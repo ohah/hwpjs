@@ -219,40 +219,40 @@
           data.underline_shape = "solid";
           break;
         case 1:
-          data.underline_shape = "long dot";
+          data.underline_shape = "dashed";
           break;
         case 2:
-          data.underline_shape = "dot";
+          data.underline_shape = "dotted";
           break;
         case 3:
-          data.underline_shape = "-.-.-.-.";
+          data.underline_shape = "dotted";
           break;
         case 4:
-          data.underline_shape = "-..-..-..";
+          data.underline_shape = "dotted";
           break;
         case 5:
-          data.underline_shape = "long dash loop";
+          data.underline_shape = "dotted";
           break;
         case 6:
-          data.underline_shape = "big dot loop";
+          data.underline_shape = "dotted";
           break;
         case 7:
           data.underline_shape = "second";
           break;
         case 8:
-          data.underline_shape = "solid bold";
+          data.underline_shape = "double";
           break;
         case 9:
-          data.underline_shape = "bold solid";
+          data.underline_shape = "double";
           break;
         case 10:
-          data.underline_shape = "solid bold solid";
+          data.underline_shape = "double";
           break;
         case 11:
-          data.underline_shape = "wave";
+          data.underline_shape = "wavy";
           break;
         case 12:
-          data.underline_shape = "wave second";
+          data.underline_shape = "wavy";
           break;
         case 13:
           data.underline_shape = "bold 3d";
@@ -670,7 +670,7 @@
               data.tag.page_start_line = this.readBit(tag, 0, 0);
               data.tag.page_start_line = [];
               for (let k = 0; k < 36; k++) {
-                data.tag.page_start_line.push(this.readBit(tag, k, k))
+                data.tag.page_start_line.push(this.readBit(tag, k, k));
               }
               data.tag.column_start_line = this.readBit(tag, 1, 1);
               data.tag.empty_text = this.readBit(tag, 16, 16);
@@ -925,6 +925,7 @@
             c.move(size);
             result.push(data);
             break;
+            
           case HWPTAG_SHAPE_COMPONENT:
             var start = c.pos;
             data = {
@@ -976,7 +977,14 @@
               //   }
               // }
             }
-            var end = c.pos;
+            // console.log('조까', c.pos - start);
+            data.render = {
+              matrix_cnt : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
+              ratation : this.dataview(this.uint_8(content.slice(c.pos, c.move(48)))).getUint32(0, true),
+            }
+            data.render.sequence = this.uint_8(content.slice(c.pos, c.move(data.render.matrix_cnt * 48 * 2)));
+            var end = c.pos;            
+            // console.log(data, "조까튼세상", size, (end - start))
             // c.move(size);
             c.move(size - (end - start));
             // console.log('size', size);
@@ -1067,7 +1075,6 @@
                 }
               },
             }
-            c.move(size);
             result.push(data);
             break;
           case HWPTAG_SHAPE_COMPONENT_ELLIPSE:
@@ -1116,6 +1123,7 @@
             result.push(data);
             break;
           case HWPTAG_SHAPE_COMPONENT_ARC:
+            var start = c.pos;
             data = {
               name : "HWPTAG_SHAPE_COMPONENT_ARC",
               tag_id : tag_id,
@@ -1136,7 +1144,9 @@
                 y : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
               },
             }
-            // c.move(size);
+            var end = c.pos;
+            c.move(size - (end - start));
+            console.log('야하..?', data, size, (end - start));
             result.push(data);
             break;
           case HWPTAG_SHAPE_COMPONENT_POLYGON:
@@ -1725,15 +1735,45 @@
             result.push(data);
             break;
           case HWPTAG_CTRL_HEADER:
+            var start = c.pos;
             data = {
               name : "HWPTAG_CTRL_HEADER",
               tag_id : tag_id,
               level : level,
               size : size,
               hex : buf2hex(content.slice(c.pos, c.pos + size)),
-              ctrl_id : this.ctrlId(content.slice(c.pos, c.pos + 4)),
+              ctrl_id : this.ctrlId(content.slice(c.pos, c.move(4))),
             }
-            c.move(size);
+            var end = c.pos;
+            switch (data.ctrl_id) {
+              case "tbl ":
+                break;
+              case "$lin":
+                break;
+              case "$rec":
+                break;
+              case "$ell":
+                break;
+              case "$arc":
+                break;
+              case "$pol":
+                break;
+              case "$cur":
+                break;
+              case "eqed":
+                break;
+              case "$pic":
+                break;
+              case "$ole":
+                break;
+              case "$con":
+                break;
+              case "gso":
+                break;
+              default:
+                break;
+            }
+            c.move(size - (end - start));
             result.push(data);
             break;
           case HWPTAG_CHAR_SHAPE:
@@ -1762,7 +1802,7 @@
                 symbol : this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getUint8(0, true),
                 user : this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getUint8(0, true),
               },
-              latter_spacing : {
+              letter_spacing : {
                 ko : this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getInt8(0, true),
                 en : this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getInt8(0, true),
                 cn : this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getInt8(0, true),
@@ -1935,8 +1975,11 @@
             }
             const bullet = this.uint_8(content.slice(c.pos, c.move(2)));
             const charCode = this.dataview(bullet).getUint16(0, true);
-            // console.log('니여친2', this.textDecoder(data.char2,'utf-16le'));
+            console.log('니여친2', charCode, this.textDecoder(data.char2,'utf-16le'));
             switch (charCode) {
+              case 45:
+                data.char = {char : "&#8208;", size : 'normal', code : charCode};
+                break;
               case 61548:
                 data.char = {char : "&#9679;", size : 'normal', code : charCode};
                 break;
@@ -2031,8 +2074,18 @@
           case HWPTAG_PARA_SHAPE:
             attr = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true);
             attribute = {
-              latter_type : this.readBit(attr, 0, 1),
               grid_use : this.readBit(attr, 8, 8)
+            }
+            switch (this.readBit(attr, 0, 1)) {
+              case 0:
+                attribute.line_spacing_type = "%"
+                break;
+              case 1:
+                attribute.line_spacing_type = "fixed"
+                break;
+              case 2:
+                attribute.line_spacing_type = "margin"
+                break;              
             }
             switch (this.readBit(attr, 2, 4)) {
               case 0:
@@ -2476,7 +2529,6 @@
           line_height : 0,
           indent : 0,
         }
-        let align = 'left';
         Object.values(data).forEach((_, i) => {
           switch (_.tag_id) {
             case HWPTAG_LIST_HEADER:
@@ -2520,6 +2572,11 @@
                   $.table[cnt.row][cnt.col].paragraph = new Array(_.paragraph_count);
                   cnt.paragraph = _.paragraph_count;
                 }
+              }else if($.type === "$rec") {
+                cnt.paragraph = _.paragraph_count;
+                $.textbox = {};
+                $.textbox.paragraph = new Array(_.paragraph_count).fill(true);
+                console.log('생성',$.textbox);
               }
               break;
             case HWPTAG_PARA_HEADER:
@@ -2541,6 +2598,8 @@
               const Style = this.hwp.Style[_.paragraph_style_reference_value];
               textOpt.align = ParaShape.align;
               textOpt.line_height = ParaShape.margin.line_spacing;
+              textOpt.line_height_type = ParaShape.line_spacing_type;
+              textOpt.paragraph_margin = ParaShape.margin.paragraph_spacing;
               textOpt.indent = ParaShape.margin.indent;
               if($.type === "tbl " && cnt.paragraph === 0) {
                 result.push($);
@@ -2549,7 +2608,6 @@
                   paragraph : {},
                 };
                 if(Bullet) {
-                  // $.paragraph.bullet = {};
                   $.paragraph.bullet = {
                     char : Bullet.char,
                     align_type : Bullet.align_type,
@@ -2559,6 +2617,21 @@
                   }
                 }
                 // console.log($, _);
+              }else if($.type === "$rec" && cnt.paragraph === 0) {
+                result.push($);
+                $ = {
+                  type : 'paragraph',
+                  paragraph : {},
+                };
+                if(Bullet) {
+                  $.paragraph.bullet = {
+                    char : Bullet.char,
+                    align_type : Bullet.align_type,
+                    distance_type : Bullet.distance_type,
+                    width : Bullet.width,
+                    like_letters : Bullet.like_letters,
+                  }
+                }
               }else if(cnt.paragraph === 0) {
                 result.push($);
                 $ = {
@@ -2566,7 +2639,6 @@
                   paragraph : {},
                 };
                 if(Bullet) {
-                  // $.paragraph.bullet = {};
                   $.paragraph.bullet = {
                     char : Bullet.char,
                     align_type : Bullet.align_type,
@@ -2580,7 +2652,7 @@
               cnt.parashape++;
               break;
             case HWPTAG_PARA_TEXT:
-              if($.type === "tbl " && cnt.paragraph !== 0) {
+              if($.type === "tbl " && cnt.paragraph !== 0) { //아씨 발 족같네
                 $.table[cnt.row][cnt.col].paragraph[cnt.tpi] = {
                   text : _.text,
                   shape : {},
@@ -2588,35 +2660,40 @@
                   image_height : '',
                   image_width : '',
                   height:0,
-                  align : textOpt.align,
-                  line_height : textOpt.line_height,
-                  indent : textOpt.indent,
+                  ...textOpt,
                 };
-              }else if($.type === "paragraph") {
+              }else if($.type === "$rec" && cnt.paragraph !== 0) {
+                $.textbox.paragraph[cnt.tpi] = {
+                  text : _.text,
+                  shape : {},
+                  image_src : '',
+                  image_height : '',
+                  image_width : '',
+                  height:0,
+                  ...textOpt,
+                };
+                console.log('되야하잖아요', _.text, cnt.tpi, $.textbox.paragraph);
+              } else if($.type === "paragraph") {
                 $.paragraph = {
                   ...$.paragraph,
-                  align : textOpt.align,
-                  line_height : textOpt.line_height,
-                  indent : textOpt.indent,
                   text : _.text, 
                   shape : {},
                   image_src : '',
                   image_height : '',
                   image_width : '',
                   height:0,
+                  ...textOpt,
                 };
               } else {
                 $.paragraph = {
                   ...$.paragraph,
-                  align : textOpt.align,
                   text : _.text, 
-                  line_height : textOpt.line_height,
-                  indent : textOpt.indent,
                   shape : {},
                   image_src : '',
                   image_height : '',
                   image_width : '',
                   height:0,
+                  ...textOpt,
                 };
               }
               textOpt.align = 'left';
@@ -2628,19 +2705,19 @@
                 const shape = _.shape.map(shape => {
                   const attr = this.hwp.CharShape[shape.shape_id];
                   const FaceName = this.hwp.FaceName[attr.font_id.ko];
-                  console.log(attr);
                   return shape = {
                     ...shape,
                     fontName : FaceName.font.name,
                     fontStretch : attr.font_stretch.ko,
                     fontSize : attr.standard_size.hwpPt(),
                     fontColor : attr.color.font.hwpRGB(),
-                    latter_spacing : attr.latter_spacing.ko,
+                    letter_spacing : attr.letter_spacing.ko,
                     bold : attr.font_attribute.bold,
                     italic : attr.font_attribute.italic,
                     underline : attr.font_attribute.underline,
                     underline_color : attr.color.underline.hwpRGB(),
                     strikethrough : attr.font_attribute.strikethrough,
+                    underline_shape : attr.font_attribute.underline_shape,
                   }
                 });
                 if($.type === "tbl " && cnt.paragraph !== 0) {
@@ -2669,11 +2746,14 @@
                 $.paragraph.height = _.height_line.hwpInch();
                 $.paragraph.margin = (_.line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
                 $.paragraph.start_line = _.start_line;
-              } else if($.type === "paragraph") {
-                $.paragraph = {}
+              }else if($.type === "paragraph") {
+                $.paragraph = {};
                 $.paragraph.height = _.height_line.hwpInch();
                 $.paragraph.margin = (_.line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
                 $.paragraph.start_line = _.start_line;
+              }else if($.type === "$rec" && cnt.paragraph !== 0) {
+                cnt.paragraph--;
+                if(cnt.paragraph !== 0) cnt.tpi++;
               }
               break;
             case HWPTAG_CTRL_HEADER:
@@ -2705,6 +2785,15 @@
               $.table = table;
               break;
             case HWPTAG_SHAPE_COMPONENT:
+              /**
+               * ( 그리기 개체 )
+                선 $lin
+                사각형 $rec
+                타원 $ell
+                호 $arc
+                다각형 $pol
+                곡선 $cur
+               */
               if($.type === "tbl " && cnt.paragraph !== 0 && _.object_control_id === "$pic") {
                 if(cnt.cell !== 0 && $.table[cnt.row][cnt.col]) {
                   $.table[cnt.row][cnt.col].paragraph[cnt.tpi].image_height = _.height.hwpInch();
@@ -2717,7 +2806,7 @@
                   image_width : _.width.hwpInch(),
                 };
               }else if(_.object_control_id === "$rec") {
-                $.type = "textbox";
+                $.type = "$rec";
                 $.paragraph = {
                   ...$.paragraph,
                   height : _.height.hwpInch(),
@@ -2739,6 +2828,8 @@
               } else {
                 $.paragraph.image_src = URL.createObjectURL(new Blob([new Uint8Array(uncompress)], { type: `image/${info.attribute.extension}` }));
               }
+              break;
+            case HWPTAG_SHAPE_COMPONENT_RECTANGLE: //SHAPE_COMPONENT에서 $rec('사각형')일떄 마지막으로 나옴.
               break;
             default:
               break;
@@ -2762,15 +2853,20 @@
       page.style.paddingLeft = pageDef.margin.right.hwpInch();
       return page;        
     }
+    /**
+     * text css
+     */
     hwpjs.prototype.hwpTextCss = function(paragraph) {
       // const {text, shape, image_height, image_src, image_width, height, margin, start_line, align, bullet, line_height} = paragraph;
-      const {text, shape, image_height, image_src, image_width, margin, height, start_line, align, bullet, line_height, indent} = paragraph;
+      const {text, shape, image_height, image_src, image_width, margin, height, start_line, align, bullet, line_height, line_height_type, indent, paragraph_margin} = paragraph;
       const div = document.createElement('div');
-      div.style.margin = `${margin} 0`;
+      // div.style.margin = `${margin} 0`;
       div.style.Height = height;
       div.style.textAlign = align;
       if(line_height) {
-        div.style.lineHeight = `${line_height}%`;
+        if(line_height_type === "%") { 
+          div.style.lineHeight = `${line_height/120}`; //임시. 주어진대로 설정하면 레이아웃이 깨짐.
+        }
       }
       if(indent) {
         // div.style.textIndent = `-${indent.hwpPt()}`;
@@ -2779,6 +2875,10 @@
         // div.style.marginLeft = "17.5px";
         div.style.textIndent = `-${indent * (-0.003664154103852596)}px`;
         div.style.marginLeft = `${indent * (-0.003664154103852596)}px`;
+      }
+      if(paragraph_margin) {
+        div.style.marginTop = `${paragraph_margin.top.hwpInch()}`;
+        div.style.marginBottom = `${paragraph_margin.bottom.hwpInch()}`;
       }
       div.dataset.start_line = start_line;
       // div.style.top = parseFloat(start_line).hwpInch();
@@ -2839,10 +2939,11 @@
         // solid | double | dotted | dashed | wavy | inherit
         // text-decoration-color	
         span.style.textDecoration = `${shape[i].underline} ${shape[i].strikethrough ? 'line-through' : ''}`;
+        span.style.textDecorationStyle = `${shape[i].underline_shape}`;
         span.style.textDecorationColor = shape[i].underline_color;
         span.style.fontFamily = `${shape[i].fontName}, "Arial", sans-serif`;
         span.style.fontStretch = `${shape[i].fontStretch}%`;
-        span.style.letterSpacing = `${shape[i].latter_spacing}%`; //안됨
+        span.style.letterSpacing = `${shape[i].letter_spacing/100}em`; //안됨
         span.textContent = text;
         div.appendChild(span);
         // console.log(shape[i], text);
@@ -2854,14 +2955,15 @@
           span.style.color = shape[i].fontColor;
           span.style.fontSize = shape[i].fontSize;
           span.style.textDecoration = `${shape[i].underline} ${shape[i].strikethrough ? 'line-through' : ''}`;
+          span.style.textDecorationStyle = `${shape[i].underline_shape}`;
           span.style.textDecorationColor = shape[i].underline_color;
-          console.log(shape[i], spanText);
+          // console.log(shape[i], spanText);
           if(shape[i].bold) {
             span.style.fontWeight = 600;
           }
           span.style.fontFamily = `${shape[i].fontName}, "Arial", sans-serif`;
           span.style.fontStretch = `${shape[i].fontStretch}%`;
-          span.style.letterSpacing = `${shape[i].latter_spacing}%`; //안됨
+          span.style.letterSpacing = `${shape[i].letter_spacing/100}em`; //안됨
           span.textContent = spanText;
           div.appendChild(span);
         }
@@ -3026,6 +3128,14 @@
             wrapper.appendChild(pages[c.pos]);
           }
           pages[c.pos].appendChild(p);
+        }else if(data.type === "$rec") {
+          const p = this.hwpTable(data);          
+          if(p.dataset.start_line === "0" || preline > parseInt(p.dataset.start_line)) {
+            pages.push(this.PageElement());
+            c.move(1);
+            wrapper.appendChild(pages[c.pos]);
+          }
+          pages[c.pos].appendChild(p);
         }else if(data.type === "paragraph" && data.paragraph) {
           const p = this.hwpTextCss(data.paragraph);
           if(p.dataset.start_line === "0" || preline > parseInt(p.dataset.start_line)) {
@@ -3071,10 +3181,10 @@ let hwp;
   // hwp = await fetch('test/underline-styles.hwp');
   // hwp = await fetch('test/paragraph-split-page.hwp');
   // hwp = await fetch('test/charshape.hwp');
-  // hwp = await fetch('test/textbox.hwp');
+  hwp = await fetch('test/multicolumns-layout.hwp');
   // hwp = await fetch('test/table-caption.hwp');
   // hwp = await fetch('./test.hwp');
-  hwp = await fetch('./noori.hwp');
+  // hwp = await fetch('./noori.hwp');
   // hwp = await fetch('./testext.hwp');
   // hwp = await fetch('test/table.hwp');
   const hwpData = await hwp.arrayBuffer();
