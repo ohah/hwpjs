@@ -4,7 +4,6 @@
 [Link](https://www.hancom.com/etc/hwpDownload.do)
 ```
 ## Demo
----
 [Link](https://kbl-ref.com/hwpjs)  
 
 후술 할 동명의 hwpjs와 동일한 문서를 읽은 이미지입니다.
@@ -47,7 +46,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 개발 시작시 타입스크립트, 속도를 위하여 WASM 등을 고려하였으나 호환성이나 접근성, 사용 편의를 위해 순수한 자바스크립트로 개발하였습니다.
 
 ## 사용조건
----
 위의 라이센스에도 사실 언급되어있는 내용이지만 저작자를 표기한다는 조건으로 자유롭게 사용하시면 됩니다.  
 아직 상용프로그램이나 실 사용 소스로 쓰기에는 아직까지 많은 무리가 있습니다.  
 개발기간도 개발기간이지만 개발자라고도 부르기 민망한 수준의 개발 능력입니다.
@@ -56,7 +54,6 @@ ES6기준 문법으로 개발하였으며 IE에선 테스트하지 않았습니�
 확인하지 않았지만, Babel 등을 활용하여 사용은 할 수 있을것으로 보입니다.
 
 ## 개발 진행 내역
-----
 1. 페이지 처리, 페이지 여백 처리(일부 미완성)
 2. 테이블 처리
 3. 글자 서식 적용(언어별 서식 미적용, 자간, 장평, 공백 개행단락의 부정확한 크기 등 일부 미구현)
@@ -72,7 +69,6 @@ ex) 줄간격의 경우 적용은 되어있으나 css와 hwp문서의 줄간격 
 2. 웹워커 형식의 구동버전
 
 ## 사용법
-----
 ```html
 <!DOCTYPE html>
 <html lang="ko">
@@ -94,10 +90,10 @@ ex) 줄간격의 경우 적용은 되어있으나 css와 hwp문서의 줄간격 
 ```
 ```javascript
 (async () => {
-  const hwp = await fetch('./noori.hwp');
-  const hwpData = await hwp.arrayBuffer();
-  t = new hwpjs(hwpData);
-  const data = t.getHtml();
+  const file = await fetch('./noori.hwp');
+  const hwpData = await file.arrayBuffer();
+  const hwp = new hwpjs(hwpData);
+  const data = hwp.getHtml();
   document.querySelector('.hwpjs').innerHTML = data;
 })();
 ```
@@ -109,14 +105,12 @@ ex) 줄간격의 경우 적용은 되어있으나 css와 hwp문서의 줄간격 
 
 
 ### 미완성 상태인데 공개하는 이유
-----
 1. 어느정도 틀은 잡았으나 나머지 작업량이 방대한걸 알아버려서.
 2. 누군가에게 만든다고 떠들고 싶어서.
 3. 현재 나와있는 웹버전 hwpjs보다는 조금 더 진척 되어 보여서
 4. 공식문서가 좆같아서.
 
 ### 이름 중복에 대한 고민
------
 이미 어느정도 구현 된 상태에서 목적과 이름이 같은 (소스는 다름) 동명의 소스가 깃허브에 hwpjs가 있다는걸 알았습니다.  
 생성자 명을 이미 hwpjs로 해버려서 수정하기에는 번거롭고 제가 네이밍 센스가 없기 때문에 수정할만한 이름이 떠오르지 않았습니다.  
 언제든지 개명이 가능한 플러그인이니 원하시는 플러그인 이름이 있으면 남겨주세요
