@@ -81,7 +81,7 @@ ex) 줄간격의 경우 적용은 되어있으나 css와 hwp문서의 줄간격 
 <body>
   <script src="./cfb.js"></script>
   <script src="./pako.js"></script>
-  <script src="./index.js"></script>
+  <script src="./hwpjs.js"></script>
   <div class="hwpjs">
   </div>
 </body>
