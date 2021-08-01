@@ -642,14 +642,16 @@
             break;
           case HWPTAG_PARA_LINE_SEG:
             // var start = c.pos;
-            var seg = [];
+            data = {
+              name : "HWPTAG_PARA_LINE_SEG",
+              tag_id : tag_id,
+              level : level,
+              size : size,
+              hex : buf2hex(content.slice(c.pos, c.pos + size)),
+              seg : new Array(size/36).fill(true),
+            };
             for (let i = 0; i < size/36; i++) {
-              data = {
-                name : "HWPTAG_PARA_LINE_SEG",
-                tag_id : tag_id,
-                level : level,
-                size : size,
-                hex : buf2hex(content.slice(c.pos, c.pos + size)),
+              data.seg[i] = {
                 start_text : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true),
                 start_line : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
                 height_line : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
@@ -666,21 +668,20 @@
               // var tagE = tagS + 4;
               // const tag = this.dataview(this.uint_8(content.slice(tagS, tagE))).getUint32(0, true);
               const tag = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint8(0, true);
-              data.tag.data = tag;
-              data.tag.page_start_line = this.readBit(tag, 0, 0);
-              data.tag.page_start_line = [];
+              data.seg[i].tag.data = tag;
+              data.seg[i].tag.page_start_line = this.readBit(tag, 0, 0);
+              data.seg[i].tag.page_start_line = [];
               for (let k = 0; k < 36; k++) {
-                data.tag.page_start_line.push(this.readBit(tag, k, k));
+                data.seg[i].tag.page_start_line.push(this.readBit(tag, k, k));
               }
-              data.tag.column_start_line = this.readBit(tag, 1, 1);
-              data.tag.empty_text = this.readBit(tag, 16, 16);
-              data.tag.line_first_sagment = this.readBit(tag, 17, 17);
-              data.tag.line_last_sagment = this.readBit(tag, 18, 18);
-              data.tag.line_last_auto_hyphenation = this.readBit(tag, 19, 19);
-              data.tag.indent = this.readBit(tag, 20, 20);
-              data.tag.ctrl_id_header_shape_apply = this.readBit(tag, 21, 21);
-              data.tag.property = this.readBit(tag, 31, 31);
-              seg.push(data);
+              data.seg[i].tag.column_start_line = this.readBit(tag, 1, 1);
+              data.seg[i].tag.empty_text = this.readBit(tag, 16, 16);
+              data.seg[i].tag.line_first_sagment = this.readBit(tag, 17, 17);
+              data.seg[i].tag.line_last_sagment = this.readBit(tag, 18, 18);
+              data.seg[i].tag.line_last_auto_hyphenation = this.readBit(tag, 19, 19);
+              data.seg[i].tag.indent = this.readBit(tag, 20, 20);
+              data.seg[i].tag.ctrl_id_header_shape_apply = this.readBit(tag, 21, 21);
+              data.seg[i].tag.property = this.readBit(tag, 31, 31);
             }
             result.push(data);
             break;
@@ -715,7 +716,7 @@
               ctrl_id : this.ctrlId(content.slice(c.pos, c.move(4))),
             }
             ctrl_id = data.ctrl_id;
-            if(data.ctrl_id === "tbl ") {
+            if(data.ctrl_id === "tbl " || data.ctrl_id === "gso ") {
               attribute = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true);
               data.offset = {
                 y : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true),
@@ -800,10 +801,11 @@
             attribute = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true); //6
             data.text_direction = this.readBit(attribute, 0, 2) === 0 ? 'horizontal' : 'vertical';
             data.line_break = this.readBit(attribute, 3, 4) === 0 ? 'line' : this.readBit(attribute, 3, 4) === 1 ? 'kerning' : 'content_width';
-            data.vertical_align = this.readBit(attribute, 3, 4) === 0 ? 'top' : this.readBit(attribute, 3, 4) === 1 ? 'center' : 'bottom';
-            c.move(2); //6이라 되어있는데 실제로는 8비트..?는 라노벨 소설 제목급 //8
+            data.vertical_align = this.readBit(attribute, 5, 6) === 0 ? 'top' : this.readBit(attribute, 5, 6) === 1 ? 'center' : 'bottom';
+            data.unknown = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getInt16(0, true);
+
+            // c.move(2); //6이라 되어있는데 실제로는 8비트..?는 라노벨 소설 제목급 //8
             if(cell_count !== 0) {
-              // c.move(size - 30); //제대로 된 값을 구하려면 30을 빼야함 왜인지는 모름 시발.
               data.cell_attribute = {
                 address : {
                   col : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true), //10
@@ -910,7 +912,6 @@
               breakline_color : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint16(0, true),
               breakline_unknown : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint8(0, true), //자료는 없으나 2칸 남음.
             }
-            // c.move(size);
             result.push(data);
             break;
           case HWPTAG_PAGE_BORDER_FILL:
@@ -1078,6 +1079,7 @@
             result.push(data);
             break;
           case HWPTAG_SHAPE_COMPONENT_ELLIPSE:
+            var start = c.pos;
             const arc_attr = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true);
             data = {
               name : "HWPTAG_SHAPE_COMPONENT_ELLIPSE",
@@ -1119,7 +1121,8 @@
                 y : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
               },
             }
-            c.move(size);
+            var end = c.pos;
+            c.move(size - (end - start));
             result.push(data);
             break;
           case HWPTAG_SHAPE_COMPONENT_ARC:
@@ -1146,7 +1149,6 @@
             }
             var end = c.pos;
             c.move(size - (end - start));
-            console.log('야하..?', data, size, (end - start));
             result.push(data);
             break;
           case HWPTAG_SHAPE_COMPONENT_POLYGON:
@@ -1167,6 +1169,7 @@
             result.push(data);
             break;
           case HWPTAG_SHAPE_COMPONENT_CURVE:
+            var start = c.pos;
             data = {
               name : "HWPTAG_SHAPE_COMPONENT_CURVE",
               tag_id : tag_id,
@@ -1178,6 +1181,8 @@
             data.x = this.dataview(this.uint_8(content.slice(c.pos, c.move(4 * data.cnt)))).getInt32(0, true);
             data.y = this.dataview(this.uint_8(content.slice(c.pos, c.move(4 * data.cnt)))).getInt32(0, true);
             data.segment_type = content.slice(c.pos, c.move(data.cnt - 1));
+            var end = c.pos;
+            c.move(size - (end - start));
             result.push(data);
             break;
           case HWPTAG_SHAPE_COMPONENT_OLE:
@@ -1202,18 +1207,32 @@
               border_color : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true),
               border_width : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
               border_type : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true),
-              x : this.dataview(this.uint_8(content.slice(c.pos, c.move(4 * 4)))).getInt32(0, true),
-              y : this.dataview(this.uint_8(content.slice(c.pos, c.move(4 * 4)))).getInt32(0, true), 
+              rectangle_position : {
+                x : {
+                  left : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                  top : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                  right : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                  bottom :this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                },
+                y : {
+                  left : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                  top : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                  right : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                  bottom : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                },
+              },
               padding : {
                 left : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
                 right : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
                 top : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
                 bottom : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
               },
-              left : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
-              top : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
-              right : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
-              bottom : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+              cut : {
+                left : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                top : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                right : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                bottom : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+              },
               info : {
                 light : this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getInt8(0, true),
                 contrast : this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getInt8(0, true),
@@ -1251,6 +1270,7 @@
             result.push(data);
             break;
           case HWPTAG_EQEDIT:
+            var start = c.pos;
             data = {
               name : "HWPTAG_EQEDIT",
               tag_id : tag_id,
@@ -1266,7 +1286,8 @@
                 }
               }
             }
-            c.move(size - 8);
+            var end = c.pos;
+            c.move(size - (end - start));
             result.push(data);
             break;
           case RESERVED:
@@ -1975,7 +1996,7 @@
             }
             const bullet = this.uint_8(content.slice(c.pos, c.move(2)));
             const charCode = this.dataview(bullet).getUint16(0, true);
-            console.log('니여친2', charCode, this.textDecoder(data.char2,'utf-16le'));
+            // console.log('니여친2', charCode, this.textDecoder(data.char2,'utf-16le'));
             switch (charCode) {
               case 45:
                 data.char = {char : "&#8208;", size : 'normal', code : charCode};
@@ -2091,7 +2112,7 @@
               case 0:
                 attribute.align = "justify";
               case 1:
-                attribute.align = "left";
+                attribute.align = "justify";
                 break;
               case 2:
                 attribute.align = "right";
@@ -2125,7 +2146,7 @@
             attribute.paragraph_page_divide = this.readBit(attr, 19, 19);
             switch (this.readBit(attr, 20, 21)) {
               case 0:
-                attribute.vertical_align = 'text';
+                attribute.vertical_align = 'font';
                 break;
               case 1:
                 attribute.vertical_align = 'top';
@@ -2137,7 +2158,8 @@
                 attribute.vertical_align = 'bottom';
                 break;
             };
-            switch (this.readBit(attr, 20, 21)) {
+            attribute.font_line_height = this.readBit(attr, 22, 22);
+            switch (this.readBit(attr, 23, 24)) {
               case 0:
                 attribute.paragraph_header_type = 'none';
                 break;
@@ -2435,65 +2457,61 @@
       else return `${this / 7200}in`;
     }
     Number.prototype.borderWidth = function () {
+      let result = 0;
       switch (this) {
         case 0:
-          return "0.1mm";
+          result = 0.1;
           break;
         case 1:
-          return "0.12mm";
+          result = 0.12;
           break;
         case 2:
-          return "0.15mm";
+          result = 0.15;
           break;
         case 3:
-          return "0.2mm";
+          result = 0.2;
           break;
         case 4:
-          return "0.25mm";
+          result = 0.25;
           break;
         case 5:
-          return "0.3mm";
+          result = 0.3;
           break;
         case 6:
-          return "0.4mm";
+          result = 0.4;
           break;
         case 7:
-          return "0.5mm";
+          result = 0.5;
           break;
         case 8:
-          return "0.6mm";
+          result = 0.6;
           break;
         case 9:
-          return "0.7mm";
+          result = 0.7;
           break;
         case 10:
-          return "1.0mm";
+          result = 1.0;
           break;
         case 11:
-          return "1.5mm";
+          result = 1.5;
           break;
         case 12:
-          return "2.0mm";
+          result = 2.0;
           break;
         case 13:
-          return "3.0mm";
+          result = 3.0;
           break;
         case 14:
-          return "4.0mm";
+          result = 4.0;
           break;
         case 15:
-          return "5.0mm";
+          result = 5.0;
           break;
       }
+      return result;
     }
     Array.prototype.hwpRGB = function() {
       return `rgb(${this.join(',')})`;
-    }
-    hwpjs.prototype.text = function(idx) {
-      //HWPTAG_CHAR_SHAPE
-      const font = this.hwp.DocInfo.data.find(data=>data.tag_id === 21)[idx]
-      const div = document.createElement('div');
-      return div;
     }
     /**
      * bodyText의 필요한 옵션들만 가져와 정리하여 하나의 오브젝트로 구성한다
@@ -2599,8 +2617,11 @@
               textOpt.align = ParaShape.align;
               textOpt.line_height = ParaShape.margin.line_spacing;
               textOpt.line_height_type = ParaShape.line_spacing_type;
+              textOpt.vertical_align = ParaShape.vertical_align;
               textOpt.paragraph_margin = ParaShape.margin.paragraph_spacing;
               textOpt.indent = ParaShape.margin.indent;
+              textOpt.left = ParaShape.margin.left;
+              textOpt.right = ParaShape.margin.right;
               if($.type === "tbl " && cnt.paragraph === 0) {
                 result.push($);
                 $ = {
@@ -2608,7 +2629,8 @@
                   paragraph : {},
                 };
                 if(Bullet) {
-                  $.paragraph.bullet = {
+                  console.log('이써야하는데?');
+                  $.table[cnt.row][cnt.col].paragraph.bullet = {
                     char : Bullet.char,
                     align_type : Bullet.align_type,
                     distance_type : Bullet.distance_type,
@@ -2672,7 +2694,7 @@
                   height:0,
                   ...textOpt,
                 };
-                console.log('되야하잖아요', _.text, cnt.tpi, $.textbox.paragraph);
+                // console.log('되야하잖아요', _.text, cnt.tpi, $.textbox.paragraph);
               } else if($.type === "paragraph") {
                 $.paragraph = {
                   ...$.paragraph,
@@ -2699,6 +2721,9 @@
               textOpt.align = 'left';
               textOpt.line_height = 0;
               textOpt.indent = 0;
+              textOpt.left = 0;
+              textOpt.right = 0;
+              textOpt.vertical_align = "text";
               break;
             case HWPTAG_PARA_CHAR_SHAPE:
               if(_.shape) {
@@ -2733,37 +2758,53 @@
             case HWPTAG_PARA_LINE_SEG:
               if($.type === "tbl " && cnt.paragraph !== 0) {
                 try { 
-                  $.table[cnt.row][cnt.col].paragraph[cnt.tpi].height = _.height_line.hwpInch();
-                  $.table[cnt.row][cnt.col].paragraph[cnt.tpi].margin = (_.line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
-                  $.table.margin = (_.line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
-                  $.table.start_line = _.start_line;
+                  $.table[cnt.row][cnt.col].paragraph[cnt.tpi].height = _.seg[0].height_line.hwpInch();
+                  $.table[cnt.row][cnt.col].paragraph[cnt.tpi].margin = (_.seg[0].line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
+                  $.table[cnt.row][cnt.col].paragraph[cnt.tpi].start_line = _.seg[0].start_line;
+                  $.table[cnt.row][cnt.col].paragraph[cnt.tpi].line_segment = _.seg;
+                  $.table.margin = (_.seg[0].line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
+                  // $.table.start_line = _.seg[0].start_line;
+                  // console.log('table_line', $.table.start_line);
                 }catch(e){
 
                 }
                 cnt.paragraph--;
                 if(cnt.paragraph !== 0) cnt.tpi++;
               }else if($.type === "paragraph" && $.paragraph) {
-                $.paragraph.height = _.height_line.hwpInch();
-                $.paragraph.margin = (_.line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
-                $.paragraph.start_line = _.start_line;
+                $.paragraph.height = _.seg[0].height_line.hwpInch();
+                $.paragraph.margin = (_.seg[0].line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
+                $.paragraph.start_line = _.seg[0].start_line;
+                $.paragraph.line_segment = _.seg;
               }else if($.type === "paragraph") {
                 $.paragraph = {};
-                $.paragraph.height = _.height_line.hwpInch();
-                $.paragraph.margin = (_.line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
-                $.paragraph.start_line = _.start_line;
+                $.paragraph.height = _.seg[0].height_line.hwpInch();
+                $.paragraph.margin = (_.seg[0].line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
+                $.paragraph.start_line = _.seg[0].start_line;
+                $.paragraph.line_segment = _.seg;
               }else if($.type === "$rec" && cnt.paragraph !== 0) {
                 cnt.paragraph--;
                 if(cnt.paragraph !== 0) cnt.tpi++;
               }
               break;
             case HWPTAG_CTRL_HEADER:
-              console.log('ctrl_id', _.ctrl_id);
+              if($.type === "tbl " && _.ctrl_id === "gso ") {
+                $.table[cnt.row][cnt.col].paragraph[cnt.tpi].object = _.object;
+                $.table[cnt.row][cnt.col].paragraph[cnt.tpi].offset = _.offset;
+              }else if($.type === "paragraph" && $.paragraph) {
+                $.paragraph.object = _.object;
+                $.paragraph.offset = _.offset;
+              }else if($.type === "paragraph") {
+                $.paragraph = {};
+                $.paragraph.object = _.object;
+                $.paragraph.offset = _.offset;
+              }else if($.type === "$rec" && cnt.paragraph !== 0) {
+              }
               break;
             case HWPTAG_TABLE:
               const ctrl_header = data[i-1];
               const line_seg = data[i-2];
               if(line_seg.tag_id === HWPTAG_PARA_LINE_SEG) {
-                $.start_line = line_seg.start_line;
+                $.start_line = line_seg.seg[0].start_line;
               }
               if(ctrl_header.tag_id === HWPTAG_CTRL_HEADER) {
                 $.width = ctrl_header.object.width.hwpInch();
@@ -2794,16 +2835,25 @@
                 다각형 $pol
                 곡선 $cur
                */
-              if($.type === "tbl " && cnt.paragraph !== 0 && _.object_control_id === "$pic") {
+              // if($.type === "tbl " && cnt.paragraph !== 0 && _.object_control_id === "$pic") {
+              if($.type === "tbl " && _.object_control_id === "$pic") {
                 if(cnt.cell !== 0 && $.table[cnt.row][cnt.col]) {
                   $.table[cnt.row][cnt.col].paragraph[cnt.tpi].image_height = _.height.hwpInch();
                   $.table[cnt.row][cnt.col].paragraph[cnt.tpi].image_width = _.width.hwpInch();
+                  $.table[cnt.row][cnt.col].paragraph[cnt.tpi].group_offset = {
+                    x : _.group_offset.x.hwpInch(),
+                    y : _.group_offset.y.hwpInch(),
+                  };
                 }
               }else if(_.object_control_id === "$pic") {
                 $.paragraph = {
                   ...$.paragraph,
                   image_height : _.height.hwpInch(),
                   image_width : _.width.hwpInch(),
+                  group_offset : {
+                    x : _.group_offset.x.hwpInch(),
+                    y : _.group_offset.y.hwpInch(),
+                  },
                 };
               }else if(_.object_control_id === "$rec") {
                 $.type = "$rec";
@@ -2811,6 +2861,10 @@
                   ...$.paragraph,
                   height : _.height.hwpInch(),
                   width : _.width.hwpInch(),
+                  group_offset : {
+                    x : _.group_offset.x.hwpInch(),
+                    y : _.group_offset.y.hwpInch(),
+                  },
                 };
               }
               break;
@@ -2825,8 +2879,16 @@
               const uncompress = pako.inflate(this.uint_8(imgData.content), { windowBits: -15 });
               if(cnt.cell !== 0 && $.table[cnt.row][cnt.col]) {
                 $.table[cnt.row][cnt.col].paragraph[cnt.tpi].image_src = URL.createObjectURL(new Blob([new Uint8Array(uncompress)], { type: `image/${info.attribute.extension}` }));
+                $.table[cnt.row][cnt.col].paragraph[cnt.tpi].image = {
+                  rectangle_position : _.rectangle_position,
+                  padding : _.padding,
+                }
               } else {
                 $.paragraph.image_src = URL.createObjectURL(new Blob([new Uint8Array(uncompress)], { type: `image/${info.attribute.extension}` }));
+                $.paragraph.image = {
+                  rectangle_position : _.rectangle_position,
+                  padding : _.padding,
+                }
               }
               break;
             case HWPTAG_SHAPE_COMPONENT_RECTANGLE: //SHAPE_COMPONENT에서 $rec('사각형')일떄 마지막으로 나옴.
@@ -2851,35 +2913,44 @@
       page.style.paddingTop = pageDef.margin.top.hwpInch();
       page.style.paddingRight = pageDef.margin.right.hwpInch();
       page.style.paddingLeft = pageDef.margin.right.hwpInch();
+      const div = document.createElement('div');
+      div.style.position = "relative";
+      div.style.height = "100%";
+      div.style.width = "100%";
+      div.className = "hwp-content";
+      page.appendChild(div);
       return page;        
     }
     /**
      * text css
      */
-    hwpjs.prototype.hwpTextCss = function(paragraph) {
+    hwpjs.prototype.hwpTextCss = function(paragraph, opt) {
       // const {text, shape, image_height, image_src, image_width, height, margin, start_line, align, bullet, line_height} = paragraph;
-      const {text, shape, image_height, image_src, image_width, margin, height, start_line, align, bullet, line_height, line_height_type, indent, paragraph_margin} = paragraph;
+      const {left, right, line_segment, text, shape, image_height, image_src, image_width, margin, height, start_line, align, bullet, line_height, line_height_type, indent, image, object, offset, group_offset, paragraph_margin, vertical_align} = paragraph;
+      console.log(text, vertical_align);
       const div = document.createElement('div');
+      div.className="paragraph_wrapper";
       // div.style.margin = `${margin} 0`;
-      div.style.Height = height;
+      div.style.width = "100%";
+      div.style.height = "auto";
+      // div.style.Height = height;
+      if(line_segment) {
+        // div.style.top = parseFloat(line_segment[0].start_line).hwpInch();
+        div.style.position = "absolute";
+      }
       div.style.textAlign = align;
       if(line_height) {
         if(line_height_type === "%") { 
-          div.style.lineHeight = `${line_height/120}`; //임시. 주어진대로 설정하면 레이아웃이 깨짐.
+          div.style.lineHeight = `${line_height/100}em`; //임시. 주어진대로 설정하면 레이아웃이 깨짐.
         }
       }
-      if(indent) {
-        // div.style.textIndent = `-${indent.hwpPt()}`;
-        // div.style.marginLeft = indent.hwpPt();
-        // div.style.textIndent = "-17.5px";
-        // div.style.marginLeft = "17.5px";
-        div.style.textIndent = `-${indent * (-0.003664154103852596)}px`;
-        div.style.marginLeft = `${indent * (-0.003664154103852596)}px`;
+      if(margin) {
+        // div.style.marginTop = `${margin.top.hwpInch()}`;
       }
-      if(paragraph_margin) {
-        div.style.marginTop = `${paragraph_margin.top.hwpInch()}`;
-        div.style.marginBottom = `${paragraph_margin.bottom.hwpInch()}`;
-      }
+      // if(paragraph_margin) {
+      //   div.style.marginTop = `${paragraph_margin.top.hwpInch()}`;
+      //   div.style.marginBottom = `${paragraph_margin.bottom.hwpInch()}`;
+      // }
       div.dataset.start_line = start_line;
       // div.style.top = parseFloat(start_line).hwpInch();
       // div.style.position = "absolute";
@@ -2906,15 +2977,42 @@
       }
       if(image_src) {
         const img = new Image();
+        // img.style.position = "absolute";
+        // img.style.bottom = 0;
+        // img.style.left = 0;
+        
         img.src = image_src;
         img.style.height = image_height;
         img.style.width = image_width;
-        div.appendChild(img);
+        const img_parent = document.createElement('div');
+        img_parent.className = "img_parent";
+        img_parent.appendChild(img);
+        if(image.rectangle_position) {
+          // img.style.left = image.rectangle_position.x.left.hwpInch();
+          // img.style.top = image.rectangle_position.x.left.hwpInch();
+        }
+        if(group_offset) {
+          // img_parent.style.left = group_offset.x;
+          // img_parent.style.top = group_offset.y;
+        }
+        if(offset) {
+          // img.style.left = offset.x;
+          // img.style.top = group_offset.y;
+        }
+        // if(image) {
+        //   img.style.top = image.top.hwpInch();
+        //   img.style.left = image.left.hwpInch();
+        //   img.style.right = image.right.hwpInch();
+        //   img.style.bottom = image.bottom.hwpInch();
+        //   img.style.left = image.left.hwpInch();
+        //   img.style.top = image.y.hwpInch();
+        // }
+        div.appendChild(img_parent);
         return div;
       }
       if(!text) {
-        div.innerHTML = "&nbsp;";
-        // div.style.height = "15px"; //개행 라인 최소높이 임의로 설정
+        // div.innerHTML = "&nbsp;";
+        div.style.height = height;
         return div;
       }
       if(!shape) {
@@ -2925,48 +3023,85 @@
       }
       var length = shape.length;
       // console.log(shape, text);
-      if(length === 1) {
-        let i = 0;
+      const template = [];
+      const newline = [];
+      for (let i = 1; i < line_segment.length; i++) {
+        newline.push(line_segment[i].start_text);
+      }
+      for (let i = 0; i < length; i++) {
         const span = document.createElement('span');
+        const start = shape[i].shape_start;
+        const end = length !== i + 1 ? shape[i+1].shape_start : text.length;
+        const spanText = text.substring(start, end);
         span.style.color = shape[i].fontColor;
         span.style.fontSize = shape[i].fontSize;
-        // Weight = Enum('any', 'no_fit', 'very_light', 'light', 'thin', 'book',
-        // 'medium', 'demi', 'bold', 'heavy', 'black', 'nord')
-        if(shape[i].bold) {
-          span.style.fontWeight = 600;
-        }
-        // text-decoration-style
-        // solid | double | dotted | dashed | wavy | inherit
-        // text-decoration-color	
         span.style.textDecoration = `${shape[i].underline} ${shape[i].strikethrough ? 'line-through' : ''}`;
         span.style.textDecorationStyle = `${shape[i].underline_shape}`;
         span.style.textDecorationColor = shape[i].underline_color;
-        span.style.fontFamily = `${shape[i].fontName}, "Arial", sans-serif`;
-        span.style.fontStretch = `${shape[i].fontStretch}%`;
-        span.style.letterSpacing = `${shape[i].letter_spacing/100}em`; //안됨
-        span.textContent = text;
-        div.appendChild(span);
-        // console.log(shape[i], text);
-      } else {
-        for (let i = 0; i < length; i++) {
-          const span = document.createElement('span');
-          const spanText = text.substring(shape[i].shape_start, length !== i + 1 ? shape[i+1].shape_start : text.length);
-          // console.log(shape[i], spanText);
-          span.style.color = shape[i].fontColor;
-          span.style.fontSize = shape[i].fontSize;
-          span.style.textDecoration = `${shape[i].underline} ${shape[i].strikethrough ? 'line-through' : ''}`;
-          span.style.textDecorationStyle = `${shape[i].underline_shape}`;
-          span.style.textDecorationColor = shape[i].underline_color;
-          // console.log(shape[i], spanText);
-          if(shape[i].bold) {
-            span.style.fontWeight = 600;
-          }
-          span.style.fontFamily = `${shape[i].fontName}, "Arial", sans-serif`;
-          span.style.fontStretch = `${shape[i].fontStretch}%`;
-          span.style.letterSpacing = `${shape[i].letter_spacing/100}em`; //안됨
-          span.textContent = spanText;
-          div.appendChild(span);
+        if(shape[i].bold) {
+          span.style.fontWeight = 600;
         }
+        span.style.fontFamily = `${shape[i].fontName}, "Arial", sans-serif`;
+        // span.style.fontStretch = `${shape[i].fontStretch}%`;
+        span.style.letterSpacing = `${shape[i].letter_spacing/100}em`; //대충 유사치 출력 중..
+        span.dataset.start = start;
+        span.dataset.end = end;
+        span.textContent = spanText;
+        for (let k = 0; k < newline.length; k++) {
+          if(start < newline[k] && newline[k] < end) {
+            const clone = span.cloneNode(false);
+            clone.textContent = text.substring(newline[k], end);
+            span.textContent = text.substring(start, newline[k]);
+            clone.dataset.start = newline[k];
+            span.dataset.end = newline[k];
+            template.push(span);
+            template.push(clone);
+          } else {
+            template.push(span);
+          }
+        }
+        if(newline.length === 0) {
+          template.push(span);
+        }
+      }
+      let divHeight = 0;
+      for (let i = 0; i < line_segment.length; i++) {
+        const p = document.createElement('p');
+        // p.style.paddingTop = line_interval.hwpInch();
+        const start = line_segment[i].start_text;
+        // p.style.display = "inline-block";
+        // p.style.justifyContent = "space-between";
+        if(line_segment[i].start_column) {
+          p.style.paddingTop = line_segment[i].start_column.hwpInch();
+        }
+        p.style.position = "absolute";
+        // console.log('?', line_segment);
+        p.style.top = line_segment[i].start_line.hwpInch();
+        // p.style.transform = `translateY(-${line_segment[i].start_line.hwpInch()})`;
+        p.style.width = line_segment[i].sagment_width.hwpInch();
+        const end = line_segment.length !== i + 1 ? line_segment[i+1].start_text : text.length;
+        const pText = text.substring(start, end);
+        p.dataset.start = line_segment[i].start_text;
+        p.dataset.end = end;
+        // if(i !==0) {
+        //   p.style.marginTop = line_segment[i].line_interval.hwpInch();
+        // }
+        if(indent && i !== 0) {
+          // p.style.textIndent = `-${indent * (-0.003664154103852596)}px`;
+          p.style.marginLeft = `${indent * (-0.003664154103852596)}px`;
+        }
+        if(left) {
+          p.style.paddingLeft = `${left * (-0.003664154103852596)}px`;
+        }
+        if(right) {
+          p.style.paddingRight = `${Right * (-0.003664154103852596)}px`;
+        }
+        template.forEach(span => {
+          if(start <= span.dataset.start && end >= span.dataset.end) {
+            p.appendChild(span);
+          }
+        });
+        div.appendChild(p);
       }
       return div;
     }
@@ -3048,28 +3183,59 @@
     }
     hwpjs.prototype.hwpTable = function (data) {
       const { table, padding, cols, rows, cell_spacing, width, height, start_line } = data;
+      console.log('table', data);
       const t = document.createElement('table');
       t.style.margin = `${table.margin} 0`;
+      t.style.position = "absolute";
+      t.style.top = parseFloat(start_line).hwpInch();
       t.style.fontSize = "initial";
       t.dataset.start_line = start_line;
       t.style.width = width;
       t.style.height = height;
+      t.style.boxSizing = "content-box";
+      if(padding) {
+        t.style.paddingTop = padding.top.hwpInch();
+        t.style.paddingRight = padding.right.hwpInch();
+        t.style.paddingBottom = padding.bottom.hwpInch();
+        t.style.paddingLeft = padding.left.hwpInch();
+      }
       table.forEach(row=>{
         const tr = t.insertRow();
         row.forEach(col=>{
           const { colspan, rowspan, fill, cell, margin, border, align } = col;
           const td = tr.insertCell();
+          // td.style.position = "relative";
           td.style.textAlign = align;
           td.style.width = cell.width;
           td.style.height = cell.height;
           td.rowSpan = rowspan;
           td.colSpan = colspan;
           const div = document.createElement('div');
+          div.className="paragraph_parent";
+          // div.style.display = "flex";
+          // div.style.flexDirection = "column";
+          // div.style.justifyContent = "center";
           col.paragraph.forEach(paragraph=>{
-            // const p = document.createElement('p');
-            // p.textContent = paragraph.text;
-            td.appendChild(this.hwpTextCss(paragraph));
+            const p = this.hwpTextCss(paragraph);
+            // p.style.position = "unset";
+            // p.style.height = "100%";
+            // p.style.display = "table-cell";
+            const pw = p.querySelectorAll('p');
+            pw.forEach(ele => {
+              ele.style.position ="unset";
+            });
+            if(pw) {
+              // pw.style = "height:100%;width:100%";
+            }
+            div.appendChild(p);
+            if(paragraph.image_width && paragraph.image_height) {
+              td.style.height = paragraph.image_height;
+            }
           });
+          td.style.marginTop = margin.top.hwpInch();
+          td.style.marginRight = margin.right.hwpInch();
+          td.style.marginBottom = margin.bottom.hwpInch();
+          td.style.marginLeft = margin.left.hwpInch();
           if(fill && fill.background_color) {
             td.style.backgroundColor = fill.background_color;
           }
@@ -3078,12 +3244,6 @@
           // }else {
           //   // td.style.borderStyle = `solid`;
           // }
-          if(padding) {
-            td.style.paddingTop = padding.top;
-            td.style.paddingRight = padding.right;
-            td.style.paddingBottom = padding.bottom;
-            td.style.paddingLeft = padding.left;
-          }
           if(border && border.line) {
             td.style.borderTopStyle = border.line.top.BorderStyle();
             td.style.borderRightStyle = border.line.right.BorderStyle();
@@ -3091,10 +3251,10 @@
             td.style.borderLeftStyle = border.line.left.BorderStyle();
           }
           if(border && border.width) {
-            td.style.borderTopWidth = border.width.top;
-            td.style.borderRightWidth = border.width.right;
-            td.style.borderBottomWidth = border.width.bottom;
-            td.style.borderLeftWidth = border.width.left;
+            td.style.borderTopWidth = `${border.line.top.BorderStyle() === "double" ? border.width.top * 2 : border.width.top}mm`;
+            td.style.borderRightWidth = `${border.line.right.BorderStyle() === "double" ? border.width.right * 2 : border.width.right}mm`;
+            td.style.borderBottomWidth = `${border.line.bottom.BorderStyle() === "double" ? border.width.bottom * 2 : border.width.bottom}mm`;
+            td.style.borderLeftWidth = `${border.line.left.BorderStyle() === "double" ? border.width.left * 2 : border.width.left}mm`;
           }
           if(border && border.color) {
             td.style.borderTopColor = border.color.top;
@@ -3119,39 +3279,44 @@
       const result = this.ObjectHwp();
       const c = new Cursor(0);
       result.forEach((data, i) => {
-        let preline = i > 1 ? result[i-1].paragraph.start_line : data.paragraph.start_line;        
+        let preline = i > 1 ? result[i-1].paragraph.start_line : data.paragraph.start_line;
+        let content = pages[c.pos].querySelector('.hwp-content');
         if(data.type === "tbl ") {
           const p = this.hwpTable(data);          
           if(p.dataset.start_line === "0" || preline > parseInt(p.dataset.start_line)) {
             pages.push(this.PageElement());
             c.move(1);
             wrapper.appendChild(pages[c.pos]);
+            content = pages[c.pos].querySelector('.hwp-content');
           }
-          pages[c.pos].appendChild(p);
+          content.appendChild(p);
         }else if(data.type === "$rec") {
           const p = this.hwpTable(data);          
           if(p.dataset.start_line === "0" || preline > parseInt(p.dataset.start_line)) {
             pages.push(this.PageElement());
             c.move(1);
             wrapper.appendChild(pages[c.pos]);
+            content = pages[c.pos].querySelector('.hwp-content');
           }
-          pages[c.pos].appendChild(p);
+          content.appendChild(p);
         }else if(data.type === "paragraph" && data.paragraph) {
           const p = this.hwpTextCss(data.paragraph);
           if(p.dataset.start_line === "0" || preline > parseInt(p.dataset.start_line)) {
             pages.push(this.PageElement());
             c.move(1);
             wrapper.appendChild(pages[c.pos]);
+            content = pages[c.pos].querySelector('.hwp-content');
           }
-          pages[c.pos].appendChild(p);
+          content.appendChild(p);
         }else {
           const p = this.hwpTextCss(data.paragraph);
           if(p.dataset.start_line === "0" || preline > parseInt(p.dataset.start_line)) {
             pages.push(this.PageElement());
             c.move(1);
             wrapper.appendChild(pages[c.pos]);
+            content = pages[c.pos].querySelector('.hwp-content');
           }
-          pages[c.pos].appendChild(p);
+          content.appendChild(p);
         }
       });
       if(wrapper.childNodes.length === 0) { //1페이지 일떄 처리
@@ -3168,6 +3333,62 @@
 }));
 let t;
 let hwp;
+/**
+ * HorzRelTo: "column"
+HorzRelTo_relative: 3
+VertRelTo: "para"
+VertRelTo_para: "on"
+VertRelTo_relative: 0
+like_letters: 0
+object_category: 5
+object_height_standard: 2
+object_text_option: 1
+object_text_position_option: 0
+object_width_standard: 4
+overlap: 0
+reservation: 0
+size_protect: 0
+margin: {bottom: 0, left: 0, right: 0, top: 0}
+name: "HWPTAG_CTRL_HEADER"
+object: {width: 8648, height: 45538}
+offset: {y: 0, x: 0}
+attribute: "vert_flip"
+group_offset:
+x: -6411
+y: 0
+[[Prototype]]: Object
+height: 45540
+how_to_number_group: 0
+initial_height: 54000
+initial_width: 15060
+level: 4
+name: "HWPTAG_SHAPE_COMPONENT"
+object_control_id: "$pic"
+object_control_id2: "$pic"
+object_local_version: 1
+render: {matrix_cnt: 1, ratation: 0, sequence: Uint8Array(96)}
+rotaion_angle: 0
+rotaion_center:
+x: 4324
+y: 22770
+[[Prototype]]: Object
+size: 196
+tag_id: 76
+width: 8649
+[[Prototype]]: Object
+182:
+border_color: 0
+border_type: 0
+border_width: 0
+cut: {left: 8640, top: 54000, right: 0, bottom: 0}
+info: {light: 0, contrast: 0, effect: 0, BinItem: 3}
+level: 5
+name: "HWPTAG_SHAPE_COMPONENT_PICTURE"
+padding: {left: 0, right: 0, top: 0, bottom: 0}
+rectangle_position: {x: {…}, y: {…}}
+size: 91
+
+ */
 (async () => {
   // hwp = new hwpjs('test/sample-5017-pics.hwp')
   // hwp = new hwpjs('test/underline-styles.hwp');
@@ -3181,10 +3402,10 @@ let hwp;
   // hwp = await fetch('test/underline-styles.hwp');
   // hwp = await fetch('test/paragraph-split-page.hwp');
   // hwp = await fetch('test/charshape.hwp');
-  hwp = await fetch('test/multicolumns-layout.hwp');
+  // hwp = await fetch('test/multicolumns.hwp');
   // hwp = await fetch('test/table-caption.hwp');
   // hwp = await fetch('./test.hwp');
-  // hwp = await fetch('./noori.hwp');
+  hwp = await fetch('./noori.hwp');
   // hwp = await fetch('./testext.hwp');
   // hwp = await fetch('test/table.hwp');
   const hwpData = await hwp.arrayBuffer();
