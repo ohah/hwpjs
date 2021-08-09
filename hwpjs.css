@@ -1,3 +1,7 @@
+/* @font-face {
+	font-family: '휴먼명조';
+	unicode-range: U+0020-007E;
+} */
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -14,19 +18,19 @@ time, mark, audio, video {
 	margin: 0;
 	padding: 0;
 	border: 0;
-	font-size: 100%;
-	font: inherit;
-	vertical-align: baseline;
+	/* font-size: 100%; */
+	/* font: inherit; */
+	/* vertical-align: baseline; */
 }
 article, aside, details, figcaption, figure, 
 footer, header, hgroup, menu, nav, section {
 	display: block;
 }
 body {
-	line-height: 1;
+	/* line-height: 1; */
 }
 ol, ul {
-	list-style: none;
+	/* list-style: none; */
 }
 blockquote, q {
 	quotes: none;
@@ -67,9 +71,10 @@ html, body {
 .hwp-wrapper span.hwp-para-text{
 	white-space: pre-wrap;
 }
-.hwp-wrapper .paragraph_parent, .hwp-wrapper .img_parent{
+.hwp-wrapper .paragraph_parent{
 	width:100%;
 	height:100%;
+	display:unset;
 	position: relative;
 }
 .hwp-wrapper .paragraph{
@@ -89,19 +94,53 @@ html, body {
 	-webkit-column-break-inside: avoid;
   -webkit-backface-visibility: hidden; 
 }
-.hwp-wrapper table td .paragraph_wrapper {
+.hwp-wrapper .para-normal {
+	margin: 0pt;
+	font-size:10pt;
+	text-align: justify;
+	text-indent: 0pt;
+	min-height: 1.6em;
+}
+
+/*
+테이블 내의 p 태그가 부모 태그의 넓이를 무시하는 경우가 있어서 넣음.
+*/
+.hwp-wrapper table p{width:inherit !important}
+.hwp-wrapper .img_parent{
+	width:100%;
+	height:100%;
+	display: block;
+}
+
+/* .hwp-wrapper table td .paragraph_wrapper {
 	position: unset !important;
 }
 .hwp-wrapper table td .paragraph_parent {
 	display: flex;
-	/* text-align: center; */
+	text-align: center;
 	justify-content: center;
 	flex-flow: column;
 }
+.hwp-wrapper table td p[data-start] {
+	position: unset !important;
+} */
 .hwp-page .hwp-column {
 	display:grid;
 	position: relative;
 }
 .hwp-page .hwp-col {
 	position: relative;
+}
+.hwp-wrapper .inter-word {
+/* display: inline-block; */
+/* text-align-last: justify; */
+}
+.hwp-wrapper .inter-word p:last-child{
+	/* text-align:left; */
+	/* display:flex; */
+}
+.preview{
+	position: fixed;
+	top:0;
+	left:0;
 }
