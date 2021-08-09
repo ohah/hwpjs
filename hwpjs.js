@@ -312,6 +312,7 @@
           style.insertRule(`${selector} p {padding-right:${right * (-0.003664154103852596)}px`, 0);
         }
         style.insertRule(`${selector} {${css.join(";")}}`, 0);
+        style.insertRule(`${selector} p {line-height:${line_spacing/100}}`, 0); //임시. 행간높이 비슷하게 적용되서 이렇게 함 우선.
       });
       Object.values(this.hwp.Style).forEach((Style, i) => {
         const {en, char_shape_id, para_shape_id, local } = Style;
