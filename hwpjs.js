@@ -29,6 +29,9 @@
     Cursor.prototype.move = function(num) {
       return this.pos += num;
     }
+    Cursor.prototype.set = function(num) {
+      return this.pos = num;
+    }
     return Cursor;
   })();
   const hwpjs = (function () {
@@ -50,6 +53,7 @@
         Page:0,
       }
       this.hwp = this.Init();
+      this.createStyle();
     }
     hwpjs.prototype = {};
     hwpjs.prototype.Init = function() {
@@ -113,7 +117,6 @@
           HWPTAG_SHAPE_COMPONENT_UNKNOWN : HWPTAG_BEGIN + 99,
         }
       }
-
       this.hwp.FileHeader = this.cfb.FileIndex.find(FileIndex=>FileIndex.name === "FileHeader");
       this.hwp.DocInfo = this.cfb.FileIndex.find(FileIndex=>FileIndex.name === "DocInfo");
       this.hwp.BodyText = this.cfb.FileIndex.find(FileIndex=>FileIndex.name === "BodyText");
@@ -137,6 +140,9 @@
         VersionLog1: this.cfb.FileIndex.find(FileIndex=>FileIndex.name === "VersionLog1"),
         VersionLog2: this.cfb.FileIndex.find(FileIndex=>FileIndex.name === "VersionLog2"),
       }
+      this.hwp.HwpSummaryInformation = this.cfb.FileIndex.find(FileIndex=>FileIndex.name === "\x05HwpSummaryInformation");
+      this.hwp.HwpSummaryInformation.hex = buf2hex(this.hwp.HwpSummaryInformation.content);
+      this.hwp.HwpSummaryInformation.text = this.textDecoder(this.uint_8(this.hwp.HwpSummaryInformation.content), 'utf-16le');
       this.hwp.FileHeader = {
         ...this.hwp.FileHeader,
         data : this.getFileInfo(),
@@ -174,6 +180,7 @@
       this.hwp.Bullet = {
         ...this.getDocAttr("HWPTAG_BULLET"),
       }
+      this.hwp.Definition = [];
       this.hwp.BodyText = {
         ...this.hwp.BodyText,
         data : this.getSection(),
@@ -183,6 +190,160 @@
       }
       return this.hwp;
     };
+    hwpjs.prototype.createStyle = function () {
+      const head = document.head || document.getElementsByTagName('head')[0];
+      head.appendChild(document.createElement('style'));
+      const style = document.styleSheets[document.styleSheets.length - 1];
+      Object.values(this.hwp.FaceName).forEach((FaceName, i) => {
+        const { font, font_type_info } = FaceName;
+        const id = i;
+        const selector = `.hwp-FaceName-${id}`;
+        const css = [];
+        try {
+          css.push(`font-family:${font.name}, ${font_type_info.serif ? "sans-serif" : "serif"}`);
+          if(font_type_info.bold) {
+            css.push(`font-weight:800`);
+          }
+        }catch (e) {
+        }
+        style.insertRule(`${selector}{${css.join(";")}}`, 0);
+      });
+      Object.values(this.hwp.CharShape).forEach((CharShape, i) => {
+        const id = i;
+        const selector = `.hwp-CharShape-${id}`;
+        const { standard_size, letter_spacing, font_stretch, font_attribute, color, font_id } = CharShape;
+        // span.style.color = shape[i].fontColor;
+        const css = [
+          `font-size:${standard_size.hwpPt()}`,
+          `color:${color.font.hwpRGB()}`,
+          `text-decoration-color:${color.underline.hwpRGB()}`,
+        ];
+        if(font_attribute.underline_color) {
+          css.push(`text-decoration-color:${font_attribute.underline_color.hwpRGB()}`);
+        }
+        if(font_attribute.underline) {
+          css.push(`text-decoration:${font_attribute.underline} ${font_attribute.strikethrough ? 'line-through' : ''}`);
+        }
+        if(font_attribute.underline_shape) {
+          css.push(`text-decoration-style:${font_attribute.underline_shape}`);
+        }
+        if(font_attribute.italic){
+          css.push(`font-style:italic`);
+        }
+        if(font_attribute.bold){
+          css.push(`font-weight:800`);
+        }
+        if(letter_spacing){
+          css.push(`letter-spacing:${letter_spacing[name]/100}em`);
+        }
+        /** 
+         * 유니코드로 구문하여 텍스트 별로 영어 한글 특수문자 등을 구분하여 짤라줘야 한다 귀찮으므로 한글로 일단 통일.
+        */
+        style.insertRule(`${selector}{${css.join(";")}}`, 0);
+        for (const [name, Idx] of Object.entries(font_id)) {
+          const { font, font_type_info } = this.hwp.FaceName[Idx];
+          const selector = `.hwp-CharShape-${id}.lang-${name}`;
+          const css = [];
+          try {
+            css.push(`font-family:"${font.name}", ${font_type_info.serif ? "sans-serif" : "serif"}`);
+          }catch(e) {
+            css.push(`font-family:"${font.name}"`);
+          }
+          if(font_stretch[name]) {
+            css.push(`font-stretch:${font_stretch}%`);
+          }
+          css.push(`letter-spacing:${letter_spacing[name]/100}em`);
+          style.insertRule(`${selector}{${css.join(";")}}`, 0);
+        }
+      });
+      Object.values(this.hwp.BorderFill).forEach((BorderFill, i) => {
+        const id = i;
+        const selector = `.hwp-BorderFill-${id}`;
+        const { border, fill } = BorderFill;
+        const css = [];
+        if(border && border.line.top) css.push(`border-top-style:${border.line.top.BorderStyle()}`);
+        if(border && border.line.right) css.push(`border-right-style:${border.line.right.BorderStyle()}`);
+        if(border && border.line.bottom) css.push(`border-bottom-style:${border.line.bottom.BorderStyle()}`);
+        if(border && border.line.left) css.push(`border-left-style:${border.line.left.BorderStyle()}`);
+        if(border && border.width.top) css.push(`border-top-width:${border.width.top.BorderStyle() === "double" ? border.width.top.borderWidth() * 2 : border.width.top.borderWidth()}mm`);
+        if(border && border.width.right) css.push(`border-right-width:${border.width.right.BorderStyle() === "double" ? border.width.right.borderWidth() * 2 : border.width.right.borderWidth()}mm`);
+        if(border && border.width.bottom) css.push(`border-bottom-width:${border.width.bottom.BorderStyle() === "double" ? border.width.bottom.borderWidth() * 2 : border.width.bottom.borderWidth()}mm`);
+        if(border && border.width.left) css.push(`border-left-width:${border.width.left.BorderStyle() === "double" ? border.width.left.borderWidth() * 2 : border.width.left.borderWidth()}mm`);
+        if(border && border.color.top) css.push(`border-top-color:${border.color.top.hwpRGB()}`);
+        if(border && border.color.right) css.push(`border-right-color:${border.color.right.hwpRGB()}`);
+        if(border && border.color.bottom) css.push(`border-bottom-color:${border.color.bottom.hwpRGB()}`);
+        if(border && border.color.left) css.push(`border-left-color:${border.color.left.hwpRGB()}`);
+        if(fill && fill.background_color) css.push(`background-color:${fill.background_color.hwpRGB()}`);
+        style.insertRule(`${selector}{${css.join(";")}}`, 0);
+      });
+      Object.values(this.hwp.ParaShape).forEach((ParaShape, i) => {
+        const { align, margin, line_spacing_type, vertical_align } = ParaShape;
+        const {line_spacing, paragraph_spacing, indent, left, right } = margin;
+        // textOpt.align = ParaShape.align;
+        // textOpt.line_height = ParaShape.margin.line_spacing;
+        // textOpt.line_height_type = ParaShape.line_spacing_type;
+        // textOpt.vertical_align = ParaShape.vertical_align;
+        // textOpt.paragraph_margin = ParaShape.margin.paragraph_spacing;
+        // textOpt.indent = ParaShape.margin.indent;
+        // textOpt.left = ParaShape.margin.left;
+        // textOpt.right = ParaShape.margin.right;
+        const id = i;
+        const selector = `.hwp-ParaShape-${id}`;
+        const css = [
+          `text-align:${align}`,
+        ]
+        if(line_spacing) {
+          if(line_spacing_type === "%") { 
+            css.push(`line-height:${line_spacing/100}em`); //임시. 주어진대로 설정하면 레이아웃이 깨짐.
+          }
+        }
+        if(paragraph_spacing) {
+          css.push(`margin-top:${paragraph_spacing.top.hwpPt(true) / 2}pt`);
+          css.push(`margin-bottom:${paragraph_spacing.bottom.hwpPt(true) / 2}pt`);
+        }
+        if(indent) {
+          style.insertRule(`${selector} p:first-child {text-indent:-${indent * (-0.003664154103852596)}px}`, 0);
+          style.insertRule(`${selector} p {margin-left:${indent * (-0.003664154103852596)}px}`, 0);
+        }
+        if(left) {          
+          style.insertRule(`${selector} p {padding-left:${left * (-0.003664154103852596)}px`, 0);
+        }
+        if(right) {
+          style.insertRule(`${selector} p {padding-right:${right * (-0.003664154103852596)}px`, 0);
+        }
+        style.insertRule(`${selector} {${css.join(";")}}`, 0);
+      });
+      Object.values(this.hwp.Style).forEach((Style, i) => {
+        const {en, char_shape_id, para_shape_id, local } = Style;
+        const id = i;
+        const clsName = en.name ? en.name.replace(/\s/g, '-') : local.name.replace(/\s/g, '-') ;
+        const selector = `.hwp-Style-${id}-${clsName}`;
+        const css = [];
+        const { standard_size, letter_spacing, font_stretch, font_attribute, color, font_id } = this.hwp.CharShape[char_shape_id];
+        // span.style.color = shape[i].fontColor;        
+        css.push(`font-size:${standard_size.hwpPt()}`);
+        css.push(`color:${color.font.hwpRGB()}`);
+        css.push(`text-decoration-color:${color.underline.hwpRGB()}`);
+        if(font_attribute.underline_color) {
+          css.push(`text-decoration-color:${font_attribute.underline_color.hwpRGB()}`);
+        }
+        if(font_attribute.underline) {
+          css.push(`text-decoration:${font_attribute.underline} ${shape[i].strikethrough ? 'line-through' : ''}`);
+        }
+        if(font_attribute.underline_shape) {
+          css.push(`text-decoration-style:${font_attribute.underline_shape}`);
+        }
+        if(font_attribute.italic){
+          css.push(`font-style:italic`);
+        }
+        if(font_attribute.bold){
+          css.push(`font-weight:800`);
+        }
+        const { align, margin } = this.hwp.ParaShape[para_shape_id];
+        css.push(`text-align:${align}`);
+        style.insertRule(`${selector} {${css.join(";")}}`, 0);
+      });
+    }
     hwpjs.prototype.getDocAttr = function(name) {
       return Object.values(this.hwp.DocInfo.data).filter(hwptag => {
         if(hwptag.name === name) {
@@ -418,7 +579,8 @@
       let ctrl_id = '';
       let cell_count = 0;
       while(c.pos < content.length) {
-        const { tag_id, level, size } = this.readRecord(this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true));
+        const { tag_id, level, size, move } = this.readRecord(this.uint_8(content.slice(c.pos, c.move(4) + 4)));
+        c.move(move);
         const { HWPTAG_PARA_HEADER, HWPTAG_PARA_TEXT, HWPTAG_PARA_CHAR_SHAPE, HWPTAG_PARA_LINE_SEG, HWPTAG_PARA_RANGE_TAG, HWPTAG_CTRL_HEADER, HWPTAG_LIST_HEADER, HWPTAG_PAGE_DEF, HWPTAG_FOOTNOTE_SHAPE, HWPTAG_PAGE_BORDER_FILL, HWPTAG_SHAPE_COMPONENT, HWPTAG_TABLE, HWPTAG_SHAPE_COMPONENT_LINE, HWPTAG_SHAPE_COMPONENT_RECTANGLE, HWPTAG_SHAPE_COMPONENT_ELLIPSE, HWPTAG_SHAPE_COMPONENT_ARC, HWPTAG_SHAPE_COMPONENT_POLYGON, HWPTAG_SHAPE_COMPONENT_CURVE, HWPTAG_SHAPE_COMPONENT_OLE, HWPTAG_SHAPE_COMPONENT_PICTURE, HWPTAG_SHAPE_COMPONENT_CONTAINER, HWPTAG_CTRL_DATA, HWPTAG_EQEDIT, RESERVED, HWPTAG_SHAPE_COMPONENT_TEXTART, HWPTAG_FORM_OBJECT, HWPTAG_MEMO_SHAPE, HWPTAG_MEMO_LIST, HWPTAG_CHART_DATA, HWPTAG_VIDEO_DATA, HWPTAG_SHAPE_COMPONENT_UNKNOWN} = this.hwp.DATA_RECORD.SECTION_TAG_ID;
         let data = {};
         let attribute = {};
@@ -427,18 +589,21 @@
             if(cell_count !== 0) {
               cell_count--;
             }
+            var text = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true);
+            if (text & 0x80000000) {
+              text &= 0x7fffffff;
+            }
             data = {
               name : "HWPTAG_PARA_HEADER",
               tag_id : tag_id,
               level : level,
               size : size,
               hex : buf2hex(content.slice(c.pos, c.pos + size)),
-              text: this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true),
+              text : text,
               control_mask: this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true),
               paragraph_shape_reference_value: this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
               paragraph_style_reference_value: this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getUint8(0, true),
               paragraph_dvide_type: this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getUint8(0, true),
-              // text_shapes: this.text_shape_attr(this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint8(0, true)),
               text_shapes: this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint8(0, true),
               range_tags: this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
               line_align: this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
@@ -471,135 +636,138 @@
               // data.content = data.content.slice(32, data.content.length);
               FIRST_PARA = true;
             }
-            data.ctrl_id = [];
+            data.ctrl_text = [];
             while (pc.pos < data.content.length) {
               const charCode = this.dataview(this.uint_8(data.content.slice(pc.pos, pc.pos + 2))).getUint16(0, true);
               switch (charCode) {
                 // Char //하나의 문자 취급.
                 case 0: //unusable 
-                  data.ctrl_id.push({type : 'char', name : 'unusable', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'unusable', charCode : charCode})
                   pc.move(2);
                   break;
                 case 10: // 한 줄 끝(line break)
-                  data.ctrl_id.push({type : 'char', name : 'line break', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'line break', charCode : charCode})
                   pc.move(2);
                   break;
                 case 13: //문단 끝(para break)
-                  data.ctrl_id.push({type : 'char', name : 'para break', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'para break', charCode : charCode})
                   pc.move(2);
                   break;
                 case 24: // 하이픈
-                  data.ctrl_id.push({type : 'char', name : 'hypen', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'hypen', charCode : charCode})
                   break;
                 case 25:
                 case 26:
                 case 27:
                 case 28:
                 case 29: // 예약
-                  data.ctrl_id.push({type : 'char', name : 'reservation', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'reservation', charCode : charCode})
                   pc.move(2);
                   break;
                 case 30: // 묶음 빈칸
-                  data.ctrl_id.push({type : 'char', name : 'no break space', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'no break space', charCode : charCode})
                   pc.move(2);
                   break;
                 case 31: // 고정폭 빈칸
-                  data.ctrl_id.push({type : 'char', name : 'fixed width space', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'fixed width space', charCode : charCode})
                   pc.move(2);
                   break;
                 // Inline * 8 //별도의 오브젝트를 가리키지 않음
                 case 4: // 필드 끝
-                  data.ctrl_id.push({type : 'Inline', name : 'field end',  char : charCode});
+                  data.ctrl_text.push({type : 'Inline', name : 'field end',  char : charCode});
                   pc.move(14)
                   pc.move(16);
                   break;
                 case 5:
                 case 6:
                 case 7: // 예약
-                  data.ctrl_id.push({type : 'Inline', name: 'reservation',  char : charCode});
+                  data.ctrl_text.push({type : 'Inline', name: 'reservation',  char : charCode});
                   pc.move(14)
                   pc.move(16);
                   break;
                 case 8: //title mark
-                  data.ctrl_id.push({type : 'Inline', name: 'title mark',  char : charCode});
+                  data.ctrl_text.push({type : 'Inline', name: 'title mark',  char : charCode});
                   pc.move(14)
                   pc.move(16);
                   break;
                 case 9: //tab
-                  data.ctrl_id.push({type : 'Inline', name: 'indent',  char : charCode});
+                  data.ctrl_text.push({type : 'Inline', name: 'indent',  char : charCode});
                   pc.move(14)
                   pc.move(16);
                   break;
                 case 19:
                 case 20: //예약 
-                  data.ctrl_id.push({type : 'Inline', name: 'reservation',  char : charCode});
+                  data.ctrl_text.push({type : 'Inline', name: 'reservation',  char : charCode});
                   pc.move(14)
                   pc.move(16);
                   break;
                 // Extened *8 별도의 오브젝트를 가리킴.
                 case 1: //예약
-                  data.ctrl_id.push({type : 'Extened', name: 'reservation', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'reservation', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
                 case 2: //구역정의 단 정의
-                  data.ctrl_id.push({type : 'Extened', name: 'single/zone definition', char : charCode});
-                  console.log('구역정의');
+                  data.ctrl_text.push({type : 'Extened', name: 'single/zone definition', char : charCode});
                   pc.move(14);
                   pc.move(16);
+                  pc.move(4);
                   break;
                 case 3: //필드 시작(누름틀, 하이퍼링크, 블록 책갈피, 표 계산식, 문서 요약, 사용자 정보, 현재 날짜/시간, 문서 날짜/시간, 파일 경로, 상호 참조, 메일 머지, 메모, 교정부호, 개인정보)
-                  data.ctrl_id.push({type : 'Extened', name: 'field start', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'field start', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
                 case 11: //그리기 개체, 표
-                  data.ctrl_id.push({type : 'Extened', name: 'OLE', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'OLE', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
                 case 12: //예약
-                  data.ctrl_id.push({type : 'Extened', name: 'reservation', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'reservation', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
                 case 14: //예약
-                  data.ctrl_id.push({type : 'Extened', name: 'reservation', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'reservation', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
                 case 15: //숨은 설명
-                  data.ctrl_id.push({type : 'Extened', name: 'hidden explanation', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'hidden explanation', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
                 case 16: //머리말/꼬리말 
-                  data.ctrl_id.push({type : 'Extened', name: 'header/footer', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'header/footer', char : charCode});
+                  var head = this.ctrlId(content.slice(c.pos + 2, c.pos + 14)).trim();
+                  // console.log('head', this.ctrlId(content.slice(c.pos + 2, c.pos + 14)).trim());
                   pc.move(14);
+                  // console.log('tail', this.ctrlId(content.slice(c.pos + 18, c.pos + 30)).trim());
                   pc.move(16);
                   break;
                 case 17: //각주/미주
-                  data.ctrl_id.push({type : 'Extened', name: 'foot/end note', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'foot/end note', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
                 case 18: //자동번호(각주, 표 등)
-                  data.ctrl_id.push({type : 'Extened', name: 'auto number', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'auto number', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
                 case 21: //페이지 컨트롤(감추기, 새 번호로 시작 등)
-                  data.ctrl_id.push({type : 'Extened', name: 'page control', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'page control', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
                 case 22: //책갈피 / 찾아보기 표식
-                  data.ctrl_id.push({type : 'Extened', name: 'bookmark browe marker', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'bookmark browe marker', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
                 case 23: //덧말 /글자 겹침 
-                  data.ctrl_id.push({type : 'Extened', name: 'overlapping', char : charCode});
+                  data.ctrl_text.push({type : 'Extened', name: 'overlapping', char : charCode});
                   pc.move(14);
                   pc.move(16);
                   break;
@@ -615,6 +783,7 @@
             }
             data.text = this.textDecoder(data.text, 'utf-16le');
             data.utf8 = this.textDecoder(data.content, 'utf-8');
+            data.ctrl_id = this.textDecoder(data.content, 'utf-8');
             this.hwp.Text += data.text;
             // console.log("HWPTAG_PARA_TEXT", data);
             c.move(size);
@@ -667,13 +836,13 @@
               // var tagS = c.pos - 32;
               // var tagE = tagS + 4;
               // const tag = this.dataview(this.uint_8(content.slice(tagS, tagE))).getUint32(0, true);
-              const tag = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint8(0, true);
+              const tag = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true);
               data.seg[i].tag.data = tag;
               data.seg[i].tag.page_start_line = this.readBit(tag, 0, 0);
-              data.seg[i].tag.page_start_line = [];
-              for (let k = 0; k < 36; k++) {
-                data.seg[i].tag.page_start_line.push(this.readBit(tag, k, k));
-              }
+              // data.seg[i].tag.page_start_line = [];
+              // for (let k = 0; k < 36; k++) {
+              //   data.seg[i].tag.page_start_line.push(this.readBit(tag, k, k));
+              // }
               data.seg[i].tag.column_start_line = this.readBit(tag, 1, 1);
               data.seg[i].tag.empty_text = this.readBit(tag, 16, 16);
               data.seg[i].tag.line_first_sagment = this.readBit(tag, 17, 17);
@@ -682,6 +851,7 @@
               data.seg[i].tag.indent = this.readBit(tag, 20, 20);
               data.seg[i].tag.ctrl_id_header_shape_apply = this.readBit(tag, 21, 21);
               data.seg[i].tag.property = this.readBit(tag, 31, 31);
+              // console.log('data.seg[i].tag.page_start_line', data.seg[i].tag.page_start_line)
             }
             result.push(data);
             break;
@@ -751,6 +921,39 @@
                 object_text_position_option : this.readBit(attribute, 24, 25),
                 object_category : this.readBit(attribute, 26, 28),
               }
+            }else if(data.ctrl_id === "cold") {
+              data.definition = {};
+              attribute = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
+              data.definition.interval = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
+              switch (this.readBit(attribute, 0, 1)) {
+                case 0:
+                  data.definition.type = "normal";
+                  break;
+                case 1:
+                  data.definition.type = "distribution";
+                  break;
+                case 2:
+                  data.definition.type = "parallel";
+                  break;
+              }
+              data.definition.cnt = this.readBit(attribute, 2, 9);
+              switch (this.readBit(attribute, 10, 11)) {
+                case 0:
+                  data.definition.type = "left";
+                  break;
+                case 1:
+                  data.definition.type = "right";
+                  break;
+                case 2:
+                  data.definition.type = "bidirectional";
+                  break;
+              }
+              data.definition.same = this.readBit(attribute, 12, 12);
+              this.hwp.Definition.push(data.definition);
+            }else if(data.ctrl_id === "head") {
+              // 이때는 사이즈가 8로 아무것도 없음
+            }else if(data.ctrl_id === "foot") {
+              // 이때는 사이즈가 8로 아무것도 없음
             }
             /**
               cold ColDef ColDef 단
@@ -825,7 +1028,7 @@
                   bottom : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
                   left : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
                 },
-                border_background_id : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
+                borderfill_id : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
               }
             }
             if(ctrl_id === "tbl ") {
@@ -871,7 +1074,7 @@
                 right : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
                 top : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
                 bottom : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
-                preface : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
+                header : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
                 footer : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
                 binding : this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true),
               }
@@ -880,7 +1083,6 @@
             data.paper_direction = this.readBit(paper_attribute, 0, 0) === 0 ? 'vertical' : 'horizontal';
             data.restraint = this.readBit(paper_attribute, 1, 2) === 0 ? 'pair_edit' : this.readBit(1, 2) === 1 ? 'opposite_edit' : 'flip_up';
             // c.move(size);
-            console.log('HWPTAG_PAGE_DEF', size);
             result.push(data);
             break;
           case HWPTAG_FOOTNOTE_SHAPE:
@@ -915,18 +1117,39 @@
             result.push(data);
             break;
           case HWPTAG_PAGE_BORDER_FILL:
+            attribute = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true);
             data = {
               name : "HWPTAG_PAGE_BORDER_FILL",
               tag_id : tag_id,
               level : level,
               size : size,
               hex : buf2hex(content.slice(c.pos, c.pos + size)),
+              attribute : {},
+              borderfill_letter : {
+                left : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
+                right : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
+                top : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
+                botom : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
+              },
+              borderfill_id : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
             }
-            this.hwp.Page++;
-            c.move(size);
+            data.attribute.position = this.readBit(attribute, 0, 0) === 0 ? "main" : "paper";
+            data.attribute.preface = this.readBit(attribute, 1, 1);
+            data.attribute.footer = this.readBit(attribute, 1, 1);
+            switch (this.readBit(attribute, 3, 4)) {
+              case 0:
+                data.attribute.fill = "paper";
+                break;
+              case 1:
+                data.attribute.fill = "page";
+                break;
+              case 2:
+                data.attribute.fill = "border";
+                break;
+            }
+            // c.move(size);
             result.push(data);
             break;
-            
           case HWPTAG_SHAPE_COMPONENT:
             var start = c.pos;
             data = {
@@ -1379,6 +1602,7 @@
             result.push(data);
             break;
           default:
+            console.log('모르는 아이디들', tag_id, level, size);
             break;
           }
       }
@@ -1448,7 +1672,8 @@
           break;
       }
     }
-    hwpjs.prototype.readRecord = function(value) {
+    hwpjs.prototype.readRecord = function(data) {
+      const value = this.dataview(data.slice(0,4)).getUint32(0, true);
       const tagID = value & 0x3FF;
       const level = (value >> 10) & 0x3FF;
       const size = (value >> 20) & 0xFFF;
@@ -1456,10 +1681,11 @@
         return {
           tag_id : tagID,
           level : level, 
-          size : this.dataview(value).getInt32()
+          size : this.dataview(data.slice(4,8)).getUint32(0, true),
+          move : 4,
         }
       }
-      return {tag_id : tagID, level : level, size : size}
+      return {tag_id : tagID, level : level, size : size, move : 0}
     }
     hwpjs.prototype.readBinRecord = function(value) {
       const Type = this.readBit(value, 0x00, 0x03);
@@ -1500,7 +1726,8 @@
       // console.log('content',this.readRecord(this.dataview(this.uint_8(content.slice(c.pos, c.pos + 4))).getUint32(0, true)));
       let result = [];
       while(c.pos < content.length) {
-        const { tag_id, level, size } = this.readRecord(this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true));
+        const { tag_id, level, size, move } = this.readRecord(this.uint_8(content.slice(c.pos, c.move(4) + 4)));
+        c.move(move);
         const { HWPTAG_DOCUMENT_PROPERTIES, HWPTAG_ID_MAPPINGS, HWPTAG_BIN_DATA, HWPTAG_FACE_NAME, HWPTAG_BORDER_FILL, HWPTAG_CTRL_HEADER, HWPTAG_CHAR_SHAPE, HWPTAG_TAB_DEF, HWPTAG_NUMBERING, HWPTAG_BULLET, HWPTAG_PARA_SHAPE, HWPTAG_STYLE, HWPTAG_MEMO_SHAPE, HWPTAG_TRACK_CHANGE_AUTHOR, HWPTAG_TRACK_CHANGE, HWPTAG_DOC_DATA, HWPTAG_FORBIDDEN_CHAR, HWPTAG_COMPATIBLE_DOCUMENT, HWPTAG_LAYOUT_COMPATIBILITY, HWPTAG_DISTRIBUTE_DOC_DATA, HWPTAG_TRACKCHANGE } = this.hwp.DATA_RECORD.DOC_INFO;
         let data = {};
         let attr = {};
@@ -1755,48 +1982,6 @@
             c.move(size - (end - start));
             result.push(data);
             break;
-          case HWPTAG_CTRL_HEADER:
-            var start = c.pos;
-            data = {
-              name : "HWPTAG_CTRL_HEADER",
-              tag_id : tag_id,
-              level : level,
-              size : size,
-              hex : buf2hex(content.slice(c.pos, c.pos + size)),
-              ctrl_id : this.ctrlId(content.slice(c.pos, c.move(4))),
-            }
-            var end = c.pos;
-            switch (data.ctrl_id) {
-              case "tbl ":
-                break;
-              case "$lin":
-                break;
-              case "$rec":
-                break;
-              case "$ell":
-                break;
-              case "$arc":
-                break;
-              case "$pol":
-                break;
-              case "$cur":
-                break;
-              case "eqed":
-                break;
-              case "$pic":
-                break;
-              case "$ole":
-                break;
-              case "$con":
-                break;
-              case "gso":
-                break;
-              default:
-                break;
-            }
-            c.move(size - (end - start));
-            result.push(data);
-            break;
           case HWPTAG_CHAR_SHAPE:
             var start = c.pos;
             data = {
@@ -1919,7 +2104,6 @@
                 data.tab.push(temp);
               }
             }
-            console.log('무야호', size, data);
             var end = c.pos;
             c.move(size - (end - start));
             result.push(data);
@@ -1977,7 +2161,6 @@
             data.bullet = _;
             var end = c.pos;            
             c.move(size - (end - start));
-            console.log('data', data);
             result.push(data);
             break;
           case HWPTAG_BULLET:
@@ -2230,11 +2413,11 @@
             data.local.name = this.textDecoder(this.uint_8(content.slice(c.pos, c.move(2 * data.local.size))), 'utf-16le');
             data.en.size = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
             data.en.name = this.textDecoder(this.uint_8(content.slice(c.pos, c.move(2 * data.en.size))), 'utf-16le');
-            data.attribute = content.slice(c.pos, c.move(1));
+            data.property = this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getUint8(0, true),
             data.next_style_id = this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getInt8(0, true);
-            data.language_id = this.readBit(this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getInt16(0, true), 0, 2) === 0 ? 'paragraph' : 'text';
-            data.ctrl_id_shape_id = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
-            data.text_shape_id = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
+            data.lang_id = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getInt16(0, true),
+            data.para_shape_id = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
+            data.char_shape_id = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
             data.unknown = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
             // c.move(size);
             result.push(data);
@@ -2273,20 +2456,77 @@
             result.push(data);
             break;
           case HWPTAG_DOC_DATA:
+            var start = c.pos;
             data = {
               name : "HWPTAG_DOC_DATA",
               tag_id : tag_id,
               level : level,
               size : size,
               hex : buf2hex(content.slice(c.pos, c.pos + size)),
-              // parameter : {
-              //   set_id : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
-              //   item_count : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getInt16(0, true),
-              //   item : [],
-              // },
+              parameter : {
+                set_id : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
+                item_count : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getInt16(0, true),
+                item : [],
+              },
             }
-            // data.p
-            c.move(size);
+            for (let i = 0; i < data.parameter.item_count; i++) {
+              const item = {
+                id : this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true),
+              }
+              attribute = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
+              switch (attribute) {
+                // PIT_NULL
+                case 0:
+                  item.data = this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getUint8(0, true);
+                  break;
+                // PIT_BSTR
+                case 1:
+                  item.length = this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getUint8(0, true);
+                  item.word = this.textDecoder(this.uint_8(content.slice(c.pos, c.move(item.length))));
+                  break;
+                // PIT_I1
+                case 2:
+                  item.data = this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getInt8(0, true);
+                  break;
+                case 3:
+                  item.data = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getInt16(0, true);
+                  break;
+                case 4:
+                  item.data = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getInt32(0, true);
+                  break;
+                case 5:
+                  item.data = this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getInt8(0, true);
+                  break;
+                case 6:
+                  item.data = this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getUint8(0, true);
+                  break;
+                case 7:
+                  item.data = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
+                  break;
+                case 8:
+                  item.data = this.dataview(this.uint_8(content.slice(c.pos, c.move(4)))).getUint32(0, true);
+                  break;
+                case 9:
+                  item.data = this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getUint8(0, true);
+                  break;
+                // PIT_SET
+                case 0x8000:
+                  item.set = this.dataview(this.uint_8(content.slice(c.pos, c.move(1)))).getUint8(0, true);
+                  break;
+                // PIT_ARRAY
+                case 0x8001:
+                  item.length = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getInt16(0, true);
+                  item.set = this.dataview(this.uint_8(content.slice(c.pos, c.move(item.length * 4)))).getUint8(0, true);
+                  break;
+                // PIT_BINDATA
+                case 0x8001:
+                  item.binary_data_id = this.dataview(this.uint_8(content.slice(c.pos, c.move(2)))).getUint16(0, true);
+                  break;
+              }
+              data.parameter.item.push(item);
+            }
+            var end = c.pos;
+            c.move(size - (end - start));
             result.push(data);
             break;
           case HWPTAG_FORBIDDEN_CHAR:
@@ -2363,6 +2603,7 @@
             result.push(data);
             break;
           default:
+            console.log('모르는 아이디들', tag_id, level, size)
             break;
         }
       }
@@ -2393,10 +2634,7 @@
       return result;
     }
     hwpjs.prototype.getPrvImage = function () {
-      const result = {
-        PrvText : this.getImage(this.hwp.PrvImage.content),
-      }
-      return result;
+      return this.getImage(this.hwp.PrvImage.content);
     }
     hwpjs.prototype.getFileInfo = function() {
       // console.log('getfileInto');
@@ -2523,6 +2761,7 @@
       const { HWPTAG_PARA_HEADER, HWPTAG_PARA_TEXT, HWPTAG_PARA_CHAR_SHAPE, HWPTAG_PARA_LINE_SEG, HWPTAG_PARA_RANGE_TAG, HWPTAG_CTRL_HEADER, HWPTAG_LIST_HEADER, HWPTAG_PAGE_DEF, HWPTAG_FOOTNOTE_SHAPE, HWPTAG_PAGE_BORDER_FILL, HWPTAG_SHAPE_COMPONENT, HWPTAG_TABLE, HWPTAG_SHAPE_COMPONENT_LINE, HWPTAG_SHAPE_COMPONENT_RECTANGLE, HWPTAG_SHAPE_COMPONENT_ELLIPSE, HWPTAG_SHAPE_COMPONENT_ARC, HWPTAG_SHAPE_COMPONENT_POLYGON, HWPTAG_SHAPE_COMPONENT_CURVE, HWPTAG_SHAPE_COMPONENT_OLE, HWPTAG_SHAPE_COMPONENT_PICTURE, HWPTAG_SHAPE_COMPONENT_CONTAINER, HWPTAG_CTRL_DATA, HWPTAG_EQEDIT, RESERVED, HWPTAG_SHAPE_COMPONENT_TEXTART, HWPTAG_FORM_OBJECT, HWPTAG_MEMO_SHAPE, HWPTAG_MEMO_LIST, HWPTAG_CHART_DATA, HWPTAG_VIDEO_DATA, HWPTAG_SHAPE_COMPONENT_UNKNOWN} = this.hwp.DATA_RECORD.SECTION_TAG_ID;
       this.hwp.BodyText.data.map(section => {
         let data = section.data;
+        let tag_id = 0;
         const cnt = {
           cell : 0,
           paragraph : 0,
@@ -2540,6 +2779,8 @@
             image_height : '',
             image_width : '',
             height:0,
+            classList : [],
+            start_line : undefined,
           }
         };
         const textOpt = {
@@ -2547,12 +2788,18 @@
           line_height : 0,
           indent : 0,
         }
+        const extend = [];
+        const header_class = {
+          ParaShape : '',
+          Bullet : '',
+          Style : '',
+        }
         Object.values(data).forEach((_, i) => {
+          tag_id = _.tag_id;
           switch (_.tag_id) {
             case HWPTAG_LIST_HEADER:
               if($.type === "tbl ") {
                 const cell = _.cell_attribute;
-                const borderfill = this.hwp.BorderFill[_.cell_attribute.border_background_id - 1];
                 cnt.row = cell.address.row;
                 cnt.col = cell.address.col;
                 $.table[cnt.row][cnt.col] = {
@@ -2564,28 +2811,9 @@
                   margin : cell.margin,
                   rowspan : cell.span.row,
                   colspan : cell.span.col,
-                  border : {
-                    color : {
-                      bottom : borderfill.border.color.bottom.hwpRGB(),
-                      left : borderfill.border.color.left.hwpRGB(),
-                      right : borderfill.border.color.right.hwpRGB(),
-                      top : borderfill.border.color.top.hwpRGB(),
-                    },
-                    line : borderfill.border.line,
-                    width : {
-                      bottom : borderfill.border.width.bottom.borderWidth(),
-                      left : borderfill.border.width.left.borderWidth(),
-                      right : borderfill.border.width.right.borderWidth(),
-                      top : borderfill.border.width.top.borderWidth(),
-                    },
-                  },
                 }
-                if(borderfill.fill) {
-                  $.table[cell.address.row][cell.address.col].fill = {
-                    background_color : borderfill.fill.background_color.hwpRGB(),
-                    style : borderfill.fill.style,
-                  }
-                }
+                if(!$.table[cnt.row][cnt.col].classList) $.table[cnt.row][cnt.col].classList = [];
+                $.table[cnt.row][cnt.col].classList.push(`hwp-BorderFill-${_.cell_attribute.borderfill_id - 1}`);
                 if(_.paragraph_count) {
                   $.table[cnt.row][cnt.col].paragraph = new Array(_.paragraph_count);
                   cnt.paragraph = _.paragraph_count;
@@ -2598,22 +2826,15 @@
               }
               break;
             case HWPTAG_PARA_HEADER:
-              /*
-              margin:
-                border_spacing: {left: 0, right: 0, top: 0, bottom: 0}
-                borderfill_id: 0
-                indent: 0
-                left: 8000
-                line_spacing: 160
-                number_bullet_id: 0
-                paragraph_spacing: {top: 0, bottom: 0}
-                right: 0
-                tabdef_id: 0
-              */
               const ParaShape = this.hwp.ParaShape[_.paragraph_shape_reference_value];
+              header_class.parashape = `hwp-ParaShape-${_.paragraph_shape_reference_value}`;
               // const Numbering = this.hwp.Numbering[ParaShape.margin.number_bullet_id];
               const Bullet = this.hwp.Bullet[ParaShape.margin.number_bullet_id - 1];
               const Style = this.hwp.Style[_.paragraph_style_reference_value];
+              const id = _.paragraph_style_reference_value;
+              const clsName = Style.en.name ? Style.en.name.replace(/\s/g, '-') : Style.local.name.replace(/\s/g, '-') ;
+              const selector = `hwp-Style-${id}-${clsName}`;
+              header_class.Style = `${selector}`;
               textOpt.align = ParaShape.align;
               textOpt.line_height = ParaShape.margin.line_spacing;
               textOpt.line_height_type = ParaShape.line_spacing_type;
@@ -2629,7 +2850,6 @@
                   paragraph : {},
                 };
                 if(Bullet) {
-                  console.log('이써야하는데?');
                   $.table[cnt.row][cnt.col].paragraph.bullet = {
                     char : Bullet.char,
                     align_type : Bullet.align_type,
@@ -2654,7 +2874,7 @@
                     like_letters : Bullet.like_letters,
                   }
                 }
-              }else if(cnt.paragraph === 0) {
+              }else if(cnt.paragraph === 0 && $.type === "paragraph") {
                 result.push($);
                 $ = {
                   type : 'paragraph',
@@ -2670,11 +2890,46 @@
                     like_letters : Bullet.like_letters,
                   }
                 }
+              }else if(cnt.paragraph === 0 && $.type === "header/footer") {
+                result.push($);
+                $ = {
+                  type : 'paragraph',
+                  paragraph : {},
+                };
+                if(Bullet) {
+                  $.paragraph.bullet = {
+                    char : Bullet.char,
+                    align_type : Bullet.align_type,
+                    distance_type : Bullet.distance_type,
+                    space : Bullet.space,
+                    width : Bullet.width,
+                    like_letters : Bullet.like_letters,
+                  }
+                }
+              }else {
+                // result.push($);
+                // $ = {
+                //   type : 'paragraph',
+                //   paragraph : {},
+                // };
+              }
+              if(extend.length > 0) {
+                var headname = '';
+                if(data[i-2].tag_id === HWPTAG_CTRL_HEADER) {
+                  headname = data[i-2].ctrl_id;
+                }
+                if(data[i-1].tag_id === HWPTAG_CTRL_HEADER) {
+                  headname = data[i-1].ctrl_id;
+                }
+                $.type = extend[0];
+                $.ctrl_id = headname;
+                $.extend = true;
+                extend.shift();
               }
               cnt.parashape++;
               break;
             case HWPTAG_PARA_TEXT:
-              if($.type === "tbl " && cnt.paragraph !== 0) { //아씨 발 족같네
+              if($.type === "tbl " && cnt.paragraph !== 0) { 
                 $.table[cnt.row][cnt.col].paragraph[cnt.tpi] = {
                   text : _.text,
                   shape : {},
@@ -2682,7 +2937,8 @@
                   image_height : '',
                   image_width : '',
                   height:0,
-                  ...textOpt,
+                  start_line : 0,
+                  ...header_class,
                 };
               }else if($.type === "$rec" && cnt.paragraph !== 0) {
                 $.textbox.paragraph[cnt.tpi] = {
@@ -2692,9 +2948,9 @@
                   image_height : '',
                   image_width : '',
                   height:0,
-                  ...textOpt,
+                  start_line : 0,
+                  ...header_class,
                 };
-                // console.log('되야하잖아요', _.text, cnt.tpi, $.textbox.paragraph);
               } else if($.type === "paragraph") {
                 $.paragraph = {
                   ...$.paragraph,
@@ -2704,7 +2960,8 @@
                   image_height : '',
                   image_width : '',
                   height:0,
-                  ...textOpt,
+                  start_line : 0,
+                  ...header_class,
                 };
               } else {
                 $.paragraph = {
@@ -2715,36 +2972,25 @@
                   image_height : '',
                   image_width : '',
                   height:0,
-                  ...textOpt,
+                  start_line : 0,
+                  ...header_class,
                 };
               }
-              textOpt.align = 'left';
-              textOpt.line_height = 0;
-              textOpt.indent = 0;
-              textOpt.left = 0;
-              textOpt.right = 0;
-              textOpt.vertical_align = "text";
+              if(_.ctrl_text) {
+                $.ctrl_text = _.ctrl_text;
+                _.ctrl_text.forEach(ctrl => {
+                  if(ctrl.type === "Extened" && ctrl.name === "header/footer") {
+                    extend.push(ctrl.name);
+                  }
+                })
+              }
+              header_class.ParaShape = '';
+              header_class.Bullet = '';
+              header_class.Style = '';
               break;
             case HWPTAG_PARA_CHAR_SHAPE:
               if(_.shape) {
-                const shape = _.shape.map(shape => {
-                  const attr = this.hwp.CharShape[shape.shape_id];
-                  const FaceName = this.hwp.FaceName[attr.font_id.ko];
-                  return shape = {
-                    ...shape,
-                    fontName : FaceName.font.name,
-                    fontStretch : attr.font_stretch.ko,
-                    fontSize : attr.standard_size.hwpPt(),
-                    fontColor : attr.color.font.hwpRGB(),
-                    letter_spacing : attr.letter_spacing.ko,
-                    bold : attr.font_attribute.bold,
-                    italic : attr.font_attribute.italic,
-                    underline : attr.font_attribute.underline,
-                    underline_color : attr.color.underline.hwpRGB(),
-                    strikethrough : attr.font_attribute.strikethrough,
-                    underline_shape : attr.font_attribute.underline_shape,
-                  }
-                });
+                const shape = _.shape;
                 if($.type === "tbl " && cnt.paragraph !== 0) {
                   try {
                     $.table[cnt.row][cnt.col].paragraph[cnt.tpi].shape = shape;
@@ -2762,9 +3008,7 @@
                   $.table[cnt.row][cnt.col].paragraph[cnt.tpi].margin = (_.seg[0].line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
                   $.table[cnt.row][cnt.col].paragraph[cnt.tpi].start_line = _.seg[0].start_line;
                   $.table[cnt.row][cnt.col].paragraph[cnt.tpi].line_segment = _.seg;
-                  $.table.margin = (_.seg[0].line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
-                  // $.table.start_line = _.seg[0].start_line;
-                  // console.log('table_line', $.table.start_line);
+                  $.table.line_interval = _.seg[0].line_interval;
                 }catch(e){
 
                 }
@@ -2772,13 +3016,13 @@
                 if(cnt.paragraph !== 0) cnt.tpi++;
               }else if($.type === "paragraph" && $.paragraph) {
                 $.paragraph.height = _.seg[0].height_line.hwpInch();
-                $.paragraph.margin = (_.seg[0].line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
+                $.paragraph.line_interval = _.seg[0].line_interval;
                 $.paragraph.start_line = _.seg[0].start_line;
                 $.paragraph.line_segment = _.seg;
               }else if($.type === "paragraph") {
                 $.paragraph = {};
                 $.paragraph.height = _.seg[0].height_line.hwpInch();
-                $.paragraph.margin = (_.seg[0].line_interval / 2).hwpInch(); //라인간의 거리인데 위아래로 주기 위해서 나누기 2해줌
+                $.paragraph.line_interval = _.seg[0].line_interval;
                 $.paragraph.start_line = _.seg[0].start_line;
                 $.paragraph.line_segment = _.seg;
               }else if($.type === "$rec" && cnt.paragraph !== 0) {
@@ -2790,14 +3034,36 @@
               if($.type === "tbl " && _.ctrl_id === "gso ") {
                 $.table[cnt.row][cnt.col].paragraph[cnt.tpi].object = _.object;
                 $.table[cnt.row][cnt.col].paragraph[cnt.tpi].offset = _.offset;
+                if(_.attribute) {
+                  $.table[cnt.row][cnt.col].paragraph[cnt.tpi].property = {
+                    ..._.attribute
+                  }
+                }
               }else if($.type === "paragraph" && $.paragraph) {
                 $.paragraph.object = _.object;
                 $.paragraph.offset = _.offset;
+                if(_.attribute) {
+                  $.paragraph.property = {
+                    ..._.attribute
+                  }
+                }
               }else if($.type === "paragraph") {
                 $.paragraph = {};
                 $.paragraph.object = _.object;
                 $.paragraph.offset = _.offset;
+                if(_.attribute) {
+                  $.paragraph.property = {
+                    ..._.attribute
+                  }
+                }
               }else if($.type === "$rec" && cnt.paragraph !== 0) {
+              }
+              if(_.ctrl_id == "cold") { //단 분리
+                $.paragraph.cold = _.definition;
+              }else if(_.ctrl_id == "head" || _.ctrl_id == "foot") { //머리 꼬리말.
+                // $.type = _.ctrl_id;
+              }else if(_.ctrl_id == "secd") {
+                $.type = "paragraph";
               }
               break;
             case HWPTAG_TABLE:
@@ -2871,7 +3137,7 @@
             case HWPTAG_SHAPE_COMPONENT_PICTURE:
               const filename = _.info.BinItem; //5017 버전에서 bindataid가 상이한 경우가 있음.
               const info = this.hwp.DocInfo.data.find(data=>data.name === "HWPTAG_BIN_DATA" && data.attribute.binary_data_id === filename);
-              const path = `Root Entry/BinData/BIN${`${filename.toString(16).toUpperCase()}`.padStart(4, '0')}.${info.attribute.extension}`;              
+              const path = `Root Entry/BinData/BIN${`${filename.toString(16).toUpperCase()}`.padStart(4, '0')}.${info.attribute.extension}`;
               const Idx = Object.values(this.cfb.FullPaths).findIndex((fullpath) => {
                 return fullpath === path;
               });
@@ -2912,44 +3178,75 @@
       page.style.paddingBottom = pageDef.margin.bottom.hwpInch();;
       page.style.paddingTop = pageDef.margin.top.hwpInch();
       page.style.paddingRight = pageDef.margin.right.hwpInch();
-      page.style.paddingLeft = pageDef.margin.right.hwpInch();
+      page.style.paddingLeft = pageDef.margin.paper_left.hwpInch();
+      const header = document.createElement('header');
+      header.style.paddingRight = pageDef.margin.right.hwpInch();
+      header.style.paddingLeft = pageDef.margin.paper_left.hwpInch();
+      header.style.width = pageDef.paper_width.hwpInch();
+      header.style.height = pageDef.margin.header.hwpInch();
+      header.style.display = "flex";
+      header.style.alignItems = "center";
+      header.style.position = "absolute";
+      header.style.top = 0;
+      header.style.left = 0;
+      const footer = document.createElement('footer');
+      footer.style.paddingRight = pageDef.margin.right.hwpInch();
+      footer.style.paddingLeft = pageDef.margin.paper_left.hwpInch();
+      footer.style.width = pageDef.paper_width.hwpInch();
+      footer.style.height = pageDef.margin.footer.hwpInch();
+      footer.style.position = "absolute";
+      footer.style.bottom = 0;
+      footer.style.display = "flex";
+      footer.style.alignItems = "center";
+      footer.style.left = 0;
       const div = document.createElement('div');
       div.style.position = "relative";
       div.style.height = "100%";
       div.style.width = "100%";
       div.className = "hwp-content";
+      page.appendChild(header);
       page.appendChild(div);
-      return page;        
+      page.appendChild(footer);
+      return page;
     }
     /**
      * text css
+     * 현재 div로 돌려주고 있는데 페이지 분기가 일어나는 경우가 있어서 이러면 안된다. 배열로 돌려주는 형태로 구성해야함.
      */
-    hwpjs.prototype.hwpTextCss = function(paragraph, opt) {
-      // const {text, shape, image_height, image_src, image_width, height, margin, start_line, align, bullet, line_height} = paragraph;
-      const {left, right, line_segment, text, shape, image_height, image_src, image_width, margin, height, start_line, align, bullet, line_height, line_height_type, indent, image, object, offset, group_offset, paragraph_margin, vertical_align} = paragraph;
-      console.log(text, vertical_align);
-      const div = document.createElement('div');
-      div.className="paragraph_wrapper";
+    hwpjs.prototype.hwpTextCss = function(paragraph, opt = true) {
+      const result = [];
+      const {left, right, property, line_segment, text, shape, parashape, Style, image_height, image_src, image_width, line_interval, height, start_line, align, bullet, line_height, line_height_type, indent, image, object, offset, group_offset, paragraph_margin, vertical_align, cold} = paragraph;      // console.log(text, vertical_align)      
+      let div = document.createElement('div');
+      const container = document.createElement('div');
+      container.style.position = "relative";      
+      if(cold && cold.cnt > 1) {
+        container.style.columnCount = cold.cnt;
+      }
+      div.appendChild(container);
+      if(Style) {
+        container.classList.add(`${Style}`);
+      }
+      if(parashape) container.classList.add(parashape);
+      else container.classList.add("para-normal");
+      
+      if(line_segment && line_segment.length > 1) {
+        container.classList.add('inter-word');
+      }
       // div.style.margin = `${margin} 0`;
-      div.style.width = "100%";
-      div.style.height = "auto";
       // div.style.Height = height;
-      if(line_segment) {
-        // div.style.top = parseFloat(line_segment[0].start_line).hwpInch();
+      if(line_segment && opt !== false) {
+        div.style.top = parseFloat(line_segment[0].start_line).hwpInch();
         div.style.position = "absolute";
       }
-      div.style.textAlign = align;
-      if(line_height) {
-        if(line_height_type === "%") { 
-          div.style.lineHeight = `${line_height/100}em`; //임시. 주어진대로 설정하면 레이아웃이 깨짐.
-        }
-      }
-      if(margin) {
-        // div.style.marginTop = `${margin.top.hwpInch()}`;
-      }
+      // div.style.textAlign = align;
+      // if(line_height) {
+      //   if(line_height_type === "%") { 
+      //     div.style.lineHeight = `${line_height/100}em`; //임시. 주어진대로 설정하면 레이아웃이 깨짐.
+      //   }
+      // }
       // if(paragraph_margin) {
-      //   div.style.marginTop = `${paragraph_margin.top.hwpInch()}`;
-      //   div.style.marginBottom = `${paragraph_margin.bottom.hwpInch()}`;
+      //   div.style.marginTop = `${paragraph_margin.top.hwpPt(true) / 2}pt`;
+      //   div.style.marginBottom = `${paragraph_margin.bottom.hwpPt(true) / 2}pt`;
       // }
       div.dataset.start_line = start_line;
       // div.style.top = parseFloat(start_line).hwpInch();
@@ -2980,24 +3277,26 @@
         // img.style.position = "absolute";
         // img.style.bottom = 0;
         // img.style.left = 0;
-        
         img.src = image_src;
         img.style.height = image_height;
         img.style.width = image_width;
-        const img_parent = document.createElement('div');
+        const img_parent = document.createElement('span');
         img_parent.className = "img_parent";
+        if(property.like_letters) {
+          if(!property.overlap) img_parent.style.position = "absolute";
+        }
         img_parent.appendChild(img);
         if(image.rectangle_position) {
-          // img.style.left = image.rectangle_position.x.left.hwpInch();
-          // img.style.top = image.rectangle_position.x.left.hwpInch();
+          img.style.left = image.rectangle_position.x.left.hwpInch();
+          img.style.top = image.rectangle_position.x.left.hwpInch();
         }
         if(group_offset) {
-          // img_parent.style.left = group_offset.x;
-          // img_parent.style.top = group_offset.y;
+          img_parent.style.left = group_offset.x;
+          img_parent.style.top = group_offset.y;
         }
         if(offset) {
-          // img.style.left = offset.x;
-          // img.style.top = group_offset.y;
+          img.style.left = offset.x;
+          img.style.top = group_offset.y;
         }
         // if(image) {
         //   img.style.top = image.top.hwpInch();
@@ -3007,43 +3306,44 @@
         //   img.style.left = image.left.hwpInch();
         //   img.style.top = image.y.hwpInch();
         // }
-        div.appendChild(img_parent);
-        return div;
+        container.appendChild(img_parent);
+        return [div];
       }
       if(!text) {
         // div.innerHTML = "&nbsp;";
-        div.style.height = height;
-        return div;
+        // div.style.height = height;
+        const p = document.createElement('p');
+        p.className = "para-normal";
+        if(parashape) p.classList.add(parashape);
+        container.appendChild(p);
+        return [div];
       }
       if(!shape) {
         const span = document.createElement('span');
         span.textContent = "text";
-        div.appendChild(span);
-        return div;
+        container.appendChild(span);
+        return [div];
       }
       var length = shape.length;
       // console.log(shape, text);
       const template = [];
       const newline = [];
-      for (let i = 1; i < line_segment.length; i++) {
-        newline.push(line_segment[i].start_text);
+      if(line_segment !== undefined) {
+        for (let i = 1; i < line_segment.length; i++) {
+          newline.push(line_segment[i].start_text);
+        }
       }
       for (let i = 0; i < length; i++) {
         const span = document.createElement('span');
         const start = shape[i].shape_start;
         const end = length !== i + 1 ? shape[i+1].shape_start : text.length;
         const spanText = text.substring(start, end);
+        span.classList.add(`hwp-CharShape-${shape[i].shape_id}`);
+        span.classList.add(`lang-ko`); //텍스트를 읽어 유니코드 별로구분하여 또 서식을 나눠줘야하나 귀찮아서 일단 한국어 서식으로 통일.
         span.style.color = shape[i].fontColor;
-        span.style.fontSize = shape[i].fontSize;
-        span.style.textDecoration = `${shape[i].underline} ${shape[i].strikethrough ? 'line-through' : ''}`;
-        span.style.textDecorationStyle = `${shape[i].underline_shape}`;
-        span.style.textDecorationColor = shape[i].underline_color;
         if(shape[i].bold) {
-          span.style.fontWeight = 600;
+          span.style.fontWeight = 800;
         }
-        span.style.fontFamily = `${shape[i].fontName}, "Arial", sans-serif`;
-        // span.style.fontStretch = `${shape[i].fontStretch}%`;
-        span.style.letterSpacing = `${shape[i].letter_spacing/100}em`; //대충 유사치 출력 중..
         span.dataset.start = start;
         span.dataset.end = end;
         span.textContent = spanText;
@@ -3064,20 +3364,29 @@
           template.push(span);
         }
       }
-      let divHeight = 0;
+      if(line_segment === undefined) {
+        container.textContent = text;
+        return [div];
+      }
       for (let i = 0; i < line_segment.length; i++) {
         const p = document.createElement('p');
+        let preline = i > 1 ? line_segment[i-1].start_line : line_segment[i].start_line;
+        if(i !== 0 && line_segment[i].start_line === 0 || i !== 0 && preline > line_segment[i].start_line) {
+          result.push(div);
+          div = div.cloneNode(false);
+        }
         // p.style.paddingTop = line_interval.hwpInch();
         const start = line_segment[i].start_text;
         // p.style.display = "inline-block";
         // p.style.justifyContent = "space-between";
-        if(line_segment[i].start_column) {
-          p.style.paddingTop = line_segment[i].start_column.hwpInch();
-        }
-        p.style.position = "absolute";
+        // if(line_segment[i].line_interval) {
+        //   p.style.paddingTop = line_segment[i].line_interval.hwpInch();
+        // }
+        // p.style.position = "absolute";
         // console.log('?', line_segment);
-        p.style.top = line_segment[i].start_line.hwpInch();
+        // p.style.top = line_segment[i].start_line.hwpInch();
         // p.style.transform = `translateY(-${line_segment[i].start_line.hwpInch()})`;
+        // p.style.maxWidth = line_segment[i].sagment_width.hwpInch();
         p.style.width = line_segment[i].sagment_width.hwpInch();
         const end = line_segment.length !== i + 1 ? line_segment[i+1].start_text : text.length;
         const pText = text.substring(start, end);
@@ -3086,24 +3395,27 @@
         // if(i !==0) {
         //   p.style.marginTop = line_segment[i].line_interval.hwpInch();
         // }
-        if(indent && i !== 0) {
-          // p.style.textIndent = `-${indent * (-0.003664154103852596)}px`;
-          p.style.marginLeft = `${indent * (-0.003664154103852596)}px`;
-        }
-        if(left) {
-          p.style.paddingLeft = `${left * (-0.003664154103852596)}px`;
-        }
-        if(right) {
-          p.style.paddingRight = `${Right * (-0.003664154103852596)}px`;
-        }
+        // if(indent) {
+        //   if(i === 0) {
+        //     p.style.textIndent = `-${indent * (-0.003664154103852596)}px`;
+        //   }
+        //   p.style.marginLeft = `${indent * (-0.003664154103852596)}px`;
+        // }
+        // if(left) {
+        //   p.style.paddingLeft = `${left * (-0.003664154103852596)}px`;
+        // }
+        // if(right) {
+        //   p.style.paddingRight = `${right * (-0.003664154103852596)}px`;
+        // }
         template.forEach(span => {
           if(start <= span.dataset.start && end >= span.dataset.end) {
             p.appendChild(span);
           }
         });
-        div.appendChild(p);
+        container.appendChild(p);
+        result.push(div);
       }
-      return div;
+      return result;
     }
     /**
      * 값 설명
@@ -3182,17 +3494,25 @@
       }
     }
     hwpjs.prototype.hwpTable = function (data) {
-      const { table, padding, cols, rows, cell_spacing, width, height, start_line } = data;
-      console.log('table', data);
+      const result = [];
+      const { table, padding, cols, rows, cell_spacing, width, height, start_line, paragraph_margin } = data;
+      // console.log('table', data);
+      const container = document.createElement('div');
+      container.style.position = "absolute";
+      if(start_line) container.style.top = start_line.hwpInch();
       const t = document.createElement('table');
       t.style.margin = `${table.margin} 0`;
-      t.style.position = "absolute";
+      // t.style.position = "absolute";
       t.style.top = parseFloat(start_line).hwpInch();
       t.style.fontSize = "initial";
       t.dataset.start_line = start_line;
       t.style.width = width;
       t.style.height = height;
       t.style.boxSizing = "content-box";
+      if(paragraph_margin) {
+        div.style.marginTop = `${paragraph_margin.top.hwpInch()}`;
+        div.style.marginBottom = `${paragraph_margin.bottom.hwpInch()}`;
+      }
       if(padding) {
         t.style.paddingTop = padding.top.hwpInch();
         t.style.paddingRight = padding.right.hwpInch();
@@ -3202,7 +3522,7 @@
       table.forEach(row=>{
         const tr = t.insertRow();
         row.forEach(col=>{
-          const { colspan, rowspan, fill, cell, margin, border, align } = col;
+          const { colspan, rowspan, cell, margin, align, classList } = col;
           const td = tr.insertCell();
           // td.style.position = "relative";
           td.style.textAlign = align;
@@ -3210,24 +3530,12 @@
           td.style.height = cell.height;
           td.rowSpan = rowspan;
           td.colSpan = colspan;
-          const div = document.createElement('div');
-          div.className="paragraph_parent";
-          // div.style.display = "flex";
-          // div.style.flexDirection = "column";
-          // div.style.justifyContent = "center";
           col.paragraph.forEach(paragraph=>{
-            const p = this.hwpTextCss(paragraph);
-            // p.style.position = "unset";
-            // p.style.height = "100%";
-            // p.style.display = "table-cell";
-            const pw = p.querySelectorAll('p');
-            pw.forEach(ele => {
-              ele.style.position ="unset";
+            const p = this.hwpTextCss(paragraph, false);
+            classList.forEach(cls => {
+              td.classList.add(cls);
             });
-            if(pw) {
-              // pw.style = "height:100%;width:100%";
-            }
-            div.appendChild(p);
+            td.appendChild(p[0]);
             if(paragraph.image_width && paragraph.image_height) {
               td.style.height = paragraph.image_height;
             }
@@ -3236,92 +3544,88 @@
           td.style.marginRight = margin.right.hwpInch();
           td.style.marginBottom = margin.bottom.hwpInch();
           td.style.marginLeft = margin.left.hwpInch();
-          if(fill && fill.background_color) {
-            td.style.backgroundColor = fill.background_color;
-          }
-          // if(fill && fill.style) {
-          //   td.style.borderStyle = fill.style;
-          // }else {
-          //   // td.style.borderStyle = `solid`;
-          // }
-          if(border && border.line) {
-            td.style.borderTopStyle = border.line.top.BorderStyle();
-            td.style.borderRightStyle = border.line.right.BorderStyle();
-            td.style.borderBottomStyle = border.line.bottom.BorderStyle();
-            td.style.borderLeftStyle = border.line.left.BorderStyle();
-          }
-          if(border && border.width) {
-            td.style.borderTopWidth = `${border.line.top.BorderStyle() === "double" ? border.width.top * 2 : border.width.top}mm`;
-            td.style.borderRightWidth = `${border.line.right.BorderStyle() === "double" ? border.width.right * 2 : border.width.right}mm`;
-            td.style.borderBottomWidth = `${border.line.bottom.BorderStyle() === "double" ? border.width.bottom * 2 : border.width.bottom}mm`;
-            td.style.borderLeftWidth = `${border.line.left.BorderStyle() === "double" ? border.width.left * 2 : border.width.left}mm`;
-          }
-          if(border && border.color) {
-            td.style.borderTopColor = border.color.top;
-            td.style.borderRightColor = border.color.right;
-            td.style.borderBottomColor = border.color.bottom;
-            td.style.borderLeftColor = border.color.left;
-          }else {
-            // td.style.border = "1px solid #000";
-          }
-          td.appendChild(div);
+          // td.appendChild(div);
         })
       });
-      return t;  
+      container.appendChild(t);
+      return [container];
     }
     /**
-     * html 변환
+     * 페이지부터 생성하고 관리하는것이 편하다. 페이지부터 생성하자.
      */
-    hwpjs.prototype.getHtml = function() {
+    hwpjs.prototype.getPage = function () {
       const wrapper = document.createElement('atricle');
       wrapper.className = "hwp-wrapper";
       const pages = [this.PageElement()];
       const result = this.ObjectHwp();
       const c = new Cursor(0);
+      const dc = new Cursor(0); //문단 커서
       result.forEach((data, i) => {
         let preline = i > 1 ? result[i-1].paragraph.start_line : data.paragraph.start_line;
-        let content = pages[c.pos].querySelector('.hwp-content');
-        if(data.type === "tbl ") {
-          const p = this.hwpTable(data);          
-          if(p.dataset.start_line === "0" || preline > parseInt(p.dataset.start_line)) {
+        if(data.paragraph.start_line === 0 || preline > parseInt(data.paragraph.start_line)) {
+          if(data.extend) {
+          }else {
+            pages[c.pos].dataset.page = c.pos + 1;
             pages.push(this.PageElement());
-            c.move(1);
             wrapper.appendChild(pages[c.pos]);
-            content = pages[c.pos].querySelector('.hwp-content');
-          }
-          content.appendChild(p);
-        }else if(data.type === "$rec") {
-          const p = this.hwpTable(data);          
-          if(p.dataset.start_line === "0" || preline > parseInt(p.dataset.start_line)) {
-            pages.push(this.PageElement());
             c.move(1);
-            wrapper.appendChild(pages[c.pos]);
-            content = pages[c.pos].querySelector('.hwp-content');
           }
-          content.appendChild(p);
-        }else if(data.type === "paragraph" && data.paragraph) {
-          const p = this.hwpTextCss(data.paragraph);
-          if(p.dataset.start_line === "0" || preline > parseInt(p.dataset.start_line)) {
-            pages.push(this.PageElement());
-            c.move(1);
-            wrapper.appendChild(pages[c.pos]);
-            content = pages[c.pos].querySelector('.hwp-content');
-          }
-          content.appendChild(p);
-        }else {
-          const p = this.hwpTextCss(data.paragraph);
-          if(p.dataset.start_line === "0" || preline > parseInt(p.dataset.start_line)) {
-            pages.push(this.PageElement());
-            c.move(1);
-            wrapper.appendChild(pages[c.pos]);
-            content = pages[c.pos].querySelector('.hwp-content');
-          }
-          content.appendChild(p);
         }
       });
       if(wrapper.childNodes.length === 0) { //1페이지 일떄 처리
+        pages[c.pos].dataset.page = c.pos + 1;
         wrapper.appendChild(pages[c.pos]);
       }
+      return wrapper;
+    }
+    /**
+     * html 변환
+     * 하나의 긴 텍스트가 컬럼이나 페이지를 넘어갈때는 line_segment가 배열이기 떄문에 hwpTextCss에서 무언가 처리를 해줘야 한다..시발이다.
+     */
+    hwpjs.prototype.getHtml = function() {
+      const wrapper = this.getPage();
+      console.log(wrapper);
+      const c = new Cursor(1);
+      const dc = new Cursor(1); //문단 커서
+      const result = this.ObjectHwp();
+      result.forEach((data, i) => {
+        let preline = i > 1 ? result[i-1].paragraph.start_line : data.paragraph.start_line;
+        let content = wrapper.querySelector(`.hwp-page[data-page="${c.pos}"] .hwp-content`);
+        let p;
+        if(data.ctrl_id === "head") {
+          content = wrapper.querySelector(`.hwp-page[data-page="${c.pos}"] header`);
+        }else if(data.ctrl_id === "foot") {
+          content = wrapper.querySelector(`.hwp-page[data-page="${c.pos}"] footer`);
+        }else {
+          if(preline > parseInt(data.paragraph.start_line)) {
+            const isNext = wrapper.querySelector(`.hwp-page[data-page="${c.pos + 1}"] .hwp-content`);
+            if(isNext) {
+              c.move(1);
+              content = wrapper.querySelector(`.hwp-page[data-page="${c.pos}"] .hwp-content`);
+              // dc.move(1);
+            }else {
+              // console.log('none');
+              // c.move(1);
+              // dc.set(1);
+            }
+            // 
+          }
+        }
+        if(data.type === "tbl ") {
+          p = this.hwpTable(data);          
+        }else if(data.type === "$rec") {
+          p = this.hwpTable(data);
+        }else if(data.type === "paragraph") {
+          p = this.hwpTextCss(data.paragraph);
+        }else {
+          p = this.hwpTextCss(data.paragraph);
+        }
+        if(content) {
+          p.forEach((ele, idx) => {
+            content.appendChild(ele);
+          });
+        }
+      });
       return wrapper.outerHTML;
     }
     hwpjs.prototype.setHtml = function() {
@@ -3331,94 +3635,7 @@
   })();
   return hwpjs;
 }));
-let t;
-let hwp;
-/**
- * HorzRelTo: "column"
-HorzRelTo_relative: 3
-VertRelTo: "para"
-VertRelTo_para: "on"
-VertRelTo_relative: 0
-like_letters: 0
-object_category: 5
-object_height_standard: 2
-object_text_option: 1
-object_text_position_option: 0
-object_width_standard: 4
-overlap: 0
-reservation: 0
-size_protect: 0
-margin: {bottom: 0, left: 0, right: 0, top: 0}
-name: "HWPTAG_CTRL_HEADER"
-object: {width: 8648, height: 45538}
-offset: {y: 0, x: 0}
-attribute: "vert_flip"
-group_offset:
-x: -6411
-y: 0
-[[Prototype]]: Object
-height: 45540
-how_to_number_group: 0
-initial_height: 54000
-initial_width: 15060
-level: 4
-name: "HWPTAG_SHAPE_COMPONENT"
-object_control_id: "$pic"
-object_control_id2: "$pic"
-object_local_version: 1
-render: {matrix_cnt: 1, ratation: 0, sequence: Uint8Array(96)}
-rotaion_angle: 0
-rotaion_center:
-x: 4324
-y: 22770
-[[Prototype]]: Object
-size: 196
-tag_id: 76
-width: 8649
-[[Prototype]]: Object
-182:
-border_color: 0
-border_type: 0
-border_width: 0
-cut: {left: 8640, top: 54000, right: 0, bottom: 0}
-info: {light: 0, contrast: 0, effect: 0, BinItem: 3}
-level: 5
-name: "HWPTAG_SHAPE_COMPONENT_PICTURE"
-padding: {left: 0, right: 0, top: 0, bottom: 0}
-rectangle_position: {x: {…}, y: {…}}
-size: 91
 
- */
-(async () => {
-  // hwp = new hwpjs('test/sample-5017-pics.hwp')
-  // hwp = new hwpjs('test/underline-styles.hwp');
-  // hwp = new hwpjs('test.hwp');
-  // hwp = new hwpjs('list.hwp');
-  // hwp = new hwpjs('test/viewtext.hwp');
-  // hwp = await fetch('list.hwp');
-  // hwp = await fetch('test/lists-bullet.hwp');
-  // hwp = await fetch('test/sample-5017-pics.hwp');
-  // hwp = await fetch('test/textbox.hwp');
-  // hwp = await fetch('test/underline-styles.hwp');
-  // hwp = await fetch('test/paragraph-split-page.hwp');
-  // hwp = await fetch('test/charshape.hwp');
-  // hwp = await fetch('test/multicolumns.hwp');
-  // hwp = await fetch('test/table-caption.hwp');
-  // hwp = await fetch('./test.hwp');
-  hwp = await fetch('./noori.hwp');
-  // hwp = await fetch('./testext.hwp');
-  // hwp = await fetch('test/table.hwp');
-  const hwpData = await hwp.arrayBuffer();
-  t = new hwpjs(hwpData);
-  // console.log(t.cfb);
-  // console.log(Object.values(t.hwp.CharShape).length, Object.values(t.hwp.ParaShape).length)
-  console.log(t.hwp);
-  // console.log('header',t.getBodyAttr("HWPTAG_PARA_HEADER"));
-  console.log(t.hwp.DocInfo.data);
-  console.log(t.hwp.BodyText.data[0].data);
-  const data = t.getHtml();
-  document.querySelector('.hwpjs').innerHTML = data;
-})();
 
 // var worker = new Worker( 'hwpjs.js' );
 // worker.postMessage( '워커 실행' );  // 워커에 메시지를 보낸다.
