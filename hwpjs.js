@@ -303,7 +303,7 @@
         }
         if(indent) {
           style.insertRule(`${selector} p:first-child {text-indent:-${indent * (-0.003664154103852596)}px}`, 0);
-          style.insertRule(`${selector} p {margin-left:${indent * (-0.003664154103852596)}px}`, 0);
+          style.insertRule(`${selector} p {padding-left:${indent * (-0.003664154103852596)}px}`, 0);
         }
         if(left) {          
           style.insertRule(`${selector} p {padding-left:${left * (-0.003664154103852596)}px`, 0);
@@ -625,6 +625,7 @@
               hex : buf2hex(content.slice(c.pos, c.pos + size)),
               content : this.uint_8(content.slice(c.pos, c.pos + size)),
               text : [],
+              ctrl_id : [],
               // text : this.textDecoder(data.content, 'utf-16le'),
               // utf8 : this.textDecoder(data.content, 'utf-8'),
             }
@@ -643,137 +644,130 @@
               switch (charCode) {
                 // Char //하나의 문자 취급.
                 case 0: //unusable 
-                  data.ctrl_text.push({type : 'char', name : 'unusable', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'unusable', charCode : charCode});
                   pc.move(2);
                   break;
                 case 10: // 한 줄 끝(line break)
-                  data.ctrl_text.push({type : 'char', name : 'line break', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'line break', charCode : charCode});
                   pc.move(2);
                   break;
                 case 13: //문단 끝(para break)
-                  data.ctrl_text.push({type : 'char', name : 'para break', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'para break', charCode : charCode});
                   pc.move(2);
                   break;
                 case 24: // 하이픈
-                  data.ctrl_text.push({type : 'char', name : 'hypen', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'hypen', charCode : charCode});
                   break;
                 case 25:
                 case 26:
                 case 27:
                 case 28:
                 case 29: // 예약
-                  data.ctrl_text.push({type : 'char', name : 'reservation', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'reservation', charCode : charCode});
                   pc.move(2);
                   break;
                 case 30: // 묶음 빈칸
-                  data.ctrl_text.push({type : 'char', name : 'no break space', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'no break space', charCode : charCode});
                   pc.move(2);
                   break;
                 case 31: // 고정폭 빈칸
-                  data.ctrl_text.push({type : 'char', name : 'fixed width space', charCode : charCode})
+                  data.ctrl_text.push({type : 'char', name : 'fixed width space', charCode : charCode});
                   pc.move(2);
                   break;
                 // Inline * 8 //별도의 오브젝트를 가리키지 않음
                 case 4: // 필드 끝
-                  data.ctrl_text.push({type : 'Inline', name : 'field end',  char : charCode});
-                  pc.move(14)
+                  data.ctrl_text.push({type : 'Inline', name : 'field end',  charCode : charCode});
                   pc.move(16);
                   break;
                 case 5:
                 case 6:
                 case 7: // 예약
-                  data.ctrl_text.push({type : 'Inline', name: 'reservation',  char : charCode});
-                  pc.move(14)
+                  data.ctrl_text.push({type : 'Inline', name: 'reservation',  charCode : charCode});
                   pc.move(16);
                   break;
                 case 8: //title mark
-                  data.ctrl_text.push({type : 'Inline', name: 'title mark',  char : charCode});
-                  pc.move(14)
+                  data.ctrl_text.push({type : 'Inline', name: 'title mark',  charCode : charCode});
                   pc.move(16);
                   break;
                 case 9: //tab
-                  data.ctrl_text.push({type : 'Inline', name: 'indent',  char : charCode});
-                  pc.move(14)
+                  data.ctrl_text.push({type : 'Inline', name: 'indent',  charCode : charCode});
                   pc.move(16);
                   break;
                 case 19:
                 case 20: //예약 
-                  data.ctrl_text.push({type : 'Inline', name: 'reservation',  char : charCode});
-                  pc.move(14)
+                  data.ctrl_text.push({type : 'Inline', name: 'reservation',  charCode : charCode});
                   pc.move(16);
                   break;
                 // Extened *8 별도의 오브젝트를 가리킴.
                 case 1: //예약
-                  data.ctrl_text.push({type : 'Extened', name: 'reservation', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'reservation', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 case 2: //구역정의 단 정의
-                  data.ctrl_text.push({type : 'Extened', name: 'single/zone definition', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'single/zone definition', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
-                  pc.move(4);
+                  // pc.move(4);
                   break;
                 case 3: //필드 시작(누름틀, 하이퍼링크, 블록 책갈피, 표 계산식, 문서 요약, 사용자 정보, 현재 날짜/시간, 문서 날짜/시간, 파일 경로, 상호 참조, 메일 머지, 메모, 교정부호, 개인정보)
-                  data.ctrl_text.push({type : 'Extened', name: 'field start', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'field start', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 case 11: //그리기 개체, 표
-                  data.ctrl_text.push({type : 'Extened', name: 'OLE', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'OLE', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 case 12: //예약
-                  data.ctrl_text.push({type : 'Extened', name: 'reservation', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'reservation', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 case 14: //예약
-                  data.ctrl_text.push({type : 'Extened', name: 'reservation', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'reservation', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 case 15: //숨은 설명
-                  data.ctrl_text.push({type : 'Extened', name: 'hidden explanation', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'hidden explanation', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 case 16: //머리말/꼬리말 
-                  data.ctrl_text.push({type : 'Extened', name: 'header/footer', char : charCode});
-                  var head = this.ctrlId(content.slice(c.pos + 2, c.pos + 14)).trim();
-                  // console.log('head', this.ctrlId(content.slice(c.pos + 2, c.pos + 14)).trim());
-                  pc.move(14);
-                  // console.log('tail', this.ctrlId(content.slice(c.pos + 18, c.pos + 30)).trim());
+                  data.ctrl_text.push({type : 'Extened', name: 'header/footer', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 case 17: //각주/미주
-                  data.ctrl_text.push({type : 'Extened', name: 'foot/end note', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'foot/end note', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 case 18: //자동번호(각주, 표 등)
-                  data.ctrl_text.push({type : 'Extened', name: 'auto number', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'auto number', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
+                  // pc.move(4);
                   pc.move(16);
                   break;
                 case 21: //페이지 컨트롤(감추기, 새 번호로 시작 등)
-                  data.ctrl_text.push({type : 'Extened', name: 'page control', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'page control', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 case 22: //책갈피 / 찾아보기 표식
-                  data.ctrl_text.push({type : 'Extened', name: 'bookmark browe marker', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'bookmark browe marker', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 case 23: //덧말 /글자 겹침 
-                  data.ctrl_text.push({type : 'Extened', name: 'overlapping', char : charCode});
-                  pc.move(14);
+                  data.ctrl_text.push({type : 'Extened', name: 'overlapping', charCode : charCode});
+                  data.ctrl_id.push(this.ctrlId(data.content.slice(pc.pos + 2, pc.pos + 6)));
                   pc.move(16);
                   break;
                 default: {
-                  const Char = this.uint_8(data.content.slice(pc.pos, pc.pos + charCode))
+                  const Char = this.uint_8(data.content.slice(pc.pos, pc.pos + charCode));
                   // var t = this.textDecoder(Char, 'utf-16le');
                   // console.log('asdf', t);
                   data.text.push(Char[0]);
@@ -784,7 +778,7 @@
             }
             data.text = this.textDecoder(data.text, 'utf-16le');
             data.utf8 = this.textDecoder(data.content, 'utf-8');
-            data.ctrl_id = this.textDecoder(data.content, 'utf-8');
+            // data.ctrl_id = this.textDecoder(data.content, 'utf-8');
             this.hwp.Text += data.text;
             // console.log("HWPTAG_PARA_TEXT", data);
             c.move(size);
@@ -915,12 +909,83 @@
                 HorzRelTo_relative : this.readBit(attribute, 10, 12),
                 VertRelTo_para : this.readBit(attribute, 13, 13) === 0 ? "off" : "on",
                 overlap : this.readBit(attribute, 14, 14),
-                object_width_standard : this.readBit(attribute, 15, 17),
-                object_height_standard : this.readBit(attribute, 18, 19),
-                size_protect : this.readBit(attribute, 20, 20),
-                object_text_option : this.readBit(attribute, 21, 23),
-                object_text_position_option : this.readBit(attribute, 24, 25),
-                object_category : this.readBit(attribute, 26, 28),
+                size_protect : this.readBit(attribute, 20, 20) === 0 ? "off" : "on",
+              }
+              switch (this.readBit(attribute, 15, 17)) {
+                case 0:
+                  data.object_width_standard = "paper";
+                  break;
+                case 1:
+                  data.object_width_standard = "page";
+                  break;
+                case 2:
+                  data.object_width_standard = "column";
+                  break;
+                case 3:
+                  data.object_width_standard = "para";
+                  break;
+                case 4:
+                  data.object_width_standard = "absolute";
+                  break;
+              }
+              switch (this.readBit(attribute, 18, 19)) {
+                case 0:
+                  data.object_height_standard = "paper";
+                  break;
+                case 1:
+                  data.object_height_standard = "page";
+                  break;
+                case 2:
+                  data.object_height_standard = "absolute";
+                  break;
+              }
+              switch (this.readBit(attribute, 21, 23)) {
+                case 0:
+                  data.object_text_option = "Square";
+                  break;
+                case 1:
+                  data.object_text_option = "Tight";
+                  break;
+                case 2:
+                  data.object_text_option = "Through";
+                  break;
+                case 3:
+                  data.object_text_option = "TopAndBottom";
+                  break;
+                case 4:
+                  data.object_text_option = "BehindText";
+                  break;
+                case 5:
+                  data.object_text_option = "InFrontOfText";
+                  break;
+              }
+              switch (this.readBit(attribute, 24, 25)) {
+                case 0:
+                  data.object_text_position_option = "BothSides";
+                  break;
+                case 1:
+                  data.object_text_position_option = "LeftOnly";
+                  break;
+                case 2:
+                  data.object_text_position_option = "RightOnly";
+                  break;
+                case 3:
+                  data.object_text_position_option = "LargestOnly";
+                  break;
+              }
+              switch (this.readBit(attribute, 26, 28)) {
+                case 0:
+                  data.object_category = "none";
+                  break;
+                case 1:
+                  data.object_category = "figure";
+                  break;
+                case 2:
+                  data.object_category = "table";
+                  break;
+                case 3:
+                  data.object_category = "equation";
+                  break;
               }
             }else if(data.ctrl_id === "cold") {
               data.definition = {};
@@ -2800,30 +2865,38 @@
           switch (_.tag_id) {
             case HWPTAG_LIST_HEADER:
               if($.type === "tbl ") {
+                console.log('캡션체크', _.caption);
                 const cell = _.cell_attribute;
-                cnt.row = cell.address.row;
-                cnt.col = cell.address.col;
-                $.table[cnt.row][cnt.col] = {
-                  ...$.table[cnt.row][cnt.col],
-                  cell : {
-                    width : cell.cell.width.hwpInch(),
-                    height : cell.cell.height.hwpInch(),
-                  },
-                  margin : cell.margin,
-                  rowspan : cell.span.row,
-                  colspan : cell.span.col,
+                if(_.caption) {
+                  console.log('캡숀', _.caption);
+                  $.caption = _.caption;
+                  // console.log('table', $.table);
                 }
-                if(!$.table[cnt.row][cnt.col].classList) $.table[cnt.row][cnt.col].classList = [];
-                $.table[cnt.row][cnt.col].classList.push(`hwp-BorderFill-${_.cell_attribute.borderfill_id - 1}`);
-                if(_.paragraph_count) {
-                  $.table[cnt.row][cnt.col].paragraph = new Array(_.paragraph_count);
-                  cnt.paragraph = _.paragraph_count;
+                if($.rows && $.cols) {
+                  cnt.row = cell.address.row;
+                  cnt.col = cell.address.col;
+                  $.table[cnt.row][cnt.col] = {
+                    ...$.table[cnt.row][cnt.col],
+                    cell : {
+                      width : cell.cell.width.hwpInch(),
+                      height : cell.cell.height.hwpInch(),
+                    },
+                    margin : cell.margin,
+                    rowspan : cell.span.row,
+                    colspan : cell.span.col,
+                  }
+                  if(!$.table[cnt.row][cnt.col].classList) $.table[cnt.row][cnt.col].classList = [];
+                  $.table[cnt.row][cnt.col].classList.push(`hwp-BorderFill-${_.cell_attribute.borderfill_id - 1}`);
+                  if(_.paragraph_count) {
+                    $.table[cnt.row][cnt.col].paragraph = new Array(_.paragraph_count);
+                    cnt.paragraph = _.paragraph_count;
+                  }
                 }
               }else if($.type === "$rec") {
                 cnt.paragraph = _.paragraph_count;
                 $.textbox = {};
                 $.textbox.paragraph = new Array(_.paragraph_count).fill(true);
-                console.log('생성',$.textbox);
+                // console.log('생성',$.textbox);
               }
               break;
             case HWPTAG_PARA_HEADER:
@@ -2833,7 +2906,7 @@
               const Bullet = this.hwp.Bullet[ParaShape.margin.number_bullet_id - 1];
               const Style = this.hwp.Style[_.paragraph_style_reference_value];
               const id = _.paragraph_style_reference_value;
-              const clsName = Style.en.name ? Style.en.name.replace(/\s/g, '-') : Style.local.name.replace(/\s/g, '-') ;
+              const clsName = Style.en.name ? Style.en.name.replace(/\s/g, '-') : Style.local.name.replace(/\s/g, '-');
               const selector = `hwp-Style-${id}-${clsName}`;
               header_class.Style = `${selector}`;
               textOpt.align = ParaShape.align;
@@ -2844,7 +2917,7 @@
               textOpt.indent = ParaShape.margin.indent;
               textOpt.left = ParaShape.margin.left;
               textOpt.right = ParaShape.margin.right;
-              if($.type === "tbl " && cnt.paragraph === 0) {
+              if($.type === "tbl " && cnt.paragraph === 0 && $.rows && $.cols) {
                 result.push($);
                 $ = {
                   type : 'paragraph',
@@ -2922,15 +2995,16 @@
                 if(data[i-1].tag_id === HWPTAG_CTRL_HEADER) {
                   headname = data[i-1].ctrl_id;
                 }
-                $.type = extend[0];
                 $.ctrl_id = headname;
                 $.extend = true;
                 extend.shift();
+              }else {
+                $.extend = false;
               }
               cnt.parashape++;
               break;
             case HWPTAG_PARA_TEXT:
-              if($.type === "tbl " && cnt.paragraph !== 0) { 
+              if($.type === "tbl " && cnt.paragraph !== 0 && $.rows && $.cols) { 
                 $.table[cnt.row][cnt.col].paragraph[cnt.tpi] = {
                   text : _.text,
                   shape : {},
@@ -2980,10 +3054,13 @@
               if(_.ctrl_text) {
                 $.ctrl_text = _.ctrl_text;
                 _.ctrl_text.forEach(ctrl => {
-                  if(ctrl.type === "Extened" && ctrl.name === "header/footer") {
+                  if(ctrl.type === "Extened") {
                     extend.push(ctrl.name);
                   }
-                })
+                  // if(ctrl.type === "Extened" && ctrl.name === "foot/end note") {
+                  //   extend.push(ctrl.name);
+                  // }
+                });
               }
               header_class.ParaShape = '';
               header_class.Bullet = '';
@@ -3003,6 +3080,9 @@
               }
               break;
             case HWPTAG_PARA_LINE_SEG:
+              if($.type === "tbl ") {
+                // $.start_line = _.seg[0].start_line;
+              }
               if($.type === "tbl " && cnt.paragraph !== 0) {
                 try { 
                   $.table[cnt.row][cnt.col].paragraph[cnt.tpi].height = _.seg[0].height_line.hwpInch();
@@ -3032,10 +3112,16 @@
               }
               break;
             case HWPTAG_CTRL_HEADER:
-              if($.type === "tbl " && _.ctrl_id === "gso ") {
-                $.table[cnt.row][cnt.col].paragraph[cnt.tpi].object = _.object;
+              if($.type === "tbl ") {
+                if(_.object && _.object.width) $.width = _.object.width.hwpInch();
+                if(_.object && _.object.height) $.height = _.object.height.hwpInch();
+              }
+              if($.type === "tbl " && $.rows && $.cols) {
+                if(!$.table[cnt.row][cnt.col].paragraph[cnt.tpi]) $.table[cnt.row][cnt.col].paragraph[cnt.tpi] = {};
+                if(_.object) $.table[cnt.row][cnt.col].paragraph[cnt.tpi].object = _.object;
                 $.table[cnt.row][cnt.col].paragraph[cnt.tpi].offset = _.offset;
                 if(_.attribute) {
+                  console.log(_.attribute);
                   $.table[cnt.row][cnt.col].paragraph[cnt.tpi].property = {
                     ..._.attribute
                   }
@@ -3065,6 +3151,8 @@
                 // $.type = _.ctrl_id;
               }else if(_.ctrl_id == "secd") {
                 $.type = "paragraph";
+              }else if(_.ctrl_id == "tbl ") {
+                $.type = "tbl ";
               }
               break;
             case HWPTAG_TABLE:
@@ -3074,8 +3162,8 @@
                 $.start_line = line_seg.seg[0].start_line;
               }
               if(ctrl_header.tag_id === HWPTAG_CTRL_HEADER) {
-                $.width = ctrl_header.object.width.hwpInch();
-                $.height = ctrl_header.object.height.hwpInch();
+                if(ctrl_header.object && ctrl_header.object.width) $.width = ctrl_header.object.width.hwpInch();
+                if(ctrl_header.object && ctrl_header.object.height) $.height = ctrl_header.object.height.hwpInch();
               }
               cnt.paragraph = 0;
               cnt.tpi = 0;
@@ -3124,15 +3212,14 @@
                 };
               }else if(_.object_control_id === "$rec") {
                 $.type = "$rec";
-                $.paragraph = {
-                  ...$.paragraph,
+                $.shape = {
                   height : _.height.hwpInch(),
                   width : _.width.hwpInch(),
                   group_offset : {
                     x : _.group_offset.x.hwpInch(),
                     y : _.group_offset.y.hwpInch(),
                   },
-                };
+                }
               }
               break;
             case HWPTAG_SHAPE_COMPONENT_PICTURE:
@@ -3200,6 +3287,14 @@
       footer.style.display = "flex";
       footer.style.alignItems = "center";
       footer.style.left = 0;
+      const footnote = document.createElement('footnote');
+      footnote.style.paddingRight = pageDef.margin.right.hwpInch();
+      footnote.style.paddingLeft = pageDef.margin.paper_left.hwpInch();
+      footnote.style.width = pageDef.paper_width.hwpInch();
+      // footnote.style.height = pageDef.margin.footer.hwpInch();
+      footnote.style.position = "absolute";
+      // footnote.style.bottom = 0;
+      footnote.style.left = 0;
       const div = document.createElement('div');
       div.style.position = "relative";
       div.style.height = "100%";
@@ -3208,6 +3303,7 @@
       page.appendChild(header);
       page.appendChild(div);
       page.appendChild(footer);
+      page.appendChild(footnote);
       return page;
     }
     /**
@@ -3221,7 +3317,7 @@
       const container = document.createElement('div');
       container.style.position = "relative";      
       if(cold && cold.cnt > 1) {
-        container.style.columnCount = cold.cnt;
+        container.style.columnCount = cold.cnt; //다단 문제가 있음
       }
       div.appendChild(container);
       if(Style) {
@@ -3231,10 +3327,19 @@
       else container.classList.add("para-normal");
       
       if(line_segment && line_segment.length > 1) {
-        container.classList.add('inter-word');
+        const styles = getComputedStyle(container);
+        if(parashape) {
+          // const style = /([a-z]+)-([a-zA-Z]+)-([0-9])-([a-zA-z]+)/.exec(Style)[3];
+          const paracls = parashape.replace('hwp-ParaShape-', '');
+          const { align } = this.hwp.ParaShape[paracls];
+          if(align === "justify") {
+            container.classList.add('inter-word');
+          }
+          // console.log('line_seg', align, container.classList);
+        }
+        // console.log('line_seg',container, container.classList, styles, align);
+        
       }
-      // div.style.margin = `${margin} 0`;
-      // div.style.Height = height;
       if(line_segment && opt !== false) {
         div.style.top = parseFloat(line_segment[0].start_line).hwpInch();
         div.style.position = "absolute";
@@ -3254,7 +3359,8 @@
       // div.style.position = "absolute";
       if(bullet !== undefined) {
         const span = document.createElement('span');
-        span.style.position = "relative";
+        span.style.position = "absolute";
+        span.style.top = "0";
         span.style.display = "inline-flex";
         if(bullet.width) {
           span.style.width = `${bullet.width / 100 * 2}pt`; //넓이는 되었으나 여백이 문제
@@ -3299,14 +3405,6 @@
           img.style.left = offset.x;
           img.style.top = group_offset.y;
         }
-        // if(image) {
-        //   img.style.top = image.top.hwpInch();
-        //   img.style.left = image.left.hwpInch();
-        //   img.style.right = image.right.hwpInch();
-        //   img.style.bottom = image.bottom.hwpInch();
-        //   img.style.left = image.left.hwpInch();
-        //   img.style.top = image.y.hwpInch();
-        // }
         container.appendChild(img_parent);
         return [div];
       }
@@ -3348,6 +3446,7 @@
         span.dataset.start = start;
         span.dataset.end = end;
         span.textContent = spanText;
+        console.log('span', spanText);
         for (let k = 0; k < newline.length; k++) {
           if(start < newline[k] && newline[k] < end) {
             const clone = span.cloneNode(false);
@@ -3364,6 +3463,7 @@
         if(newline.length === 0) {
           template.push(span);
         }
+        console.log(template);
       }
       if(line_segment === undefined) {
         container.textContent = text;
@@ -3371,43 +3471,24 @@
       }
       for (let i = 0; i < line_segment.length; i++) {
         const p = document.createElement('p');
-        let preline = i > 1 ? line_segment[i-1].start_line : line_segment[i].start_line;
+        const preline = i > 0 ? line_segment[i-1].start_line : line_segment[i].start_line;
         if(i !== 0 && line_segment[i].start_line === 0 || i !== 0 && preline > line_segment[i].start_line) {
+          console.log('으음...?', text, line_segment[i]);
           result.push(div);
           div = div.cloneNode(false);
         }
-        // p.style.paddingTop = line_interval.hwpInch();
+        if(bullet !== undefined) {
+          if(bullet.width) {
+            p.style.paddingLeft = `${bullet.width / 100 * 2}pt`;
+          }else {
+            p.style.paddingLeft = `15pt`;
+          }
+        }
         const start = line_segment[i].start_text;
-        // p.style.display = "inline-block";
-        // p.style.justifyContent = "space-between";
-        // if(line_segment[i].line_interval) {
-        //   p.style.paddingTop = line_segment[i].line_interval.hwpInch();
-        // }
-        // p.style.position = "absolute";
-        // console.log('?', line_segment);
-        // p.style.top = line_segment[i].start_line.hwpInch();
-        // p.style.transform = `translateY(-${line_segment[i].start_line.hwpInch()})`;
-        // p.style.maxWidth = line_segment[i].sagment_width.hwpInch();
         p.style.width = line_segment[i].sagment_width.hwpInch();
         const end = line_segment.length !== i + 1 ? line_segment[i+1].start_text : text.length;
-        const pText = text.substring(start, end);
         p.dataset.start = line_segment[i].start_text;
         p.dataset.end = end;
-        // if(i !==0) {
-        //   p.style.marginTop = line_segment[i].line_interval.hwpInch();
-        // }
-        // if(indent) {
-        //   if(i === 0) {
-        //     p.style.textIndent = `-${indent * (-0.003664154103852596)}px`;
-        //   }
-        //   p.style.marginLeft = `${indent * (-0.003664154103852596)}px`;
-        // }
-        // if(left) {
-        //   p.style.paddingLeft = `${left * (-0.003664154103852596)}px`;
-        // }
-        // if(right) {
-        //   p.style.paddingRight = `${right * (-0.003664154103852596)}px`;
-        // }
         template.forEach(span => {
           if(start <= span.dataset.start && end >= span.dataset.end) {
             p.appendChild(span);
@@ -3494,10 +3575,33 @@
           break;
       }
     }
+    /**
+     * 글상자
+     */
+    hwpjs.prototype.hwpTextBox = function (data) {
+      const { textbox, paragraph, shape } = data;
+      const container = document.createElement('div');
+      const { height , width} = shape;
+      container.style.width = width;
+      container.style.height = height;
+      textbox.paragraph.forEach(paragraph => {
+        const tb = this.hwpTextCss(paragraph);
+        console.log(tb);
+        tb.forEach((ele, idx) => {
+          container.appendChild(ele);
+          console.log(ele.textContent);
+        });  
+      });
+      console.log(data);
+      return [container];
+    }
+    /**
+     * 테이블
+     */
     hwpjs.prototype.hwpTable = function (data) {
       const result = [];
-      const { table, padding, cols, rows, cell_spacing, width, height, start_line, paragraph_margin } = data;
-      // console.log('table', data);
+      const { table, padding, cols, rows, cell_spacing, width, height, start_line, paragraph_margin, caption } = data;
+      console.log('table', data, caption);
       const container = document.createElement('div');
       container.style.position = "absolute";
       if(start_line) container.style.top = start_line.hwpInch();
@@ -3507,8 +3611,8 @@
       t.style.top = parseFloat(start_line).hwpInch();
       t.style.fontSize = "initial";
       t.dataset.start_line = start_line;
-      t.style.width = width;
-      t.style.height = height;
+      // t.style.width = width;
+      // t.style.height = height;
       t.style.boxSizing = "content-box";
       if(paragraph_margin) {
         div.style.marginTop = `${paragraph_margin.top.hwpInch()}`;
@@ -3546,6 +3650,11 @@
           td.style.marginBottom = margin.bottom.hwpInch();
           td.style.marginLeft = margin.left.hwpInch();
           // td.appendChild(div);
+          if(col.paragraph) {
+            classList.forEach(cls => {
+              td.classList.add(cls);
+            });
+          }
         })
       });
       container.appendChild(t);
@@ -3564,7 +3673,7 @@
       result.forEach((data, i) => {
         let preline = i > 1 ? result[i-1].paragraph.start_line : data.paragraph.start_line;
         if(data.paragraph.start_line === 0 || preline > parseInt(data.paragraph.start_line)) {
-          if(data.extend) {
+          if(data.extend && data.ctrl_text.filter(ctrl=>ctrl.name === "OLE").length === 0) {
           }else {
             pages[c.pos].dataset.page = c.pos + 1;
             pages.push(this.PageElement());
@@ -3585,7 +3694,6 @@
      */
     hwpjs.prototype.getHtml = function() {
       const wrapper = this.getPage();
-      console.log(wrapper);
       const c = new Cursor(1);
       const dc = new Cursor(1); //문단 커서
       const result = this.ObjectHwp();
@@ -3597,6 +3705,12 @@
           content = wrapper.querySelector(`.hwp-page[data-page="${c.pos}"] header`);
         }else if(data.ctrl_id === "foot") {
           content = wrapper.querySelector(`.hwp-page[data-page="${c.pos}"] footer`);
+        }else if(data.ctrl_id === "fn  ") {
+          content = wrapper.querySelector(`.hwp-page[data-page="${c.pos}"] footnote`);
+        }else if(data.ctrl_id === "en  ") {
+          return false;
+          // continue;
+          // content = wrapper.querySelector(`.hwp-page[data-page="${c.pos}"] footer`);
         }else {
           if(preline > parseInt(data.paragraph.start_line)) {
             const isNext = wrapper.querySelector(`.hwp-page[data-page="${c.pos + 1}"] .hwp-content`);
@@ -3613,16 +3727,21 @@
           }
         }
         if(data.type === "tbl ") {
-          p = this.hwpTable(data);          
-        }else if(data.type === "$rec") {
           p = this.hwpTable(data);
+        }else if(data.type === "$rec") {
+          p = this.hwpTextBox(data);
         }else if(data.type === "paragraph") {
+          p = this.hwpTextCss(data.paragraph);
+        }else if(data.ctrl_id === "fn  " || data.ctrl_id === "en  ") {
           p = this.hwpTextCss(data.paragraph);
         }else {
           p = this.hwpTextCss(data.paragraph);
         }
         if(content) {
           p.forEach((ele, idx) => {
+            if((data.ctrl_id === "fn  " || data.ctrl_id === "en  ")){
+              ele.style.position = "unset";
+            }
             content.appendChild(ele);
           });
         }
