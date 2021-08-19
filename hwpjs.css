@@ -132,12 +132,12 @@ html, body {
 	position: relative;
 }
 .hwp-wrapper .inter-word {
-/* display: inline-block; */
-/* text-align-last: justify; */
+	display: inline-block; 
+	text-align-last: justify;
 }
 .hwp-wrapper .inter-word p:last-child{
-	/* text-align:left; */
-	/* display:flex; */
+	text-align:justify;
+	display:flex;
 }
 .preview{
 	position: fixed;
