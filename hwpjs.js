@@ -3432,7 +3432,7 @@
         const ko = spanText.match(/([\uAC00-\uD7A3]+|[\uAC00-\uD7A3]+)/g);
         console.log('spanText', spanText, ko);
         // "இந்தியா ASASAS எறத்தாழ ASSASAS குடியரசு ASWED SAASAS".match(/[\u0B80-\u0BFF]+/g);
-        span.classList.add(`lang-ko`); //텍스트를 읽어 유니코드 별로구분하여 또 서식을 나눠줘야하나 귀찮아서 일단 한국어 서식으로 통일.
+        // span.classList.add(`lang-ko`); //텍스트를 읽어 유니코드 별로구분하여 또 서식을 나눠줘야하나 귀찮아서 일단 한국어 서식으로 통일.
         span.style.color = shape[i].fontColor;
         if(shape[i].bold) {
           span.style.fontWeight = 800;
@@ -3508,6 +3508,7 @@
               else cls = 'user'
               const s = document.createElement('span');
               s.textContent = lang;
+              s.classList.add(span.className);
               s.classList.add(`lang-${cls}`);
               span.appendChild(s);
             });
