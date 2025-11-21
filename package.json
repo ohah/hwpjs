@@ -1,0 +1,23 @@
+{
+  "name": "hwpjs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test:rust": "cargo test --workspace",
+    "test:node": "bun run --filter=@hwpjs/node test",
+    "test:e2e": "maestro test packages/react-native/.maestro",
+    "lint": "oxlint .",
+    "format": "oxfmt .",
+    "build": "bun run --filter=@hwpjs/node build && bun run --filter=@hwpjs/react-native build",
+    "build:node": "bun run --filter=@hwpjs/node build",
+    "build:react-native": "bun run --filter=@hwpjs/react-native build"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.14.0",
+    "oxlint": "^1.29.0"
+  }
+}

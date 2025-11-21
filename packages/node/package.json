@@ -1,0 +1,27 @@
+{
+  "name": "@hwpjs/node",
+  "version": "0.1.0",
+  "description": "HWP file reader for Node.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsdown src/index.ts",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "keywords": [
+    "hwp",
+    "node",
+    "native-module",
+    "napi"
+  ],
+  "author": "HWPJS Contributors",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsdown": "^0.2.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

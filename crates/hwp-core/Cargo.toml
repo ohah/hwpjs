@@ -1,0 +1,15 @@
+[package]
+name = "hwp-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Core HWP file parsing library"
+repository = "https://github.com/ohah/hwpjs"
+
+[lib]
+name = "hwp_core"
+path = "src/lib.rs"
+
+[dependencies]
+

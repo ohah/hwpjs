@@ -1,0 +1,38 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit"
+    }
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "rust-analyzer.checkOnSave": {
+    "command": "clippy",
+    "allTargets": true
+  },
+  "rust-analyzer.rustfmt.extraArgs": [],
+  "rust-analyzer.rustfmt.overrideCommand": null,
+  "rust-analyzer.rustfmt.enableRangeFormatting": true,
+  "rust-analyzer.server.extraEnv": {
+    "PATH": "${env:USERPROFILE}\\.cargo\\bin;${env:PATH}"
+  },
+  "files.exclude": {
+    "**/target": true,
+    "**/node_modules": true
+  },
+  "oxc.fmt.experimental": true
+}

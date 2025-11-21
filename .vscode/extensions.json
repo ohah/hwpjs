@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "rust-lang.rust-analyzer",
+    "oxc.oxc-vscode",
+    "bun.bun-vscode"
+  ]
+}

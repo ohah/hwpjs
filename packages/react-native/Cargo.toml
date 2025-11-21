@@ -1,0 +1,17 @@
+[package]
+name = "hwp-react-native"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "React Native bindings for HWP file reading"
+repository = "https://github.com/ohah/hwpjs"
+
+[lib]
+name = "hwp_react_native"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+hwp-core = { path = "../../crates/hwp-core" }
+# Craby dependencies will be added when initializing with Craby CLI
+

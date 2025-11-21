@@ -1,0 +1,22 @@
+{
+  "name": "@hwpjs/react-native",
+  "version": "0.1.0",
+  "description": "HWP file reader for React Native",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo 'Build script will be configured with Craby'",
+    "test": "echo 'Tests will be configured with Maestro'"
+  },
+  "keywords": [
+    "hwp",
+    "react-native",
+    "native-module"
+  ],
+  "author": "HWPJS Contributors",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-native": "^0.72.0"
+  }
+}
