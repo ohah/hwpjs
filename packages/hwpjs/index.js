@@ -572,4 +572,5 @@ if (!nativeBinding) {
 }
 
 module.exports = nativeBinding
+module.exports.parseHwp = nativeBinding.parseHwp
 module.exports.plus100 = nativeBinding.plus100

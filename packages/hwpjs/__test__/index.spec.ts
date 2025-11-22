@@ -1,8 +1,9 @@
 import { test, expect } from 'bun:test';
 
-import { plus100 } from '../index';
+import { parseHwp } from '../index';
 
-test('sync function from native code', () => {
-  const fixture = 42;
-  expect(plus100(fixture)).toBe(fixture + 100);
+test('parse_hwp should parse HWP file', () => {
+  // 현재는 placeholder 구현이므로 "Hello from hwp-core!"를 반환
+  const result = parseHwp('test.hwp');
+  expect(result).toBe('Hello from hwp-core!');
 });

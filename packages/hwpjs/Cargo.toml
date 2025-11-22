@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 [dependencies]
 napi = "3.0.0"
 napi-derive = "3.0.0"
+hwp-core = { path = "../../crates/hwp-core" }
 
 [build-dependencies]
 napi-build = "2"
