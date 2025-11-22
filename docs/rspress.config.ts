@@ -1,33 +1,21 @@
-import { defineConfig } from 'rspress/config';
+import * as path from 'node:path';
+import { defineConfig } from '@rspress/core';
 
 export default defineConfig({
-  root: 'docs',
-  title: 'HWPJS',
-  description: 'HWP file reader library for React Native and Node.js',
-  icon: '/favicon.ico',
+  root: path.join(__dirname, 'docs'),
+  title: 'My Site',
+  icon: '/rspress-icon.png',
   logo: {
-    light: '/logo-light.png',
-    dark: '/logo-dark.png',
+    light: '/rspress-light-logo.png',
+    dark: '/rspress-dark-logo.png',
   },
   themeConfig: {
-    nav: [
+    socialLinks: [
       {
-        text: 'Guide',
-        link: '/guide',
-      },
-      {
-        text: 'API',
-        link: '/api',
+        icon: 'github',
+        mode: 'link',
+        content: 'https://github.com/web-infra-dev/rspress',
       },
     ],
-    sidebar: {
-      '/': [
-        {
-          text: 'Introduction',
-          link: '/',
-        },
-      ],
-    },
   },
 });
-

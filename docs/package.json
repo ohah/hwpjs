@@ -1,20 +1,16 @@
 {
   "name": "@hwpjs/docs",
-  "version": "0.1.0",
-  "description": "Documentation site for HWPJS",
+  "version": "1.0.0",
+  "private": true,
   "scripts": {
-    "dev": "rspress dev",
     "build": "rspress build",
+    "dev": "rspress dev",
     "preview": "rspress preview"
   },
-  "keywords": [
-    "hwp",
-    "documentation"
-  ],
-  "author": "HWPJS Contributors",
-  "license": "MIT",
+  "dependencies": {
+    "@rspress/core": "^2.0.0-beta.34"
+  },
   "devDependencies": {
-    "rspress": "^2.0.0"
+    "@types/node": "^22.8.1"
   }
 }
-

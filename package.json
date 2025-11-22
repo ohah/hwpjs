@@ -4,9 +4,11 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "docs"
   ],
   "scripts": {
+    "dev:docs": "bun run --filter=@hwpjs/docs dev",
     "napi": "napi",
     "test:rust": "cargo test --workspace",
     "test:node": "bun run --filter=@ohah/hwpjs test",
