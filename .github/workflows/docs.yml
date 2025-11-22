@@ -41,7 +41,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: doc_build
+          path: docs/doc_build
 
   deploy:
     environment:
