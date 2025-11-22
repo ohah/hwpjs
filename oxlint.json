@@ -1,3 +1,18 @@
 {
-  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/packages/oxlint/schema.json"
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/packages/oxc/main/packages/oxlint/schema.json",
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/*.generated.ts",
+    "**/*.lock",
+    "**/target/**",
+    "Cargo.lock",
+    "**/*.rs.bk",
+    "**/*.node",
+    "**/*.so",
+    "**/*.dylib",
+    "**/*.dll",
+    "**/*.pdb"
+  ]
 }
