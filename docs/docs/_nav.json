@@ -8,5 +8,10 @@
     "text": "API",
     "link": "/api/",
     "activeMatch": "/api/"
+  },
+  {
+    "text": "명세서",
+    "link": "/spec/",
+    "activeMatch": "/spec/"
   }
 ]
