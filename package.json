@@ -7,16 +7,19 @@
     "packages/*"
   ],
   "scripts": {
+    "napi": "napi",
     "test:rust": "cargo test --workspace",
     "test:node": "bun run --filter=@hwpjs/node test",
     "test:e2e": "maestro test packages/react-native/.maestro",
     "lint": "oxlint .",
     "format": "oxfmt .",
-    "build": "bun run --filter=@hwpjs/node build && bun run --filter=@hwpjs/react-native build",
+    "build": "bun run --filter=@ohah/hwpjs build && bun run --filter=@hwpjs/node build && bun run --filter=@hwpjs/react-native build",
+    "build:hwpjs": "bun run --filter=@ohah/hwpjs build",
     "build:node": "bun run --filter=@hwpjs/node build",
     "build:react-native": "bun run --filter=@hwpjs/react-native build"
   },
   "devDependencies": {
+    "@napi-rs/cli": "^3.4.1",
     "oxfmt": "^0.14.0",
     "oxlint": "^1.29.0"
   }

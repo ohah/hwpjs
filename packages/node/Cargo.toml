@@ -10,6 +10,7 @@ repository = "https://github.com/ohah/hwpjs"
 [lib]
 name = "hwp_node"
 crate-type = ["cdylib"]
+path = "src/lib.rs"
 
 [dependencies]
 hwp-core = { path = "../../crates/hwp-core" }
