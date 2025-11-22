@@ -1,0 +1,50 @@
+import { PackageManagerTabs } from '@theme';
+
+# 빠른 시작
+
+HWPJS를 사용하여 첫 번째 HWP 파일을 파싱해보세요.
+
+## 설치
+
+먼저 패키지를 설치합니다.
+
+<PackageManagerTabs command="install @ohah/hwpjs" />
+
+## 기본 사용법
+
+가장 간단한 사용 예제입니다.
+
+```typescript
+import { parseHwp } from '@ohah/hwpjs';
+
+// HWP 파일 경로를 전달하여 파싱
+const result = parseHwp('./document.hwp');
+console.log(result);
+```
+
+## 예제 코드
+
+더 자세한 예제는 [예제 페이지](./examples)를 참고하세요.
+
+```typescript
+import { parseHwp } from '@ohah/hwpjs';
+import { readFileSync } from 'fs';
+
+// 파일 경로로 파싱
+const result1 = parseHwp('./document.hwp');
+
+// 에러 처리
+try {
+  const result2 = parseHwp('./document.hwp');
+  console.log('파싱 성공:', result2);
+} catch (error) {
+  console.error('파싱 실패:', error);
+}
+```
+
+## 다음 단계
+
+- [API 레퍼런스](../api/parseHwp) - 모든 API 함수 확인
+- [예제](./examples) - 다양한 사용 사례
+- [아키텍처](./architecture) - 내부 구조 이해하기
+

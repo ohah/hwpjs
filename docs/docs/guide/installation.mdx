@@ -1,0 +1,69 @@
+import { PackageManagerTabs } from '@theme';
+
+# 설치하기
+
+HWPJS는 여러 플랫폼에서 사용할 수 있습니다. 사용할 환경에 맞는 설치 방법을 선택하세요.
+
+## Node.js
+
+Node.js 환경에서는 다양한 패키지 매니저를 통해 설치할 수 있습니다.
+
+<PackageManagerTabs command="install @ohah/hwpjs" />
+
+### Deno 사용법
+
+Deno에서는 npm 스펙을 사용하여 설치할 수 있습니다:
+
+```typescript
+import { parseHwp } from 'npm:@ohah/hwpjs';
+```
+
+또는 `deno.json`에 의존성을 추가할 수 있습니다:
+
+```json title="deno.json"
+{
+  "imports": {
+    "@ohah/hwpjs": "npm:@ohah/hwpjs@^1.0.0"
+  }
+}
+```
+
+### 사용 예제
+
+```typescript
+import { parseHwp } from '@ohah/hwpjs';
+
+const result = parseHwp('./document.hwp');
+console.log(result);
+```
+
+## Web
+
+:::warning
+Web 지원은 현재 개발 중입니다. 곧 제공될 예정입니다.
+:::
+
+Web 환경에서는 WASM을 통해 사용할 수 있습니다. (예정)
+
+## React Native
+
+:::warning
+React Native 지원은 추후 제공될 예정입니다.
+:::
+
+React Native 환경에서는 네이티브 모듈을 통해 사용할 수 있습니다. (예정)
+
+## 요구사항
+
+### Node.js
+
+- Node.js >= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0
+
+### Rust (개발 시)
+
+개발 환경에서는 Rust가 필요합니다. [rustup](https://rustup.rs/)을 통해 설치할 수 있습니다.
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
