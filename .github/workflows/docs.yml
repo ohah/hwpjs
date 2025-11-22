@@ -30,12 +30,10 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        working-directory: docs
         run: bun install
 
       - name: Build docs
-        working-directory: docs
-        run: bun run build
+        run: bun run build:docs
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -43,7 +41,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/dist
+          path: doc_build
 
   deploy:
     environment:
