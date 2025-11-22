@@ -52,7 +52,7 @@
     "format:rs": "cargo fmt",
     "lint": "oxlint .",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "ava",
+    "test": "bun test",
     "preversion": "napi build --platform --package hwpjs && git add .",
     "version": "napi version",
     "prepare": "husky"
@@ -64,26 +64,11 @@
     "@oxc-node/core": "^0.0.34",
     "@taplo/cli": "^0.7.0",
     "@tybys/wasm-util": "^0.10.0",
-    "ava": "^6.4.1",
     "chalk": "^5.6.2",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.1.6",
     "npm-run-all2": "^8.0.4",
-    "oxlint": "^1.14.0",
-    "prettier": "^3.6.2",
     "tinybench": "^5.0.1",
+    "@types/bun": "latest",
     "typescript": "^5.9.2"
-  },
-  "lint-staged": {
-    "*.@(js|ts|tsx)": [
-      "oxlint --fix"
-    ],
-    "*.@(js|ts|tsx|yml|yaml|md|json)": [
-      "prettier --write"
-    ],
-    "*.toml": [
-      "taplo format"
-    ]
   },
   "ava": {
     "extensions": {
@@ -98,13 +83,5 @@
       "--import",
       "@oxc-node/core/register"
     ]
-  },
-  "prettier": {
-    "printWidth": 120,
-    "semi": false,
-    "trailingComma": "all",
-    "singleQuote": true,
-    "arrowParens": "always"
-  },
-  "packageManager": "yarn@4.11.0"
+  }
 }

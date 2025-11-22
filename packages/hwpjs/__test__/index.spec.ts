@@ -1,8 +1,8 @@
-import test from 'ava'
+import { test, expect } from 'bun:test';
 
-import { plus100 } from '../index'
+import { plus100 } from '../index';
 
-test('sync function from native code', (t) => {
-  const fixture = 42
-  t.is(plus100(fixture), fixture + 100)
-})
+test('sync function from native code', () => {
+  const fixture = 42;
+  expect(plus100(fixture)).toBe(fixture + 100);
+});
