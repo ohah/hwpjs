@@ -51,8 +51,15 @@ impl HwpParser {
         let docinfo_data = CfbParser::read_stream(&mut cfb, "DocInfo")?;
         document.doc_info = DocInfo::parse(&docinfo_data, &fileheader)?;
 
-        // Initialize BodyText (will be populated later)
-        document.body_text = BodyText::default();
+        // Parse BodyText sections
+        // 구역 개수는 DocumentProperties의 area_count에서 가져옵니다 / Get section count from DocumentProperties.area_count
+        let section_count = document
+            .doc_info
+            .document_properties
+            .as_ref()
+            .map(|props| props.area_count)
+            .unwrap_or(1); // 기본값은 1 / Default is 1
+        document.body_text = BodyText::parse(&mut cfb, &fileheader, section_count)?;
 
         // Initialize BinData (will be populated later)
         document.bin_data = BinData::default();
