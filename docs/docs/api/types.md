@@ -355,7 +355,7 @@ Rust에서는 `Vec<u8>` 또는 `&[u8]`로 표현됩니다.
 
 ## 참고
 
-- **스펙 문서**: [HWP 5.0 명세서 - 표 1: 자료형](./spec/hwp-5.0.md#표-1-자료형)
+- **스펙 문서**: [HWP 5.0 명세서 - 표 1: 자료형](../spec/hwp-5.0.md#2-자료형-설명)
 - **소스 코드**: `crates/hwp-core/src/types.rs`
 - **플래그 상수**: `crates/hwp-core/src/fileheader.rs`의 `document_flags`, `license_flags` 모듈
 
