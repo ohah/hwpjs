@@ -1,18 +1,17 @@
-/// HWP Document structure
-/// 
-/// This module defines the main document structure for HWP files.
-/// 
-/// 스펙 문서 매핑: 표 2 - 전체 구조
-
-mod fileheader;
-mod docinfo;
-mod bodytext;
 mod bindata;
+mod bodytext;
+mod docinfo;
+/// HWP Document structure
+///
+/// This module defines the main document structure for HWP files.
+///
+/// 스펙 문서 매핑: 표 2 - 전체 구조
+mod fileheader;
 
-pub use fileheader::FileHeader;
-pub use docinfo::{DocInfo, DocumentProperties, IdMappings};
-pub use bodytext::{BodyText, Section};
 pub use bindata::BinData;
+pub use bodytext::{BodyText, Section};
+pub use docinfo::{DocInfo, DocumentProperties, FaceName, IdMappings};
+pub use fileheader::FileHeader;
 
 use serde::{Deserialize, Serialize};
 
@@ -40,4 +39,3 @@ impl HwpDocument {
         }
     }
 }
-

@@ -5,6 +5,7 @@
 /// 스펙 문서 매핑: 표 2 - 문서 정보 (DocInfo 스트림) / Spec mapping: Table 2 - Document information (DocInfo stream)
 mod constants;
 mod document_properties;
+mod face_name;
 mod id_mappings;
 
 use crate::decompress::decompress_deflate;
@@ -12,6 +13,7 @@ use crate::document::fileheader::FileHeader;
 use crate::types::RecordHeader;
 use constants::*;
 pub use document_properties::DocumentProperties;
+pub use face_name::FaceName;
 pub use id_mappings::IdMappings;
 use serde::{Deserialize, Serialize};
 
@@ -25,8 +27,8 @@ pub struct DocInfo {
     /// Binary data list (excluded from JSON serialization) / 바이너리 데이터 리스트 (JSON 직렬화에서 제외)
     #[serde(skip)]
     pub bin_data: Vec<Vec<u8>>,
-    /// Face names (fonts)
-    pub face_names: Vec<Vec<u8>>,
+    /// Face names (fonts) (parsed) / 글꼴 목록 (파싱됨)
+    pub face_names: Vec<FaceName>,
     /// Border/fill information
     pub border_fill: Vec<Vec<u8>>,
     /// Character shapes
@@ -108,7 +110,9 @@ impl DocInfo {
                 }
                 HWPTAG_FACE_NAME => {
                     if header.level == 1 {
-                        doc_info.face_names.push(record_data.to_vec());
+                        // FaceName은 완전히 파싱 / Fully parse FaceName
+                        let face_name = FaceName::parse(record_data)?;
+                        doc_info.face_names.push(face_name);
                     }
                 }
                 HWPTAG_BORDER_FILL => {

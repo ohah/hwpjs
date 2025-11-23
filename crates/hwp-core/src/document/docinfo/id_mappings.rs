@@ -62,7 +62,7 @@ impl IdMappings {
     ///
     /// # Returns
     /// 파싱된 IdMappings 구조체 / Parsed IdMappings structure
-    pub fn parse(data: &[u8], version: u32) -> Result<Self, String> {
+    pub fn parse(data: &[u8], _version: u32) -> Result<Self, String> {
         // 최소 60바이트 (15개 INT32) 필요 / Need at least 60 bytes (15 INT32 values)
         if data.len() < 60 {
             return Err(format!(

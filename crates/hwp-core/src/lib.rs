@@ -10,7 +10,8 @@ mod types;
 pub use cfb::CfbParser;
 pub use decompress::{decompress_deflate, decompress_zlib};
 pub use document::{
-    BinData, BodyText, DocInfo, DocumentProperties, FileHeader, HwpDocument, IdMappings, Section,
+    BinData, BodyText, DocInfo, DocumentProperties, FaceName, FileHeader, HwpDocument, IdMappings,
+    Section,
 };
 pub use types::{
     RecordHeader, BYTE, COLORREF, DWORD, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT,
