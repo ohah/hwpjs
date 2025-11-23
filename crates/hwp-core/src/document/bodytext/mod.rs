@@ -5,9 +5,11 @@ mod char_shape;
 ///
 /// 스펙 문서 매핑: 표 2 - 본문 (BodyText 스토리지)
 pub mod constants;
+mod line_seg;
 mod para_header;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
+pub use line_seg::{LineSegmentInfo, LineSegmentTag, ParaLineSeg};
 
 use crate::cfb::CfbParser;
 use crate::decompress::decompress_deflate;
@@ -60,9 +62,8 @@ pub enum ParagraphRecord {
     },
     /// 문단의 레이아웃 / Paragraph line segment
     ParaLineSeg {
-        /// Raw data (will be parsed later)
-        #[serde(skip)]
-        data: Vec<u8>,
+        /// 줄 세그먼트 정보 리스트 / Line segment information list
+        segments: Vec<LineSegmentInfo>,
     },
     /// 문단의 영역 태그 / Paragraph range tag
     ParaRangeTag {
@@ -155,9 +156,13 @@ impl Section {
                                 shapes: para_char_shape.shapes,
                             }
                         }
-                        HWPTAG_PARA_LINE_SEG => ParagraphRecord::ParaLineSeg {
-                            data: record_data.to_vec(),
-                        },
+                        HWPTAG_PARA_LINE_SEG => {
+                            // 문단의 레이아웃 파싱 / Parse paragraph line segment
+                            let para_line_seg = ParaLineSeg::parse(record_data)?;
+                            ParagraphRecord::ParaLineSeg {
+                                segments: para_line_seg.segments,
+                            }
+                        }
                         HWPTAG_PARA_RANGE_TAG => ParagraphRecord::ParaRangeTag {
                             data: record_data.to_vec(),
                         },
