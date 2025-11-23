@@ -10,7 +10,7 @@ mod bodytext;
 mod bindata;
 
 pub use fileheader::FileHeader;
-pub use docinfo::DocInfo;
+pub use docinfo::{DocInfo, DocumentProperties, IdMappings};
 pub use bodytext::{BodyText, Section};
 pub use bindata::BinData;
 

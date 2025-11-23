@@ -154,3 +154,68 @@ pub type INT32 = i32;
 /// HWPUNIT16: INT16과 같음
 pub type HWPUNIT16 = i16;
 
+/// 레코드 헤더 파싱 결과 / Record header parsing result
+/// 
+/// 스펙 문서 매핑: 그림 45 - 레코드 구조 / Spec mapping: Figure 45 - Record structure
+/// 레코드 헤더는 32비트로 구성되며 Tag ID (10 bits), Level (10 bits), Size (12 bits)를 포함합니다.
+/// Record header is 32 bits consisting of Tag ID (10 bits), Level (10 bits), Size (12 bits).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RecordHeader {
+    /// Tag ID (10 bits, 0x000-0x3FF)
+    pub tag_id: u16,
+    /// Level (10 bits)
+    pub level: u16,
+    /// Size (12 bits, 또는 확장 길이) / Size (12 bits, or extended length)
+    pub size: u32,
+    /// 확장 길이를 사용하는지 여부 (Size가 0xFFF인 경우) / Whether extended size is used (when Size is 0xFFF)
+    pub has_extended_size: bool,
+}
+
+impl RecordHeader {
+    /// 레코드 헤더를 파싱합니다. / Parse record header.
+    ///
+    /// # Arguments
+    /// * `data` - 최소 4바이트의 데이터 (레코드 헤더) / At least 4 bytes of data (record header)
+    ///
+    /// # Returns
+    /// 파싱된 RecordHeader와 다음 데이터 위치로 이동할 바이트 수 (헤더 크기) / Parsed RecordHeader and number of bytes to advance (header size)
+    pub fn parse(data: &[u8]) -> Result<(Self, usize), String> {
+        if data.len() < 4 {
+            return Err("Record header must be at least 4 bytes".to_string());
+        }
+
+        // DWORD를 little-endian으로 읽기 / Read DWORD as little-endian
+        let header_value = DWORD::from_le_bytes([data[0], data[1], data[2], data[3]]);
+
+        // Tag ID: bits 0-9 (10 bits)
+        let tag_id = (header_value & 0x3FF) as u16;
+
+        // Level: bits 10-19 (10 bits)
+        let level = ((header_value >> 10) & 0x3FF) as u16;
+
+        // Size: bits 20-31 (12 bits)
+        let size = (header_value >> 20) & 0xFFF;
+
+        let (size, has_extended_size, header_size) = if size == 0xFFF {
+            // 확장 길이 사용: 다음 DWORD가 실제 길이 / Extended size: next DWORD is actual length
+            if data.len() < 8 {
+                return Err("Extended size record header requires 8 bytes".to_string());
+            }
+            let extended_size = DWORD::from_le_bytes([data[4], data[5], data[6], data[7]]);
+            (extended_size, true, 8)
+        } else {
+            (size, false, 4)
+        };
+
+        Ok((
+            RecordHeader {
+                tag_id,
+                level,
+                size,
+                has_extended_size,
+            },
+            header_size,
+        ))
+    }
+}
+

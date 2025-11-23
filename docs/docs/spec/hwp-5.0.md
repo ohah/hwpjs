@@ -242,7 +242,7 @@ HWPUNIT과 SHWPUNIT는 문자의 크기, 그림의 크기, 용지 여백 등, �
 
 | Tag ID | 길이(바이트) | 레벨 | 설명 |
 |---|---|---|---|
-| HWPTAG_DOCUMENT_PROPERTIES | 30 | 0 | 문서 속성(표 14 참조) |
+| HWPTAG_DOCUMENT_PROPERTIES | ~30~<br> 26 | 0 | ⚠️ 문서 속성(표 14 참조) |
 | HWPTAG_ID_MAPPINGS | 32 | 0 | 아이디 매핑 헤더(표 15 참조) |
 | HWPTAG_BIN_DATA | 가변 | 1 | 바이너리 데이터(표 17 참조) |
 | HWPTAG_FACE_NAME | 가변 | 1 | 글꼴(표 19 참조) |
@@ -638,11 +638,15 @@ Tag ID: HWPTAG_DOCUMENT_PROPERTIES
 | UINT16 | 2 | 그림 시작 번호 |
 | UINT16 | 2 | 표 시작 번호 |
 | UINT16 | 2 | 수식 시작 번호 |
-| UINT32 | 4 | 문서 내 캐럿의 위치 정보 |
+| ~UINT32~ | ~4~ | ~문서 내 캐럿의 위치 정보~ |
 | UINT32 | 4 | 리스트 아이디 |
 | UINT32 | 4 | 문단 아이디 |
 | UINT32 | 4 | 문단 내에서의 글자 단위 위치 |
 | 전체 길이 | 26 | |
+
+> **⚠️ 실제 구현 시 주의사항 (Implementation Notes)**
+> 
+> 첫 번째 UINT32 필드인 **"문서 내 캐럿의 위치 정보"**는 실제로 존재하지 않습니다.
 
 ##### 4.2.2. 아이디 매핑 헤더
 

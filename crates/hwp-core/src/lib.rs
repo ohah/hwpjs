@@ -8,11 +8,13 @@ mod document;
 mod types;
 
 pub use cfb::CfbParser;
-pub use decompress::decompress_zlib;
-pub use document::{BinData, BodyText, DocInfo, FileHeader, HwpDocument, Section};
+pub use decompress::{decompress_deflate, decompress_zlib};
+pub use document::{
+    BinData, BodyText, DocInfo, DocumentProperties, FileHeader, HwpDocument, IdMappings, Section,
+};
 pub use types::{
-    BYTE, COLORREF, DWORD, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT, UINT16, UINT32,
-    UINT8, WCHAR, WORD,
+    RecordHeader, BYTE, COLORREF, DWORD, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT,
+    UINT16, UINT32, UINT8, WCHAR, WORD,
 };
 
 /// Main HWP parser structure
@@ -42,10 +44,11 @@ impl HwpParser {
         let fileheader = FileHeader::parse(&fileheader_data)?;
 
         // Create document structure with initial empty data
-        let mut document = HwpDocument::new(fileheader);
+        let mut document = HwpDocument::new(fileheader.clone());
 
-        // Initialize DocInfo (will be populated later)
-        document.doc_info = DocInfo::default();
+        // Read and parse DocInfo
+        let docinfo_data = CfbParser::read_stream(&mut cfb, "DocInfo")?;
+        document.doc_info = DocInfo::parse(&docinfo_data, &fileheader)?;
 
         // Initialize BodyText (will be populated later)
         document.body_text = BodyText::default();
