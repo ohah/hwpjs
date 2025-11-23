@@ -1,28 +1,42 @@
 #![deny(clippy::all)]
 
-use hwp_core::{FileReader, HwpParser};
+use hwp_core::HwpParser;
 use napi_derive::napi;
-
-/// Node.js file reader implementation
-struct NodeFileReader;
-
-impl FileReader for NodeFileReader {
-    fn read(&self, path: &str) -> Result<Vec<u8>, String> {
-        use std::fs;
-        fs::read(path).map_err(|e| e.to_string())
-    }
-}
+use serde_json;
 
 #[napi]
 pub fn plus_100(input: u32) -> u32 {
     input + 100
 }
 
+/// Parse HWP file from byte array (Buffer or Uint8Array)
+///
+/// # Arguments
+/// * `data` - Byte array containing HWP file data
+///
+/// # Returns
+/// Parsed HWP document as JSON string
 #[napi]
-pub fn parse_hwp(path: String) -> Result<String, napi::Error> {
+pub fn parse_hwp(data: Vec<u8>) -> Result<String, napi::Error> {
     let parser = HwpParser::new();
-    let reader = NodeFileReader;
+    let document = parser.parse(&data).map_err(napi::Error::from_reason)?;
+
+    // Convert to JSON
+    serde_json::to_string(&document)
+        .map_err(|e| napi::Error::from_reason(format!("Failed to serialize to JSON: {}", e)))
+}
+
+/// Parse HWP file and return only FileHeader as JSON
+///
+/// # Arguments
+/// * `data` - Byte array containing HWP file data
+///
+/// # Returns
+/// FileHeader as JSON string
+#[napi]
+pub fn parse_hwp_fileheader(data: Vec<u8>) -> Result<String, napi::Error> {
+    let parser = HwpParser::new();
     parser
-        .parse(&reader, &path)
+        .parse_fileheader_json(&data)
         .map_err(napi::Error::from_reason)
 }
