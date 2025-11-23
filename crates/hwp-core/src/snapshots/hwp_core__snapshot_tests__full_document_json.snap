@@ -9018,7 +9018,29 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 0,
+                    "line_height": 6134,
+                    "text_height": 6134,
+                    "baseline_distance": 5214,
+                    "line_spacing": 840,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               },
               {
                 "type": "ctrl_header"
@@ -9063,7 +9085,29 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 6974,
+                    "line_height": 6869,
+                    "text_height": 6869,
+                    "baseline_distance": 5839,
+                    "line_spacing": 1120,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               },
               {
                 "type": "ctrl_header"
@@ -9098,7 +9142,29 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 14963,
+                    "line_height": 300,
+                    "text_height": 300,
+                    "baseline_distance": 255,
+                    "line_spacing": 212,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               },
               {
                 "type": "ctrl_header"
@@ -9137,7 +9203,29 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 15475,
+                    "line_height": 12858,
+                    "text_height": 12858,
+                    "baseline_distance": 10929,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               },
               {
                 "type": "ctrl_header"
@@ -9220,7 +9308,69 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 30685,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 42,
+                    "vertical_position": 33237,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 82,
+                    "vertical_position": 35789,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9268,7 +9418,69 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 39341,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 43,
+                    "vertical_position": 41893,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 82,
+                    "vertical_position": 44445,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9300,7 +9512,49 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 47997,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 39,
+                    "vertical_position": 50549,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9356,7 +9610,69 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 54401,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 41,
+                    "vertical_position": 56953,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 80,
+                    "vertical_position": 59505,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9408,7 +9724,69 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 63057,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 47,
+                    "vertical_position": 65609,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 84,
+                    "vertical_position": 68161,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9456,7 +9834,69 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 1000,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 38,
+                    "vertical_position": 3552,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 73,
+                    "vertical_position": 6104,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9504,7 +9944,49 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 9656,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 38,
+                    "vertical_position": 12208,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9564,7 +10046,69 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 16060,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 37,
+                    "vertical_position": 18612,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 76,
+                    "vertical_position": 21164,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9636,7 +10180,89 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 24716,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 37,
+                    "vertical_position": 27268,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 75,
+                    "vertical_position": 29820,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 112,
+                    "vertical_position": 32372,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9676,7 +10302,49 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 35924,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 40,
+                    "vertical_position": 38476,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9728,7 +10396,89 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 42328,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 37,
+                    "vertical_position": 44880,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 72,
+                    "vertical_position": 47432,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 105,
+                    "vertical_position": 49984,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": true,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9756,7 +10506,29 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 53836,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9784,7 +10556,29 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 57688,
+                    "line_height": 1500,
+                    "text_height": 1500,
+                    "baseline_distance": 1275,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9812,7 +10606,29 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 61240,
+                    "line_height": 1400,
+                    "text_height": 1400,
+                    "baseline_distance": 1190,
+                    "line_spacing": 980,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9844,7 +10660,29 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 64620,
+                    "line_height": 4831,
+                    "text_height": 4831,
+                    "baseline_distance": 4106,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               },
               {
                 "type": "ctrl_header"
@@ -9881,7 +10719,29 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 1000,
+                    "line_height": 2831,
+                    "text_height": 2831,
+                    "baseline_distance": 2406,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               },
               {
                 "type": "ctrl_header"
@@ -9916,7 +10776,29 @@ expression: json
                 ]
               },
               {
-                "type": "para_line_seg"
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 5883,
+                    "line_height": 62701,
+                    "text_height": 62701,
+                    "baseline_distance": 53296,
+                    "line_spacing": 1052,
+                    "column_start_position": 0,
+                    "segment_width": 48188,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
               },
               {
                 "type": "ctrl_header"
