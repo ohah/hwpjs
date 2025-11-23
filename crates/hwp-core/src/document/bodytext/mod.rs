@@ -7,9 +7,11 @@ mod char_shape;
 pub mod constants;
 mod line_seg;
 mod para_header;
+mod range_tag;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
 pub use line_seg::{LineSegmentInfo, LineSegmentTag, ParaLineSeg};
+pub use range_tag::{ParaRangeTag, RangeTagInfo};
 
 use crate::cfb::CfbParser;
 use crate::decompress::decompress_deflate;
@@ -67,9 +69,8 @@ pub enum ParagraphRecord {
     },
     /// 문단의 영역 태그 / Paragraph range tag
     ParaRangeTag {
-        /// Raw data (will be parsed later)
-        #[serde(skip)]
-        data: Vec<u8>,
+        /// 영역 태그 정보 리스트 / Range tag information list
+        tags: Vec<RangeTagInfo>,
     },
     /// 컨트롤 헤더 / Control header
     CtrlHeader {
@@ -163,9 +164,14 @@ impl Section {
                                 segments: para_line_seg.segments,
                             }
                         }
-                        HWPTAG_PARA_RANGE_TAG => ParagraphRecord::ParaRangeTag {
-                            data: record_data.to_vec(),
-                        },
+                        // NOTE: HWPTAG_PARA_RANGE_TAG가 있는 문서를 구해야함.
+                        HWPTAG_PARA_RANGE_TAG => {
+                            // 문단의 영역 태그 파싱 / Parse paragraph range tag
+                            let para_range_tag = ParaRangeTag::parse(record_data)?;
+                            ParagraphRecord::ParaRangeTag {
+                                tags: para_range_tag.tags,
+                            }
+                        }
                         HWPTAG_CTRL_HEADER => ParagraphRecord::CtrlHeader {
                             data: record_data.to_vec(),
                         },
