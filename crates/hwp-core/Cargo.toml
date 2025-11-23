@@ -12,4 +12,11 @@ name = "hwp_core"
 path = "src/lib.rs"
 
 [dependencies]
+cfb = "0.12.1"
+flate2 = "1.1.5"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+
+[dev-dependencies]
+insta = "1.43.2"
 
