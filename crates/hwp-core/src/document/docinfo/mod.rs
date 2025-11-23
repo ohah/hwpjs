@@ -11,6 +11,7 @@ mod document_properties;
 mod face_name;
 mod id_mappings;
 mod numbering;
+mod para_shape;
 mod tab_def;
 
 use crate::decompress::decompress_deflate;
@@ -24,6 +25,7 @@ pub use document_properties::DocumentProperties;
 pub use face_name::FaceName;
 pub use id_mappings::IdMappings;
 pub use numbering::Numbering;
+pub use para_shape::ParaShape;
 use serde::{Deserialize, Serialize};
 pub use tab_def::TabDef;
 
@@ -49,8 +51,8 @@ pub struct DocInfo {
     pub numbering: Vec<Numbering>,
     /// Bullet information (parsed) / 글머리표 정보 (파싱됨)
     pub bullets: Vec<Bullet>,
-    /// Paragraph shapes
-    pub para_shapes: Vec<Vec<u8>>,
+    /// Paragraph shapes (parsed) / 문단 모양 (파싱됨)
+    pub para_shapes: Vec<ParaShape>,
     /// Styles
     pub styles: Vec<Vec<u8>>,
 }
@@ -162,7 +164,9 @@ impl DocInfo {
                 }
                 HWPTAG_PARA_SHAPE => {
                     if header.level == 1 {
-                        doc_info.para_shapes.push(record_data.to_vec());
+                        // ParaShape은 완전히 파싱 / Fully parse ParaShape
+                        let para_shape = ParaShape::parse(record_data, file_header.version)?;
+                        doc_info.para_shapes.push(para_shape);
                     }
                 }
                 HWPTAG_STYLE => {

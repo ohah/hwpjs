@@ -12,7 +12,7 @@ pub use bindata::BinData;
 pub use bodytext::{BodyText, Section};
 pub use docinfo::{
     BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName, IdMappings, Numbering,
-    TabDef,
+    ParaShape, TabDef,
 };
 pub use fileheader::FileHeader;
 
