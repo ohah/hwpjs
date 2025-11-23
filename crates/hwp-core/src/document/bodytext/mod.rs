@@ -90,7 +90,7 @@ pub enum ParagraphRecord {
     /// 기타 레코드 / Other records
     Other {
         /// Tag ID
-        tag_id: u16,
+        tag_id: WORD,
         /// Raw data
         #[serde(skip)]
         data: Vec<u8>,

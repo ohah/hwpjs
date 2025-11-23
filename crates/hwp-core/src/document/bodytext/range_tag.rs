@@ -2,7 +2,7 @@
 ///
 /// 스펙 문서 매핑: 표 63 - 문단의 영역 태그 / Spec mapping: Table 63 - Paragraph range tag
 /// 각 항목: 12바이트
-use crate::types::UINT32;
+use crate::types::{UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
 /// 영역 태그 정보 / Range tag information
@@ -13,7 +13,7 @@ pub struct RangeTagInfo {
     /// 영역 끝 위치 / Range end position
     pub end: UINT32,
     /// 태그 종류 (상위 8비트) / Tag type (upper 8 bits)
-    pub tag_type: u8,
+    pub tag_type: UINT8,
     /// 태그 데이터 (하위 24비트) / Tag data (lower 24 bits)
     pub tag_data: UINT32,
 }
@@ -43,7 +43,7 @@ impl RangeTagInfo {
         // UINT32 태그(종류 + 데이터) / UINT32 tag (type + data)
         // 상위 8비트가 종류, 하위 24비트가 데이터 / Upper 8 bits are type, lower 24 bits are data
         let tag_value = UINT32::from_le_bytes([data[8], data[9], data[10], data[11]]);
-        let tag_type = ((tag_value >> 24) & 0xFF) as u8;
+        let tag_type = ((tag_value >> 24) & 0xFF) as UINT8;
         let tag_data = tag_value & 0x00FFFFFF;
 
         Ok(RangeTagInfo {
@@ -91,5 +91,3 @@ impl ParaRangeTag {
         Ok(ParaRangeTag { tags })
     }
 }
-
-

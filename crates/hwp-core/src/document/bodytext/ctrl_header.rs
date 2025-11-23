@@ -1,7 +1,7 @@
 /// CtrlHeader 구조체 / CtrlHeader structure
 ///
 /// 스펙 문서 매핑: 표 64 - 컨트롤 헤더 / Spec mapping: Table 64 - Control header
-use crate::types::{decode_utf16le, HWPUNIT, HWPUNIT16, INT32, UINT16, UINT32};
+use crate::types::{decode_utf16le, HWPUNIT, HWPUNIT16, INT32, UINT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
 /// 컨트롤 헤더 / Control header
@@ -61,11 +61,11 @@ pub struct ObjectAttribute {
     /// 세로 위치의 기준 / Vertical position reference
     pub vert_rel_to: VertRelTo,
     /// 세로 위치의 기준에 대한 상대적인 배열 방식 / Vertical alignment relative to reference
-    pub vert_relative: u8,
+    pub vert_relative: UINT8,
     /// 가로 위치의 기준 / Horizontal position reference
     pub horz_rel_to: HorzRelTo,
     /// 가로 위치의 기준에 대한 상대적인 배열 방식 / Horizontal alignment relative to reference
-    pub horz_relative: u8,
+    pub horz_relative: UINT8,
     /// VertRelTo이 'para'일 때 오브젝트의 세로 위치를 본문 영역으로 제한할지 여부 / Limit vertical position to body area when VertRelTo is 'para'
     pub vert_rel_to_para_limit: bool,
     /// 다른 오브젝트와 겹치는 것을 허용할지 여부 / Allow overlap with other objects
@@ -362,7 +362,7 @@ fn parse_object_attribute(value: UINT32) -> ObjectAttribute {
     };
 
     // bit 5-7: 세로 위치의 기준에 대한 상대적인 배열 방식 / bit 5-7: vertical alignment relative to reference
-    let vert_relative = ((value >> 5) & 0x07) as u8;
+    let vert_relative = ((value >> 5) & 0x07) as UINT8;
 
     // bit 8-9: 가로 위치의 기준 (HorzRelTo) / bit 8-9: horizontal position reference
     let horz_rel_to = match (value >> 8) & 0x03 {
@@ -373,7 +373,7 @@ fn parse_object_attribute(value: UINT32) -> ObjectAttribute {
     };
 
     // bit 10-12: HorzRelTo에 대한 상대적인 배열 방식 / bit 10-12: horizontal alignment relative to reference
-    let horz_relative = ((value >> 10) & 0x07) as u8;
+    let horz_relative = ((value >> 10) & 0x07) as UINT8;
 
     // bit 13: VertRelTo이 'para'일 때 오브젝트의 세로 위치를 본문 영역으로 제한할지 여부 / bit 13: limit vertical position to body area when VertRelTo is 'para'
     let vert_rel_to_para_limit = (value & 0x2000) != 0;

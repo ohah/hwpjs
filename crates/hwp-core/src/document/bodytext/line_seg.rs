@@ -214,5 +214,3 @@ impl ParaLineSeg {
         Ok(ParaLineSeg { segments })
     }
 }
-
-
