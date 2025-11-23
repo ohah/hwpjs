@@ -1,0 +1,35 @@
+---
+source: crates/hwp-core/src/lib.rs
+expression: json
+---
+{
+  "file_header": {
+    "signature": "HWP Document File",
+    "version": "5.0.3.0",
+    "document_flags": [
+      "compressed"
+    ],
+    "license_flags": [],
+    "encrypt_version": 4,
+    "kogl_country": 0
+  },
+  "doc_info": {
+    "document_properties": null,
+    "id_mappings": null,
+    "bin_data": [],
+    "face_names": [],
+    "border_fill": [],
+    "char_shapes": [],
+    "tab_defs": [],
+    "numbering": [],
+    "bullets": [],
+    "para_shapes": [],
+    "styles": []
+  },
+  "body_text": {
+    "sections": []
+  },
+  "bin_data": {
+    "items": []
+  }
+}
