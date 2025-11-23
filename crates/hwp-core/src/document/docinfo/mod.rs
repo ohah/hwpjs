@@ -3,6 +3,8 @@
 /// This module handles parsing of HWP DocInfo stream.
 ///
 /// 스펙 문서 매핑: 표 2 - 문서 정보 (DocInfo 스트림) / Spec mapping: Table 2 - Document information (DocInfo stream)
+mod border_fill;
+mod char_shape;
 mod constants;
 mod document_properties;
 mod face_name;
@@ -11,6 +13,8 @@ mod id_mappings;
 use crate::decompress::decompress_deflate;
 use crate::document::fileheader::FileHeader;
 use crate::types::RecordHeader;
+pub use border_fill::BorderFill;
+pub use char_shape::CharShape;
 use constants::*;
 pub use document_properties::DocumentProperties;
 pub use face_name::FaceName;
@@ -29,10 +33,10 @@ pub struct DocInfo {
     pub bin_data: Vec<Vec<u8>>,
     /// Face names (fonts) (parsed) / 글꼴 목록 (파싱됨)
     pub face_names: Vec<FaceName>,
-    /// Border/fill information
-    pub border_fill: Vec<Vec<u8>>,
-    /// Character shapes
-    pub char_shapes: Vec<Vec<u8>>,
+    /// Border/fill information (parsed) / 테두리/배경 정보 (파싱됨)
+    pub border_fill: Vec<BorderFill>,
+    /// Character shapes (parsed) / 글자 모양 (파싱됨)
+    pub char_shapes: Vec<CharShape>,
     /// Tab definitions
     pub tab_defs: Vec<Vec<u8>>,
     /// Numbering information
@@ -117,12 +121,16 @@ impl DocInfo {
                 }
                 HWPTAG_BORDER_FILL => {
                     if header.level == 1 {
-                        doc_info.border_fill.push(record_data.to_vec());
+                        // BorderFill은 완전히 파싱 / Fully parse BorderFill
+                        let border_fill = BorderFill::parse(record_data)?;
+                        doc_info.border_fill.push(border_fill);
                     }
                 }
                 HWPTAG_CHAR_SHAPE => {
                     if header.level == 1 {
-                        doc_info.char_shapes.push(record_data.to_vec());
+                        // CharShape는 완전히 파싱 / Fully parse CharShape
+                        let char_shape = CharShape::parse(record_data, file_header.version)?;
+                        doc_info.char_shapes.push(char_shape);
                     }
                 }
                 HWPTAG_TAB_DEF => {
