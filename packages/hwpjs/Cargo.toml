@@ -1,6 +1,6 @@
 
 [package]
-authors = ["LongYinan <lynweklm@gmail.com>"]
+authors = ["ohah <bookyoon173@gmail.com>"]
 edition = "2021"
 name = "hwpjs"
 version = "0.1.0"
@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 napi = "3.0.0"
 napi-derive = "3.0.0"
 hwp-core = { path = "../../crates/hwp-core" }
+serde_json = "1.0.145"
 
 [build-dependencies]
 napi-build = "2"
