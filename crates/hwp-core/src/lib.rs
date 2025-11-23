@@ -11,7 +11,7 @@ pub use cfb::CfbParser;
 pub use decompress::{decompress_deflate, decompress_zlib};
 pub use document::{
     BinData, BodyText, BorderFill, CharShape, DocInfo, DocumentProperties, FaceName, FileHeader,
-    HwpDocument, IdMappings, Section,
+    HwpDocument, IdMappings, Numbering, Section, TabDef,
 };
 pub use types::{
     RecordHeader, BYTE, COLORREF, DWORD, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT,
@@ -117,6 +117,9 @@ mod tests {
             if let Ok(data) = std::fs::read(path) {
                 let parser = HwpParser::new();
                 let result = parser.parse(&data);
+                if let Err(e) = &result {
+                    eprintln!("Parse error: {}", e);
+                }
                 assert!(result.is_ok(), "Should parse actual HWP file");
                 let document = result.unwrap();
 
@@ -511,6 +514,8 @@ mod snapshot_tests {
             let document = result.unwrap();
 
             // Convert to JSON
+            // serde_json already outputs unicode characters as-is (not escaped)
+            // Only control characters are escaped according to JSON standard
             let json =
                 serde_json::to_string_pretty(&document).expect("Should serialize document to JSON");
             assert_snapshot!("full_document_json", json);

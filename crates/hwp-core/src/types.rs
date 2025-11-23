@@ -1,8 +1,7 @@
 /// HWP 5.0 자료형 정의
-/// 
+///
 /// 표 1: 자료형에 따른 타입 정의
 /// 스펙 문서와 1:1 매핑을 위해 모든 자료형을 명시적으로 정의합니다.
-
 use serde::{Deserialize, Serialize};
 
 /// BYTE: 부호 없는 한 바이트(0~255)
@@ -155,7 +154,7 @@ pub type INT32 = i32;
 pub type HWPUNIT16 = i16;
 
 /// 레코드 헤더 파싱 결과 / Record header parsing result
-/// 
+///
 /// 스펙 문서 매핑: 그림 45 - 레코드 구조 / Spec mapping: Figure 45 - Record structure
 /// 레코드 헤더는 32비트로 구성되며 Tag ID (10 bits), Level (10 bits), Size (12 bits)를 포함합니다.
 /// Record header is 32 bits consisting of Tag ID (10 bits), Level (10 bits), Size (12 bits).
@@ -219,3 +218,14 @@ impl RecordHeader {
     }
 }
 
+/// UTF-16LE 바이트 배열을 String으로 디코딩 / Decode UTF-16LE byte array to String
+pub fn decode_utf16le(bytes: &[u8]) -> Result<String, String> {
+    if bytes.len() % 2 != 0 {
+        return Err("UTF-16LE bytes must be even length".to_string());
+    }
+    let u16_chars: Vec<u16> = bytes
+        .chunks_exact(2)
+        .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
+        .collect();
+    String::from_utf16(&u16_chars).map_err(|e| format!("Failed to decode UTF-16LE string: {}", e))
+}

@@ -10,7 +10,9 @@ mod fileheader;
 
 pub use bindata::BinData;
 pub use bodytext::{BodyText, Section};
-pub use docinfo::{BorderFill, CharShape, DocInfo, DocumentProperties, FaceName, IdMappings};
+pub use docinfo::{
+    BorderFill, CharShape, DocInfo, DocumentProperties, FaceName, IdMappings, Numbering, TabDef,
+};
 pub use fileheader::FileHeader;
 
 use serde::{Deserialize, Serialize};

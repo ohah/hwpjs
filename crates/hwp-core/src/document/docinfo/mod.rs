@@ -9,6 +9,8 @@ mod constants;
 mod document_properties;
 mod face_name;
 mod id_mappings;
+mod numbering;
+mod tab_def;
 
 use crate::decompress::decompress_deflate;
 use crate::document::fileheader::FileHeader;
@@ -19,7 +21,9 @@ use constants::*;
 pub use document_properties::DocumentProperties;
 pub use face_name::FaceName;
 pub use id_mappings::IdMappings;
+pub use numbering::Numbering;
 use serde::{Deserialize, Serialize};
+pub use tab_def::TabDef;
 
 /// Document information structure
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -37,10 +41,10 @@ pub struct DocInfo {
     pub border_fill: Vec<BorderFill>,
     /// Character shapes (parsed) / 글자 모양 (파싱됨)
     pub char_shapes: Vec<CharShape>,
-    /// Tab definitions
-    pub tab_defs: Vec<Vec<u8>>,
-    /// Numbering information
-    pub numbering: Vec<Vec<u8>>,
+    /// Tab definitions (parsed) / 탭 정의 (파싱됨)
+    pub tab_defs: Vec<TabDef>,
+    /// Numbering information (parsed) / 문단 번호 정보 (파싱됨)
+    pub numbering: Vec<Numbering>,
     /// Bullet information
     pub bullets: Vec<Vec<u8>>,
     /// Paragraph shapes
@@ -135,12 +139,16 @@ impl DocInfo {
                 }
                 HWPTAG_TAB_DEF => {
                     if header.level == 1 {
-                        doc_info.tab_defs.push(record_data.to_vec());
+                        // TabDef는 완전히 파싱 / Fully parse TabDef
+                        let tab_def = TabDef::parse(record_data)?;
+                        doc_info.tab_defs.push(tab_def);
                     }
                 }
                 HWPTAG_NUMBERING => {
                     if header.level == 1 {
-                        doc_info.numbering.push(record_data.to_vec());
+                        // Numbering은 완전히 파싱 / Fully parse Numbering
+                        let numbering = Numbering::parse(record_data, file_header.version)?;
+                        doc_info.numbering.push(numbering);
                     }
                 }
                 HWPTAG_BULLET => {

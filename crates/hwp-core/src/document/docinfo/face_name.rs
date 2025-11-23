@@ -2,20 +2,8 @@
 ///
 /// 스펙 문서 매핑: 표 19 - 글꼴 / Spec mapping: Table 19 - Font
 /// Tag ID: HWPTAG_FACE_NAME
-use crate::types::{BYTE, WORD};
+use crate::types::{decode_utf16le, BYTE, WORD};
 use serde::{Deserialize, Serialize};
-
-/// UTF-16LE 바이트 배열을 String으로 디코딩 / Decode UTF-16LE byte array to String
-fn decode_utf16le(bytes: &[u8]) -> Result<String, String> {
-    if bytes.len() % 2 != 0 {
-        return Err("UTF-16LE bytes must be even length".to_string());
-    }
-    let u16_chars: Vec<u16> = bytes
-        .chunks_exact(2)
-        .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
-        .collect();
-    String::from_utf16(&u16_chars).map_err(|e| format!("Failed to decode UTF-16LE string: {}", e))
-}
 
 /// 글꼴 속성 플래그 / Font attribute flags
 mod flags {
