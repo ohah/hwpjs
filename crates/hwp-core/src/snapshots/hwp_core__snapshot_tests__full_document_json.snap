@@ -1,5 +1,6 @@
 ---
 source: crates/hwp-core/src/lib.rs
+assertion_line: 528
 expression: json
 ---
 {
@@ -8982,7 +8983,949 @@ expression: json
     ]
   },
   "body_text": {
-    "sections": []
+    "sections": [
+      {
+        "index": 0,
+        "paragraphs": [
+          {
+            "para_header": {
+              "text_char_count": 25,
+              "control_mask": 2052,
+              "para_shape_id": 26,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "section",
+                "multi_column"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "\u0002捤獥\u0000\u0000\u0000\u0000\u0002\u0002汤捯\u0000\u0000\u0000\u0000\u0002\u000b漠杳\u0000\u0000\u0000\u0000\u000b\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 19
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              },
+              {
+                "type": "ctrl_header"
+              },
+              {
+                "type": "ctrl_header"
+              },
+              {
+                "type": "ctrl_header"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 9,
+              "control_mask": 2048,
+              "para_shape_id": 26,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 2,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "\u000b氠瑢\u0000\u0000\u0000\u0000\u000b\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 9
+                  },
+                  {
+                    "position": 8,
+                    "shape_id": 28
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              },
+              {
+                "type": "ctrl_header"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 9,
+              "control_mask": 2097152,
+              "para_shape_id": 26,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 2147483648,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "\u0015湰灧\u0000\u0000\u0000\u0000\u0015\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 26
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              },
+              {
+                "type": "ctrl_header"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 9,
+              "control_mask": 2048,
+              "para_shape_id": 26,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 2,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "\u000b氠瑢\u0000\u0000\u0000\u0000\u000b\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 21
+                  },
+                  {
+                    "position": 8,
+                    "shape_id": 22
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              },
+              {
+                "type": "ctrl_header"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 100,
+              "control_mask": 0,
+              "para_shape_id": 35,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 13,
+              "range_tag_count": 0,
+              "line_align_count": 3,
+              "instance_id": 2147483648,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "□ 과학기술정보통신부(장관 유영민, 이하 ‘과기정통부’)는 우리나라 최초로 순수 우리기술로 개발 중인 한국형발사체(KSLV-2)의 새로운 이름으로 “누리”가 선정되었다고 밝혔다.\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 2,
+                    "shape_id": 47
+                  },
+                  {
+                    "position": 11,
+                    "shape_id": 49
+                  },
+                  {
+                    "position": 31,
+                    "shape_id": 47
+                  },
+                  {
+                    "position": 42,
+                    "shape_id": 40
+                  },
+                  {
+                    "position": 50,
+                    "shape_id": 37
+                  },
+                  {
+                    "position": 57,
+                    "shape_id": 38
+                  },
+                  {
+                    "position": 63,
+                    "shape_id": 6
+                  },
+                  {
+                    "position": 71,
+                    "shape_id": 38
+                  },
+                  {
+                    "position": 79,
+                    "shape_id": 37
+                  },
+                  {
+                    "position": 81,
+                    "shape_id": 47
+                  },
+                  {
+                    "position": 82,
+                    "shape_id": 39
+                  },
+                  {
+                    "position": 90,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 110,
+              "control_mask": 0,
+              "para_shape_id": 29,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 5,
+              "range_tag_count": 0,
+              "line_align_count": 3,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "  o 한국형발사체는 1.5톤급 실용위성을 지구 저궤도(600km~800km)까지 쏘아 올릴 수 있는 3단형 우주발사체로, 연간 130여개 기관이 참여하여 2021년 발사를 목표로 개발하고 있다.\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 43,
+                    "shape_id": 48
+                  },
+                  {
+                    "position": 80,
+                    "shape_id": 43
+                  },
+                  {
+                    "position": 81,
+                    "shape_id": 42
+                  },
+                  {
+                    "position": 108,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 68,
+              "control_mask": 0,
+              "para_shape_id": 30,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 2,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "  o 올해 10월에는 한국형발사체의 핵심부품인 75톤 액체엔진의 비행성능을 확인하기 위해 시험발사체를 발사할 예정이다.\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 111,
+              "control_mask": 0,
+              "para_shape_id": 37,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 7,
+              "range_tag_count": 0,
+              "line_align_count": 3,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "□ 과기정통부는 한국항공우주연구원(원장 임철호, 이하 ‘항우연’)과 함께 그간 별도의 명칭 없이 ‘한국형발사체’라 불려온 우리 발사체의 새로운 이름을 선정하기 위해 대국민 명칭 공모전을 실시하였다.\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 18,
+                    "shape_id": 44
+                  },
+                  {
+                    "position": 36,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 41,
+                    "shape_id": 40
+                  },
+                  {
+                    "position": 78,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 92,
+                    "shape_id": 39
+                  },
+                  {
+                    "position": 106,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 94,
+              "control_mask": 0,
+              "para_shape_id": 38,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 6,
+              "range_tag_count": 0,
+              "line_align_count": 3,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "  o 4월 27일부터 5월 31일까지 실시한 동 명칭 공모에는 약 6,300여명의 국민이 참여하여 총 10,000건 이상의 응모작을 제출하여 뜨거운 관심을 보였다. \r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 3,
+                    "shape_id": 45
+                  },
+                  {
+                    "position": 35,
+                    "shape_id": 50
+                  },
+                  {
+                    "position": 47,
+                    "shape_id": 41
+                  },
+                  {
+                    "position": 77,
+                    "shape_id": 42
+                  },
+                  {
+                    "position": 83,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 106,
+              "control_mask": 0,
+              "para_shape_id": 34,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 5,
+              "range_tag_count": 0,
+              "line_align_count": 3,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "  o 명칭선정절차는 제출된 응모작에 대해 네이미스트, 카피라이터, 국어교사 등 외부 전문가가 주제와의 적합성, 상징성, 참신성, 발음 및 기억의 용의성 등을 기준으로 후보작을 선별한 후,\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 24,
+                    "shape_id": 39
+                  },
+                  {
+                    "position": 52,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 94,
+                    "shape_id": 39
+                  },
+                  {
+                    "position": 101,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 74,
+              "control_mask": 0,
+              "para_shape_id": 32,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 5,
+              "range_tag_count": 0,
+              "line_align_count": 2,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "  o 발사체 개발에 직접 참여하고 있는 연구자, 산업체 관계자 약 400명의 선호도 조사를 통해 최종 선정하는 절차로 진행되었다.\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 4,
+                    "shape_id": 39
+                  },
+                  {
+                    "position": 17,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 38,
+                    "shape_id": 41
+                  },
+                  {
+                    "position": 60,
+                    "shape_id": 42
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 94,
+              "control_mask": 0,
+              "para_shape_id": 39,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 8,
+              "range_tag_count": 0,
+              "line_align_count": 3,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "□ 이러한 절차를 거쳐 한국형발사체의 새로운 명칭은 ‘누리’로 결정되었으며, 동 명칭은 앞으로 우리나라 독자 발사체인 ‘한국형발사체’의 공식 명칭으로 사용될 예정이다.\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 5,
+                    "shape_id": 47
+                  },
+                  {
+                    "position": 21,
+                    "shape_id": 46
+                  },
+                  {
+                    "position": 37,
+                    "shape_id": 47
+                  },
+                  {
+                    "position": 38,
+                    "shape_id": 45
+                  },
+                  {
+                    "position": 65,
+                    "shape_id": 50
+                  },
+                  {
+                    "position": 75,
+                    "shape_id": 39
+                  },
+                  {
+                    "position": 86,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 135,
+              "control_mask": 0,
+              "para_shape_id": 40,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 11,
+              "range_tag_count": 0,
+              "line_align_count": 4,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "  o 동 명칭을 제출한 경상대학교 에너지기계공학과 백승엽 학생은 ‘누리’는 ‘세상’의 옛말로 우주로까지 확장된 새로운 세상을 연다는 의미로, 우리 손으로 만든 발사체로 온 우주를 누비고 미래 발전을 누리길 희망하는 마음을 담았다고 밝혔다.\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 37,
+                    "shape_id": 45
+                  },
+                  {
+                    "position": 38,
+                    "shape_id": 50
+                  },
+                  {
+                    "position": 51,
+                    "shape_id": 45
+                  },
+                  {
+                    "position": 53,
+                    "shape_id": 50
+                  },
+                  {
+                    "position": 71,
+                    "shape_id": 56
+                  },
+                  {
+                    "position": 74,
+                    "shape_id": 46
+                  },
+                  {
+                    "position": 75,
+                    "shape_id": 38
+                  },
+                  {
+                    "position": 77,
+                    "shape_id": 37
+                  },
+                  {
+                    "position": 107,
+                    "shape_id": 42
+                  },
+                  {
+                    "position": 112,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 59,
+              "control_mask": 0,
+              "para_shape_id": 36,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 3,
+              "range_tag_count": 0,
+              "line_align_count": 2,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "  o 백승엽학생에게는 오는 9월 7일(금)에 과기정통부 장관상과 함께 소정의 상금이 수여될 예정이다. \r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 4,
+                    "shape_id": 47
+                  },
+                  {
+                    "position": 43,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 137,
+              "control_mask": 0,
+              "para_shape_id": 33,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 6,
+              "range_tag_count": 0,
+              "line_align_count": 4,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "□ 과기정통부 거대공공연구정책관은 “명칭 공모전을 통해 우리국민의 우주에 대한 높은 관심을 확인할 수 있었다”며 “새로운 이름에 걸맞게 무한한 가능성을 갖고 있는 우주공간을 우리 발사체로 직접 개척할 수 있도록 최선을 다할 것” 이라고 밝혔다.\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 2,
+                    "shape_id": 48
+                  },
+                  {
+                    "position": 37,
+                    "shape_id": 39
+                  },
+                  {
+                    "position": 53,
+                    "shape_id": 36
+                  },
+                  {
+                    "position": 91,
+                    "shape_id": 39
+                  },
+                  {
+                    "position": 126,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 1,
+              "control_mask": 0,
+              "para_shape_id": 33,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 1,
+              "control_mask": 0,
+              "para_shape_id": 33,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 1,
+              "control_mask": 0,
+              "para_shape_id": 27,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 12
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 9,
+              "control_mask": 2048,
+              "para_shape_id": 27,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "\u000b氠瑢\u0000\u0000\u0000\u0000\u000b\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 36
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              },
+              {
+                "type": "ctrl_header"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 9,
+              "control_mask": 2048,
+              "para_shape_id": 27,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "\u000b氠瑢\u0000\u0000\u0000\u0000\u000b\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 30
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              },
+              {
+                "type": "ctrl_header"
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 9,
+              "control_mask": 2048,
+              "para_shape_id": 27,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "\u000b氠瑢\u0000\u0000\u0000\u0000\u000b\r"
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 30
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg"
+              },
+              {
+                "type": "ctrl_header"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   },
   "bin_data": {
     "items": []
