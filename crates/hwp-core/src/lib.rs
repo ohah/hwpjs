@@ -240,13 +240,13 @@ mod decompress_tests {
 
     #[test]
     fn test_decompress_zlib_basic() {
-        // Create a simple test: compress "hello" and then decompress it
-        use flate2::write::DeflateEncoder;
+        // Create a simple test: compress "hello" using zlib format and then decompress it
+        use flate2::write::ZlibEncoder;
         use flate2::Compression;
         use std::io::Write;
 
         let original = b"hello world";
-        let mut encoder = DeflateEncoder::new(Vec::new(), Compression::default());
+        let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
         encoder.write_all(original).unwrap();
         let compressed = encoder.finish().unwrap();
 
