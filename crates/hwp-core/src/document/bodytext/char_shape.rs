@@ -76,3 +76,4 @@ impl ParaCharShape {
         Ok(ParaCharShape { shapes })
     }
 }
+
