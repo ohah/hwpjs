@@ -6,12 +6,14 @@ mod cfb;
 mod decompress;
 mod document;
 mod types;
+mod viewer;
 
 pub use cfb::CfbParser;
 pub use decompress::{decompress_deflate, decompress_zlib};
 pub use document::{
-    BinData, BodyText, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName,
-    FileHeader, HwpDocument, IdMappings, Numbering, ParaShape, Section, Style, TabDef,
+    BinData, BodyText, BorderFill, Bullet, CharShape, ColumnDivideType, CtrlHeader, CtrlHeaderData,
+    DocInfo, DocumentProperties, FaceName, FileHeader, HwpDocument, IdMappings, Numbering,
+    ParaShape, Paragraph, ParagraphRecord, Section, Style, TabDef,
 };
 pub use types::{
     RecordHeader, BYTE, COLORREF, DWORD, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT,
@@ -526,6 +528,69 @@ mod snapshot_tests {
             let json =
                 serde_json::to_string_pretty(&document).expect("Should serialize document to JSON");
             assert_snapshot!("full_document_json", json);
+        }
+    }
+
+    #[test]
+    fn test_document_to_markdown() {
+        let file_path = match find_test_file() {
+            Some(path) => path,
+            None => return, // Skip test if file not available
+        };
+
+        if let Ok(data) = std::fs::read(&file_path) {
+            let parser = HwpParser::new();
+            let result = parser.parse(&data);
+            assert!(result.is_ok(), "Should parse HWP document");
+            let document = result.unwrap();
+
+            // Convert to Markdown using viewer module
+            let markdown = crate::viewer::to_markdown(&document);
+
+            // Validate markdown output
+            assert!(!markdown.is_empty(), "Markdown should not be empty");
+            assert!(
+                markdown.contains("# HWP 문서"),
+                "Markdown should contain document title"
+            );
+            assert!(
+                markdown.contains("**버전**: "),
+                "Markdown should contain version information"
+            );
+
+            // Print markdown for manual inspection
+            println!("\n=== Generated Markdown ===");
+            println!("{}", markdown);
+            println!("=== End of Markdown ===\n");
+
+            // Save to file for inspection
+            let output_path = "test_output.md";
+            if let Err(e) = std::fs::write(output_path, &markdown) {
+                eprintln!("Warning: Could not write markdown to file: {}", e);
+            } else {
+                println!("Markdown saved to: {}", output_path);
+            }
+        }
+    }
+
+    #[test]
+    fn test_document_to_markdown_snapshot() {
+        let file_path = match find_test_file() {
+            Some(path) => path,
+            None => return, // Skip test if file not available
+        };
+
+        if let Ok(data) = std::fs::read(&file_path) {
+            let parser = HwpParser::new();
+            let result = parser.parse(&data);
+            assert!(result.is_ok(), "Should parse HWP document");
+            let document = result.unwrap();
+
+            // Convert to Markdown using viewer module
+            let markdown = crate::viewer::to_markdown(&document);
+
+            // Create snapshot for markdown output
+            assert_snapshot!("document_markdown", markdown);
         }
     }
 }

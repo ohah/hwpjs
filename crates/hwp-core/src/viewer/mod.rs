@@ -1,0 +1,9 @@
+/// Viewer module for converting HWP documents to various formats
+/// HWP 문서를 다양한 형식으로 변환하는 뷰어 모듈
+///
+/// This module provides functionality to convert parsed HWP documents
+/// into different output formats like Markdown, HTML, etc.
+/// 이 모듈은 파싱된 HWP 문서를 마크다운, HTML 등 다양한 출력 형식으로 변환하는 기능을 제공합니다.
+pub mod markdown;
+
+pub use markdown::to_markdown;

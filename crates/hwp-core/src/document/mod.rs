@@ -10,7 +10,9 @@ mod docinfo;
 mod fileheader;
 
 pub use bindata::BinData;
-pub use bodytext::{BodyText, Paragraph, ParagraphRecord, Section};
+pub use bodytext::{
+    BodyText, ColumnDivideType, CtrlHeader, CtrlHeaderData, Paragraph, ParagraphRecord, Section,
+};
 pub use docinfo::{
     BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName, IdMappings, Numbering,
     ParaShape, Style, TabDef,
@@ -41,5 +43,14 @@ impl HwpDocument {
             body_text: BodyText::default(),
             bin_data: BinData::default(),
         }
+    }
+
+    /// Convert HWP document to Markdown format
+    /// HWP 문서를 마크다운 형식으로 변환
+    ///
+    /// # Returns / 반환값
+    /// Markdown string representation of the document / 문서의 마크다운 문자열 표현
+    pub fn to_markdown(&self) -> String {
+        crate::viewer::to_markdown(self)
     }
 }

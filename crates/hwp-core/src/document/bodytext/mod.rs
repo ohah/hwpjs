@@ -12,9 +12,10 @@ mod para_header;
 mod range_tag;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
-pub use ctrl_header::CtrlHeader;
+pub use ctrl_header::{CtrlHeader, CtrlHeaderData};
 pub use line_seg::{LineSegmentInfo, ParaLineSeg};
 pub use list_header::ListHeader;
+pub use para_header::{ColumnDivideType, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
 
 use crate::cfb::CfbParser;
@@ -23,7 +24,6 @@ use crate::document::fileheader::FileHeader;
 use crate::types::{decode_utf16le, RecordHeader, WORD};
 use cfb::CompoundFile;
 use constants::*;
-use para_header::ParaHeader;
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 
