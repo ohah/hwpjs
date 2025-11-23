@@ -7,12 +7,14 @@ mod char_shape;
 pub mod constants;
 mod ctrl_header;
 mod line_seg;
+mod list_header;
 mod para_header;
 mod range_tag;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
 pub use ctrl_header::CtrlHeader;
 pub use line_seg::{LineSegmentInfo, ParaLineSeg};
+pub use list_header::ListHeader;
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
 
 use crate::cfb::CfbParser;
@@ -82,9 +84,8 @@ pub enum ParagraphRecord {
     },
     /// 문단 리스트 헤더 / Paragraph list header
     ListHeader {
-        /// Raw data (will be parsed later)
-        #[serde(skip)]
-        data: Vec<u8>,
+        /// 문단 리스트 헤더 정보 / Paragraph list header information
+        header: ListHeader,
     },
     /// 기타 레코드 / Other records
     Other {
@@ -181,9 +182,14 @@ impl Section {
                                 header: ctrl_header,
                             }
                         }
-                        HWPTAG_LIST_HEADER => ParagraphRecord::ListHeader {
-                            data: record_data.to_vec(),
-                        },
+                        // NOTE: HWPTAG_LIST_HEADER가 있는 문서를 구해야 함
+                        HWPTAG_LIST_HEADER => {
+                            // 문단 리스트 헤더 파싱 / Parse paragraph list header
+                            let list_header = ListHeader::parse(record_data)?;
+                            ParagraphRecord::ListHeader {
+                                header: list_header,
+                            }
+                        }
                         _ => ParagraphRecord::Other {
                             tag_id: header.tag_id,
                             data: record_data.to_vec(),
