@@ -3,8 +3,7 @@
 /// 스펙 문서 매핑: 표 33 - 글자 모양 / Spec mapping: Table 33 - Character shape
 /// Tag ID: HWPTAG_CHAR_SHAPE
 /// 전체 길이: 72 바이트 / Total length: 72 bytes
-
-use crate::types::{COLORREF, INT32, INT8, UINT16, UINT32, WORD};
+use crate::types::{COLORREF, INT32, INT8, UINT16, UINT32, UINT8, WORD};
 use serde::{Deserialize, Serialize};
 
 /// 언어별 글꼴 정보 / Language-specific font information
@@ -30,38 +29,38 @@ pub struct LanguageFontInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LanguageCharAttributesU8 {
     /// 한글 / Korean
-    pub korean: u8,
+    pub korean: UINT8,
     /// 영어 / English
-    pub english: u8,
+    pub english: UINT8,
     /// 한자 / Chinese
-    pub chinese: u8,
+    pub chinese: UINT8,
     /// 일어 / Japanese
-    pub japanese: u8,
+    pub japanese: UINT8,
     /// 기타 / Other
-    pub other: u8,
+    pub other: UINT8,
     /// 기호 / Symbol
-    pub symbol: u8,
+    pub symbol: UINT8,
     /// 사용자 / User
-    pub user: u8,
+    pub user: UINT8,
 }
 
 /// 언어별 글자 속성 정보 (INT8) / Language-specific character attribute information (INT8)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LanguageCharAttributesI8 {
     /// 한글 / Korean
-    pub korean: i8,
+    pub korean: INT8,
     /// 영어 / English
-    pub english: i8,
+    pub english: INT8,
     /// 한자 / Chinese
-    pub chinese: i8,
+    pub chinese: INT8,
     /// 일어 / Japanese
-    pub japanese: i8,
+    pub japanese: INT8,
     /// 기타 / Other
-    pub other: i8,
+    pub other: INT8,
     /// 기호 / Symbol
-    pub symbol: i8,
+    pub symbol: INT8,
     /// 사용자 / User
-    pub user: i8,
+    pub user: INT8,
 }
 
 /// 글자 모양 속성 / Character shape attributes
@@ -72,13 +71,13 @@ pub struct CharShapeAttributes {
     /// 진하게 여부 / Bold
     pub bold: bool,
     /// 밑줄 종류 (0: 없음, 1: 글자 아래, 2: 글자 위) / Underline type (0: none, 1: below, 2: above)
-    pub underline_type: u8, // bits 2-3
+    pub underline_type: UINT8, // bits 2-3
     /// 밑줄 모양 (0-6) / Underline style (0-6)
-    pub underline_style: u8, // bits 4-7
+    pub underline_style: UINT8, // bits 4-7
     /// 외곽선 종류 (0: 없음, 1: 비연속, 2: 연속) / Outline type (0: none, 1: non-continuous, 2: continuous)
-    pub outline_type: u8, // bits 8-10
+    pub outline_type: UINT8, // bits 8-10
     /// 그림자 종류 / Shadow type
-    pub shadow_type: u8, // bits 11-12
+    pub shadow_type: UINT8, // bits 11-12
     /// 양각 여부 / Emboss
     pub emboss: bool, // bit 13
     /// 음각 여부 / Engrave
@@ -88,13 +87,13 @@ pub struct CharShapeAttributes {
     /// 아래 첨자 여부 / Subscript
     pub subscript: bool, // bit 16
     /// 취소선 여부 (0: 없음, 1-6: 종류) / Strikethrough (0: none, 1-6: type)
-    pub strikethrough: u8, // bits 18-20
+    pub strikethrough: UINT8, // bits 18-20
     /// 강조점 종류 / Emphasis mark type
-    pub emphasis_mark: u8, // bits 21-24
+    pub emphasis_mark: UINT8, // bits 21-24
     /// 글꼴에 어울리는 빈칸 사용 여부 / Use font-appropriate spacing
     pub use_font_spacing: bool, // bit 25
     /// 취소선 모양 (표 25 참조) / Strikethrough style (Table 25)
-    pub strikethrough_style: u8, // bits 26-29
+    pub strikethrough_style: UINT8, // bits 26-29
     /// Kerning 여부 / Kerning
     pub kerning: bool, // bit 30
 }
@@ -168,49 +167,49 @@ impl CharShape {
 
         // UINT8 array[7] 언어별 장평 / UINT8 array[7] language-specific font stretch
         let font_stretch = LanguageCharAttributesU8 {
-            korean: data[offset],
-            english: data[offset + 1],
-            chinese: data[offset + 2],
-            japanese: data[offset + 3],
-            other: data[offset + 4],
-            symbol: data[offset + 5],
-            user: data[offset + 6],
+            korean: data[offset] as UINT8,
+            english: data[offset + 1] as UINT8,
+            chinese: data[offset + 2] as UINT8,
+            japanese: data[offset + 3] as UINT8,
+            other: data[offset + 4] as UINT8,
+            symbol: data[offset + 5] as UINT8,
+            user: data[offset + 6] as UINT8,
         };
         offset += 7;
 
         // INT8 array[7] 언어별 자간 / INT8 array[7] language-specific letter spacing
         let letter_spacing = LanguageCharAttributesI8 {
-            korean: data[offset] as i8,
-            english: data[offset + 1] as i8,
-            chinese: data[offset + 2] as i8,
-            japanese: data[offset + 3] as i8,
-            other: data[offset + 4] as i8,
-            symbol: data[offset + 5] as i8,
-            user: data[offset + 6] as i8,
+            korean: data[offset] as INT8,
+            english: data[offset + 1] as INT8,
+            chinese: data[offset + 2] as INT8,
+            japanese: data[offset + 3] as INT8,
+            other: data[offset + 4] as INT8,
+            symbol: data[offset + 5] as INT8,
+            user: data[offset + 6] as INT8,
         };
         offset += 7;
 
         // UINT8 array[7] 언어별 상대 크기 / UINT8 array[7] language-specific relative size
         let relative_size = LanguageCharAttributesU8 {
-            korean: data[offset],
-            english: data[offset + 1],
-            chinese: data[offset + 2],
-            japanese: data[offset + 3],
-            other: data[offset + 4],
-            symbol: data[offset + 5],
-            user: data[offset + 6],
+            korean: data[offset] as UINT8,
+            english: data[offset + 1] as UINT8,
+            chinese: data[offset + 2] as UINT8,
+            japanese: data[offset + 3] as UINT8,
+            other: data[offset + 4] as UINT8,
+            symbol: data[offset + 5] as UINT8,
+            user: data[offset + 6] as UINT8,
         };
         offset += 7;
 
         // INT8 array[7] 언어별 글자 위치 / INT8 array[7] language-specific text position
         let text_position = LanguageCharAttributesI8 {
-            korean: data[offset] as i8,
-            english: data[offset + 1] as i8,
-            chinese: data[offset + 2] as i8,
-            japanese: data[offset + 3] as i8,
-            other: data[offset + 4] as i8,
-            symbol: data[offset + 5] as i8,
-            user: data[offset + 6] as i8,
+            korean: data[offset] as INT8,
+            english: data[offset + 1] as INT8,
+            chinese: data[offset + 2] as INT8,
+            japanese: data[offset + 3] as INT8,
+            other: data[offset + 4] as INT8,
+            symbol: data[offset + 5] as INT8,
+            user: data[offset + 6] as INT8,
         };
         offset += 7;
 
@@ -235,27 +234,27 @@ impl CharShape {
         let attributes = CharShapeAttributes {
             italic: (attr_value & 0x00000001) != 0,
             bold: (attr_value & 0x00000002) != 0,
-            underline_type: ((attr_value >> 2) & 0x03) as u8,
-            underline_style: ((attr_value >> 4) & 0x0F) as u8,
-            outline_type: ((attr_value >> 8) & 0x07) as u8,
-            shadow_type: ((attr_value >> 11) & 0x03) as u8,
+            underline_type: ((attr_value >> 2) & 0x03) as UINT8,
+            underline_style: ((attr_value >> 4) & 0x0F) as UINT8,
+            outline_type: ((attr_value >> 8) & 0x07) as UINT8,
+            shadow_type: ((attr_value >> 11) & 0x03) as UINT8,
             emboss: (attr_value & 0x00002000) != 0,
             engrave: (attr_value & 0x00004000) != 0,
             superscript: (attr_value & 0x00008000) != 0,
             subscript: (attr_value & 0x00010000) != 0,
-            strikethrough: ((attr_value >> 18) & 0x07) as u8,
-            emphasis_mark: ((attr_value >> 21) & 0x0F) as u8,
+            strikethrough: ((attr_value >> 18) & 0x07) as UINT8,
+            emphasis_mark: ((attr_value >> 21) & 0x0F) as UINT8,
             use_font_spacing: (attr_value & 0x02000000) != 0,
-            strikethrough_style: ((attr_value >> 26) & 0x0F) as u8,
+            strikethrough_style: ((attr_value >> 26) & 0x0F) as UINT8,
             kerning: (attr_value & 0x40000000) != 0,
         };
 
         // INT8 그림자 간격 X / INT8 shadow spacing X
-        let shadow_spacing_x = data[offset] as i8;
+        let shadow_spacing_x = data[offset] as INT8;
         offset += 1;
 
         // INT8 그림자 간격 Y / INT8 shadow spacing Y
-        let shadow_spacing_y = data[offset] as i8;
+        let shadow_spacing_y = data[offset] as INT8;
         offset += 1;
 
         // COLORREF 글자 색 / COLORREF text color
@@ -337,4 +336,3 @@ impl CharShape {
         })
     }
 }
-

@@ -3,7 +3,7 @@
 /// 스펙 문서 매핑: 표 43 - 문단 모양 / Spec mapping: Table 43 - Paragraph shape
 /// Tag ID: HWPTAG_PARA_SHAPE
 /// 전체 길이: 54바이트 / Total length: 54 bytes
-use crate::types::{HWPUNIT16, INT16, INT32, UINT16, UINT32};
+use crate::types::{HWPUNIT16, INT16, INT32, UINT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
 /// 문단 모양 속성1 / Paragraph shape attributes 1
@@ -20,7 +20,7 @@ pub struct ParaShapeAttributes1 {
     /// 편집 용지의 줄 격자 사용 여부 / Use line grid of editing paper
     pub use_line_grid: bool,
     /// 최소 공백 값(0%~75%) / Minimum blank value (0%~75%)
-    pub blank_min_value: u8,
+    pub blank_min_value: UINT8,
     /// 외톨이 줄 보호 / Protect orphan line
     pub protect_orphan_line: bool,
     /// 다음 문단과 함께 / With next paragraph
@@ -36,7 +36,7 @@ pub struct ParaShapeAttributes1 {
     /// 문단 머리 모양 종류 / Paragraph header shape type
     pub header_shape_type: HeaderShapeType,
     /// 문단 수준(1~7) / Paragraph level (1~7)
-    pub paragraph_level: u8,
+    pub paragraph_level: UINT8,
     /// 문단 테두리 연결 / Connect paragraph border
     pub connect_border: bool,
     /// 문단 여백 무시 / Ignore paragraph margin
@@ -182,7 +182,7 @@ impl HeaderShapeType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParaShapeAttributes2 {
     /// 한 줄 입력 / Single line input
-    pub single_line_input: u8,
+    pub single_line_input: UINT8,
     /// 한글과 영문 사이 자동 간격 조정 / Auto spacing adjustment between Korean and English
     pub auto_spacing_ko_en: bool,
     /// 한글과 숫자 사이 자동 간격 조정 / Auto spacing adjustment between Korean and number
@@ -297,7 +297,7 @@ impl ParaShape {
             line_divide_en: LineDivideUnit::from_bits_en(attr1_value),
             line_divide_ko: LineDivideUnit::from_bit_ko((attr1_value & 0x00000080) != 0),
             use_line_grid: (attr1_value & 0x00000100) != 0,
-            blank_min_value: ((attr1_value >> 9) & 0x0000007F) as u8,
+            blank_min_value: ((attr1_value >> 9) & 0x0000007F) as UINT8,
             protect_orphan_line: (attr1_value & 0x00010000) != 0,
             with_next_paragraph: (attr1_value & 0x00020000) != 0,
             protect_paragraph: (attr1_value & 0x00040000) != 0,
@@ -305,7 +305,7 @@ impl ParaShape {
             vertical_align: VerticalAlignment::from_bits(attr1_value),
             line_height_matches_font: (attr1_value & 0x00400000) != 0,
             header_shape_type: HeaderShapeType::from_bits(attr1_value),
-            paragraph_level: ((attr1_value >> 25) & 0x00000007) as u8,
+            paragraph_level: ((attr1_value >> 25) & 0x00000007) as UINT8,
             connect_border: (attr1_value & 0x10000000) != 0,
             ignore_margin: (attr1_value & 0x20000000) != 0,
             tail_shape: (attr1_value & 0x40000000) != 0,
@@ -412,7 +412,7 @@ impl ParaShape {
             ]);
             offset += 4;
             Some(ParaShapeAttributes2 {
-                single_line_input: (attr2_value & 0x00000003) as u8,
+                single_line_input: (attr2_value & 0x00000003) as UINT8,
                 auto_spacing_ko_en: (attr2_value & 0x00000010) != 0,
                 auto_spacing_ko_num: (attr2_value & 0x00000020) != 0,
             })
