@@ -5,12 +5,14 @@ mod char_shape;
 ///
 /// 스펙 문서 매핑: 표 2 - 본문 (BodyText 스토리지)
 pub mod constants;
+mod ctrl_header;
 mod line_seg;
 mod para_header;
 mod range_tag;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
-pub use line_seg::{LineSegmentInfo, LineSegmentTag, ParaLineSeg};
+pub use ctrl_header::CtrlHeader;
+pub use line_seg::{LineSegmentInfo, ParaLineSeg};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
 
 use crate::cfb::CfbParser;
@@ -74,9 +76,9 @@ pub enum ParagraphRecord {
     },
     /// 컨트롤 헤더 / Control header
     CtrlHeader {
-        /// Raw data (will be parsed later)
-        #[serde(skip)]
-        data: Vec<u8>,
+        /// 컨트롤 헤더 정보 / Control header information
+        #[serde(flatten)]
+        header: CtrlHeader,
     },
     /// 문단 리스트 헤더 / Paragraph list header
     ListHeader {
@@ -172,9 +174,13 @@ impl Section {
                                 tags: para_range_tag.tags,
                             }
                         }
-                        HWPTAG_CTRL_HEADER => ParagraphRecord::CtrlHeader {
-                            data: record_data.to_vec(),
-                        },
+                        HWPTAG_CTRL_HEADER => {
+                            // 컨트롤 헤더 파싱 / Parse control header
+                            let ctrl_header = CtrlHeader::parse(record_data)?;
+                            ParagraphRecord::CtrlHeader {
+                                header: ctrl_header,
+                            }
+                        }
                         HWPTAG_LIST_HEADER => ParagraphRecord::ListHeader {
                             data: record_data.to_vec(),
                         },
