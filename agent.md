@@ -30,7 +30,7 @@ hwpjs/
 │   └── hwp-core/          # 공유 Rust 라이브러리 (핵심 HWP 파싱 로직)
 ├── packages/
 │   ├── react-native/      # React Native용 래퍼 (Craby 사용)
-│   └── node/              # Node.js용 래퍼 (NAPI-RS 사용)
+│   └── hwpjs/             # Node.js용 래퍼 (NAPI-RS 사용)
 ├── examples/              # 사용 예제 코드
 ├── docs/                  # 문서 사이트 (Rspress)
 └── legacy/                # 기존 JavaScript 구현
@@ -53,7 +53,7 @@ hwpjs/
 ### JavaScript/TypeScript 관련
 - **린트**: oxlint - 빠른 JavaScript/TypeScript 린터
 - **포맷터**: oxfmt - Prettier 호환 포맷터
-- **테스트 (Node)**: Vitest
+- **테스트 (Node)**: Bun
 - **배포 (Node)**: tsdown
 
 ### 문서
@@ -61,7 +61,7 @@ hwpjs/
 
 ### 테스트
 - **React Native**: Maestro (E2E 테스트)
-- **Node.js**: Vitest (유닛 테스트)
+- **Node.js**: Bun (유닛 테스트)
 - **Rust**: cargo test
 
 ### 환경 관리
@@ -359,17 +359,17 @@ refactor(core): reorganize modules to match HWP file structure
   - 스냅샷 파일은 `src/snapshots/` 디렉토리에 저장
   - 스냅샷 변경 시 `cargo insta review`로 검토 및 승인
 
-### `packages/react-native`
+### `packages/react-native(지원 X)`
 - **역할**: React Native 환경에서 HWP 파일 읽기
 - **의존성**: `hwp-core`
 - **도구**: Craby
 - **테스트**: Maestro
 
-### `packages/node`
+### `packages/hwpjs`
 - **역할**: Node.js 환경에서 HWP 파일 읽기
 - **의존성**: `hwp-core`
 - **도구**: NAPI-RS
-- **테스트**: Vitest
+- **테스트**: Bun
 - **배포**: tsdown
 
 ### `examples/`
@@ -392,8 +392,7 @@ refactor(core): reorganize modules to match HWP file structure
 
 ## 주의사항
 
-1. 모든 패키지는 초기 설정 단계이며 "Hello World" 수준의 코드만 포함
+1. hwp-core를 제외한 나머지는 초기설정 단계이며 "Hello World" 수준의 코드만 포함
 2. 실제 Rust 구현은 이후 단계에서 진행
 3. Craby와 NAPI-RS 프로젝트 초기화는 각각의 CLI 도구로 진행 예정
 4. 파일 읽기 로직은 환경별로 다르게 구현되지만, 핵심 파싱 로직은 공유
-
