@@ -77,6 +77,36 @@ hwpjs/
 - 파일 읽기를 트레이트로 추상화하여 환경별 구현 가능
 - 환경 독립적인 비즈니스 로직만 포함
 
+#### 모듈 구조
+
+`crates/hwp-core/src/` 디렉토리는 HWP 파일 구조에 맞춰 다음과 같이 구성됩니다:
+
+```
+src/
+├── document/                 # HWP 문서 구조 (표 2: 전체 구조)
+│   ├── mod.rs               # HwpDocument 통합 구조체
+│   ├── fileheader/          # FileHeader 스트림 (파일 인식 정보)
+│   │   ├── mod.rs           # 구조체 정의 및 파싱 로직
+│   │   ├── constants.rs     # 플래그 상수 (document_flags, license_flags)
+│   │   └── serialize.rs     # JSON 직렬화 함수
+│   ├── docinfo/             # DocInfo 스트림 (문서 정보)
+│   │   └── mod.rs
+│   ├── bodytext/            # BodyText 스토리지 (본문)
+│   │   └── mod.rs
+│   └── bindata/             # BinData 스토리지 (바이너리 데이터)
+│       └── mod.rs
+├── types.rs                  # HWP 자료형 정의 (표 1: 자료형)
+├── cfb.rs                    # CFB (Compound File Binary) 파싱
+├── decompress.rs             # zlib 압축 해제
+└── lib.rs                    # 라이브러리 진입점 및 HwpParser
+```
+
+**구조 원칙**:
+- HWP 파일 구조(스펙 문서 표 2)와 1:1 매핑
+- 각 스트림/스토리지는 독립적인 모듈로 분리
+- 상수, 직렬화 등은 별도 파일로 분리하여 가독성 향상
+- 스펙 문서의 구조를 그대로 반영하여 유지보수성 향상
+
 ### 환경별 래퍼
 
 #### `packages/react-native`
@@ -110,8 +140,103 @@ hwpjs/
 - JavaScript/TypeScript: `oxlint` 및 `oxfmt` 사용
 - 모든 코드는 저장 시 자동 포맷팅
 
+### HWP 자료형 타입 정의 (hwp-core 개발 필수)
+
+**중요**: `crates/hwp-core`에서 HWP 파일을 파싱할 때는 반드시 스펙 문서의 자료형을 별도 타입으로 정의해야 합니다.
+
+#### 원칙
+- HWP 5.0 스펙 문서의 "표 1: 자료형"에 정의된 모든 자료형을 `crates/hwp-core/src/types.rs`에 명시적으로 정의
+- 스펙 문서와 코드의 1:1 매핑을 유지하여 유지보수성 향상
+- 스펙 문서의 용어를 그대로 사용 (예: `DWORD`, `HWPUNIT`, `COLORREF`)
+
+#### 구현 방법
+1. **기본 타입**: `type` 별칭으로 정의
+   ```rust
+   pub type BYTE = u8;
+   pub type WORD = u16;
+   pub type DWORD = u32;
+   pub type WCHAR = u16;
+   pub type UINT8 = u8;
+   pub type UINT16 = u16;
+   pub type UINT32 = u32;
+   pub type INT8 = i8;
+   pub type INT16 = i16;
+   pub type INT32 = i32;
+   ```
+
+2. **도메인 특화 타입**: 구조체로 정의하고 유용한 메서드 추가
+   ```rust
+   // HWPUNIT: 1/7200인치 단위
+   #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+   pub struct HWPUNIT(pub u32);
+   
+   impl HWPUNIT {
+       pub fn to_inches(self) -> f64 { self.0 as f64 / 7200.0 }
+       pub fn from_inches(inches: f64) -> Self { Self((inches * 7200.0) as u32) }
+   }
+   
+   // COLORREF: RGB 값 (0x00bbggrr)
+   #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+   pub struct COLORREF(pub u32);
+   
+   impl COLORREF {
+       pub fn rgb(r: u8, g: u8, b: u8) -> Self { ... }
+       pub fn r(self) -> u8 { ... }
+       pub fn g(self) -> u8 { ... }
+       pub fn b(self) -> u8 { ... }
+   }
+   ```
+
+3. **사용 예시**
+   ```rust
+   // ❌ 잘못된 방법: Rust 기본 타입 직접 사용
+   pub struct FileHeader {
+       pub version: u32,        // 스펙 문서와 불일치
+       pub attributes: u32,     // DWORD인지 UINT32인지 불명확
+   }
+   
+   // ✅ 올바른 방법: 스펙 문서의 자료형 사용
+   pub struct FileHeader {
+       pub version: DWORD,       // 스펙 문서와 1:1 매핑
+       pub attributes: DWORD,   // 명확한 의미
+   }
+   ```
+
+#### 장점
+- **유지보수성**: 스펙 문서 변경 시 타입 정의만 수정하면 컴파일러가 영향 범위 자동 감지
+- **가독성**: 타입 이름만 봐도 스펙 문서의 의미를 바로 파악 가능
+- **타입 안전성**: 도메인 특화 타입으로 실수 방지 (예: `HWPUNIT`와 일반 `u32` 혼용 방지)
+- **스펙 문서 일치**: 코드 리뷰 시 스펙 문서 참조가 쉬움
+
+#### 참고
+- 모든 타입 정의는 `crates/hwp-core/src/types.rs`에 위치
+- `Serialize`/`Deserialize` 트레이트를 구현하여 JSON 직렬화 지원
+- 도메인 특화 타입(`HWPUNIT`, `COLORREF` 등)은 유용한 변환 메서드 제공
+
 ### 테스트
+
+#### Rust 테스트 (필수)
+
+**중요**: `crates/hwp-core` 개발 시에는 반드시 다음을 수행해야 합니다:
+
+1. **단위 테스트 작성**: 모든 기능에 대한 단위 테스트를 먼저 작성 (TDD 방식)
+2. **스냅샷 테스트 작성**: JSON 출력 결과를 검증하기 위한 스냅샷 테스트 작성
+3. **테스트 실행**: `bun run test:rust` 또는 `bun run test:rust-core`로 모든 테스트 통과 확인
+4. **스냅샷 검토**: `bun run test:rust:snapshot:review`로 스냅샷 변경사항 검토 및 승인
+
+**스냅샷 테스트 원칙**:
+- JSON 출력 결과는 반드시 스냅샷으로 저장하여 검증
+- 스냅샷 파일은 `crates/hwp-core/src/snapshots/` 디렉토리에 저장
+- 스냅샷 변경 시 `cargo insta review`로 변경사항을 검토하고 승인
+- 스냅샷 파일은 git에 커밋하여 버전 관리
+
+**테스트 명령어**:
 - Rust 테스트: `bun run test:rust`
+- Rust 코어 테스트: `bun run test:rust-core`
+- Rust 스냅샷 테스트: `bun run test:rust:snapshot`
+- Rust 스냅샷 검토: `bun run test:rust:snapshot:review`
+
+#### 기타 테스트
 - Node.js 테스트: `bun run test:node`
 - E2E 테스트: `bun run test:e2e`
 
@@ -129,6 +254,20 @@ hwpjs/
 - **역할**: HWP 파일 파싱 핵심 로직
 - **의존성**: 없음 (순수 Rust 라이브러리)
 - **인터페이스**: 파일 읽기를 위한 트레이트 정의
+- **자료형 정의**: `src/types.rs`에 HWP 5.0 스펙 문서의 모든 자료형을 명시적으로 정의
+  - 스펙 문서의 "표 1: 자료형"과 1:1 매핑
+  - 기본 타입은 `type` 별칭으로, 도메인 특화 타입은 구조체로 정의
+- **모듈 구조**: HWP 파일 구조(스펙 문서 표 2)에 맞춰 `document/` 디렉토리 하위에 구성
+  - `document/fileheader/`: FileHeader 스트림 파싱
+  - `document/docinfo/`: DocInfo 스트림 파싱
+  - `document/bodytext/`: BodyText 스토리지 파싱
+  - `document/bindata/`: BinData 스토리지 파싱
+  - 각 모듈은 상수, 직렬화 등을 별도 파일로 분리하여 가독성 향상
+- **테스트**: 
+  - **필수**: 모든 기능에 대한 단위 테스트 작성 (TDD 방식)
+  - **필수**: JSON 출력 결과를 검증하는 스냅샷 테스트 작성
+  - 스냅샷 파일은 `src/snapshots/` 디렉토리에 저장
+  - 스냅샷 변경 시 `cargo insta review`로 검토 및 승인
 
 ### `packages/react-native`
 - **역할**: React Native 환경에서 HWP 파일 읽기
