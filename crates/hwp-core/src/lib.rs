@@ -11,7 +11,7 @@ pub use cfb::CfbParser;
 pub use decompress::{decompress_deflate, decompress_zlib};
 pub use document::{
     BinData, BodyText, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName,
-    FileHeader, HwpDocument, IdMappings, Numbering, ParaShape, Section, TabDef,
+    FileHeader, HwpDocument, IdMappings, Numbering, ParaShape, Section, Style, TabDef,
 };
 pub use types::{
     RecordHeader, BYTE, COLORREF, DWORD, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT,

@@ -12,6 +12,7 @@ mod face_name;
 mod id_mappings;
 mod numbering;
 mod para_shape;
+mod style;
 mod tab_def;
 
 use crate::decompress::decompress_deflate;
@@ -27,6 +28,7 @@ pub use id_mappings::IdMappings;
 pub use numbering::Numbering;
 pub use para_shape::ParaShape;
 use serde::{Deserialize, Serialize};
+pub use style::Style;
 pub use tab_def::TabDef;
 
 /// Document information structure
@@ -53,8 +55,8 @@ pub struct DocInfo {
     pub bullets: Vec<Bullet>,
     /// Paragraph shapes (parsed) / 문단 모양 (파싱됨)
     pub para_shapes: Vec<ParaShape>,
-    /// Styles
-    pub styles: Vec<Vec<u8>>,
+    /// Styles (parsed) / 스타일 (파싱됨)
+    pub styles: Vec<Style>,
 }
 
 impl DocInfo {
@@ -171,7 +173,8 @@ impl DocInfo {
                 }
                 HWPTAG_STYLE => {
                     if header.level == 1 {
-                        doc_info.styles.push(record_data.to_vec());
+                        let style = Style::parse(record_data)?;
+                        doc_info.styles.push(style);
                     }
                 }
                 // 기타 태그는 무시 (나중에 구현 가능) / Other tags are ignored (can be implemented later)
