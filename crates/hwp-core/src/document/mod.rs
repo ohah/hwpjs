@@ -1,5 +1,6 @@
 mod bindata;
 mod bodytext;
+mod constants;
 mod docinfo;
 /// HWP Document structure
 ///
@@ -9,7 +10,7 @@ mod docinfo;
 mod fileheader;
 
 pub use bindata::BinData;
-pub use bodytext::{BodyText, Section};
+pub use bodytext::{BodyText, Paragraph, ParagraphRecord, Section};
 pub use docinfo::{
     BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName, IdMappings, Numbering,
     ParaShape, Style, TabDef,

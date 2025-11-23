@@ -1,10 +1,7 @@
 /// DocInfo 태그 상수 정의 / DocInfo tag constants definition
 ///
 /// 스펙 문서 매핑: 표 13 - 문서 정보의 데이터 레코드 / Spec mapping: Table 13 - Document information data records
-/// HWPTAG_BEGIN = 0x10 (한글 내부 사용을 위해 예약된 영역의 시작) / HWPTAG_BEGIN = 0x10 (start of reserved area for HWP internal use)
-
-/// 데이터 레코드 시작 값 / Data record start value
-pub const HWPTAG_BEGIN: u16 = 0x10;
+use crate::document::constants::HWPTAG_BEGIN;
 
 /// 문서 속성 / Document properties
 pub const HWPTAG_DOCUMENT_PROPERTIES: u16 = HWPTAG_BEGIN;
@@ -68,4 +65,3 @@ pub const HWPTAG_TRACK_CHANGE: u16 = HWPTAG_BEGIN + 80;
 
 /// 변경 추적 작성자 / Track change author
 pub const HWPTAG_TRACK_CHANGE_AUTHOR: u16 = HWPTAG_BEGIN + 81;
-
