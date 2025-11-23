@@ -4,6 +4,7 @@
 ///
 /// 스펙 문서 매핑: 표 2 - 문서 정보 (DocInfo 스트림) / Spec mapping: Table 2 - Document information (DocInfo stream)
 mod border_fill;
+mod bullet;
 mod char_shape;
 mod constants;
 mod document_properties;
@@ -16,6 +17,7 @@ use crate::decompress::decompress_deflate;
 use crate::document::fileheader::FileHeader;
 use crate::types::RecordHeader;
 pub use border_fill::BorderFill;
+pub use bullet::Bullet;
 pub use char_shape::CharShape;
 use constants::*;
 pub use document_properties::DocumentProperties;
@@ -45,8 +47,8 @@ pub struct DocInfo {
     pub tab_defs: Vec<TabDef>,
     /// Numbering information (parsed) / 문단 번호 정보 (파싱됨)
     pub numbering: Vec<Numbering>,
-    /// Bullet information
-    pub bullets: Vec<Vec<u8>>,
+    /// Bullet information (parsed) / 글머리표 정보 (파싱됨)
+    pub bullets: Vec<Bullet>,
     /// Paragraph shapes
     pub para_shapes: Vec<Vec<u8>>,
     /// Styles
@@ -153,7 +155,9 @@ impl DocInfo {
                 }
                 HWPTAG_BULLET => {
                     if header.level == 1 {
-                        doc_info.bullets.push(record_data.to_vec());
+                        // Bullet은 완전히 파싱 / Fully parse Bullet
+                        let bullet = Bullet::parse(record_data)?;
+                        doc_info.bullets.push(bullet);
                     }
                 }
                 HWPTAG_PARA_SHAPE => {

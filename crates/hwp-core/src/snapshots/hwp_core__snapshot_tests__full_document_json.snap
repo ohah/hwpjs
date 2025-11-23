@@ -6678,31 +6678,26 @@ expression: json
       }
     ],
     "bullets": [
-      [
-        8,
-        0,
-        0,
-        0,
-        0,
-        0,
-        50,
-        0,
-        255,
-        255,
-        255,
-        255,
-        45,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ]
+      {
+        "attributes": {
+          "align_type": "left",
+          "instance_like": false,
+          "auto_outdent": true,
+          "distance_type": "ratio"
+        },
+        "width": 0,
+        "space": 50,
+        "char_shape_id": -1,
+        "bullet_char": 45,
+        "image_bullet_id": 0,
+        "image_bullet_attributes": {
+          "brightness": 0,
+          "contrast": 0,
+          "effect": 0,
+          "id": 0
+        },
+        "check_bullet_char": 0
+      }
     ],
     "para_shapes": [
       [
