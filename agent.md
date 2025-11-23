@@ -27,7 +27,10 @@ HWPJS는 한글과컴퓨터의 한/글 문서 파일(.hwp)을 읽고 파싱하�
 ```
 hwpjs/
 ├── crates/
-│   └── hwp-core/          # 공유 Rust 라이브러리 (핵심 HWP 파싱 로직)
+│   └── hwp-core/          # 공유 Rust 라이브러리 (핵심 HWP 파싱 로직 + 뷰어 기능)
+│       └── src/
+│           ├── document/  # 문서 파싱 모듈
+│           └── viewer/     # 문서 변환/뷰어 모듈 (마크다운, PDF(지원 예정) 등)
 ├── packages/
 │   ├── react-native/      # React Native용 래퍼 (Craby 사용)
 │   └── hwpjs/             # Node.js용 래퍼 (NAPI-RS 사용)
@@ -76,6 +79,11 @@ hwpjs/
 - HWP 파일 파싱의 핵심 로직을 담당
 - 파일 읽기를 트레이트로 추상화하여 환경별 구현 가능
 - 환경 독립적인 비즈니스 로직만 포함
+- 파싱된 문서 구조체(`HwpDocument`) 제공
+- 문서 변환/뷰어 기능 포함 (`viewer/` 모듈)
+  - 현재 지원 형식: 마크다운 (Markdown)
+  - 향후 지원 예정: PDF 등
+  - 파싱(`document/`)과 변환(`viewer/`)의 관심사 분리
 
 #### 모듈 구조
 
@@ -95,6 +103,9 @@ src/
 │   │   └── mod.rs
 │   └── bindata/             # BinData 스토리지 (바이너리 데이터)
 │       └── mod.rs
+├── viewer/                   # 문서 변환/뷰어 모듈
+│   ├── mod.rs               # 뷰어 모듈 진입점
+│   └── markdown.rs          # 마크다운 변환 로직
 ├── types.rs                  # HWP 자료형 정의 (표 1: 자료형)
 ├── cfb.rs                    # CFB (Compound File Binary) 파싱
 ├── decompress.rs             # zlib 압축 해제
@@ -341,18 +352,26 @@ refactor(core): reorganize modules to match HWP file structure
 ## 패키지별 상세
 
 ### `crates/hwp-core`
-- **역할**: HWP 파일 파싱 핵심 로직
+- **역할**: HWP 파일 파싱 핵심 로직 및 문서 변환/뷰어 기능
 - **의존성**: 없음 (순수 Rust 라이브러리)
 - **인터페이스**: 파일 읽기를 위한 트레이트 정의
 - **자료형 정의**: `src/types.rs`에 HWP 5.0 스펙 문서의 모든 자료형을 명시적으로 정의
   - 스펙 문서의 "표 1: 자료형"과 1:1 매핑
   - 기본 타입은 `type` 별칭으로, 도메인 특화 타입은 구조체로 정의
-- **모듈 구조**: HWP 파일 구조(스펙 문서 표 2)에 맞춰 `document/` 디렉토리 하위에 구성
-  - `document/fileheader/`: FileHeader 스트림 파싱
-  - `document/docinfo/`: DocInfo 스트림 파싱
-  - `document/bodytext/`: BodyText 스토리지 파싱
-  - `document/bindata/`: BinData 스토리지 파싱
-  - 각 모듈은 상수, 직렬화 등을 별도 파일로 분리하여 가독성 향상
+- **모듈 구조**:
+  - **파싱 모듈** (`document/`): HWP 파일 구조(스펙 문서 표 2)에 맞춰 구성
+    - `document/fileheader/`: FileHeader 스트림 파싱
+    - `document/docinfo/`: DocInfo 스트림 파싱
+    - `document/bodytext/`: BodyText 스토리지 파싱
+    - `document/bindata/`: BinData 스토리지 파싱
+    - 각 모듈은 상수, 직렬화 등을 별도 파일로 분리하여 가독성 향상
+  - **뷰어 모듈** (`viewer/`): 문서 변환/뷰어 기능
+    - `viewer/markdown.rs`: 마크다운 변환 로직
+    - 향후 `viewer/html.rs`, `viewer/pdf.rs` 등 추가 예정
+- **설계 원칙**:
+  - 파싱(`document/`)과 변환(`viewer/`)의 관심사 분리
+  - 각 형식별 변환 로직을 독립적인 모듈로 구성
+  - 확장 가능한 구조로 다양한 출력 형식 지원
 - **테스트**: 
   - **필수**: 모든 기능에 대한 단위 테스트 작성 (TDD 방식)
   - **필수**: JSON 출력 결과를 검증하는 스냅샷 테스트 작성
