@@ -16,6 +16,7 @@ mod para_header;
 mod range_tag;
 pub mod record_tree;
 mod shape_component;
+mod shape_component_line;
 mod table;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
@@ -28,6 +29,7 @@ pub use page_def::PageDef;
 pub use para_header::{ColumnDivideType, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
 pub use shape_component::ShapeComponent;
+pub use shape_component_line::ShapeComponentLine;
 pub use table::{Table, TableCell};
 
 use crate::cfb::CfbParser;
@@ -129,6 +131,11 @@ pub enum ParagraphRecord {
     ShapeComponent {
         /// 개체 요소 정보 / Shape component information
         shape_component: ShapeComponent,
+    },
+    /// 직선 개체 / Line shape component
+    ShapeComponentLine {
+        /// 직선 개체 정보 / Line shape component information
+        shape_component_line: ShapeComponentLine,
     },
     /// 기타 레코드 / Other records
     Other {
@@ -733,6 +740,20 @@ impl Section {
                 // 스펙 문서 매핑: 표 82, 83 - 개체 요소 속성 / Spec mapping: Table 82, 83 - Shape component attributes
                 let shape_component = ShapeComponent::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponent { shape_component })
+            }
+            HwpTag::SHAPE_COMPONENT_LINE => {
+                // 직선 개체 파싱 / Parse line shape component
+                // 스펙 문서 매핑: 표 92 - 선 개체 속성 / Spec mapping: Table 92 - Line shape component attributes
+                // 레거시 코드는 선 개체 속성 부분만 파싱하고 있습니다.
+                // Legacy code only parses the line shape component attributes part.
+                // 실제 파일 구조를 확인하여 필요시 수정이 필요할 수 있습니다.
+                // Actual file structure may need to be verified and modified if necessary.
+                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_LINE 레코드가 없어 실제 파일로 테스트되지 않음
+                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_LINE records, so it has not been tested with actual files
+                let shape_component_line = ShapeComponentLine::parse(node.data())?;
+                Ok(ParagraphRecord::ShapeComponentLine {
+                    shape_component_line,
+                })
             }
             _ => Ok(ParagraphRecord::Other {
                 tag_id: node.tag_id(),
