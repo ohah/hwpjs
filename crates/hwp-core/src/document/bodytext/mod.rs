@@ -9,6 +9,7 @@ pub use constants::HwpTag;
 mod ctrl_header;
 mod line_seg;
 mod list_header;
+mod page_def;
 mod para_header;
 mod range_tag;
 pub mod record_tree;
@@ -18,6 +19,7 @@ pub use char_shape::{CharShapeInfo, ParaCharShape};
 pub use ctrl_header::{CtrlHeader, CtrlHeaderData, CtrlId};
 pub use line_seg::{LineSegmentInfo, ParaLineSeg};
 pub use list_header::ListHeader;
+pub use page_def::PageDef;
 pub use para_header::{ColumnDivideType, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
 pub use table::{Table, TableCell};
@@ -101,6 +103,11 @@ pub enum ParagraphRecord {
     Table {
         /// 표 개체 정보 / Table object information
         table: Table,
+    },
+    /// 용지 설정 / Page definition
+    PageDef {
+        /// 용지 설정 정보 / Page definition information
+        page_def: PageDef,
     },
     /// 기타 레코드 / Other records
     Other {
@@ -681,6 +688,12 @@ impl Section {
                 // hwp.js: visitTable only parses table attributes, LIST_HEADER is processed in visitListHeader
                 let table = Table::parse(node.data(), version)?;
                 Ok(ParagraphRecord::Table { table })
+            }
+            HwpTag::PAGE_DEF => {
+                // 용지 설정 파싱 / Parse page definition
+                // 스펙 문서 매핑: 표 131 - 용지 설정 / Spec mapping: Table 131 - Page definition
+                let page_def = PageDef::parse(node.data())?;
+                Ok(ParagraphRecord::PageDef { page_def })
             }
             _ => Ok(ParagraphRecord::Other {
                 tag_id: node.tag_id(),

@@ -9081,8 +9081,22 @@ expression: json
                 "data_type": "other",
                 "children": [
                   {
-                    "type": "other",
-                    "tag_id": 73
+                    "type": "page_def",
+                    "page_def": {
+                      "paper_width": 59528,
+                      "paper_height": 84188,
+                      "left_margin": 5669,
+                      "right_margin": 5669,
+                      "top_margin": 2834,
+                      "bottom_margin": 2834,
+                      "header_margin": 4251,
+                      "footer_margin": 4251,
+                      "binding_margin": 0,
+                      "attributes": {
+                        "paper_direction": "vertical",
+                        "binding_method": "single_page"
+                      }
+                    }
                   },
                   {
                     "type": "other",
