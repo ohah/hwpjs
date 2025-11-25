@@ -7,6 +7,7 @@ mod char_shape;
 pub mod constants;
 pub use constants::HwpTag;
 mod ctrl_header;
+mod footnote_shape;
 mod line_seg;
 mod list_header;
 mod page_def;
@@ -17,6 +18,7 @@ mod table;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
 pub use ctrl_header::{CtrlHeader, CtrlHeaderData, CtrlId};
+pub use footnote_shape::FootnoteShape;
 pub use line_seg::{LineSegmentInfo, ParaLineSeg};
 pub use list_header::ListHeader;
 pub use page_def::PageDef;
@@ -108,6 +110,11 @@ pub enum ParagraphRecord {
     PageDef {
         /// 용지 설정 정보 / Page definition information
         page_def: PageDef,
+    },
+    /// 각주/미주 모양 / Footnote/endnote shape
+    FootnoteShape {
+        /// 각주/미주 모양 정보 / Footnote/endnote shape information
+        footnote_shape: FootnoteShape,
     },
     /// 기타 레코드 / Other records
     Other {
@@ -694,6 +701,12 @@ impl Section {
                 // 스펙 문서 매핑: 표 131 - 용지 설정 / Spec mapping: Table 131 - Page definition
                 let page_def = PageDef::parse(node.data())?;
                 Ok(ParagraphRecord::PageDef { page_def })
+            }
+            HwpTag::FOOTNOTE_SHAPE => {
+                // 각주/미주 모양 파싱 / Parse footnote/endnote shape
+                // 스펙 문서 매핑: 표 133 - 각주/미주 모양 / Spec mapping: Table 133 - Footnote/endnote shape
+                let footnote_shape = FootnoteShape::parse(node.data())?;
+                Ok(ParagraphRecord::FootnoteShape { footnote_shape })
             }
             _ => Ok(ParagraphRecord::Other {
                 tag_id: node.tag_id(),

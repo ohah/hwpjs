@@ -9099,12 +9099,50 @@ expression: json
                     }
                   },
                   {
-                    "type": "other",
-                    "tag_id": 74
+                    "type": "footnote_shape",
+                    "footnote_shape": {
+                      "attributes": {
+                        "number_shape": "arabic",
+                        "page_position": "separate",
+                        "numbering": "continue",
+                        "superscript": false,
+                        "prefix": false
+                      },
+                      "custom_symbol": 0,
+                      "front_decoration": 0,
+                      "back_decoration": 41,
+                      "start_number": 1,
+                      "breakline_length": -1,
+                      "breakline_top_margin": -1,
+                      "breakline_bottom_margin": 850,
+                      "remark_between_margin": 567,
+                      "breakline_type": 27,
+                      "breakline_thickness": 1,
+                      "breakline_color": 257
+                    }
                   },
                   {
-                    "type": "other",
-                    "tag_id": 74
+                    "type": "footnote_shape",
+                    "footnote_shape": {
+                      "attributes": {
+                        "number_shape": "arabic",
+                        "page_position": "separate",
+                        "numbering": "continue",
+                        "superscript": false,
+                        "prefix": false
+                      },
+                      "custom_symbol": 0,
+                      "front_decoration": 0,
+                      "back_decoration": 41,
+                      "start_number": 1,
+                      "breakline_length": 12280,
+                      "breakline_top_margin": 224,
+                      "breakline_bottom_margin": 850,
+                      "remark_between_margin": 567,
+                      "breakline_type": 0,
+                      "breakline_thickness": 0,
+                      "breakline_color": 257
+                    }
                   },
                   {
                     "type": "other",
