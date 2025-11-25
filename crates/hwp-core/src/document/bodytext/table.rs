@@ -1,0 +1,339 @@
+/// Table 구조체 / Table structure
+///
+/// 스펙 문서 매핑: 표 74 - 표 개체 / Spec mapping: Table 74 - Table object
+use crate::types::{HWPUNIT, HWPUNIT16, UINT16, UINT32};
+use serde::{Deserialize, Serialize};
+
+use super::list_header::ListHeader;
+
+/// 표 개체 / Table object
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Table {
+    /// 표 개체 속성 (표 75 참조) / Table object attributes (see Table 75)
+    pub attributes: TableAttributes,
+    /// 셀 리스트 (표 79 참조) / Cell list (see Table 79)
+    pub cells: Vec<TableCell>,
+}
+
+/// 표 개체 속성 (표 75) / Table object attributes (Table 75)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TableAttributes {
+    /// 속성 (표 76 참조) / Attribute (see Table 76)
+    pub attribute: TableAttribute,
+    /// 행 개수 / Row count
+    pub row_count: UINT16,
+    /// 열 개수 / Column count
+    pub col_count: UINT16,
+    /// 셀 간격 / Cell spacing
+    pub cell_spacing: HWPUNIT16,
+    /// 안쪽 여백 정보 (표 77 참조) / Padding information (see Table 77)
+    pub padding: TablePadding,
+    /// 행 크기 리스트 / Row size list
+    pub row_sizes: Vec<HWPUNIT16>,
+    /// 테두리 채우기 ID / Border fill ID
+    pub border_fill_id: UINT16,
+    /// 영역 속성 리스트 (5.0.1.0 이상) / Zone attributes list (5.0.1.0 and above)
+    pub zones: Vec<TableZone>,
+}
+
+/// 표 속성의 속성 (표 76) / Table attribute properties (Table 76)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TableAttribute {
+    /// 쪽 경계에서 나눔 / Page break behavior
+    pub page_break: PageBreakBehavior,
+    /// 제목 줄 자동 반복 여부 / Header row auto repeat
+    pub header_row_repeat: bool,
+}
+
+/// 쪽 경계에서 나눔 / Page break behavior
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PageBreakBehavior {
+    /// 나누지 않음 / No break
+    NoBreak,
+    /// 셀 단위로 나눔 / Break by cell
+    BreakByCell,
+    /// 나누지 않음 (다른 값) / No break (other value)
+    NoBreakOther,
+}
+
+/// 안쪽 여백 정보 (표 77) / Padding information (Table 77)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TablePadding {
+    /// 왼쪽 여백 / Left padding
+    pub left: HWPUNIT16,
+    /// 오른쪽 여백 / Right padding
+    pub right: HWPUNIT16,
+    /// 위쪽 여백 / Top padding
+    pub top: HWPUNIT16,
+    /// 아래쪽 여백 / Bottom padding
+    pub bottom: HWPUNIT16,
+}
+
+/// 영역 속성 (표 78) / Zone attributes (Table 78)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TableZone {
+    /// 시작 열 주소 / Start column address
+    pub start_col: UINT16,
+    /// 시작 행 주소 / Start row address
+    pub start_row: UINT16,
+    /// 끝 열 주소 / End column address
+    pub end_col: UINT16,
+    /// 끝 행 주소 / End row address
+    pub end_row: UINT16,
+    /// 테두리 채우기 ID / Border fill ID
+    pub border_fill_id: UINT16,
+}
+
+/// 셀 리스트 (표 79) / Cell list (Table 79)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TableCell {
+    /// 문단 리스트 헤더 (표 65 참조) / Paragraph list header (see Table 65)
+    pub list_header: ListHeader,
+    /// 셀 속성 (표 80 참조) / Cell attributes (see Table 80)
+    pub cell_attributes: CellAttributes,
+}
+
+/// 셀 속성 (표 80) / Cell attributes (Table 80)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CellAttributes {
+    /// 열 주소 / Column address
+    pub col_address: UINT16,
+    /// 행 주소 / Row address
+    pub row_address: UINT16,
+    /// 열 병합 개수 / Column merge count
+    pub col_span: UINT16,
+    /// 행 병합 개수 / Row merge count
+    pub row_span: UINT16,
+    /// 폭 / Width
+    pub width: HWPUNIT,
+    /// 높이 / Height
+    pub height: HWPUNIT,
+    /// 왼쪽 여백 / Left margin
+    pub left_margin: HWPUNIT16,
+    /// 오른쪽 여백 / Right margin
+    pub right_margin: HWPUNIT16,
+    /// 위쪽 여백 / Top margin
+    pub top_margin: HWPUNIT16,
+    /// 아래쪽 여백 / Bottom margin
+    pub bottom_margin: HWPUNIT16,
+    /// 테두리/배경 아이디 / Border fill ID
+    pub border_fill_id: UINT16,
+}
+
+impl Table {
+    /// Table을 바이트 배열에서 파싱합니다. / Parse Table from byte array.
+    ///
+    /// # Arguments
+    /// * `data` - Table 데이터 (개체 공통 속성 포함) / Table data (including object common properties)
+    /// * `version` - 파일 버전 / File version
+    ///
+    /// # Returns
+    /// 파싱된 Table 구조체 / Parsed Table structure
+    pub fn parse(data: &[u8], version: u32) -> Result<Self, String> {
+        if data.is_empty() {
+            return Err("Table data is empty".to_string());
+        }
+
+        let mut offset = 0;
+
+        // 레거시 코드를 보면 HWPTAG_TABLE은 개체 공통 속성을 건너뛰고 표 개체 속성부터 시작
+        // According to legacy code, HWPTAG_TABLE skips object common properties and starts from table attributes
+        // 표 개체 속성 파싱 (표 75) / Parse table object attributes (Table 75)
+        let attributes = parse_table_attributes(data, &mut offset, version)?;
+
+        // 셀 리스트 파싱 (표 79) / Parse cell list (Table 79)
+        let cells = parse_cell_list(
+            &data[offset..],
+            attributes.row_count,
+            attributes.col_count,
+            &attributes.row_sizes,
+        )?;
+
+        Ok(Table { attributes, cells })
+    }
+}
+
+/// 표 개체 속성 파싱 (표 75) / Parse table object attributes (Table 75)
+fn parse_table_attributes(
+    data: &[u8],
+    offset: &mut usize,
+    version: u32,
+) -> Result<TableAttributes, String> {
+    // 최소 22바이트 필요 (기본 필드) / Need at least 22 bytes (basic fields)
+    if data.len() < *offset + 22 {
+        return Err(format!(
+            "Table attributes must be at least 22 bytes, got {} bytes",
+            data.len() - *offset
+        ));
+    }
+
+    // UINT32 속성 (표 76 참조) / UINT32 attribute (see Table 76)
+    let attribute_value = UINT32::from_le_bytes([
+        data[*offset],
+        data[*offset + 1],
+        data[*offset + 2],
+        data[*offset + 3],
+    ]);
+    *offset += 4;
+
+    // UINT16 RowCount / UINT16 RowCount
+    let row_count = UINT16::from_le_bytes([data[*offset], data[*offset + 1]]);
+    *offset += 2;
+
+    // UINT16 nCols / UINT16 nCols
+    let col_count = UINT16::from_le_bytes([data[*offset], data[*offset + 1]]);
+    *offset += 2;
+
+    // HWPUNIT16 CellSpacing / HWPUNIT16 CellSpacing
+    let cell_spacing = HWPUNIT16::from_le_bytes([data[*offset], data[*offset + 1]]);
+    *offset += 2;
+
+    // BYTE stream 8 안쪽 여백 정보 (표 77 참조) / BYTE stream 8 padding information (see Table 77)
+    let padding = TablePadding {
+        left: HWPUNIT16::from_le_bytes([data[*offset], data[*offset + 1]]),
+        right: HWPUNIT16::from_le_bytes([data[*offset + 2], data[*offset + 3]]),
+        top: HWPUNIT16::from_le_bytes([data[*offset + 4], data[*offset + 5]]),
+        bottom: HWPUNIT16::from_le_bytes([data[*offset + 6], data[*offset + 7]]),
+    };
+    *offset += 8;
+
+    // BYTE stream 2×row Row Size / BYTE stream 2×row Row Size
+    let mut row_sizes = Vec::new();
+    for _ in 0..row_count {
+        if *offset + 2 > data.len() {
+            return Err("Insufficient data for row sizes".to_string());
+        }
+        row_sizes.push(HWPUNIT16::from_le_bytes([data[*offset], data[*offset + 1]]));
+        *offset += 2;
+    }
+
+    // UINT16 Border Fill ID / UINT16 Border Fill ID
+    let border_fill_id = UINT16::from_le_bytes([data[*offset], data[*offset + 1]]);
+    *offset += 2;
+
+    // UINT16 Valid Zone Info Size (5.0.1.0 이상) / UINT16 Valid Zone Info Size (5.0.1.0 and above)
+    let mut zones = Vec::new();
+    if version >= 5010 {
+        if *offset + 2 > data.len() {
+            return Err("Insufficient data for valid zone info size".to_string());
+        }
+        let valid_zone_info_size = UINT16::from_le_bytes([data[*offset], data[*offset + 1]]);
+        *offset += 2;
+
+        // BYTE stream 10×zone 영역 속성 (표 78 참조) / BYTE stream 10×zone zone attributes (see Table 78)
+        let zone_count = valid_zone_info_size as usize / 10;
+        for _ in 0..zone_count {
+            if *offset + 10 > data.len() {
+                return Err("Insufficient data for zone attributes".to_string());
+            }
+            zones.push(TableZone {
+                start_col: UINT16::from_le_bytes([data[*offset], data[*offset + 1]]),
+                start_row: UINT16::from_le_bytes([data[*offset + 2], data[*offset + 3]]),
+                end_col: UINT16::from_le_bytes([data[*offset + 4], data[*offset + 5]]),
+                end_row: UINT16::from_le_bytes([data[*offset + 6], data[*offset + 7]]),
+                border_fill_id: UINT16::from_le_bytes([data[*offset + 8], data[*offset + 9]]),
+            });
+            *offset += 10;
+        }
+    }
+
+    // 속성 파싱 (표 76) / Parse attribute (Table 76)
+    let attribute = parse_table_attribute(attribute_value);
+
+    Ok(TableAttributes {
+        attribute,
+        row_count,
+        col_count,
+        cell_spacing,
+        padding,
+        row_sizes,
+        border_fill_id,
+        zones,
+    })
+}
+
+/// 표 속성의 속성 파싱 (표 76) / Parse table attribute properties (Table 76)
+fn parse_table_attribute(value: UINT32) -> TableAttribute {
+    // bit 0-1: 쪽 경계에서 나눔 / bit 0-1: page break behavior
+    let page_break = match value & 0x03 {
+        0 => PageBreakBehavior::NoBreak,
+        1 => PageBreakBehavior::BreakByCell,
+        2 => PageBreakBehavior::NoBreakOther,
+        _ => PageBreakBehavior::NoBreak,
+    };
+
+    // bit 2: 제목 줄 자동 반복 여부 / bit 2: header row auto repeat
+    let header_row_repeat = (value & 0x04) != 0;
+
+    TableAttribute {
+        page_break,
+        header_row_repeat,
+    }
+}
+
+/// 셀 리스트 파싱 (표 79) / Parse cell list (Table 79)
+fn parse_cell_list(
+    data: &[u8],
+    row_count: UINT16,
+    col_count: UINT16,
+    row_sizes: &[HWPUNIT16], // 각 행의 실제 셀 개수
+) -> Result<Vec<TableCell>, String> {
+    let mut cells = Vec::new();
+    let mut offset = 0;
+
+    // 레거시 코드 방식: 각 행의 셀 개수를 합산
+    let total_cells: usize = row_sizes.iter().map(|&size| size as usize).sum::<usize>();
+
+    // 또는 더 안전하게: 최소한 row_count * col_count는 보장
+    let total_cells = total_cells.max(row_count as usize * col_count as usize);
+
+    for _ in 0..total_cells {
+        if offset >= data.len() {
+            break; // 셀 데이터가 부족할 수 있음 / Cell data may be insufficient
+        }
+
+        // 문단 리스트 헤더 파싱 (표 65 참조) / Parse paragraph list header (see Table 65)
+        let list_header = ListHeader::parse(&data[offset..])?;
+        offset += 10; // ListHeader는 10바이트 / ListHeader is 10 bytes
+
+        // 셀 속성 파싱 (표 80 참조) / Parse cell attributes (see Table 80)
+        // 표 80: 전체 길이 26바이트
+        // UINT16(2) + UINT16(2) + UINT16(2) + UINT16(2) + HWPUNIT(4) + HWPUNIT(4) + HWPUNIT16[4](8) + UINT16(2) = 26
+        if offset + 26 > data.len() {
+            return Err("Insufficient data for cell attributes".to_string());
+        }
+
+        let cell_attributes = CellAttributes {
+            col_address: UINT16::from_le_bytes([data[offset], data[offset + 1]]),
+            row_address: UINT16::from_le_bytes([data[offset + 2], data[offset + 3]]),
+            col_span: UINT16::from_le_bytes([data[offset + 4], data[offset + 5]]),
+            row_span: UINT16::from_le_bytes([data[offset + 6], data[offset + 7]]),
+            width: HWPUNIT::from(UINT32::from_le_bytes([
+                data[offset + 8],
+                data[offset + 9],
+                data[offset + 10],
+                data[offset + 11],
+            ])),
+            height: HWPUNIT::from(UINT32::from_le_bytes([
+                data[offset + 12],
+                data[offset + 13],
+                data[offset + 14],
+                data[offset + 15],
+            ])),
+            left_margin: HWPUNIT16::from_le_bytes([data[offset + 16], data[offset + 17]]),
+            right_margin: HWPUNIT16::from_le_bytes([data[offset + 18], data[offset + 19]]),
+            top_margin: HWPUNIT16::from_le_bytes([data[offset + 20], data[offset + 21]]),
+            bottom_margin: HWPUNIT16::from_le_bytes([data[offset + 22], data[offset + 23]]),
+            border_fill_id: UINT16::from_le_bytes([data[offset + 24], data[offset + 25]]),
+        };
+        offset += 26;
+
+        cells.push(TableCell {
+            list_header,
+            cell_attributes,
+        });
+    }
+
+    Ok(cells)
+}

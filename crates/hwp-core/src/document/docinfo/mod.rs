@@ -6,14 +6,23 @@
 mod border_fill;
 mod bullet;
 mod char_shape;
+mod compatible_document;
 mod constants;
+mod distribute_doc_data;
+mod doc_data;
 mod document_properties;
 mod face_name;
+mod forbidden_char;
 mod id_mappings;
+mod layout_compatibility;
+mod memo_shape;
 mod numbering;
 mod para_shape;
 mod style;
 mod tab_def;
+mod track_change;
+mod track_change_author;
+mod track_change_content;
 
 use crate::decompress::decompress_deflate;
 use crate::document::fileheader::FileHeader;
@@ -21,15 +30,24 @@ use crate::types::RecordHeader;
 pub use border_fill::BorderFill;
 pub use bullet::Bullet;
 pub use char_shape::CharShape;
+pub use compatible_document::CompatibleDocument;
 use constants::*;
+pub use distribute_doc_data::DistributeDocData;
+pub use doc_data::DocData;
 pub use document_properties::DocumentProperties;
 pub use face_name::FaceName;
+pub use forbidden_char::ForbiddenChar;
 pub use id_mappings::IdMappings;
+pub use layout_compatibility::LayoutCompatibility;
+pub use memo_shape::MemoShape;
 pub use numbering::Numbering;
 pub use para_shape::ParaShape;
 use serde::{Deserialize, Serialize};
 pub use style::Style;
 pub use tab_def::TabDef;
+pub use track_change::TrackChange;
+pub use track_change_author::TrackChangeAuthor;
+pub use track_change_content::TrackChangeContent;
 
 /// Document information structure
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -57,6 +75,24 @@ pub struct DocInfo {
     pub para_shapes: Vec<ParaShape>,
     /// Styles (parsed) / 스타일 (파싱됨)
     pub styles: Vec<Style>,
+    /// Document arbitrary data (parsed) / 문서 임의의 데이터 (파싱됨)
+    pub doc_data: Vec<DocData>,
+    /// Distribution document data (parsed) / 배포용 문서 데이터 (파싱됨)
+    pub distribute_doc_data: Option<DistributeDocData>,
+    /// Compatible document (parsed) / 호환 문서 (파싱됨)
+    pub compatible_document: Option<CompatibleDocument>,
+    /// Layout compatibility (parsed) / 레이아웃 호환성 (파싱됨)
+    pub layout_compatibility: Option<LayoutCompatibility>,
+    /// Track change information (parsed) / 변경 추적 정보 (파싱됨)
+    pub track_change: Option<TrackChange>,
+    /// Memo shapes (parsed) / 메모 모양 (파싱됨)
+    pub memo_shapes: Vec<MemoShape>,
+    /// Forbidden characters (parsed) / 금칙처리 문자 (파싱됨)
+    pub forbidden_chars: Vec<ForbiddenChar>,
+    /// Track change contents (parsed) / 변경 추적 내용 및 모양 (파싱됨)
+    pub track_change_contents: Vec<TrackChangeContent>,
+    /// Track change authors (parsed) / 변경 추적 작성자 (파싱됨)
+    pub track_change_authors: Vec<TrackChangeAuthor>,
 }
 
 impl DocInfo {
@@ -175,6 +211,69 @@ impl DocInfo {
                     if header.level == 1 {
                         let style = Style::parse(record_data)?;
                         doc_info.styles.push(style);
+                    }
+                }
+                HWPTAG_DOC_DATA => {
+                    if header.level == 0 {
+                        // 문서 임의의 데이터 파싱 / Parse document arbitrary data
+                        let doc_data = DocData::parse(record_data)?;
+                        doc_info.doc_data.push(doc_data);
+                    }
+                }
+                HWPTAG_DISTRIBUTE_DOC_DATA => {
+                    if header.level == 0 {
+                        // 배포용 문서 데이터 파싱 / Parse distribution document data
+                        let distribute_doc_data = DistributeDocData::parse(record_data)?;
+                        doc_info.distribute_doc_data = Some(distribute_doc_data);
+                    }
+                }
+                HWPTAG_COMPATIBLE_DOCUMENT => {
+                    if header.level == 0 {
+                        // 호환 문서 파싱 / Parse compatible document
+                        let compatible_document = CompatibleDocument::parse(record_data)?;
+                        doc_info.compatible_document = Some(compatible_document);
+                    }
+                }
+                HWPTAG_LAYOUT_COMPATIBILITY => {
+                    if header.level == 1 {
+                        // 레이아웃 호환성 파싱 / Parse layout compatibility
+                        let layout_compatibility = LayoutCompatibility::parse(record_data)?;
+                        doc_info.layout_compatibility = Some(layout_compatibility);
+                    }
+                }
+                HWPTAG_TRACKCHANGE => {
+                    if header.level == 1 {
+                        // 변경 추적 정보 파싱 / Parse track change information
+                        let track_change = TrackChange::parse(record_data)?;
+                        doc_info.track_change = Some(track_change);
+                    }
+                }
+                HWPTAG_MEMO_SHAPE => {
+                    if header.level == 1 {
+                        // 메모 모양 파싱 / Parse memo shape
+                        let memo_shape = MemoShape::parse(record_data)?;
+                        doc_info.memo_shapes.push(memo_shape);
+                    }
+                }
+                HWPTAG_FORBIDDEN_CHAR => {
+                    if header.level == 0 {
+                        // 금칙처리 문자 파싱 / Parse forbidden character
+                        let forbidden_char = ForbiddenChar::parse(record_data)?;
+                        doc_info.forbidden_chars.push(forbidden_char);
+                    }
+                }
+                HWPTAG_TRACK_CHANGE => {
+                    if header.level == 1 {
+                        // 변경 추적 내용 및 모양 파싱 / Parse track change content and shape
+                        let track_change_content = TrackChangeContent::parse(record_data)?;
+                        doc_info.track_change_contents.push(track_change_content);
+                    }
+                }
+                HWPTAG_TRACK_CHANGE_AUTHOR => {
+                    if header.level == 1 {
+                        // 변경 추적 작성자 파싱 / Parse track change author
+                        let track_change_author = TrackChangeAuthor::parse(record_data)?;
+                        doc_info.track_change_authors.push(track_change_author);
                     }
                 }
                 // 기타 태그는 무시 (나중에 구현 가능) / Other tags are ignored (can be implemented later)

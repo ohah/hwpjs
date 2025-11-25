@@ -1,6 +1,5 @@
 ---
 source: crates/hwp-core/src/lib.rs
-assertion_line: 528
 expression: json
 ---
 {
@@ -8979,6 +8978,23 @@ expression: json
         "lang_id": 1042,
         "para_shape_id": 4,
         "char_shape_id": null
+      }
+    ],
+    "doc_data": [
+      {
+        "parameter_set": {
+          "set_id": 540,
+          "item_count": 1,
+          "items": [
+            {
+              "id": 0,
+              "item_type": "null",
+              "data": {
+                "type": "null"
+              }
+            }
+          ]
+        }
       }
     ]
   },

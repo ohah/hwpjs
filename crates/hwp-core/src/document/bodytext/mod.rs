@@ -10,6 +10,7 @@ mod line_seg;
 mod list_header;
 mod para_header;
 mod range_tag;
+mod table;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
 pub use ctrl_header::{CtrlHeader, CtrlHeaderData};
@@ -17,6 +18,7 @@ pub use line_seg::{LineSegmentInfo, ParaLineSeg};
 pub use list_header::ListHeader;
 pub use para_header::{ColumnDivideType, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
+pub use table::Table;
 
 use crate::cfb::CfbParser;
 use crate::decompress::decompress_deflate;
@@ -86,6 +88,11 @@ pub enum ParagraphRecord {
     ListHeader {
         /// 문단 리스트 헤더 정보 / Paragraph list header information
         header: ListHeader,
+    },
+    /// 표 개체 / Table object
+    Table {
+        /// 표 개체 정보 / Table object information
+        table: Table,
     },
     /// 기타 레코드 / Other records
     Other {
@@ -188,6 +195,19 @@ impl Section {
                             let list_header = ListHeader::parse(record_data)?;
                             ParagraphRecord::ListHeader {
                                 header: list_header,
+                            }
+                        }
+                        HWPTAG_TABLE => {
+                            // 표 개체 파싱 / Parse table object
+                            match Table::parse(record_data, version) {
+                                Ok(table) => ParagraphRecord::Table { table },
+                                Err(e) => {
+                                    eprintln!("Failed to parse HWPTAG_TABLE: {}", e);
+                                    ParagraphRecord::Other {
+                                        tag_id: header.tag_id,
+                                        data: record_data.to_vec(),
+                                    }
+                                }
                             }
                         }
                         _ => ParagraphRecord::Other {
