@@ -15,6 +15,7 @@ mod page_def;
 mod para_header;
 mod range_tag;
 pub mod record_tree;
+mod shape_component;
 mod table;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
@@ -26,6 +27,7 @@ pub use page_border_fill::PageBorderFill;
 pub use page_def::PageDef;
 pub use para_header::{ColumnDivideType, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
+pub use shape_component::ShapeComponent;
 pub use table::{Table, TableCell};
 
 use crate::cfb::CfbParser;
@@ -122,6 +124,11 @@ pub enum ParagraphRecord {
     PageBorderFill {
         /// 쪽 테두리/배경 정보 / Page border/fill information
         page_border_fill: PageBorderFill,
+    },
+    /// 개체 요소 / Shape component
+    ShapeComponent {
+        /// 개체 요소 정보 / Shape component information
+        shape_component: ShapeComponent,
     },
     /// 기타 레코드 / Other records
     Other {
@@ -720,6 +727,12 @@ impl Section {
                 // 스펙 문서 매핑: 표 135 - 쪽 테두리/배경 / Spec mapping: Table 135 - Page border/fill
                 let page_border_fill = PageBorderFill::parse(node.data())?;
                 Ok(ParagraphRecord::PageBorderFill { page_border_fill })
+            }
+            HwpTag::SHAPE_COMPONENT => {
+                // 개체 요소 파싱 / Parse shape component
+                // 스펙 문서 매핑: 표 82, 83 - 개체 요소 속성 / Spec mapping: Table 82, 83 - Shape component attributes
+                let shape_component = ShapeComponent::parse(node.data())?;
+                Ok(ParagraphRecord::ShapeComponent { shape_component })
             }
             _ => Ok(ParagraphRecord::Other {
                 tag_id: node.tag_id(),

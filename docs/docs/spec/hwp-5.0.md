@@ -1847,7 +1847,12 @@ Tag ID: HWPTAG_SHAPE_COMPONENT (GenShapeObject일 경우 id가 두 번 기록됨
 | 자료형 | 길이(바이트) | 설명 |
 |---|---|---|
 | UINT32 | 4 | 개체 컨트롤 ID |
-| 전체 길이 | 4 | |
+| UINT32 | 4 | 개체 컨트롤 ID (두 번째 ID, 실제 파일에서는 항상 존재) |
+| 전체 길이 | 8 | |
+
+**참고사항 / Notes**
+
+실제 HWP 파일에서는 모든 SHAPE_COMPONENT 레코드에서 개체 컨트롤 ID가 두 번 기록됩니다. pyhwp, hwp.js도 항상 두 번째 ID를 읽고 있습니다.
 
 **표 83: 개체 요소 속성**
 

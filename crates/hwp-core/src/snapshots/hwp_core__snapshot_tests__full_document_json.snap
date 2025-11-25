@@ -9237,8 +9237,64 @@ expression: json
                 "description": "그림입니다.\r\n원본 그림의 이름: 보도_생태계.jpg\r\n원본 그림의 크기: 가로 1200pixel, 세로 153pixel\r\n사진 찍은 날짜: 2018년 03월 15일 오후 11:22",
                 "children": [
                   {
-                    "type": "other",
-                    "tag_id": 76
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 120000,
+                      "initial_height": 15300,
+                      "width": 48104,
+                      "height": 6134,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 24052,
+                        "y": 3067
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                0.40086666666666665,
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.40091503267973855,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
                   }
                 ]
               }
@@ -13190,8 +13246,64 @@ expression: json
                             "description": null
                           },
                           {
-                            "type": "other",
-                            "tag_id": 76
+                            "type": "shape_component",
+                            "shape_component": {
+                              "object_control_id": "cip$",
+                              "object_control_id2": "cip$",
+                              "group_offset": {
+                                "x": 15,
+                                "y": 0
+                              },
+                              "group_count": 0,
+                              "local_version": 1,
+                              "initial_width": 6082,
+                              "initial_height": 2457,
+                              "width": 9178,
+                              "height": 3244,
+                              "attributes": "vertical_flip",
+                              "rotation_angle": 0,
+                              "rotation_center": {
+                                "x": 4589,
+                                "y": 1622
+                              },
+                              "rendering": {
+                                "matrix_count": 1,
+                                "translation_matrix": {
+                                  "elements": [
+                                    1.0,
+                                    0.0,
+                                    15.0,
+                                    0.0,
+                                    1.0,
+                                    0.0
+                                  ]
+                                },
+                                "matrix_sequence": [
+                                  {
+                                    "scale": {
+                                      "elements": [
+                                        1.5090430779348898,
+                                        0.0,
+                                        -15.0,
+                                        0.0,
+                                        1.3207163207163206,
+                                        0.0
+                                      ]
+                                    },
+                                    "rotation": {
+                                      "elements": [
+                                        1.0,
+                                        -0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0,
+                                        0.0
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
                           },
                           {
                             "type": "other",
@@ -13470,8 +13582,64 @@ expression: json
                                   "description": null
                                 },
                                 {
-                                  "type": "other",
-                                  "tag_id": 76
+                                  "type": "shape_component",
+                                  "shape_component": {
+                                    "object_control_id": "cip$",
+                                    "object_control_id2": "cip$",
+                                    "group_offset": {
+                                      "x": 15,
+                                      "y": 0
+                                    },
+                                    "group_count": 0,
+                                    "local_version": 1,
+                                    "initial_width": 6082,
+                                    "initial_height": 2457,
+                                    "width": 9178,
+                                    "height": 3244,
+                                    "attributes": "vertical_flip",
+                                    "rotation_angle": 0,
+                                    "rotation_center": {
+                                      "x": 4589,
+                                      "y": 1622
+                                    },
+                                    "rendering": {
+                                      "matrix_count": 1,
+                                      "translation_matrix": {
+                                        "elements": [
+                                          1.0,
+                                          0.0,
+                                          15.0,
+                                          0.0,
+                                          1.0,
+                                          0.0
+                                        ]
+                                      },
+                                      "matrix_sequence": [
+                                        {
+                                          "scale": {
+                                            "elements": [
+                                              1.5090430779348898,
+                                              0.0,
+                                              -15.0,
+                                              0.0,
+                                              1.3207163207163206,
+                                              0.0
+                                            ]
+                                          },
+                                          "rotation": {
+                                            "elements": [
+                                              1.0,
+                                              -0.0,
+                                              0.0,
+                                              0.0,
+                                              1.0,
+                                              0.0
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
                                 },
                                 {
                                   "type": "other",
@@ -14656,8 +14824,64 @@ expression: json
                             "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel"
                           },
                           {
-                            "type": "other",
-                            "tag_id": 76
+                            "type": "shape_component",
+                            "shape_component": {
+                              "object_control_id": "cip$",
+                              "object_control_id2": "cip$",
+                              "group_offset": {
+                                "x": -6411,
+                                "y": 0
+                              },
+                              "group_count": 0,
+                              "local_version": 1,
+                              "initial_width": 15060,
+                              "initial_height": 54000,
+                              "width": 8649,
+                              "height": 45540,
+                              "attributes": "vertical_flip",
+                              "rotation_angle": 0,
+                              "rotation_center": {
+                                "x": 4324,
+                                "y": 22770
+                              },
+                              "rendering": {
+                                "matrix_count": 1,
+                                "translation_matrix": {
+                                  "elements": [
+                                    1.0,
+                                    0.0,
+                                    -6411.0,
+                                    0.0,
+                                    1.0,
+                                    0.0
+                                  ]
+                                },
+                                "matrix_sequence": [
+                                  {
+                                    "scale": {
+                                      "elements": [
+                                        0.5743027888446215,
+                                        0.0,
+                                        6411.0,
+                                        0.0,
+                                        0.8433333333333334,
+                                        0.0
+                                      ]
+                                    },
+                                    "rotation": {
+                                      "elements": [
+                                        1.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0,
+                                        0.0
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
                           },
                           {
                             "type": "other",
@@ -14771,8 +14995,64 @@ expression: json
                             "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel"
                           },
                           {
-                            "type": "other",
-                            "tag_id": 76
+                            "type": "shape_component",
+                            "shape_component": {
+                              "object_control_id": "cip$",
+                              "object_control_id2": "cip$",
+                              "group_offset": {
+                                "x": 0,
+                                "y": -1648
+                              },
+                              "group_count": 0,
+                              "local_version": 1,
+                              "initial_width": 15060,
+                              "initial_height": 54000,
+                              "width": 6965,
+                              "height": 23691,
+                              "attributes": "vertical_flip",
+                              "rotation_angle": 0,
+                              "rotation_center": {
+                                "x": 3482,
+                                "y": 11845
+                              },
+                              "rendering": {
+                                "matrix_count": 1,
+                                "translation_matrix": {
+                                  "elements": [
+                                    1.0,
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0,
+                                    -1648.0
+                                  ]
+                                },
+                                "matrix_sequence": [
+                                  {
+                                    "scale": {
+                                      "elements": [
+                                        0.46248339973439573,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.43872222222222224,
+                                        1648.0
+                                      ]
+                                    },
+                                    "rotation": {
+                                      "elements": [
+                                        1.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0,
+                                        0.0
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
                           },
                           {
                             "type": "other",
@@ -16583,8 +16863,64 @@ expression: json
                                   "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel"
                                 },
                                 {
-                                  "type": "other",
-                                  "tag_id": 76
+                                  "type": "shape_component",
+                                  "shape_component": {
+                                    "object_control_id": "cip$",
+                                    "object_control_id2": "cip$",
+                                    "group_offset": {
+                                      "x": -6411,
+                                      "y": 0
+                                    },
+                                    "group_count": 0,
+                                    "local_version": 1,
+                                    "initial_width": 15060,
+                                    "initial_height": 54000,
+                                    "width": 8649,
+                                    "height": 45540,
+                                    "attributes": "vertical_flip",
+                                    "rotation_angle": 0,
+                                    "rotation_center": {
+                                      "x": 4324,
+                                      "y": 22770
+                                    },
+                                    "rendering": {
+                                      "matrix_count": 1,
+                                      "translation_matrix": {
+                                        "elements": [
+                                          1.0,
+                                          0.0,
+                                          -6411.0,
+                                          0.0,
+                                          1.0,
+                                          0.0
+                                        ]
+                                      },
+                                      "matrix_sequence": [
+                                        {
+                                          "scale": {
+                                            "elements": [
+                                              0.5743027888446215,
+                                              0.0,
+                                              6411.0,
+                                              0.0,
+                                              0.8433333333333334,
+                                              0.0
+                                            ]
+                                          },
+                                          "rotation": {
+                                            "elements": [
+                                              1.0,
+                                              0.0,
+                                              0.0,
+                                              0.0,
+                                              1.0,
+                                              0.0
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
                                 },
                                 {
                                   "type": "other",
@@ -16706,8 +17042,64 @@ expression: json
                                   "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel"
                                 },
                                 {
-                                  "type": "other",
-                                  "tag_id": 76
+                                  "type": "shape_component",
+                                  "shape_component": {
+                                    "object_control_id": "cip$",
+                                    "object_control_id2": "cip$",
+                                    "group_offset": {
+                                      "x": 0,
+                                      "y": -1648
+                                    },
+                                    "group_count": 0,
+                                    "local_version": 1,
+                                    "initial_width": 15060,
+                                    "initial_height": 54000,
+                                    "width": 6965,
+                                    "height": 23691,
+                                    "attributes": "vertical_flip",
+                                    "rotation_angle": 0,
+                                    "rotation_center": {
+                                      "x": 3482,
+                                      "y": 11845
+                                    },
+                                    "rendering": {
+                                      "matrix_count": 1,
+                                      "translation_matrix": {
+                                        "elements": [
+                                          1.0,
+                                          0.0,
+                                          0.0,
+                                          0.0,
+                                          1.0,
+                                          -1648.0
+                                        ]
+                                      },
+                                      "matrix_sequence": [
+                                        {
+                                          "scale": {
+                                            "elements": [
+                                              0.46248339973439573,
+                                              0.0,
+                                              0.0,
+                                              0.0,
+                                              0.43872222222222224,
+                                              1648.0
+                                            ]
+                                          },
+                                          "rotation": {
+                                            "elements": [
+                                              1.0,
+                                              0.0,
+                                              0.0,
+                                              0.0,
+                                              1.0,
+                                              0.0
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
                                 },
                                 {
                                   "type": "other",
