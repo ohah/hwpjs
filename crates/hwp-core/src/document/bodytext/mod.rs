@@ -18,6 +18,7 @@ pub mod record_tree;
 mod shape_component;
 mod shape_component_line;
 mod shape_component_rectangle;
+mod shape_component_ellipse;
 mod table;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
@@ -32,6 +33,7 @@ pub use range_tag::{ParaRangeTag, RangeTagInfo};
 pub use shape_component::ShapeComponent;
 pub use shape_component_line::ShapeComponentLine;
 pub use shape_component_rectangle::ShapeComponentRectangle;
+pub use shape_component_ellipse::ShapeComponentEllipse;
 pub use table::{Table, TableCell};
 
 use crate::cfb::CfbParser;
@@ -143,6 +145,11 @@ pub enum ParagraphRecord {
     ShapeComponentRectangle {
         /// 사각형 개체 정보 / Rectangle shape component information
         shape_component_rectangle: ShapeComponentRectangle,
+    },
+    /// 타원 개체 / Ellipse shape component
+    ShapeComponentEllipse {
+        /// 타원 개체 정보 / Ellipse shape component information
+        shape_component_ellipse: ShapeComponentEllipse,
     },
     /// 기타 레코드 / Other records
     Other {
@@ -772,6 +779,18 @@ impl Section {
                 let shape_component_rectangle = ShapeComponentRectangle::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentRectangle {
                     shape_component_rectangle,
+                })
+            }
+            HwpTag::SHAPE_COMPONENT_ELLIPSE => {
+                // 타원 개체 파싱 / Parse ellipse shape component
+                // 스펙 문서 매핑: 표 96 - 타원 개체 속성 / Spec mapping: Table 96 - Ellipse shape component attributes
+                // 레거시 코드는 타원 개체 속성 부분만 파싱하고 있습니다.
+                // Legacy code only parses the ellipse shape component attributes part.
+                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_ELLIPSE 레코드가 없어 실제 파일로 테스트되지 않음
+                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_ELLIPSE records, so it has not been tested with actual files
+                let shape_component_ellipse = ShapeComponentEllipse::parse(node.data())?;
+                Ok(ParagraphRecord::ShapeComponentEllipse {
+                    shape_component_ellipse,
                 })
             }
             _ => Ok(ParagraphRecord::Other {
