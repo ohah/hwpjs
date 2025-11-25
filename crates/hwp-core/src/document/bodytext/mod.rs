@@ -5,6 +5,7 @@ mod char_shape;
 ///
 /// 스펙 문서 매핑: 표 2 - 본문 (BodyText 스토리지)
 pub mod constants;
+pub use constants::HwpTag;
 mod ctrl_header;
 mod line_seg;
 mod list_header;
@@ -14,7 +15,7 @@ pub mod record_tree;
 mod table;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
-pub use ctrl_header::{CtrlHeader, CtrlHeaderData};
+pub use ctrl_header::{CtrlHeader, CtrlHeaderData, CtrlId};
 pub use line_seg::{LineSegmentInfo, ParaLineSeg};
 pub use list_header::ListHeader;
 pub use para_header::{ColumnDivideType, ParaHeader};
@@ -26,7 +27,6 @@ use crate::decompress::decompress_deflate;
 use crate::document::fileheader::FileHeader;
 use crate::types::{decode_utf16le, RecordHeader, WORD};
 use cfb::CompoundFile;
-use constants::*;
 use record_tree::RecordTreeNode;
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;
@@ -131,7 +131,7 @@ impl Section {
         // 트리를 재귀적으로 방문하여 Paragraph 리스트로 변환 / Recursively visit tree to convert to Paragraph list
         let mut paragraphs = Vec::new();
         for child in tree.children() {
-            if child.tag_id() == HWPTAG_PARA_HEADER {
+            if child.tag_id() == HwpTag::PARA_HEADER {
                 paragraphs.push(Self::parse_paragraph_from_tree(child, version, data)?);
             }
         }
@@ -148,9 +148,9 @@ impl Section {
         version: u32,
         original_data: &[u8],
     ) -> Result<Paragraph, String> {
-        if node.tag_id() != HWPTAG_PARA_HEADER {
+        if node.tag_id() != HwpTag::PARA_HEADER {
             return Err(format!(
-                "Expected HWPTAG_PARA_HEADER, got tag {}",
+                "Expected HwpTag::PARA_HEADER, got tag {}",
                 node.tag_id()
             ));
         }
@@ -179,29 +179,29 @@ impl Section {
         original_data: &[u8],
     ) -> Result<ParagraphRecord, String> {
         match node.tag_id() {
-            HWPTAG_PARA_TEXT => {
+            HwpTag::PARA_TEXT => {
                 let text = decode_utf16le(node.data())?;
                 Ok(ParagraphRecord::ParaText { text })
             }
-            HWPTAG_PARA_CHAR_SHAPE => {
+            HwpTag::PARA_CHAR_SHAPE => {
                 let para_char_shape = ParaCharShape::parse(node.data())?;
                 Ok(ParagraphRecord::ParaCharShape {
                     shapes: para_char_shape.shapes,
                 })
             }
-            HWPTAG_PARA_LINE_SEG => {
+            HwpTag::PARA_LINE_SEG => {
                 let para_line_seg = ParaLineSeg::parse(node.data())?;
                 Ok(ParagraphRecord::ParaLineSeg {
                     segments: para_line_seg.segments,
                 })
             }
-            HWPTAG_PARA_RANGE_TAG => {
+            HwpTag::PARA_RANGE_TAG => {
                 let para_range_tag = ParaRangeTag::parse(node.data())?;
                 Ok(ParagraphRecord::ParaRangeTag {
                     tags: para_range_tag.tags,
                 })
             }
-            HWPTAG_CTRL_HEADER => {
+            HwpTag::CTRL_HEADER => {
                 let ctrl_header = CtrlHeader::parse(node.data())?;
                 // 자식 레코드들을 재귀적으로 처리 / Recursively process child records
                 // hwp.js: visitControlHeader에서 record.children를 모두 처리
@@ -221,15 +221,16 @@ impl Section {
                 // hwp.js: CommonCtrlID.Table = makeCtrlID('t', 'b', 'l', ' ') = 0x206C6274 (little-endian: 0x74626C20)
                 // hwp.js: CommonCtrlID.Table = makeCtrlID('t', 'b', 'l', ' ') = 0x206C6274 (little-endian: 0x74626C20)
                 // pyhwp: CHID.TBL = 'tbl ' (바이트 리버스 후) / pyhwp: CHID.TBL = 'tbl ' (after byte reverse)
-                let is_table =
-                    ctrl_header.ctrl_id == "tbl " || ctrl_header.ctrl_id_value == 0x74626C20u32;
+                use crate::document::bodytext::ctrl_header::CtrlId;
+                let is_table = ctrl_header.ctrl_id == CtrlId::TABLE
+                    || ctrl_header.ctrl_id_value == 0x74626C20u32;
 
                 for child in node.children() {
-                    if child.tag_id() == HWPTAG_TABLE {
+                    if child.tag_id() == HwpTag::TABLE {
                         // TABLE은 별도로 처리 / TABLE is processed separately
                         let mut table_data = Table::parse(child.data(), version)?;
                         table_opt = Some(table_data);
-                    } else if child.tag_id() == HWPTAG_LIST_HEADER && is_table {
+                    } else if child.tag_id() == HwpTag::LIST_HEADER && is_table {
                         // LIST_HEADER가 테이블의 셀인 경우 / LIST_HEADER is a table cell
                         // hwp.js: visitListHeader에서 LIST_HEADER를 파싱하고 테이블 셀로 처리
                         // hwp.js: visitListHeader parses LIST_HEADER and processes as table cell
@@ -378,7 +379,7 @@ impl Section {
                                 // LIST_HEADER 원시 데이터 찾기 / Find LIST_HEADER raw data
                                 let mut found_list_header = None;
                                 for child in node.children() {
-                                    if child.tag_id() == HWPTAG_LIST_HEADER {
+                                    if child.tag_id() == HwpTag::LIST_HEADER {
                                         let cell_data = child.data();
                                         if cell_data.len() >= 36 {
                                             let offset = 10;
@@ -514,7 +515,7 @@ impl Section {
                     children,
                 })
             }
-            HWPTAG_LIST_HEADER => {
+            HwpTag::LIST_HEADER => {
                 let list_header = ListHeader::parse(node.data())?;
                 // 자식들(셀 내부 문단) 처리 / Process children (paragraphs inside cell)
                 // hwp.js: visitListHeader에서 paragraphs 수를 읽고, for 루프로 reader.read()를 호출하여 다음 레코드를 읽음
@@ -530,7 +531,7 @@ impl Section {
                 let mut stack: Vec<&RecordTreeNode> = vec![node];
                 while let Some(current_node) = stack.pop() {
                     for child in current_node.children() {
-                        if child.tag_id() == HWPTAG_PARA_HEADER {
+                        if child.tag_id() == HwpTag::PARA_HEADER {
                             paragraphs.push(Self::parse_paragraph_from_tree(
                                 child,
                                 version,
@@ -556,7 +557,7 @@ impl Section {
                         if let Ok((header, header_size)) =
                             RecordHeader::parse(&original_data[offset..])
                         {
-                            if header.tag_id == HWPTAG_LIST_HEADER {
+                            if header.tag_id == HwpTag::LIST_HEADER {
                                 // node.data()와 비교하여 같은 LIST_HEADER인지 확인 / Compare with node.data() to verify same LIST_HEADER
                                 let data_offset = offset + header_size;
                                 if data_offset + header.size as usize <= original_data.len() {
@@ -593,7 +594,7 @@ impl Section {
                             {
                                 offset += header_size;
 
-                                if header.tag_id == HWPTAG_PARA_HEADER {
+                                if header.tag_id == HwpTag::PARA_HEADER {
                                     // PARA_HEADER 레코드 파싱 / Parse PARA_HEADER record
                                     let data_size = header.size as usize;
                                     if offset + data_size <= original_data.len() {
@@ -674,7 +675,7 @@ impl Section {
                     paragraphs,
                 })
             }
-            HWPTAG_TABLE => {
+            HwpTag::TABLE => {
                 // 테이블 파싱: 테이블 속성만 먼저 파싱 / Parse table: parse table attributes first
                 // hwp.js: visitTable은 테이블 속성만 파싱하고, LIST_HEADER는 visitListHeader에서 처리
                 // hwp.js: visitTable only parses table attributes, LIST_HEADER is processed in visitListHeader

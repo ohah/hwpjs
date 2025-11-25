@@ -2424,6 +2424,15 @@ HWPTAG_CTRL_HEAD부터 시작하며 ctrlid로 각 개체를 확인할 수 있다
 
 특징 컨트롤은 정보 이외의 문단 리스트를 가질 수 있다.
 
+**개체 컨트롤 ID / Object Control IDs**
+
+개체 공통 속성(Object Common Properties)을 가지는 컨트롤 ID들입니다. 이들은 표 127에 포함되지 않지만 중요한 컨트롤 ID입니다.
+
+| 컨트롤 ID | 의미 | 설명 |
+|---|---|---|
+| `MAKE_4CHID('t', 'b', 'l', ' ')` = `"tbl "` | 테이블 컨트롤 / Table control | 표 개체를 나타내는 컨트롤 ID |
+| `MAKE_4CHID('g', 's', 'o', ' ')` = `"gso "` | 일반 그리기 개체 / General shape object | 글상자, 그림 등 그리기 개체를 나타내는 컨트롤 ID |
+
 **표 127: 개체 이외의 컨트롤과 컨트롤 ID**
 
 | 표 | 의미 | 컨트롤 ID | 문단 리스트 | 파일 태그 |

@@ -4,6 +4,96 @@
 use crate::types::{decode_utf16le, HWPUNIT, HWPUNIT16, INT32, UINT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
+/// 컨트롤 ID 상수 정의 / Control ID constants definition
+///
+/// 스펙 문서 매핑: 표 127 - 개체 이외의 컨트롤과 컨트롤 ID, 표 128 - 필드 컨트롤 ID
+/// Spec mapping: Table 127 - Controls other than objects and Control IDs, Table 128 - Field Control IDs
+pub struct CtrlId;
+
+impl CtrlId {
+    // 개체 컨트롤 ID / Object Control IDs
+    /// 테이블 컨트롤 / Table control
+    /// 개체 공통 속성을 가지는 컨트롤 ID / Control ID with object common properties
+    pub const TABLE: &str = "tbl ";
+    /// 일반 그리기 개체 / General shape object
+    /// 개체 공통 속성을 가지는 컨트롤 ID / Control ID with object common properties
+    pub const SHAPE_OBJECT: &str = "gso ";
+
+    // 표 127: 개체 이외의 컨트롤과 컨트롤 ID / Table 127: Controls other than objects and Control IDs
+    /// 구역 정의 / Section definition
+    pub const SECTION_DEF: &str = "secd";
+    /// 단 정의 / Column definition
+    pub const COLUMN_DEF: &str = "cold";
+    /// 머리말/꼬리말 / Header/Footer
+    pub const HEADER_FOOTER: &str = "head";
+    /// 각주/미주 / Footnote/Endnote
+    pub const FOOTNOTE: &str = "foot";
+    /// 자동번호 / Auto numbering
+    pub const AUTO_NUMBER: &str = "autn";
+    /// 새 번호 지정 / New number specification
+    pub const NEW_NUMBER: &str = "newn";
+    /// 감추기 / Hide
+    pub const HIDE: &str = "pghd";
+    /// 홀/짝수 조정 / Odd/Even page adjustment
+    pub const PAGE_ADJUST: &str = "pgad";
+    /// 쪽 번호 위치 / Page number position
+    pub const PAGE_NUMBER: &str = "pgno";
+    /// 찾아보기 표식 / Bookmark marker
+    pub const BOOKMARK_MARKER: &str = "bkmk";
+    /// 글자 겹침 / Character overlap
+    pub const OVERLAP: &str = "over";
+    /// 덧말 / Comment
+    pub const COMMENT: &str = "cmtt";
+    /// 숨은 설명 / Hidden description
+    pub const HIDDEN_DESC: &str = "hide";
+    /// 필드 시작 / Field start
+    pub const FIELD_START: &str = "%%%%";
+
+    // 표 128: 필드 컨트롤 ID / Table 128: Field Control IDs
+    /// 필드: 알 수 없음 / Field: Unknown
+    pub const FIELD_UNKNOWN: &str = "%unk";
+    /// 필드: 날짜 / Field: Date
+    pub const FIELD_DATE: &str = "%dte";
+    /// 필드: 문서 날짜 / Field: Document date
+    pub const FIELD_DOC_DATE: &str = "%ddt";
+    /// 필드: 경로 / Field: Path
+    pub const FIELD_PATH: &str = "%pat";
+    /// 필드: 책갈피 / Field: Bookmark
+    pub const FIELD_BOOKMARK: &str = "%bkm";
+    /// 필드: 메일 머지 / Field: Mail merge
+    pub const FIELD_MAILMERGE: &str = "%mmg";
+    /// 필드: 상호 참조 / Field: Cross reference
+    pub const FIELD_CROSSREF: &str = "%crf";
+    /// 필드: 수식 / Field: Formula
+    pub const FIELD_FORMULA: &str = "%fml";
+    /// 필드: 하이퍼링크 / Field: Hyperlink
+    pub const FIELD_HYPERLINK: &str = "%hlk";
+    /// 필드: 변경 추적 서명 / Field: Revision sign
+    pub const FIELD_REVISION_SIGN: &str = "%%sg";
+    /// 필드: 변경 추적 삭제 / Field: Revision delete
+    pub const FIELD_REVISION_DELETE: &str = "%%de";
+    /// 필드: 변경 추적 삽입 / Field: Revision insert
+    pub const FIELD_REVISION_INSERT: &str = "%%in";
+    /// 필드: 변경 추적 변경 / Field: Revision change
+    pub const FIELD_REVISION_CHANGE: &str = "%%ch";
+    /// 필드: 변경 추적 첨부 / Field: Revision attach
+    pub const FIELD_REVISION_ATTACH: &str = "%%at";
+    /// 필드: 변경 추적 하이퍼링크 / Field: Revision hyperlink
+    pub const FIELD_REVISION_HYPERLINK: &str = "%%h";
+    /// 필드: 변경 추적 줄 첨부 / Field: Revision line attach
+    pub const FIELD_REVISION_LINE_ATTACH: &str = "%%A";
+    /// 필드: 변경 추적 줄 링크 / Field: Revision line link
+    pub const FIELD_REVISION_LINE_LINK: &str = "%%l";
+    /// 필드: 변경 추적 줄 전송 / Field: Revision line transfer
+    pub const FIELD_REVISION_LINE_TRANSFER: &str = "%%t";
+    /// 필드: 메모 / Field: Memo
+    pub const FIELD_MEMO: &str = "%%me";
+    /// 필드: 개인정보 보안 / Field: Private info security
+    pub const FIELD_PRIVATE_INFO_SECURITY: &str = "%cpr";
+    /// 필드: 목차 / Field: Table of contents
+    pub const FIELD_TABLE_OF_CONTENTS: &str = "%oc";
+}
+
 /// 컨트롤 헤더 / Control header
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CtrlHeader {
@@ -201,14 +291,18 @@ impl CtrlHeader {
         // 컨트롤 ID에 따라 다른 구조로 파싱 / Parse different structure based on CtrlID
         // 공백까지 포함해서 분기 처리 / Branch based on CtrlID including spaces
         // pyhwp: CHID.TBL = 'tbl ', CHID.GSO = 'gso '
-        let parsed_data = match ctrl_id.as_str() {
-            "tbl " | "gso " => {
-                // 개체 공통 속성 (표 69) / Object common properties (Table 69)
-                parse_object_common(remaining_data)?
-            }
-            "cold" => CtrlHeaderData::ColumnDefinition,
-            "head" | "foot" => CtrlHeaderData::HeaderFooter,
-            _ => CtrlHeaderData::Other,
+        // 컨트롤 ID 상수 사용 / Use control ID constants
+        let ctrl_id_str = ctrl_id.as_str();
+        let parsed_data = if ctrl_id_str == CtrlId::TABLE || ctrl_id_str == CtrlId::SHAPE_OBJECT {
+            // 개체 공통 속성 (표 69) / Object common properties (Table 69)
+            parse_object_common(remaining_data)?
+        } else if ctrl_id_str == CtrlId::COLUMN_DEF {
+            CtrlHeaderData::ColumnDefinition
+        } else if ctrl_id_str == CtrlId::HEADER_FOOTER || ctrl_id_str == CtrlId::FOOTNOTE {
+            CtrlHeaderData::HeaderFooter
+        } else {
+            // 표 127, 128의 다른 컨트롤 ID들 (현재는 Other로 처리) / Other control IDs from Table 127, 128 (currently handled as Other)
+            CtrlHeaderData::Other
         };
 
         Ok(CtrlHeader {

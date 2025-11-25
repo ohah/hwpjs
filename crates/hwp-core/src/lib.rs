@@ -643,7 +643,7 @@ mod snapshot_tests {
                 eprintln!("Parse error: {:?}", e);
             }
             assert!(result.is_ok(), "Should parse HWP document");
-            let document = result.unwrap();
+            let _document = result.unwrap();
 
             use crate::decompress::decompress_deflate;
             use crate::document::bodytext::record_tree::RecordTreeNode;
