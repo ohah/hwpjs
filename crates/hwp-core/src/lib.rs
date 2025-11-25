@@ -558,39 +558,14 @@ mod snapshot_tests {
                 "Markdown should contain version information"
             );
 
+            // Create snapshot for markdown output
+            // 마크다운 출력에 대한 스냅샷 생성
+            assert_snapshot!("document_markdown", markdown);
+
             // Print markdown for manual inspection
             println!("\n=== Generated Markdown ===");
             println!("{}", markdown);
             println!("=== End of Markdown ===\n");
-
-            // Save to file for inspection
-            let output_path = "test_output.md";
-            if let Err(e) = std::fs::write(output_path, &markdown) {
-                eprintln!("Warning: Could not write markdown to file: {}", e);
-            } else {
-                println!("Markdown saved to: {}", output_path);
-            }
-        }
-    }
-
-    #[test]
-    fn test_document_to_markdown_snapshot() {
-        let file_path = match find_test_file() {
-            Some(path) => path,
-            None => return, // Skip test if file not available
-        };
-
-        if let Ok(data) = std::fs::read(&file_path) {
-            let parser = HwpParser::new();
-            let result = parser.parse(&data);
-            assert!(result.is_ok(), "Should parse HWP document");
-            let document = result.unwrap();
-
-            // Convert to Markdown using viewer module
-            let markdown = crate::viewer::to_markdown(&document);
-
-            // Create snapshot for markdown output
-            assert_snapshot!("document_markdown", markdown);
         }
     }
 }

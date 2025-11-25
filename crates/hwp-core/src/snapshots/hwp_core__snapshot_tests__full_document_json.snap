@@ -8996,7 +8996,23 @@ expression: json
           ]
         }
       }
-    ]
+    ],
+    "distribute_doc_data": null,
+    "compatible_document": {
+      "target_program": "hwp_current"
+    },
+    "layout_compatibility": {
+      "character_format": 0,
+      "paragraph_format": 0,
+      "section_format": 0,
+      "object_format": 0,
+      "field_format": 0
+    },
+    "track_change": null,
+    "memo_shapes": [],
+    "forbidden_chars": [],
+    "track_change_contents": [],
+    "track_change_authors": []
   },
   "body_text": {
     "sections": [
