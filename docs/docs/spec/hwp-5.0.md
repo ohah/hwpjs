@@ -1554,6 +1554,30 @@ Tag ID: HWPTAG_LIST_HEADER
 | UINT32 | 4 | 속성(표 65-1 참조) |
 | 전체 길이 | 6 | |
 
+**파싱 주의사항 / Parsing Notes**
+
+실제 HWP 파일에서는 표 65와 다른 구조로 저장될 수 있습니다. 일부 구현체(pyhwp 등)에서는 다음과 같이 파싱합니다:
+
+| 자료형 | 길이(바이트) | 설명 |
+|---|---|---|
+| UINT16 | 2 | 문단 수 |
+| UINT16 | 2 | 알 수 없는 필드 (unknown1) |
+| UINT32 | 4 | 속성(표 65-1 참조) |
+| 전체 길이 | 8 | |
+
+따라서 `ListHeader`를 파싱할 때는 실제 데이터 구조를 확인하여 올바른 offset을 사용해야 합니다. 특히 표 셀(`TableCell`)의 경우 `ListHeader` 이후에 셀 속성(표 80)이 이어지므로, `ListHeader`의 실제 크기를 정확히 파악하는 것이 중요합니다.
+
+**In actual HWP files, the structure may differ from Table 65. Some implementations (e.g., pyhwp) parse it as follows:**
+
+| Data Type | Length (bytes) | Description |
+|---|---|---|
+| UINT16 | 2 | Paragraph count |
+| UINT16 | 2 | Unknown field (unknown1) |
+| UINT32 | 4 | Attribute (see Table 65-1) |
+| Total Length | 8 | |
+
+Therefore, when parsing `ListHeader`, the actual data structure should be verified to use the correct offset. Especially for table cells (`TableCell`), since cell attributes (Table 80) follow after `ListHeader`, it is important to accurately determine the actual size of `ListHeader`.
+
 **표 65-1: 문단 리스트 헤더 속성**
 
 | 범위 | 구분 | 값 | 설명 |
@@ -1618,7 +1642,7 @@ MAKE_4CHID(a, b, c, d) (((a) << 24) | ((b) << 16) | ((c) << 8) | (d))
 
 | 자료형 | 길이(바이트) | 설명 |
 |---|---|---|
-| UINT32 | 4 | 컨트롤 ID |
+| UINT32 | 4 | ctrl ID |
 | UINT32 | 4 | 속성(표 70 참조) |
 | HWPUNIT | 4 | 세로 오프셋 값 |
 | HWPUNIT | 4 | 가로 오프셋 값 |
@@ -1779,6 +1803,12 @@ Tag ID: HWPTAG_TABLE
 | BYTE stream | n | 문단 리스트 헤더(표 65 참조) |
 | BYTE stream | 26 | 셀 속성(표 80 참조) |
 | 전체 길이 | 가변 | `26+n 바이트` |
+
+**파싱 주의사항 / Parsing Notes**
+
+표 65에 명시된 `ListHeader`는 6바이트이지만, 실제 구현에서는 8바이트일 수 있습니다 (UINT16 + UINT16 + UINT32). 따라서 셀 속성(표 80)을 파싱할 때는 `ListHeader`의 실제 크기를 확인하여 올바른 offset(6 또는 8바이트)을 사용해야 합니다.
+
+**Table 65 specifies `ListHeader` as 6 bytes, but actual implementations may use 8 bytes (UINT16 + UINT16 + UINT32). Therefore, when parsing cell attributes (Table 80), the actual size of `ListHeader` should be verified to use the correct offset (6 or 8 bytes).**
 
 **표 80: 셀 속성**
 

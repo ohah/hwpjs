@@ -297,8 +297,13 @@ fn parse_cell_list(
         }
 
         // 문단 리스트 헤더 파싱 (표 65 참조) / Parse paragraph list header (see Table 65)
+        // 표 65: INT16(2) + UINT32(4) = 6바이트 (문서 기준)
+        // 하지만 실제 구현에서는 UINT16(2) + UINT16(2) + UINT32(4) = 8바이트일 수 있음
+        // pyhwp를 참고하면 ListHeader는 8바이트로 파싱됨
         let list_header = ListHeader::parse(&data[offset..])?;
-        offset += 10; // ListHeader는 10바이트 / ListHeader is 10 bytes
+        // ListHeader::parse는 6바이트만 파싱하지만, 실제 데이터에는 추가 2바이트가 있을 수 있음
+        // pyhwp에서는 UINT16 unknown1이 추가로 있음
+        offset += 8; // 실제 구현: UINT16(2) + UINT16(2) + UINT32(4) = 8바이트
 
         // 셀 속성 파싱 (표 80 참조) / Parse cell attributes (see Table 80)
         // 표 80: 전체 길이 26바이트

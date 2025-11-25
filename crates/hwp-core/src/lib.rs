@@ -628,4 +628,99 @@ mod snapshot_tests {
             }
         }
     }
+
+    #[test]
+    fn test_debug_list_header_children() {
+        let file_path = match find_test_file() {
+            Some(path) => path,
+            None => return,
+        };
+
+        if let Ok(data) = std::fs::read(&file_path) {
+            let parser = HwpParser::new();
+            let result = parser.parse(&data);
+            if let Err(e) = &result {
+                eprintln!("Parse error: {:?}", e);
+            }
+            assert!(result.is_ok(), "Should parse HWP document");
+            let document = result.unwrap();
+
+            use crate::decompress::decompress_deflate;
+            use crate::document::bodytext::record_tree::RecordTreeNode;
+            use crate::types::RecordHeader;
+            use crate::CfbParser;
+            use crate::FileHeader;
+
+            let mut cfb = CfbParser::parse(&data).expect("Should parse CFB");
+            let fileheader = FileHeader::parse(
+                &CfbParser::read_stream(&mut cfb, "FileHeader").expect("Should read FileHeader"),
+            )
+            .expect("Should parse FileHeader");
+
+            let section_data = CfbParser::read_nested_stream(&mut cfb, "BodyText", "Section0")
+                .expect("Should read Section0");
+
+            let decompressed = if fileheader.is_compressed() {
+                decompress_deflate(&section_data).expect("Should decompress section data")
+            } else {
+                section_data
+            };
+
+            let tree = RecordTreeNode::parse_tree(&decompressed).expect("Should parse tree");
+
+            // LIST_HEADER 찾기 및 자식 확인 / Find LIST_HEADER and check children
+            fn find_list_headers(node: &RecordTreeNode, depth: usize) {
+                if node.tag_id() == 0x44 {
+                    // HWPTAG_LIST_HEADER
+                    println!(
+                        "{}LIST_HEADER (level {}): {} children",
+                        "  ".repeat(depth),
+                        node.level(),
+                        node.children().len()
+                    );
+                    for (i, child) in node.children().iter().enumerate() {
+                        println!(
+                            "{}  Child {}: tag_id={}, level={}",
+                            "  ".repeat(depth),
+                            i,
+                            child.tag_id(),
+                            child.level()
+                        );
+                        if child.tag_id() == 0x32 {
+                            // HWPTAG_PARA_HEADER
+                            println!("{}    -> PARA_HEADER found!", "  ".repeat(depth));
+                        }
+                    }
+                }
+                for child in node.children() {
+                    find_list_headers(child, depth + 1);
+                }
+            }
+
+            println!("=== LIST_HEADER Children Debug ===");
+            find_list_headers(&tree, 0);
+        }
+    }
+
+    #[test]
+    fn test_document_markdown_snapshot() {
+        let file_path = match find_test_file() {
+            Some(path) => path,
+            None => return, // Skip test if file not available
+        };
+
+        if let Ok(data) = std::fs::read(&file_path) {
+            let parser = HwpParser::new();
+            let result = parser.parse(&data);
+            if let Err(e) = &result {
+                eprintln!("Parse error: {:?}", e);
+            }
+            assert!(result.is_ok(), "Should parse HWP document");
+            let document = result.unwrap();
+
+            // Convert to markdown
+            let markdown = document.to_markdown();
+            assert_snapshot!("document_markdown", markdown);
+        }
+    }
 }
