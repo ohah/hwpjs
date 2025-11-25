@@ -104,21 +104,4 @@ impl CfbParser {
             }
         }
     }
-
-    /// Read a BodyText section stream (convenience method)
-    /// BodyText 섹션 스트림을 읽습니다 (편의 메서드).
-    ///
-    /// # Arguments
-    /// * `cfb` - CompoundFile structure (mutable reference required) / CompoundFile 구조체 (가변 참조 필요)
-    /// * `section_index` - Section index (0-based) / 섹션 인덱스 (0부터 시작)
-    ///
-    /// # Returns
-    /// Stream content as byte vector / 바이트 벡터로 된 스트림 내용
-    pub fn read_bodytext_section(
-        cfb: &mut CompoundFile<Cursor<&[u8]>>,
-        section_index: u16,
-    ) -> Result<Vec<u8>, String> {
-        let stream_name = format!("Section{}", section_index);
-        Self::read_nested_stream(cfb, "BodyText", &stream_name)
-    }
 }

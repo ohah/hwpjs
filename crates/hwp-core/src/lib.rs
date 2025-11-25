@@ -6,6 +6,7 @@ mod cfb;
 mod decompress;
 mod document;
 mod types;
+mod viewer;
 
 pub use cfb::CfbParser;
 pub use decompress::{decompress_deflate, decompress_zlib};
@@ -48,11 +49,18 @@ impl HwpParser {
         let mut document = HwpDocument::new(fileheader.clone());
 
         // Read and parse DocInfo
-        let docinfo_data = CfbParser::read_stream(&mut cfb, "DocInfo")?;
+        let docinfo_data: Vec<u8> = CfbParser::read_stream(&mut cfb, "DocInfo")?;
         document.doc_info = DocInfo::parse(&docinfo_data, &fileheader)?;
 
-        // Initialize BodyText (will be populated later)
-        document.body_text = BodyText::default();
+        // Parse BodyText sections
+        // 구역 개수는 DocumentProperties의 area_count에서 가져옵니다 / Get section count from DocumentProperties.area_count
+        let section_count = document
+            .doc_info
+            .document_properties
+            .as_ref()
+            .map(|props| props.area_count)
+            .unwrap_or(1); // 기본값은 1 / Default is 1
+        document.body_text = BodyText::parse(&mut cfb, &fileheader, section_count)?;
 
         // Initialize BinData (will be populated later)
         document.bin_data = BinData::default();
@@ -512,6 +520,21 @@ mod snapshot_tests {
             let result = parser.parse(&data);
             assert!(result.is_ok(), "Should parse HWP document");
             let document = result.unwrap();
+
+            // Verify BodyText is parsed correctly
+            // BodyText가 올바르게 파싱되었는지 검증
+            assert!(
+                !document.body_text.sections.is_empty(),
+                "BodyText should have at least one section"
+            );
+            assert!(
+                document.body_text.sections[0].index == 0,
+                "First section should have index 0"
+            );
+            assert!(
+                !document.body_text.sections[0].paragraphs.is_empty(),
+                "First section should have at least one paragraph"
+            );
 
             // Convert to JSON
             // serde_json already outputs unicode characters as-is (not escaped)

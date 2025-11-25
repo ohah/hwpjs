@@ -245,10 +245,11 @@ impl BodyText {
 
         // 각 구역을 읽어옵니다 / Read each section
         for i in 0..section_count {
-            let section_name = format!("BodyText/Section{}", i);
+            let stream_name = format!("Section{}", i);
 
             // 스트림 읽기 시도 / Try to read stream
-            match CfbParser::read_stream(cfb, &section_name) {
+            // CFB 경로 처리는 CfbParser에 위임 / Delegate CFB path handling to CfbParser
+            match CfbParser::read_nested_stream(cfb, "BodyText", &stream_name) {
                 Ok(mut section_data) => {
                     // 압축 해제 (필요한 경우) / Decompress if needed
                     // HWP BodyText uses raw deflate format (windowBits: -15), not zlib
@@ -266,7 +267,7 @@ impl BodyText {
                 }
                 Err(e) => {
                     // 스트림이 없으면 경고만 출력하고 계속 진행 / If stream doesn't exist, just warn and continue
-                    eprintln!("Warning: Could not read {}: {}", section_name, e);
+                    eprintln!("Warning: Could not read BodyText/{}: {}", stream_name, e);
                 }
             }
         }
