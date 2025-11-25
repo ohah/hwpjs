@@ -10,6 +10,7 @@ mod ctrl_header;
 mod footnote_shape;
 mod line_seg;
 mod list_header;
+mod page_border_fill;
 mod page_def;
 mod para_header;
 mod range_tag;
@@ -21,6 +22,7 @@ pub use ctrl_header::{CtrlHeader, CtrlHeaderData, CtrlId};
 pub use footnote_shape::FootnoteShape;
 pub use line_seg::{LineSegmentInfo, ParaLineSeg};
 pub use list_header::ListHeader;
+pub use page_border_fill::PageBorderFill;
 pub use page_def::PageDef;
 pub use para_header::{ColumnDivideType, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
@@ -115,6 +117,11 @@ pub enum ParagraphRecord {
     FootnoteShape {
         /// 각주/미주 모양 정보 / Footnote/endnote shape information
         footnote_shape: FootnoteShape,
+    },
+    /// 쪽 테두리/배경 / Page border/fill
+    PageBorderFill {
+        /// 쪽 테두리/배경 정보 / Page border/fill information
+        page_border_fill: PageBorderFill,
     },
     /// 기타 레코드 / Other records
     Other {
@@ -707,6 +714,12 @@ impl Section {
                 // 스펙 문서 매핑: 표 133 - 각주/미주 모양 / Spec mapping: Table 133 - Footnote/endnote shape
                 let footnote_shape = FootnoteShape::parse(node.data())?;
                 Ok(ParagraphRecord::FootnoteShape { footnote_shape })
+            }
+            HwpTag::PAGE_BORDER_FILL => {
+                // 쪽 테두리/배경 파싱 / Parse page border/fill
+                // 스펙 문서 매핑: 표 135 - 쪽 테두리/배경 / Spec mapping: Table 135 - Page border/fill
+                let page_border_fill = PageBorderFill::parse(node.data())?;
+                Ok(ParagraphRecord::PageBorderFill { page_border_fill })
             }
             _ => Ok(ParagraphRecord::Other {
                 tag_id: node.tag_id(),
