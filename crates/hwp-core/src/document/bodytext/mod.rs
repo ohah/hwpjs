@@ -19,7 +19,7 @@ pub use line_seg::{LineSegmentInfo, ParaLineSeg};
 pub use list_header::ListHeader;
 pub use para_header::{ColumnDivideType, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
-pub use table::Table;
+pub use table::{Table, TableCell};
 
 use crate::cfb::CfbParser;
 use crate::decompress::decompress_deflate;
