@@ -17,6 +17,7 @@ mod range_tag;
 pub mod record_tree;
 mod shape_component;
 mod shape_component_line;
+mod shape_component_rectangle;
 mod table;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
@@ -30,6 +31,7 @@ pub use para_header::{ColumnDivideType, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
 pub use shape_component::ShapeComponent;
 pub use shape_component_line::ShapeComponentLine;
+pub use shape_component_rectangle::ShapeComponentRectangle;
 pub use table::{Table, TableCell};
 
 use crate::cfb::CfbParser;
@@ -136,6 +138,11 @@ pub enum ParagraphRecord {
     ShapeComponentLine {
         /// 직선 개체 정보 / Line shape component information
         shape_component_line: ShapeComponentLine,
+    },
+    /// 사각형 개체 / Rectangle shape component
+    ShapeComponentRectangle {
+        /// 사각형 개체 정보 / Rectangle shape component information
+        shape_component_rectangle: ShapeComponentRectangle,
     },
     /// 기타 레코드 / Other records
     Other {
@@ -753,6 +760,18 @@ impl Section {
                 let shape_component_line = ShapeComponentLine::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentLine {
                     shape_component_line,
+                })
+            }
+            HwpTag::SHAPE_COMPONENT_RECTANGLE => {
+                // 사각형 개체 파싱 / Parse rectangle shape component
+                // 스펙 문서 매핑: 표 94 - 사각형 개체 속성 / Spec mapping: Table 94 - Rectangle shape component attributes
+                // 레거시 코드는 사각형 개체 속성 부분만 파싱하고 있습니다.
+                // Legacy code only parses the rectangle shape component attributes part.
+                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_RECTANGLE 레코드가 없어 실제 파일로 테스트되지 않음
+                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_RECTANGLE records, so it has not been tested with actual files
+                let shape_component_rectangle = ShapeComponentRectangle::parse(node.data())?;
+                Ok(ParagraphRecord::ShapeComponentRectangle {
+                    shape_component_rectangle,
                 })
             }
             _ => Ok(ParagraphRecord::Other {
