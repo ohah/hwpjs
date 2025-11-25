@@ -108,6 +108,8 @@ src/
 │   └── markdown.rs          # 마크다운 변환 로직
 ├── types.rs                  # HWP 자료형 정의 (표 1: 자료형)
 ├── cfb.rs                    # CFB (Compound File Binary) 파싱
+│                             # - read_stream(): 루트 레벨 스트림 접근
+│                             # - read_nested_stream(): 중첩 스토리지 접근 (폴백 지원)
 ├── decompress.rs             # zlib 압축 해제
 └── lib.rs                    # 라이브러리 진입점 및 HwpParser
 ```
@@ -117,6 +119,7 @@ src/
 - 각 스트림/스토리지는 독립적인 모듈로 분리
 - 상수, 직렬화 등은 별도 파일로 분리하여 가독성 향상
 - 스펙 문서의 구조를 그대로 반영하여 유지보수성 향상
+- **CFB 경로 처리는 CfbParser에 중앙화**: 중첩 스토리지 접근 로직을 CfbParser에 집중하여 재사용성과 유지보수성 향상
 
 ### 환경별 래퍼
 
@@ -372,6 +375,8 @@ refactor(core): reorganize modules to match HWP file structure
   - 파싱(`document/`)과 변환(`viewer/`)의 관심사 분리
   - 각 형식별 변환 로직을 독립적인 모듈로 구성
   - 확장 가능한 구조로 다양한 출력 형식 지원
+  - **CFB 경로 처리 모듈화**: 중첩 스토리지 접근은 `CfbParser::read_nested_stream()`을 사용하여 경로 형식 변경 시 한 곳만 수정하도록 설계
+  - **BodyText 파싱 통합**: `HwpParser::parse()`에서 DocumentProperties의 `area_count`를 사용하여 BodyText 섹션을 자동으로 파싱
 - **테스트**: 
   - **필수**: 모든 기능에 대한 단위 테스트 작성 (TDD 방식)
   - **필수**: JSON 출력 결과를 검증하는 스냅샷 테스트 작성
