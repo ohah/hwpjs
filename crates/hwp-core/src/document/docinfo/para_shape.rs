@@ -3,7 +3,7 @@
 /// 스펙 문서 매핑: 표 43 - 문단 모양 / Spec mapping: Table 43 - Paragraph shape
 /// Tag ID: HWPTAG_PARA_SHAPE
 /// 전체 길이: 54바이트 / Total length: 54 bytes
-use crate::types::{HWPUNIT16, INT16, INT32, UINT16, UINT32, UINT8};
+use crate::types::{INT16, INT32, UINT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
 /// 문단 모양 속성1 / Paragraph shape attributes 1
