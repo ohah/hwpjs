@@ -16,9 +16,11 @@ mod para_header;
 mod range_tag;
 pub mod record_tree;
 mod shape_component;
-mod shape_component_line;
-mod shape_component_rectangle;
+mod shape_component_arc;
 mod shape_component_ellipse;
+mod shape_component_line;
+mod shape_component_polygon;
+mod shape_component_rectangle;
 mod table;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
@@ -31,9 +33,11 @@ pub use page_def::PageDef;
 pub use para_header::{ColumnDivideType, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
 pub use shape_component::ShapeComponent;
-pub use shape_component_line::ShapeComponentLine;
-pub use shape_component_rectangle::ShapeComponentRectangle;
+pub use shape_component_arc::ShapeComponentArc;
 pub use shape_component_ellipse::ShapeComponentEllipse;
+pub use shape_component_line::ShapeComponentLine;
+pub use shape_component_polygon::ShapeComponentPolygon;
+pub use shape_component_rectangle::ShapeComponentRectangle;
 pub use table::{Table, TableCell};
 
 use crate::cfb::CfbParser;
@@ -150,6 +154,16 @@ pub enum ParagraphRecord {
     ShapeComponentEllipse {
         /// 타원 개체 정보 / Ellipse shape component information
         shape_component_ellipse: ShapeComponentEllipse,
+    },
+    /// 호 개체 / Arc shape component
+    ShapeComponentArc {
+        /// 호 개체 정보 / Arc shape component information
+        shape_component_arc: ShapeComponentArc,
+    },
+    /// 다각형 개체 / Polygon shape component
+    ShapeComponentPolygon {
+        /// 다각형 개체 정보 / Polygon shape component information
+        shape_component_polygon: ShapeComponentPolygon,
     },
     /// 기타 레코드 / Other records
     Other {
@@ -791,6 +805,30 @@ impl Section {
                 let shape_component_ellipse = ShapeComponentEllipse::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentEllipse {
                     shape_component_ellipse,
+                })
+            }
+            HwpTag::SHAPE_COMPONENT_ARC => {
+                // 호 개체 파싱 / Parse arc shape component
+                // 스펙 문서 매핑: 표 101 - 호 개체 속성 / Spec mapping: Table 101 - Arc shape component attributes
+                // 레거시 코드는 호 개체 속성 부분만 파싱하고 있습니다.
+                // Legacy code only parses the arc shape component attributes part.
+                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_ARC 레코드가 없어 실제 파일로 테스트되지 않음
+                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_ARC records, so it has not been tested with actual files
+                let shape_component_arc = ShapeComponentArc::parse(node.data())?;
+                Ok(ParagraphRecord::ShapeComponentArc {
+                    shape_component_arc,
+                })
+            }
+            HwpTag::SHAPE_COMPONENT_POLYGON => {
+                // 다각형 개체 파싱 / Parse polygon shape component
+                // 스펙 문서 매핑: 표 99 - 다각형 개체 속성 / Spec mapping: Table 99 - Polygon shape component attributes
+                // 레거시 코드는 다각형 개체 속성 부분만 파싱하고 있습니다.
+                // Legacy code only parses the polygon shape component attributes part.
+                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_POLYGON 레코드가 없어 실제 파일로 테스트되지 않음
+                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_POLYGON records, so it has not been tested with actual files
+                let shape_component_polygon = ShapeComponentPolygon::parse(node.data())?;
+                Ok(ParagraphRecord::ShapeComponentPolygon {
+                    shape_component_polygon,
                 })
             }
             _ => Ok(ParagraphRecord::Other {
