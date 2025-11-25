@@ -50,3 +50,8 @@ Cargo.lock
 # Rspress
 .rspress/
 
+# Legacy reference repositories
+legacy/hwp.js/
+legacy/java-hwp/
+legacy/pyhwp/
+
