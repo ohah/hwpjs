@@ -518,6 +518,9 @@ mod snapshot_tests {
         if let Ok(data) = std::fs::read(&file_path) {
             let parser = HwpParser::new();
             let result = parser.parse(&data);
+            if let Err(e) = &result {
+                eprintln!("Parse error: {:?}", e);
+            }
             assert!(result.is_ok(), "Should parse HWP document");
             let document = result.unwrap();
 
@@ -542,6 +545,87 @@ mod snapshot_tests {
             let json =
                 serde_json::to_string_pretty(&document).expect("Should serialize document to JSON");
             assert_snapshot!("full_document_json", json);
+        }
+    }
+
+    #[test]
+    fn test_debug_record_levels() {
+        let file_path = match find_test_file() {
+            Some(path) => path,
+            None => return,
+        };
+
+        if let Ok(data) = std::fs::read(&file_path) {
+            let mut cfb = CfbParser::parse(&data).expect("Should parse CFB");
+            let fileheader = FileHeader::parse(
+                &CfbParser::read_stream(&mut cfb, "FileHeader").expect("Should read FileHeader"),
+            )
+            .expect("Should parse FileHeader");
+
+            let section_data = CfbParser::read_nested_stream(&mut cfb, "BodyText", "Section0")
+                .expect("Should read Section0");
+
+            let decompressed = if fileheader.is_compressed() {
+                crate::decompress_deflate(&section_data).expect("Should decompress section data")
+            } else {
+                section_data
+            };
+
+            use crate::types::RecordHeader;
+            let mut offset = 0;
+            let mut record_count = 0;
+            let mut table_records = Vec::new();
+            let mut list_header_records = Vec::new();
+
+            while offset < decompressed.len() {
+                let remaining_data = &decompressed[offset..];
+                match RecordHeader::parse(remaining_data) {
+                    Ok((header, header_size)) => {
+                        record_count += 1;
+                        let tag_id = header.tag_id;
+                        let level = header.level;
+                        let size = header.size as usize;
+
+                        if tag_id == 0x43 {
+                            table_records.push((record_count, level, offset));
+                            println!(
+                                "Record {}: TABLE (0x43) at offset {}, level {}",
+                                record_count, offset, level
+                            );
+                        }
+                        if tag_id == 0x44 {
+                            list_header_records.push((record_count, level, offset));
+                            println!(
+                                "Record {}: LIST_HEADER (0x44) at offset {}, level {}",
+                                record_count, offset, level
+                            );
+                        }
+
+                        offset += header_size + size;
+                    }
+                    Err(_) => break,
+                }
+            }
+
+            println!("\n=== Summary ===");
+            println!("Total records: {}", record_count);
+            println!("TABLE records: {}", table_records.len());
+            println!("LIST_HEADER records: {}", list_header_records.len());
+
+            for (table_idx, table_level, table_offset) in &table_records {
+                println!(
+                    "\nTABLE at record {} (offset {}, level {}):",
+                    table_idx, table_offset, table_level
+                );
+                for (list_idx, list_level, list_offset) in &list_header_records {
+                    if *list_offset > *table_offset && *list_offset < *table_offset + 1000 {
+                        println!(
+                            "  -> LIST_HEADER at record {} (offset {}, level {})",
+                            list_idx, list_offset, list_level
+                        );
+                    }
+                }
+            }
         }
     }
 }

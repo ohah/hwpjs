@@ -187,15 +187,20 @@ impl CtrlHeader {
         let ctrl_id_value = UINT32::from_le_bytes([data[0], data[1], data[2], data[3]]);
 
         // 컨트롤 ID를 ASCII 문자열로 변환 (4바이트) / Convert control ID to ASCII string (4 bytes)
-        let ctrl_id = String::from_utf8_lossy(&data[0..4])
+        // pyhwp처럼 바이트를 리버스해서 읽음 / Read bytes in reverse order like pyhwp
+        // pyhwp: chr(bytes[3]) + chr(bytes[2]) + chr(bytes[1]) + chr(bytes[0])
+        let ctrl_id_bytes = [data[3], data[2], data[1], data[0]];
+        // 공백까지 포함해서 파싱 (trim_end 제거) / Parse including spaces (remove trim_end)
+        let ctrl_id = String::from_utf8_lossy(&ctrl_id_bytes)
             .trim_end_matches('\0')
-            .trim_end()
             .to_string();
 
         // 나머지 데이터 파싱 / Parse remaining data
         let remaining_data = if data.len() > 4 { &data[4..] } else { &[] };
 
         // 컨트롤 ID에 따라 다른 구조로 파싱 / Parse different structure based on CtrlID
+        // 공백까지 포함해서 분기 처리 / Branch based on CtrlID including spaces
+        // pyhwp: CHID.TBL = 'tbl ', CHID.GSO = 'gso '
         let parsed_data = match ctrl_id.as_str() {
             "tbl " | "gso " => {
                 // 개체 공통 속성 (표 69) / Object common properties (Table 69)
@@ -216,10 +221,11 @@ impl CtrlHeader {
 
 /// 개체 공통 속성 파싱 (표 69) / Parse object common properties (Table 69)
 fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, String> {
-    // 최소 46바이트 필요 (개체 설명문 제외) / Need at least 46 bytes (excluding description)
-    if data.len() < 46 {
+    // 최소 42바이트 필요 (개체 설명문 제외, 일부 파일에서는 42바이트만 있을 수 있음)
+    // Need at least 42 bytes (excluding description, some files may have only 42 bytes)
+    if data.len() < 42 {
         return Err(format!(
-            "Object common properties must be at least 46 bytes, got {} bytes",
+            "Object common properties must be at least 42 bytes, got {} bytes",
             data.len()
         ));
     }
@@ -309,15 +315,20 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, String> {
     offset += 4;
 
     // WORD 개체 설명문 글자 길이(len) / WORD object description text length
-    let description_len = UINT16::from_le_bytes([data[offset], data[offset + 1]]) as usize;
-    offset += 2;
+    // 데이터가 부족할 수 있으므로 안전하게 처리 / Handle safely as data may be insufficient
+    let description = if offset + 2 <= data.len() {
+        let description_len = UINT16::from_le_bytes([data[offset], data[offset + 1]]) as usize;
+        offset += 2;
 
-    // WCHAR array[len] 개체 설명문 글자 / WCHAR array[len] object description text
-    let description = if description_len > 0 && offset + (description_len * 2) <= data.len() {
-        let description_bytes = &data[offset..offset + (description_len * 2)];
-        match decode_utf16le(description_bytes) {
-            Ok(text) if !text.is_empty() => Some(text),
-            _ => None,
+        // WCHAR array[len] 개체 설명문 글자 / WCHAR array[len] object description text
+        if description_len > 0 && offset + (description_len * 2) <= data.len() {
+            let description_bytes = &data[offset..offset + (description_len * 2)];
+            match decode_utf16le(description_bytes) {
+                Ok(text) if !text.is_empty() => Some(text),
+                _ => None,
+            }
+        } else {
+            None
         }
     } else {
         None

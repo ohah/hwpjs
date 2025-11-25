@@ -1474,6 +1474,74 @@ Tag ID: HWPTAG_CTRL_HEADER
 | | | 컨트롤 ID 이하 속성들은 CtrlID에 따라 다르다. - 각 컨트롤 및 개체 참고 |
 | 전체 길이 | 4 | |
 
+**컨트롤 ID 파싱 주의사항 / Control ID Parsing Notes**
+
+본 라이브러리는 실제 HWP 파일 파싱 시 다음과 같은 커스텀 로직을 사용합니다:
+
+This library uses the following custom logic when parsing actual HWP files:
+
+**바이트 순서 / Byte Order**
+
+HWP 파일에서 컨트롤 ID는 4바이트 UINT32 값으로 저장되며, **바이트를 리버스해서 읽어야** 올바른 문자열을 얻을 수 있습니다. 레거시 라이브러리들(pyhwp, hwp.js)과 동일하게 바이트를 리버스해서 읽습니다:
+
+In HWP files, control IDs are stored as 4-byte UINT32 values, and **bytes must be read in reverse order** to obtain the correct string. Legacy libraries (pyhwp, hwp.js) read bytes in reverse order:
+
+**pyhwp 방식:**
+```python
+def decode(bytes):
+    return chr(bytes[3]) + chr(bytes[2]) + chr(bytes[1]) + chr(bytes[0])
+```
+
+**Rust 구현:**
+```rust
+let ctrl_id_bytes = [data[3], data[2], data[1], data[0]];
+let ctrl_id = String::from_utf8_lossy(&ctrl_id_bytes)
+    .trim_end_matches('\0')
+    .to_string();
+```
+
+**예시 / Example**
+
+- 파일에 저장된 바이트: `[0x20, 0x6C, 0x62, 0x74]` (little-endian)
+- 리버스 후: `[0x74, 0x62, 0x6C, 0x20]` = `"tbl "` (테이블 컨트롤)
+- 리버스하지 않으면: `[0x20, 0x6C, 0x62, 0x74]` = `" lbt"` (잘못된 파싱)
+
+- Bytes stored in file: `[0x20, 0x6C, 0x62, 0x74]` (little-endian)
+- After reverse: `[0x74, 0x62, 0x6C, 0x20]` = `"tbl "` (table control)
+- Without reverse: `[0x20, 0x6C, 0x62, 0x74]` = `" lbt"` (incorrect parsing)
+
+**공백 포함 분기 처리 / Branching with Spaces**
+
+컨트롤 ID는 공백을 포함할 수 있으므로, 분기 처리 시 **공백까지 포함해서 비교**해야 합니다.
+
+Control IDs can include spaces, so branching logic must **compare including spaces**.
+
+**주요 컨트롤 ID / Common Control IDs**
+
+- `"tbl "` - 테이블 컨트롤 / Table control
+- `"gso "` - 일반 그리기 개체 / General shape object
+- `"cold"` - 단 정의 / Column definition
+- `"head"` - 머리말 / Header
+- `"foot"` - 꼬리말 / Footer
+
+**구현 예시 / Implementation Example**
+
+```rust
+match ctrl_id.as_str() {
+    "tbl " | "gso " => {
+        // 개체 공통 속성 파싱 / Parse object common properties
+        parse_object_common(remaining_data)?
+    }
+    "cold" => CtrlHeaderData::ColumnDefinition,
+    "head" | "foot" => CtrlHeaderData::HeaderFooter,
+    _ => CtrlHeaderData::Other,
+}
+```
+
+**주의**: `trim_end()`를 사용하면 공백이 제거되어 `"tbl "`가 `"tbl"`로 변환되므로, 분기 처리 시 매칭되지 않을 수 있습니다.
+
+**Note**: Using `trim_end()` removes spaces, converting `"tbl "` to `"tbl"`, which may cause branching to fail.
+
 ##### 4.3.7. 문단 리스트 헤더
 
 Tag ID: HWPTAG_LIST_HEADER
@@ -1563,6 +1631,12 @@ MAKE_4CHID(a, b, c, d) (((a) << 24) | ((b) << 16) | ((c) << 8) | (d))
 | WORD | 2 | 개체 설명문 글자 길이(len) |
 | WCHAR array[len] | 2×len | 개체 설명문 글자 |
 | 전체 길이 | 가변 | `46 + (2×len) 바이트` |
+
+**파싱 주의사항 / Parsing Notes**
+
+본 라이브러리는 실제 HWP 파일 파싱 시 `parse_object_common` 함수가 컨트롤 ID 이후의 데이터만 파싱하므로, 최소 42바이트가 필요합니다. 표 69의 전체 길이는 컨트롤 ID(4바이트)를 포함한 `46 + (2×len) 바이트`이지만, 컨트롤 ID를 제외하면 `42 + (2×len) 바이트`입니다. 개체 설명문(글자 길이 2바이트 + 글자 2×len 바이트)을 제외하면 42바이트이며, 일부 파일에서는 42바이트만 있을 수 있습니다.
+
+This library's `parse_object_common` function parses only the data after the control ID, so at least 42 bytes are required. Table 69's total length includes the control ID (4 bytes) as `46 + (2×len) bytes`, but excluding the control ID it is `42 + (2×len) bytes`. Excluding the object description (2 bytes for length + 2×len bytes for characters) results in 42 bytes, and some files may have only 42 bytes.
 
 **표 70: 개체 공통 속성**
 

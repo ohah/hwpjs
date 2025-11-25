@@ -92,6 +92,9 @@ pub struct TableCell {
     pub list_header: ListHeader,
     /// 셀 속성 (표 80 참조) / Cell attributes (see Table 80)
     pub cell_attributes: CellAttributes,
+    /// 셀 내부의 문단들 (레벨 3) / Paragraphs inside cell (level 3)
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub paragraphs: Vec<super::Paragraph>,
 }
 
 /// 셀 속성 (표 80) / Cell attributes (Table 80)
@@ -332,6 +335,7 @@ fn parse_cell_list(
         cells.push(TableCell {
             list_header,
             cell_attributes,
+            paragraphs: Vec::new(), // 트리 구조에서 나중에 채워짐 / Will be filled from tree structure later
         });
     }
 

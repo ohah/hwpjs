@@ -92,7 +92,22 @@ fn convert_paragraph_to_markdown(paragraph: &Paragraph) -> String {
                     parts.push(cleaned.trim().to_string());
                 }
             }
-            ParagraphRecord::CtrlHeader { header } => {
+            ParagraphRecord::CtrlHeader { header, children } => {
+                // 컨트롤 헤더의 자식 레코드 처리 (레벨 2, 예: 테이블) / Process control header children (level 2, e.g., table)
+                for child in children {
+                    match child {
+                        ParagraphRecord::Table { table } => {
+                            // 테이블을 마크다운으로 변환 / Convert table to markdown
+                            parts.push(format!(
+                                "\n\n[Table: {}x{}]\n\n",
+                                table.attributes.row_count, table.attributes.col_count
+                            ));
+                        }
+                        _ => {
+                            // 기타 자식 레코드는 무시 / Ignore other child records
+                        }
+                    }
+                }
                 // Convert control header to markdown / 컨트롤 헤더를 마크다운으로 변환
                 let control_md = convert_control_to_markdown(header);
                 if !control_md.is_empty() {

@@ -1,5 +1,5 @@
 mod bindata;
-mod bodytext;
+pub mod bodytext;
 mod constants;
 mod docinfo;
 /// HWP Document structure

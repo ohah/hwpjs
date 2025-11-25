@@ -10,6 +10,7 @@ mod line_seg;
 mod list_header;
 mod para_header;
 mod range_tag;
+pub mod record_tree;
 mod table;
 
 pub use char_shape::{CharShapeInfo, ParaCharShape};
@@ -23,9 +24,10 @@ pub use table::Table;
 use crate::cfb::CfbParser;
 use crate::decompress::decompress_deflate;
 use crate::document::fileheader::FileHeader;
-use crate::types::{decode_utf16le, RecordHeader, WORD};
+use crate::types::{decode_utf16le, WORD};
 use cfb::CompoundFile;
 use constants::*;
+use record_tree::RecordTreeNode;
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 
@@ -83,11 +85,17 @@ pub enum ParagraphRecord {
         /// 컨트롤 헤더 정보 / Control header information
         #[serde(flatten)]
         header: CtrlHeader,
+        /// 컨트롤 헤더의 자식 레코드 (레벨 2) / Child records of control header (level 2)
+        #[serde(skip_serializing_if = "Vec::is_empty", default)]
+        children: Vec<ParagraphRecord>,
     },
     /// 문단 리스트 헤더 / Paragraph list header
     ListHeader {
         /// 문단 리스트 헤더 정보 / Paragraph list header information
         header: ListHeader,
+        /// 리스트 헤더의 자식 문단들 (레벨 3, 예: 테이블 셀 내부 문단) / Child paragraphs of list header (level 3, e.g., paragraphs inside table cell)
+        #[serde(skip_serializing_if = "Vec::is_empty", default)]
+        paragraphs: Vec<Paragraph>,
     },
     /// 표 개체 / Table object
     Table {
@@ -107,6 +115,9 @@ pub enum ParagraphRecord {
 impl Section {
     /// Section 데이터를 파싱하여 Paragraph 리스트로 변환합니다. / Parse section data into paragraph list.
     ///
+    /// 트리 구조를 먼저 파싱한 후 재귀적으로 방문하여 구조화된 데이터로 변환합니다.
+    /// First parses the tree structure, then recursively visits it to convert to structured data.
+    ///
     /// # Arguments
     /// * `data` - Section의 원시 바이트 데이터 / Raw byte data of section
     /// * `version` - 파일 버전 / File version
@@ -114,115 +125,174 @@ impl Section {
     /// # Returns
     /// 파싱된 Paragraph 리스트 / Parsed paragraph list
     pub fn parse_data(data: &[u8], version: u32) -> Result<Vec<Paragraph>, String> {
+        // 먼저 레코드를 트리 구조로 파싱 / First parse records into tree structure
+        let tree = RecordTreeNode::parse_tree(data)?;
+
+        // 트리를 재귀적으로 방문하여 Paragraph 리스트로 변환 / Recursively visit tree to convert to Paragraph list
         let mut paragraphs = Vec::new();
-        let mut offset = 0;
-
-        while offset < data.len() {
-            // 레코드 헤더 파싱 / Parse record header
-            let remaining_data = &data[offset..];
-            let (header, header_size) = RecordHeader::parse(remaining_data)?;
-            offset += header_size;
-
-            // 데이터 영역 읽기 / Read data area
-            let data_size = header.size as usize;
-            if offset + data_size > data.len() {
-                return Err(format!(
-                    "Record data extends beyond section: offset={}, size={}, section_len={}",
-                    offset,
-                    data_size,
-                    data.len()
-                ));
-            }
-
-            let record_data = &data[offset..offset + data_size];
-            offset += data_size;
-
-            // 레벨 0인 경우 새로운 문단 시작 (HWPTAG_PARA_HEADER) / Level 0 means new paragraph (HWPTAG_PARA_HEADER)
-            if header.level == 0 {
-                if header.tag_id == HWPTAG_PARA_HEADER {
-                    let para_header = ParaHeader::parse(record_data, version)?;
-                    paragraphs.push(Paragraph {
-                        para_header,
-                        records: Vec::new(),
-                    });
-                } else {
-                    return Err(format!(
-                        "Unexpected level 0 tag ID: {} (expected HWPTAG_PARA_HEADER)",
-                        header.tag_id
-                    ));
-                }
-            } else if header.level == 1 {
-                // 레벨 1 레코드는 현재 문단에 추가 / Level 1 records belong to current paragraph
-                if let Some(current_para) = paragraphs.last_mut() {
-                    let record = match header.tag_id {
-                        HWPTAG_PARA_TEXT => {
-                            // UTF-16LE 텍스트 파싱 / Parse UTF-16LE text
-                            let text = decode_utf16le(record_data)?;
-                            ParagraphRecord::ParaText { text }
-                        }
-                        HWPTAG_PARA_CHAR_SHAPE => {
-                            // 문단의 글자 모양 파싱 / Parse paragraph character shape
-                            let para_char_shape = ParaCharShape::parse(record_data)?;
-                            ParagraphRecord::ParaCharShape {
-                                shapes: para_char_shape.shapes,
-                            }
-                        }
-                        HWPTAG_PARA_LINE_SEG => {
-                            // 문단의 레이아웃 파싱 / Parse paragraph line segment
-                            let para_line_seg = ParaLineSeg::parse(record_data)?;
-                            ParagraphRecord::ParaLineSeg {
-                                segments: para_line_seg.segments,
-                            }
-                        }
-                        // NOTE: HWPTAG_PARA_RANGE_TAG가 있는 문서를 구해야함.
-                        HWPTAG_PARA_RANGE_TAG => {
-                            // 문단의 영역 태그 파싱 / Parse paragraph range tag
-                            let para_range_tag = ParaRangeTag::parse(record_data)?;
-                            ParagraphRecord::ParaRangeTag {
-                                tags: para_range_tag.tags,
-                            }
-                        }
-                        HWPTAG_CTRL_HEADER => {
-                            // 컨트롤 헤더 파싱 / Parse control header
-                            let ctrl_header = CtrlHeader::parse(record_data)?;
-                            ParagraphRecord::CtrlHeader {
-                                header: ctrl_header,
-                            }
-                        }
-                        // NOTE: HWPTAG_LIST_HEADER가 있는 문서를 구해야 함
-                        HWPTAG_LIST_HEADER => {
-                            // 문단 리스트 헤더 파싱 / Parse paragraph list header
-                            let list_header = ListHeader::parse(record_data)?;
-                            ParagraphRecord::ListHeader {
-                                header: list_header,
-                            }
-                        }
-                        HWPTAG_TABLE => {
-                            // 표 개체 파싱 / Parse table object
-                            match Table::parse(record_data, version) {
-                                Ok(table) => ParagraphRecord::Table { table },
-                                Err(e) => {
-                                    eprintln!("Failed to parse HWPTAG_TABLE: {}", e);
-                                    ParagraphRecord::Other {
-                                        tag_id: header.tag_id,
-                                        data: record_data.to_vec(),
-                                    }
-                                }
-                            }
-                        }
-                        _ => ParagraphRecord::Other {
-                            tag_id: header.tag_id,
-                            data: record_data.to_vec(),
-                        },
-                    };
-                    current_para.records.push(record);
-                } else {
-                    return Err("Level 1 record found before paragraph header".to_string());
-                }
+        for child in tree.children() {
+            if child.tag_id() == HWPTAG_PARA_HEADER {
+                paragraphs.push(Self::parse_paragraph_from_tree(child, version)?);
             }
         }
 
         Ok(paragraphs)
+    }
+
+    /// 트리 노드에서 Paragraph를 파싱합니다. / Parse Paragraph from tree node.
+    ///
+    /// 문단 헤더 노드와 그 자식들을 재귀적으로 처리합니다.
+    /// Recursively processes paragraph header node and its children.
+    fn parse_paragraph_from_tree(node: &RecordTreeNode, version: u32) -> Result<Paragraph, String> {
+        if node.tag_id() != HWPTAG_PARA_HEADER {
+            return Err(format!(
+                "Expected HWPTAG_PARA_HEADER, got tag {}",
+                node.tag_id()
+            ));
+        }
+
+        let para_header = ParaHeader::parse(node.data(), version)?;
+        let mut records = Vec::new();
+
+        // 자식들을 처리 / Process children
+        for child in node.children() {
+            records.push(Self::parse_record_from_tree(child, version)?);
+        }
+
+        Ok(Paragraph {
+            para_header,
+            records,
+        })
+    }
+
+    /// 트리 노드에서 ParagraphRecord를 파싱합니다. / Parse ParagraphRecord from tree node.
+    ///
+    /// 모든 레벨의 레코드를 재귀적으로 처리합니다.
+    /// Recursively processes records at all levels.
+    fn parse_record_from_tree(
+        node: &RecordTreeNode,
+        version: u32,
+    ) -> Result<ParagraphRecord, String> {
+        match node.tag_id() {
+            HWPTAG_PARA_TEXT => {
+                let text = decode_utf16le(node.data())?;
+                Ok(ParagraphRecord::ParaText { text })
+            }
+            HWPTAG_PARA_CHAR_SHAPE => {
+                let para_char_shape = ParaCharShape::parse(node.data())?;
+                Ok(ParagraphRecord::ParaCharShape {
+                    shapes: para_char_shape.shapes,
+                })
+            }
+            HWPTAG_PARA_LINE_SEG => {
+                let para_line_seg = ParaLineSeg::parse(node.data())?;
+                Ok(ParagraphRecord::ParaLineSeg {
+                    segments: para_line_seg.segments,
+                })
+            }
+            HWPTAG_PARA_RANGE_TAG => {
+                let para_range_tag = ParaRangeTag::parse(node.data())?;
+                Ok(ParagraphRecord::ParaRangeTag {
+                    tags: para_range_tag.tags,
+                })
+            }
+            HWPTAG_CTRL_HEADER => {
+                let ctrl_header = CtrlHeader::parse(node.data())?;
+                // 자식 레코드들을 재귀적으로 처리 / Recursively process child records
+                // hwp.js: visitControlHeader에서 record.children를 모두 처리
+                // hwp.js: visitControlHeader processes all record.children
+                // hwp.js: visitListHeader에서 record.parentTagID === HWPTAG_CTRL_HEADER이고 isTable(control)일 때 테이블 셀로 처리
+                // hwp.js: visitListHeader processes as table cell when record.parentTagID === HWPTAG_CTRL_HEADER and isTable(control)
+                let mut children = Vec::new();
+                let mut table_opt: Option<crate::document::bodytext::Table> = None;
+                let mut list_headers_for_table: Vec<(usize, Vec<super::Paragraph>)> = Vec::new(); // (cell_index, paragraphs)
+
+                // CTRL_HEADER가 테이블인지 확인 / Check if CTRL_HEADER is a table
+                // hwp.js: CommonCtrlID.Table = makeCtrlID('t', 'b', 'l', ' ') = 0x206C6274 (little-endian: 0x74626C20)
+                // hwp.js: CommonCtrlID.Table = makeCtrlID('t', 'b', 'l', ' ') = 0x206C6274 (little-endian: 0x74626C20)
+                // pyhwp: CHID.TBL = 'tbl ' (바이트 리버스 후) / pyhwp: CHID.TBL = 'tbl ' (after byte reverse)
+                let is_table =
+                    ctrl_header.ctrl_id == "tbl " || ctrl_header.ctrl_id_value == 0x74626C20u32;
+
+                for child in node.children() {
+                    if child.tag_id() == HWPTAG_TABLE {
+                        // TABLE은 별도로 처리 / TABLE is processed separately
+                        let mut table_data = Table::parse(child.data(), version)?;
+                        table_opt = Some(table_data);
+                    } else if child.tag_id() == HWPTAG_LIST_HEADER && is_table {
+                        // LIST_HEADER가 테이블의 셀인 경우 / LIST_HEADER is a table cell
+                        // hwp.js: visitListHeader에서 LIST_HEADER를 파싱하고 테이블 셀로 처리
+                        // hwp.js: visitListHeader parses LIST_HEADER and processes as table cell
+                        let list_header_record = Self::parse_record_from_tree(child, version)?;
+                        // LIST_HEADER는 children에도 포함되어야 함 / LIST_HEADER should also be included in children
+                        // 테이블 셀로 처리하기 위해 paragraphs 추출 / Extract paragraphs for table cell processing
+                        let paragraphs_for_cell = if let ParagraphRecord::ListHeader {
+                            header: _,
+                            paragraphs,
+                        } = &list_header_record
+                        {
+                            paragraphs.clone()
+                        } else {
+                            Vec::new()
+                        };
+                        // LIST_HEADER를 children에 추가 / Add LIST_HEADER to children
+                        children.push(list_header_record);
+                        // 테이블 셀로 처리하기 위해 paragraphs 저장 / Store paragraphs for table cell processing
+                        // 셀 인덱스 계산 (LIST_HEADER의 순서대로) / Calculate cell index (in order of LIST_HEADER)
+                        // 실제로는 LIST_HEADER의 데이터에서 row/column 정보를 읽어야 하지만,
+                        // 현재는 순서대로 처리 / Actually should read row/column from LIST_HEADER data, but process in order for now
+                        list_headers_for_table
+                            .push((list_headers_for_table.len(), paragraphs_for_cell));
+                    } else {
+                        children.push(Self::parse_record_from_tree(child, version)?);
+                    }
+                }
+
+                // TABLE이 있으면 LIST_HEADER를 셀로 연결 / If TABLE exists, connect LIST_HEADER as cells
+                if let Some(ref mut table) = table_opt {
+                    for (cell_index, paragraphs) in list_headers_for_table {
+                        if cell_index < table.cells.len() {
+                            table.cells[cell_index].paragraphs = paragraphs;
+                        }
+                    }
+                    children.push(ParagraphRecord::Table {
+                        table: table.clone(),
+                    });
+                }
+
+                Ok(ParagraphRecord::CtrlHeader {
+                    header: ctrl_header,
+                    children,
+                })
+            }
+            HWPTAG_LIST_HEADER => {
+                let list_header = ListHeader::parse(node.data())?;
+                // 자식들(셀 내부 문단) 처리 / Process children (paragraphs inside cell)
+                // 트리 구조에서 이미 부모-자식 관계가 올바르게 설정되어 있으므로 레벨 체크 불필요
+                // Tree structure already has correct parent-child relationships, so level check is unnecessary
+                let mut paragraphs = Vec::new();
+                for child in node.children() {
+                    if child.tag_id() == HWPTAG_PARA_HEADER {
+                        paragraphs.push(Self::parse_paragraph_from_tree(child, version)?);
+                    }
+                }
+                Ok(ParagraphRecord::ListHeader {
+                    header: list_header,
+                    paragraphs,
+                })
+            }
+            HWPTAG_TABLE => {
+                // 테이블 파싱: 테이블 속성만 먼저 파싱 / Parse table: parse table attributes first
+                // hwp.js: visitTable은 테이블 속성만 파싱하고, LIST_HEADER는 visitListHeader에서 처리
+                // hwp.js: visitTable only parses table attributes, LIST_HEADER is processed in visitListHeader
+                let table = Table::parse(node.data(), version)?;
+                Ok(ParagraphRecord::Table { table })
+            }
+            _ => Ok(ParagraphRecord::Other {
+                tag_id: node.tag_id(),
+                data: node.data().to_vec(),
+            }),
+        }
     }
 }
 

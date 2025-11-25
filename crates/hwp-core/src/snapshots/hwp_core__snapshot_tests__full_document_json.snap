@@ -1,5 +1,6 @@
 ---
 source: crates/hwp-core/src/lib.rs
+assertion_line: 547
 expression: json
 ---
 {
@@ -9076,21 +9077,83 @@ expression: json
               },
               {
                 "type": "ctrl_header",
-                "ctrl_id": "dces",
+                "ctrl_id": "secd",
                 "ctrl_id_value": 1936024420,
-                "data_type": "other"
+                "data_type": "other",
+                "children": [
+                  {
+                    "type": "other",
+                    "tag_id": 73
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 74
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 74
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 75
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 75
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 75
+                  }
+                ]
               },
               {
                 "type": "ctrl_header",
-                "ctrl_id": "dloc",
+                "ctrl_id": "cold",
                 "ctrl_id_value": 1668246628,
-                "data_type": "other"
+                "data_type": "column_definition"
               },
               {
                 "type": "ctrl_header",
-                "ctrl_id": " osg",
+                "ctrl_id": "gso ",
                 "ctrl_id_value": 1735618336,
-                "data_type": "other"
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": true,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": false,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 0,
+                "width": 48104,
+                "height": 6134,
+                "z_order": 8,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1879040631,
+                "page_divide": 0,
+                "description": "그림입니다.\r\n원본 그림의 이름: 보도_생태계.jpg\r\n원본 그림의 크기: 가로 1200pixel, 세로 153pixel\r\n사진 찍은 날짜: 2018년 03월 15일 오후 11:22",
+                "children": [
+                  {
+                    "type": "other",
+                    "tag_id": 76
+                  }
+                ]
               }
             ]
           },
@@ -9152,9 +9215,219 @@ expression: json
               },
               {
                 "type": "ctrl_header",
-                "ctrl_id": " lbt",
+                "ctrl_id": "tbl ",
                 "ctrl_id_value": 1952607264,
-                "data_type": "other"
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": true,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": false,
+                  "overlap": false,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "table",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 0,
+                "width": 48230,
+                "height": 6869,
+                "z_order": 0,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1938967211,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "table",
+                    "table": {
+                      "attributes": {
+                        "attribute": {
+                          "page_break": "no_break",
+                          "header_row_repeat": true
+                        },
+                        "row_count": 3,
+                        "col_count": 4,
+                        "cell_spacing": 0,
+                        "padding": {
+                          "left": 0,
+                          "right": 0,
+                          "top": 0,
+                          "bottom": 0
+                        },
+                        "row_sizes": [
+                          2,
+                          4,
+                          4
+                        ],
+                        "border_fill_id": 0,
+                        "zones": []
+                      },
+                      "cells": []
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -9212,7 +9485,7 @@ expression: json
               },
               {
                 "type": "ctrl_header",
-                "ctrl_id": "pngp",
+                "ctrl_id": "pgnp",
                 "ctrl_id_value": 1885826672,
                 "data_type": "other"
               }
@@ -9276,9 +9549,94 @@ expression: json
               },
               {
                 "type": "ctrl_header",
-                "ctrl_id": " lbt",
+                "ctrl_id": "tbl ",
                 "ctrl_id_value": 1952607264,
-                "data_type": "other"
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": true,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": false,
+                  "overlap": false,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "table",
+                  "size_protect": false
+                },
+                "offset_y": 4294967156,
+                "offset_x": 4294967156,
+                "width": 47907,
+                "height": 12578,
+                "z_order": 3,
+                "margin": {
+                  "top": 140,
+                  "right": 140,
+                  "bottom": 140,
+                  "left": 140
+                },
+                "instance_id": 1682767015,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 4,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "table",
+                    "table": {
+                      "attributes": {
+                        "attribute": {
+                          "page_break": "no_break",
+                          "header_row_repeat": true
+                        },
+                        "row_count": 1,
+                        "col_count": 1,
+                        "cell_spacing": 0,
+                        "padding": {
+                          "left": 140,
+                          "right": 140,
+                          "top": 140,
+                          "bottom": 140
+                        },
+                        "row_sizes": [
+                          1
+                        ],
+                        "border_fill_id": 0,
+                        "zones": []
+                      },
+                      "cells": []
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -10736,9 +11094,101 @@ expression: json
               },
               {
                 "type": "ctrl_header",
-                "ctrl_id": " lbt",
+                "ctrl_id": "tbl ",
                 "ctrl_id_value": 1952607264,
-                "data_type": "other"
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": true,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "para",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": false,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "table",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 0,
+                "width": 47897,
+                "height": 4551,
+                "z_order": 1,
+                "margin": {
+                  "top": 140,
+                  "right": 140,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1629878411,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 2,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "table",
+                    "table": {
+                      "attributes": {
+                        "attribute": {
+                          "page_break": "no_break_other",
+                          "header_row_repeat": true
+                        },
+                        "row_count": 1,
+                        "col_count": 2,
+                        "cell_spacing": 0,
+                        "padding": {
+                          "left": 141,
+                          "right": 141,
+                          "top": 141,
+                          "bottom": 141
+                        },
+                        "row_sizes": [
+                          2
+                        ],
+                        "border_fill_id": 7,
+                        "zones": []
+                      },
+                      "cells": []
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -10798,9 +11248,112 @@ expression: json
               },
               {
                 "type": "ctrl_header",
-                "ctrl_id": " lbt",
+                "ctrl_id": "tbl ",
                 "ctrl_id_value": 1952607264,
-                "data_type": "other"
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": true,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "para",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": false,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "table",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 0,
+                "width": 48159,
+                "height": 2831,
+                "z_order": 4,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1878870789,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "table",
+                    "table": {
+                      "attributes": {
+                        "attribute": {
+                          "page_break": "no_break_other",
+                          "header_row_repeat": true
+                        },
+                        "row_count": 1,
+                        "col_count": 3,
+                        "cell_spacing": 0,
+                        "padding": {
+                          "left": 141,
+                          "right": 141,
+                          "top": 141,
+                          "bottom": 141
+                        },
+                        "row_sizes": [
+                          3
+                        ],
+                        "border_fill_id": 2,
+                        "zones": []
+                      },
+                      "cells": []
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -10858,9 +11411,434 @@ expression: json
               },
               {
                 "type": "ctrl_header",
-                "ctrl_id": " lbt",
+                "ctrl_id": "tbl ",
                 "ctrl_id_value": 1952607264,
-                "data_type": "other"
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": true,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "para",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": false,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "table",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 0,
+                "width": 48230,
+                "height": 62701,
+                "z_order": 5,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1878870803,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "list_header",
+                    "header": {
+                      "paragraph_count": 1,
+                      "attribute": {
+                        "text_direction": "horizontal",
+                        "line_break": "normal",
+                        "vertical_align": "top"
+                      }
+                    }
+                  },
+                  {
+                    "type": "other",
+                    "tag_id": 66
+                  },
+                  {
+                    "type": "table",
+                    "table": {
+                      "attributes": {
+                        "attribute": {
+                          "page_break": "no_break_other",
+                          "header_row_repeat": true
+                        },
+                        "row_count": 8,
+                        "col_count": 3,
+                        "cell_spacing": 0,
+                        "padding": {
+                          "left": 510,
+                          "right": 510,
+                          "top": 141,
+                          "bottom": 141
+                        },
+                        "row_sizes": [
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3,
+                          3
+                        ],
+                        "border_fill_id": 2,
+                        "zones": []
+                      },
+                      "cells": []
+                    }
+                  }
+                ]
               }
             ]
           }
