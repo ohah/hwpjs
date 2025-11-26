@@ -7,6 +7,9 @@ mod control;
 mod table;
 
 use crate::document::{BinDataRecord, ColumnDivideType, HwpDocument, Paragraph, ParagraphRecord};
+use base64::{engine::general_purpose::STANDARD, Engine as _};
+use std::fs;
+use std::path::Path;
 
 pub use control::convert_control_to_markdown;
 pub use table::convert_table_to_markdown;
@@ -16,10 +19,12 @@ pub use table::convert_table_to_markdown;
 ///
 /// # Arguments / 매개변수
 /// * `document` - The HWP document to convert / 변환할 HWP 문서
+/// * `image_output_dir` - Optional directory path to save images as files. If None, images are embedded as base64 data URIs.
+///                        이미지를 파일로 저장할 디렉토리 경로 (선택). None이면 base64 데이터 URI로 임베드됩니다.
 ///
 /// # Returns / 반환값
 /// Markdown string representation of the document / 문서의 마크다운 문자열 표현
-pub fn to_markdown(document: &HwpDocument) -> String {
+pub fn to_markdown(document: &HwpDocument, image_output_dir: Option<&str>) -> String {
     let mut lines = Vec::new();
 
     // Add document title with version info / 문서 제목과 버전 정보 추가
@@ -48,7 +53,7 @@ pub fn to_markdown(document: &HwpDocument) -> String {
             }
 
             // Convert paragraph to markdown (includes text and controls) / 문단을 마크다운으로 변환 (텍스트와 컨트롤 포함)
-            let markdown = convert_paragraph_to_markdown(paragraph, document);
+            let markdown = convert_paragraph_to_markdown(paragraph, document, image_output_dir);
             if !markdown.is_empty() {
                 lines.push(markdown);
             }
@@ -72,7 +77,11 @@ fn format_version(document: &HwpDocument) -> String {
 
 /// Convert a paragraph to markdown
 /// 문단을 마크다운으로 변환
-fn convert_paragraph_to_markdown(paragraph: &Paragraph, document: &HwpDocument) -> String {
+fn convert_paragraph_to_markdown(
+    paragraph: &Paragraph,
+    document: &HwpDocument,
+    image_output_dir: Option<&str>,
+) -> String {
     if paragraph.records.is_empty() {
         return String::new();
     }
@@ -109,13 +118,15 @@ fn convert_paragraph_to_markdown(paragraph: &Paragraph, document: &HwpDocument) 
                     .iter()
                     .find(|item| item.index == bindata_id)
                 {
-                    // base64 데이터를 마크다운 이미지 형식으로 출력 / Output base64 data as markdown image
-                    // 확장자는 bin_data_records에서 찾을 수 있지만, 간단하게 jpeg로 가정
-                    // Extension can be found from bin_data_records, but assume jpeg for simplicity
-                    let mime_type = get_mime_type_from_bindata_id(document, bindata_id);
-                    let image_markdown =
-                        format!("![이미지](data:{};base64,{})", mime_type, bin_item.data);
-                    parts.push(image_markdown);
+                    let image_markdown = format_image_markdown(
+                        document,
+                        bindata_id,
+                        &bin_item.data,
+                        image_output_dir,
+                    );
+                    if !image_markdown.is_empty() {
+                        parts.push(image_markdown);
+                    }
                 }
             }
             ParagraphRecord::CtrlHeader { header, children } => {
@@ -146,21 +157,24 @@ fn convert_paragraph_to_markdown(paragraph: &Paragraph, document: &HwpDocument) 
                                 .iter()
                                 .find(|item| item.index == bindata_id)
                             {
-                                // base64 데이터를 마크다운 이미지 형식으로 출력 / Output base64 data as markdown image
-                                let mime_type = get_mime_type_from_bindata_id(document, bindata_id);
-                                let image_markdown = format!(
-                                    "![이미지](data:{};base64,{})",
-                                    mime_type, bin_item.data
+                                let image_markdown = format_image_markdown(
+                                    document,
+                                    bindata_id,
+                                    &bin_item.data,
+                                    image_output_dir,
                                 );
-                                parts.push(image_markdown);
-                                has_image = true;
+                                if !image_markdown.is_empty() {
+                                    parts.push(image_markdown);
+                                    has_image = true;
+                                }
                             }
                         }
                         ParagraphRecord::ListHeader { paragraphs, .. } => {
                             // ListHeader의 paragraphs를 재귀적으로 처리하여 이미지 찾기
                             // Recursively process ListHeader paragraphs to find images
                             for para in paragraphs {
-                                let para_md = convert_paragraph_to_markdown(para, document);
+                                let para_md =
+                                    convert_paragraph_to_markdown(para, document, image_output_dir);
                                 if !para_md.is_empty() {
                                     // 이미지가 포함되어 있는지 확인 / Check if image is included
                                     if para_md.contains("![이미지]") {
@@ -182,8 +196,11 @@ fn convert_paragraph_to_markdown(paragraph: &Paragraph, document: &HwpDocument) 
                                         // ListHeader의 paragraphs를 재귀적으로 처리하여 이미지 찾기
                                         // Recursively process ListHeader paragraphs to find images
                                         for para in paragraphs {
-                                            let para_md =
-                                                convert_paragraph_to_markdown(para, document);
+                                            let para_md = convert_paragraph_to_markdown(
+                                                para,
+                                                document,
+                                                image_output_dir,
+                                            );
                                             if !para_md.is_empty() {
                                                 // 이미지가 포함되어 있는지 확인 / Check if image is included
                                                 if para_md.contains("![이미지]") {
@@ -208,15 +225,16 @@ fn convert_paragraph_to_markdown(paragraph: &Paragraph, document: &HwpDocument) 
                                             .iter()
                                             .find(|item| item.index == bindata_id)
                                         {
-                                            // base64 데이터를 마크다운 이미지 형식으로 출력 / Output base64 data as markdown image
-                                            let mime_type =
-                                                get_mime_type_from_bindata_id(document, bindata_id);
-                                            let image_markdown = format!(
-                                                "![이미지](data:{};base64,{})",
-                                                mime_type, bin_item.data
+                                            let image_markdown = format_image_markdown(
+                                                document,
+                                                bindata_id,
+                                                &bin_item.data,
+                                                image_output_dir,
                                             );
-                                            parts.push(image_markdown);
-                                            has_image = true;
+                                            if !image_markdown.is_empty() {
+                                                parts.push(image_markdown);
+                                                has_image = true;
+                                            }
                                         }
                                     }
                                     _ => {
@@ -285,4 +303,87 @@ fn get_mime_type_from_bindata_id(document: &HwpDocument, bindata_id: crate::type
     }
     // 기본값 / default
     "image/jpeg".to_string()
+}
+
+/// Get file extension from BinData ID using bin_data_records
+/// bin_data_records를 사용하여 BinData ID에서 파일 확장자 가져오기
+fn get_extension_from_bindata_id(document: &HwpDocument, bindata_id: crate::types::WORD) -> String {
+    // bin_data_records에서 EMBEDDING 타입의 extension 찾기 / Find extension from EMBEDDING type in bin_data_records
+    for record in &document.doc_info.bin_data {
+        match record {
+            BinDataRecord::Embedding { embedding, .. } => {
+                if embedding.binary_data_id == bindata_id {
+                    return embedding.extension.clone();
+                }
+            }
+            _ => {}
+        }
+    }
+    // 기본값 / default
+    "jpg".to_string()
+}
+
+/// Format image markdown - either as base64 data URI or file path
+/// 이미지 마크다운 포맷 - base64 데이터 URI 또는 파일 경로
+fn format_image_markdown(
+    document: &HwpDocument,
+    bindata_id: crate::types::WORD,
+    base64_data: &str,
+    image_output_dir: Option<&str>,
+) -> String {
+    match image_output_dir {
+        Some(dir_path) => {
+            // 이미지를 파일로 저장하고 파일 경로를 마크다운에 포함 / Save image as file and include file path in markdown
+            match save_image_to_file(document, bindata_id, base64_data, dir_path) {
+                Ok(file_path) => {
+                    // 상대 경로로 변환 (디렉토리 경로 제거) / Convert to relative path (remove directory path)
+                    let relative_path = Path::new(&file_path)
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or(&file_path);
+                    format!("![이미지]({})", relative_path)
+                }
+                Err(e) => {
+                    eprintln!("Failed to save image: {}", e);
+                    // 실패 시 base64로 폴백 / Fallback to base64 on failure
+                    let mime_type = get_mime_type_from_bindata_id(document, bindata_id);
+                    format!("![이미지](data:{};base64,{})", mime_type, base64_data)
+                }
+            }
+        }
+        None => {
+            // base64 데이터 URI로 임베드 / Embed as base64 data URI
+            let mime_type = get_mime_type_from_bindata_id(document, bindata_id);
+            format!("![이미지](data:{};base64,{})", mime_type, base64_data)
+        }
+    }
+}
+
+/// Save image to file from base64 data
+/// base64 데이터에서 이미지를 파일로 저장
+fn save_image_to_file(
+    document: &HwpDocument,
+    bindata_id: crate::types::WORD,
+    base64_data: &str,
+    dir_path: &str,
+) -> Result<String, String> {
+    // base64 디코딩 / Decode base64
+    let image_data = STANDARD
+        .decode(base64_data)
+        .map_err(|e| format!("Failed to decode base64: {}", e))?;
+
+    // 파일명 생성 / Generate filename
+    let extension = get_extension_from_bindata_id(document, bindata_id);
+    let file_name = format!("BIN{:04X}.{}", bindata_id, extension);
+    let file_path = Path::new(dir_path).join(&file_name);
+
+    // 디렉토리 생성 / Create directory
+    fs::create_dir_all(dir_path)
+        .map_err(|e| format!("Failed to create directory '{}': {}", dir_path, e))?;
+
+    // 파일 저장 / Save file
+    fs::write(&file_path, &image_data)
+        .map_err(|e| format!("Failed to write file '{}': {}", file_path.display(), e))?;
+
+    Ok(file_path.to_string_lossy().to_string())
 }

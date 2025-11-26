@@ -49,9 +49,13 @@ impl HwpDocument {
     /// Convert HWP document to Markdown format
     /// HWP 문서를 마크다운 형식으로 변환
     ///
+    /// # Arguments / 매개변수
+    /// * `image_output_dir` - Optional directory path to save images as files. If None, images are embedded as base64 data URIs.
+    ///                        이미지를 파일로 저장할 디렉토리 경로 (선택). None이면 base64 데이터 URI로 임베드됩니다.
+    ///
     /// # Returns / 반환값
     /// Markdown string representation of the document / 문서의 마크다운 문자열 표현
-    pub fn to_markdown(&self) -> String {
-        crate::viewer::to_markdown(self)
+    pub fn to_markdown(&self, image_output_dir: Option<&str>) -> String {
+        crate::viewer::to_markdown(self, image_output_dir)
     }
 }
