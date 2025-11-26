@@ -62,8 +62,16 @@ impl HwpParser {
             .unwrap_or(1); // 기본값은 1 / Default is 1
         document.body_text = BodyText::parse(&mut cfb, &fileheader, section_count)?;
 
-        // Initialize BinData (will be populated later)
-        document.bin_data = BinData::default();
+        // Parse BinData storage
+        // BinData 스토리지 파싱
+        // 표 17의 bin_data_records를 사용하여 스트림을 찾습니다 (EMBEDDING/STORAGE 타입의 binary_data_id와 extension 사용)
+        // Use bin_data_records from Table 17 to find streams (use binary_data_id and extension for EMBEDDING/STORAGE types)
+        use crate::document::BinaryDataFormat;
+        document.bin_data = BinData::parse(
+            &mut cfb,
+            BinaryDataFormat::Base64,
+            &document.doc_info.bin_data,
+        )?;
 
         Ok(document)
     }

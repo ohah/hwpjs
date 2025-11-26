@@ -12,6 +12,7 @@ name = "hwp_core"
 path = "src/lib.rs"
 
 [dependencies]
+base64 = "0.22.1"
 cfb = "0.12.1"
 flate2 = "1.1.5"
 serde = { version = "1.0.228", features = ["derive"] }

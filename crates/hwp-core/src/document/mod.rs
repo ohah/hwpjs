@@ -9,7 +9,7 @@ mod docinfo;
 /// 스펙 문서 매핑: 표 2 - 전체 구조
 mod fileheader;
 
-pub use bindata::BinData;
+pub use bindata::{BinData, BinaryDataFormat};
 pub use bodytext::{
     BodyText, ColumnDivideType, CtrlHeader, CtrlHeaderData, CtrlId, Paragraph, ParagraphRecord,
     Section,

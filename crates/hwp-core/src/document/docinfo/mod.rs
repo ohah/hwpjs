@@ -3,6 +3,7 @@
 /// This module handles parsing of HWP DocInfo stream.
 ///
 /// 스펙 문서 매핑: 표 2 - 문서 정보 (DocInfo 스트림) / Spec mapping: Table 2 - Document information (DocInfo stream)
+mod bin_data;
 mod border_fill;
 mod bullet;
 mod char_shape;
@@ -27,6 +28,7 @@ mod track_change_content;
 use crate::decompress::decompress_deflate;
 use crate::document::fileheader::FileHeader;
 use crate::types::RecordHeader;
+pub use bin_data::BinDataRecord;
 pub use border_fill::BorderFill;
 pub use bullet::Bullet;
 pub use char_shape::CharShape;
@@ -56,9 +58,8 @@ pub struct DocInfo {
     pub document_properties: Option<DocumentProperties>,
     /// ID mappings (parsed)
     pub id_mappings: Option<IdMappings>,
-    /// Binary data list (excluded from JSON serialization) / 바이너리 데이터 리스트 (JSON 직렬화에서 제외)
-    #[serde(skip)]
-    pub bin_data: Vec<Vec<u8>>,
+    /// Binary data records (parsed) / 바이너리 데이터 레코드 (파싱됨)
+    pub bin_data: Vec<BinDataRecord>,
     /// Face names (fonts) (parsed) / 글꼴 목록 (파싱됨)
     pub face_names: Vec<FaceName>,
     /// Border/fill information (parsed) / 테두리/배경 정보 (파싱됨)
@@ -155,7 +156,9 @@ impl DocInfo {
                 }
                 HwpTag::BIN_DATA => {
                     if header.level == 1 {
-                        doc_info.bin_data.push(record_data.to_vec());
+                        // BinDataRecord는 완전히 파싱 / Fully parse BinDataRecord
+                        let bin_data_record = BinDataRecord::parse(record_data)?;
+                        doc_info.bin_data.push(bin_data_record);
                     }
                 }
                 HwpTag::FACE_NAME => {
