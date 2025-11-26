@@ -408,6 +408,15 @@ Summary Information에 대한 자세한 설명은 MSDN을 참고:
 
 `BinData` 스토리지에는 그림이나 OLE 개체와 같이 문서에 첨부된 바이너리 데이터가 각각의 스트림으로 저장된다.
 
+**압축:**
+표 2에 따르면 BinData 스토리지의 스트림은 압축되어 저장됩니다. 실제 구현에서는 CFB에서 스트림을 읽은 후 **압축 해제가 필요**합니다.
+
+- 압축 형식: raw deflate (zlib의 deflate 알고리즘, windowBits: -15)
+- 압축 해제 방법: zlib의 `decompress(..., -15)` 또는 동등한 함수 사용
+- 레거시 구현 참고:
+  - hwpjs.js: `pako.inflate(data.content, { windowBits: -15 })`
+  - pyhwp: `zlib.decompress(compressed_data, -15)`
+
 > **⚠️ 실제 구현 시 주의사항 (Implementation Notes)**
 > 
 > 스펙 문서에는 BinData 스토리지 내 스트림의 정확한 경로 형식이 명시되어 있지 않습니다.
@@ -427,6 +436,9 @@ Summary Information에 대한 자세한 설명은 MSDN을 참고:
 > 3. **LINK 타입**: BinData 스토리지에 저장되지 않으므로 건너뜀
 > 
 > 표 17의 `extension` 필드는 EMBEDDING 타입일 때 바이너리 데이터의 형식 정보를 제공하며, 이를 활용하여 스트림 경로를 구성할 수 있습니다.
+> 
+> **압축 해제:**
+> CFB에서 스트림을 읽은 후, raw deflate 형식으로 압축 해제해야 합니다. 압축 해제 실패 시 원본 데이터를 사용하거나 에러를 처리해야 합니다.
 
 ##### 3.2.6. 미리보기 텍스트
 

@@ -3,6 +3,7 @@
 /// This module handles parsing of HWP BinData storage.
 ///
 /// 스펙 문서 매핑: 표 2 - 바이너리 데이터 (BinData 스토리지)
+use crate::decompress::decompress_deflate;
 use crate::document::docinfo::BinDataRecord;
 use crate::types::WORD;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
@@ -98,38 +99,61 @@ impl BinData {
                         let mut buffer = Vec::new();
                         match stream.read_to_end(&mut buffer) {
                             Ok(_) => {
-                                let data = match &output_format {
-                                    BinaryDataFormat::Base64 => STANDARD.encode(&buffer),
-                                    BinaryDataFormat::File(dir_path) => {
-                                        let ext = extension_opt.as_deref().unwrap_or("bin");
-                                        let file_name = format!("{}.{}", base_stream_name, ext);
-                                        let file_path = Path::new(dir_path).join(&file_name);
+                                if !buffer.is_empty() {
+                                    // BinData 스트림은 압축되어 있으므로 압축 해제 필요
+                                    // BinData streams are compressed, so decompression is required
+                                    // 레거시 코드 참고: hwpjs.js는 pako.inflate(..., { windowBits: -15 })
+                                    //                  pyhwp는 zlib.decompress(..., -15) 사용
+                                    // Reference: hwpjs.js uses pako.inflate(..., { windowBits: -15 })
+                                    //            pyhwp uses zlib.decompress(..., -15)
+                                    let compressed_size = buffer.len();
+                                    let decompressed_buffer = match decompress_deflate(&buffer) {
+                                        Ok(decompressed) => decompressed,
+                                        Err(e) => {
+                                            eprintln!(
+                                                "Warning: Failed to decompress BinData stream '{}' (id={}): {}. Using raw data.",
+                                                path, binary_data_id, e
+                                            );
+                                            buffer.clone() // 압축 해제 실패 시 원본 데이터 사용
+                                        }
+                                    };
 
-                                        std::fs::create_dir_all(dir_path).map_err(|e| {
-                                            format!(
-                                                "Failed to create directory '{}': {}",
-                                                dir_path, e
-                                            )
-                                        })?;
+                                    let data = match &output_format {
+                                        BinaryDataFormat::Base64 => {
+                                            STANDARD.encode(&decompressed_buffer)
+                                        }
+                                        BinaryDataFormat::File(dir_path) => {
+                                            let ext = extension_opt.as_deref().unwrap_or("bin");
+                                            let file_name = format!("{}.{}", base_stream_name, ext);
+                                            let file_path = Path::new(dir_path).join(&file_name);
 
-                                        std::fs::write(&file_path, &buffer).map_err(|e| {
-                                            format!(
-                                                "Failed to write file '{}': {}",
-                                                file_path.display(),
-                                                e
-                                            )
-                                        })?;
+                                            std::fs::create_dir_all(dir_path).map_err(|e| {
+                                                format!(
+                                                    "Failed to create directory '{}': {}",
+                                                    dir_path, e
+                                                )
+                                            })?;
 
-                                        file_path.to_string_lossy().to_string()
-                                    }
-                                };
+                                            std::fs::write(&file_path, &decompressed_buffer)
+                                                .map_err(|e| {
+                                                    format!(
+                                                        "Failed to write file '{}': {}",
+                                                        file_path.display(),
+                                                        e
+                                                    )
+                                                })?;
 
-                                items.push(BinaryDataItem {
-                                    index: binary_data_id,
-                                    data,
-                                });
-                                found = true;
-                                break;
+                                            file_path.to_string_lossy().to_string()
+                                        }
+                                    };
+
+                                    items.push(BinaryDataItem {
+                                        index: binary_data_id,
+                                        data,
+                                    });
+                                    found = true;
+                                    break;
+                                }
                             }
                             Err(_) => continue,
                         }
