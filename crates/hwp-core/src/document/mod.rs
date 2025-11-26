@@ -15,8 +15,8 @@ pub use bodytext::{
     Section,
 };
 pub use docinfo::{
-    BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName, IdMappings, Numbering,
-    ParaShape, Style, TabDef,
+    BinDataRecord, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName,
+    IdMappings, Numbering, ParaShape, Style, TabDef,
 };
 pub use fileheader::FileHeader;
 
