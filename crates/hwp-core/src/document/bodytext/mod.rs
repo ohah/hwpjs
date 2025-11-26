@@ -114,6 +114,16 @@ pub enum ParagraphRecord {
         /// 제어 문자가 없어도 빈 배열로 표시되어 JSON에 포함됩니다 / Empty array is included in JSON even if no control characters
         #[serde(default)]
         control_char_positions: Vec<(usize, u8)>,
+        /// INLINE 제어 문자 파라미터 정보 (문자 인덱스, 파라미터) / INLINE control character parameter information (char index, parameter)
+        /// INLINE 타입 제어 문자(FIELD_END, TITLE_MARK, TAB 등)의 파라미터를 저장합니다.
+        /// Stores parameters for INLINE type control characters (FIELD_END, TITLE_MARK, TAB, etc.).
+        /// 스펙 문서에 파라미터 구조가 명시되지 않았으므로 바이트 배열로 저장됩니다.
+        /// Parameter structure is not specified in spec document, so stored as byte array.
+        #[serde(skip_serializing_if = "Vec::is_empty", default)]
+        inline_control_params: Vec<(
+            usize,
+            crate::document::bodytext::control_char::InlineControlParam,
+        )>,
     },
     /// 문단의 글자 모양 / Paragraph character shape
     ParaCharShape {
@@ -343,6 +353,7 @@ impl Section {
                 let data = node.data();
                 // pyhwp처럼 제어 문자를 찾고 텍스트만 추출 / Find control characters and extract only text like pyhwp
                 let mut control_char_positions = Vec::new();
+                let mut inline_control_params = Vec::new();
                 let mut cleaned_text = String::new();
                 let mut idx = 0;
 
@@ -367,6 +378,28 @@ impl Section {
                         // 제어 문자 위치 저장 (문자 인덱스 기준) / Store control character position (based on character index)
                         let char_idx = idx / 2; // UTF-16LE에서 문자 인덱스는 바이트 인덱스 / 2 / Character index in UTF-16LE is byte index / 2
                         control_char_positions.push((char_idx, control_code));
+
+                        // INLINE 타입 제어 문자인 경우 파라미터 파싱 / Parse parameters for INLINE type control characters
+                        if ControlChar::get_size_by_code(control_code) == 8
+                            && matches!(
+                                control_code,
+                                ControlChar::FIELD_END
+                                    | ControlChar::RESERVED_5_7_START..=ControlChar::RESERVED_5_7_END
+                                    | ControlChar::TITLE_MARK
+                                    | ControlChar::TAB
+                                    | ControlChar::RESERVED_19_20_START..=ControlChar::RESERVED_19_20_END
+                            )
+                        {
+                            // 제어 문자 코드(2 bytes) 이후의 파라미터(12 bytes) 파싱 / Parse parameter (12 bytes) after control character code (2 bytes)
+                            if idx + 2 + 12 <= data.len() {
+                                let param_data = &data[idx + 2..idx + 2 + 12];
+                                if let Ok(param) =
+                                    crate::document::bodytext::control_char::InlineControlParam::parse(param_data)
+                                {
+                                    inline_control_params.push((char_idx, param));
+                                }
+                            }
+                        }
 
                         // 텍스트로 표현 가능한 제어 문자는 텍스트에 변환된 형태로 추가 / Add convertible control characters as converted text
                         if ControlChar::is_convertible(control_code) {
@@ -408,6 +441,7 @@ impl Section {
                 Ok(ParagraphRecord::ParaText {
                     text: cleaned_text,
                     control_char_positions,
+                    inline_control_params,
                 })
             }
             HwpTag::PARA_CHAR_SHAPE => {

@@ -114,6 +114,7 @@ fn convert_paragraph_to_markdown(
             ParagraphRecord::ParaText {
                 text,
                 control_char_positions,
+                inline_control_params: _,
             } => {
                 // 의미 있는 텍스트인지 확인 / Check if text is meaningful
                 // 제어 문자는 이미 파싱 단계에서 제거되었으므로 텍스트를 그대로 사용 / Control characters are already removed during parsing, so use text as-is

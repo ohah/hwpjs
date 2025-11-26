@@ -2,9 +2,58 @@
 /// HWP 5.0 스펙 표 6 기반 제어 문자 상수
 ///
 /// 표 6: 제어 문자 / Table 6: Control characters
+use serde::{Deserialize, Serialize};
+
 pub struct ControlChar;
 
+/// INLINE 제어 문자 파라미터 / INLINE control character parameter
+///
+/// 스펙 문서에 파라미터 구조가 명시되지 않았으므로 기본 바이트 배열로 저장합니다.
+/// Spec document does not specify parameter structure, so stored as raw byte array.
+///
+/// INLINE 타입 제어 문자는 제어 문자 1 WCHAR (2 bytes) + 파라미터 6 WCHAR (12 bytes) = 총 8 WCHAR (16 bytes)
+/// INLINE type control characters: control char 1 WCHAR (2 bytes) + parameter 6 WCHAR (12 bytes) = total 8 WCHAR (16 bytes)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InlineControlParam {
+    /// 파라미터 바이트 배열 (6 WCHAR = 12 bytes) / Parameter byte array (6 WCHAR = 12 bytes)
+    pub param_bytes: [u8; 12],
+}
+
+impl InlineControlParam {
+    /// INLINE 제어 문자 파라미터를 바이트 배열에서 파싱합니다. / Parse INLINE control character parameter from byte array.
+    ///
+    /// # Arguments
+    /// * `data` - 최소 12바이트의 데이터 (제어 문자 코드 이후의 데이터) / At least 12 bytes of data (data after control character code)
+    ///
+    /// # Returns
+    /// 파싱된 InlineControlParam 구조체 / Parsed InlineControlParam structure
+    pub fn parse(data: &[u8]) -> Result<Self, String> {
+        if data.len() < 12 {
+            return Err(format!(
+                "InlineControlParam must be at least 12 bytes, got {} bytes",
+                data.len()
+            ));
+        }
+
+        let mut param_bytes = [0u8; 12];
+        param_bytes.copy_from_slice(&data[0..12]);
+
+        Ok(InlineControlParam { param_bytes })
+    }
+}
+
 impl ControlChar {
+    // Char control characters / 문자 제어 문자
+    /// NULL 문자 / NULL character
+    /// 표 6에는 명시되지 않았지만 CHAR 타입으로 처리됨 / Not specified in Table 6 but handled as CHAR type
+    pub const NULL: u8 = 0;
+
+    // Extended control characters / 확장 제어 문자
+    /// 예약 (1-3) / Reserved (1-3)
+    /// 표 6에는 명시되지 않았지만 EXTENDED 타입으로 처리됨 / Not specified in Table 6 but handled as EXTENDED type
+    pub const RESERVED_1_3_START: u8 = 1;
+    pub const RESERVED_1_3_END: u8 = 3;
+
     // Inline control characters / 인라인 제어 문자
     /// 필드 끝 / Field end
     pub const FIELD_END: u8 = 4;
@@ -19,7 +68,7 @@ impl ControlChar {
     pub const RESERVED_19_20_START: u8 = 19;
     pub const RESERVED_19_20_END: u8 = 20;
 
-    // Char control characters / 문자 제어 문자
+    // Char control characters (continued) / 문자 제어 문자 (계속)
     /// 한 줄 끝(line break) / Line break
     pub const LINE_BREAK: u8 = 10;
     /// 문단 끝(para break) / Paragraph break
@@ -74,6 +123,7 @@ impl ControlChar {
             | Self::BOOKMARK
             | Self::COMMENT_OVERLAP
             // 예약된 제어 문자 / Reserved control characters
+            | Self::RESERVED_1_3_START..=Self::RESERVED_1_3_END
             | Self::RESERVED_5_7_START..=Self::RESERVED_5_7_END
             | Self::RESERVED_19_20_START..=Self::RESERVED_19_20_END
             | Self::RESERVED_25_29_START..=Self::RESERVED_25_29_END
@@ -90,7 +140,12 @@ impl ControlChar {
     pub fn is_convertible(code: u8) -> bool {
         matches!(
             code,
-            Self::TAB | Self::LINE_BREAK | Self::PARA_BREAK | Self::HYPHEN | Self::BOUND_SPACE | Self::FIXED_SPACE
+            Self::TAB
+                | Self::LINE_BREAK
+                | Self::PARA_BREAK
+                | Self::HYPHEN
+                | Self::BOUND_SPACE
+                | Self::FIXED_SPACE
         )
     }
 
@@ -99,7 +154,7 @@ impl ControlChar {
     /// 변환 불가능한 경우 None 반환 / Returns None if conversion is not possible
     pub fn to_text(code: u8) -> Option<&'static str> {
         match code {
-            Self::TAB => Some("\t"),         // 탭 문자 그대로 유지 / Keep tab character as-is
+            Self::TAB => Some("\t"), // 탭 문자 그대로 유지 / Keep tab character as-is
             Self::LINE_BREAK => Some("\n"), // 한 줄 끝(line break) / Line break
             Self::PARA_BREAK => Some("\n"), // 문단 끝(para break) - 줄바꿈으로 표현 / Paragraph break - expressed as line break
             Self::HYPHEN => Some("-"),      // 하이픈 / Hyphen
@@ -114,20 +169,39 @@ impl ControlChar {
     /// CHAR: 1 WCHAR (2 bytes)
     /// INLINE: 8 WCHAR (16 bytes) - 제어 문자 1 + 파라미터 6
     /// EXTENDED: 8 WCHAR (16 bytes) - 제어 문자 1 + 포인터 6
+    #[allow(clippy::if_same_then_else)]
     pub fn get_size_by_code(code: u8) -> usize {
         if code <= 31 {
             // CHAR 타입: 1 WCHAR (2 bytes)
-            // 표 6 참조: 10 (LINE_BREAK), 13 (PARA_BREAK), 24 (HYPHEN), 30 (BOUND_SPACE), 31 (FIXED_SPACE), 0 (NULL)
-            if matches!(code, 0 | 10 | 13 | 24 | 30 | 31) {
+            // 표 6 참조: 10 (LINE_BREAK), 13 (PARA_BREAK), 24 (HYPHEN), 30 (BOUND_SPACE), 31 (FIXED_SPACE)
+            // 표 6 미명시: 0 (NULL) - CHAR 타입으로 처리
+            if matches!(
+                code,
+                Self::NULL
+                    | Self::LINE_BREAK
+                    | Self::PARA_BREAK
+                    | Self::HYPHEN
+                    | Self::BOUND_SPACE
+                    | Self::FIXED_SPACE
+            ) {
                 1
             }
             // INLINE 타입: 8 WCHAR (16 bytes)
             // 표 6 참조: 4 (FIELD_END), 5-7 (예약), 8 (TITLE_MARK), 9 (TAB), 19-20 (예약)
-            else if matches!(code, 4 | 5 | 6 | 7 | 8 | 9 | 19 | 20) {
+            else if matches!(
+                code,
+                Self::FIELD_END
+                    | Self::RESERVED_5_7_START..=Self::RESERVED_5_7_END
+                    | Self::TITLE_MARK
+                    | Self::TAB
+                    | Self::RESERVED_19_20_START..=Self::RESERVED_19_20_END
+            ) {
                 8
             }
             // EXTENDED 타입: 8 WCHAR (16 bytes)
-            // 표 6 참조: 1-3, 11-12, 14-18, 21-23
+            // 표 6 참조: 11-12, 14-18, 21-23
+            // 표 6 미명시: 1-3 - EXTENDED 타입으로 처리
+            // INLINE과 동일한 크기(8)이지만 의미적으로 다른 타입임 / Same size (8) as INLINE but semantically different type
             else {
                 8
             }
