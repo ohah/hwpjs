@@ -88,6 +88,21 @@ impl HwpParser {
             }
         }
 
+        // Parse PreviewImage stream
+        // 미리보기 이미지 스트림 파싱 / Parse preview image stream
+        // 스펙 문서 3.2.7: PrvImage 스트림에는 미리보기 이미지가 BMP 또는 GIF 형식으로 저장됩니다.
+        // Spec 3.2.7: PrvImage stream contains preview image stored as BMP or GIF format.
+        if let Ok(prvimage_data) = CfbParser::read_stream(&mut cfb, "PrvImage") {
+            match crate::document::PreviewImage::parse(&prvimage_data, None) {
+                Ok(preview_image) => {
+                    document.preview_image = Some(preview_image);
+                }
+                Err(e) => {
+                    eprintln!("Warning: Failed to parse PrvImage stream: {}", e);
+                }
+            }
+        }
+
         Ok(document)
     }
 
