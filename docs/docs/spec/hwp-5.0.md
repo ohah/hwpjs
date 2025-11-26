@@ -1961,10 +1961,9 @@ Tag ID: HWPTAG_SHAPE_COMPONENT (GenShapeObject일 경우 id가 두 번 기록됨
 
 Tag ID: HWPTAG_SHAPE_COMPONENT_LINE
 
-**구현 상태 / Implementation Status**
-- 구현 완료 / Implementation complete
+**구현 상태**
+- 구현 완료
 - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_LINE 레코드가 없어 실제 파일로 테스트되지 않음
-- Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_LINE records
 
 **표 91: 선 개체**
 
@@ -1990,10 +1989,9 @@ Tag ID: HWPTAG_SHAPE_COMPONENT_LINE
 
 Tag ID: HWPTAG_SHAPE_COMPONENT_RECTANGLE
 
-**구현 상태 / Implementation Status**
-- 구현 완료 / Implementation complete
+**구현 상태**
+- 구현 완료
 - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_RECTANGLE 레코드가 없어 실제 파일로 테스트되지 않음
-- Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_RECTANGLE records
 
 **표 93: 사각형 개체**
 
@@ -2017,10 +2015,9 @@ Tag ID: HWPTAG_SHAPE_COMPONENT_RECTANGLE
 
 Tag ID: HWPTAG_SHAPE_COMPONENT_ELLIPSE
 
-**구현 상태 / Implementation Status**
-- 구현 완료 / Implementation complete
+**구현 상태**
+- 구현 완료
 - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_ELLIPSE 레코드가 없어 실제 파일로 테스트되지 않음
-- Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_ELLIPSE records
 
 **표 95: 타원 개체**
 
@@ -2328,10 +2325,9 @@ Tag ID: HWPTAG_SHAPE_COMPONENT_PICTURE
 
 Tag ID: HWPTAG_SHAPE_COMPONENT_OLE
 
-**구현 상태 / Implementation Status**
-- 구현 완료 / Implementation complete
+**구현 상태**
+- 구현 완료
 - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_OLE 레코드가 없어 실제 파일로 테스트되지 않음
-- Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_OLE records
 
 **표 117: OLE 개체**
 
@@ -2383,10 +2379,9 @@ Tag ID: HWPTAG_SHAPE_COMPONENT_OLE
 
 Tag ID: HWPTAG_SHAPE_COMPONENT_CONTAINER
 
-**구현 상태 / Implementation Status**
-- 구현 완료 / Implementation complete
+**구현 상태**
+- 구현 완료
 - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_CONTAINER 레코드가 없어 실제 파일로 테스트되지 않음
-- Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_CONTAINER records
 
 **표 120: 묶음 개체**
 
