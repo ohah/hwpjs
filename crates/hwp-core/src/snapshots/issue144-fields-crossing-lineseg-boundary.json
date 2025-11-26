@@ -1557,6 +1557,27 @@
                     73,
                     13
                   ]
+                ],
+                "inline_control_params": [
+                  [
+                    65,
+                    {
+                      "param_bytes": [
+                        107,
+                        108,
+                        104,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                      ]
+                    }
+                  ]
                 ]
               },
               {
@@ -1625,7 +1646,18 @@
                 "type": "ctrl_header",
                 "ctrl_id": "secd",
                 "ctrl_id_value": 1936024420,
-                "data_type": "other",
+                "data_type": "section_definition",
+                "attribute": 0,
+                "column_spacing": 1134,
+                "vertical_alignment": 0,
+                "horizontal_alignment": 0,
+                "default_tip_spacing": 8000,
+                "number_para_shape_id": 1,
+                "page_number": 0,
+                "figure_number": 0,
+                "table_number": 0,
+                "equation_number": 0,
+                "language": 0,
                 "children": [
                   {
                     "type": "page_def",
@@ -1874,6 +1906,27 @@
                   [
                     14,
                     13
+                  ]
+                ],
+                "inline_control_params": [
+                  [
+                    4,
+                    {
+                      "param_bytes": [
+                        107,
+                        108,
+                        104,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                      ]
+                    }
                   ]
                 ]
               },
