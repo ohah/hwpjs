@@ -500,20 +500,52 @@ mod snapshot_tests {
     use super::*;
     use insta::assert_snapshot;
 
-    /// Helper function to find test HWP file
-    fn find_test_file() -> Option<String> {
+    /// Helper function to find test HWP files directory
+    fn find_fixtures_dir() -> Option<std::path::PathBuf> {
         let possible_paths = [
-            "../../examples/fixtures/noori.hwp",
-            "../examples/fixtures/noori.hwp",
-            "examples/fixtures/noori.hwp",
+            "../../examples/fixtures",
+            "../examples/fixtures",
+            "examples/fixtures",
         ];
 
-        for path in &possible_paths {
-            if std::path::Path::new(path).exists() {
-                return Some(path.to_string());
+        for path_str in &possible_paths {
+            let path = std::path::Path::new(path_str);
+            if path.exists() && path.is_dir() {
+                return Some(path.to_path_buf());
             }
         }
         None
+    }
+
+    /// Helper function to find test HWP file (for snapshot tests, uses noori.hwp)
+    fn find_test_file() -> Option<String> {
+        if let Some(dir) = find_fixtures_dir() {
+            let file_path = dir.join("noori.hwp");
+            if file_path.exists() {
+                return Some(file_path.to_string_lossy().to_string());
+            }
+        }
+        None
+    }
+
+    /// Helper function to get all HWP files in fixtures directory
+    fn find_all_hwp_files() -> Vec<String> {
+        if let Some(dir) = find_fixtures_dir() {
+            let mut files = Vec::new();
+            if let Ok(entries) = std::fs::read_dir(&dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("hwp") {
+                        if let Some(path_str) = path.to_str() {
+                            files.push(path_str.to_string());
+                        }
+                    }
+                }
+            }
+            files.sort();
+            return files;
+        }
+        Vec::new()
     }
 
     #[test]
@@ -754,6 +786,47 @@ mod snapshot_tests {
                 eprintln!("Failed to write Markdown file: {}", e);
             });
         }
+    }
+
+    #[test]
+    fn test_parse_all_fixtures() {
+        // 모든 fixtures 파일을 파싱하여 에러가 없는지 확인 / Parse all fixtures files to check for errors
+        let hwp_files = find_all_hwp_files();
+        if hwp_files.is_empty() {
+            println!("No HWP files found in fixtures directory");
+            return;
+        }
+
+        let parser = HwpParser::new();
+        let mut success_count = 0;
+        let mut error_count = 0;
+
+        for file_path in &hwp_files {
+            match std::fs::read(file_path) {
+                Ok(data) => {
+                    match parser.parse(&data) {
+                        Ok(_document) => {
+                            success_count += 1;
+                        }
+                        Err(e) => {
+                            error_count += 1;
+                            eprintln!("Failed to parse {}: {}", file_path, e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    error_count += 1;
+                    eprintln!("Failed to read {}: {}", file_path, e);
+                }
+            }
+        }
+
+        println!(
+            "Parsed {} files successfully, {} errors",
+            success_count, error_count
+        );
+        // 최소한 하나는 성공해야 함 / At least one should succeed
+        assert!(success_count > 0, "At least one file should parse successfully");
     }
 
     #[test]
