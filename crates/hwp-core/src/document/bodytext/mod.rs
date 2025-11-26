@@ -7,7 +7,7 @@ mod char_shape;
 pub mod constants;
 pub use constants::HwpTag;
 mod control_char;
-pub use control_char::ControlChar;
+pub use control_char::{ControlChar, ControlCharPosition};
 mod chart_data;
 mod ctrl_data;
 mod ctrl_header;
@@ -110,10 +110,10 @@ pub enum ParagraphRecord {
     ParaText {
         /// 텍스트 내용 (UTF-16LE) / Text content (UTF-16LE)
         text: String,
-        /// 제어 문자 위치 정보 (문자 인덱스, 제어 문자 코드) / Control character positions (char index, control char code)
+        /// 제어 문자 위치 정보 / Control character positions
         /// 제어 문자가 없어도 빈 배열로 표시되어 JSON에 포함됩니다 / Empty array is included in JSON even if no control characters
         #[serde(default)]
-        control_char_positions: Vec<(usize, u8)>,
+        control_char_positions: Vec<crate::document::bodytext::control_char::ControlCharPosition>,
         /// INLINE 제어 문자 파라미터 정보 (문자 인덱스, 파라미터) / INLINE control character parameter information (char index, parameter)
         /// INLINE 타입 제어 문자(FIELD_END, TITLE_MARK, TAB 등)의 파라미터를 저장합니다.
         /// Stores parameters for INLINE type control characters (FIELD_END, TITLE_MARK, TAB, etc.).
@@ -377,7 +377,13 @@ impl Section {
                     if found_control {
                         // 제어 문자 위치 저장 (문자 인덱스 기준) / Store control character position (based on character index)
                         let char_idx = idx / 2; // UTF-16LE에서 문자 인덱스는 바이트 인덱스 / 2 / Character index in UTF-16LE is byte index / 2
-                        control_char_positions.push((char_idx, control_code));
+                        control_char_positions.push(
+                            crate::document::bodytext::control_char::ControlCharPosition {
+                                position: char_idx,
+                                code: control_code,
+                                name: ControlChar::to_name(control_code),
+                            },
+                        );
 
                         // INLINE 타입 제어 문자인 경우 파라미터 파싱 / Parse parameters for INLINE type control characters
                         if ControlChar::get_size_by_code(control_code) == 8

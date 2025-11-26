@@ -64,23 +64,27 @@ pub fn to_markdown(document: &HwpDocument, image_output_dir: Option<&str>) -> St
     lines.join("\n")
 }
 
-/// Format version number to readable string
 /// 의미 있는 텍스트인지 확인합니다. / Check if text is meaningful.
 ///
-/// 제어 문자와 공백만 있는 텍스트는 의미 없다고 판단합니다.
-/// Text containing only control characters and whitespace is considered meaningless.
+/// 공백만 있는 텍스트는 의미 없다고 판단합니다.
+/// Text containing only whitespace is considered meaningless.
 ///
 /// # Arguments / 매개변수
 /// * `text` - 제어 문자가 이미 제거된 텍스트 / Text with control characters already removed
-/// * `control_positions` - 제어 문자 위치 정보 (원본 텍스트 기준) / Control character positions (based on original text)
+/// * `control_positions` - 제어 문자 위치 정보 (현재는 사용되지 않음) / Control character positions (currently unused)
 ///
 /// # Returns / 반환값
 /// 의미 있는 텍스트이면 `true`, 그렇지 않으면 `false` / `true` if meaningful, `false` otherwise
-pub(crate) fn is_meaningful_text(text: &str, control_positions: &[(usize, u8)]) -> bool {
-    // 제어 문자는 이미 파싱 단계에서 text에서 제거되었으므로,
-    // 텍스트가 비어있지 않은지만 확인하면 됩니다.
-    // Control characters are already removed from text during parsing,
-    // so we only need to check if text is not empty.
+///
+/// # Note
+/// 제어 문자는 이미 파싱 단계에서 text에서 제거되었으므로,
+/// 텍스트가 비어있지 않은지만 확인합니다.
+/// Control characters are already removed from text during parsing,
+/// so we only check if text is not empty.
+pub(crate) fn is_meaningful_text(
+    text: &str,
+    _control_positions: &[crate::document::bodytext::ControlCharPosition],
+) -> bool {
     !text.trim().is_empty()
 }
 

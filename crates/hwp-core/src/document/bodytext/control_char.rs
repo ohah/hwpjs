@@ -6,6 +6,20 @@ use serde::{Deserialize, Serialize};
 
 pub struct ControlChar;
 
+/// 제어 문자 위치 정보 / Control character position information
+///
+/// 문단 텍스트 내에서 제어 문자의 위치와 종류를 나타냅니다.
+/// Represents the position and type of control characters within paragraph text.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ControlCharPosition {
+    /// 문자 인덱스 (텍스트 내 위치) / Character index (position in text)
+    pub position: usize,
+    /// 제어 문자 코드 (0-31) / Control character code (0-31)
+    pub code: u8,
+    /// 제어 문자 이름 (상수 이름) / Control character name (constant name)
+    pub name: String,
+}
+
 /// INLINE 제어 문자 파라미터 / INLINE control character parameter
 ///
 /// 스펙 문서에 파라미터 구조가 명시되지 않았으므로 기본 바이트 배열로 저장합니다.
@@ -105,35 +119,6 @@ impl ControlChar {
     /// 덧말/글자 겹침 / Comment overlap
     pub const COMMENT_OVERLAP: u8 = 23;
 
-    /// 제거해야 할 제어 문자인지 확인 / Check if control character should be removed
-    ///
-    /// Extended 타입과 예약된 제어 문자는 제거 / Extended type and reserved control characters are removed
-    pub fn is_removable(code: u8) -> bool {
-        matches!(
-            code,
-            // Extended 타입 - 이미 별도 레코드로 처리됨 / Extended type - already handled as separate records
-            Self::SHAPE_OBJECT
-            | Self::RESERVED_12
-            | Self::RESERVED_14
-            | Self::HIDDEN_DESC
-            | Self::HEADER_FOOTER
-            | Self::FOOTNOTE
-            | Self::AUTO_NUMBER
-            | Self::PAGE_CONTROL
-            | Self::BOOKMARK
-            | Self::COMMENT_OVERLAP
-            // 예약된 제어 문자 / Reserved control characters
-            | Self::RESERVED_1_3_START..=Self::RESERVED_1_3_END
-            | Self::RESERVED_5_7_START..=Self::RESERVED_5_7_END
-            | Self::RESERVED_19_20_START..=Self::RESERVED_19_20_END
-            | Self::RESERVED_25_29_START..=Self::RESERVED_25_29_END
-            // 필드 끝 - 이미 필드로 처리됨 / Field end - already handled as field
-            | Self::FIELD_END
-            // title mark - 마크다운에서 표현 불가 / title mark - cannot be expressed in markdown
-            | Self::TITLE_MARK
-        )
-    }
-
     /// 변환 가능한 제어 문자인지 확인 / Check if control character can be converted
     ///
     /// 텍스트로 표현 가능한 제어 문자 (텍스트에 유지됨) / Control characters that can be expressed as text (kept in text)
@@ -161,6 +146,50 @@ impl ControlChar {
             Self::BOUND_SPACE => Some(" "), // 묶음 빈칸을 공백으로 변환 / Convert bound space to space
             Self::FIXED_SPACE => Some(" "), // 고정폭 빈칸을 공백으로 변환 / Convert fixed-width space to space
             _ => None,
+        }
+    }
+
+    /// 제어 문자 코드를 이름으로 변환 / Convert control character code to name
+    ///
+    /// # Arguments
+    /// * `code` - 제어 문자 코드 (0-31) / Control character code (0-31)
+    ///
+    /// # Returns
+    /// 제어 문자 상수 이름 (예: "FOOTNOTE", "AUTO_NUMBER") / Control character constant name (e.g., "FOOTNOTE", "AUTO_NUMBER")
+    pub fn to_name(code: u8) -> String {
+        match code {
+            Self::NULL => "NULL".to_string(),
+            Self::RESERVED_1_3_START..=Self::RESERVED_1_3_END => {
+                format!("RESERVED_{}", code)
+            }
+            Self::FIELD_END => "FIELD_END".to_string(),
+            Self::RESERVED_5_7_START..=Self::RESERVED_5_7_END => {
+                format!("RESERVED_{}", code)
+            }
+            Self::TITLE_MARK => "TITLE_MARK".to_string(),
+            Self::TAB => "TAB".to_string(),
+            Self::LINE_BREAK => "LINE_BREAK".to_string(),
+            Self::SHAPE_OBJECT => "SHAPE_OBJECT".to_string(),
+            Self::RESERVED_12 => "RESERVED_12".to_string(),
+            Self::PARA_BREAK => "PARA_BREAK".to_string(),
+            Self::RESERVED_14 => "RESERVED_14".to_string(),
+            Self::HIDDEN_DESC => "HIDDEN_DESC".to_string(),
+            Self::HEADER_FOOTER => "HEADER_FOOTER".to_string(),
+            Self::FOOTNOTE => "FOOTNOTE".to_string(),
+            Self::AUTO_NUMBER => "AUTO_NUMBER".to_string(),
+            Self::RESERVED_19_20_START..=Self::RESERVED_19_20_END => {
+                format!("RESERVED_{}", code)
+            }
+            Self::PAGE_CONTROL => "PAGE_CONTROL".to_string(),
+            Self::BOOKMARK => "BOOKMARK".to_string(),
+            Self::COMMENT_OVERLAP => "COMMENT_OVERLAP".to_string(),
+            Self::HYPHEN => "HYPHEN".to_string(),
+            Self::RESERVED_25_29_START..=Self::RESERVED_25_29_END => {
+                format!("RESERVED_{}", code)
+            }
+            Self::BOUND_SPACE => "BOUND_SPACE".to_string(),
+            Self::FIXED_SPACE => "FIXED_SPACE".to_string(),
+            _ => format!("UNKNOWN_{}", code),
         }
     }
 
