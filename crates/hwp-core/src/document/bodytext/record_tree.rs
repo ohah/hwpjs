@@ -34,7 +34,7 @@ impl RecordTreeNode {
     /// # Returns
     /// 루트 노드 (레벨 0 레코드들이 자식으로 포함됨) / Root node (level 0 records are included as children)
     pub fn parse_tree(data: &[u8]) -> Result<RecordTreeNode, String> {
-        let mut root = RecordTreeNode {
+        let root = RecordTreeNode {
             header: RecordHeader {
                 tag_id: 0,
                 level: 0,
@@ -77,7 +77,7 @@ impl RecordTreeNode {
 
             // 새 노드 생성 / Create new node
             let new_node = RecordTreeNode {
-                header: header.clone(),
+                header,
                 data: record_data.to_vec(),
                 children: Vec::new(),
             };
@@ -132,7 +132,7 @@ impl RecordTreeNode {
         fn build_tree(nodes: &[(RecordTreeNode, Vec<usize>)], index: usize) -> RecordTreeNode {
             let (node, children_indices) = &nodes[index];
             let mut result = RecordTreeNode {
-                header: node.header.clone(),
+                header: node.header,
                 data: node.data.clone(),
                 children: Vec::new(),
             };
