@@ -116,6 +116,29 @@ impl HwpParser {
             }
         }
 
+        // Parse XMLTemplate storage
+        // XML 템플릿 스토리지 파싱 / Parse XML template storage
+        // 스펙 문서 3.2.10: XMLTemplate 스토리지에는 XML Template 정보가 저장됩니다.
+        // Spec 3.2.10: XMLTemplate storage contains XML Template information.
+        // FileHeader의 document_flags Bit 5를 확인하여 XMLTemplate 스토리지 존재 여부 확인
+        // Check FileHeader document_flags Bit 5 to determine if XMLTemplate storage exists
+        if fileheader.has_xml_template() {
+            match crate::document::XmlTemplate::parse(&mut cfb) {
+                Ok(xml_template) => {
+                    // 모든 필드가 None이 아닌 경우에만 설정 / Only set if at least one field is not None
+                    if xml_template.schema_name.is_some()
+                        || xml_template.schema.is_some()
+                        || xml_template.instance.is_some()
+                    {
+                        document.xml_template = Some(xml_template);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Warning: Failed to parse XMLTemplate storage: {}", e);
+                }
+            }
+        }
+
         Ok(document)
     }
 

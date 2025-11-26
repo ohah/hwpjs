@@ -11,6 +11,7 @@ mod fileheader;
 mod preview_image;
 mod preview_text;
 mod scripts;
+mod xml_template;
 
 pub use bindata::{BinData, BinaryDataFormat};
 pub use bodytext::{
@@ -25,6 +26,7 @@ pub use fileheader::FileHeader;
 pub use preview_image::PreviewImage;
 pub use preview_text::PreviewText;
 pub use scripts::Scripts;
+pub use xml_template::XmlTemplate;
 
 use serde::{Deserialize, Serialize};
 
@@ -45,6 +47,8 @@ pub struct HwpDocument {
     pub preview_image: Option<PreviewImage>,
     /// Scripts (Scripts storage)
     pub scripts: Option<Scripts>,
+    /// XML Template (XMLTemplate storage)
+    pub xml_template: Option<XmlTemplate>,
 }
 
 impl HwpDocument {
@@ -58,6 +62,7 @@ impl HwpDocument {
             preview_text: None,
             preview_image: None,
             scripts: None,
+            xml_template: None,
         }
     }
 

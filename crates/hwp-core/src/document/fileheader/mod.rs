@@ -101,6 +101,12 @@ impl FileHeader {
         (self.document_flags & 0x02) != 0
     }
 
+    /// Check if XMLTemplate storage exists
+    /// XMLTemplate 스토리지 존재 여부 확인
+    pub fn has_xml_template(&self) -> bool {
+        (self.document_flags & 0x20) != 0 // Bit 5
+    }
+
     /// Convert FileHeader to JSON string
     pub fn to_json(&self) -> Result<String, String> {
         serde_json::to_string_pretty(self)
