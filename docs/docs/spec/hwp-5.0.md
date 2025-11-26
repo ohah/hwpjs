@@ -408,6 +408,26 @@ Summary Information에 대한 자세한 설명은 MSDN을 참고:
 
 `BinData` 스토리지에는 그림이나 OLE 개체와 같이 문서에 첨부된 바이너리 데이터가 각각의 스트림으로 저장된다.
 
+> **⚠️ 실제 구현 시 주의사항 (Implementation Notes)**
+> 
+> 스펙 문서에는 BinData 스토리지 내 스트림의 정확한 경로 형식이 명시되어 있지 않습니다.
+> 
+> 실제 구현에서는 **표 17의 HWPTAG_BIN_DATA 레코드**를 사용하여 스트림을 찾습니다:
+> 
+> 1. **EMBEDDING 타입**: `binary_data_id`와 `extension` 정보를 사용
+>    - 스트림 이름: `BIN{id:04X}` (16진수 4자리, 대문자)
+>    - 시도하는 경로:
+>      - `BinData/BIN{id:04X}`, `Root Entry/BinData/BIN{id:04X}`, `BIN{id:04X}`
+>      - `BinData/BIN{id:04X}.{extension}`, `Root Entry/BinData/BIN{id:04X}.{extension}` (표 17의 extension 정보 사용)
+> 
+> 2. **STORAGE 타입**: `binary_data_id`만 사용 (extension 없음)
+>    - 스트림 이름: `BIN{id:04X}`
+>    - 시도하는 경로: `BinData/BIN{id:04X}`, `Root Entry/BinData/BIN{id:04X}`, `BIN{id:04X}`
+> 
+> 3. **LINK 타입**: BinData 스토리지에 저장되지 않으므로 건너뜀
+> 
+> 표 17의 `extension` 필드는 EMBEDDING 타입일 때 바이너리 데이터의 형식 정보를 제공하며, 이를 활용하여 스트림 경로를 구성할 수 있습니다.
+
 ##### 3.2.6. 미리보기 텍스트
 
 `PrvText` 스트림에는 미리보기 텍스트가 유니코드 문자열로 저장된다.
@@ -2358,6 +2378,17 @@ Tag ID: HWPTAG_SHAPE_COMPONENT_OLE
 | bit 8 | TRUE if moniker is assigned<br>자세한 설명은 MSDN의 MFC COleClientItem::m_bMoniker 참고 |
 | bit 9-15 | 베이스라인. 0은 기본값(85%), 1-101은 0-100%를 나타냄. 현재는 수식만 별도의 베이스라인을 가짐 |
 | bit 16-21 | 개체 종류<br>- 0: Unknown<br>- 1: Embedded<br>- 2: Link<br>- 3: Static<br>- 4: Equation |
+
+> **⚠️ 실제 구현 시 주의사항 (Implementation Notes)**
+> 
+> 표 119에서 **bit 16-21**은 "개체 종류"를 나타낸다고 명시되어 있으나, 실제로 속성 필드는 **UINT16 (16비트)** 타입입니다.
+> 
+> UINT16은 16비트이므로 bit 16-21은 이 필드에 존재하지 않습니다. 실제 구현에서는:
+> - bit 0-7: drawing aspect
+> - bit 8: has moniker
+> - bit 9-15: baseline
+> 
+> 만약 "개체 종류" 정보가 필요하다면, 이후 데이터 필드에서 별도로 읽어야 할 수 있습니다.
 
 ###### 4.3.9.6. 차트 개체
 
