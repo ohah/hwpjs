@@ -6006,5 +6006,8 @@ expression: json
   },
   "bin_data": {
     "items": []
+  },
+  "preview_text": {
+    "text": "글머리표\r\n1\r\n2\r\n3\r\n\r\n글머리표 두 번째\r\n1\r\n2\r\n3\r\n\r\n문단번호\r\n1\r\n2\r\n2-1\r\n3\r\n3-1\r\n3-2\r\n3-2-1\r\n3-2-2\r\n3-2-3\r\n4\r\n\r\n문단번호 두 번째 (번호 이어짐)\r\n5\r\n5-1\r\n\r\n문단번호 세 번째 (새 번호)\r\n1\r\n2\r\n2-1\r\n3\r\n3-1\r\n3-2\r\n3-2-1\r\n3-2-2\r\n3-2-3\r\n4\r\n개요\r\n1\r\n2\r\n2-1\r\n3\r\n3-1\r\n3-2\r\n3-2-1\r\n3-2-2\r\n3-2-3\r\n4\r\n\r\n개요 두 번째 (번호 이어짐)\r\n5\r\n5-1\r\n\r\n개요 세 번째 (새 번호)\r\n1\r\n2\r\n2-1\r\n3\r\n3-1\r\n3-2\r\n3-2-1\r\n3-2-2\r\n3-2-3\r\n4\r\n"
   }
 }

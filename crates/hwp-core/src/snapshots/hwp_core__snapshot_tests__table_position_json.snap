@@ -11958,5 +11958,8 @@ expression: json
   },
   "bin_data": {
     "items": []
+  },
+  "preview_text": {
+    "text": "\r\n전<><>\r\n<><>후\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n<><>\r\n"
   }
 }

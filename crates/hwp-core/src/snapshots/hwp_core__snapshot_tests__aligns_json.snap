@@ -4218,5 +4218,8 @@ expression: json
   },
   "bin_data": {
     "items": []
+  },
+  "preview_text": {
+    "text": "\r\n<left 0>\r\n<left 10>\r\n<center 0>\r\n<center -10>\r\n<right 0>\r\n<right 10>\r\n<inside 0>\r\n<inside 0>\r\n<outside 0>\r\n<outside 10>\r\n<top 0>\r\n<top 10>\r\n<middle 0>\r\n<middle -10>\r\n<bottom 0>\r\n<bottom 10>\r\n"
   }
 }

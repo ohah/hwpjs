@@ -1844,5 +1844,8 @@ expression: json
   },
   "bin_data": {
     "items": []
+  },
+  "preview_text": {
+    "text": "Section 1: A4 portrait\r\nSection 2: A4 landscape\r\n"
   }
 }

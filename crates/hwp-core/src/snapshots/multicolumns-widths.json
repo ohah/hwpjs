@@ -1728,5 +1728,8 @@
   },
   "bin_data": {
     "items": []
+  },
+  "preview_text": {
+    "text": "1\r\n2\r\n3\r\n"
   }
 }

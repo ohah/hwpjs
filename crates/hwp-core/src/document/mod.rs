@@ -8,6 +8,7 @@ mod docinfo;
 ///
 /// 스펙 문서 매핑: 표 2 - 전체 구조
 mod fileheader;
+mod preview_text;
 
 pub use bindata::{BinData, BinaryDataFormat};
 pub use bodytext::{
@@ -19,6 +20,7 @@ pub use docinfo::{
     IdMappings, Numbering, ParaShape, Style, TabDef,
 };
 pub use fileheader::FileHeader;
+pub use preview_text::PreviewText;
 
 use serde::{Deserialize, Serialize};
 
@@ -33,6 +35,8 @@ pub struct HwpDocument {
     pub body_text: BodyText,
     /// Binary data (BinData storage)
     pub bin_data: BinData,
+    /// Preview text (PrvText stream)
+    pub preview_text: Option<PreviewText>,
 }
 
 impl HwpDocument {
@@ -43,6 +47,7 @@ impl HwpDocument {
             doc_info: DocInfo::default(),
             body_text: BodyText::default(),
             bin_data: BinData::default(),
+            preview_text: None,
         }
     }
 

@@ -2044,5 +2044,8 @@ expression: json
   },
   "bin_data": {
     "items": []
+  },
+  "preview_text": {
+    "text": "각주참조\r\n미주참조\r\n"
   }
 }

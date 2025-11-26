@@ -73,6 +73,21 @@ impl HwpParser {
             &document.doc_info.bin_data,
         )?;
 
+        // Parse PreviewText stream
+        // 미리보기 텍스트 스트림 파싱 / Parse preview text stream
+        // 스펙 문서 3.2.6: PrvText 스트림에는 미리보기 텍스트가 유니코드 문자열로 저장됩니다.
+        // Spec 3.2.6: PrvText stream contains preview text stored as Unicode string.
+        if let Ok(prvtext_data) = CfbParser::read_stream(&mut cfb, "PrvText") {
+            match crate::document::PreviewText::parse(&prvtext_data) {
+                Ok(preview_text) => {
+                    document.preview_text = Some(preview_text);
+                }
+                Err(e) => {
+                    eprintln!("Warning: Failed to parse PrvText stream: {}", e);
+                }
+            }
+        }
+
         Ok(document)
     }
 

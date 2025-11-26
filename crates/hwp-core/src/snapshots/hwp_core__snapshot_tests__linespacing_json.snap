@@ -3721,5 +3721,8 @@ expression: json
   },
   "bin_data": {
     "items": []
+  },
+  "preview_text": {
+    "text": "|HHHHHHHHHHHHHH\r\n|HHHHHHHHHHHHHH\r\n|H 글자에 따라 150%\r\n|HHHHHHHHHHHHHH\r\n|H 고정 값 15pt\r\n|HHHHHHHHHHHHHH\r\n|H 여백만 지정 5pt\r\n|HHHHHHHHHHHHHH\r\n|H 글자에 따라 100%\r\n|HHHHHHHHHHHHHH\r\n|H 고정 값 10pt\r\n|HHHHHHHHHHHHHH\r\n|H 여백만 지정 0pt\r\n|HHHHHHHHHHHHHH\r\n|H 글자에 따라 200%\r\n|HHHHHHHHHHHHHH\r\n|H 고정 값 20pt\r\n|HHHHHHHHHHHHHH\r\n|H 여백만 지정 10pt\r\n|HHHHHHHHHHHHHH\r\n|H 글자에 따라 100%\r\n|HHHHHHHHHHHHHH\r\n|H 고정 값 0pt\r\n|HHHHHHHHHHHHHH\r\n|H 여백만 지정 0pt\r\n|HHHHHHHHHHHHHH\r\n"
   }
 }

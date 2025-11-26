@@ -3077,5 +3077,8 @@
   },
   "bin_data": {
     "items": []
+  },
+  "preview_text": {
+    "text": "가\r\n기울임진하게\r\n밑줄없음밑줄가운데줄윗줄\r\n글자크기: 기준크기10pt 한글90% 영문80% 기타70%\r\n폰트: 한글돋움 영문CourierNew 기타قLucidaSansUnicode\r\n붉은밑줄\r\n점선밑줄\r\n"
   }
 }

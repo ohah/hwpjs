@@ -1568,5 +1568,8 @@
   },
   "bin_data": {
     "items": []
+  },
+  "preview_text": {
+    "text": "pyhwp 테스트를 위한 배포 문서 예제입니다.\r\n"
   }
 }

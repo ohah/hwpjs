@@ -2991,5 +2991,8 @@ expression: json
   },
   "bin_data": {
     "items": []
+  },
+  "preview_text": {
+    "text": "실선밑줄\r\n대시밑줄\r\n점선밑줄\r\n대시일점밑줄\r\n대시이점밑줄\r\n긴대시밑줄\r\n큰점선밑줄\r\n이중실선밑줄\r\n이중증가밑줄\r\n이중감소밑줄\r\n삼중밑줄\r\n"
   }
 }
