@@ -1,7 +1,11 @@
 /// Table conversion to Markdown
 /// 테이블을 마크다운으로 변환하는 모듈
+///
+/// 스펙 문서 매핑: 표 57 - 본문의 데이터 레코드, TABLE (HWPTAG_BEGIN + 61)
+/// Spec mapping: Table 57 - BodyText data records, TABLE (HWPTAG_BEGIN + 61)
 use crate::document::{bodytext::Table, HwpDocument, ParagraphRecord};
-use crate::viewer::markdown::{format_image_markdown, is_meaningful_text};
+use crate::viewer::markdown::common::format_image_markdown;
+use crate::viewer::markdown::para_text::is_meaningful_text;
 
 /// Convert table to markdown format
 /// 테이블을 마크다운 형식으로 변환
