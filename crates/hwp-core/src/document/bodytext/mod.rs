@@ -181,6 +181,9 @@ pub enum ParagraphRecord {
     ShapeComponent {
         /// 개체 요소 정보 / Shape component information
         shape_component: ShapeComponent,
+        /// 개체 요소의 자식 레코드 (레벨 3, 예: SHAPE_COMPONENT_PICTURE) / Child records of shape component (level 3, e.g., SHAPE_COMPONENT_PICTURE)
+        #[serde(skip_serializing_if = "Vec::is_empty", default)]
+        children: Vec<ParagraphRecord>,
     },
     /// 직선 개체 / Line shape component
     ShapeComponentLine {
@@ -606,22 +609,6 @@ impl Section {
                         ));
                     } else {
                         children.push(Self::parse_record_from_tree(child, version, original_data)?);
-
-                        // SHAPE_COMPONENT의 children을 평탄하게 추가
-                        // Flatten SHAPE_COMPONENT's children
-                        // SHAPE_COMPONENT_PICTURE는 SHAPE_COMPONENT의 자식으로 올 수 있지만,
-                        // CTRL_HEADER의 children에 평탄하게 추가되어야 함
-                        // SHAPE_COMPONENT_PICTURE can be a child of SHAPE_COMPONENT, but
-                        // should be flattened and added to CTRL_HEADER's children
-                        if child.tag_id() == HwpTag::SHAPE_COMPONENT {
-                            for grandchild in child.children() {
-                                children.push(Self::parse_record_from_tree(
-                                    grandchild,
-                                    version,
-                                    original_data,
-                                )?);
-                            }
-                        }
                     }
                 }
 
@@ -985,11 +972,15 @@ impl Section {
                 // Recursively process SHAPE_COMPONENT's children
                 // SHAPE_COMPONENT_PICTURE는 SHAPE_COMPONENT의 자식으로 올 수 있음
                 // SHAPE_COMPONENT_PICTURE can be a child of SHAPE_COMPONENT
-                // 하지만 이것은 CTRL_HEADER의 children에 평탄하게 추가되어야 함
-                // But this should be flattened and added to CTRL_HEADER's children
-                // 이것은 상위 레벨에서 처리되므로 여기서는 그냥 반환
-                // This is handled at a higher level, so just return here
-                Ok(ParagraphRecord::ShapeComponent { shape_component })
+                let mut children = Vec::new();
+                for child in node.children() {
+                    children.push(Self::parse_record_from_tree(child, version, original_data)?);
+                }
+
+                Ok(ParagraphRecord::ShapeComponent {
+                    shape_component,
+                    children,
+                })
             }
             HwpTag::SHAPE_COMPONENT_LINE => {
                 // 직선 개체 파싱 / Parse line shape component

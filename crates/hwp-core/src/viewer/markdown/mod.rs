@@ -128,6 +128,42 @@ fn convert_paragraph_to_markdown(
                     }
                 }
             }
+            ParagraphRecord::ShapeComponent {
+                shape_component: _,
+                children,
+            } => {
+                // SHAPE_COMPONENT의 children을 재귀적으로 처리 / Recursively process SHAPE_COMPONENT's children
+                // SHAPE_COMPONENT_PICTURE는 SHAPE_COMPONENT의 자식으로 올 수 있음
+                // SHAPE_COMPONENT_PICTURE can be a child of SHAPE_COMPONENT
+                for child in children {
+                    if let ParagraphRecord::ShapeComponentPicture {
+                        shape_component_picture,
+                    } = child
+                    {
+                        // 그림 개체를 마크다운 이미지로 변환 / Convert picture shape component to markdown image
+                        let bindata_id = shape_component_picture.picture_info.bindata_id;
+
+                        // BinData에서 해당 이미지 찾기 / Find image in BinData
+                        if let Some(bin_item) = document
+                            .bin_data
+                            .items
+                            .iter()
+                            .find(|item| item.index == bindata_id)
+                        {
+                            let image_markdown = format_image_markdown(
+                                document,
+                                bindata_id,
+                                &bin_item.data,
+                                image_output_dir,
+                            );
+                            if !image_markdown.is_empty() {
+                                parts.push(image_markdown);
+                            }
+                        }
+                    }
+                    // 기타 children은 무시 (SHAPE_COMPONENT_PICTURE만 처리) / Ignore other children (only process SHAPE_COMPONENT_PICTURE)
+                }
+            }
             ParagraphRecord::ShapeComponentPicture {
                 shape_component_picture,
             } => {
@@ -180,6 +216,53 @@ fn convert_paragraph_to_markdown(
                             if !table_md.is_empty() {
                                 parts.push(table_md);
                                 has_table = true;
+                            }
+                        }
+                        ParagraphRecord::ShapeComponent {
+                            shape_component: _,
+                            children: shape_children,
+                        } => {
+                            // SHAPE_COMPONENT의 children 처리 (SHAPE_COMPONENT_PICTURE 등) / Process SHAPE_COMPONENT's children (SHAPE_COMPONENT_PICTURE, etc.)
+                            for shape_child in shape_children {
+                                if let ParagraphRecord::ShapeComponentPicture {
+                                    shape_component_picture,
+                                } = shape_child
+                                {
+                                    let bindata_id =
+                                        shape_component_picture.picture_info.bindata_id;
+
+                                    // BinData에서 해당 이미지 찾기 / Find image in BinData
+                                    if let Some(bin_item) = document
+                                        .bin_data
+                                        .items
+                                        .iter()
+                                        .find(|item| item.index == bindata_id)
+                                    {
+                                        if has_table {
+                                            // 표 안에 이미지가 있는 경우 표 셀에 이미 포함되므로 여기서는 표시만 함
+                                            // If image is in table, it's already included in table cell, so just mark it here
+                                            has_image = true;
+                                        } else if is_shape_object {
+                                            // SHAPE_OBJECT의 경우 표 밖에서도 이미지를 처리
+                                            // For SHAPE_OBJECT, process image even outside table
+                                            let image_markdown = format_image_markdown(
+                                                document,
+                                                bindata_id,
+                                                &bin_item.data,
+                                                image_output_dir,
+                                            );
+                                            if !image_markdown.is_empty() {
+                                                parts.push(image_markdown);
+                                                has_image = true;
+                                                has_content = true;
+                                            }
+                                        } else {
+                                            // 기타 경우에는 has_image만 설정
+                                            // For other cases, only set has_image
+                                            has_image = true;
+                                        }
+                                    }
+                                }
                             }
                         }
                         ParagraphRecord::ShapeComponentPicture {
@@ -362,9 +445,13 @@ fn convert_paragraph_to_markdown(
                 let control_md = convert_control_to_markdown(header, has_table);
                 if !control_md.is_empty() {
                     // SHAPE_OBJECT의 경우 description이 있으면 내용이 있다고 간주 / For SHAPE_OBJECT, if description exists, consider it as content
-                    let is_shape_object_for_desc = header.ctrl_id.as_str() == crate::document::CtrlId::SHAPE_OBJECT;
+                    let is_shape_object_for_desc =
+                        header.ctrl_id.as_str() == crate::document::CtrlId::SHAPE_OBJECT;
                     if is_shape_object_for_desc {
-                        if let crate::document::CtrlHeaderData::ObjectCommon { description, .. } = &header.data {
+                        if let crate::document::CtrlHeaderData::ObjectCommon {
+                            description, ..
+                        } = &header.data
+                        {
                             if let Some(desc) = description {
                                 // description이 여러 줄이면 내용이 있다고 간주 / If description has multiple lines, consider it as content
                                 if desc.contains('\n') && desc.lines().count() > 1 {
@@ -373,7 +460,7 @@ fn convert_paragraph_to_markdown(
                             }
                         }
                     }
-                    
+
                     // 내용이 추출되었으면 (이미지 또는 텍스트) 메시지 부분만 제거 / Remove message part if content was extracted (image or text)
                     if (has_image || has_content)
                         && control_md.contains("[개체 내용은 추출되지 않았습니다]")

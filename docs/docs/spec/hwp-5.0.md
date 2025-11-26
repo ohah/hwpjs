@@ -2212,9 +2212,18 @@ Tag ID: HWPTAG_SHAPE_COMPONENT_PICTURE
 
 **구현 참고사항 / Implementation Notes**
 
-실제 HWP 파일에서 `SHAPE_COMPONENT_PICTURE`는 레코드 트리 구조상 `SHAPE_COMPONENT`의 자식(level 3)으로 파싱될 수 있습니다. 이는 스펙 문서 표 106에서 `SHAPE_COMPONENT_PICTURE`가 `SHAPE_COMPONENT`와 동일한 "개체 요소 공통 속성(표 83)"을 포함하기 때문입니다.
+**레벨 정보 / Level Information**
 
-하지만 최종 JSON 출력에서는 `CTRL_HEADER`(그리기 개체)의 children에 `SHAPE_COMPONENT`와 `SHAPE_COMPONENT_PICTURE`가 평탄하게(flattened) 포함되어야 합니다. 따라서 파서 구현 시 `CTRL_HEADER`의 children을 처리할 때, `SHAPE_COMPONENT`의 children(`SHAPE_COMPONENT_PICTURE` 등)을 평탄하게 추가하는 로직이 필요합니다.
+스펙 문서 표 5에서는 `HWPTAG_SHAPE_COMPONENT`와 `HWPTAG_SHAPE_COMPONENT_PICTURE` 모두 레벨 1로 표시되어 있습니다. 하지만 실제 HWP 파일에서는 두 가지 경우가 모두 가능합니다:
+
+1. **레벨 1 (형제 관계)**: `SHAPE_COMPONENT`와 `SHAPE_COMPONENT_PICTURE`가 같은 레벨 형제로 나타나는 경우
+2. **레벨 3 (부모-자식 관계)**: `SHAPE_COMPONENT_PICTURE`가 `SHAPE_COMPONENT`의 자식(level 3)으로 파싱되는 경우
+
+이는 스펙 문서 표 106에서 `SHAPE_COMPONENT_PICTURE`가 `SHAPE_COMPONENT`와 동일한 "개체 요소 공통 속성(표 83)"을 포함하기 때문에, 실제 바이너리 구조에서 `SHAPE_COMPONENT_PICTURE`가 `SHAPE_COMPONENT`의 자식으로 중첩될 수 있기 때문입니다.
+
+**파서 구현 / Parser Implementation**
+
+파서 구현 시 `SHAPE_COMPONENT`의 children을 재귀적으로 처리하도록 구현해야 합니다. `SHAPE_COMPONENT`에 `children` 필드를 추가하여, `SHAPE_COMPONENT_PICTURE`가 자식으로 올 경우 이를 포함할 수 있도록 해야 합니다. 이렇게 하면 레벨 1과 레벨 3 두 경우 모두 올바르게 처리할 수 있습니다.
 
 **표 106: 그림 개체**
 

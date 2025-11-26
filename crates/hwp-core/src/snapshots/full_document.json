@@ -9373,53 +9373,55 @@
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "shape_component_picture",
-                    "shape_component_picture": {
-                      "border_color": 0,
-                      "border_width": 0,
-                      "border_attributes": 0,
-                      "border_rectangle_x": {
-                        "left": 0,
-                        "top": 0,
-                        "right": 120000,
-                        "bottom": 0
-                      },
-                      "border_rectangle_y": {
-                        "left": 120000,
-                        "top": 15300,
-                        "right": 0,
-                        "bottom": 15300
-                      },
-                      "crop_rectangle": {
-                        "left": 0,
-                        "top": 0,
-                        "right": 90000,
-                        "bottom": 11460
-                      },
-                      "padding": {
-                        "left": 0,
-                        "right": 0,
-                        "top": 0,
-                        "bottom": 0
-                      },
-                      "picture_info": {
-                        "brightness": 0,
-                        "contrast": 0,
-                        "effect": 0,
-                        "bindata_id": 1
-                      },
-                      "border_opacity": 0,
-                      "instance_id": 805298808,
-                      "effect_data": [
-                        0,
-                        0,
-                        0,
-                        0
-                      ]
-                    }
+                    },
+                    "children": [
+                      {
+                        "type": "shape_component_picture",
+                        "shape_component_picture": {
+                          "border_color": 0,
+                          "border_width": 0,
+                          "border_attributes": 0,
+                          "border_rectangle_x": {
+                            "left": 0,
+                            "top": 0,
+                            "right": 120000,
+                            "bottom": 0
+                          },
+                          "border_rectangle_y": {
+                            "left": 120000,
+                            "top": 15300,
+                            "right": 0,
+                            "bottom": 15300
+                          },
+                          "crop_rectangle": {
+                            "left": 0,
+                            "top": 0,
+                            "right": 90000,
+                            "bottom": 11460
+                          },
+                          "padding": {
+                            "left": 0,
+                            "right": 0,
+                            "top": 0,
+                            "bottom": 0
+                          },
+                          "picture_info": {
+                            "brightness": 0,
+                            "contrast": 0,
+                            "effect": 0,
+                            "bindata_id": 1
+                          },
+                          "border_opacity": 0,
+                          "instance_id": 805298808,
+                          "effect_data": [
+                            0,
+                            0,
+                            0,
+                            0
+                          ]
+                        }
+                      }
+                    ]
                   }
                 ]
               }

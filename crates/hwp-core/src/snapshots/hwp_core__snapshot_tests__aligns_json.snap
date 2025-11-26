@@ -1751,103 +1751,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -2013,103 +2015,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -2275,103 +2279,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -2537,103 +2543,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -2799,103 +2807,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -3061,103 +3071,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -3323,103 +3335,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -3585,103 +3599,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -3847,103 +3863,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -4109,103 +4127,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -4371,103 +4391,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -4633,103 +4655,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -4895,103 +4919,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -5157,103 +5183,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -5419,103 +5447,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
@@ -5681,103 +5711,105 @@ expression: json
                           }
                         ]
                       }
-                    }
-                  },
-                  {
-                    "type": "list_header",
-                    "header": {
-                      "paragraph_count": 1,
-                      "attribute": {
-                        "text_direction": "horizontal",
-                        "line_break": "normal",
-                        "vertical_align": "top"
-                      }
                     },
-                    "paragraphs": [
+                    "children": [
                       {
-                        "para_header": {
-                          "text_char_count": 7,
-                          "control_mask": 0,
-                          "para_shape_id": 2,
-                          "para_style_id": 0,
-                          "column_divide_type": [],
-                          "char_shape_count": 1,
-                          "range_tag_count": 0,
-                          "line_align_count": 1,
-                          "instance_id": 2147483648,
-                          "section_merge": null
+                        "type": "list_header",
+                        "header": {
+                          "paragraph_count": 1,
+                          "attribute": {
+                            "text_direction": "horizontal",
+                            "line_break": "normal",
+                            "vertical_align": "top"
+                          }
                         },
-                        "records": [
+                        "paragraphs": [
                           {
-                            "type": "para_text",
-                            "text": "left 0\n",
-                            "control_char_positions": [
+                            "para_header": {
+                              "text_char_count": 7,
+                              "control_mask": 0,
+                              "para_shape_id": 2,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 1,
+                              "instance_id": 2147483648,
+                              "section_merge": null
+                            },
+                            "records": [
                               {
-                                "position": 6,
-                                "code": 13,
-                                "name": "PARA_BREAK"
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_char_shape",
-                            "shapes": [
+                                "type": "para_text",
+                                "text": "left 0\n",
+                                "control_char_positions": [
+                                  {
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
                               {
-                                "position": 0,
-                                "shape_id": 1
-                              }
-                            ]
-                          },
-                          {
-                            "type": "para_line_seg",
-                            "segments": [
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
                               {
-                                "text_start_position": 0,
-                                "vertical_position": 0,
-                                "line_height": 1000,
-                                "text_height": 1000,
-                                "baseline_distance": 850,
-                                "line_spacing": 600,
-                                "column_start_position": 0,
-                                "segment_width": 7936,
-                                "tag": {
-                                  "is_first_line_of_page": false,
-                                  "is_first_line_of_column": false,
-                                  "is_empty_segment": false,
-                                  "is_first_segment_of_line": true,
-                                  "is_last_segment_of_line": true,
-                                  "has_auto_hyphenation": false,
-                                  "has_indentation": false,
-                                  "has_paragraph_header_shape": false
-                                }
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 7936,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
+                      },
+                      {
+                        "type": "other",
+                        "tag_id": 66
+                      },
+                      {
+                        "type": "shape_component_rectangle",
+                        "shape_component_rectangle": {
+                          "corner_curvature": 0,
+                          "x_coordinates": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 11235,
+                            "left": 0
+                          },
+                          "y_coordinates": {
+                            "top": 11235,
+                            "right": 4345,
+                            "bottom": 0,
+                            "left": 4345
+                          }
+                        }
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "shape_component_rectangle",
-                    "shape_component_rectangle": {
-                      "corner_curvature": 0,
-                      "x_coordinates": {
-                        "top": 0,
-                        "right": 0,
-                        "bottom": 11235,
-                        "left": 0
-                      },
-                      "y_coordinates": {
-                        "top": 11235,
-                        "right": 4345,
-                        "bottom": 0,
-                        "left": 4345
-                      }
-                    }
                   }
                 ]
               }
