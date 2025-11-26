@@ -1690,9 +1690,21 @@ MAKE_4CHID(a, b, c, d) (((a) << 24) | ((b) << 16) | ((c) << 8) | (d))
 
 **파싱 주의사항 / Parsing Notes**
 
-본 라이브러리는 실제 HWP 파일 파싱 시 `parse_object_common` 함수가 컨트롤 ID 이후의 데이터만 파싱하므로, 최소 42바이트가 필요합니다. 표 69의 전체 길이는 컨트롤 ID(4바이트)를 포함한 `46 + (2×len) 바이트`이지만, 컨트롤 ID를 제외하면 `42 + (2×len) 바이트`입니다. 개체 설명문(글자 길이 2바이트 + 글자 2×len 바이트)을 제외하면 42바이트이며, 일부 파일에서는 42바이트만 있을 수 있습니다.
+본 라이브러리는 실제 HWP 파일 파싱 시 `parse_object_common` 함수가 컨트롤 ID 이후의 데이터만 파싱하므로, 최소 40바이트가 필요합니다. 표 69의 전체 길이는 컨트롤 ID(4바이트)를 포함한 `46 + (2×len) 바이트`이지만, 컨트롤 ID를 제외하면 `42 + (2×len) 바이트`입니다.
 
-This library's `parse_object_common` function parses only the data after the control ID, so at least 42 bytes are required. Table 69's total length includes the control ID (4 bytes) as `46 + (2×len) bytes`, but excluding the control ID it is `42 + (2×len) bytes`. Excluding the object description (2 bytes for length + 2×len bytes for characters) results in 42 bytes, and some files may have only 42 bytes.
+구조 분석:
+- 필수 필드 (컨트롤 ID 제외): attribute(4) + offset_y(4) + offset_x(4) + width(4) + height(4) + z_order(4) + margin(8) + instance_id(4) + page_divide(4) = **40바이트**
+- 선택적 필드: description_len(2) + description(2×len)
+
+따라서 40바이트는 유효한 크기입니다 (page_divide까지 포함, description 없음). 일부 파일에서는 40바이트만 있을 수 있으며, 42바이트 이상일 때는 description이 포함될 수 있습니다.
+
+This library's `parse_object_common` function parses only the data after the control ID, so at least 40 bytes are required. Table 69's total length includes the control ID (4 bytes) as `46 + (2×len) bytes`, but excluding the control ID it is `42 + (2×len) bytes`.
+
+Structure analysis:
+- Required fields (excluding control ID): attribute(4) + offset_y(4) + offset_x(4) + width(4) + height(4) + z_order(4) + margin(8) + instance_id(4) + page_divide(4) = **40 bytes**
+- Optional fields: description_len(2) + description(2×len)
+
+Therefore, 40 bytes is a valid size (includes up to page_divide, without description). Some files may have only 40 bytes, and when 42+ bytes are present, description may be included.
 
 **표 70: 개체 공통 속성**
 

@@ -369,11 +369,17 @@ impl CtrlHeader {
 
 /// 개체 공통 속성 파싱 (표 69) / Parse object common properties (Table 69)
 fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, String> {
-    // 최소 42바이트 필요 (개체 설명문 제외, 일부 파일에서는 42바이트만 있을 수 있음)
-    // Need at least 42 bytes (excluding description, some files may have only 42 bytes)
-    if data.len() < 42 {
+    // 표 69 구조 분석:
+    // 컨트롤 ID 제외 후: attribute(4) + offset_y(4) + offset_x(4) + width(4) + height(4) + z_order(4) + margin(8) + instance_id(4) + page_divide(4) = 40바이트
+    // description_len(2) + description(2×len) = 추가 바이트
+    // 따라서 40바이트는 유효한 크기 (page_divide까지, description 없음)
+    // Table 69 structure analysis:
+    // After excluding control ID: attribute(4) + offset_y(4) + offset_x(4) + width(4) + height(4) + z_order(4) + margin(8) + instance_id(4) + page_divide(4) = 40 bytes
+    // description_len(2) + description(2×len) = additional bytes
+    // Therefore, 40 bytes is a valid size (up to page_divide, without description)
+    if data.len() < 40 {
         return Err(format!(
-            "Object common properties must be at least 42 bytes, got {} bytes",
+            "Object common properties must be at least 40 bytes, got {} bytes",
             data.len()
         ));
     }
