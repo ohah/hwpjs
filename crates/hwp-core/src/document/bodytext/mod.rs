@@ -6,21 +6,23 @@ mod char_shape;
 /// 스펙 문서 매핑: 표 2 - 본문 (BodyText 스토리지)
 pub mod constants;
 pub use constants::HwpTag;
+mod control_char;
+pub use control_char::ControlChar;
+mod chart_data;
+mod ctrl_data;
 mod ctrl_header;
+mod eqedit;
 mod footnote_shape;
+mod form_object;
 mod line_seg;
 mod list_header;
+mod memo_list;
+mod memo_shape;
 mod page_border_fill;
 mod page_def;
 mod para_header;
 mod range_tag;
 pub mod record_tree;
-mod chart_data;
-mod ctrl_data;
-mod eqedit;
-mod form_object;
-mod memo_list;
-mod memo_shape;
 mod shape_component;
 mod shape_component_arc;
 mod shape_component_container;
@@ -39,14 +41,14 @@ mod video_data;
 pub use char_shape::{CharShapeInfo, ParaCharShape};
 pub use chart_data::ChartData;
 pub use ctrl_data::CtrlData;
-pub use ctrl_header::{CtrlHeader, CtrlHeaderData, CtrlId};
+pub use ctrl_header::{CtrlHeader, CtrlHeaderData, CtrlId, PageNumberPosition};
 pub use eqedit::EqEdit;
 pub use footnote_shape::FootnoteShape;
 pub use form_object::FormObject;
 pub use line_seg::{LineSegmentInfo, ParaLineSeg};
+pub use list_header::ListHeader;
 pub use memo_list::MemoList;
 pub use memo_shape::MemoShape;
-pub use list_header::ListHeader;
 pub use page_border_fill::PageBorderFill;
 pub use page_def::PageDef;
 pub use para_header::{ColumnDivideType, ParaHeader};
@@ -108,6 +110,10 @@ pub enum ParagraphRecord {
     ParaText {
         /// 텍스트 내용 (UTF-16LE) / Text content (UTF-16LE)
         text: String,
+        /// 제어 문자 위치 정보 (문자 인덱스, 제어 문자 코드) / Control character positions (char index, control char code)
+        /// 제어 문자가 없어도 빈 배열로 표시되어 JSON에 포함됩니다 / Empty array is included in JSON even if no control characters
+        #[serde(default)]
+        control_char_positions: Vec<(usize, u8)>,
     },
     /// 문단의 글자 모양 / Paragraph character shape
     ParaCharShape {
@@ -334,8 +340,75 @@ impl Section {
     ) -> Result<ParagraphRecord, String> {
         match node.tag_id() {
             HwpTag::PARA_TEXT => {
-                let text = decode_utf16le(node.data())?;
-                Ok(ParagraphRecord::ParaText { text })
+                let data = node.data();
+                // pyhwp처럼 제어 문자를 찾고 텍스트만 추출 / Find control characters and extract only text like pyhwp
+                let mut control_char_positions = Vec::new();
+                let mut cleaned_text = String::new();
+                let mut idx = 0;
+
+                while idx < data.len() {
+                    // 제어 문자 찾기 (UTF-16LE 바이트 배열에서) / Find control character (in UTF-16LE byte array)
+                    let mut found_control = false;
+                    let mut control_code = 0u8;
+                    let mut control_size = 0usize;
+
+                    // 현재 위치에서 제어 문자 확인 (0-31 범위) / Check for control character at current position (range 0-31)
+                    if idx + 1 < data.len() {
+                        let code = data[idx] as u32;
+                        // 제어 문자는 UTF-16LE에서 하위 바이트가 0-31이고 상위 바이트가 0인 경우 / Control character is when lower byte is 0-31 and upper byte is 0 in UTF-16LE
+                        if code <= 31 && data[idx + 1] == 0 {
+                            control_code = code as u8;
+                            control_size = ControlChar::get_size_by_code(control_code) * 2; // WCHAR를 바이트로 변환 / Convert WCHAR to bytes
+                            found_control = true;
+                        }
+                    }
+
+                    if found_control {
+                        // 제어 문자 위치 저장 (문자 인덱스 기준) / Store control character position (based on character index)
+                        let char_idx = idx / 2; // UTF-16LE에서 문자 인덱스는 바이트 인덱스 / 2 / Character index in UTF-16LE is byte index / 2
+                        control_char_positions.push((char_idx, control_code));
+
+                        // 텍스트로 표현 가능한 제어 문자는 텍스트에 변환된 형태로 추가 / Add convertible control characters as converted text
+                        if ControlChar::is_convertible(control_code) {
+                            if let Some(text_repr) = ControlChar::to_text(control_code) {
+                                cleaned_text.push_str(text_repr);
+                            }
+                        }
+                        // 제거해야 할 제어 문자는 텍스트에 추가하지 않음 / Don't add removable control characters to text
+
+                        idx += control_size; // 제어 문자와 파라미터 건너뛰기 / Skip control character and parameters
+                    } else {
+                        // 텍스트 부분 디코딩 / Decode text portion
+                        // 다음 제어 문자까지 또는 끝까지 / Until next control character or end
+                        let mut text_end = idx;
+                        while text_end < data.len() {
+                            if text_end + 1 < data.len() {
+                                let code = data[text_end] as u32;
+                                if code <= 31 && data[text_end + 1] == 0 {
+                                    break; // 제어 문자 발견 / Control character found
+                                }
+                            }
+                            text_end += 2; // UTF-16LE는 2바이트 단위 / UTF-16LE is 2-byte units
+                        }
+
+                        if text_end > idx {
+                            // 텍스트 부분 디코딩 / Decode text portion
+                            let text_bytes = &data[idx..text_end];
+                            if let Ok(text) = decode_utf16le(text_bytes) {
+                                cleaned_text.push_str(&text);
+                            }
+                            idx = text_end;
+                        } else {
+                            // 더 이상 처리할 데이터 없음 / No more data to process
+                            break;
+                        }
+                    }
+                }
+
+                Ok(ParagraphRecord::ParaText {
+                    text: cleaned_text,
+                    control_char_positions,
+                })
             }
             HwpTag::PARA_CHAR_SHAPE => {
                 let para_char_shape = ParaCharShape::parse(node.data())?;

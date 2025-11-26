@@ -1,7 +1,3 @@
----
-source: crates/hwp-core/src/lib.rs
-expression: json
----
 {
   "file_header": {
     "signature": "HWP Document File",

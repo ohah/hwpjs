@@ -111,8 +111,8 @@ impl VideoData {
                 }
                 // 웹 태그 길이 계산: 전체 길이 - offset - 썸네일 BinData ID(2바이트)
                 // Calculate web tag length: total length - offset - thumbnail BinData ID (2 bytes)
-                let web_tag_length = data.len() - offset - 2;
-                if web_tag_length < 0 {
+                let web_tag_length = data.len().saturating_sub(offset + 2);
+                if web_tag_length == 0 {
                     return Err("Invalid web tag length".to_string());
                 }
                 let web_tag_bytes = &data[offset..offset + web_tag_length];

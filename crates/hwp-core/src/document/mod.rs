@@ -11,8 +11,8 @@ mod fileheader;
 
 pub use bindata::{BinData, BinaryDataFormat};
 pub use bodytext::{
-    BodyText, ColumnDivideType, CtrlHeader, CtrlHeaderData, CtrlId, Paragraph, ParagraphRecord,
-    Section,
+    BodyText, ColumnDivideType, CtrlHeader, CtrlHeaderData, CtrlId, PageNumberPosition, Paragraph,
+    ParagraphRecord, Section,
 };
 pub use docinfo::{
     BinDataRecord, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName,

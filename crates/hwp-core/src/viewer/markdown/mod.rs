@@ -6,6 +6,7 @@
 mod control;
 mod table;
 
+use crate::document::bodytext::ControlChar;
 use crate::document::{BinDataRecord, ColumnDivideType, HwpDocument, Paragraph, ParagraphRecord};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use std::fs;
@@ -64,6 +65,25 @@ pub fn to_markdown(document: &HwpDocument, image_output_dir: Option<&str>) -> St
 }
 
 /// Format version number to readable string
+/// 의미 있는 텍스트인지 확인합니다. / Check if text is meaningful.
+///
+/// 제어 문자와 공백만 있는 텍스트는 의미 없다고 판단합니다.
+/// Text containing only control characters and whitespace is considered meaningless.
+///
+/// # Arguments / 매개변수
+/// * `text` - 제어 문자가 이미 제거된 텍스트 / Text with control characters already removed
+/// * `control_positions` - 제어 문자 위치 정보 (원본 텍스트 기준) / Control character positions (based on original text)
+///
+/// # Returns / 반환값
+/// 의미 있는 텍스트이면 `true`, 그렇지 않으면 `false` / `true` if meaningful, `false` otherwise
+pub(crate) fn is_meaningful_text(text: &str, control_positions: &[(usize, u8)]) -> bool {
+    // 제어 문자는 이미 파싱 단계에서 text에서 제거되었으므로,
+    // 텍스트가 비어있지 않은지만 확인하면 됩니다.
+    // Control characters are already removed from text during parsing,
+    // so we only need to check if text is not empty.
+    !text.trim().is_empty()
+}
+
 /// 버전 번호를 읽기 쉬운 문자열로 변환
 fn format_version(document: &HwpDocument) -> String {
     let version = document.file_header.version;
@@ -91,18 +111,17 @@ fn convert_paragraph_to_markdown(
     // Process all records in order / 모든 레코드를 순서대로 처리
     for record in &paragraph.records {
         match record {
-            ParagraphRecord::ParaText { text } => {
-                // Clean up control characters and normalize whitespace / 제어 문자 제거 및 공백 정규화
-                let cleaned = text
-                    .chars()
-                    .filter(|c| {
-                        // Keep printable characters and common whitespace / 출력 가능한 문자와 일반 공백 유지
-                        c.is_whitespace() || !c.is_control()
-                    })
-                    .collect::<String>();
-
-                if !cleaned.trim().is_empty() {
-                    parts.push(cleaned.trim().to_string());
+            ParagraphRecord::ParaText {
+                text,
+                control_char_positions,
+            } => {
+                // 의미 있는 텍스트인지 확인 / Check if text is meaningful
+                // 제어 문자는 이미 파싱 단계에서 제거되었으므로 텍스트를 그대로 사용 / Control characters are already removed during parsing, so use text as-is
+                if is_meaningful_text(text, control_char_positions) {
+                    let trimmed = text.trim();
+                    if !trimmed.is_empty() {
+                        parts.push(trimmed.to_string());
+                    }
                 }
             }
             ParagraphRecord::ShapeComponentPicture {
@@ -133,12 +152,22 @@ fn convert_paragraph_to_markdown(
                 // 컨트롤 헤더의 자식 레코드 처리 (레벨 2, 예: 테이블, 그림 등) / Process control header children (level 2, e.g., table, images, etc.)
                 let mut has_table = false;
                 let mut has_image = false;
-                // 먼저 자식 레코드를 처리하여 이미지나 테이블 찾기 / First process children to find images or tables
+
+                // 먼저 표가 있는지 확인 / First check if table exists
+                for child in children.iter() {
+                    if matches!(child, ParagraphRecord::Table { .. }) {
+                        has_table = true;
+                        break;
+                    }
+                }
+
+                // 자식 레코드 처리 / Process children
                 for child in children {
                     match child {
                         ParagraphRecord::Table { table } => {
                             // 테이블을 마크다운으로 변환 / Convert table to markdown
-                            let table_md = convert_table_to_markdown(table);
+                            let table_md =
+                                convert_table_to_markdown(table, document, image_output_dir);
                             if !table_md.is_empty() {
                                 parts.push(table_md);
                                 has_table = true;
@@ -147,41 +176,59 @@ fn convert_paragraph_to_markdown(
                         ParagraphRecord::ShapeComponentPicture {
                             shape_component_picture,
                         } => {
-                            // 그림 개체를 마크다운 이미지로 변환 / Convert picture shape component to markdown image
+                            // 표 안에 이미지가 있는 경우 표 셀에 이미 포함되므로 여기서는 표시만 함
+                            // If image is in table, it's already included in table cell, so just mark it here
                             let bindata_id = shape_component_picture.picture_info.bindata_id;
-
-                            // BinData에서 해당 이미지 찾기 / Find image in BinData
-                            if let Some(bin_item) = document
+                            // 표 안에 이미지가 있는지 확인하기 위해 has_image만 설정
+                            // Only set has_image to check if image exists in table
+                            if document
                                 .bin_data
                                 .items
                                 .iter()
-                                .find(|item| item.index == bindata_id)
+                                .any(|item| item.index == bindata_id)
                             {
-                                let image_markdown = format_image_markdown(
-                                    document,
-                                    bindata_id,
-                                    &bin_item.data,
-                                    image_output_dir,
-                                );
-                                if !image_markdown.is_empty() {
-                                    parts.push(image_markdown);
-                                    has_image = true;
-                                }
+                                has_image = true;
                             }
+                            // 표 밖에 이미지를 출력하지 않음 (표 셀에 이미 포함됨)
+                            // Don't output image outside table (already included in table cell)
                         }
                         ParagraphRecord::ListHeader { paragraphs, .. } => {
-                            // ListHeader의 paragraphs를 재귀적으로 처리하여 이미지 찾기
-                            // Recursively process ListHeader paragraphs to find images
-                            for para in paragraphs {
-                                let para_md =
-                                    convert_paragraph_to_markdown(para, document, image_output_dir);
-                                if !para_md.is_empty() {
-                                    // 이미지가 포함되어 있는지 확인 / Check if image is included
+                            // ListHeader는 표 셀 내부의 문단들을 포함할 수 있음
+                            // ListHeader can contain paragraphs inside table cells
+                            // 표가 있는 경우, ListHeader의 paragraphs가 표 셀에 포함되는지 확인
+                            // If table exists, check if ListHeader's paragraphs are included in table cells
+                            if has_table {
+                                // 표가 있으면 ListHeader는 표 셀의 일부이므로 건너뜀
+                                // If table exists, ListHeader is part of table cell, so skip
+                                // 이미지가 포함되어 있는지만 확인
+                                // Only check if image is included
+                                for para in paragraphs {
+                                    let para_md = convert_paragraph_to_markdown(
+                                        para,
+                                        document,
+                                        image_output_dir,
+                                    );
                                     if para_md.contains("![이미지]") {
                                         has_image = true;
                                     }
-                                    // 이미지가 있든 없든 마크다운 추가 / Add markdown regardless of image
-                                    parts.push(para_md);
+                                }
+                            } else {
+                                // 표가 없으면 ListHeader의 paragraphs를 처리
+                                // If no table, process ListHeader's paragraphs
+                                for para in paragraphs {
+                                    let para_md = convert_paragraph_to_markdown(
+                                        para,
+                                        document,
+                                        image_output_dir,
+                                    );
+                                    if !para_md.is_empty() {
+                                        // 이미지가 포함되어 있는지 확인 / Check if image is included
+                                        if para_md.contains("![이미지]") {
+                                            has_image = true;
+                                        }
+                                        // 이미지가 있든 없든 마크다운 추가 / Add markdown regardless of image
+                                        parts.push(para_md);
+                                    }
                                 }
                             }
                         }
@@ -193,49 +240,64 @@ fn convert_paragraph_to_markdown(
                             for grandchild in child_children {
                                 match grandchild {
                                     ParagraphRecord::ListHeader { paragraphs, .. } => {
-                                        // ListHeader의 paragraphs를 재귀적으로 처리하여 이미지 찾기
-                                        // Recursively process ListHeader paragraphs to find images
-                                        for para in paragraphs {
-                                            let para_md = convert_paragraph_to_markdown(
-                                                para,
-                                                document,
-                                                image_output_dir,
-                                            );
-                                            if !para_md.is_empty() {
-                                                // 이미지가 포함되어 있는지 확인 / Check if image is included
+                                        // ListHeader는 표 셀 내부의 문단들을 포함할 수 있음
+                                        // ListHeader can contain paragraphs inside table cells
+                                        // 표가 있는 경우, ListHeader의 paragraphs가 표 셀에 포함되는지 확인
+                                        // If table exists, check if ListHeader's paragraphs are included in table cells
+                                        if has_table {
+                                            // 표가 있으면 ListHeader는 표 셀의 일부이므로 건너뜀
+                                            // If table exists, ListHeader is part of table cell, so skip
+                                            // 이미지가 포함되어 있는지만 확인
+                                            // Only check if image is included
+                                            for para in paragraphs {
+                                                let para_md = convert_paragraph_to_markdown(
+                                                    para,
+                                                    document,
+                                                    image_output_dir,
+                                                );
                                                 if para_md.contains("![이미지]") {
                                                     has_image = true;
                                                 }
-                                                // 이미지가 있든 없든 마크다운 추가 / Add markdown regardless of image
-                                                parts.push(para_md);
+                                            }
+                                        } else {
+                                            // 표가 없으면 ListHeader의 paragraphs를 처리
+                                            // If no table, process ListHeader's paragraphs
+                                            for para in paragraphs {
+                                                let para_md = convert_paragraph_to_markdown(
+                                                    para,
+                                                    document,
+                                                    image_output_dir,
+                                                );
+                                                if !para_md.is_empty() {
+                                                    // 이미지가 포함되어 있는지 확인 / Check if image is included
+                                                    if para_md.contains("![이미지]") {
+                                                        has_image = true;
+                                                    }
+                                                    // 이미지가 있든 없든 마크다운 추가 / Add markdown regardless of image
+                                                    parts.push(para_md);
+                                                }
                                             }
                                         }
                                     }
                                     ParagraphRecord::ShapeComponentPicture {
                                         shape_component_picture,
                                     } => {
-                                        // 그림 개체를 마크다운 이미지로 변환 / Convert picture shape component to markdown image
+                                        // 표 안에 이미지가 있는 경우 표 셀에 이미 포함되므로 여기서는 표시만 함
+                                        // If image is in table, it's already included in table cell, so just mark it here
                                         let bindata_id =
                                             shape_component_picture.picture_info.bindata_id;
-
-                                        // BinData에서 해당 이미지 찾기 / Find image in BinData
-                                        if let Some(bin_item) = document
+                                        // 표 안에 이미지가 있는지 확인하기 위해 has_image만 설정
+                                        // Only set has_image to check if image exists in table
+                                        if document
                                             .bin_data
                                             .items
                                             .iter()
-                                            .find(|item| item.index == bindata_id)
+                                            .any(|item| item.index == bindata_id)
                                         {
-                                            let image_markdown = format_image_markdown(
-                                                document,
-                                                bindata_id,
-                                                &bin_item.data,
-                                                image_output_dir,
-                                            );
-                                            if !image_markdown.is_empty() {
-                                                parts.push(image_markdown);
-                                                has_image = true;
-                                            }
+                                            has_image = true;
                                         }
+                                        // 표 밖에 이미지를 출력하지 않음 (표 셀에 이미 포함됨)
+                                        // Don't output image outside table (already included in table cell)
                                     }
                                     _ => {
                                         // 기타 자식 레코드는 무시 / Ignore other child records
@@ -310,13 +372,10 @@ fn get_mime_type_from_bindata_id(document: &HwpDocument, bindata_id: crate::type
 fn get_extension_from_bindata_id(document: &HwpDocument, bindata_id: crate::types::WORD) -> String {
     // bin_data_records에서 EMBEDDING 타입의 extension 찾기 / Find extension from EMBEDDING type in bin_data_records
     for record in &document.doc_info.bin_data {
-        match record {
-            BinDataRecord::Embedding { embedding, .. } => {
-                if embedding.binary_data_id == bindata_id {
-                    return embedding.extension.clone();
-                }
+        if let BinDataRecord::Embedding { embedding, .. } = record {
+            if embedding.binary_data_id == bindata_id {
+                return embedding.extension.clone();
             }
-            _ => {}
         }
     }
     // 기본값 / default
@@ -325,7 +384,7 @@ fn get_extension_from_bindata_id(document: &HwpDocument, bindata_id: crate::type
 
 /// Format image markdown - either as base64 data URI or file path
 /// 이미지 마크다운 포맷 - base64 데이터 URI 또는 파일 경로
-fn format_image_markdown(
+pub(crate) fn format_image_markdown(
     document: &HwpDocument,
     bindata_id: crate::types::WORD,
     base64_data: &str,
@@ -336,12 +395,14 @@ fn format_image_markdown(
             // 이미지를 파일로 저장하고 파일 경로를 마크다운에 포함 / Save image as file and include file path in markdown
             match save_image_to_file(document, bindata_id, base64_data, dir_path) {
                 Ok(file_path) => {
-                    // 상대 경로로 변환 (디렉토리 경로 제거) / Convert to relative path (remove directory path)
-                    let relative_path = Path::new(&file_path)
+                    // 상대 경로로 변환 (images/ 디렉토리 포함) / Convert to relative path (include images/ directory)
+                    let file_path_obj = Path::new(&file_path);
+                    let file_name = file_path_obj
                         .file_name()
                         .and_then(|n| n.to_str())
                         .unwrap_or(&file_path);
-                    format!("![이미지]({})", relative_path)
+                    // images/ 디렉토리 경로 포함 / Include images/ directory path
+                    format!("![이미지](images/{})", file_name)
                 }
                 Err(e) => {
                     eprintln!("Failed to save image: {}", e);

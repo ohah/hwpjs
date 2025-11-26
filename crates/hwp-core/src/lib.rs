@@ -553,6 +553,17 @@ mod snapshot_tests {
             let json =
                 serde_json::to_string_pretty(&document).expect("Should serialize document to JSON");
             assert_snapshot!("full_document_json", json);
+
+            // 실제 JSON 파일로도 저장 / Also save as actual JSON file
+            let manifest_dir = env!("CARGO_MANIFEST_DIR");
+            let snapshots_dir = std::path::Path::new(manifest_dir)
+                .join("src")
+                .join("snapshots");
+            std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
+            let json_file = snapshots_dir.join("full_document.json");
+            std::fs::write(&json_file, &json).unwrap_or_else(|e| {
+                eprintln!("Failed to write JSON file: {}", e);
+            });
         }
     }
 
@@ -726,9 +737,22 @@ mod snapshot_tests {
             assert!(result.is_ok(), "Should parse HWP document");
             let document = result.unwrap();
 
-            // Convert to markdown (with base64 images)
-            let markdown = document.to_markdown(None);
+            // Convert to markdown with image files (not base64)
+            // 이미지를 파일로 저장하고 파일 경로를 사용 / Save images as files and use file paths
+            let manifest_dir = env!("CARGO_MANIFEST_DIR");
+            let snapshots_dir = std::path::Path::new(manifest_dir)
+                .join("src")
+                .join("snapshots");
+            let images_dir = snapshots_dir.join("images");
+            std::fs::create_dir_all(&images_dir).unwrap_or(());
+            let markdown = document.to_markdown(Some(images_dir.to_str().unwrap()));
             assert_snapshot!("document_markdown", markdown);
+
+            // 실제 Markdown 파일로도 저장 / Also save as actual Markdown file
+            let md_file = snapshots_dir.join("document.md");
+            std::fs::write(&md_file, &markdown).unwrap_or_else(|e| {
+                eprintln!("Failed to write Markdown file: {}", e);
+            });
         }
     }
 

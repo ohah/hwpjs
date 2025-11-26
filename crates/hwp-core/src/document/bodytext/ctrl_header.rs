@@ -38,6 +38,9 @@ impl CtrlId {
     pub const PAGE_ADJUST: &str = "pgad";
     /// 쪽 번호 위치 / Page number position
     pub const PAGE_NUMBER: &str = "pgno";
+    /// 쪽 번호 위치 (pgnp) / Page number position (pgnp)
+    /// 실제 파일에서는 'pgnp'로 저장되는 경우가 있음 / Some files store this as 'pgnp'
+    pub const PAGE_NUMBER_POS: &str = "pgnp";
     /// 찾아보기 표식 / Bookmark marker
     pub const BOOKMARK_MARKER: &str = "bkmk";
     /// 글자 겹침 / Character overlap
@@ -137,6 +140,17 @@ pub enum CtrlHeaderData {
     ColumnDefinition,
     /// 머리말/꼬리말 / Header/Footer
     HeaderFooter,
+    /// 쪽 번호 위치 / Page number position
+    PageNumberPosition {
+        /// 속성 (표 148 참조) / Attribute (see Table 148)
+        flags: PageNumberPositionFlags,
+        /// 사용자 기호 / User symbol
+        user_symbol: String,
+        /// 앞 장식 문자 / Prefix decoration character
+        prefix: String,
+        /// 뒤 장식 문자 / Suffix decoration character
+        suffix: String,
+    },
     /// 기타 컨트롤 / Other controls
     Other,
 }
@@ -257,6 +271,43 @@ pub struct Margin {
     pub left: HWPUNIT16,
 }
 
+/// 쪽 번호 위치 속성 (표 148) / Page number position attributes (Table 148)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PageNumberPositionFlags {
+    /// 번호 모양 (bit 0-7, 표 143 참조) / Number shape (bit 0-7, see Table 143)
+    pub shape: u8,
+    /// 번호의 표시 위치 (bit 8-11) / Number display position (bit 8-11)
+    pub position: PageNumberPosition,
+}
+
+/// 쪽 번호의 표시 위치 / Page number display position
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PageNumberPosition {
+    /// 쪽 번호 없음 / No page number
+    None,
+    /// 왼쪽 위 / Top left
+    TopLeft,
+    /// 가운데 위 / Top center
+    TopCenter,
+    /// 오른쪽 위 / Top right
+    TopRight,
+    /// 왼쪽 아래 / Bottom left
+    BottomLeft,
+    /// 가운데 아래 / Bottom center
+    BottomCenter,
+    /// 오른쪽 아래 / Bottom right
+    BottomRight,
+    /// 바깥쪽 위 / Outside top
+    OutsideTop,
+    /// 바깥쪽 아래 / Outside bottom
+    OutsideBottom,
+    /// 안쪽 위 / Inside top
+    InsideTop,
+    /// 안쪽 아래 / Inside bottom
+    InsideBottom,
+}
+
 impl CtrlHeader {
     /// CtrlHeader를 바이트 배열에서 파싱합니다. / Parse CtrlHeader from byte array.
     ///
@@ -300,6 +351,9 @@ impl CtrlHeader {
             CtrlHeaderData::ColumnDefinition
         } else if ctrl_id_str == CtrlId::HEADER_FOOTER || ctrl_id_str == CtrlId::FOOTNOTE {
             CtrlHeaderData::HeaderFooter
+        } else if ctrl_id_str == CtrlId::PAGE_NUMBER || ctrl_id_str == CtrlId::PAGE_NUMBER_POS {
+            // 쪽 번호 위치 (표 147) / Page number position (Table 147)
+            parse_page_number_position(remaining_data)?
         } else {
             // 표 127, 128의 다른 컨트롤 ID들 (현재는 Other로 처리) / Other control IDs from Table 127, 128 (currently handled as Other)
             CtrlHeaderData::Other
@@ -447,6 +501,71 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, String> {
         instance_id,
         page_divide,
         description,
+    })
+}
+
+/// 쪽 번호 위치 파싱 (표 147) / Parse page number position (Table 147)
+fn parse_page_number_position(data: &[u8]) -> Result<CtrlHeaderData, String> {
+    // 최소 12바이트 필요 / Need at least 12 bytes
+    if data.len() < 12 {
+        return Err(format!(
+            "PageNumberPosition must be at least 12 bytes, got {} bytes",
+            data.len()
+        ));
+    }
+
+    let mut offset = 0;
+
+    // UINT32 속성 (표 148) / UINT32 attribute (Table 148)
+    let flags_value = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
+    offset += 4;
+
+    // bit 0-7: 번호 모양 / bit 0-7: number shape
+    let shape = (flags_value & 0xFF) as u8;
+
+    // bit 8-11: 번호의 표시 위치 / bit 8-11: number display position
+    let position = match (flags_value >> 8) & 0x0F {
+        0 => PageNumberPosition::None,
+        1 => PageNumberPosition::TopLeft,
+        2 => PageNumberPosition::TopCenter,
+        3 => PageNumberPosition::TopRight,
+        4 => PageNumberPosition::BottomLeft,
+        5 => PageNumberPosition::BottomCenter,
+        6 => PageNumberPosition::BottomRight,
+        7 => PageNumberPosition::OutsideTop,
+        8 => PageNumberPosition::OutsideBottom,
+        9 => PageNumberPosition::InsideTop,
+        10 => PageNumberPosition::InsideBottom,
+        _ => PageNumberPosition::None,
+    };
+
+    let flags = PageNumberPositionFlags { shape, position };
+
+    // WCHAR 사용자 기호 / WCHAR user symbol
+    let user_symbol = decode_utf16le(&data[offset..offset + 2])?;
+    offset += 2;
+
+    // WCHAR 앞 장식 문자 / WCHAR prefix decoration character
+    let prefix = decode_utf16le(&data[offset..offset + 2])?;
+    offset += 2;
+
+    // WCHAR 뒤 장식 문자 / WCHAR suffix decoration character
+    let suffix = decode_utf16le(&data[offset..offset + 2])?;
+    offset += 2;
+
+    // WCHAR 항상 "-" / WCHAR always "-"
+    // offset += 2; // 읽지만 사용하지 않음 / Read but not used
+
+    Ok(CtrlHeaderData::PageNumberPosition {
+        flags,
+        user_symbol,
+        prefix,
+        suffix,
     })
 }
 

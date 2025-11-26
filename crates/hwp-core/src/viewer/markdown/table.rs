@@ -1,10 +1,15 @@
 /// Table conversion to Markdown
 /// 테이블을 마크다운으로 변환하는 모듈
-use crate::document::{bodytext::Table, ParagraphRecord};
+use crate::document::{bodytext::Table, HwpDocument, ParagraphRecord};
+use crate::viewer::markdown::{format_image_markdown, is_meaningful_text};
 
 /// Convert table to markdown format
 /// 테이블을 마크다운 형식으로 변환
-pub fn convert_table_to_markdown(table: &Table) -> String {
+pub fn convert_table_to_markdown(
+    table: &Table,
+    document: &HwpDocument,
+    image_output_dir: Option<&str>,
+) -> String {
     let row_count = table.attributes.row_count as usize;
     let col_count = table.attributes.col_count as usize;
 
@@ -90,7 +95,16 @@ pub fn convert_table_to_markdown(table: &Table) -> String {
             let row = row_index;
 
             if col < col_count {
-                fill_cell_content(&mut grid, cell, row, col, row_count, col_count);
+                fill_cell_content(
+                    &mut grid,
+                    cell,
+                    row,
+                    col,
+                    row_count,
+                    col_count,
+                    document,
+                    image_output_dir,
+                );
             }
         }
     } else {
@@ -101,7 +115,16 @@ pub fn convert_table_to_markdown(table: &Table) -> String {
             let col = (cell.cell_attributes.col_address.saturating_sub(min_col)) as usize;
 
             if row < row_count && col < col_count {
-                fill_cell_content(&mut grid, cell, row, col, row_count, col_count);
+                fill_cell_content(
+                    &mut grid,
+                    cell,
+                    row,
+                    col,
+                    row_count,
+                    col_count,
+                    document,
+                    image_output_dir,
+                );
             }
         }
     }
@@ -145,32 +168,73 @@ fn fill_cell_content(
     col: usize,
     row_count: usize,
     col_count: usize,
+    document: &HwpDocument,
+    image_output_dir: Option<&str>,
 ) {
-    // 셀 내용을 텍스트로 변환 / Convert cell content to text
-    let cell_text = cell
-        .paragraphs
-        .iter()
-        .map(|para| {
-            para.records
-                .iter()
-                .filter_map(|rec| {
-                    if let ParagraphRecord::ParaText { text } = rec {
-                        // 제어 문자 제거 및 공백 정규화 / Remove control characters and normalize whitespace
-                        let cleaned = text
-                            .chars()
-                            .filter(|c| c.is_whitespace() || !c.is_control())
-                            .collect::<String>();
-                        Some(cleaned.trim().to_string())
-                    } else {
-                        None
+    // 셀 내용을 텍스트와 이미지로 변환 / Convert cell content to text and images
+    let mut cell_parts = Vec::new();
+    let mut has_image = false;
+
+    // 먼저 이미지가 있는지 확인 / First check if image exists
+    for para in &cell.paragraphs {
+        for rec in &para.records {
+            if matches!(rec, ParagraphRecord::ShapeComponentPicture { .. }) {
+                has_image = true;
+                break;
+            }
+        }
+        if has_image {
+            break;
+        }
+    }
+
+    for para in &cell.paragraphs {
+        for rec in &para.records {
+            match rec {
+                ParagraphRecord::ParaText {
+                    text,
+                    control_char_positions,
+                } => {
+                    // 의미 있는 텍스트인지 확인 / Check if text is meaningful
+                    // 제어 문자는 이미 파싱 단계에서 제거되었으므로 텍스트를 그대로 사용 / Control characters are already removed during parsing, so use text as-is
+                    if is_meaningful_text(text, control_char_positions) {
+                        let trimmed = text.trim();
+                        if !trimmed.is_empty() {
+                            cell_parts.push(trimmed.to_string());
+                        }
                     }
-                })
-                .collect::<Vec<_>>()
-                .join(" ")
-        })
-        .filter(|s| !s.is_empty())
-        .collect::<Vec<_>>()
-        .join(" ");
+                }
+                ParagraphRecord::ShapeComponentPicture {
+                    shape_component_picture,
+                } => {
+                    // 셀 안의 이미지를 마크다운으로 변환 / Convert image in cell to markdown
+                    let bindata_id = shape_component_picture.picture_info.bindata_id;
+                    if let Some(bin_item) = document
+                        .bin_data
+                        .items
+                        .iter()
+                        .find(|item| item.index == bindata_id)
+                    {
+                        let image_markdown = format_image_markdown(
+                            document,
+                            bindata_id,
+                            &bin_item.data,
+                            image_output_dir,
+                        );
+                        if !image_markdown.is_empty() {
+                            cell_parts.push(image_markdown);
+                        }
+                    }
+                }
+                _ => {
+                    // 기타 레코드는 무시 / Ignore other records
+                }
+            }
+        }
+    }
+
+    // 셀 내용을 하나의 문자열로 결합 / Combine cell parts into a single string
+    let cell_text = cell_parts.join(" ");
 
     // 마크다운 표에서 파이프 문자 이스케이프 처리 / Escape pipe characters in markdown table
     let cell_content = if cell_text.is_empty() {
@@ -208,4 +272,3 @@ fn fill_cell_content(
         }
     }
 }
-

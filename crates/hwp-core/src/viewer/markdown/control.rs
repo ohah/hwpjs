@@ -1,6 +1,6 @@
 /// Control header conversion to Markdown
 /// 컨트롤 헤더를 마크다운으로 변환하는 모듈
-use crate::document::{CtrlHeader, CtrlHeaderData, CtrlId};
+use crate::document::{CtrlHeader, CtrlHeaderData, CtrlId, PageNumberPosition};
 
 /// Convert control header to markdown
 /// 컨트롤 헤더를 마크다운으로 변환
@@ -52,6 +52,36 @@ pub fn convert_control_to_markdown(header: &CtrlHeader, has_table: bool) -> Stri
         CtrlId::COLUMN_DEF => {
             // 단 정의 (Column Definition) / Column Definition
             String::from("*[단 정의]*")
+        }
+        CtrlId::PAGE_NUMBER | CtrlId::PAGE_NUMBER_POS => {
+            // 쪽 번호 위치 (Page Number Position) / Page number position
+            if let CtrlHeaderData::PageNumberPosition {
+                flags,
+                user_symbol,
+                prefix,
+                suffix,
+            } = &header.data
+            {
+                let position_str = match flags.position {
+                    PageNumberPosition::None => "없음",
+                    PageNumberPosition::TopLeft => "왼쪽 위",
+                    PageNumberPosition::TopCenter => "가운데 위",
+                    PageNumberPosition::TopRight => "오른쪽 위",
+                    PageNumberPosition::BottomLeft => "왼쪽 아래",
+                    PageNumberPosition::BottomCenter => "가운데 아래",
+                    PageNumberPosition::BottomRight => "오른쪽 아래",
+                    PageNumberPosition::OutsideTop => "바깥쪽 위",
+                    PageNumberPosition::OutsideBottom => "바깥쪽 아래",
+                    PageNumberPosition::InsideTop => "안쪽 위",
+                    PageNumberPosition::InsideBottom => "안쪽 아래",
+                };
+                format!(
+                    "*[쪽 번호 위치: {} (모양: {}, 장식: {}{})]*",
+                    position_str, flags.shape, prefix, suffix
+                )
+            } else {
+                String::from("*[쪽 번호 위치]*")
+            }
         }
         _ => {
             // 기타 컨트롤 / Other controls
