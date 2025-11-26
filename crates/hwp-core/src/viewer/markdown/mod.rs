@@ -6,7 +6,6 @@
 mod control;
 mod table;
 
-use crate::document::bodytext::ControlChar;
 use crate::document::{BinDataRecord, ColumnDivideType, HwpDocument, Paragraph, ParagraphRecord};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use std::fs;
@@ -157,6 +156,7 @@ fn convert_paragraph_to_markdown(
                 // 컨트롤 헤더의 자식 레코드 처리 (레벨 2, 예: 테이블, 그림 등) / Process control header children (level 2, e.g., table, images, etc.)
                 let mut has_table = false;
                 let mut has_image = false;
+                let mut has_content = false; // 자식 레코드에서 내용이 추출되었는지 여부 / Whether content was extracted from child records
 
                 // 먼저 표가 있는지 확인 / First check if table exists
                 for child in children.iter() {
@@ -165,6 +165,9 @@ fn convert_paragraph_to_markdown(
                         break;
                     }
                 }
+
+                // SHAPE_OBJECT인지 확인 / Check if this is SHAPE_OBJECT
+                let is_shape_object = header.ctrl_id.as_str() == crate::document::CtrlId::SHAPE_OBJECT;
 
                 // 자식 레코드 처리 / Process children
                 for child in children {
@@ -181,21 +184,39 @@ fn convert_paragraph_to_markdown(
                         ParagraphRecord::ShapeComponentPicture {
                             shape_component_picture,
                         } => {
-                            // 표 안에 이미지가 있는 경우 표 셀에 이미 포함되므로 여기서는 표시만 함
-                            // If image is in table, it's already included in table cell, so just mark it here
                             let bindata_id = shape_component_picture.picture_info.bindata_id;
-                            // 표 안에 이미지가 있는지 확인하기 위해 has_image만 설정
-                            // Only set has_image to check if image exists in table
-                            if document
+                            
+                            // BinData에서 해당 이미지 찾기 / Find image in BinData
+                            if let Some(bin_item) = document
                                 .bin_data
                                 .items
                                 .iter()
-                                .any(|item| item.index == bindata_id)
+                                .find(|item| item.index == bindata_id)
                             {
-                                has_image = true;
+                                if has_table {
+                                    // 표 안에 이미지가 있는 경우 표 셀에 이미 포함되므로 여기서는 표시만 함
+                                    // If image is in table, it's already included in table cell, so just mark it here
+                                    has_image = true;
+                                } else if is_shape_object {
+                                    // SHAPE_OBJECT의 경우 표 밖에서도 이미지를 처리
+                                    // For SHAPE_OBJECT, process image even outside table
+                                    let image_markdown = format_image_markdown(
+                                        document,
+                                        bindata_id,
+                                        &bin_item.data,
+                                        image_output_dir,
+                                    );
+                                    if !image_markdown.is_empty() {
+                                        parts.push(image_markdown);
+                                        has_image = true;
+                                        has_content = true;
+                                    }
+                                } else {
+                                    // 기타 경우에는 has_image만 설정
+                                    // For other cases, only set has_image
+                                    has_image = true;
+                                }
                             }
-                            // 표 밖에 이미지를 출력하지 않음 (표 셀에 이미 포함됨)
-                            // Don't output image outside table (already included in table cell)
                         }
                         ParagraphRecord::ListHeader { paragraphs, .. } => {
                             // ListHeader는 표 셀 내부의 문단들을 포함할 수 있음
@@ -233,12 +254,13 @@ fn convert_paragraph_to_markdown(
                                         }
                                         // 이미지가 있든 없든 마크다운 추가 / Add markdown regardless of image
                                         parts.push(para_md);
+                                        has_content = true;
                                     }
                                 }
                             }
                         }
                         ParagraphRecord::CtrlHeader {
-                            header: child_header,
+                            header: _child_header,
                             children: child_children,
                         } => {
                             // 중첩된 CtrlHeader의 자식들을 재귀적으로 처리 / Recursively process nested CtrlHeader children
@@ -280,6 +302,7 @@ fn convert_paragraph_to_markdown(
                                                     }
                                                     // 이미지가 있든 없든 마크다운 추가 / Add markdown regardless of image
                                                     parts.push(para_md);
+                                                    has_content = true;
                                                 }
                                             }
                                         }
@@ -287,22 +310,40 @@ fn convert_paragraph_to_markdown(
                                     ParagraphRecord::ShapeComponentPicture {
                                         shape_component_picture,
                                     } => {
-                                        // 표 안에 이미지가 있는 경우 표 셀에 이미 포함되므로 여기서는 표시만 함
-                                        // If image is in table, it's already included in table cell, so just mark it here
                                         let bindata_id =
                                             shape_component_picture.picture_info.bindata_id;
-                                        // 표 안에 이미지가 있는지 확인하기 위해 has_image만 설정
-                                        // Only set has_image to check if image exists in table
-                                        if document
+                                        
+                                        // BinData에서 해당 이미지 찾기 / Find image in BinData
+                                        if let Some(bin_item) = document
                                             .bin_data
                                             .items
                                             .iter()
-                                            .any(|item| item.index == bindata_id)
+                                            .find(|item| item.index == bindata_id)
                                         {
-                                            has_image = true;
+                                            if has_table {
+                                                // 표 안에 이미지가 있는 경우 표 셀에 이미 포함되므로 여기서는 표시만 함
+                                                // If image is in table, it's already included in table cell, so just mark it here
+                                                has_image = true;
+                                            } else if is_shape_object {
+                                                // SHAPE_OBJECT의 경우 표 밖에서도 이미지를 처리
+                                                // For SHAPE_OBJECT, process image even outside table
+                                                let image_markdown = format_image_markdown(
+                                                    document,
+                                                    bindata_id,
+                                                    &bin_item.data,
+                                                    image_output_dir,
+                                                );
+                                                if !image_markdown.is_empty() {
+                                                    parts.push(image_markdown);
+                                                    has_image = true;
+                                                    has_content = true;
+                                                }
+                                            } else {
+                                                // 기타 경우에는 has_image만 설정
+                                                // For other cases, only set has_image
+                                                has_image = true;
+                                            }
                                         }
-                                        // 표 밖에 이미지를 출력하지 않음 (표 셀에 이미 포함됨)
-                                        // Don't output image outside table (already included in table cell)
                                     }
                                     _ => {
                                         // 기타 자식 레코드는 무시 / Ignore other child records
@@ -316,11 +357,11 @@ fn convert_paragraph_to_markdown(
                     }
                 }
                 // Convert control header to markdown / 컨트롤 헤더를 마크다운으로 변환
-                // 표나 이미지가 이미 추출되었다면 메시지를 출력하지 않음 / Don't output message if table or image was already extracted
+                // 표나 이미지 또는 내용이 이미 추출되었다면 메시지를 출력하지 않음 / Don't output message if table, image, or content was already extracted
                 let control_md = convert_control_to_markdown(header, has_table);
                 if !control_md.is_empty() {
-                    // 이미지가 있으면 메시지 부분만 제거 / Remove message part if image exists
-                    if has_image && control_md.contains("[개체 내용은 추출되지 않았습니다]")
+                    // 내용이 추출되었으면 (이미지 또는 텍스트) 메시지 부분만 제거 / Remove message part if content was extracted (image or text)
+                    if (has_image || has_content) && control_md.contains("[개체 내용은 추출되지 않았습니다]")
                     {
                         let header_info = control_md
                             .lines()
@@ -352,20 +393,17 @@ fn convert_paragraph_to_markdown(
 fn get_mime_type_from_bindata_id(document: &HwpDocument, bindata_id: crate::types::WORD) -> String {
     // bin_data_records에서 EMBEDDING 타입의 extension 찾기 / Find extension from EMBEDDING type in bin_data_records
     for record in &document.doc_info.bin_data {
-        match record {
-            BinDataRecord::Embedding { embedding, .. } => {
-                if embedding.binary_data_id == bindata_id {
-                    return match embedding.extension.to_lowercase().as_str() {
-                        "jpg" | "jpeg" => "image/jpeg",
-                        "png" => "image/png",
-                        "gif" => "image/gif",
-                        "bmp" => "image/bmp",
-                        _ => "image/jpeg", // 기본값 / default
-                    }
-                    .to_string();
+        if let BinDataRecord::Embedding { embedding, .. } = record {
+            if embedding.binary_data_id == bindata_id {
+                return match embedding.extension.to_lowercase().as_str() {
+                    "jpg" | "jpeg" => "image/jpeg",
+                    "png" => "image/png",
+                    "gif" => "image/gif",
+                    "bmp" => "image/bmp",
+                    _ => "image/jpeg", // 기본값 / default
                 }
+                .to_string();
             }
-            _ => {}
         }
     }
     // 기본값 / default

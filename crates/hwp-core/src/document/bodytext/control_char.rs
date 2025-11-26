@@ -22,26 +22,34 @@ pub struct ControlCharPosition {
 
 /// INLINE 제어 문자 파라미터 / INLINE control character parameter
 ///
-/// 스펙 문서에 파라미터 구조가 명시되지 않았으므로 기본 바이트 배열로 저장합니다.
-/// Spec document does not specify parameter structure, so stored as raw byte array.
+/// JSON으로 표현 가능한 의미 있는 값만 저장합니다.
+/// Only stores meaningful values that can be expressed in JSON.
 ///
 /// INLINE 타입 제어 문자는 제어 문자 1 WCHAR (2 bytes) + 파라미터 6 WCHAR (12 bytes) = 총 8 WCHAR (16 bytes)
 /// INLINE type control characters: control char 1 WCHAR (2 bytes) + parameter 6 WCHAR (12 bytes) = total 8 WCHAR (16 bytes)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InlineControlParam {
-    /// 파라미터 바이트 배열 (6 WCHAR = 12 bytes) / Parameter byte array (6 WCHAR = 12 bytes)
-    pub param_bytes: [u8; 12],
+    /// TAB 제어 문자의 너비 (HWPUNIT, 1/7200인치) / Width for TAB control character (HWPUNIT, 1/7200 inch)
+    /// TAB (0x09)의 경우 첫 4바이트를 UINT32로 읽어서 저장 / For TAB (0x09), first 4 bytes read as UINT32
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub width: Option<crate::types::HWPUNIT>,
+    /// 컨트롤 ID (4바이트 ASCII 문자열) / Control ID (4-byte ASCII string)
+    /// 다른 INLINE 타입의 경우 첫 4바이트를 ASCII로 읽기 시도 / For other INLINE types, attempt to read first 4 bytes as ASCII
+    /// 스펙 문서에 명시되지 않은 식별자로, 정확한 의미는 알 수 없음 / Unspecified identifier in spec document, exact meaning is unknown
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chid: Option<String>,
 }
 
 impl InlineControlParam {
     /// INLINE 제어 문자 파라미터를 바이트 배열에서 파싱합니다. / Parse INLINE control character parameter from byte array.
     ///
     /// # Arguments
+    /// * `control_code` - 제어 문자 코드 / Control character code
     /// * `data` - 최소 12바이트의 데이터 (제어 문자 코드 이후의 데이터) / At least 12 bytes of data (data after control character code)
     ///
     /// # Returns
     /// 파싱된 InlineControlParam 구조체 / Parsed InlineControlParam structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(control_code: u8, data: &[u8]) -> Result<Self, String> {
         if data.len() < 12 {
             return Err(format!(
                 "InlineControlParam must be at least 12 bytes, got {} bytes",
@@ -49,10 +57,39 @@ impl InlineControlParam {
             ));
         }
 
-        let mut param_bytes = [0u8; 12];
-        param_bytes.copy_from_slice(&data[0..12]);
+        let mut param = InlineControlParam {
+            width: None,
+            chid: None,
+        };
 
-        Ok(InlineControlParam { param_bytes })
+        if control_code == ControlChar::TAB {
+            // TAB의 경우: 첫 4바이트를 UINT32로 읽어서 width로 저장
+            // For TAB: read first 4 bytes as UINT32 and store as width
+            use crate::types::UINT32;
+            let width_value = UINT32::from_le_bytes([data[0], data[1], data[2], data[3]]);
+            param.width = Some(crate::types::HWPUNIT::from(width_value));
+        } else {
+            // 다른 INLINE 타입의 경우: 첫 4바이트를 ASCII 문자열로 읽기 시도
+            // For other INLINE types: attempt to read first 4 bytes as ASCII string
+            // 스펙 문서에 파라미터 구조가 명시되지 않아 정확한 의미를 알 수 없는 식별자
+            // Parameter structure not specified in spec document, exact meaning of identifier is unknown
+            let chid_bytes = &data[0..4];
+            // ASCII로 읽을 수 있는지 확인 (모든 바이트가 0x20-0x7E 범위이거나 0x00)
+            // Check if can be read as ASCII (all bytes in range 0x20-0x7E or 0x00)
+            if chid_bytes
+                .iter()
+                .all(|&b| b == 0 || (b >= 0x20 && b <= 0x7E))
+            {
+                let chid_str = String::from_utf8_lossy(chid_bytes)
+                    .trim_end_matches('\0')
+                    .to_string();
+                if !chid_str.is_empty() {
+                    param.chid = Some(chid_str);
+                }
+            }
+        }
+
+        Ok(param)
     }
 }
 

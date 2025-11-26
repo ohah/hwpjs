@@ -400,7 +400,7 @@ impl Section {
                             if idx + 2 + 12 <= data.len() {
                                 let param_data = &data[idx + 2..idx + 2 + 12];
                                 if let Ok(param) =
-                                    crate::document::bodytext::control_char::InlineControlParam::parse(param_data)
+                                    crate::document::bodytext::control_char::InlineControlParam::parse(control_code, param_data)
                                 {
                                     inline_control_params.push((char_idx, param));
                                 }

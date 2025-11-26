@@ -353,9 +353,63 @@ Rust에서는 `Vec<u8>` 또는 `&[u8]`로 표현됩니다.
 }
 ```
 
+## 제어 문자 파라미터
+
+### InlineControlParam
+
+INLINE 타입 제어 문자는 제어 문자 코드(2 bytes) 이후에 12 bytes의 파라미터 데이터를 가집니다. 이 파라미터는 제어 문자 타입에 따라 다른 의미를 가집니다.
+
+**스펙 문서 매핑**: 표 6 - 제어 문자 (INLINE 타입)
+
+**구조**:
+```rust
+pub struct InlineControlParam {
+    pub width: Option<HWPUNIT>,  // TAB 제어 문자용
+    pub chid: Option<String>,    // 기타 INLINE 제어 문자용
+}
+```
+
+#### `width: Option<HWPUNIT>`
+
+- **제어 문자**: `TAB` (0x09)
+- **설명**: 탭의 너비를 1/7200인치 단위로 표현
+- **파싱**: 파라미터의 첫 4바이트를 UINT32로 읽어서 HWPUNIT으로 변환
+- **JSON 예시**:
+```json
+{
+  "inline_control_params": [
+    [16, { "width": 4000 }]
+  ]
+}
+```
+
+#### `chid: Option<String>`
+
+- **제어 문자**: `FIELD_END` (0x04), `TITLE_MARK` (0x08), 기타 INLINE 타입
+- **설명**: 스펙 문서에 명시되지 않은 식별자. 정확한 의미는 알 수 없음
+- **파싱**: 파라미터의 첫 4바이트를 ASCII 문자열로 읽기 시도 (0x20-0x7E 범위의 바이트만 허용)
+- **주의사항**: 
+  - 스펙 문서에 파라미터 구조가 명시되지 않아 정확한 의미를 알 수 없음
+  - ASCII로 읽을 수 있는 경우에만 `chid` 값이 설정됨
+  - 바이너리 데이터는 JSON으로 표현할 수 없으므로 저장하지 않음
+- **JSON 예시**:
+```json
+{
+  "inline_control_params": [
+    [65, { "chid": "klh" }]
+  ]
+}
+```
+
+**참고**:
+- JSON으로 표현 가능한 의미 있는 값만 저장됩니다
+- 바이너리 데이터는 저장하지 않습니다
+- `width`와 `chid`는 제어 문자 타입에 따라 하나만 설정됩니다
+
 ## 참고
 
 - **스펙 문서**: [HWP 5.0 명세서 - 표 1: 자료형](../spec/hwp-5.0.md#2-자료형-설명)
 - **소스 코드**: `crates/hwp-core/src/types.rs`
 - **플래그 상수**: `crates/hwp-core/src/fileheader.rs`의 `document_flags`, `license_flags` 모듈
+- **제어 문자**: `crates/hwp-core/src/document/bodytext/control_char.rs`
 
