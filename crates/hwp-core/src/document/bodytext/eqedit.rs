@@ -90,7 +90,9 @@ impl EqEdit {
         if data.len() < required_bytes {
             return Err(format!(
                 "EqEdit must be at least {} bytes for script length {}, got {} bytes",
-                required_bytes, script_length_usize, data.len()
+                required_bytes,
+                script_length_usize,
+                data.len()
             ));
         }
 
@@ -145,4 +147,3 @@ impl EqEdit {
         })
     }
 }
-

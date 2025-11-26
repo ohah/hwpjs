@@ -4,4 +4,3 @@
 
 /// 데이터 레코드 시작 값 / Data record start value
 pub const HWPTAG_BEGIN: u16 = 0x10;
-

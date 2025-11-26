@@ -31,4 +31,3 @@ impl DistributeDocData {
         Ok(DistributeDocData { data: doc_data })
     }
 }
-

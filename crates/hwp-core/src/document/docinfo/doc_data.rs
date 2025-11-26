@@ -219,10 +219,10 @@ impl ParameterItem {
             _ => {
                 // 스펙 문서(표 52)에 명시되지 않은 알 수 없는 타입
                 // Unknown type not specified in spec (Table 52)
-                // 
+                //
                 // 이유: 스펙 문서 표 52에는 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0x8000, 0x8001, 0x8002만 정의되어 있음
                 // Reason: Spec document Table 52 only defines 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0x8000, 0x8001, 0x8002
-                // 
+                //
                 // 실제 파일에서 발견된 타입(예: 519 = 0x0207)은 스펙 문서에 없으므로
                 // 데이터 크기를 알 수 없어 파싱할 수 없음
                 // Types found in actual files (e.g., 519 = 0x0207) are not in spec,

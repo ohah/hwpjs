@@ -3,7 +3,6 @@
 /// 스펙 문서 매핑: 표 36 - 탭 정의 / Spec mapping: Table 36 - Tab definition
 /// Tag ID: HWPTAG_TAB_DEF
 /// 전체 길이: 가변 (8 + 8×count 바이트) / Total length: variable (8 + 8×count bytes)
-
 use crate::types::{HWPUNIT, INT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
@@ -146,4 +145,3 @@ impl TabDef {
         })
     }
 }
-

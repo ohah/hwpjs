@@ -2,9 +2,8 @@
 ///
 /// This module handles parsing of HWP FileHeader structure.
 /// According to HWP 5.0 spec, FileHeader is 256 bytes.
-/// 
+///
 /// 스펙 문서 매핑: 표 2 - 파일 인식 정보 (FileHeader 스트림)
-
 use crate::types::{BYTE, DWORD};
 use serde::{Deserialize, Serialize};
 
@@ -122,4 +121,3 @@ impl FileHeader {
         format!("{}.{}.{}.{}", major, minor, patch, revision)
     }
 }
-

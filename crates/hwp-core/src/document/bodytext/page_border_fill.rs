@@ -152,4 +152,3 @@ fn parse_page_border_fill_attributes(value: UINT32) -> PageBorderFillAttributes 
         fill_area,
     }
 }
-

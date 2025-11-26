@@ -18,6 +18,8 @@
     "test:mobile:e2e": "maestro test packages/react-native/.maestro",
     "lint": "oxlint .",
     "format": "oxfmt .",
+    "format:rust": "cargo fmt --all",
+    "format:rust:check": "cargo fmt --all -- --check",
     "build": "bun run --filter=@ohah/hwpjs build && bun run --filter=@ohah/hwpjs build && bun run --filter=@hwpjs/react-native build",
     "build:docs": "bun run --filter=@hwpjs/docs build",
     "build:node": "bun run --filter=@ohah/hwpjs build",

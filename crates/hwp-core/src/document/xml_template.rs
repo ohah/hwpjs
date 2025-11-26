@@ -180,4 +180,3 @@ impl XmlTemplate {
         }
     }
 }
-

@@ -69,7 +69,9 @@ impl ShapeComponentContainer {
         if data.len() < required_bytes {
             return Err(format!(
                 "ShapeComponentContainer must be at least {} bytes for {} objects, got {} bytes",
-                required_bytes, object_count_usize, data.len()
+                required_bytes,
+                object_count_usize,
+                data.len()
             ));
         }
 
@@ -92,4 +94,3 @@ impl ShapeComponentContainer {
         })
     }
 }
-

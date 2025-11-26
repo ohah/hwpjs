@@ -73,12 +73,8 @@ impl PreviewImage {
             let file_name = format!("preview_image.{}", extension);
             let file_path = Path::new(dir_path).join(&file_name);
 
-            std::fs::create_dir_all(dir_path).map_err(|e| {
-                format!(
-                    "Failed to create directory '{}': {}",
-                    dir_path, e
-                )
-            })?;
+            std::fs::create_dir_all(dir_path)
+                .map_err(|e| format!("Failed to create directory '{}': {}", dir_path, e))?;
 
             std::fs::write(&file_path, data).map_err(|e| {
                 format!(
@@ -100,4 +96,3 @@ impl PreviewImage {
         })
     }
 }
-

@@ -3,7 +3,6 @@
 /// 스펙 문서 매핑: 표 42 - 글머리표 / Spec mapping: Table 42 - Bullet
 /// Tag ID: HWPTAG_BULLET
 /// 전체 길이: 20바이트 (표 42) 또는 가변 (레거시 코드 기준) / Total length: 20 bytes (Table 42) or variable (legacy code)
-
 use crate::types::{BYTE, HWPUNIT16, INT32, UINT32, WCHAR};
 use serde::{Deserialize, Serialize};
 
@@ -203,4 +202,3 @@ impl Bullet {
         })
     }
 }
-

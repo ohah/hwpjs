@@ -55,5 +55,3 @@ impl CompatibleDocument {
         Ok(CompatibleDocument { target_program })
     }
 }
-
-

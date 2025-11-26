@@ -35,4 +35,3 @@ impl PreviewText {
         Ok(PreviewText { text })
     }
 }
-

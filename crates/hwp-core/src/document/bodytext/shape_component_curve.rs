@@ -82,7 +82,9 @@ impl ShapeComponentCurve {
         if data.len() < required_bytes {
             return Err(format!(
                 "ShapeComponentCurve must be at least {} bytes for {} points, got {} bytes",
-                required_bytes, point_count_usize, data.len()
+                required_bytes,
+                point_count_usize,
+                data.len()
             ));
         }
 
@@ -127,4 +129,3 @@ impl ShapeComponentCurve {
         })
     }
 }
-

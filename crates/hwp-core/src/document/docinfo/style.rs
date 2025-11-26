@@ -3,7 +3,6 @@
 /// 스펙 문서 매핑: 표 47 - 스타일 / Spec mapping: Table 47 - Style
 /// Tag ID: HWPTAG_STYLE
 /// 전체 길이: 가변 (12 + 2×len1 + 2×len2 바이트) / Total length: variable (12 + 2×len1 + 2×len2 bytes)
-
 use crate::types::{decode_utf16le, BYTE, INT16, UINT16, WORD};
 use serde::{Deserialize, Serialize};
 
@@ -182,4 +181,3 @@ impl Style {
         })
     }
 }
-

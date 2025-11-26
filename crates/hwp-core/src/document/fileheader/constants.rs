@@ -1,5 +1,5 @@
 /// Document flag constants
-/// 
+///
 /// 스펙 문서 매핑: 표 3 - 속성 (첫 번째 DWORD)
 pub mod document_flags {
     /// Bit 0: 압축 여부
@@ -41,7 +41,7 @@ pub mod document_flags {
 }
 
 /// License flag constants
-/// 
+///
 /// 스펙 문서 매핑: 표 3 - 속성 (두 번째 DWORD)
 pub mod license_flags {
     /// Bit 0: CCL, 공공누리 라이선스 정보
@@ -51,4 +51,3 @@ pub mod license_flags {
     /// Bit 2: 동일 조건 하에 복제 허가 여부 (복제 제한인 경우 무시)
     pub const COPY_ALLOWED_SAME_CONDITION: &str = "copy_allowed_same_condition";
 }
-
