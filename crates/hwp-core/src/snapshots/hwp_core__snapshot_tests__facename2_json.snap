@@ -1173,18 +1173,21 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    59,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 59,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1378,10 +1381,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko한컴돋움 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕\n",
                 "control_char_positions": [
-                  [
-                    45,
-                    13
-                  ]
+                  {
+                    "position": 45,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1438,10 +1442,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕 enTimesNewRoman cn바탕 jp바탕 other바탕 symbol바탕 user바탕\n",
                 "control_char_positions": [
-                  [
-                    54,
-                    13
-                  ]
+                  {
+                    "position": 54,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1498,10 +1503,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕 enArial cn바탕 jp바탕 other바탕 symbol바탕 user바탕\n",
                 "control_char_positions": [
-                  [
-                    46,
-                    13
-                  ]
+                  {
+                    "position": 46,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1558,10 +1564,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕 en바탕 cn약자漢字 jp바탕 other바탕 symbol바탕 user바탕\n",
                 "control_char_positions": [
-                  [
-                    45,
-                    13
-                  ]
+                  {
+                    "position": 45,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1618,10 +1625,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕 en바탕 cn간자漢字 jp바탕 other바탕 symbol바탕 user바탕\n",
                 "control_char_positions": [
-                  [
-                    45,
-                    13
-                  ]
+                  {
+                    "position": 45,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1678,10 +1686,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕 en바탕 cn바탕 jp명조あ other바탕 symbol바탕 user바탕\n",
                 "control_char_positions": [
-                  [
-                    44,
-                    13
-                  ]
+                  {
+                    "position": 44,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1738,10 +1747,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕 en바탕 cn바탕 jp고딕あ other바탕 symbol바탕 user바탕\n",
                 "control_char_positions": [
-                  [
-                    44,
-                    13
-                  ]
+                  {
+                    "position": 44,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

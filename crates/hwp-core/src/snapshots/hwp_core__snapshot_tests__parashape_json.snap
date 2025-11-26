@@ -1707,18 +1707,21 @@ expression: json
                 "type": "para_text",
                 "text": "문단1\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    19,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 19,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1912,10 +1915,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단2\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1972,10 +1976,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단3 - 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt\n",
                 "control_char_positions": [
-                  [
-                    75,
-                    13
-                  ]
+                  {
+                    "position": 75,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2052,10 +2057,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단4 - 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt\n",
                 "control_char_positions": [
-                  [
-                    75,
-                    13
-                  ]
+                  {
+                    "position": 75,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2132,10 +2138,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단 5\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2192,10 +2199,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단 6\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2252,10 +2260,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단 7\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2312,10 +2321,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단 8\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2372,10 +2382,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단 9\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

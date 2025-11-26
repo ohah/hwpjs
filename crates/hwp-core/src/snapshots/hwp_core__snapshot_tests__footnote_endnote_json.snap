@@ -1395,26 +1395,31 @@ expression: json
                 "type": "para_text",
                 "text": "각주참조\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    20,
-                    17
-                  ],
-                  [
-                    28,
-                    17
-                  ],
-                  [
-                    36,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 20,
+                    "code": 17,
+                    "name": "FOOTNOTE"
+                  },
+                  {
+                    "position": 28,
+                    "code": 17,
+                    "name": "FOOTNOTE"
+                  },
+                  {
+                    "position": 36,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1623,14 +1628,16 @@ expression: json
                             "type": "para_text",
                             "text": " 각주입니다.\n",
                             "control_char_positions": [
-                              [
-                                0,
-                                18
-                              ],
-                              [
-                                15,
-                                13
-                              ]
+                              {
+                                "position": 0,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 15,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -1718,14 +1725,16 @@ expression: json
                             "type": "para_text",
                             "text": " 각주입니다.\n",
                             "control_char_positions": [
-                              [
-                                0,
-                                18
-                              ],
-                              [
-                                15,
-                                13
-                              ]
+                              {
+                                "position": 0,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 15,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -1798,18 +1807,21 @@ expression: json
                 "type": "para_text",
                 "text": "미주참조\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    17
-                  ],
-                  [
-                    12,
-                    17
-                  ],
-                  [
-                    20,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 17,
+                    "name": "FOOTNOTE"
+                  },
+                  {
+                    "position": 12,
+                    "code": 17,
+                    "name": "FOOTNOTE"
+                  },
+                  {
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1881,14 +1893,16 @@ expression: json
                             "type": "para_text",
                             "text": " 각주입니다.\n",
                             "control_char_positions": [
-                              [
-                                0,
-                                18
-                              ],
-                              [
-                                15,
-                                13
-                              ]
+                              {
+                                "position": 0,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 15,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -1976,14 +1990,16 @@ expression: json
                             "type": "para_text",
                             "text": " 각주입니다.\n",
                             "control_char_positions": [
-                              [
-                                0,
-                                18
-                              ],
-                              [
-                                15,
-                                13
-                              ]
+                              {
+                                "position": 0,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 15,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {

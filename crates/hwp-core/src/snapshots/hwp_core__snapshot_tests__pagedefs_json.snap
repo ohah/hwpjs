@@ -1438,18 +1438,21 @@ expression: json
                 "type": "para_text",
                 "text": "Section 1: A4 portrait\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    38,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 38,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1651,18 +1654,21 @@ expression: json
                 "type": "para_text",
                 "text": "Section 2: A4 landscape\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    39,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 39,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

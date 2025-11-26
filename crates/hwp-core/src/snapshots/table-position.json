@@ -1510,18 +1510,21 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    16,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1715,14 +1718,16 @@
                 "type": "para_text",
                 "text": "전후\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    11
-                  ],
-                  [
-                    10,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 10,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1864,14 +1869,16 @@
                             "type": "para_text",
                             "text": "표  여백 0mm, 글자처럼 취급\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                26,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 26,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -2542,14 +2549,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2651,14 +2660,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3327,14 +3338,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3436,14 +3449,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -4112,14 +4127,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4221,14 +4238,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -4897,14 +4916,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5006,14 +5027,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -5684,14 +5707,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5793,14 +5818,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -6469,14 +6496,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6578,14 +6607,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -7254,14 +7285,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7363,14 +7396,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -8039,14 +8074,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -8148,14 +8185,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -8826,14 +8865,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -8935,14 +8976,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -9611,14 +9654,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -9720,14 +9765,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -10396,14 +10443,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -10505,14 +10554,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -11181,14 +11232,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -11290,14 +11343,16 @@
                             "type": "para_text",
                             "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                31,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 31,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {

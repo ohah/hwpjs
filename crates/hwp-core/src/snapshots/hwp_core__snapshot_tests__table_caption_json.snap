@@ -1476,22 +1476,26 @@ expression: json
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    16,
-                    11
-                  ],
-                  [
-                    24,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 16,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 24,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1730,14 +1734,16 @@ expression: json
                             "type": "para_text",
                             "text": "표  위 캡션\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                15,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 15,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -1979,14 +1985,16 @@ expression: json
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2088,14 +2096,16 @@ expression: json
                             "type": "para_text",
                             "text": "표  아래 캡션\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                16,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 16,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -2337,14 +2347,16 @@ expression: json
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2446,14 +2458,16 @@ expression: json
                             "type": "para_text",
                             "text": "표  왼쪽\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                13,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 13,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -2695,14 +2709,16 @@ expression: json
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2804,14 +2820,16 @@ expression: json
                             "type": "para_text",
                             "text": "표  오른쪽\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                14,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 14,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3053,14 +3071,16 @@ expression: json
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3162,14 +3182,16 @@ expression: json
                             "type": "para_text",
                             "text": "표  왼쪽 위\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                15,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 15,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3411,14 +3433,16 @@ expression: json
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3520,14 +3544,16 @@ expression: json
                             "type": "para_text",
                             "text": "표  오른쪽 아래\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                17,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 17,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3769,18 +3795,21 @@ expression: json
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    11
-                  ],
-                  [
-                    16,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3882,14 +3911,16 @@ expression: json
                             "type": "para_text",
                             "text": "표  여백까지 확대\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                18,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 18,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3952,10 +3983,11 @@ expression: json
                             "type": "para_text",
                             "text": "------------------------------------------\n",
                             "control_char_positions": [
-                              [
-                                42,
-                                13
-                              ]
+                              {
+                                "position": 42,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -4240,14 +4272,16 @@ expression: json
                             "type": "para_text",
                             "text": "표  한 줄로 입력\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                18,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 18,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -4310,10 +4344,11 @@ expression: json
                             "type": "para_text",
                             "text": "------------------------------------------\n",
                             "control_char_positions": [
-                              [
-                                42,
-                                13
-                              ]
+                              {
+                                "position": 42,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {

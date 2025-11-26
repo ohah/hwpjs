@@ -1541,26 +1541,31 @@ expression: json
                 "type": "para_text",
                 "text": "google google google google google google\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    16,
-                    3
-                  ],
-                  [
-                    65,
-                    4
-                  ],
-                  [
-                    73,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 16,
+                    "code": 3,
+                    "name": "RESERVED_3"
+                  },
+                  {
+                    "position": 65,
+                    "code": 4,
+                    "name": "FIELD_END"
+                  },
+                  {
+                    "position": 73,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ],
                 "inline_control_params": [
                   [
@@ -1809,14 +1814,16 @@ expression: json
                 "type": "para_text",
                 "text": "gmail gmail gmail gmail gmail gmail\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    3
-                  ],
-                  [
-                    43,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 3,
+                    "name": "RESERVED_3"
+                  },
+                  {
+                    "position": 43,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1903,14 +1910,16 @@ expression: json
                 "type": "para_text",
                 "text": "gmaile\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    4
-                  ],
-                  [
-                    14,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 4,
+                    "name": "FIELD_END"
+                  },
+                  {
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ],
                 "inline_control_params": [
                   [

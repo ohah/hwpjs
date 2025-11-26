@@ -1404,18 +1404,21 @@ expression: json
                 "type": "para_text",
                 "text": "첫 페이지\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    21,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 21,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1609,18 +1612,21 @@ expression: json
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    16
-                  ],
-                  [
-                    8,
-                    16
-                  ],
-                  [
-                    16,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 16,
+                    "name": "HEADER_FOOTER"
+                  },
+                  {
+                    "position": 8,
+                    "code": 16,
+                    "name": "HEADER_FOOTER"
+                  },
+                  {
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1692,14 +1698,16 @@ expression: json
                             "type": "para_text",
                             "text": "Header 이것은 머리말입니다.\n",
                             "control_char_positions": [
-                              [
-                                17,
-                                18
-                              ],
-                              [
-                                26,
-                                13
-                              ]
+                              {
+                                "position": 17,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 26,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -1787,10 +1795,11 @@ expression: json
                             "type": "para_text",
                             "text": "Footer 이것은 꼬리말입니다.\n",
                             "control_char_positions": [
-                              [
-                                18,
-                                13
-                              ]
+                              {
+                                "position": 18,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {

@@ -1726,18 +1726,21 @@
                 "type": "para_text",
                 "text": "첫페이지 첫 문단: 1단\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    29,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 29,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1933,14 +1936,16 @@
                 "type": "para_text",
                 "text": "2단 2단 2단 2단 2단 2단 2단 2단 2단\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    34,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 34,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2179,10 +2184,11 @@
                 "type": "para_text",
                 "text": "2단 2단 2단\n",
                 "control_char_positions": [
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2281,14 +2287,16 @@
                 "type": "para_text",
                 "text": "3단 3단 3단 3단  3단  3단  3단 3단 3단 3단 3단 \n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    44,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 44,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2551,10 +2559,11 @@
                 "type": "para_text",
                 "text": "3단 3단\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2631,10 +2640,11 @@
                 "type": "para_text",
                 "text": "3단 3단 3단\n",
                 "control_char_positions": [
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2734,14 +2744,16 @@
                 "type": "para_text",
                 "text": "두 번 째 페이지: 새 쪽으로 2 단\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    28,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 28,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2854,10 +2866,11 @@
                 "type": "para_text",
                 "text": "다단다단다단다단다단다단다단\n",
                 "control_char_positions": [
-                  [
-                    14,
-                    13
-                  ]
+                  {
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3034,18 +3047,21 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    11
-                  ],
-                  [
-                    16,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3267,14 +3283,16 @@
                             "type": "para_text",
                             "text": "표 셀 안의 다단\n",
                             "control_char_positions": [
-                              [
-                                0,
-                                2
-                              ],
-                              [
-                                17,
-                                13
-                              ]
+                              {
+                                "position": 0,
+                                "code": 2,
+                                "name": "RESERVED_2"
+                              },
+                              {
+                                "position": 17,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3337,10 +3355,11 @@
                             "type": "para_text",
                             "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀\n",
                             "control_char_positions": [
-                              [
-                                67,
-                                13
-                              ]
+                              {
+                                "position": 67,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3610,14 +3629,16 @@
                                   "type": "para_text",
                                   "text": "표 셀 안의 다단\n",
                                   "control_char_positions": [
-                                    [
-                                      0,
-                                      2
-                                    ],
-                                    [
-                                      17,
-                                      13
-                                    ]
+                                    {
+                                      "position": 0,
+                                      "code": 2,
+                                      "name": "RESERVED_2"
+                                    },
+                                    {
+                                      "position": 17,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -3680,10 +3701,11 @@
                                   "type": "para_text",
                                   "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀\n",
                                   "control_char_positions": [
-                                    [
-                                      67,
-                                      13
-                                    ]
+                                    {
+                                      "position": 67,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {

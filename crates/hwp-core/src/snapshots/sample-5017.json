@@ -2129,18 +2129,21 @@
                 "type": "para_text",
                 "text": "한글 2005 예제 파일입니다.\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    33,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 33,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2400,10 +2403,11 @@
                 "type": "para_text",
                 "text": "머리말입니다\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2510,10 +2514,11 @@
                 "type": "para_text",
                 "text": "본문 내용입니다. 본 문서는 글 워드 프로세서의 파일 저장 형식 중, 글 2002 이후 제품에서 사용되는 글 문서 파일 형식 5.0 및 글 97 문서 파일 형식, HWPML에 관하여 설명한다.\n",
                 "control_char_positions": [
-                  [
-                    111,
-                    13
-                  ]
+                  {
+                    "position": 111,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2618,18 +2623,21 @@
                 "type": "para_text",
                 "text": "표표끝\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    11
-                  ],
-                  [
-                    11,
-                    11
-                  ],
-                  [
-                    19,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 11,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 19,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2795,10 +2803,11 @@
                             "type": "para_text",
                             "text": "A0\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -2872,10 +2881,11 @@
                             "type": "para_text",
                             "text": "B0\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -2949,10 +2959,11 @@
                             "type": "para_text",
                             "text": "A1\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3026,10 +3037,11 @@
                             "type": "para_text",
                             "text": "B10\n",
                             "control_char_positions": [
-                              [
-                                3,
-                                13
-                              ]
+                              {
+                                "position": 3,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3086,10 +3098,11 @@
                             "type": "para_text",
                             "text": "B11\n",
                             "control_char_positions": [
-                              [
-                                3,
-                                13
-                              ]
+                              {
+                                "position": 3,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3204,10 +3217,11 @@
                                   "type": "para_text",
                                   "text": "A0\n",
                                   "control_char_positions": [
-                                    [
-                                      2,
-                                      13
-                                    ]
+                                    {
+                                      "position": 2,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -3289,10 +3303,11 @@
                                   "type": "para_text",
                                   "text": "B0\n",
                                   "control_char_positions": [
-                                    [
-                                      2,
-                                      13
-                                    ]
+                                    {
+                                      "position": 2,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -3374,10 +3389,11 @@
                                   "type": "para_text",
                                   "text": "A1\n",
                                   "control_char_positions": [
-                                    [
-                                      2,
-                                      13
-                                    ]
+                                    {
+                                      "position": 2,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -3459,10 +3475,11 @@
                                   "type": "para_text",
                                   "text": "B10\n",
                                   "control_char_positions": [
-                                    [
-                                      3,
-                                      13
-                                    ]
+                                    {
+                                      "position": 3,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -3519,10 +3536,11 @@
                                   "type": "para_text",
                                   "text": "B11\n",
                                   "control_char_positions": [
-                                    [
-                                      3,
-                                      13
-                                    ]
+                                    {
+                                      "position": 3,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -3633,10 +3651,11 @@
                             "type": "para_text",
                             "text": "table2\n",
                             "control_char_positions": [
-                              [
-                                6,
-                                13
-                              ]
+                              {
+                                "position": 6,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3746,10 +3765,11 @@
                                   "type": "para_text",
                                   "text": "table2\n",
                                   "control_char_positions": [
-                                    [
-                                      6,
-                                      13
-                                    ]
+                                    {
+                                      "position": 6,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -3815,14 +3835,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3924,14 +3946,16 @@
                             "type": "para_text",
                             "text": "표  2x2짜리표\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                18
-                              ],
-                              [
-                                17,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 18,
+                                "name": "AUTO_NUMBER"
+                              },
+                              {
+                                "position": 17,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -3994,10 +4018,11 @@
                             "type": "para_text",
                             "text": "가나다\n",
                             "control_char_positions": [
-                              [
-                                3,
-                                13
-                              ]
+                              {
+                                "position": 3,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -4075,10 +4100,11 @@
                             "type": "para_text",
                             "text": "A0\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -4390,10 +4416,11 @@
                                   "type": "para_text",
                                   "text": "A0\n",
                                   "control_char_positions": [
-                                    [
-                                      2,
-                                      13
-                                    ]
+                                    {
+                                      "position": 2,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -4684,10 +4711,11 @@
                 "type": "para_text",
                 "text": "다음 문단\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4794,10 +4822,11 @@
                 "type": "para_text",
                 "text": "본 문서는 먼저 글 문서 파일 형식 5.0에 관하여 설명한 후, 글 97 문서 파일 형식, HWPML에 관하여 설명한다. 각 형식에 대한 설명은 문서 파일 형식 내의 주요한 자료 형식 및 파일 구조, 레코드 구조에 대해서 설명한다.\n",
                 "control_char_positions": [
-                  [
-                    131,
-                    13
-                  ]
+                  {
+                    "position": 131,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4902,14 +4931,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5064,10 +5095,11 @@
                 "type": "para_text",
                 "text": "미주입니다.\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5124,10 +5156,11 @@
                 "type": "para_text",
                 "text": "이건 각주이지요.\n",
                 "control_char_positions": [
-                  [
-                    9,
-                    13
-                  ]
+                  {
+                    "position": 9,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5186,14 +5219,16 @@
                 "type": "para_text",
                 "text": "다음 페이지\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    11
-                  ],
-                  [
-                    14,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

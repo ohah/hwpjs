@@ -1938,18 +1938,21 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    20,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2143,10 +2146,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2203,10 +2207,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2263,10 +2268,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2373,10 +2379,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표 두 번째\n",
                 "control_char_positions": [
-                  [
-                    9,
-                    13
-                  ]
+                  {
+                    "position": 9,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2433,10 +2440,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2493,10 +2501,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2553,10 +2562,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2663,10 +2673,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단번호\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2723,10 +2734,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2783,10 +2795,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2843,10 +2856,11 @@ expression: json
                 "type": "para_text",
                 "text": "2-1\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2903,10 +2917,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2963,10 +2978,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-1\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3023,10 +3039,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3083,10 +3100,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-1\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3143,10 +3161,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-2\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3203,10 +3222,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-3\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3263,10 +3283,11 @@ expression: json
                 "type": "para_text",
                 "text": "4\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3373,10 +3394,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단번호 두 번째 (번호 이어짐)\n",
                 "control_char_positions": [
-                  [
-                    18,
-                    13
-                  ]
+                  {
+                    "position": 18,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3433,10 +3455,11 @@ expression: json
                 "type": "para_text",
                 "text": "5\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3493,10 +3516,11 @@ expression: json
                 "type": "para_text",
                 "text": "5-1\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3603,10 +3627,11 @@ expression: json
                 "type": "para_text",
                 "text": "문단번호 세 번째 (새 번호)\n",
                 "control_char_positions": [
-                  [
-                    16,
-                    13
-                  ]
+                  {
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3663,10 +3688,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3723,10 +3749,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3783,10 +3810,11 @@ expression: json
                 "type": "para_text",
                 "text": "2-1\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3843,10 +3871,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3903,10 +3932,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-1\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3963,10 +3993,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4023,10 +4054,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-1\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4083,10 +4115,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-2\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4143,10 +4176,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-3\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4203,10 +4237,11 @@ expression: json
                 "type": "para_text",
                 "text": "4\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4265,10 +4300,11 @@ expression: json
                 "type": "para_text",
                 "text": "개요\n",
                 "control_char_positions": [
-                  [
-                    2,
-                    13
-                  ]
+                  {
+                    "position": 2,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4325,10 +4361,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4385,10 +4422,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4445,10 +4483,11 @@ expression: json
                 "type": "para_text",
                 "text": "2-1\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4505,10 +4544,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4565,10 +4605,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-1\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4625,10 +4666,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4685,10 +4727,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-1\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4745,10 +4788,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-2\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4805,10 +4849,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-3\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4865,10 +4910,11 @@ expression: json
                 "type": "para_text",
                 "text": "4\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4975,10 +5021,11 @@ expression: json
                 "type": "para_text",
                 "text": "개요 두 번째 (번호 이어짐)\n",
                 "control_char_positions": [
-                  [
-                    16,
-                    13
-                  ]
+                  {
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5035,10 +5082,11 @@ expression: json
                 "type": "para_text",
                 "text": "5\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5095,10 +5143,11 @@ expression: json
                 "type": "para_text",
                 "text": "5-1\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5205,10 +5254,11 @@ expression: json
                 "type": "para_text",
                 "text": "개요 세 번째 (새 번호)\n",
                 "control_char_positions": [
-                  [
-                    14,
-                    13
-                  ]
+                  {
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5273,18 +5323,21 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    17,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 17,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5478,10 +5531,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5538,10 +5592,11 @@ expression: json
                 "type": "para_text",
                 "text": "2-1\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5598,10 +5653,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5658,10 +5714,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-1\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5718,10 +5775,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2\n",
                 "control_char_positions": [
-                  [
-                    3,
-                    13
-                  ]
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5778,10 +5836,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-1\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5838,10 +5897,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-2\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5898,10 +5958,11 @@ expression: json
                 "type": "para_text",
                 "text": "3-2-3\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5958,10 +6019,11 @@ expression: json
                 "type": "para_text",
                 "text": "4\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

@@ -1964,18 +1964,21 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    31,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 31,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2169,10 +2172,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2233,10 +2237,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 글자에 따라 150%\n",
                 "control_char_positions": [
-                  [
-                    14,
-                    13
-                  ]
+                  {
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2293,10 +2298,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2357,10 +2363,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 고정 값 15pt\n",
                 "control_char_positions": [
-                  [
-                    12,
-                    13
-                  ]
+                  {
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2417,10 +2424,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2481,10 +2489,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 여백만 지정 5pt\n",
                 "control_char_positions": [
-                  [
-                    13,
-                    13
-                  ]
+                  {
+                    "position": 13,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2541,10 +2550,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2605,10 +2615,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 글자에 따라 100%\n",
                 "control_char_positions": [
-                  [
-                    14,
-                    13
-                  ]
+                  {
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2665,10 +2676,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2729,10 +2741,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 고정 값 10pt\n",
                 "control_char_positions": [
-                  [
-                    12,
-                    13
-                  ]
+                  {
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2789,10 +2802,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2853,10 +2867,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 여백만 지정 0pt\n",
                 "control_char_positions": [
-                  [
-                    13,
-                    13
-                  ]
+                  {
+                    "position": 13,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2913,10 +2928,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2977,10 +2993,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 글자에 따라 200%\n",
                 "control_char_positions": [
-                  [
-                    14,
-                    13
-                  ]
+                  {
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3037,10 +3054,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3101,10 +3119,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 고정 값 20pt\n",
                 "control_char_positions": [
-                  [
-                    12,
-                    13
-                  ]
+                  {
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3161,10 +3180,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3225,10 +3245,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 여백만 지정 10pt\n",
                 "control_char_positions": [
-                  [
-                    14,
-                    13
-                  ]
+                  {
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3285,10 +3306,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3349,10 +3371,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 글자에 따라 100%\n",
                 "control_char_positions": [
-                  [
-                    14,
-                    13
-                  ]
+                  {
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3413,10 +3436,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3477,10 +3501,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 고정 값 0pt\n",
                 "control_char_positions": [
-                  [
-                    11,
-                    13
-                  ]
+                  {
+                    "position": 11,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3541,10 +3566,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3605,10 +3631,11 @@ expression: json
                 "type": "para_text",
                 "text": "|H 여백만 지정 0pt\n",
                 "control_char_positions": [
-                  [
-                    13,
-                    13
-                  ]
+                  {
+                    "position": 13,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3669,10 +3696,11 @@ expression: json
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH\n",
                 "control_char_positions": [
-                  [
-                    15,
-                    13
-                  ]
+                  {
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

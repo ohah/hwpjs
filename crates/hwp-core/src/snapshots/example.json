@@ -2530,18 +2530,21 @@
                 "type": "para_text",
                 "text": "삼강오륜\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    20,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2739,10 +2742,11 @@
                 "type": "para_text",
                 "text": "삼강오륜 은 현재까지도 이어져 일상생활에 깊이 뿌리내린 윤리 도덕이랍니다.\n",
                 "control_char_positions": [
-                  [
-                    41,
-                    13
-                  ]
+                  {
+                    "position": 41,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2849,10 +2853,11 @@
                 "type": "para_text",
                 "text": "삼강\n",
                 "control_char_positions": [
-                  [
-                    2,
-                    13
-                  ]
+                  {
+                    "position": 2,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2909,10 +2914,11 @@
                 "type": "para_text",
                 "text": "군위신강: 임금과 신하 사이에 마땅히 지켜야 할 도리\n",
                 "control_char_positions": [
-                  [
-                    29,
-                    13
-                  ]
+                  {
+                    "position": 29,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2973,10 +2979,11 @@
                 "type": "para_text",
                 "text": "부위자강 : 어버이와 자식 사이에 마땅히 지켜야 할 도리\n",
                 "control_char_positions": [
-                  [
-                    31,
-                    13
-                  ]
+                  {
+                    "position": 31,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3033,10 +3040,11 @@
                 "type": "para_text",
                 "text": "부위부강 : 남편과 아내 사이에 지켜야 할 도리\n",
                 "control_char_positions": [
-                  [
-                    26,
-                    13
-                  ]
+                  {
+                    "position": 26,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3143,10 +3151,11 @@
                 "type": "para_text",
                 "text": "오륜\n",
                 "control_char_positions": [
-                  [
-                    2,
-                    13
-                  ]
+                  {
+                    "position": 2,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3203,10 +3212,11 @@
                 "type": "para_text",
                 "text": "군신유의: 임금과 신하 사이에는 의로움이 있어야 함.\n",
                 "control_char_positions": [
-                  [
-                    29,
-                    13
-                  ]
+                  {
+                    "position": 29,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3263,10 +3273,11 @@
                 "type": "para_text",
                 "text": "부자유친: 어버이와 자식 사이에는 친함이 있어야 함.\n",
                 "control_char_positions": [
-                  [
-                    29,
-                    13
-                  ]
+                  {
+                    "position": 29,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3323,10 +3334,11 @@
                 "type": "para_text",
                 "text": "부부유별: 부부 사이에는 구별이 있어야 함.\n",
                 "control_char_positions": [
-                  [
-                    24,
-                    13
-                  ]
+                  {
+                    "position": 24,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3383,10 +3395,11 @@
                 "type": "para_text",
                 "text": "장유유서: 어른과 아이 사이에는 차례와 질서가 있어야 함.\n",
                 "control_char_positions": [
-                  [
-                    32,
-                    13
-                  ]
+                  {
+                    "position": 32,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3443,10 +3456,11 @@
                 "type": "para_text",
                 "text": "붕우유신: 친구 사이에는 믿음이 있어야 함\n",
                 "control_char_positions": [
-                  [
-                    23,
-                    13
-                  ]
+                  {
+                    "position": 23,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

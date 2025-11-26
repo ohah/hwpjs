@@ -1403,18 +1403,21 @@ expression: json
                 "type": "para_text",
                 "text": "ODT 변환 시 원문에 없는 공백이 띄엄띄엄 나타남 ODT 변환 시 중간 중간에 공백 문자들이 들어가는 현상이 발생한다. 아마도 변환 과정에서 xmllint의 reindent 때문에 new line 문자가 들어가는 것 같음.\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    141,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 141,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

@@ -2396,18 +2396,21 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    53,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 53,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2601,10 +2604,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko한컴바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    39,
-                    13
-                  ]
+                  {
+                    "position": 39,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2669,10 +2673,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko한양신명조en바탕cn바탕jp바탕other바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    40,
-                    13
-                  ]
+                  {
+                    "position": 40,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2737,10 +2742,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko휴먼명조en바탕cn바탕jp바탕other바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    39,
-                    13
-                  ]
+                  {
+                    "position": 39,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2805,10 +2811,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕enArialcn바탕jp바탕other바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    40,
-                    13
-                  ]
+                  {
+                    "position": 40,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2873,10 +2880,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕enComicSansMScn바탕jp바탕other바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    46,
-                    13
-                  ]
+                  {
+                    "position": 46,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2941,10 +2949,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕enCourierNewcn바탕jp바탕other바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    45,
-                    13
-                  ]
+                  {
+                    "position": 45,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3009,10 +3018,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕enDejaVuSerifcn바탕jp바탕other바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    46,
-                    13
-                  ]
+                  {
+                    "position": 46,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3077,10 +3087,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕en바탕cnSimHeijp바탕other바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    41,
-                    13
-                  ]
+                  {
+                    "position": 41,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3145,10 +3156,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕en바탕cnSimSunjp바탕other바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    41,
-                    13
-                  ]
+                  {
+                    "position": 41,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3213,10 +3225,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕en바탕cn바탕jpMSGothicother바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    43,
-                    13
-                  ]
+                  {
+                    "position": 43,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3281,10 +3294,11 @@ expression: json
                 "type": "para_text",
                 "text": "ko바탕en바탕cn바탕jpMSMinChoother바탕symbol바탕user바탕\n",
                 "control_char_positions": [
-                  [
-                    43,
-                    13
-                  ]
+                  {
+                    "position": 43,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

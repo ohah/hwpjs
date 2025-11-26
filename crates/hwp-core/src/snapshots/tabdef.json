@@ -1823,30 +1823,36 @@
                 "type": "para_text",
                 "text": "\t\t\t\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    16,
-                    9
-                  ],
-                  [
-                    24,
-                    9
-                  ],
-                  [
-                    32,
-                    9
-                  ],
-                  [
-                    40,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 16,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 24,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 32,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 40,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ],
                 "inline_control_params": [
                   [
@@ -2099,22 +2105,26 @@
                 "type": "para_text",
                 "text": "\tL\tL\tL\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    9
-                  ],
-                  [
-                    9,
-                    9
-                  ],
-                  [
-                    18,
-                    9
-                  ],
-                  [
-                    27,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ],
                 "inline_control_params": [
                   [
@@ -2230,22 +2240,26 @@
                 "type": "para_text",
                 "text": "\tR\tR\tR\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    9
-                  ],
-                  [
-                    9,
-                    9
-                  ],
-                  [
-                    18,
-                    9
-                  ],
-                  [
-                    27,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ],
                 "inline_control_params": [
                   [
@@ -2361,22 +2375,26 @@
                 "type": "para_text",
                 "text": "\tC\tC\tC\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    9
-                  ],
-                  [
-                    9,
-                    9
-                  ],
-                  [
-                    18,
-                    9
-                  ],
-                  [
-                    27,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ],
                 "inline_control_params": [
                   [
@@ -2492,22 +2510,26 @@
                 "type": "para_text",
                 "text": "\tM\tM\tM\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    9
-                  ],
-                  [
-                    9,
-                    9
-                  ],
-                  [
-                    18,
-                    9
-                  ],
-                  [
-                    27,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ],
                 "inline_control_params": [
                   [
@@ -2623,22 +2645,26 @@
                 "type": "para_text",
                 "text": "\tL\tL\tL\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    9
-                  ],
-                  [
-                    9,
-                    9
-                  ],
-                  [
-                    18,
-                    9
-                  ],
-                  [
-                    27,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ],
                 "inline_control_params": [
                   [
@@ -2754,18 +2780,21 @@
                 "type": "para_text",
                 "text": "\tE\tE\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    9
-                  ],
-                  [
-                    9,
-                    9
-                  ],
-                  [
-                    18,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 18,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ],
                 "inline_control_params": [
                   [
@@ -2862,22 +2891,26 @@
                 "type": "para_text",
                 "text": "\tI\tI\tI\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    9
-                  ],
-                  [
-                    9,
-                    9
-                  ],
-                  [
-                    18,
-                    9
-                  ],
-                  [
-                    27,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB"
+                  },
+                  {
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ],
                 "inline_control_params": [
                   [

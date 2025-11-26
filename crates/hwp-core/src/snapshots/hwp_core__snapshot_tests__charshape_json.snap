@@ -2480,18 +2480,21 @@ expression: json
                 "type": "para_text",
                 "text": "가\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    17,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 17,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2685,10 +2688,11 @@ expression: json
                 "type": "para_text",
                 "text": "기울임진하게\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2749,10 +2753,11 @@ expression: json
                 "type": "para_text",
                 "text": "밑줄없음밑줄가운데줄윗줄\n",
                 "control_char_positions": [
-                  [
-                    12,
-                    13
-                  ]
+                  {
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2825,10 +2830,11 @@ expression: json
                 "type": "para_text",
                 "text": "글자크기: 기준크기10pt 한글90% 영문80% 기타70%\n",
                 "control_char_positions": [
-                  [
-                    32,
-                    13
-                  ]
+                  {
+                    "position": 32,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2901,10 +2907,11 @@ expression: json
                 "type": "para_text",
                 "text": "폰트: 한글돋움 영문CourierNew 기타قLucidaSansUnicode\n",
                 "control_char_positions": [
-                  [
-                    42,
-                    13
-                  ]
+                  {
+                    "position": 42,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2973,10 +2980,11 @@ expression: json
                 "type": "para_text",
                 "text": "붉은밑줄\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3033,10 +3041,11 @@ expression: json
                 "type": "para_text",
                 "text": "점선밑줄\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

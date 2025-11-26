@@ -2194,18 +2194,21 @@
                 "type": "para_text",
                 "text": "실선밑줄\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    20,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2399,10 +2402,11 @@
                 "type": "para_text",
                 "text": "대시밑줄\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2459,10 +2463,11 @@
                 "type": "para_text",
                 "text": "점선밑줄\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2519,10 +2524,11 @@
                 "type": "para_text",
                 "text": "대시일점밑줄\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2579,10 +2585,11 @@
                 "type": "para_text",
                 "text": "대시이점밑줄\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2639,10 +2646,11 @@
                 "type": "para_text",
                 "text": "긴대시밑줄\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2699,10 +2707,11 @@
                 "type": "para_text",
                 "text": "큰점선밑줄\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2759,10 +2768,11 @@
                 "type": "para_text",
                 "text": "이중실선밑줄\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2819,10 +2829,11 @@
                 "type": "para_text",
                 "text": "이중증가밑줄\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2879,10 +2890,11 @@
                 "type": "para_text",
                 "text": "이중감소밑줄\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2939,10 +2951,11 @@
                 "type": "para_text",
                 "text": "삼중밑줄\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {

@@ -9086,22 +9086,26 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    16,
-                    11
-                  ],
-                  [
-                    24,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 16,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 24,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -9393,14 +9397,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -9506,10 +9512,11 @@
                             "type": "para_text",
                             "text": "보도일시\n",
                             "control_char_positions": [
-                              [
-                                4,
-                                13
-                              ]
+                              {
+                                "position": 4,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -9583,10 +9590,11 @@
                             "type": "para_text",
                             "text": "2018. 9. 4.(화) 조간(온라인 9. 3. 12:00)부터 보도해 주시기 바랍니다.  \n",
                             "control_char_positions": [
-                              [
-                                52,
-                                13
-                              ]
+                              {
+                                "position": 52,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -9684,10 +9692,11 @@
                             "type": "para_text",
                             "text": "배포일시\n",
                             "control_char_positions": [
-                              [
-                                4,
-                                13
-                              ]
+                              {
+                                "position": 4,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -9761,10 +9770,11 @@
                             "type": "para_text",
                             "text": "2018. 9. 3.(월) 09:00\n",
                             "control_char_positions": [
-                              [
-                                20,
-                                13
-                              ]
+                              {
+                                "position": 20,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -9838,10 +9848,11 @@
                             "type": "para_text",
                             "text": "담당부서\n",
                             "control_char_positions": [
-                              [
-                                4,
-                                13
-                              ]
+                              {
+                                "position": 4,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -9915,10 +9926,11 @@
                             "type": "para_text",
                             "text": "거대공공연구정책과\n",
                             "control_char_positions": [
-                              [
-                                9,
-                                13
-                              ]
+                              {
+                                "position": 9,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -9996,10 +10008,11 @@
                             "type": "para_text",
                             "text": "담당과장\n",
                             "control_char_positions": [
-                              [
-                                4,
-                                13
-                              ]
+                              {
+                                "position": 4,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -10073,10 +10086,11 @@
                             "type": "para_text",
                             "text": "장인숙(02-2110-2430)\n",
                             "control_char_positions": [
-                              [
-                                17,
-                                13
-                              ]
+                              {
+                                "position": 17,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -10154,10 +10168,11 @@
                             "type": "para_text",
                             "text": "담 당 자\n",
                             "control_char_positions": [
-                              [
-                                5,
-                                13
-                              ]
+                              {
+                                "position": 5,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -10231,10 +10246,11 @@
                             "type": "para_text",
                             "text": " 용찬재 사무관(02-2110-2428)\n",
                             "control_char_positions": [
-                              [
-                                22,
-                                13
-                              ]
+                              {
+                                "position": 22,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -10346,10 +10362,11 @@
                                   "type": "para_text",
                                   "text": "보도일시\n",
                                   "control_char_positions": [
-                                    [
-                                      4,
-                                      13
-                                    ]
+                                    {
+                                      "position": 4,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -10431,10 +10448,11 @@
                                   "type": "para_text",
                                   "text": "2018. 9. 4.(화) 조간(온라인 9. 3. 12:00)부터 보도해 주시기 바랍니다.  \n",
                                   "control_char_positions": [
-                                    [
-                                      52,
-                                      13
-                                    ]
+                                    {
+                                      "position": 52,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -10540,10 +10558,11 @@
                                   "type": "para_text",
                                   "text": "배포일시\n",
                                   "control_char_positions": [
-                                    [
-                                      4,
-                                      13
-                                    ]
+                                    {
+                                      "position": 4,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -10625,10 +10644,11 @@
                                   "type": "para_text",
                                   "text": "2018. 9. 3.(월) 09:00\n",
                                   "control_char_positions": [
-                                    [
-                                      20,
-                                      13
-                                    ]
+                                    {
+                                      "position": 20,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -10710,10 +10730,11 @@
                                   "type": "para_text",
                                   "text": "담당부서\n",
                                   "control_char_positions": [
-                                    [
-                                      4,
-                                      13
-                                    ]
+                                    {
+                                      "position": 4,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -10795,10 +10816,11 @@
                                   "type": "para_text",
                                   "text": "거대공공연구정책과\n",
                                   "control_char_positions": [
-                                    [
-                                      9,
-                                      13
-                                    ]
+                                    {
+                                      "position": 9,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -10884,10 +10906,11 @@
                                   "type": "para_text",
                                   "text": "담당과장\n",
                                   "control_char_positions": [
-                                    [
-                                      4,
-                                      13
-                                    ]
+                                    {
+                                      "position": 4,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -10969,10 +10992,11 @@
                                   "type": "para_text",
                                   "text": "장인숙(02-2110-2430)\n",
                                   "control_char_positions": [
-                                    [
-                                      17,
-                                      13
-                                    ]
+                                    {
+                                      "position": 17,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -11058,10 +11082,11 @@
                                   "type": "para_text",
                                   "text": "담 당 자\n",
                                   "control_char_positions": [
-                                    [
-                                      5,
-                                      13
-                                    ]
+                                    {
+                                      "position": 5,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -11143,10 +11168,11 @@
                                   "type": "para_text",
                                   "text": " 용찬재 사무관(02-2110-2428)\n",
                                   "control_char_positions": [
-                                    [
-                                      22,
-                                      13
-                                    ]
+                                    {
+                                      "position": 22,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -11212,14 +11238,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    21
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 21,
+                    "name": "PAGE_CONTROL"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -11289,14 +11317,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -11402,10 +11432,11 @@
                             "type": "para_text",
                             "text": "우리가 독자 개발하여 최초 발사하는 한국형발사체,\n",
                             "control_char_positions": [
-                              [
-                                27,
-                                13
-                              ]
+                              {
+                                "position": 27,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -11462,10 +11493,11 @@
                             "type": "para_text",
                             "text": "국민이 정한 그 이름은 ｢누리｣\n",
                             "control_char_positions": [
-                              [
-                                17,
-                                13
-                              ]
+                              {
+                                "position": 17,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -11522,10 +11554,11 @@
                             "type": "para_text",
                             "text": "“세상”의 옛말로, 우주까지 확장된 새로운 세상을 연다는 의미 -\n",
                             "control_char_positions": [
-                              [
-                                36,
-                                13
-                              ]
+                              {
+                                "position": 36,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -11582,10 +11615,11 @@
                             "type": "para_text",
                             "text": "명칭공모전에 1만건 이상 응모, 뜨거운 관심 보여 -\n",
                             "control_char_positions": [
-                              [
-                                29,
-                                13
-                              ]
+                              {
+                                "position": 29,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -11707,10 +11741,11 @@
                                   "type": "para_text",
                                   "text": "우리가 독자 개발하여 최초 발사하는 한국형발사체,\n",
                                   "control_char_positions": [
-                                    [
-                                      27,
-                                      13
-                                    ]
+                                    {
+                                      "position": 27,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -11767,10 +11802,11 @@
                                   "type": "para_text",
                                   "text": "국민이 정한 그 이름은 ｢누리｣\n",
                                   "control_char_positions": [
-                                    [
-                                      17,
-                                      13
-                                    ]
+                                    {
+                                      "position": 17,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -11827,10 +11863,11 @@
                                   "type": "para_text",
                                   "text": "“세상”의 옛말로, 우주까지 확장된 새로운 세상을 연다는 의미 -\n",
                                   "control_char_positions": [
-                                    [
-                                      36,
-                                      13
-                                    ]
+                                    {
+                                      "position": 36,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -11887,10 +11924,11 @@
                                   "type": "para_text",
                                   "text": "명칭공모전에 1만건 이상 응모, 뜨거운 관심 보여 -\n",
                                   "control_char_positions": [
-                                    [
-                                      29,
-                                      13
-                                    ]
+                                    {
+                                      "position": 29,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -11956,10 +11994,11 @@
                 "type": "para_text",
                 "text": "□ 과학기술정보통신부(장관 유영민, 이하 ‘과기정통부’)는 우리나라 최초로 순수 우리기술로 개발 중인 한국형발사체(KSLV-2)의 새로운 이름으로 “누리”가 선정되었다고 밝혔다.\n",
                 "control_char_positions": [
-                  [
-                    99,
-                    13
-                  ]
+                  {
+                    "position": 99,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -12104,10 +12143,11 @@
                 "type": "para_text",
                 "text": "  o 한국형발사체는 1.5톤급 실용위성을 지구 저궤도(600km~800km)까지 쏘아 올릴 수 있는 3단형 우주발사체로, 연간 130여개 기관이 참여하여 2021년 발사를 목표로 개발하고 있다.\n",
                 "control_char_positions": [
-                  [
-                    109,
-                    13
-                  ]
+                  {
+                    "position": 109,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -12220,10 +12260,11 @@
                 "type": "para_text",
                 "text": "  o 올해 10월에는 한국형발사체의 핵심부품인 75톤 액체엔진의 비행성능을 확인하기 위해 시험발사체를 발사할 예정이다.\n",
                 "control_char_positions": [
-                  [
-                    67,
-                    13
-                  ]
+                  {
+                    "position": 67,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -12300,10 +12341,11 @@
                 "type": "para_text",
                 "text": "□ 과기정통부는 한국항공우주연구원(원장 임철호, 이하 ‘항우연’)과 함께 그간 별도의 명칭 없이 ‘한국형발사체’라 불려온 우리 발사체의 새로운 이름을 선정하기 위해 대국민 명칭 공모전을 실시하였다.\n",
                 "control_char_positions": [
-                  [
-                    110,
-                    13
-                  ]
+                  {
+                    "position": 110,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -12424,10 +12466,11 @@
                 "type": "para_text",
                 "text": "  o 4월 27일부터 5월 31일까지 실시한 동 명칭 공모에는 약 6,300여명의 국민이 참여하여 총 10,000건 이상의 응모작을 제출하여 뜨거운 관심을 보였다. \n",
                 "control_char_positions": [
-                  [
-                    93,
-                    13
-                  ]
+                  {
+                    "position": 93,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -12544,10 +12587,11 @@
                 "type": "para_text",
                 "text": "  o 명칭선정절차는 제출된 응모작에 대해 네이미스트, 카피라이터, 국어교사 등 외부 전문가가 주제와의 적합성, 상징성, 참신성, 발음 및 기억의 용의성 등을 기준으로 후보작을 선별한 후,\n",
                 "control_char_positions": [
-                  [
-                    105,
-                    13
-                  ]
+                  {
+                    "position": 105,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -12660,10 +12704,11 @@
                 "type": "para_text",
                 "text": "  o 발사체 개발에 직접 참여하고 있는 연구자, 산업체 관계자 약 400명의 선호도 조사를 통해 최종 선정하는 절차로 진행되었다.\n",
                 "control_char_positions": [
-                  [
-                    73,
-                    13
-                  ]
+                  {
+                    "position": 73,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -12756,10 +12801,11 @@
                 "type": "para_text",
                 "text": "□ 이러한 절차를 거쳐 한국형발사체의 새로운 명칭은 ‘누리’로 결정되었으며, 동 명칭은 앞으로 우리나라 독자 발사체인 ‘한국형발사체’의 공식 명칭으로 사용될 예정이다.\n",
                 "control_char_positions": [
-                  [
-                    93,
-                    13
-                  ]
+                  {
+                    "position": 93,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -12884,10 +12930,11 @@
                 "type": "para_text",
                 "text": "  o 동 명칭을 제출한 경상대학교 에너지기계공학과 백승엽 학생은 ‘누리’는 ‘세상’의 옛말로 우주로까지 확장된 새로운 세상을 연다는 의미로, 우리 손으로 만든 발사체로 온 우주를 누비고 미래 발전을 누리길 희망하는 마음을 담았다고 밝혔다.\n",
                 "control_char_positions": [
-                  [
-                    134,
-                    13
-                  ]
+                  {
+                    "position": 134,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -13044,10 +13091,11 @@
                 "type": "para_text",
                 "text": "  o 백승엽학생에게는 오는 9월 7일(금)에 과기정통부 장관상과 함께 소정의 상금이 수여될 예정이다. \n",
                 "control_char_positions": [
-                  [
-                    58,
-                    13
-                  ]
+                  {
+                    "position": 58,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -13132,10 +13180,11 @@
                 "type": "para_text",
                 "text": "□ 과기정통부 거대공공연구정책관은 “명칭 공모전을 통해 우리국민의 우주에 대한 높은 관심을 확인할 수 있었다”며 “새로운 이름에 걸맞게 무한한 가능성을 갖고 있는 우주공간을 우리 발사체로 직접 개척할 수 있도록 최선을 다할 것” 이라고 밝혔다.\n",
                 "control_char_positions": [
-                  [
-                    136,
-                    13
-                  ]
+                  {
+                    "position": 136,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -13422,14 +13471,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -13531,14 +13582,16 @@
                             "type": "para_text",
                             "text": "\n",
                             "control_char_positions": [
-                              [
-                                0,
-                                11
-                              ],
-                              [
-                                8,
-                                13
-                              ]
+                              {
+                                "position": 0,
+                                "code": 11,
+                                "name": "SHAPE_OBJECT"
+                              },
+                              {
+                                "position": 8,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -13754,10 +13807,11 @@
                             "type": "para_text",
                             "text": "이 자료에 대하여 더욱 자세한 내용을 원하시면\n",
                             "control_char_positions": [
-                              [
-                                25,
-                                13
-                              ]
+                              {
+                                "position": 25,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -13814,10 +13868,11 @@
                             "type": "para_text",
                             "text": "과학기술정보통신부 용찬재 사무관(☎ 02-2110-2428)에게 연락주시기 바랍니다.\n",
                             "control_char_positions": [
-                              [
-                                47,
-                                13
-                              ]
+                              {
+                                "position": 47,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -13931,14 +13986,16 @@
                                   "type": "para_text",
                                   "text": "\n",
                                   "control_char_positions": [
-                                    [
-                                      0,
-                                      11
-                                    ],
-                                    [
-                                      8,
-                                      13
-                                    ]
+                                    {
+                                      "position": 0,
+                                      "code": 11,
+                                      "name": "SHAPE_OBJECT"
+                                    },
+                                    {
+                                      "position": 8,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -14162,10 +14219,11 @@
                                   "type": "para_text",
                                   "text": "이 자료에 대하여 더욱 자세한 내용을 원하시면\n",
                                   "control_char_positions": [
-                                    [
-                                      25,
-                                      13
-                                    ]
+                                    {
+                                      "position": 25,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -14222,10 +14280,11 @@
                                   "type": "para_text",
                                   "text": "과학기술정보통신부 용찬재 사무관(☎ 02-2110-2428)에게 연락주시기 바랍니다.\n",
                                   "control_char_positions": [
-                                    [
-                                      47,
-                                      13
-                                    ]
+                                    {
+                                      "position": 47,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -14293,14 +14352,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -14402,10 +14463,11 @@
                             "type": "para_text",
                             "text": "붙임\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -14546,10 +14608,11 @@
                             "type": "para_text",
                             "text": " 한국형발사체(누리호)와 시험발사체 비교\n",
                             "control_char_positions": [
-                              [
-                                22,
-                                13
-                              ]
+                              {
+                                "position": 22,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -14659,10 +14722,11 @@
                                   "type": "para_text",
                                   "text": "붙임\n",
                                   "control_char_positions": [
-                                    [
-                                      2,
-                                      13
-                                    ]
+                                    {
+                                      "position": 2,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -14819,10 +14883,11 @@
                                   "type": "para_text",
                                   "text": " 한국형발사체(누리호)와 시험발사체 비교\n",
                                   "control_char_positions": [
-                                    [
-                                      22,
-                                      13
-                                    ]
+                                    {
+                                      "position": 22,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -14888,14 +14953,16 @@
                 "type": "para_text",
                 "text": "\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    11
-                  ],
-                  [
-                    8,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -14997,10 +15064,11 @@
                             "type": "para_text",
                             "text": "구 분\n",
                             "control_char_positions": [
-                              [
-                                3,
-                                13
-                              ]
+                              {
+                                "position": 3,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -15074,10 +15142,11 @@
                             "type": "para_text",
                             "text": "한국형발사체(누리호)\n",
                             "control_char_positions": [
-                              [
-                                11,
-                                13
-                              ]
+                              {
+                                "position": 11,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -15151,10 +15220,11 @@
                             "type": "para_text",
                             "text": "시험발사체\n",
                             "control_char_positions": [
-                              [
-                                5,
-                                13
-                              ]
+                              {
+                                "position": 5,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -15228,10 +15298,11 @@
                             "type": "para_text",
                             "text": "형 상\n",
                             "control_char_positions": [
-                              [
-                                3,
-                                13
-                              ]
+                              {
+                                "position": 3,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -15305,14 +15376,16 @@
                             "type": "para_text",
                             "text": "\n",
                             "control_char_positions": [
-                              [
-                                0,
-                                11
-                              ],
-                              [
-                                8,
-                                13
-                              ]
+                              {
+                                "position": 0,
+                                "code": 11,
+                                "name": "SHAPE_OBJECT"
+                              },
+                              {
+                                "position": 8,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -15528,14 +15601,16 @@
                             "type": "para_text",
                             "text": "\n",
                             "control_char_positions": [
-                              [
-                                0,
-                                11
-                              ],
-                              [
-                                8,
-                                13
-                              ]
+                              {
+                                "position": 0,
+                                "code": 11,
+                                "name": "SHAPE_OBJECT"
+                              },
+                              {
+                                "position": 8,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -15751,10 +15826,11 @@
                             "type": "para_text",
                             "text": "목 적\n",
                             "control_char_positions": [
-                              [
-                                3,
-                                13
-                              ]
+                              {
+                                "position": 3,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -15828,10 +15904,11 @@
                             "type": "para_text",
                             "text": "1.5톤급 실용위성을 지구저궤도(600~800km)에 투입\n",
                             "control_char_positions": [
-                              [
-                                32,
-                                13
-                              ]
+                              {
+                                "position": 32,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -15945,10 +16022,11 @@
                             "type": "para_text",
                             "text": "한국형발사체 75톤급 엔진의 비행성능 검증\n",
                             "control_char_positions": [
-                              [
-                                23,
-                                13
-                              ]
+                              {
+                                "position": 23,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16042,10 +16120,11 @@
                             "type": "para_text",
                             "text": "총 길이\n",
                             "control_char_positions": [
-                              [
-                                4,
-                                13
-                              ]
+                              {
+                                "position": 4,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16119,10 +16198,11 @@
                             "type": "para_text",
                             "text": "47.2 m\n",
                             "control_char_positions": [
-                              [
-                                6,
-                                13
-                              ]
+                              {
+                                "position": 6,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16196,10 +16276,11 @@
                             "type": "para_text",
                             "text": "25.8 m\n",
                             "control_char_positions": [
-                              [
-                                6,
-                                13
-                              ]
+                              {
+                                "position": 6,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16273,10 +16354,11 @@
                             "type": "para_text",
                             "text": "최대 직경\n",
                             "control_char_positions": [
-                              [
-                                5,
-                                13
-                              ]
+                              {
+                                "position": 5,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16350,10 +16432,11 @@
                             "type": "para_text",
                             "text": "3.5 m\n",
                             "control_char_positions": [
-                              [
-                                5,
-                                13
-                              ]
+                              {
+                                "position": 5,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16427,10 +16510,11 @@
                             "type": "para_text",
                             "text": "2.6 m\n",
                             "control_char_positions": [
-                              [
-                                5,
-                                13
-                              ]
+                              {
+                                "position": 5,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16504,10 +16588,11 @@
                             "type": "para_text",
                             "text": "이륙 중량\n",
                             "control_char_positions": [
-                              [
-                                5,
-                                13
-                              ]
+                              {
+                                "position": 5,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16581,10 +16666,11 @@
                             "type": "para_text",
                             "text": "200 톤\n",
                             "control_char_positions": [
-                              [
-                                5,
-                                13
-                              ]
+                              {
+                                "position": 5,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16658,10 +16744,11 @@
                             "type": "para_text",
                             "text": "52.1 톤\n",
                             "control_char_positions": [
-                              [
-                                6,
-                                13
-                              ]
+                              {
+                                "position": 6,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16735,10 +16822,11 @@
                             "type": "para_text",
                             "text": "탑재체 중량\n",
                             "control_char_positions": [
-                              [
-                                6,
-                                13
-                              ]
+                              {
+                                "position": 6,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16812,10 +16900,11 @@
                             "type": "para_text",
                             "text": "1.5 톤\n",
                             "control_char_positions": [
-                              [
-                                5,
-                                13
-                              ]
+                              {
+                                "position": 5,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16889,10 +16978,11 @@
                             "type": "para_text",
                             "text": "-\n",
                             "control_char_positions": [
-                              [
-                                1,
-                                13
-                              ]
+                              {
+                                "position": 1,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -16966,10 +17056,11 @@
                             "type": "para_text",
                             "text": "단 수 \n",
                             "control_char_positions": [
-                              [
-                                4,
-                                13
-                              ]
+                              {
+                                "position": 4,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -17043,10 +17134,11 @@
                             "type": "para_text",
                             "text": "3단\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -17120,10 +17212,11 @@
                             "type": "para_text",
                             "text": "1단\n",
                             "control_char_positions": [
-                              [
-                                2,
-                                13
-                              ]
+                              {
+                                "position": 2,
+                                "code": 13,
+                                "name": "PARA_BREAK"
+                              }
                             ]
                           },
                           {
@@ -17240,10 +17333,11 @@
                                   "type": "para_text",
                                   "text": "구 분\n",
                                   "control_char_positions": [
-                                    [
-                                      3,
-                                      13
-                                    ]
+                                    {
+                                      "position": 3,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -17325,10 +17419,11 @@
                                   "type": "para_text",
                                   "text": "한국형발사체(누리호)\n",
                                   "control_char_positions": [
-                                    [
-                                      11,
-                                      13
-                                    ]
+                                    {
+                                      "position": 11,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -17410,10 +17505,11 @@
                                   "type": "para_text",
                                   "text": "시험발사체\n",
                                   "control_char_positions": [
-                                    [
-                                      5,
-                                      13
-                                    ]
+                                    {
+                                      "position": 5,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -17495,10 +17591,11 @@
                                   "type": "para_text",
                                   "text": "형 상\n",
                                   "control_char_positions": [
-                                    [
-                                      3,
-                                      13
-                                    ]
+                                    {
+                                      "position": 3,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -17580,14 +17677,16 @@
                                   "type": "para_text",
                                   "text": "\n",
                                   "control_char_positions": [
-                                    [
-                                      0,
-                                      11
-                                    ],
-                                    [
-                                      8,
-                                      13
-                                    ]
+                                    {
+                                      "position": 0,
+                                      "code": 11,
+                                      "name": "SHAPE_OBJECT"
+                                    },
+                                    {
+                                      "position": 8,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -17811,14 +17910,16 @@
                                   "type": "para_text",
                                   "text": "\n",
                                   "control_char_positions": [
-                                    [
-                                      0,
-                                      11
-                                    ],
-                                    [
-                                      8,
-                                      13
-                                    ]
+                                    {
+                                      "position": 0,
+                                      "code": 11,
+                                      "name": "SHAPE_OBJECT"
+                                    },
+                                    {
+                                      "position": 8,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18042,10 +18143,11 @@
                                   "type": "para_text",
                                   "text": "목 적\n",
                                   "control_char_positions": [
-                                    [
-                                      3,
-                                      13
-                                    ]
+                                    {
+                                      "position": 3,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18127,10 +18229,11 @@
                                   "type": "para_text",
                                   "text": "1.5톤급 실용위성을 지구저궤도(600~800km)에 투입\n",
                                   "control_char_positions": [
-                                    [
-                                      32,
-                                      13
-                                    ]
+                                    {
+                                      "position": 32,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18252,10 +18355,11 @@
                                   "type": "para_text",
                                   "text": "한국형발사체 75톤급 엔진의 비행성능 검증\n",
                                   "control_char_positions": [
-                                    [
-                                      23,
-                                      13
-                                    ]
+                                    {
+                                      "position": 23,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18357,10 +18461,11 @@
                                   "type": "para_text",
                                   "text": "총 길이\n",
                                   "control_char_positions": [
-                                    [
-                                      4,
-                                      13
-                                    ]
+                                    {
+                                      "position": 4,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18442,10 +18547,11 @@
                                   "type": "para_text",
                                   "text": "47.2 m\n",
                                   "control_char_positions": [
-                                    [
-                                      6,
-                                      13
-                                    ]
+                                    {
+                                      "position": 6,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18527,10 +18633,11 @@
                                   "type": "para_text",
                                   "text": "25.8 m\n",
                                   "control_char_positions": [
-                                    [
-                                      6,
-                                      13
-                                    ]
+                                    {
+                                      "position": 6,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18612,10 +18719,11 @@
                                   "type": "para_text",
                                   "text": "최대 직경\n",
                                   "control_char_positions": [
-                                    [
-                                      5,
-                                      13
-                                    ]
+                                    {
+                                      "position": 5,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18697,10 +18805,11 @@
                                   "type": "para_text",
                                   "text": "3.5 m\n",
                                   "control_char_positions": [
-                                    [
-                                      5,
-                                      13
-                                    ]
+                                    {
+                                      "position": 5,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18782,10 +18891,11 @@
                                   "type": "para_text",
                                   "text": "2.6 m\n",
                                   "control_char_positions": [
-                                    [
-                                      5,
-                                      13
-                                    ]
+                                    {
+                                      "position": 5,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18867,10 +18977,11 @@
                                   "type": "para_text",
                                   "text": "이륙 중량\n",
                                   "control_char_positions": [
-                                    [
-                                      5,
-                                      13
-                                    ]
+                                    {
+                                      "position": 5,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -18952,10 +19063,11 @@
                                   "type": "para_text",
                                   "text": "200 톤\n",
                                   "control_char_positions": [
-                                    [
-                                      5,
-                                      13
-                                    ]
+                                    {
+                                      "position": 5,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -19037,10 +19149,11 @@
                                   "type": "para_text",
                                   "text": "52.1 톤\n",
                                   "control_char_positions": [
-                                    [
-                                      6,
-                                      13
-                                    ]
+                                    {
+                                      "position": 6,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -19122,10 +19235,11 @@
                                   "type": "para_text",
                                   "text": "탑재체 중량\n",
                                   "control_char_positions": [
-                                    [
-                                      6,
-                                      13
-                                    ]
+                                    {
+                                      "position": 6,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -19207,10 +19321,11 @@
                                   "type": "para_text",
                                   "text": "1.5 톤\n",
                                   "control_char_positions": [
-                                    [
-                                      5,
-                                      13
-                                    ]
+                                    {
+                                      "position": 5,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -19292,10 +19407,11 @@
                                   "type": "para_text",
                                   "text": "-\n",
                                   "control_char_positions": [
-                                    [
-                                      1,
-                                      13
-                                    ]
+                                    {
+                                      "position": 1,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -19377,10 +19493,11 @@
                                   "type": "para_text",
                                   "text": "단 수 \n",
                                   "control_char_positions": [
-                                    [
-                                      4,
-                                      13
-                                    ]
+                                    {
+                                      "position": 4,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -19462,10 +19579,11 @@
                                   "type": "para_text",
                                   "text": "3단\n",
                                   "control_char_positions": [
-                                    [
-                                      2,
-                                      13
-                                    ]
+                                    {
+                                      "position": 2,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {
@@ -19547,10 +19665,11 @@
                                   "type": "para_text",
                                   "text": "1단\n",
                                   "control_char_positions": [
-                                    [
-                                      2,
-                                      13
-                                    ]
+                                    {
+                                      "position": 2,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
                                   ]
                                 },
                                 {

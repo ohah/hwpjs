@@ -1640,18 +1640,21 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    0,
-                    2
-                  ],
-                  [
-                    8,
-                    2
-                  ],
-                  [
-                    20,
-                    13
-                  ]
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1845,10 +1848,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1905,10 +1909,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -1965,10 +1970,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2025,10 +2031,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2085,10 +2092,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2145,10 +2153,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2205,10 +2214,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2265,10 +2275,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2325,10 +2336,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2385,10 +2397,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2445,10 +2458,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2505,10 +2519,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2565,10 +2580,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2625,10 +2641,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2685,10 +2702,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2745,10 +2763,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2805,10 +2824,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2865,10 +2885,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2925,10 +2946,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -2985,10 +3007,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3045,10 +3068,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3105,10 +3129,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3165,10 +3190,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3225,10 +3251,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3285,10 +3312,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3345,10 +3373,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3405,10 +3434,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3465,10 +3495,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3525,10 +3556,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3585,10 +3617,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3645,10 +3678,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3705,10 +3739,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3765,10 +3800,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3825,10 +3861,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3885,10 +3922,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -3945,10 +3983,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4005,10 +4044,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4065,10 +4105,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4125,10 +4166,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4185,10 +4227,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4245,10 +4288,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4305,10 +4349,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4365,10 +4410,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4425,10 +4471,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4485,10 +4532,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4545,10 +4593,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4605,10 +4654,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4665,10 +4715,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4725,10 +4776,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4785,10 +4837,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4845,10 +4898,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4905,10 +4959,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -4965,10 +5020,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5025,10 +5081,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5085,10 +5142,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5145,10 +5203,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5205,10 +5264,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5265,10 +5325,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5325,10 +5386,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5385,10 +5447,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5445,10 +5508,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5505,10 +5569,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5565,10 +5630,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5625,10 +5691,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5685,10 +5752,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5745,10 +5813,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5805,10 +5874,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5865,10 +5935,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5925,10 +5996,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -5985,10 +6057,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6045,10 +6118,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6105,10 +6179,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표\n",
                 "control_char_positions": [
-                  [
-                    4,
-                    13
-                  ]
+                  {
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6165,10 +6240,11 @@ expression: json
                 "type": "para_text",
                 "text": "1\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6225,10 +6301,11 @@ expression: json
                 "type": "para_text",
                 "text": "2\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6285,10 +6362,11 @@ expression: json
                 "type": "para_text",
                 "text": "3\n",
                 "control_char_positions": [
-                  [
-                    1,
-                    13
-                  ]
+                  {
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6345,10 +6423,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀\n",
                 "control_char_positions": [
-                  [
-                    12,
-                    13
-                  ]
+                  {
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6405,10 +6484,11 @@ expression: json
                 "type": "para_text",
                 "text": "너비 10pt\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6465,10 +6545,11 @@ expression: json
                 "type": "para_text",
                 "text": "정렬 가운데\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6525,10 +6606,11 @@ expression: json
                 "type": "para_text",
                 "text": "본문과의 간격 50%\n",
                 "control_char_positions": [
-                  [
-                    11,
-                    13
-                  ]
+                  {
+                    "position": 11,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6585,10 +6667,11 @@ expression: json
                 "type": "para_text",
                 "text": "자동 내어쓰기\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6645,10 +6728,11 @@ expression: json
                 "type": "para_text",
                 "text": "글자모양 없음\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6705,10 +6789,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀\n",
                 "control_char_positions": [
-                  [
-                    12,
-                    13
-                  ]
+                  {
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6765,10 +6850,11 @@ expression: json
                 "type": "para_text",
                 "text": "너비 10pt\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6825,10 +6911,11 @@ expression: json
                 "type": "para_text",
                 "text": "정렬 오른쪽\n",
                 "control_char_positions": [
-                  [
-                    6,
-                    13
-                  ]
+                  {
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6885,10 +6972,11 @@ expression: json
                 "type": "para_text",
                 "text": "본문과의 간격 50%\n",
                 "control_char_positions": [
-                  [
-                    11,
-                    13
-                  ]
+                  {
+                    "position": 11,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -6945,10 +7033,11 @@ expression: json
                 "type": "para_text",
                 "text": "자동 내어쓰기\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7005,10 +7094,11 @@ expression: json
                 "type": "para_text",
                 "text": "글자모양 없음\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7065,10 +7155,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀\n",
                 "control_char_positions": [
-                  [
-                    12,
-                    13
-                  ]
+                  {
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7125,10 +7216,11 @@ expression: json
                 "type": "para_text",
                 "text": "너비 20pt\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7185,10 +7277,11 @@ expression: json
                 "type": "para_text",
                 "text": "정렬 왼쪽\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7245,10 +7338,11 @@ expression: json
                 "type": "para_text",
                 "text": "본문과의 간격 50%\n",
                 "control_char_positions": [
-                  [
-                    11,
-                    13
-                  ]
+                  {
+                    "position": 11,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7305,10 +7399,11 @@ expression: json
                 "type": "para_text",
                 "text": "자동 내어쓰기\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7365,10 +7460,11 @@ expression: json
                 "type": "para_text",
                 "text": "글자모양 없음\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7425,10 +7521,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀\n",
                 "control_char_positions": [
-                  [
-                    12,
-                    13
-                  ]
+                  {
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7485,10 +7582,11 @@ expression: json
                 "type": "para_text",
                 "text": "너비 10pt\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7545,10 +7643,11 @@ expression: json
                 "type": "para_text",
                 "text": "정렬 왼쪽\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7605,10 +7704,11 @@ expression: json
                 "type": "para_text",
                 "text": "본문과의 간격 0%\n",
                 "control_char_positions": [
-                  [
-                    10,
-                    13
-                  ]
+                  {
+                    "position": 10,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7665,10 +7765,11 @@ expression: json
                 "type": "para_text",
                 "text": "자동 내어쓰기\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7725,10 +7826,11 @@ expression: json
                 "type": "para_text",
                 "text": "글자모양 없음\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7785,10 +7887,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀\n",
                 "control_char_positions": [
-                  [
-                    12,
-                    13
-                  ]
+                  {
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7845,10 +7948,11 @@ expression: json
                 "type": "para_text",
                 "text": "너비 10pt\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7905,10 +8009,11 @@ expression: json
                 "type": "para_text",
                 "text": "정렬 왼쪽\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -7965,10 +8070,11 @@ expression: json
                 "type": "para_text",
                 "text": "본문과의 간격 0%\n",
                 "control_char_positions": [
-                  [
-                    10,
-                    13
-                  ]
+                  {
+                    "position": 10,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -8025,10 +8131,11 @@ expression: json
                 "type": "para_text",
                 "text": "자동 내어쓰기 X\n",
                 "control_char_positions": [
-                  [
-                    9,
-                    13
-                  ]
+                  {
+                    "position": 9,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -8085,10 +8192,11 @@ expression: json
                 "type": "para_text",
                 "text": "글자모양 없음\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -8145,10 +8253,11 @@ expression: json
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀\n",
                 "control_char_positions": [
-                  [
-                    12,
-                    13
-                  ]
+                  {
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -8205,10 +8314,11 @@ expression: json
                 "type": "para_text",
                 "text": "너비 10pt\n",
                 "control_char_positions": [
-                  [
-                    7,
-                    13
-                  ]
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -8265,10 +8375,11 @@ expression: json
                 "type": "para_text",
                 "text": "정렬 왼쪽\n",
                 "control_char_positions": [
-                  [
-                    5,
-                    13
-                  ]
+                  {
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -8325,10 +8436,11 @@ expression: json
                 "type": "para_text",
                 "text": "본문과의 간격 0%\n",
                 "control_char_positions": [
-                  [
-                    10,
-                    13
-                  ]
+                  {
+                    "position": 10,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -8385,10 +8497,11 @@ expression: json
                 "type": "para_text",
                 "text": "자동 내어쓰기 X\n",
                 "control_char_positions": [
-                  [
-                    9,
-                    13
-                  ]
+                  {
+                    "position": 9,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
@@ -8445,10 +8558,11 @@ expression: json
                 "type": "para_text",
                 "text": "새 글머리표 모양: sun\n",
                 "control_char_positions": [
-                  [
-                    14,
-                    13
-                  ]
+                  {
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
                 ]
               },
               {
