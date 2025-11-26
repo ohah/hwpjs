@@ -1586,5 +1586,6 @@ expression: json
       "low": 1328439963
     },
     "default_script": null
-  }
+  },
+  "xml_template": null
 }
