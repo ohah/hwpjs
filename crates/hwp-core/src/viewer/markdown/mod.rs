@@ -20,7 +20,7 @@ pub use table::convert_table_to_markdown;
 /// # Arguments / 매개변수
 /// * `document` - The HWP document to convert / 변환할 HWP 문서
 /// * `image_output_dir` - Optional directory path to save images as files. If None, images are embedded as base64 data URIs.
-///                        이미지를 파일로 저장할 디렉토리 경로 (선택). None이면 base64 데이터 URI로 임베드됩니다.
+///   이미지를 파일로 저장할 디렉토리 경로 (선택). None이면 base64 데이터 URI로 임베드됩니다.
 ///
 /// # Returns / 반환값
 /// Markdown string representation of the document / 문서의 마크다운 문자열 표현
@@ -167,7 +167,8 @@ fn convert_paragraph_to_markdown(
                 }
 
                 // SHAPE_OBJECT인지 확인 / Check if this is SHAPE_OBJECT
-                let is_shape_object = header.ctrl_id.as_str() == crate::document::CtrlId::SHAPE_OBJECT;
+                let is_shape_object =
+                    header.ctrl_id.as_str() == crate::document::CtrlId::SHAPE_OBJECT;
 
                 // 자식 레코드 처리 / Process children
                 for child in children {
@@ -185,7 +186,7 @@ fn convert_paragraph_to_markdown(
                             shape_component_picture,
                         } => {
                             let bindata_id = shape_component_picture.picture_info.bindata_id;
-                            
+
                             // BinData에서 해당 이미지 찾기 / Find image in BinData
                             if let Some(bin_item) = document
                                 .bin_data
@@ -312,7 +313,7 @@ fn convert_paragraph_to_markdown(
                                     } => {
                                         let bindata_id =
                                             shape_component_picture.picture_info.bindata_id;
-                                        
+
                                         // BinData에서 해당 이미지 찾기 / Find image in BinData
                                         if let Some(bin_item) = document
                                             .bin_data
@@ -360,8 +361,22 @@ fn convert_paragraph_to_markdown(
                 // 표나 이미지 또는 내용이 이미 추출되었다면 메시지를 출력하지 않음 / Don't output message if table, image, or content was already extracted
                 let control_md = convert_control_to_markdown(header, has_table);
                 if !control_md.is_empty() {
+                    // SHAPE_OBJECT의 경우 description이 있으면 내용이 있다고 간주 / For SHAPE_OBJECT, if description exists, consider it as content
+                    let is_shape_object_for_desc = header.ctrl_id.as_str() == crate::document::CtrlId::SHAPE_OBJECT;
+                    if is_shape_object_for_desc {
+                        if let crate::document::CtrlHeaderData::ObjectCommon { description, .. } = &header.data {
+                            if let Some(desc) = description {
+                                // description이 여러 줄이면 내용이 있다고 간주 / If description has multiple lines, consider it as content
+                                if desc.contains('\n') && desc.lines().count() > 1 {
+                                    has_content = true;
+                                }
+                            }
+                        }
+                    }
+                    
                     // 내용이 추출되었으면 (이미지 또는 텍스트) 메시지 부분만 제거 / Remove message part if content was extracted (image or text)
-                    if (has_image || has_content) && control_md.contains("[개체 내용은 추출되지 않았습니다]")
+                    if (has_image || has_content)
+                        && control_md.contains("[개체 내용은 추출되지 않았습니다]")
                     {
                         let header_info = control_md
                             .lines()

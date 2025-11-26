@@ -495,7 +495,7 @@ impl Section {
                 for child in node.children() {
                     if child.tag_id() == HwpTag::TABLE {
                         // TABLE은 별도로 처리 / TABLE is processed separately
-                        let mut table_data = Table::parse(child.data(), version)?;
+                        let table_data = Table::parse(child.data(), version)?;
                         table_opt = Some(table_data);
                     } else if child.tag_id() == HwpTag::LIST_HEADER && is_table {
                         // LIST_HEADER가 테이블의 셀인 경우 / LIST_HEADER is a table cell
@@ -606,6 +606,22 @@ impl Section {
                         ));
                     } else {
                         children.push(Self::parse_record_from_tree(child, version, original_data)?);
+
+                        // SHAPE_COMPONENT의 children을 평탄하게 추가
+                        // Flatten SHAPE_COMPONENT's children
+                        // SHAPE_COMPONENT_PICTURE는 SHAPE_COMPONENT의 자식으로 올 수 있지만,
+                        // CTRL_HEADER의 children에 평탄하게 추가되어야 함
+                        // SHAPE_COMPONENT_PICTURE can be a child of SHAPE_COMPONENT, but
+                        // should be flattened and added to CTRL_HEADER's children
+                        if child.tag_id() == HwpTag::SHAPE_COMPONENT {
+                            for grandchild in child.children() {
+                                children.push(Self::parse_record_from_tree(
+                                    grandchild,
+                                    version,
+                                    original_data,
+                                )?);
+                            }
+                        }
                     }
                 }
 
@@ -763,9 +779,9 @@ impl Section {
                                 cell.paragraphs = paragraphs;
                             } else {
                                 // 셀을 찾지 못한 경우 인덱스로 시도 / Try by index if cell not found
-                                let cell_index = (row_addr as usize
+                                let cell_index = row_addr as usize
                                     * table.attributes.col_count as usize
-                                    + col_addr as usize);
+                                    + col_addr as usize;
                                 if cell_index < table.cells.len() {
                                     table.cells[cell_index].paragraphs = paragraphs;
                                 }
@@ -868,13 +884,6 @@ impl Section {
                                         let para_data = &original_data[offset..offset + data_size];
                                         offset += data_size;
 
-                                        // PARA_HEADER를 트리 노드로 변환하여 파싱 / Convert PARA_HEADER to tree node and parse
-                                        let para_node = RecordTreeNode {
-                                            header: header.clone(),
-                                            data: para_data.to_vec(),
-                                            children: Vec::new(),
-                                        };
-
                                         // PARA_HEADER의 자식 레코드들도 읽기 / Read child records of PARA_HEADER
                                         let mut para_records = Vec::new();
                                         while offset < original_data.len() {
@@ -894,7 +903,7 @@ impl Section {
                                                     offset += child_data_size;
 
                                                     let child_node = RecordTreeNode {
-                                                        header: child_header.clone(),
+                                                        header: child_header,
                                                         data: child_data.to_vec(),
                                                         children: Vec::new(),
                                                     };
@@ -971,6 +980,15 @@ impl Section {
                 // 개체 요소 파싱 / Parse shape component
                 // 스펙 문서 매핑: 표 82, 83 - 개체 요소 속성 / Spec mapping: Table 82, 83 - Shape component attributes
                 let shape_component = ShapeComponent::parse(node.data())?;
+
+                // SHAPE_COMPONENT의 children을 재귀적으로 처리
+                // Recursively process SHAPE_COMPONENT's children
+                // SHAPE_COMPONENT_PICTURE는 SHAPE_COMPONENT의 자식으로 올 수 있음
+                // SHAPE_COMPONENT_PICTURE can be a child of SHAPE_COMPONENT
+                // 하지만 이것은 CTRL_HEADER의 children에 평탄하게 추가되어야 함
+                // But this should be flattened and added to CTRL_HEADER's children
+                // 이것은 상위 레벨에서 처리되므로 여기서는 그냥 반환
+                // This is handled at a higher level, so just return here
                 Ok(ParagraphRecord::ShapeComponent { shape_component })
             }
             HwpTag::SHAPE_COMPONENT_LINE => {

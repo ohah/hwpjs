@@ -1696,6 +1696,20 @@ expression: json
                         ]
                       }
                     }
+                  },
+                  {
+                    "type": "shape_component_line",
+                    "shape_component_line": {
+                      "start_point": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "end_point": {
+                        "x": 2100,
+                        "y": 2050
+                      },
+                      "flag": 0
+                    }
                   }
                 ]
               },
@@ -1793,6 +1807,20 @@ expression: json
                           }
                         ]
                       }
+                    }
+                  },
+                  {
+                    "type": "shape_component_line",
+                    "shape_component_line": {
+                      "start_point": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "end_point": {
+                        "x": 2400,
+                        "y": 2350
+                      },
+                      "flag": 0
                     }
                   }
                 ]

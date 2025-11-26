@@ -1987,6 +1987,117 @@ expression: json
                         ]
                       }
                     }
+                  },
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cer$",
+                      "object_control_id2": "+0",
+                      "group_offset": {
+                        "x": 57,
+                        "y": 65537
+                      },
+                      "group_count": 8504,
+                      "local_version": 0,
+                      "initial_width": 8504,
+                      "initial_height": 421,
+                      "width": 57785,
+                      "height": 524288,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 28892,
+                        "y": 2
+                      },
+                      "rendering": {
+                        "matrix_count": 0,
+                        "translation_matrix": {
+                          "elements": [
+                            5.299808824e-315,
+                            0.0,
+                            5.369774843e-315,
+                            0.0,
+                            5.299808824e-315,
+                            5.32975948e-315
+                          ]
+                        },
+                        "matrix_sequence": []
+                      }
+                    }
+                  },
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "",
+                      "group_offset": {
+                        "x": 312,
+                        "y": 65537
+                      },
+                      "group_count": 45899,
+                      "local_version": 0,
+                      "initial_width": 6300,
+                      "initial_height": 59527,
+                      "width": 3684,
+                      "height": 604504064,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 1842,
+                        "y": 2
+                      },
+                      "rendering": {
+                        "matrix_count": 0,
+                        "translation_matrix": {
+                          "elements": [
+                            5.299808824e-315,
+                            0.0,
+                            0.0,
+                            0.0,
+                            5.299808824e-315,
+                            5.34238732e-315
+                          ]
+                        },
+                        "matrix_sequence": []
+                      }
+                    }
+                  },
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "noc$",
+                      "object_control_id2": "o#",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 65537
+                      },
+                      "group_count": 5010,
+                      "local_version": 0,
+                      "initial_width": 3869,
+                      "initial_height": 5010,
+                      "width": 3869,
+                      "height": 589824,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 1934,
+                        "y": 2
+                      },
+                      "rendering": {
+                        "matrix_count": 0,
+                        "translation_matrix": {
+                          "elements": [
+                            5.299808824e-315,
+                            0.0,
+                            5.367713206e-315,
+                            0.0,
+                            5.299808824e-315,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": []
+                      }
+                    }
                   }
                 ]
               }

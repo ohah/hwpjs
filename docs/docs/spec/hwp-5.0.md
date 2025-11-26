@@ -2210,6 +2210,12 @@ Tag ID: HWPTAG_EQEDIT
 
 Tag ID: HWPTAG_SHAPE_COMPONENT_PICTURE
 
+**구현 참고사항 / Implementation Notes**
+
+실제 HWP 파일에서 `SHAPE_COMPONENT_PICTURE`는 레코드 트리 구조상 `SHAPE_COMPONENT`의 자식(level 3)으로 파싱될 수 있습니다. 이는 스펙 문서 표 106에서 `SHAPE_COMPONENT_PICTURE`가 `SHAPE_COMPONENT`와 동일한 "개체 요소 공통 속성(표 83)"을 포함하기 때문입니다.
+
+하지만 최종 JSON 출력에서는 `CTRL_HEADER`(그리기 개체)의 children에 `SHAPE_COMPONENT`와 `SHAPE_COMPONENT_PICTURE`가 평탄하게(flattened) 포함되어야 합니다. 따라서 파서 구현 시 `CTRL_HEADER`의 children을 처리할 때, `SHAPE_COMPONENT`의 children(`SHAPE_COMPONENT_PICTURE` 등)을 평탄하게 추가하는 로직이 필요합니다.
+
 **표 106: 그림 개체**
 
 | 자료형 | 길이(바이트) | 설명 |

@@ -123,6 +123,9 @@ impl ShapeComponentPicture {
     /// Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_PICTURE records, so it has not been verified with actual files.
     /// If an actual HWP file contains SHAPE_COMPONENT_PICTURE records, they will be automatically parsed.
     pub fn parse(data: &[u8]) -> Result<Self, String> {
+        let mut offset = 0;
+
+        // 그림 개체 속성(표 107) 파싱 시작 / Start parsing picture shape component attributes (Table 107)
         // 최소 78바이트 필요 (고정 부분) / Need at least 78 bytes (fixed part)
         if data.len() < 78 {
             return Err(format!(
@@ -130,8 +133,6 @@ impl ShapeComponentPicture {
                 data.len()
             ));
         }
-
-        let mut offset = 0;
 
         // 표 107: 테두리 색 (COLORREF, 4바이트) / Table 107: Border color (COLORREF, 4 bytes)
         let border_color_value = UINT32::from_le_bytes([
