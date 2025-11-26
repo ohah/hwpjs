@@ -1,7 +1,7 @@
 /// CtrlHeader 구조체 / CtrlHeader structure
 ///
 /// 스펙 문서 매핑: 표 64 - 컨트롤 헤더 / Spec mapping: Table 64 - Control header
-use crate::types::{decode_utf16le, HWPUNIT, HWPUNIT16, INT32, UINT16, UINT32, UINT8};
+use crate::types::{decode_utf16le, HWPUNIT, HWPUNIT16, INT32, SHWPUNIT, UINT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
 /// 컨트롤 ID 상수 정의 / Control ID constants definition
@@ -118,9 +118,17 @@ pub enum CtrlHeaderData {
         /// 속성 (표 70 참조) / Attribute (see Table 70)
         attribute: ObjectAttribute,
         /// 세로 오프셋 값 / Vertical offset value
-        offset_y: HWPUNIT,
+        /// 주의: 스펙 문서(표 69)에서는 HWPUNIT (unsigned)로 명시되어 있지만, 실제 파일에서는 SHWPUNIT (signed)로 파싱해야 합니다.
+        /// Note: Spec (Table 69) specifies HWPUNIT (unsigned), but actual files require SHWPUNIT (signed) parsing.
+        /// 참고: pyhwp는 DIFFSPEC으로 표시하고 SHWPUNIT을 사용합니다.
+        /// Reference: pyhwp marks this as DIFFSPEC and uses SHWPUNIT.
+        offset_y: SHWPUNIT,
         /// 가로 오프셋 값 / Horizontal offset value
-        offset_x: HWPUNIT,
+        /// 주의: 스펙 문서(표 69)에서는 HWPUNIT (unsigned)로 명시되어 있지만, 실제 파일에서는 SHWPUNIT (signed)로 파싱해야 합니다.
+        /// Note: Spec (Table 69) specifies HWPUNIT (unsigned), but actual files require SHWPUNIT (signed) parsing.
+        /// 참고: pyhwp는 DIFFSPEC으로 표시하고 SHWPUNIT을 사용합니다.
+        /// Reference: pyhwp marks this as DIFFSPEC and uses SHWPUNIT.
+        offset_x: SHWPUNIT,
         /// 오브젝트의 폭 / Object width
         width: HWPUNIT,
         /// 오브젝트의 높이 / Object height
@@ -395,8 +403,12 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, String> {
     ]);
     offset += 4;
 
-    // HWPUNIT 세로 오프셋 값 / HWPUNIT vertical offset value
-    let offset_y = HWPUNIT::from(UINT32::from_le_bytes([
+    // SHWPUNIT 세로 오프셋 값 / SHWPUNIT vertical offset value
+    // 주의: 스펙 문서(표 69)에서는 HWPUNIT (unsigned)로 명시되어 있지만, 실제 파일에서는 SHWPUNIT (signed)로 파싱해야 합니다.
+    // Note: Spec (Table 69) specifies HWPUNIT (unsigned), but actual files require SHWPUNIT (signed) parsing.
+    // 참고: pyhwp는 DIFFSPEC으로 표시하고 SHWPUNIT을 사용합니다.
+    // Reference: pyhwp marks this as DIFFSPEC and uses SHWPUNIT.
+    let offset_y = SHWPUNIT::from(INT32::from_le_bytes([
         data[offset],
         data[offset + 1],
         data[offset + 2],
@@ -404,8 +416,12 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, String> {
     ]));
     offset += 4;
 
-    // HWPUNIT 가로 오프셋 값 / HWPUNIT horizontal offset value
-    let offset_x = HWPUNIT::from(UINT32::from_le_bytes([
+    // SHWPUNIT 가로 오프셋 값 / SHWPUNIT horizontal offset value
+    // 주의: 스펙 문서(표 69)에서는 HWPUNIT (unsigned)로 명시되어 있지만, 실제 파일에서는 SHWPUNIT (signed)로 파싱해야 합니다.
+    // Note: Spec (Table 69) specifies HWPUNIT (unsigned), but actual files require SHWPUNIT (signed) parsing.
+    // 참고: pyhwp는 DIFFSPEC으로 표시하고 SHWPUNIT을 사용합니다.
+    // Reference: pyhwp marks this as DIFFSPEC and uses SHWPUNIT.
+    let offset_x = SHWPUNIT::from(INT32::from_le_bytes([
         data[offset],
         data[offset + 1],
         data[offset + 2],

@@ -2155,7 +2155,7 @@ expression: json
                   "size_protect": false
                 },
                 "offset_y": 0,
-                "offset_x": 4294964461,
+                "offset_x": -2835,
                 "width": 8504,
                 "height": 5669,
                 "z_order": 3,
@@ -3794,7 +3794,7 @@ expression: json
                   "object_category": "figure",
                   "size_protect": false
                 },
-                "offset_y": 4294964461,
+                "offset_y": -2835,
                 "offset_x": 0,
                 "width": 8504,
                 "height": 5669,

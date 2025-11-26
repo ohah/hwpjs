@@ -619,7 +619,7 @@ mod snapshot_tests {
                 .file_stem()
                 .and_then(|n| n.to_str())
                 .unwrap_or("unknown");
-            
+
             // 파일명을 스냅샷 이름으로 사용 (특수 문자 제거) / Use filename as snapshot name (remove special chars)
             let snapshot_name = file_name.replace('-', "_").replace('.', "_");
             let snapshot_name_json = format!("{}_json", snapshot_name);
@@ -631,7 +631,7 @@ mod snapshot_tests {
                             // Convert to JSON
                             let json = serde_json::to_string_pretty(&document)
                                 .expect("Should serialize document to JSON");
-                            
+
                             // 스냅샷 생성 / Create snapshot
                             assert_snapshot!(snapshot_name_json.as_str(), json);
 
@@ -639,7 +639,11 @@ mod snapshot_tests {
                             let json_file = snapshots_dir.join(format!("{}.json", file_name));
                             std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
                             std::fs::write(&json_file, &json).unwrap_or_else(|e| {
-                                eprintln!("Failed to write JSON file {}: {}", json_file.display(), e);
+                                eprintln!(
+                                    "Failed to write JSON file {}: {}",
+                                    json_file.display(),
+                                    e
+                                );
                             });
                         }
                         Err(e) => {
@@ -861,7 +865,7 @@ mod snapshot_tests {
                 .file_stem()
                 .and_then(|n| n.to_str())
                 .unwrap_or("unknown");
-            
+
             // 파일명을 스냅샷 이름으로 사용 (특수 문자 제거) / Use filename as snapshot name (remove special chars)
             let snapshot_name = file_name.replace('-', "_").replace('.', "_");
             let snapshot_name_md = format!("{}_markdown", snapshot_name);
@@ -874,13 +878,13 @@ mod snapshot_tests {
                             // 이미지를 파일로 저장하고 파일 경로를 사용 / Save images as files and use file paths
                             let images_dir = snapshots_dir.join("images").join(file_name);
                             std::fs::create_dir_all(&images_dir).unwrap_or(());
-                            
+
                             let markdown = if let Some(images_path) = images_dir.to_str() {
                                 document.to_markdown(Some(images_path))
                             } else {
                                 document.to_markdown(None)
                             };
-                            
+
                             // 스냅샷 생성 / Create snapshot
                             assert_snapshot!(snapshot_name_md.as_str(), markdown);
 
@@ -888,7 +892,11 @@ mod snapshot_tests {
                             let md_file = snapshots_dir.join(format!("{}.md", file_name));
                             std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
                             std::fs::write(&md_file, &markdown).unwrap_or_else(|e| {
-                                eprintln!("Failed to write Markdown file {}: {}", md_file.display(), e);
+                                eprintln!(
+                                    "Failed to write Markdown file {}: {}",
+                                    md_file.display(),
+                                    e
+                                );
                             });
                         }
                         Err(e) => {

@@ -1688,6 +1688,20 @@ MAKE_4CHID(a, b, c, d) (((a) << 24) | ((b) << 16) | ((c) << 8) | (d))
 | WCHAR array[len] | 2×len | 개체 설명문 글자 |
 | 전체 길이 | 가변 | `46 + (2×len) 바이트` |
 
+**구현 주의사항 (DIFFSPEC) / Implementation Notes (DIFFSPEC)**
+
+스펙 문서 표 69에서는 `offset_y`와 `offset_x`가 `HWPUNIT` (unsigned)로 명시되어 있지만, **실제 HWP 파일에서는 `SHWPUNIT` (signed)로 파싱해야 합니다**.
+
+이유:
+- 오프셋 값은 기준점보다 위나 왼쪽에 위치할 수 있어 음수 값이 필요합니다.
+- 예: `0xFFFFF9ED` (4294964461 as u32) = `-835` (as i32) = 약 -0.116인치
+
+레거시 구현 참고:
+- **pyhwp**: `SHWPUNIT`을 사용하고 `# DIFFSPEC` 주석으로 표시
+- **hwpjs.js**: `getUint32`를 사용하지만, 이는 잘못된 구현일 수 있음
+
+따라서 본 라이브러리는 `offset_y`와 `offset_x`를 `INT32`로 읽어 `SHWPUNIT`으로 변환합니다.
+
 **파싱 주의사항 / Parsing Notes**
 
 본 라이브러리는 실제 HWP 파일 파싱 시 `parse_object_common` 함수가 컨트롤 ID 이후의 데이터만 파싱하므로, 최소 40바이트가 필요합니다. 표 69의 전체 길이는 컨트롤 ID(4바이트)를 포함한 `46 + (2×len) 바이트`이지만, 컨트롤 ID를 제외하면 `42 + (2×len) 바이트`입니다.
@@ -1697,14 +1711,6 @@ MAKE_4CHID(a, b, c, d) (((a) << 24) | ((b) << 16) | ((c) << 8) | (d))
 - 선택적 필드: description_len(2) + description(2×len)
 
 따라서 40바이트는 유효한 크기입니다 (page_divide까지 포함, description 없음). 일부 파일에서는 40바이트만 있을 수 있으며, 42바이트 이상일 때는 description이 포함될 수 있습니다.
-
-This library's `parse_object_common` function parses only the data after the control ID, so at least 40 bytes are required. Table 69's total length includes the control ID (4 bytes) as `46 + (2×len) bytes`, but excluding the control ID it is `42 + (2×len) bytes`.
-
-Structure analysis:
-- Required fields (excluding control ID): attribute(4) + offset_y(4) + offset_x(4) + width(4) + height(4) + z_order(4) + margin(8) + instance_id(4) + page_divide(4) = **40 bytes**
-- Optional fields: description_len(2) + description(2×len)
-
-Therefore, 40 bytes is a valid size (includes up to page_divide, without description). Some files may have only 40 bytes, and when 42+ bytes are present, description may be included.
 
 **표 70: 개체 공통 속성**
 

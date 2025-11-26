@@ -11351,8 +11351,8 @@ expression: json
                   "object_category": "table",
                   "size_protect": false
                 },
-                "offset_y": 4294967156,
-                "offset_x": 4294967156,
+                "offset_y": -140,
+                "offset_x": -140,
                 "width": 47907,
                 "height": 12578,
                 "z_order": 3,
