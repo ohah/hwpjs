@@ -99,10 +99,14 @@ impl ShapeComponentOle {
         offset += 2;
 
         // 표 119: 속성 비트 필드 파싱 / Table 119: Parse attribute bit fields
+        // Note: UINT16 is 16 bits, so bits 16-21 don't exist in this field
+        // 참고: UINT16은 16비트이므로 bit 16-21은 이 필드에 존재하지 않습니다
         let drawing_aspect = (attr_value & 0xFF) as u8; // bit 0-7
         let has_moniker = (attr_value & 0x100) != 0; // bit 8
         let baseline = ((attr_value >> 9) & 0x7F) as u8; // bit 9-15
-        let object_type = ((attr_value >> 16) & 0x3F) as u8; // bit 16-21
+                                                         // object_type is not in UINT16 field, will be read from later data if needed
+                                                         // object_type은 UINT16 필드에 없으며, 필요시 이후 데이터에서 읽습니다
+        let object_type = 0u8; // Placeholder - may need to read from additional data
 
         // 표 118: 오브젝트 자체의 extent x크기 (INT32, 4바이트) / Table 118: Object extent X size (INT32, 4 bytes)
         let extent_x = INT32::from_le_bytes([
@@ -169,4 +173,3 @@ impl ShapeComponentOle {
         })
     }
 }
-
