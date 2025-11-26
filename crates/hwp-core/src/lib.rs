@@ -103,6 +103,19 @@ impl HwpParser {
             }
         }
 
+        // Parse Scripts storage
+        // 스크립트 스토리지 파싱 / Parse scripts storage
+        // 스펙 문서 3.2.9: Scripts 스토리지에는 Script 코드가 저장됩니다.
+        // Spec 3.2.9: Scripts storage contains Script code.
+        match crate::document::Scripts::parse(&mut cfb) {
+            Ok(scripts) => {
+                document.scripts = Some(scripts);
+            }
+            Err(e) => {
+                eprintln!("Warning: Failed to parse Scripts storage: {}", e);
+            }
+        }
+
         Ok(document)
     }
 

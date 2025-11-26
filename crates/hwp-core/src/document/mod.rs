@@ -10,6 +10,7 @@ mod docinfo;
 mod fileheader;
 mod preview_image;
 mod preview_text;
+mod scripts;
 
 pub use bindata::{BinData, BinaryDataFormat};
 pub use bodytext::{
@@ -23,6 +24,7 @@ pub use docinfo::{
 pub use fileheader::FileHeader;
 pub use preview_image::PreviewImage;
 pub use preview_text::PreviewText;
+pub use scripts::Scripts;
 
 use serde::{Deserialize, Serialize};
 
@@ -41,6 +43,8 @@ pub struct HwpDocument {
     pub preview_text: Option<PreviewText>,
     /// Preview image (PrvImage stream)
     pub preview_image: Option<PreviewImage>,
+    /// Scripts (Scripts storage)
+    pub scripts: Option<Scripts>,
 }
 
 impl HwpDocument {
@@ -53,6 +57,7 @@ impl HwpDocument {
             bin_data: BinData::default(),
             preview_text: None,
             preview_image: None,
+            scripts: None,
         }
     }
 
