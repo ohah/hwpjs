@@ -1,14 +1,21 @@
 {
   "compilerOptions": {
     "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ESNext"],
+    "types": ["node"],
+    "jsx": "react-native",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
     "strict": true,
-    "moduleResolution": "node",
-    "module": "CommonJS",
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "allowJs": false,
+    "skipLibCheck": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
   "include": ["."],
-  "exclude": ["node_modules", "bench", "__test__"]
+  "exclude": ["node_modules", "bench", "__test__", "**/dist/*"]
 }

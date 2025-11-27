@@ -1,26 +1,70 @@
 {
   "name": "@ohah/hwpjs",
   "version": "1.0.0",
-  "description": "Template project for writing node package with napi-rs",
+  "description": "HWP parser for Node.js, Web, and React Native",
   "main": "index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "browser": "browser.js",
+  "exports": {
+    ".": {
+      "react-native": {
+        "types": "./dist/react-native/index.d.mts",
+        "default": "./dist/react-native/index.mjs"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "browser": "./browser.js",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/napi-rs/package-template.git"
+    "url": "git+ssh://git@github.com/ohah/hwpjs.git"
   },
   "license": "MIT",
-  "browser": "browser.js",
+  "author": "ohah <bookyoon173@gmail.com>",
+  "homepage": "https://ohah.github.io/hwpjs",
   "keywords": [
     "napi-rs",
     "NAPI",
     "N-API",
     "Rust",
     "node-addon",
-    "node-addon-api"
+    "node-addon-api",
+    "react-native",
+    "ios",
+    "android",
+    "hwp"
   ],
   "files": [
     "index.d.ts",
     "index.js",
-    "browser.js"
+    "browser.js",
+    "src",
+    "dist",
+    "android",
+    "ios",
+    "cpp",
+    "*.podspec",
+    "react-native.config.js",
+    "!ios/build",
+    "!android/build",
+    "!android/gradle",
+    "!android/gradlew",
+    "!android/gradlew.bat",
+    "!android/local.properties",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__",
+    "!**/.*"
   ],
   "napi": {
     "binaryName": "hwpjs",
@@ -44,39 +88,38 @@
   "scripts": {
     "artifacts": "napi artifacts",
     "bench": "node --import @oxc-node/core/register benchmark/bench.ts",
-    "build": "napi build --platform --release --package hwpjs",
-    "build:debug": "napi build --platform --package hwpjs",
+    "build": "napi build --platform --release --package hwpjs && craby build && tsdown",
+    "build:debug": "napi build --platform --package hwpjs && craby build && tsdown",
+    "build:react-native": "craby build && tsdown",
+    "build:napi": "napi build --platform --release --package hwpjs",
+    "build:rn": "craby build && tsdown",
     "format": "run-p format:prettier format:rs format:toml",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "bun test",
-    "preversion": "napi build --platform --package hwpjs && git add .",
-    "version": "napi version"
+    "preversion": "napi build --platform --package hwpjs && craby build && tsdown && git add .",
+    "version": "napi version",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check",
+    "clean": "craby clean"
   },
   "devDependencies": {
     "@emnapi/core": "^1.5.0",
     "@emnapi/runtime": "^1.5.0",
     "@napi-rs/cli": "^3.2.0",
     "@oxc-node/core": "^0.0.34",
+    "craby-modules": "^0.1.0-rc.2",
+    "@react-native-community/cli-types": "^20.0.2",
     "@taplo/cli": "^0.7.0",
     "@tybys/wasm-util": "^0.10.0",
     "chalk": "^5.6.2",
+    "crabygen": "^0.1.0-rc.2",
     "npm-run-all2": "^8.0.4",
+    "react": "19.1.1",
+    "react-native": "0.82.1",
     "tinybench": "^5.0.1",
+    "tsdown": "^0.15.10",
     "@types/bun": "latest",
-    "typescript": "^5.9.2"
-  },
-  "ava": {
-    "extensions": {
-      "ts": "module"
-    },
-    "timeout": "2m",
-    "workerThreads": false,
-    "environmentVariables": {
-      "OXC_TSCONFIG_PATH": "./__test__/tsconfig.json"
-    },
-    "nodeArguments": [
-      "--import",
-      "@oxc-node/core/register"
-    ]
+    "@types/node": "^20.0.0",
+    "typescript": "^5.9.3"
   }
 }

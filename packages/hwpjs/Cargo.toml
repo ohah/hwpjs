@@ -1,9 +1,18 @@
+[workspace]
+members = ["crates/*"]
+resolver = "2"
 
-[package]
-authors = ["ohah <bookyoon173@gmail.com>"]
-edition = "2021"
-name = "hwpjs"
+[workspace.package]
 version = "0.1.0"
+edition = "2021"
+authors = ["ohah <bookyoon173@gmail.com>"]
+
+# napi-rs용 패키지 (Node.js/Web)
+[package]
+name = "hwpjs"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
 
 [lib]
 crate-type = ["cdylib"]
@@ -20,3 +29,6 @@ napi-build = "2"
 [profile.release]
 lto = true
 strip = "symbols"
+codegen-units = 1
+opt-level = "z"
+panic = "unwind"
