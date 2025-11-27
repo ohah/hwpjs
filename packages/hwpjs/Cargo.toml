@@ -1,12 +1,3 @@
-[workspace]
-members = ["crates/*"]
-resolver = "2"
-
-[workspace.package]
-version = "0.1.0"
-edition = "2021"
-authors = ["ohah <bookyoon173@gmail.com>"]
-
 # napi-rs용 패키지 (Node.js/Web)
 [package]
 name = "hwpjs"

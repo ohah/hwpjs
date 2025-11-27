@@ -47,6 +47,8 @@ Cargo.lock
 # Maestro
 # .maestro/ config files should be committed
 # .maestro/
+maestro-debug/
+*.maestro.log
 
 # Rspress
 .rspress/

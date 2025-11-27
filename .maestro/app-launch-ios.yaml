@@ -1,0 +1,12 @@
+# 앱 실행 테스트 (iOS)
+# React Native 앱이 정상적으로 실행되는지 확인
+
+appId: org.reactjs.native.example.ReactNativeExample
+---
+- launchApp
+- waitForAnimationToEnd
+# 앱이 실행되었는지 확인 (아무 텍스트나 표시되면 성공)
+- assertVisible: 
+    text: ".*"
+
+
