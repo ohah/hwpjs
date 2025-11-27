@@ -13,5 +13,15 @@
     "text": "명세서",
     "link": "/spec/",
     "activeMatch": "/spec/"
+  },
+  {
+    "text": "로드맵",
+    "link": "/roadmap/",
+    "activeMatch": "/roadmap/"
+  },
+  {
+    "text": "백로그",
+    "link": "/backlog/",
+    "activeMatch": "/backlog/"
   }
 ]
