@@ -45,7 +45,8 @@ Cargo.lock
 *.dll
 
 # Maestro
-.maestro/
+# .maestro/ config files should be committed
+# .maestro/
 
 # Rspress
 .rspress/

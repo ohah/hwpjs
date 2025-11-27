@@ -1,0 +1,9 @@
+# 앱 실행 테스트
+# React Native 앱을 실행하고 기본 화면이 표시되는지 확인
+
+appId: org.reactjs.native.example.ReactNativeExample
+---
+- launchApp
+- assertVisible: "HWPJS"
+- takeScreenshot
+

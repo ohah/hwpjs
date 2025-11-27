@@ -1,0 +1,6 @@
+# Maestro E2E 테스트 설정
+# React Native 앱의 E2E 테스트를 위한 Maestro 설정
+
+appId: org.reactjs.native.example.ReactNativeExample
+name: HWPJS React Native E2E Tests
+
