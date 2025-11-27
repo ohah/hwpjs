@@ -1724,7 +1724,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "첫페이지 첫 문단: 1단\n",
+                "text": "첫페이지 첫 문단: 1단",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1934,7 +1934,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2단 2단 2단 2단 2단 2단 2단 2단 2단\n",
+                "text": "2단 2단 2단 2단 2단 2단 2단 2단 2단",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2182,7 +2182,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2단 2단 2단\n",
+                "text": "2단 2단 2단",
                 "control_char_positions": [
                   {
                     "position": 8,
@@ -2285,7 +2285,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3단 3단 3단 3단  3단  3단  3단 3단 3단 3단 3단 \n",
+                "text": "3단 3단 3단 3단  3단  3단  3단 3단 3단 3단 3단 ",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2557,7 +2557,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3단 3단\n",
+                "text": "3단 3단",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -2638,7 +2638,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3단 3단 3단\n",
+                "text": "3단 3단 3단",
                 "control_char_positions": [
                   {
                     "position": 8,
@@ -2742,7 +2742,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "두 번 째 페이지: 새 쪽으로 2 단\n",
+                "text": "두 번 째 페이지: 새 쪽으로 2 단",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2864,7 +2864,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "다단다단다단다단다단다단다단\n",
+                "text": "다단다단다단다단다단다단다단",
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -3045,7 +3045,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3243,7 +3243,7 @@
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "글 상자 안의 다단\n",
+                                "text": "글 상자 안의 다단",
                                 "control_char_positions": [
                                   {
                                     "position": 0,
@@ -3335,7 +3335,7 @@
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자\n",
+                                "text": "글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자",
                                 "control_char_positions": [
                                   {
                                     "position": 71,
@@ -3617,7 +3617,7 @@
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표 셀 안의 다단\n",
+                            "text": "표 셀 안의 다단",
                             "control_char_positions": [
                               {
                                 "position": 0,
@@ -3689,7 +3689,7 @@
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀\n",
+                            "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀",
                             "control_char_positions": [
                               {
                                 "position": 67,
@@ -3963,7 +3963,7 @@
                               "records": [
                                 {
                                   "type": "para_text",
-                                  "text": "표 셀 안의 다단\n",
+                                  "text": "표 셀 안의 다단",
                                   "control_char_positions": [
                                     {
                                       "position": 0,
@@ -4035,7 +4035,7 @@
                               "records": [
                                 {
                                   "type": "para_text",
-                                  "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀\n",
+                                  "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀",
                                   "control_char_positions": [
                                     {
                                       "position": 67,

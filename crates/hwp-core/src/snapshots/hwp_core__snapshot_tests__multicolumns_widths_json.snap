@@ -1393,7 +1393,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1603,7 +1603,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1677,7 +1677,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 0,

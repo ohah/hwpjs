@@ -1474,7 +1474,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1732,7 +1732,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  위 캡션\n",
+                            "text": "표  위 캡션",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -1983,7 +1983,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2094,7 +2094,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  아래 캡션\n",
+                            "text": "표  아래 캡션",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -2345,7 +2345,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2456,7 +2456,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  왼쪽\n",
+                            "text": "표  왼쪽",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -2707,7 +2707,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2818,7 +2818,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  오른쪽\n",
+                            "text": "표  오른쪽",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -3069,7 +3069,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3180,7 +3180,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  왼쪽 위\n",
+                            "text": "표  왼쪽 위",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -3431,7 +3431,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3542,7 +3542,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  오른쪽 아래\n",
+                            "text": "표  오른쪽 아래",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -3793,7 +3793,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3909,7 +3909,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백까지 확대\n",
+                            "text": "표  여백까지 확대",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -3981,7 +3981,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "------------------------------------------\n",
+                            "text": "------------------------------------------",
                             "control_char_positions": [
                               {
                                 "position": 42,
@@ -4270,7 +4270,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  한 줄로 입력\n",
+                            "text": "표  한 줄로 입력",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -4342,7 +4342,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "------------------------------------------\n",
+                            "text": "------------------------------------------",
                             "control_char_positions": [
                               {
                                 "position": 42,

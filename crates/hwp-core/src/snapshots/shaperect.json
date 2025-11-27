@@ -1435,7 +1435,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1886,7 +1886,7 @@
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "글 상자\n",
+                                "text": "글 상자",
                                 "control_char_positions": [
                                   {
                                     "position": 4,

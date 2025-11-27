@@ -1171,7 +1171,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕\n",
+                "text": "ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1379,7 +1379,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko한컴돋움 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕\n",
+                "text": "ko한컴돋움 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕",
                 "control_char_positions": [
                   {
                     "position": 45,
@@ -1440,7 +1440,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕 enTimesNewRoman cn바탕 jp바탕 other바탕 symbol바탕 user바탕\n",
+                "text": "ko바탕 enTimesNewRoman cn바탕 jp바탕 other바탕 symbol바탕 user바탕",
                 "control_char_positions": [
                   {
                     "position": 54,
@@ -1501,7 +1501,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕 enArial cn바탕 jp바탕 other바탕 symbol바탕 user바탕\n",
+                "text": "ko바탕 enArial cn바탕 jp바탕 other바탕 symbol바탕 user바탕",
                 "control_char_positions": [
                   {
                     "position": 46,
@@ -1562,7 +1562,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕 en바탕 cn약자漢字 jp바탕 other바탕 symbol바탕 user바탕\n",
+                "text": "ko바탕 en바탕 cn약자漢字 jp바탕 other바탕 symbol바탕 user바탕",
                 "control_char_positions": [
                   {
                     "position": 45,
@@ -1623,7 +1623,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕 en바탕 cn간자漢字 jp바탕 other바탕 symbol바탕 user바탕\n",
+                "text": "ko바탕 en바탕 cn간자漢字 jp바탕 other바탕 symbol바탕 user바탕",
                 "control_char_positions": [
                   {
                     "position": 45,
@@ -1684,7 +1684,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕 en바탕 cn바탕 jp명조あ other바탕 symbol바탕 user바탕\n",
+                "text": "ko바탕 en바탕 cn바탕 jp명조あ other바탕 symbol바탕 user바탕",
                 "control_char_positions": [
                   {
                     "position": 44,
@@ -1745,7 +1745,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕 en바탕 cn바탕 jp고딕あ other바탕 symbol바탕 user바탕\n",
+                "text": "ko바탕 en바탕 cn바탕 jp고딕あ other바탕 symbol바탕 user바탕",
                 "control_char_positions": [
                   {
                     "position": 44,

@@ -1705,7 +1705,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "문단1\n",
+                "text": "문단1",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1913,7 +1913,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "문단2\n",
+                "text": "문단2",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -1974,7 +1974,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "문단3 - 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt\n",
+                "text": "문단3 - 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt",
                 "control_char_positions": [
                   {
                     "position": 75,
@@ -2055,7 +2055,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "문단4 - 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt\n",
+                "text": "문단4 - 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt",
                 "control_char_positions": [
                   {
                     "position": 75,
@@ -2136,7 +2136,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "문단 5\n",
+                "text": "문단 5",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2197,7 +2197,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "문단 6\n",
+                "text": "문단 6",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2258,7 +2258,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "문단 7\n",
+                "text": "문단 7",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2319,7 +2319,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "문단 8\n",
+                "text": "문단 8",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2380,7 +2380,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "문단 9\n",
+                "text": "문단 9",
                 "control_char_positions": [
                   {
                     "position": 4,

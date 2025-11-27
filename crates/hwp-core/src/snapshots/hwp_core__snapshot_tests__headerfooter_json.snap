@@ -1402,7 +1402,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "첫 페이지\n",
+                "text": "첫 페이지",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1610,7 +1610,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1696,7 +1696,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "Header 이것은 머리말입니다.\n",
+                            "text": "Header 이것은 머리말입니다.",
                             "control_char_positions": [
                               {
                                 "position": 17,
@@ -1793,7 +1793,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "Footer 이것은 꼬리말입니다.\n",
+                            "text": "Footer 이것은 꼬리말입니다.",
                             "control_char_positions": [
                               {
                                 "position": 18,

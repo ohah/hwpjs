@@ -1821,7 +1821,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "\t\t\t\n",
+                "text": "\t\t\t",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2064,7 +2064,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "\tL\tL\tL\n",
+                "text": "\tL\tL\tL",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2160,7 +2160,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "\tR\tR\tR\n",
+                "text": "\tR\tR\tR",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2256,7 +2256,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "\tC\tC\tC\n",
+                "text": "\tC\tC\tC",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2352,7 +2352,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "\tM\tM\tM\n",
+                "text": "\tM\tM\tM",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2448,7 +2448,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "\tL\tL\tL\n",
+                "text": "\tL\tL\tL",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2544,7 +2544,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "\tE\tE\n",
+                "text": "\tE\tE",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2629,7 +2629,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "\tI\tI\tI\n",
+                "text": "\tI\tI\tI",
                 "control_char_positions": [
                   {
                     "position": 0,

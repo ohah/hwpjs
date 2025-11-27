@@ -1401,7 +1401,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1609,7 +1609,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1780,7 +1780,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -1873,7 +1873,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2044,7 +2044,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -2137,7 +2137,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2308,7 +2308,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -2401,7 +2401,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2572,7 +2572,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -2665,7 +2665,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2836,7 +2836,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -2929,7 +2929,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3100,7 +3100,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -3193,7 +3193,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3364,7 +3364,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -3457,7 +3457,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3628,7 +3628,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -3721,7 +3721,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3892,7 +3892,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -3985,7 +3985,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -4156,7 +4156,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -4249,7 +4249,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -4420,7 +4420,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -4513,7 +4513,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -4684,7 +4684,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -4777,7 +4777,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -4948,7 +4948,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -5041,7 +5041,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5212,7 +5212,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -5305,7 +5305,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5476,7 +5476,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -5569,7 +5569,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5740,7 +5740,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "left 0\n",
+                                "text": "left 0",
                                 "control_char_positions": [
                                   {
                                     "position": 6,

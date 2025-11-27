@@ -2474,7 +2474,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "가\n",
+                "text": "가",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2682,7 +2682,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "기울임진하게\n",
+                "text": "기울임진하게",
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -2747,7 +2747,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "밑줄없음밑줄가운데줄윗줄\n",
+                "text": "밑줄없음밑줄가운데줄윗줄",
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -2824,7 +2824,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "글자크기: 기준크기10pt 한글90% 영문80% 기타70%\n",
+                "text": "글자크기: 기준크기10pt 한글90% 영문80% 기타70%",
                 "control_char_positions": [
                   {
                     "position": 32,
@@ -2901,7 +2901,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "폰트: 한글돋움 영문CourierNew 기타قLucidaSansUnicode\n",
+                "text": "폰트: 한글돋움 영문CourierNew 기타قLucidaSansUnicode",
                 "control_char_positions": [
                   {
                     "position": 42,
@@ -2974,7 +2974,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "붉은밑줄\n",
+                "text": "붉은밑줄",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3035,7 +3035,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "점선밑줄\n",
+                "text": "점선밑줄",
                 "control_char_positions": [
                   {
                     "position": 4,

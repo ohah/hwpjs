@@ -1474,7 +1474,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1732,7 +1732,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  \n",
+                            "text": "표  ",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -1823,7 +1823,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 \n",
+                            "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 ",
                             "control_char_positions": [
                               {
                                 "position": 0,
@@ -1970,7 +1970,7 @@ expression: json
                               "records": [
                                 {
                                   "type": "para_text",
-                                  "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 \n",
+                                  "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 ",
                                   "control_char_positions": [
                                     {
                                       "position": 0,
@@ -2071,7 +2071,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2182,7 +2182,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "그림  \n",
+                            "text": "그림  ",
                             "control_char_positions": [
                               {
                                 "position": 3,
@@ -2333,7 +2333,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 \n",
+                                "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 ",
                                 "control_char_positions": [
                                   {
                                     "position": 0,

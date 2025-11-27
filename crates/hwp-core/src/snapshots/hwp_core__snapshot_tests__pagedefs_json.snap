@@ -1436,7 +1436,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "Section 1: A4 portrait\n",
+                "text": "Section 1: A4 portrait",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1652,7 +1652,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "Section 2: A4 landscape\n",
+                "text": "Section 2: A4 landscape",
                 "control_char_positions": [
                   {
                     "position": 0,

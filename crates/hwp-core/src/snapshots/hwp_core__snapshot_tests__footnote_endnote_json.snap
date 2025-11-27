@@ -1393,7 +1393,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "각주참조\n",
+                "text": "각주참조",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1626,7 +1626,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": " 각주입니다.\n",
+                            "text": " 각주입니다.",
                             "control_char_positions": [
                               {
                                 "position": 0,
@@ -1723,7 +1723,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": " 각주입니다.\n",
+                            "text": " 각주입니다.",
                             "control_char_positions": [
                               {
                                 "position": 0,
@@ -1805,7 +1805,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "미주참조\n",
+                "text": "미주참조",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -1891,7 +1891,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": " 각주입니다.\n",
+                            "text": " 각주입니다.",
                             "control_char_positions": [
                               {
                                 "position": 0,
@@ -1988,7 +1988,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": " 각주입니다.\n",
+                            "text": " 각주입니다.",
                             "control_char_positions": [
                               {
                                 "position": 0,

@@ -3,10 +3,6 @@
 **버전**: 5.00.01.07
 
 ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕
-
-*[컨트롤: secd]*
-
-*[단 정의]*
 ko한컴돋움 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕
 ko바탕 enTimesNewRoman cn바탕 jp바탕 other바탕 symbol바탕 user바탕
 ko바탕 enArial cn바탕 jp바탕 other바탕 symbol바탕 user바탕

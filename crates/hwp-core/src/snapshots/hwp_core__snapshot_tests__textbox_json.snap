@@ -1401,7 +1401,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1659,7 +1659,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "그림  캡션\n",
+                            "text": "그림  캡션",
                             "control_char_positions": [
                               {
                                 "position": 3,
@@ -1808,7 +1808,7 @@ expression: json
                             "records": [
                               {
                                 "type": "para_text",
-                                "text": "글상자\n",
+                                "text": "글상자",
                                 "control_char_positions": [
                                   {
                                     "position": 3,

@@ -1638,7 +1638,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1846,7 +1846,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -1907,7 +1907,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -1968,7 +1968,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2029,7 +2029,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2090,7 +2090,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2151,7 +2151,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2212,7 +2212,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2273,7 +2273,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2334,7 +2334,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2395,7 +2395,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2456,7 +2456,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2517,7 +2517,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2578,7 +2578,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2639,7 +2639,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2700,7 +2700,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2761,7 +2761,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2822,7 +2822,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2883,7 +2883,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2944,7 +2944,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3005,7 +3005,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3066,7 +3066,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3127,7 +3127,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3188,7 +3188,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3249,7 +3249,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3310,7 +3310,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3371,7 +3371,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3432,7 +3432,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3493,7 +3493,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3554,7 +3554,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3615,7 +3615,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3676,7 +3676,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3737,7 +3737,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3798,7 +3798,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3859,7 +3859,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3920,7 +3920,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3981,7 +3981,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -4042,7 +4042,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4103,7 +4103,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4164,7 +4164,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4225,7 +4225,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -4286,7 +4286,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4347,7 +4347,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4408,7 +4408,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4469,7 +4469,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -4530,7 +4530,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4591,7 +4591,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4652,7 +4652,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4713,7 +4713,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -4774,7 +4774,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4835,7 +4835,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4896,7 +4896,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4957,7 +4957,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -5018,7 +5018,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5079,7 +5079,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5140,7 +5140,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5201,7 +5201,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -5262,7 +5262,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5323,7 +5323,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5384,7 +5384,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5445,7 +5445,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -5506,7 +5506,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5567,7 +5567,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5628,7 +5628,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5689,7 +5689,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -5750,7 +5750,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5811,7 +5811,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5872,7 +5872,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5933,7 +5933,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -5994,7 +5994,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6055,7 +6055,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6116,7 +6116,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6177,7 +6177,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -6238,7 +6238,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6299,7 +6299,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6360,7 +6360,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6421,7 +6421,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표 사용자정의 ☀\n",
+                "text": "글머리표 사용자정의 ☀",
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -6482,7 +6482,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "너비 10pt\n",
+                "text": "너비 10pt",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -6543,7 +6543,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "정렬 가운데\n",
+                "text": "정렬 가운데",
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -6604,7 +6604,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "본문과의 간격 50%\n",
+                "text": "본문과의 간격 50%",
                 "control_char_positions": [
                   {
                     "position": 11,
@@ -6665,7 +6665,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "자동 내어쓰기\n",
+                "text": "자동 내어쓰기",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -6726,7 +6726,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글자모양 없음\n",
+                "text": "글자모양 없음",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -6787,7 +6787,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표 사용자정의 ☀\n",
+                "text": "글머리표 사용자정의 ☀",
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -6848,7 +6848,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "너비 10pt\n",
+                "text": "너비 10pt",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -6909,7 +6909,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "정렬 오른쪽\n",
+                "text": "정렬 오른쪽",
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -6970,7 +6970,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "본문과의 간격 50%\n",
+                "text": "본문과의 간격 50%",
                 "control_char_positions": [
                   {
                     "position": 11,
@@ -7031,7 +7031,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "자동 내어쓰기\n",
+                "text": "자동 내어쓰기",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7092,7 +7092,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글자모양 없음\n",
+                "text": "글자모양 없음",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7153,7 +7153,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표 사용자정의 ☀\n",
+                "text": "글머리표 사용자정의 ☀",
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -7214,7 +7214,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "너비 20pt\n",
+                "text": "너비 20pt",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7275,7 +7275,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "정렬 왼쪽\n",
+                "text": "정렬 왼쪽",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -7336,7 +7336,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "본문과의 간격 50%\n",
+                "text": "본문과의 간격 50%",
                 "control_char_positions": [
                   {
                     "position": 11,
@@ -7397,7 +7397,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "자동 내어쓰기\n",
+                "text": "자동 내어쓰기",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7458,7 +7458,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글자모양 없음\n",
+                "text": "글자모양 없음",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7519,7 +7519,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표 사용자정의 ☀\n",
+                "text": "글머리표 사용자정의 ☀",
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -7580,7 +7580,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "너비 10pt\n",
+                "text": "너비 10pt",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7641,7 +7641,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "정렬 왼쪽\n",
+                "text": "정렬 왼쪽",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -7702,7 +7702,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "본문과의 간격 0%\n",
+                "text": "본문과의 간격 0%",
                 "control_char_positions": [
                   {
                     "position": 10,
@@ -7763,7 +7763,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "자동 내어쓰기\n",
+                "text": "자동 내어쓰기",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7824,7 +7824,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글자모양 없음\n",
+                "text": "글자모양 없음",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7885,7 +7885,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표 사용자정의 ☀\n",
+                "text": "글머리표 사용자정의 ☀",
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -7946,7 +7946,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "너비 10pt\n",
+                "text": "너비 10pt",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -8007,7 +8007,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "정렬 왼쪽\n",
+                "text": "정렬 왼쪽",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -8068,7 +8068,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "본문과의 간격 0%\n",
+                "text": "본문과의 간격 0%",
                 "control_char_positions": [
                   {
                     "position": 10,
@@ -8129,7 +8129,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "자동 내어쓰기 X\n",
+                "text": "자동 내어쓰기 X",
                 "control_char_positions": [
                   {
                     "position": 9,
@@ -8190,7 +8190,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글자모양 없음\n",
+                "text": "글자모양 없음",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -8251,7 +8251,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표 사용자정의 ☀\n",
+                "text": "글머리표 사용자정의 ☀",
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -8312,7 +8312,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "너비 10pt\n",
+                "text": "너비 10pt",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -8373,7 +8373,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "정렬 왼쪽\n",
+                "text": "정렬 왼쪽",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -8434,7 +8434,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "본문과의 간격 0%\n",
+                "text": "본문과의 간격 0%",
                 "control_char_positions": [
                   {
                     "position": 10,
@@ -8495,7 +8495,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "자동 내어쓰기 X\n",
+                "text": "자동 내어쓰기 X",
                 "control_char_positions": [
                   {
                     "position": 9,
@@ -8556,7 +8556,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "새 글머리표 모양: sun\n",
+                "text": "새 글머리표 모양: sun",
                 "control_char_positions": [
                   {
                     "position": 14,

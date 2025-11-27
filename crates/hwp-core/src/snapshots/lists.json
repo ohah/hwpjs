@@ -1932,7 +1932,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표\n",
+                "text": "글머리표",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2140,7 +2140,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2201,7 +2201,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2262,7 +2262,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2373,7 +2373,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "글머리표 두 번째\n",
+                "text": "글머리표 두 번째",
                 "control_char_positions": [
                   {
                     "position": 9,
@@ -2434,7 +2434,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2495,7 +2495,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2556,7 +2556,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2667,7 +2667,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "문단번호\n",
+                "text": "문단번호",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2728,7 +2728,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2789,7 +2789,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2850,7 +2850,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2-1\n",
+                "text": "2-1",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -2911,7 +2911,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2972,7 +2972,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-1\n",
+                "text": "3-1",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3033,7 +3033,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2\n",
+                "text": "3-2",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3094,7 +3094,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-1\n",
+                "text": "3-2-1",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3155,7 +3155,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-2\n",
+                "text": "3-2-2",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3216,7 +3216,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-3\n",
+                "text": "3-2-3",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3277,7 +3277,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "4\n",
+                "text": "4",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3388,7 +3388,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "문단번호 두 번째 (번호 이어짐)\n",
+                "text": "문단번호 두 번째 (번호 이어짐)",
                 "control_char_positions": [
                   {
                     "position": 18,
@@ -3449,7 +3449,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "5\n",
+                "text": "5",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3510,7 +3510,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "5-1\n",
+                "text": "5-1",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3621,7 +3621,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "문단번호 세 번째 (새 번호)\n",
+                "text": "문단번호 세 번째 (새 번호)",
                 "control_char_positions": [
                   {
                     "position": 16,
@@ -3682,7 +3682,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3743,7 +3743,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3804,7 +3804,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2-1\n",
+                "text": "2-1",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3865,7 +3865,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3926,7 +3926,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-1\n",
+                "text": "3-1",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3987,7 +3987,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2\n",
+                "text": "3-2",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -4048,7 +4048,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-1\n",
+                "text": "3-2-1",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -4109,7 +4109,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-2\n",
+                "text": "3-2-2",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -4170,7 +4170,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-3\n",
+                "text": "3-2-3",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -4231,7 +4231,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "4\n",
+                "text": "4",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4294,7 +4294,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "개요\n",
+                "text": "개요",
                 "control_char_positions": [
                   {
                     "position": 2,
@@ -4355,7 +4355,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4416,7 +4416,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4477,7 +4477,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2-1\n",
+                "text": "2-1",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -4538,7 +4538,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4599,7 +4599,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-1\n",
+                "text": "3-1",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -4660,7 +4660,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2\n",
+                "text": "3-2",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -4721,7 +4721,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-1\n",
+                "text": "3-2-1",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -4782,7 +4782,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-2\n",
+                "text": "3-2-2",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -4843,7 +4843,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-3\n",
+                "text": "3-2-3",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -4904,7 +4904,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "4\n",
+                "text": "4",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5015,7 +5015,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "개요 두 번째 (번호 이어짐)\n",
+                "text": "개요 두 번째 (번호 이어짐)",
                 "control_char_positions": [
                   {
                     "position": 16,
@@ -5076,7 +5076,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "5\n",
+                "text": "5",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5137,7 +5137,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "5-1\n",
+                "text": "5-1",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -5248,7 +5248,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "개요 세 번째 (새 번호)\n",
+                "text": "개요 세 번째 (새 번호)",
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -5317,7 +5317,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "1\n",
+                "text": "1",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5525,7 +5525,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2\n",
+                "text": "2",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5586,7 +5586,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "2-1\n",
+                "text": "2-1",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -5647,7 +5647,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3\n",
+                "text": "3",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5708,7 +5708,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-1\n",
+                "text": "3-1",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -5769,7 +5769,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2\n",
+                "text": "3-2",
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -5830,7 +5830,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-1\n",
+                "text": "3-2-1",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -5891,7 +5891,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-2\n",
+                "text": "3-2-2",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -5952,7 +5952,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "3-2-3\n",
+                "text": "3-2-3",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -6013,7 +6013,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "4\n",
+                "text": "4",
                 "control_char_positions": [
                   {
                     "position": 1,

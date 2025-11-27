@@ -2192,7 +2192,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "실선밑줄\n",
+                "text": "실선밑줄",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2400,7 +2400,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "대시밑줄\n",
+                "text": "대시밑줄",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2461,7 +2461,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "점선밑줄\n",
+                "text": "점선밑줄",
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2522,7 +2522,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "대시일점밑줄\n",
+                "text": "대시일점밑줄",
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -2583,7 +2583,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "대시이점밑줄\n",
+                "text": "대시이점밑줄",
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -2644,7 +2644,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "긴대시밑줄\n",
+                "text": "긴대시밑줄",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -2705,7 +2705,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "큰점선밑줄\n",
+                "text": "큰점선밑줄",
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -2766,7 +2766,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "이중실선밑줄\n",
+                "text": "이중실선밑줄",
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -2827,7 +2827,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "이중증가밑줄\n",
+                "text": "이중증가밑줄",
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -2888,7 +2888,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "이중감소밑줄\n",
+                "text": "이중감소밑줄",
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -2949,7 +2949,7 @@
             "records": [
               {
                 "type": "para_text",
-                "text": "삼중밑줄\n",
+                "text": "삼중밑줄",
                 "control_char_positions": [
                   {
                     "position": 4,

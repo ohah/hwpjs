@@ -3,10 +3,6 @@
 **버전**: 5.00.01.07
 
 |HHHHHHHHHHHHHH
-
-*[컨트롤: secd]*
-
-*[단 정의]*
 |HHHHHHHHHHHHHH
 |H 글자에 따라 150%
 |HHHHHHHHHHHHHH

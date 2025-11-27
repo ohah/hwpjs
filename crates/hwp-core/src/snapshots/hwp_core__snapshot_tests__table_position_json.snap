@@ -1512,7 +1512,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1720,7 +1720,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "전후\n",
+                "text": "전후",
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -1871,7 +1871,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 0mm, 글자처럼 취급\n",
+                            "text": "표  여백 0mm, 글자처럼 취급",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -2551,7 +2551,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2662,7 +2662,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -3340,7 +3340,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3451,7 +3451,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -4129,7 +4129,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -4240,7 +4240,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -4918,7 +4918,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5029,7 +5029,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -5709,7 +5709,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5820,7 +5820,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -6498,7 +6498,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -6609,7 +6609,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -7287,7 +7287,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -7398,7 +7398,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -8076,7 +8076,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -8187,7 +8187,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -8867,7 +8867,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -8978,7 +8978,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -9656,7 +9656,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -9767,7 +9767,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -10445,7 +10445,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -10556,7 +10556,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,
@@ -11234,7 +11234,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "\n",
+                "text": "",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -11345,7 +11345,7 @@ expression: json
                         "records": [
                           {
                             "type": "para_text",
-                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm\n",
+                            "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
                             "control_char_positions": [
                               {
                                 "position": 2,

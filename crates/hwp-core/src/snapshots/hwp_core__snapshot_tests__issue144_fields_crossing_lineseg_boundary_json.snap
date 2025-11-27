@@ -1539,7 +1539,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "google google google google google google\n",
+                "text": "google google google google google google",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1799,7 +1799,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "gmail gmail gmail gmail gmail gmail\n",
+                "text": "gmail gmail gmail gmail gmail gmail",
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -1895,7 +1895,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "gmaile\n",
+                "text": "gmaile",
                 "control_char_positions": [
                   {
                     "position": 4,

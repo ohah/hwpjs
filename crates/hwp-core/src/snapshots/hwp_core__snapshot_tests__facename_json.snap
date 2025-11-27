@@ -2394,7 +2394,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕\n",
+                "text": "ko바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2602,7 +2602,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko한컴바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕\n",
+                "text": "ko한컴바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 39,
@@ -2671,7 +2671,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko한양신명조en바탕cn바탕jp바탕other바탕symbol바탕user바탕\n",
+                "text": "ko한양신명조en바탕cn바탕jp바탕other바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 40,
@@ -2740,7 +2740,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko휴먼명조en바탕cn바탕jp바탕other바탕symbol바탕user바탕\n",
+                "text": "ko휴먼명조en바탕cn바탕jp바탕other바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 39,
@@ -2809,7 +2809,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕enArialcn바탕jp바탕other바탕symbol바탕user바탕\n",
+                "text": "ko바탕enArialcn바탕jp바탕other바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 40,
@@ -2878,7 +2878,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕enComicSansMScn바탕jp바탕other바탕symbol바탕user바탕\n",
+                "text": "ko바탕enComicSansMScn바탕jp바탕other바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 46,
@@ -2947,7 +2947,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕enCourierNewcn바탕jp바탕other바탕symbol바탕user바탕\n",
+                "text": "ko바탕enCourierNewcn바탕jp바탕other바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 45,
@@ -3016,7 +3016,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕enDejaVuSerifcn바탕jp바탕other바탕symbol바탕user바탕\n",
+                "text": "ko바탕enDejaVuSerifcn바탕jp바탕other바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 46,
@@ -3085,7 +3085,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕en바탕cnSimHeijp바탕other바탕symbol바탕user바탕\n",
+                "text": "ko바탕en바탕cnSimHeijp바탕other바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 41,
@@ -3154,7 +3154,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕en바탕cnSimSunjp바탕other바탕symbol바탕user바탕\n",
+                "text": "ko바탕en바탕cnSimSunjp바탕other바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 41,
@@ -3223,7 +3223,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕en바탕cn바탕jpMSGothicother바탕symbol바탕user바탕\n",
+                "text": "ko바탕en바탕cn바탕jpMSGothicother바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 43,
@@ -3292,7 +3292,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "ko바탕en바탕cn바탕jpMSMinChoother바탕symbol바탕user바탕\n",
+                "text": "ko바탕en바탕cn바탕jpMSMinChoother바탕symbol바탕user바탕",
                 "control_char_positions": [
                   {
                     "position": 43,

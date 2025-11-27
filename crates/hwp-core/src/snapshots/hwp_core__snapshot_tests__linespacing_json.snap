@@ -1962,7 +1962,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2170,7 +2170,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2235,7 +2235,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 글자에 따라 150%\n",
+                "text": "|H 글자에 따라 150%",
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -2296,7 +2296,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2361,7 +2361,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 고정 값 15pt\n",
+                "text": "|H 고정 값 15pt",
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -2422,7 +2422,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2487,7 +2487,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 여백만 지정 5pt\n",
+                "text": "|H 여백만 지정 5pt",
                 "control_char_positions": [
                   {
                     "position": 13,
@@ -2548,7 +2548,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2613,7 +2613,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 글자에 따라 100%\n",
+                "text": "|H 글자에 따라 100%",
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -2674,7 +2674,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2739,7 +2739,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 고정 값 10pt\n",
+                "text": "|H 고정 값 10pt",
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -2800,7 +2800,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2865,7 +2865,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 여백만 지정 0pt\n",
+                "text": "|H 여백만 지정 0pt",
                 "control_char_positions": [
                   {
                     "position": 13,
@@ -2926,7 +2926,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2991,7 +2991,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 글자에 따라 200%\n",
+                "text": "|H 글자에 따라 200%",
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -3052,7 +3052,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3117,7 +3117,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 고정 값 20pt\n",
+                "text": "|H 고정 값 20pt",
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -3178,7 +3178,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3243,7 +3243,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 여백만 지정 10pt\n",
+                "text": "|H 여백만 지정 10pt",
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -3304,7 +3304,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3369,7 +3369,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 글자에 따라 100%\n",
+                "text": "|H 글자에 따라 100%",
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -3434,7 +3434,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3499,7 +3499,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 고정 값 0pt\n",
+                "text": "|H 고정 값 0pt",
                 "control_char_positions": [
                   {
                     "position": 11,
@@ -3564,7 +3564,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3629,7 +3629,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|H 여백만 지정 0pt\n",
+                "text": "|H 여백만 지정 0pt",
                 "control_char_positions": [
                   {
                     "position": 13,
@@ -3694,7 +3694,7 @@ expression: json
             "records": [
               {
                 "type": "para_text",
-                "text": "|HHHHHHHHHHHHHH\n",
+                "text": "|HHHHHHHHHHHHHH",
                 "control_char_positions": [
                   {
                     "position": 15,
