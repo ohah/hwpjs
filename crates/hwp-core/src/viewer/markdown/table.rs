@@ -4,14 +4,13 @@
 /// 스펙 문서 매핑: 표 57 - 본문의 데이터 레코드, TABLE (HWPTAG_BEGIN + 61)
 /// Spec mapping: Table 57 - BodyText data records, TABLE (HWPTAG_BEGIN + 61)
 use crate::document::{bodytext::Table, HwpDocument, ParagraphRecord};
-use crate::viewer::markdown::convert_paragraph_to_markdown;
 
 /// Convert table to markdown format
 /// 테이블을 마크다운 형식으로 변환
 pub fn convert_table_to_markdown(
     table: &Table,
     document: &HwpDocument,
-    image_output_dir: Option<&str>,
+    options: &crate::viewer::markdown::MarkdownOptions,
 ) -> String {
     let row_count = table.attributes.row_count as usize;
     let col_count = table.attributes.col_count as usize;
@@ -99,14 +98,7 @@ pub fn convert_table_to_markdown(
 
             if col < col_count {
                 fill_cell_content(
-                    &mut grid,
-                    cell,
-                    row,
-                    col,
-                    row_count,
-                    col_count,
-                    document,
-                    image_output_dir,
+                    &mut grid, cell, row, col, row_count, col_count, document, options,
                 );
             }
         }
@@ -119,14 +111,7 @@ pub fn convert_table_to_markdown(
 
             if row < row_count && col < col_count {
                 fill_cell_content(
-                    &mut grid,
-                    cell,
-                    row,
-                    col,
-                    row_count,
-                    col_count,
-                    document,
-                    image_output_dir,
+                    &mut grid, cell, row, col, row_count, col_count, document, options,
                 );
             }
         }
@@ -172,7 +157,7 @@ fn fill_cell_content(
     row_count: usize,
     col_count: usize,
     document: &HwpDocument,
-    image_output_dir: Option<&str>,
+    options: &crate::viewer::markdown::MarkdownOptions,
 ) {
     // 셀 내용을 텍스트와 이미지로 변환 / Convert cell content to text and images
     let mut cell_parts = Vec::new();
@@ -193,25 +178,157 @@ fn fill_cell_content(
 
     // 셀 내부의 문단들을 마크다운으로 변환 / Convert paragraphs inside cell to markdown
     for (idx, para) in cell.paragraphs.iter().enumerate() {
-        let para_md = convert_paragraph_to_markdown(para, document, image_output_dir);
-        if !para_md.is_empty() {
-            // 이미지가 포함되어 있는지 확인 / Check if image is included
-            if para_md.contains("![이미지]") {
-                has_image = true;
-            }
-            // 문단 마크다운에서 개행을 공백으로 변환 (표 셀 내부에서는 개행을 표현할 수 없음)
-            // Convert line breaks to spaces in paragraph markdown (line breaks cannot be expressed in table cells)
-            let para_md_cleaned = para_md
-                .replace("  \n", " ")
-                .replace("\n\n", " ")
-                .replace('\n', " ");
-            cell_parts.push(para_md_cleaned);
+        // 테이블 셀 내부에서는 PARA_BREAK를 직접 처리해야 함
+        // In table cells, we need to handle PARA_BREAK directly
 
-            // 마지막 문단이 아니면 문단 사이 공백 추가
-            // If not last paragraph, add space between paragraphs
-            if idx < cell.paragraphs.len() - 1 {
-                cell_parts.push(" ".to_string());
+        // 문단 내의 모든 ParaText 레코드를 먼저 수집하여 함께 처리
+        // First collect all ParaText records in the paragraph to process together
+        let mut para_text_records = Vec::new();
+        let mut has_non_text_records = false;
+
+        for record in &para.records {
+            match record {
+                ParagraphRecord::ParaText {
+                    text,
+                    control_char_positions,
+                    ..
+                } => {
+                    para_text_records.push((text, control_char_positions));
+                }
+                _ => {
+                    has_non_text_records = true;
+                }
             }
+        }
+
+        // ParaText 레코드가 있으면 직접 처리 / If ParaText records exist, process directly
+        if !para_text_records.is_empty() {
+            let mut para_text_result = String::new();
+
+            for (text, control_char_positions) in para_text_records {
+                // PARA_BREAK나 LINE_BREAK를 직접 처리 / Handle PARA_BREAK or LINE_BREAK directly
+                let has_breaks = control_char_positions.iter().any(|pos| {
+                    use crate::document::bodytext::ControlChar;
+                    pos.code == ControlChar::PARA_BREAK || pos.code == ControlChar::LINE_BREAK
+                });
+
+                if !has_breaks {
+                    // 제어 문자가 없으면 텍스트만 추가 / If no control characters, just add text
+                    para_text_result.push_str(text);
+                    continue;
+                }
+
+                let mut last_char_pos = 0;
+
+                // control_positions를 정렬하여 순서대로 처리 / Sort control_positions to process in order
+                let mut sorted_positions: Vec<_> = control_char_positions
+                    .iter()
+                    .filter(|pos| {
+                        use crate::document::bodytext::ControlChar;
+                        pos.code == ControlChar::PARA_BREAK || pos.code == ControlChar::LINE_BREAK
+                    })
+                    .collect();
+                sorted_positions.sort_by_key(|pos| pos.position);
+
+                for pos in sorted_positions {
+                    // position은 문자 인덱스이므로, 그 위치까지의 텍스트를 문자 단위로 추가
+                    // position is character index, so add text up to that position by character
+                    let text_len = text.chars().count();
+                    if pos.position > last_char_pos && pos.position <= text_len {
+                        // 문자 단위로 텍스트 추출 / Extract text by character
+                        let text_before: String = text
+                            .chars()
+                            .skip(last_char_pos)
+                            .take(pos.position - last_char_pos)
+                            .collect();
+                        // trim() 없이 그대로 추가 (정확한 위치 유지) / Add as-is without trim (maintain exact position)
+                        para_text_result.push_str(&text_before);
+                    }
+
+                    // PARA_BREAK나 LINE_BREAK 위치에 <br> 추가 / Add <br> at PARA_BREAK or LINE_BREAK position
+                    if options.use_html == Some(true) {
+                        para_text_result.push_str("<br>");
+                    } else {
+                        para_text_result.push(' ');
+                    }
+
+                    // 제어 문자 다음 위치 / Position after control character
+                    // position이 텍스트 끝이면 더 이상 텍스트가 없으므로 text_len으로 설정
+                    // If position is at end of text, set to text_len as there's no more text
+                    last_char_pos = if pos.position >= text_len {
+                        text_len
+                    } else {
+                        pos.position + 1
+                    };
+                }
+
+                // 마지막 부분의 텍스트 추가 (last_char_pos가 텍스트 길이보다 작을 때만)
+                // Add remaining text (only if last_char_pos is less than text length)
+                let text_len = text.chars().count();
+                if last_char_pos < text_len {
+                    let text_after: String = text.chars().skip(last_char_pos).collect();
+                    // trim() 없이 그대로 추가 / Add as-is without trim
+                    para_text_result.push_str(&text_after);
+                }
+            }
+
+            if !para_text_result.trim().is_empty() {
+                cell_parts.push(para_text_result);
+            }
+        }
+        // ParaText가 아닌 레코드(이미지 등)가 있으면 직접 처리
+        // Process non-ParaText records (images, etc.) directly if they exist
+        if has_non_text_records {
+            for record in &para.records {
+                match record {
+                    ParagraphRecord::ParaText { .. } => {
+                        // ParaText는 이미 처리했으므로 건너뜀 / Skip ParaText as it's already processed
+                        continue;
+                    }
+                    ParagraphRecord::ShapeComponentPicture {
+                        shape_component_picture,
+                    } => {
+                        // ShapeComponentPicture 변환 / Convert ShapeComponentPicture
+                        if let Some(image_md) =
+                            crate::viewer::markdown::convert_shape_component_picture_to_markdown(
+                                shape_component_picture,
+                                document,
+                                options.image_output_dir.as_deref(),
+                            )
+                        {
+                            cell_parts.push(image_md);
+                            has_image = true;
+                        }
+                    }
+                    ParagraphRecord::ShapeComponent {
+                        shape_component: _,
+                        children,
+                    } => {
+                        // SHAPE_COMPONENT의 children을 재귀적으로 처리 / Recursively process SHAPE_COMPONENT's children
+                        let shape_parts =
+                            crate::viewer::markdown::convert_shape_component_children_to_markdown(
+                                children,
+                                document,
+                                options.image_output_dir.as_deref(),
+                            );
+                        for shape_part in shape_parts {
+                            if shape_part.contains("![이미지]") {
+                                has_image = true;
+                            }
+                            cell_parts.push(shape_part);
+                        }
+                    }
+                    _ => {
+                        // 기타 레코드는 서식 정보이므로 건너뜀 / Other records are formatting info, skip
+                    }
+                }
+            }
+        }
+
+        // 마지막 문단이 아니면 문단 사이 공백 추가
+        // If not last paragraph, add space between paragraphs
+        if idx < cell.paragraphs.len() - 1 {
+            cell_parts.push(" ".to_string());
         }
     }
 

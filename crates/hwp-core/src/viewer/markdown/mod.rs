@@ -29,24 +29,97 @@ use para_text::convert_para_text_to_markdown;
 use shape_component::convert_shape_component_children_to_markdown;
 use shape_component_picture::convert_shape_component_picture_to_markdown;
 
+/// Markdown 변환 옵션 / Markdown conversion options
+#[derive(Debug, Clone)]
+pub struct MarkdownOptions {
+    /// 이미지를 파일로 저장할 디렉토리 경로 (None이면 base64 데이터 URI로 임베드)
+    /// Optional directory path to save images as files. If None, images are embedded as base64 data URIs.
+    pub image_output_dir: Option<String>,
+
+    /// HTML 태그 사용 여부 (Some(true)인 경우 테이블 등 개행 불가 영역에 <br> 태그 사용)
+    /// Whether to use HTML tags (if Some(true), use <br> tags in areas where line breaks are not possible, such as tables)
+    pub use_html: Option<bool>,
+
+    /// 버전 정보 포함 여부 / Whether to include version information
+    pub include_version: Option<bool>,
+
+    /// 페이지 정보 포함 여부 / Whether to include page information
+    pub include_page_info: Option<bool>,
+}
+
+impl MarkdownOptions {
+    /// 이미지 출력 디렉토리 설정 / Set image output directory
+    pub fn with_image_output_dir(mut self, dir: Option<&str>) -> Self {
+        self.image_output_dir = dir.map(|s| s.to_string());
+        self
+    }
+
+    /// HTML 태그 사용 설정 / Set HTML tag usage
+    pub fn with_use_html(mut self, use_html: Option<bool>) -> Self {
+        self.use_html = use_html;
+        self
+    }
+
+    /// 버전 정보 포함 설정 / Set version information inclusion
+    pub fn with_include_version(mut self, include: Option<bool>) -> Self {
+        self.include_version = include;
+        self
+    }
+
+    /// 페이지 정보 포함 설정 / Set page information inclusion
+    pub fn with_include_page_info(mut self, include: Option<bool>) -> Self {
+        self.include_page_info = include;
+        self
+    }
+}
+
 /// Convert HWP document to Markdown format
 /// HWP 문서를 마크다운 형식으로 변환
 ///
 /// # Arguments / 매개변수
 /// * `document` - The HWP document to convert / 변환할 HWP 문서
-/// * `image_output_dir` - Optional directory path to save images as files. If None, images are embedded as base64 data URIs.
-///   이미지를 파일로 저장할 디렉토리 경로 (선택). None이면 base64 데이터 URI로 임베드됩니다.
+/// * `options` - Markdown conversion options / 마크다운 변환 옵션
 ///
 /// # Returns / 반환값
 /// Markdown string representation of the document / 문서의 마크다운 문자열 표현
-pub fn to_markdown(document: &HwpDocument, image_output_dir: Option<&str>) -> String {
+pub fn to_markdown(document: &HwpDocument, options: &MarkdownOptions) -> String {
     let mut lines = Vec::new();
 
     // Add document title with version info / 문서 제목과 버전 정보 추가
     lines.push("# HWP 문서".to_string());
     lines.push(String::new());
-    lines.push(format!("**버전**: {}", format_version(document)));
-    lines.push(String::new());
+
+    // 버전 정보 추가 / Add version information
+    if options.include_version != Some(false) {
+        lines.push(format!("**버전**: {}", format_version(document)));
+        lines.push(String::new());
+    }
+
+    // 페이지 정보 추가 / Add page information
+    if options.include_page_info == Some(true) {
+        if let Some(page_def) = extract_page_info(document) {
+            let paper_width_inch = page_def.paper_width.to_inches();
+            let paper_height_inch = page_def.paper_height.to_inches();
+            let left_margin_inch = page_def.left_margin.to_inches();
+            let right_margin_inch = page_def.right_margin.to_inches();
+            let top_margin_inch = page_def.top_margin.to_inches();
+            let bottom_margin_inch = page_def.bottom_margin.to_inches();
+
+            lines.push(format!(
+                "**용지 크기**: {:.2}인치 x {:.2}인치",
+                paper_width_inch, paper_height_inch
+            ));
+            lines.push(format!(
+                "**용지 방향**: {:?}",
+                page_def.attributes.paper_direction
+            ));
+            lines.push(format!(
+                "**여백**: 좌 {:.2}인치 / 우 {:.2}인치 / 상 {:.2}인치 / 하 {:.2}인치",
+                left_margin_inch, right_margin_inch, top_margin_inch, bottom_margin_inch
+            ));
+            lines.push(String::new());
+        }
+    }
 
     // Convert body text to markdown / 본문 텍스트를 마크다운으로 변환
     for section in &document.body_text.sections {
@@ -68,7 +141,7 @@ pub fn to_markdown(document: &HwpDocument, image_output_dir: Option<&str>) -> St
             }
 
             // Convert paragraph to markdown (includes text and controls) / 문단을 마크다운으로 변환 (텍스트와 컨트롤 포함)
-            let markdown = convert_paragraph_to_markdown(paragraph, document, image_output_dir);
+            let markdown = convert_paragraph_to_markdown(paragraph, document, options);
             if !markdown.is_empty() {
                 lines.push(markdown);
             }
@@ -89,12 +162,26 @@ fn format_version(document: &HwpDocument) -> String {
     format!("{}.{:02}.{:02}.{:02}", major, minor, patch, build)
 }
 
+/// 문서에서 첫 번째 PageDef 정보 추출 / Extract first PageDef information from document
+fn extract_page_info(document: &HwpDocument) -> Option<&crate::document::bodytext::PageDef> {
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            for record in &paragraph.records {
+                if let ParagraphRecord::PageDef { page_def } = record {
+                    return Some(page_def);
+                }
+            }
+        }
+    }
+    None
+}
+
 /// Convert a paragraph to markdown
 /// 문단을 마크다운으로 변환
 pub(crate) fn convert_paragraph_to_markdown(
     paragraph: &Paragraph,
     document: &HwpDocument,
-    image_output_dir: Option<&str>,
+    options: &MarkdownOptions,
 ) -> String {
     if paragraph.records.is_empty() {
         return String::new();
@@ -125,7 +212,7 @@ pub(crate) fn convert_paragraph_to_markdown(
                 let shape_parts = convert_shape_component_children_to_markdown(
                     children,
                     document,
-                    image_output_dir,
+                    options.image_output_dir.as_deref(),
                 );
                 parts.extend(shape_parts);
             }
@@ -136,7 +223,7 @@ pub(crate) fn convert_paragraph_to_markdown(
                 if let Some(image_md) = convert_shape_component_picture_to_markdown(
                     shape_component_picture,
                     document,
-                    image_output_dir,
+                    options.image_output_dir.as_deref(),
                 ) {
                     parts.push(image_md);
                 }
@@ -154,7 +241,7 @@ pub(crate) fn convert_paragraph_to_markdown(
                                 let shape_parts = convert_shape_component_children_to_markdown(
                                     shape_children,
                                     document,
-                                    image_output_dir,
+                                    options.image_output_dir.as_deref(),
                                 );
                                 parts.extend(shape_parts);
                             }
@@ -164,7 +251,7 @@ pub(crate) fn convert_paragraph_to_markdown(
                                 if let Some(image_md) = convert_shape_component_picture_to_markdown(
                                     shape_component_picture,
                                     document,
-                                    image_output_dir,
+                                    options.image_output_dir.as_deref(),
                                 ) {
                                     parts.push(image_md);
                                 }
@@ -199,8 +286,7 @@ pub(crate) fn convert_paragraph_to_markdown(
                     match child {
                         ParagraphRecord::Table { table } => {
                             // 테이블을 마크다운으로 변환 / Convert table to markdown
-                            let table_md =
-                                convert_table_to_markdown(table, document, image_output_dir);
+                            let table_md = convert_table_to_markdown(table, document, options);
                             if !table_md.is_empty() {
                                 parts.push(table_md);
                                 has_table = true;
@@ -214,7 +300,7 @@ pub(crate) fn convert_paragraph_to_markdown(
                             let shape_parts = convert_shape_component_children_to_markdown(
                                 shape_children,
                                 document,
-                                image_output_dir,
+                                options.image_output_dir.as_deref(),
                             );
                             for shape_part in shape_parts {
                                 if has_table {
@@ -241,7 +327,7 @@ pub(crate) fn convert_paragraph_to_markdown(
                             if let Some(image_md) = convert_shape_component_picture_to_markdown(
                                 shape_component_picture,
                                 document,
-                                image_output_dir,
+                                options.image_output_dir.as_deref(),
                             ) {
                                 if has_table {
                                     // 표 안에 이미지가 있는 경우 표 셀에 이미 포함되므로 여기서는 표시만 함
@@ -271,11 +357,8 @@ pub(crate) fn convert_paragraph_to_markdown(
                                 // 이미지가 포함되어 있는지만 확인
                                 // Only check if image is included
                                 for para in paragraphs {
-                                    let para_md = convert_paragraph_to_markdown(
-                                        para,
-                                        document,
-                                        image_output_dir,
-                                    );
+                                    let para_md =
+                                        convert_paragraph_to_markdown(para, document, options);
                                     if para_md.contains("![이미지]") {
                                         has_image = true;
                                     }
@@ -286,11 +369,8 @@ pub(crate) fn convert_paragraph_to_markdown(
                                 // paragraph_count가 있으므로 각 문단 사이에 개행 추가
                                 // Since paragraph_count exists, add line breaks between paragraphs
                                 for (idx, para) in paragraphs.iter().enumerate() {
-                                    let para_md = convert_paragraph_to_markdown(
-                                        para,
-                                        document,
-                                        image_output_dir,
-                                    );
+                                    let para_md =
+                                        convert_paragraph_to_markdown(para, document, options);
                                     if !para_md.is_empty() {
                                         // 이미지가 포함되어 있는지 확인 / Check if image is included
                                         if para_md.contains("![이미지]") {
@@ -328,9 +408,7 @@ pub(crate) fn convert_paragraph_to_markdown(
                                             // Only check if image is included
                                             for para in paragraphs {
                                                 let para_md = convert_paragraph_to_markdown(
-                                                    para,
-                                                    document,
-                                                    image_output_dir,
+                                                    para, document, options,
                                                 );
                                                 if para_md.contains("![이미지]") {
                                                     has_image = true;
@@ -343,9 +421,7 @@ pub(crate) fn convert_paragraph_to_markdown(
                                             // Since paragraph_count exists, add line breaks between paragraphs
                                             for (idx, para) in paragraphs.iter().enumerate() {
                                                 let para_md = convert_paragraph_to_markdown(
-                                                    para,
-                                                    document,
-                                                    image_output_dir,
+                                                    para, document, options,
                                                 );
                                                 if !para_md.is_empty() {
                                                     // 이미지가 포함되어 있는지 확인 / Check if image is included
@@ -373,7 +449,7 @@ pub(crate) fn convert_paragraph_to_markdown(
                                             convert_shape_component_picture_to_markdown(
                                                 shape_component_picture,
                                                 document,
-                                                image_output_dir,
+                                                options.image_output_dir.as_deref(),
                                             )
                                         {
                                             if has_table {

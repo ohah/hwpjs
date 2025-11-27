@@ -916,11 +916,13 @@ mod snapshot_tests {
                 .join("snapshots");
             let images_dir = snapshots_dir.join("images").join(file_name);
             std::fs::create_dir_all(&images_dir).unwrap_or(());
-            let markdown = if let Some(images_path) = images_dir.to_str() {
-                document.to_markdown(Some(images_path))
-            } else {
-                document.to_markdown(None)
+            let options = crate::viewer::markdown::MarkdownOptions {
+                image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+                use_html: Some(true),
+                include_version: Some(true),
+                include_page_info: Some(true),
             };
+            let markdown = document.to_markdown(&options);
             assert_snapshot!(snapshot_name_md.as_str(), markdown);
 
             // 실제 Markdown 파일로도 저장 / Also save as actual Markdown file
@@ -965,11 +967,13 @@ mod snapshot_tests {
                             let images_dir = snapshots_dir.join("images").join(file_name);
                             std::fs::create_dir_all(&images_dir).unwrap_or(());
 
-                            let markdown = if let Some(images_path) = images_dir.to_str() {
-                                document.to_markdown(Some(images_path))
-                            } else {
-                                document.to_markdown(None)
+                            let options = crate::viewer::markdown::MarkdownOptions {
+                                image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+                                use_html: Some(true),
+                                include_version: Some(true),
+                                include_page_info: Some(true),
                             };
+                            let markdown = document.to_markdown(&options);
 
                             // 스냅샷 생성 / Create snapshot
                             assert_snapshot!(snapshot_name_md.as_str(), markdown);
@@ -1297,7 +1301,13 @@ mod snapshot_tests {
             std::fs::create_dir_all(&images_dir).unwrap();
 
             // Convert to markdown with image files
-            let markdown = document.to_markdown(Some(images_dir.to_str().unwrap()));
+            let options = crate::viewer::markdown::MarkdownOptions {
+                image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+                use_html: Some(true),
+                include_version: Some(true),
+                include_page_info: Some(true),
+            };
+            let markdown = document.to_markdown(&options);
 
             // Check that markdown contains file paths instead of base64
             assert!(
