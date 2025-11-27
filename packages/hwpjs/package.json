@@ -92,14 +92,11 @@
     "build:debug": "napi build --platform --package hwpjs && craby build && tsdown",
     "build:react-native": "craby build && tsdown",
     "build:napi": "napi build --platform --release --package hwpjs",
-    "build:rn": "craby build && tsdown",
-    "format": "run-p format:prettier format:rs format:toml",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "bun test",
     "preversion": "napi build --platform --package hwpjs && craby build && tsdown && git add .",
     "version": "napi version",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check",
     "clean": "craby clean"
   },
   "devDependencies": {
