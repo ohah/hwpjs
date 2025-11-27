@@ -411,9 +411,17 @@ impl Section {
                         }
 
                         // 텍스트로 표현 가능한 제어 문자는 텍스트에 변환된 형태로 추가 / Add convertible control characters as converted text
+                        // 단, PARA_BREAK와 LINE_BREAK는 control_char_positions에만 저장하고 텍스트에는 포함하지 않음
+                        // However, PARA_BREAK and LINE_BREAK are only stored in control_char_positions, not added to text
                         if ControlChar::is_convertible(control_code) {
-                            if let Some(text_repr) = ControlChar::to_text(control_code) {
-                                cleaned_text.push_str(text_repr);
+                            // PARA_BREAK와 LINE_BREAK는 텍스트에 추가하지 않음 (control_char_positions에만 저장)
+                            // Don't add PARA_BREAK and LINE_BREAK to text (only store in control_char_positions)
+                            if control_code != ControlChar::PARA_BREAK
+                                && control_code != ControlChar::LINE_BREAK
+                            {
+                                if let Some(text_repr) = ControlChar::to_text(control_code) {
+                                    cleaned_text.push_str(text_repr);
+                                }
                             }
                         }
                         // 제거해야 할 제어 문자는 텍스트에 추가하지 않음 / Don't add removable control characters to text

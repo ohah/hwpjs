@@ -4,8 +4,7 @@
 /// 스펙 문서 매핑: 표 57 - 본문의 데이터 레코드, TABLE (HWPTAG_BEGIN + 61)
 /// Spec mapping: Table 57 - BodyText data records, TABLE (HWPTAG_BEGIN + 61)
 use crate::document::{bodytext::Table, HwpDocument, ParagraphRecord};
-use crate::viewer::markdown::common::format_image_markdown;
-use crate::viewer::markdown::para_text::is_meaningful_text;
+use crate::viewer::markdown::convert_paragraph_to_markdown;
 
 /// Convert table to markdown format
 /// 테이블을 마크다운 형식으로 변환
@@ -192,54 +191,34 @@ fn fill_cell_content(
         }
     }
 
-    for para in &cell.paragraphs {
-        for rec in &para.records {
-            match rec {
-                ParagraphRecord::ParaText {
-                    text,
-                    control_char_positions,
-                    inline_control_params: _,
-                } => {
-                    // 의미 있는 텍스트인지 확인 / Check if text is meaningful
-                    // 제어 문자는 이미 파싱 단계에서 제거되었으므로 텍스트를 그대로 사용 / Control characters are already removed during parsing, so use text as-is
-                    if is_meaningful_text(text, control_char_positions) {
-                        let trimmed = text.trim();
-                        if !trimmed.is_empty() {
-                            cell_parts.push(trimmed.to_string());
-                        }
-                    }
-                }
-                ParagraphRecord::ShapeComponentPicture {
-                    shape_component_picture,
-                } => {
-                    // 셀 안의 이미지를 마크다운으로 변환 / Convert image in cell to markdown
-                    let bindata_id = shape_component_picture.picture_info.bindata_id;
-                    if let Some(bin_item) = document
-                        .bin_data
-                        .items
-                        .iter()
-                        .find(|item| item.index == bindata_id)
-                    {
-                        let image_markdown = format_image_markdown(
-                            document,
-                            bindata_id,
-                            &bin_item.data,
-                            image_output_dir,
-                        );
-                        if !image_markdown.is_empty() {
-                            cell_parts.push(image_markdown);
-                        }
-                    }
-                }
-                _ => {
-                    // 기타 레코드는 무시 / Ignore other records
-                }
+    // 셀 내부의 문단들을 마크다운으로 변환 / Convert paragraphs inside cell to markdown
+    for (idx, para) in cell.paragraphs.iter().enumerate() {
+        let para_md = convert_paragraph_to_markdown(para, document, image_output_dir);
+        if !para_md.is_empty() {
+            // 이미지가 포함되어 있는지 확인 / Check if image is included
+            if para_md.contains("![이미지]") {
+                has_image = true;
+            }
+            // 문단 마크다운에서 개행을 공백으로 변환 (표 셀 내부에서는 개행을 표현할 수 없음)
+            // Convert line breaks to spaces in paragraph markdown (line breaks cannot be expressed in table cells)
+            let para_md_cleaned = para_md
+                .replace("  \n", " ")
+                .replace("\n\n", " ")
+                .replace('\n', " ");
+            cell_parts.push(para_md_cleaned);
+
+            // 마지막 문단이 아니면 문단 사이 공백 추가
+            // If not last paragraph, add space between paragraphs
+            if idx < cell.paragraphs.len() - 1 {
+                cell_parts.push(" ".to_string());
             }
         }
     }
 
     // 셀 내용을 하나의 문자열로 결합 / Combine cell parts into a single string
-    let cell_text = cell_parts.join(" ");
+    // 표 셀 내부에서는 개행을 공백으로 변환 (마크다운 표는 한 줄로 표시)
+    // In table cells, convert line breaks to spaces (markdown tables are displayed in one line)
+    let cell_text = cell_parts.join("");
 
     // 마크다운 표에서 파이프 문자 이스케이프 처리 / Escape pipe characters in markdown table
     let cell_content = if cell_text.is_empty() {
