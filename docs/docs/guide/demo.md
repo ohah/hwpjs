@@ -14,7 +14,7 @@
 
 파싱된 JSON 데이터를 확인하세요:
 
-[전체 JSON 보기](/hwpjs/demo/noori.json)
+<a href="/hwpjs/demo/noori.json" target="_blank">전체 JSON 보기</a>
 
 JSON 파일은 약 1.4MB 크기이며, HWP 문서의 모든 구조 정보를 포함합니다.
 
@@ -22,7 +22,7 @@ JSON 파일은 약 1.4MB 크기이며, HWP 문서의 모든 구조 정보를 포
 
 변환된 Markdown을 확인하세요:
 
-[원본 Markdown 파일 보기](/hwpjs/demo/noori.md)
+<a href="/hwpjs/demo/noori.md" target="_blank">원본 Markdown 파일 보기</a>
 
 <iframe 
     src="/hwpjs/demo/noori.html" 
