@@ -5,9 +5,8 @@
  * @format
  */
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar, StyleSheet, useColorScheme, View, Text, ScrollView } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ReactNative } from '@ohah/hwpjs';
 import { useEffect, useState } from 'react';
 import RNFS from 'react-native-fs';
@@ -16,6 +15,8 @@ import { Platform } from 'react-native';
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [hwpData, setHwpData] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // noori.hwp 파일 읽기
@@ -33,7 +34,10 @@ function App() {
         // 파일이 존재하는지 확인
         const exists = await RNFS.exists(filePath);
         if (!exists) {
-          console.error('파일을 찾을 수 없습니다:', filePath);
+          const errorMsg = `파일을 찾을 수 없습니다: ${filePath}`;
+          console.error(errorMsg);
+          setError(errorMsg);
+          setLoading(false);
           return;
         }
 
@@ -47,8 +51,12 @@ function App() {
         const result = ReactNative.hwp_parser(numberArray);
         setHwpData(result);
         console.log('HWP 파싱 결과:', result);
-      } catch (error) {
-        console.error('HWP 파일 읽기 실패:', error);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'HWP 파일 읽기 실패';
+        console.error('HWP 파일 읽기 실패:', err);
+        setError(errorMsg);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -58,17 +66,69 @@ function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <AppContent hwpData={hwpData} loading={loading} error={error} />
     </SafeAreaProvider>
   );
 }
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+function AppContent({
+  hwpData,
+  loading,
+  error,
+}: {
+  hwpData: string | null;
+  loading: boolean;
+  error: string | null;
+}) {
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title} testID="hwp-loading">
+            HWP 파일 로딩 중...
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title} testID="hwp-error">
+            오류 발생
+          </Text>
+          <Text style={styles.error} testID="hwp-error-message">
+            {error}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (!hwpData) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title} testID="hwp-empty">
+            HWP 데이터가 없습니다
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <NewAppScreen templateFileName="App.tsx" safeAreaInsets={safeAreaInsets} />
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        <Text style={styles.title} testID="hwp-success">
+          HWP 파싱 성공
+        </Text>
+        <Text style={styles.data} testID="hwp-data" numberOfLines={10}>
+          {hwpData.substring(0, 500)}...
+        </Text>
+      </ScrollView>
     </View>
   );
 }
@@ -76,6 +136,30 @@ function AppContent() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 20,
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#000000',
+  },
+  error: {
+    fontSize: 16,
+    color: 'red',
+    marginTop: 8,
+  },
+  data: {
+    fontSize: 14,
+    marginTop: 8,
+    color: '#000000',
   },
 });
 
