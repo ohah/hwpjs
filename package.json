@@ -16,7 +16,7 @@
     "test:rust:snapshot": "cargo insta test --workspace",
     "test:rust:snapshot:review": "cargo insta review --workspace",
     "test:node": "bun run --filter=@ohah/hwpjs test",
-    "test:mobile:e2e": "maestro test packages/react-native/.maestro",
+    "test:mobile:e2e": "maestro test .maestro",
     "lint": "oxlint .",
     "format": "oxfmt .",
     "format:rust": "cargo fmt --all",
@@ -24,7 +24,8 @@
     "build": "bun run --filter=@ohah/hwpjs build && bun run --filter=@ohah/hwpjs build && bun run --filter=@hwpjs/react-native build",
     "build:docs": "bun run --filter=@hwpjs/docs build",
     "build:node": "bun run --filter=@ohah/hwpjs build",
-    "build:react-native": "bun run --filter=@hwpjs/react-native build"
+    "build:crabygen": "bun run --filter=@hwpjs/hwpjs build:crabygen",
+    "build:react-native": "bun run --filter=@hwpjs/hwpjs build:react-native"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.4.1",
