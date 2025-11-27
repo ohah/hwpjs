@@ -115,8 +115,11 @@ pub(crate) fn convert_para_text_to_markdown(
         }
     }
 
-    if !result.trim().is_empty() {
-        Some(result.trim().to_string())
+    // trim() 대신 trim_start()만 사용하여 줄 끝 공백(마크다운 개행용)은 유지
+    // Use trim_start() instead of trim() to preserve trailing spaces (for markdown line breaks)
+    let trimmed_result = result.trim_start();
+    if !trimmed_result.is_empty() {
+        Some(trimmed_result.to_string())
     } else {
         None
     }

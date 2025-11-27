@@ -148,7 +148,9 @@ pub fn to_markdown(document: &HwpDocument, options: &MarkdownOptions) -> String 
         }
     }
 
-    lines.join("\n")
+    // 문단 사이에 빈 줄을 추가하여 마크다운에서 각 문단이 구분되도록 함
+    // Add blank lines between paragraphs so each paragraph is distinguished in markdown
+    lines.join("\n\n")
 }
 
 /// 버전 번호를 읽기 쉬운 문자열로 변환
