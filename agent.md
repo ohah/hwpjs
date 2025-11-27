@@ -429,8 +429,8 @@ refactor(core): reorganize modules to match HWP file structure
   - 단기 계획: HWP 5.0 파서 구현, 마크다운 뷰어, 수식 및 차트 지원
   - 장기 계획: PDF/이미지 뷰어, HWPX 형식 구현
 - **백로그**: `docs/docs/backlog/` - 구체적인 작업 항목
+  - 백로그 개요: `docs/docs/backlog/00_overview.md` (AI가 읽어야 할 주요 파일)
   - 현재 작업: `docs/docs/backlog/10_current_tasks.md`
-  - 백로그 개요: `docs/docs/backlog/00_overview.md`
 
 로드맵과 백로그는 Rspress 문서 사이트에도 포함되어 공개됩니다.
 
