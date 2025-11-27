@@ -1,0 +1,19 @@
+[package]
+name = "reactnative"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow = "1.0.99"
+craby = "0.1.0-rc"
+cxx = { version = "1.0.187", features = ["c++20"] }
+hwp-core = { path = "../../../../crates/hwp-core" }
+serde_json = "1.0.145"
+
+
+[build-dependencies]
+craby_build = { version = "0.1.0-rc", features = ["cxx"] }
+
+[lib]
+name = "reactnative"
+crate-type = ["staticlib"]

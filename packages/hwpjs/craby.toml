@@ -1,0 +1,8 @@
+[project]
+name = "reactnative"
+source_dir = "src"
+
+[android]
+package_name = "rs.craby.reactnative"
+
+[ios]
