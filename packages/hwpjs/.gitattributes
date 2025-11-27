@@ -16,3 +16,7 @@ hwpjs.wasi-browser.js linguist-detectable=false
 hwpjs.wasi.cjs        linguist-detectable=false
 wasi-worker-browser.mjs          linguist-detectable=false
 wasi-worker.mjs                  linguist-detectable=false
+
+*.pbxproj -text
+# specific for windows script files
+*.bat text eol=crlf
