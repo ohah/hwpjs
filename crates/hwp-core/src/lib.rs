@@ -621,6 +621,14 @@ mod snapshot_tests {
             None => return, // Skip test if file not available
         };
 
+        // 파일명에서 스냅샷 이름 추출 / Extract snapshot name from filename
+        let file_name = std::path::Path::new(&file_path)
+            .file_stem()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown");
+        let snapshot_name = file_name.replace('-', "_").replace('.', "_");
+        let snapshot_name_json = format!("{}_json", snapshot_name);
+
         if let Ok(data) = std::fs::read(&file_path) {
             let parser = HwpParser::new();
             let result = parser.parse(&data);
@@ -650,7 +658,7 @@ mod snapshot_tests {
             // Only control characters are escaped according to JSON standard
             let json =
                 serde_json::to_string_pretty(&document).expect("Should serialize document to JSON");
-            assert_snapshot!("full_document_json", json);
+            assert_snapshot!(snapshot_name_json.as_str(), json);
 
             // 실제 JSON 파일로도 저장 / Also save as actual JSON file
             let manifest_dir = env!("CARGO_MANIFEST_DIR");
@@ -658,7 +666,7 @@ mod snapshot_tests {
                 .join("src")
                 .join("snapshots");
             std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
-            let json_file = snapshots_dir.join("full_document.json");
+            let json_file = snapshots_dir.join(format!("{}.json", file_name));
             std::fs::write(&json_file, &json).unwrap_or_else(|e| {
                 eprintln!("Failed to write JSON file: {}", e);
             });
@@ -883,6 +891,14 @@ mod snapshot_tests {
             None => return, // Skip test if file not available
         };
 
+        // 파일명에서 스냅샷 이름 추출 / Extract snapshot name from filename
+        let file_name = std::path::Path::new(&file_path)
+            .file_stem()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown");
+        let snapshot_name = file_name.replace('-', "_").replace('.', "_");
+        let snapshot_name_md = format!("{}_markdown", snapshot_name);
+
         if let Ok(data) = std::fs::read(&file_path) {
             let parser = HwpParser::new();
             let result = parser.parse(&data);
@@ -898,13 +914,17 @@ mod snapshot_tests {
             let snapshots_dir = std::path::Path::new(manifest_dir)
                 .join("src")
                 .join("snapshots");
-            let images_dir = snapshots_dir.join("images");
+            let images_dir = snapshots_dir.join("images").join(file_name);
             std::fs::create_dir_all(&images_dir).unwrap_or(());
-            let markdown = document.to_markdown(Some(images_dir.to_str().unwrap()));
-            assert_snapshot!("document_markdown", markdown);
+            let markdown = if let Some(images_path) = images_dir.to_str() {
+                document.to_markdown(Some(images_path))
+            } else {
+                document.to_markdown(None)
+            };
+            assert_snapshot!(snapshot_name_md.as_str(), markdown);
 
             // 실제 Markdown 파일로도 저장 / Also save as actual Markdown file
-            let md_file = snapshots_dir.join("document.md");
+            let md_file = snapshots_dir.join(format!("{}.md", file_name));
             std::fs::write(&md_file, &markdown).unwrap_or_else(|e| {
                 eprintln!("Failed to write Markdown file: {}", e);
             });
