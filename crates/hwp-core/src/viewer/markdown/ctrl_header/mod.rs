@@ -39,8 +39,9 @@ pub fn convert_control_to_markdown(header: &CtrlHeader, has_table: bool) -> Stri
             convert_page_number_ctrl_to_markdown(header)
         }
         _ => {
-            // 기타 컨트롤 / Other controls
-            format!("*[컨트롤: {}]*", header.ctrl_id.trim())
+            // 기타 컨트롤은 마크다운으로 표현할 수 없으므로 빈 문자열 반환
+            // Other controls cannot be expressed in markdown, so return empty string
+            String::new()
         }
     }
 }

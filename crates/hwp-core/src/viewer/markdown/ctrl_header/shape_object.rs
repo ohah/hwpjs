@@ -3,7 +3,7 @@
 ///
 /// 스펙 문서 매핑: 표 127 - 개체 컨트롤 ID, SHAPE_OBJECT ("gso ")
 /// Spec mapping: Table 127 - Object Control IDs, SHAPE_OBJECT ("gso ")
-use crate::document::{CtrlHeader, CtrlHeaderData};
+use crate::document::CtrlHeader;
 
 /// Convert SHAPE_OBJECT CtrlId to markdown
 /// SHAPE_OBJECT CtrlId를 마크다운으로 변환
@@ -13,17 +13,10 @@ use crate::document::{CtrlHeader, CtrlHeaderData};
 ///
 /// # Returns / 반환값
 /// 마크다운 문자열 / Markdown string
-pub(crate) fn convert_shape_object_ctrl_to_markdown(header: &CtrlHeader) -> String {
-    // 그리기 개체 (Shape Object) - 글상자, 그림 등
-    // Shape Object - text boxes, images, etc.
-    let mut md = String::from("**그리기 개체**");
-    if let CtrlHeaderData::ObjectCommon { description, .. } = &header.data {
-        if let Some(desc) = description {
-            if !desc.trim().is_empty() {
-                md.push_str(&format!(": {}", desc.trim()));
-            }
-        }
-    }
-    md.push_str("\n\n*[개체 내용은 추출되지 않았습니다]*");
-    md
+pub(crate) fn convert_shape_object_ctrl_to_markdown(_header: &CtrlHeader) -> String {
+    // 그리기 개체 메타데이터는 마크다운 뷰어에서 불필요하므로 빈 문자열 반환
+    // 실제 이미지나 내용은 자식 레코드에서 처리됨
+    // Shape object metadata is not needed in markdown viewer, so return empty string
+    // Actual images or content are processed from child records
+    String::new()
 }

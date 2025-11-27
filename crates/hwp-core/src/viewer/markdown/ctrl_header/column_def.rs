@@ -9,6 +9,7 @@
 /// # Returns / 반환값
 /// 마크다운 문자열 / Markdown string
 pub(crate) fn convert_column_def_ctrl_to_markdown() -> String {
-    // 단 정의 (Column Definition) / Column Definition
-    String::from("*[단 정의]*")
+    // 단 정의는 마크다운 뷰어에서 불필요하므로 빈 문자열 반환
+    // Column definition is not needed in markdown viewer, so return empty string
+    String::new()
 }
