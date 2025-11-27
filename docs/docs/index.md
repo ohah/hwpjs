@@ -28,9 +28,9 @@ features:
   - title: 공식 문서 기반
     details: 한글과컴퓨터의 공개 문서를 참고하여 개발되었습니다.
     icon: 📚
-  - title: 모노레포 구조
-    details: Bun 워크스페이스를 사용한 체계적인 프로젝트 구조로 관리됩니다.
-    icon: 🔧
+  - title: 마크다운 변환
+    details: HWP 문서를 마크다운 형식으로 변환하여 다양한 용도로 활용할 수 있습니다.
+    icon: 📝
   - title: 오픈 소스
     details: MIT 라이선스로 자유롭게 사용할 수 있습니다.
     icon: 🌈
