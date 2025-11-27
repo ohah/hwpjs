@@ -2,10 +2,78 @@
 
 현재 진행 중이거나 곧 시작할 작업 항목들입니다.
 
+## 지원 예정 함수
+
+### 이미지 추출 함수
+
+- **함수명**: `extract_images`
+- **NAPI 함수명**: `extract_images` (node/web/react-native 공통)
+- **기능**: HWP 문서에서 이미지를 추출
+- **반환 타입**: 옵션으로 파일 경로 리스트 또는 이미지 데이터(바이트) 배열 지원
+- **TypeScript 선언**: `extractImages(data: Array<number>, options?: ExtractImagesOptions): ExtractImagesResult`
+- **관련 함수**: `extract_images_to_dir` (디렉토리에 저장하는 버전)
+- **버전**: 0.1.0-rc.1부터 지원 예정
+- **상태**: 계획됨
+- **구현 위치**:
+  - Rust: `crates/hwp-core/src/viewer/image.rs` (새 파일)
+  - NAPI 바인딩: `packages/hwpjs/src/lib.rs`
+  - TypeScript: `packages/hwpjs/index.d.ts`
+
+**반환 형식**:
+```typescript
+interface ExtractImagesResult {
+  images: Array<{
+    id: string;
+    data: Uint8Array;
+    format: string; // "jpg", "bmp", "png" 등
+  }>;
+  paths?: string[]; // output_dir 옵션 사용 시
+}
+```
+
+### 마크다운 변환 함수
+
+- **함수명**: `to_markdown`
+- **NAPI 함수명**: `to_markdown`
+- **기능**: HWP 문서를 마크다운으로 변환
+- **TypeScript 선언**: `toMarkdown(data: Array<number>, options?: MarkdownOptions): string`
+- **버전**: 1.0.0에서 완성 예정 (현재는 내부 구현만 존재)
+- **상태**: 구현 중 (내부 구현 완료, NAPI 바인딩 필요)
+- **구현 위치**:
+  - Rust: `crates/hwp-core/src/viewer/markdown/mod.rs` (이미 구현됨)
+  - NAPI 바인딩: `packages/hwpjs/src/lib.rs` (추가 필요)
+  - TypeScript: `packages/hwpjs/index.d.ts` (추가 필요)
+
+## 알 수 없는 요소 (미지원 기능)
+
+### 알 수 없는 Ctrl ID
+
+- **요소**: `CtrlHeaderData::Other`
+- **설명**: 표 127, 128의 알 수 없는 컨트롤 ID들
+- **현재 상태**: 파서에서 "Other"로 처리되는 미지원 컨트롤들
+- **위치**: `crates/hwp-core/src/document/bodytext/ctrl_header.rs:580`
+- **우선순위**: 낮음
+- **상태**: 조사 필요
+
+### 알 수 없는 Shape Component
+
+- **요소**: `ShapeComponentUnknown`
+- **설명**: 알 수 없는 개체 타입
+- **현재 상태**: 현재 테스트되지 않은 상태
+- **위치**: `crates/hwp-core/src/document/bodytext/shape_component_unknown.rs`
+- **우선순위**: 낮음
+- **상태**: 조사 필요
+
+### 알 수 없는 필드 타입
+
+- **요소**: `FIELD_UNKNOWN` ("%unk")
+- **설명**: 알 수 없는 필드 타입
+- **위치**: `crates/hwp-core/src/document/bodytext/ctrl_header.rs:91`
+- **우선순위**: 낮음
+- **상태**: 조사 필요
 
 
-## 참고사항
+## 버전 관리
 
-- Maestro 설정은 프로젝트 루트의 `.maestro/` 디렉토리에 배치되어 있습니다.
-- `package.json`의 `test:mobile:e2e` 스크립트는 루트의 `.maestro` 디렉토리를 참조합니다.
-- 실제 React Native 예제는 `examples/react-native/`에 위치합니다.
+- **0.1.0-rc.1**: 초기 배포 시작 (이미지 추출 함수 포함 예정)
+- **1.0.0**: 마크다운 변환 완성 시 업데이트
