@@ -420,3 +420,123 @@ refactor(core): reorganize modules to match HWP file structure
 2. 실제 Rust 구현은 이후 단계에서 진행
 3. Craby와 NAPI-RS 프로젝트 초기화는 각각의 CLI 도구로 진행 예정
 4. 파일 읽기 로직은 환경별로 다르게 구현되지만, 핵심 파싱 로직은 공유
+
+## 로드맵 및 백로그
+
+프로젝트의 전략적 계획과 구체적인 작업 항목은 다음 디렉토리에서 관리됩니다:
+
+- **로드맵**: `docs/docs/roadmap/` - 전략적 계획 및 장기 목표
+  - 단기 계획: HWP 5.0 파서 구현, 마크다운 뷰어, 수식 및 차트 지원
+  - 장기 계획: PDF/이미지 뷰어, HWPX 형식 구현
+- **백로그**: `docs/docs/backlog/` - 구체적인 작업 항목
+  - 현재 작업: `docs/docs/backlog/10_current_tasks.md`
+  - 백로그 개요: `docs/docs/backlog/00_overview.md`
+
+로드맵과 백로그는 Rspress 문서 사이트에도 포함되어 공개됩니다.
+
+## packages/hwpjs 배포 구조와 원리
+
+`packages/hwpjs`는 Node.js, Web, React Native 환경을 모두 지원하는 멀티 플랫폼 패키지입니다.
+
+### 이중 빌드 시스템
+
+패키지는 두 가지 빌드 시스템을 사용하여 다양한 환경을 지원합니다:
+
+1. **NAPI-RS**: Node.js/Web용 네이티브 모듈 빌드
+   - `bun run build:node`
+   - 플랫폼별 `.node` 바이너리 생성
+   - Node.js N-API를 통한 네이티브 바인딩
+
+2. **Craby**: React Native용 네이티브 모듈 빌드
+   - `craby build`
+   - iOS/Android 네이티브 모듈 생성
+   - Rust -> C++ 바인딩을 통한 React Native 통합
+
+3. **tsdown**: TypeScript 번들링
+   - `tsdown` 명령으로 ESM/CJS 형식으로 변환
+   - React Native용 별도 번들 생성 (`dist/react-native/`)
+
+### 환경별 exports 분기
+
+`package.json`의 `exports` 필드를 사용하여 환경별로 다른 진입점을 제공합니다:
+
+```json
+{
+  "exports": {
+    ".": {
+      "react-native": {
+        "types": "./dist/react-native/index.d.mts",
+        "default": "./dist/react-native/index.mjs"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "browser": "./browser.js",
+      "default": "./index.js"
+    }
+  }
+}
+```
+
+- **react-native**: React Native 환경에서 자동으로 `dist/react-native/` 경로 사용
+- **import**: ESM 환경에서 `dist/index.mjs` 사용
+- **require**: CommonJS 환경에서 `dist/index.js` 사용
+- **browser**: 브라우저 환경에서 `browser.js` 사용 (WASI 폴백)
+
+### 플랫폼별 바이너리 패키징
+
+NAPI-RS는 `napi prepublish` 명령을 통해 플랫폼별 바이너리를 별도 npm 패키지로 분리합니다:
+
+- 각 플랫폼별로 `@ohah/hwpjs-{platform}-{arch}` 형식의 패키지 생성
+- 메인 패키지의 `optionalDependencies`에 포함
+- npm이 자동으로 적절한 플랫폼 패키지를 선택하여 설치
+
+지원 플랫폼:
+- Windows (x64, ia32, arm64)
+- macOS (x64, arm64, universal)
+- Linux (x64, arm64, arm, 다양한 libc 변형)
+- Android (arm64, arm-eabi)
+
+### 빌드 프로세스
+
+전체 빌드 프로세스는 다음과 같습니다:
+
+1. **NAPI 빌드**: `napi build --platform --release --package hwpjs`
+   - Rust 코드를 플랫폼별 네이티브 바이너리로 컴파일
+   - `.node` 파일 생성
+
+2. **Craby 빌드**: `craby build`
+   - React Native용 네이티브 모듈 빌드
+   - iOS/Android 라이브러리 생성
+
+3. **TypeScript 번들링**: `tsdown`
+   - TypeScript 소스를 ESM/CJS로 변환
+   - React Native용 별도 번들 생성
+
+### 배포 흐름
+
+배포 전 `prepublishOnly` 훅에서 다음 작업을 수행합니다:
+
+1. `napi prepublish -t npm`: 플랫폼별 패키지 준비
+2. 각 플랫폼별 바이너리를 별도 디렉토리로 분리
+3. npm 패키지 메타데이터 생성
+
+배포 시:
+- 메인 패키지 (`@ohah/hwpjs`)가 npm에 게시됨
+- 플랫폼별 패키지들이 `optionalDependencies`로 참조됨
+- 사용자가 설치할 때 npm이 자동으로 적절한 플랫폼 패키지를 선택
+
+### 파일 구조
+
+배포되는 파일은 `package.json`의 `files` 필드로 제어됩니다:
+
+- `index.js`, `index.d.ts`: Node.js 진입점
+- `dist/`: 번들된 TypeScript 파일
+- `android/`, `ios/`: React Native 네이티브 모듈
+- `cpp/`: C++ 바인딩 코드
+- `*.podspec`: iOS CocoaPods 설정
