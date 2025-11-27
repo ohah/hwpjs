@@ -91,7 +91,7 @@ fn format_version(document: &HwpDocument) -> String {
 
 /// Convert a paragraph to markdown
 /// 문단을 마크다운으로 변환
-fn convert_paragraph_to_markdown(
+pub(crate) fn convert_paragraph_to_markdown(
     paragraph: &Paragraph,
     document: &HwpDocument,
     image_output_dir: Option<&str>,
@@ -101,6 +101,7 @@ fn convert_paragraph_to_markdown(
     }
 
     let mut parts = Vec::new();
+    let mut text_parts = Vec::new(); // 같은 문단 내의 텍스트 레코드들을 모음 / Collect text records in the same paragraph
 
     // Process all records in order / 모든 레코드를 순서대로 처리
     for record in &paragraph.records {
@@ -112,7 +113,8 @@ fn convert_paragraph_to_markdown(
             } => {
                 // ParaText 변환 / Convert ParaText
                 if let Some(text_md) = convert_para_text_to_markdown(text, control_char_positions) {
-                    parts.push(text_md);
+                    // 같은 문단 내의 텍스트는 나중에 합침 / Text in the same paragraph will be combined later
+                    text_parts.push(text_md);
                 }
             }
             ParagraphRecord::ShapeComponent {
@@ -140,6 +142,41 @@ fn convert_paragraph_to_markdown(
                 }
             }
             ParagraphRecord::CtrlHeader { header, children } => {
+                // 마크다운으로 표현할 수 없는 컨트롤 헤더는 건너뜀 / Skip control headers that cannot be expressed in markdown
+                if !should_process_control_header(header) {
+                    // 자식 레코드만 처리 (예: SHAPE_OBJECT 내부의 이미지) / Only process children (e.g., images inside SHAPE_OBJECT)
+                    for child in children {
+                        match child {
+                            ParagraphRecord::ShapeComponent {
+                                shape_component: _,
+                                children: shape_children,
+                            } => {
+                                let shape_parts = convert_shape_component_children_to_markdown(
+                                    shape_children,
+                                    document,
+                                    image_output_dir,
+                                );
+                                parts.extend(shape_parts);
+                            }
+                            ParagraphRecord::ShapeComponentPicture {
+                                shape_component_picture,
+                            } => {
+                                if let Some(image_md) = convert_shape_component_picture_to_markdown(
+                                    shape_component_picture,
+                                    document,
+                                    image_output_dir,
+                                ) {
+                                    parts.push(image_md);
+                                }
+                            }
+                            _ => {
+                                // 기타 자식 레코드는 무시 (이미 처리된 경우만 도달) / Ignore other child records (only reached if already processed)
+                            }
+                        }
+                    }
+                    continue; // 이 컨트롤 헤더는 더 이상 처리하지 않음 / Don't process this control header further
+                }
+
                 // 컨트롤 헤더의 자식 레코드 처리 (레벨 2, 예: 테이블, 그림 등) / Process control header children (level 2, e.g., table, images, etc.)
                 let mut has_table = false;
                 let mut has_image = false;
@@ -246,7 +283,9 @@ fn convert_paragraph_to_markdown(
                             } else {
                                 // 표가 없으면 ListHeader의 paragraphs를 처리
                                 // If no table, process ListHeader's paragraphs
-                                for para in paragraphs {
+                                // paragraph_count가 있으므로 각 문단 사이에 개행 추가
+                                // Since paragraph_count exists, add line breaks between paragraphs
+                                for (idx, para) in paragraphs.iter().enumerate() {
                                     let para_md = convert_paragraph_to_markdown(
                                         para,
                                         document,
@@ -260,6 +299,12 @@ fn convert_paragraph_to_markdown(
                                         // 이미지가 있든 없든 마크다운 추가 / Add markdown regardless of image
                                         parts.push(para_md);
                                         has_content = true;
+
+                                        // 마지막 문단이 아니면 문단 사이 개행 추가 (스페이스 2개 + 개행)
+                                        // If not last paragraph, add line break between paragraphs (two spaces + newline)
+                                        if idx < paragraphs.len() - 1 {
+                                            parts.push("  \n".to_string());
+                                        }
                                     }
                                 }
                             }
@@ -294,7 +339,9 @@ fn convert_paragraph_to_markdown(
                                         } else {
                                             // 표가 없으면 ListHeader의 paragraphs를 처리
                                             // If no table, process ListHeader's paragraphs
-                                            for para in paragraphs {
+                                            // paragraph_count가 있으므로 각 문단 사이에 개행 추가
+                                            // Since paragraph_count exists, add line breaks between paragraphs
+                                            for (idx, para) in paragraphs.iter().enumerate() {
                                                 let para_md = convert_paragraph_to_markdown(
                                                     para,
                                                     document,
@@ -308,6 +355,12 @@ fn convert_paragraph_to_markdown(
                                                     // 이미지가 있든 없든 마크다운 추가 / Add markdown regardless of image
                                                     parts.push(para_md);
                                                     has_content = true;
+
+                                                    // 마지막 문단이 아니면 문단 사이 개행 추가 (스페이스 2개 + 개행)
+                                                    // If not last paragraph, add line break between paragraphs (two spaces + newline)
+                                                    if idx < paragraphs.len() - 1 {
+                                                        parts.push("  \n".to_string());
+                                                    }
                                                 }
                                             }
                                         }
@@ -388,6 +441,10 @@ fn convert_paragraph_to_markdown(
                         parts.push(control_md);
                     }
                 }
+                // 마크다운으로 표현할 수 없는 컨트롤은 이미 should_process_control_header에서 필터링되었으므로
+                // 여기서는 처리 가능한 컨트롤만 도달함
+                // Controls that cannot be expressed in markdown are already filtered in should_process_control_header,
+                // so only processable controls reach here
             }
             _ => {
                 // Other record types (char shape, line seg, etc.) are formatting info
@@ -398,5 +455,104 @@ fn convert_paragraph_to_markdown(
         }
     }
 
-    parts.join("\n\n")
+    // 같은 문단 내의 텍스트 레코드들을 합침 / Combine text records in the same paragraph
+    if !text_parts.is_empty() {
+        // 텍스트들을 합치되, 각 텍스트 사이에 스페이스 2개 + 개행 추가
+        // Combine texts, adding two spaces + newline between each text
+        let combined_text = text_parts.join("  \n");
+        // 개요 레벨 확인 및 헤딩으로 변환 / Check outline level and convert to heading
+        let heading_md =
+            convert_to_heading_if_outline(&combined_text, &paragraph.para_header, document);
+        parts.push(heading_md);
+    }
+
+    // 마크다운 문법에 맞게 개행 처리 / Handle line breaks according to markdown syntax
+    // 텍스트가 연속으로 나올 때는 스페이스 2개 + 개행, 블록 요소 사이는 빈 줄
+    // For consecutive text: two spaces + newline, for block elements: blank line
+    if parts.is_empty() {
+        return String::new();
+    }
+
+    if parts.len() == 1 {
+        return parts[0].clone();
+    }
+
+    let mut result = String::new();
+    for (i, part) in parts.iter().enumerate() {
+        if i > 0 {
+            let prev_part = &parts[i - 1];
+            let is_prev_text = is_text_part(prev_part);
+            let is_current_text = is_text_part(part);
+
+            // 텍스트가 연속으로 나올 때는 스페이스 2개 + 개행
+            // When text is consecutive, use two spaces + newline
+            if is_prev_text && is_current_text {
+                result.push_str("  \n");
+            }
+            // 블록 요소가 포함된 경우는 빈 줄
+            // When block elements are involved, use blank line
+            else {
+                result.push_str("\n\n");
+            }
+        }
+        result.push_str(part);
+    }
+
+    result
+}
+
+/// Check if a part is a text part (not a block element)
+/// part가 텍스트인지 확인 (블록 요소가 아님)
+fn is_text_part(part: &str) -> bool {
+    !is_block_element(part)
+}
+
+/// Check if a part is a block element (image, table, etc.)
+/// part가 블록 요소인지 확인 (이미지, 표 등)
+fn is_block_element(part: &str) -> bool {
+    part.starts_with("![이미지]")
+        || part.starts_with("|") // 테이블 / table
+        || part.starts_with("---") // 페이지 구분선 / page break
+        || part.starts_with("#") // 헤딩 / heading
+}
+
+/// Check if control header should be processed for markdown
+/// 컨트롤 헤더가 마크다운 변환에서 처리되어야 하는지 확인
+fn should_process_control_header(header: &crate::document::CtrlHeader) -> bool {
+    use crate::document::CtrlId;
+    match header.ctrl_id.as_str() {
+        // 마크다운으로 표현 가능한 컨트롤만 처리 / Only process controls that can be expressed in markdown
+        CtrlId::TABLE => true,
+        CtrlId::SHAPE_OBJECT => true, // 이미지는 자식 레코드에서 처리 / Images are processed from child records
+        CtrlId::HEADER_FOOTER => false, // 마크다운으로 표현 불가 / Cannot be expressed in markdown
+        CtrlId::FOOTNOTE => false,    // 마크다운으로 표현 불가 / Cannot be expressed in markdown
+        CtrlId::COLUMN_DEF => false,  // 마크다운으로 표현 불가 / Cannot be expressed in markdown
+        CtrlId::PAGE_NUMBER | CtrlId::PAGE_NUMBER_POS => false, // 마크다운으로 표현 불가 / Cannot be expressed in markdown
+        _ => false, // 기타 컨트롤도 마크다운으로 표현 불가 / Other controls also cannot be expressed in markdown
+    }
+}
+
+/// Convert text to heading if it's an outline level
+/// 개요 레벨이면 텍스트를 헤딩으로 변환
+fn convert_to_heading_if_outline(
+    text: &str,
+    para_header: &crate::document::bodytext::ParaHeader,
+    document: &HwpDocument,
+) -> String {
+    use crate::document::HeaderShapeType;
+
+    // ParaShape 찾기 (para_shape_id는 인덱스) / Find ParaShape (para_shape_id is index)
+    let para_shape_id = para_header.para_shape_id as usize;
+    if let Some(para_shape) = document.doc_info.para_shapes.get(para_shape_id) {
+        // 개요 타입이고 레벨이 1 이상이면 헤딩으로 변환
+        // If outline type and level >= 1, convert to heading
+        if para_shape.attributes1.header_shape_type == HeaderShapeType::Outline
+            && para_shape.attributes1.paragraph_level >= 1
+        {
+            let level = para_shape.attributes1.paragraph_level.min(6) as usize; // 최대 6레벨 / max 6 levels
+            let hashes = "#".repeat(level);
+            return format!("{} {}", hashes, text);
+        }
+    }
+    text.to_string()
 }

@@ -20,7 +20,7 @@ pub use bodytext::{
 };
 pub use docinfo::{
     BinDataRecord, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName,
-    IdMappings, Numbering, ParaShape, Style, TabDef,
+    HeaderShapeType, IdMappings, Numbering, ParaShape, Style, TabDef,
 };
 pub use fileheader::FileHeader;
 pub use preview_image::PreviewImage;

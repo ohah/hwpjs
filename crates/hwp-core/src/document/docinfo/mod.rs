@@ -43,7 +43,7 @@ pub use id_mappings::IdMappings;
 pub use layout_compatibility::LayoutCompatibility;
 pub use memo_shape::MemoShape;
 pub use numbering::Numbering;
-pub use para_shape::ParaShape;
+pub use para_shape::{HeaderShapeType, ParaShape};
 use serde::{Deserialize, Serialize};
 pub use style::Style;
 pub use tab_def::TabDef;
