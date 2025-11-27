@@ -81,6 +81,83 @@ async function main() {
 main();
 ```
 
+## React Native 예제
+
+### 기본 사용법
+
+```typescript
+import { ReactNative } from '@ohah/hwpjs';
+import RNFS from 'react-native-fs';
+import { Platform } from 'react-native';
+
+async function parseHwpFile() {
+  try {
+    // 파일 경로 설정 (플랫폼별)
+    let filePath: string;
+    if (Platform.OS === 'ios') {
+      filePath = `${RNFS.MainBundlePath}/document.hwp`;
+    } else {
+      filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
+    }
+
+    // 파일 존재 확인
+    const exists = await RNFS.exists(filePath);
+    if (!exists) {
+      console.error('파일을 찾을 수 없습니다:', filePath);
+      return;
+    }
+
+    // 파일을 base64로 읽기
+    const fileData = await RNFS.readFile(filePath, 'base64');
+
+    // base64를 number[]로 변환
+    const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+    // HWP 파일 파싱
+    const result = ReactNative.hwp_parser(numberArray);
+    console.log('파싱 결과:', result);
+  } catch (error) {
+    console.error('HWP 파일 파싱 실패:', error);
+  }
+}
+```
+
+### React 컴포넌트에서 사용
+
+```typescript
+import { useEffect, useState } from 'react';
+import { ReactNative } from '@ohah/hwpjs';
+import RNFS from 'react-native-fs';
+
+function HwpViewer() {
+  const [hwpData, setHwpData] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadHwpFile = async () => {
+      try {
+        const filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
+        const fileData = await RNFS.readFile(filePath, 'base64');
+        const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+        const result = ReactNative.hwp_parser(numberArray);
+        setHwpData(result);
+      } catch (error) {
+        console.error('파싱 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHwpFile();
+  }, []);
+
+  if (loading) return <Text>로딩 중...</Text>;
+  if (!hwpData) return <Text>파일을 읽을 수 없습니다.</Text>;
+
+  return <Text>{hwpData}</Text>;
+}
+```
+
 ## 테스트 예제
 
 실제 테스트 코드에서 사용하는 예제입니다.

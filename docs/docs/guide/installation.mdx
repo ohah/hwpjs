@@ -47,11 +47,47 @@ Web 환경에서는 WASM을 통해 사용할 수 있습니다. (예정)
 
 ## React Native
 
-:::warning
-React Native 지원은 추후 제공될 예정입니다.
-:::
+React Native 환경에서는 Craby를 통해 네이티브 모듈로 사용할 수 있습니다.
 
-React Native 환경에서는 네이티브 모듈을 통해 사용할 수 있습니다. (예정)
+### 설치
+
+<PackageManagerTabs command="install @ohah/hwpjs" />
+
+### iOS 설정
+
+iOS 프로젝트에서 CocoaPods를 사용하는 경우, `Podfile`에 다음을 추가합니다:
+
+```ruby
+pod 'ReactNative', :path => '../node_modules/@ohah/hwpjs'
+```
+
+그리고 CocoaPods 의존성을 설치합니다:
+
+```bash
+cd ios && pod install
+```
+
+### Android 설정
+
+Android 프로젝트는 자동으로 설정됩니다. 추가 설정이 필요하지 않습니다.
+
+### 사용 예제
+
+```typescript
+import { ReactNative } from '@ohah/hwpjs';
+import RNFS from 'react-native-fs';
+
+// 파일을 읽어서 number[]로 변환
+const filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
+const fileData = await RNFS.readFile(filePath, 'base64');
+const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+// HWP 파일 파싱
+const result = ReactNative.hwp_parser(numberArray);
+console.log(result);
+```
+
+더 자세한 예제는 [예제 페이지](./examples)를 참고하세요.
 
 ## 요구사항
 
