@@ -49,22 +49,28 @@ interface ExtractImagesResult {
 ### Web 예제 설정
 
 - **목표**: React Native 예제처럼 Web 환경에서 사용할 수 있는 예제 프로젝트 구성
-- **상태**: 계획됨
+- **상태**: 구현됨 (기본 설정 완료, 추가 작업 필요)
 - **우선순위**: 중간
 - **구현 위치**: `examples/web/`
 - **필요 작업**:
-  1. Web 예제 프로젝트 디렉토리 생성 (`examples/web/`)
-  2. 빌드 도구 설정 (Vite)
-  3. WASM 빌드 로드 및 사용 예제 작성
+  1. ✅ Web 예제 프로젝트 디렉토리 생성 (`examples/web/`)
+  2. ✅ 빌드 도구 설정 (Vite)
+  3. ✅ WASM 빌드 로드 및 사용 예제 작성
   4. SharedArrayBuffer를 위한 서버 설정 예제 (COOP/COEP 헤더)
   5. 다양한 브라우저 환경에서의 동작 확인
   6. 파일 업로드 및 파싱 UI 예제
   7. README 작성 (설정 방법, 실행 방법 등)
+- **커스텀 설정 필요사항**:
+  - **NAPI-RS WebAssembly 빌드 출력 차이**: NAPI-RS가 생성하는 `hwpjs.wasi-browser.js` 파일이 `./hwpjs.wasm32-wasi.wasm` 파일을 찾지만, 실제 빌드 출력은 `hwpjs.wasm`입니다. 빌드 스크립트에서 WASM 파일을 올바른 이름으로 복사하는 작업이 필요합니다.
+  - **의존성 추가**: `@napi-rs/wasm-runtime`, `@emnapi/wasi-threads`, `@emnapi/core`, `@emnapi/runtime`, `tslib` 등 웹 환경에서 필요한 런타임 의존성을 웹 예제 프로젝트에 추가해야 합니다.
+  - **package.json browser 필드 수정**: 기본 빌드 출력과 다르게 `browser` 필드를 `./dist/hwpjs.wasi-browser.js`로 설정해야 합니다.
+  - **Vite 설정**: WASM 파일을 올바르게 처리하기 위한 Vite 설정이 필요합니다 (`assetsInclude: ['**/*.wasm']`).
 - **고려사항**:
   - SharedArrayBuffer 지원을 위한 서버 헤더 설정 필요
   - 개발 서버 설정 (예: Vite dev server)
   - 프로덕션 빌드 설정
   - 다양한 브라우저 호환성
+  - NAPI-RS WebAssembly 빌드 출력과 실제 사용 간의 차이점 해결
 
 ### Node.js 예제 설정
 
