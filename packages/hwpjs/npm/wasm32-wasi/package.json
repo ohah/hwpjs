@@ -1,0 +1,46 @@
+{
+  "name": "@ohah/hwpjs-wasm32-wasi",
+  "version": "0.1.0-rc.1",
+  "cpu": [
+    "wasm32"
+  ],
+  "main": "hwpjs.wasi.cjs",
+  "files": [
+    "hwpjs.wasm32-wasi.wasm",
+    "hwpjs.wasi.cjs",
+    "hwpjs.wasi-browser.js",
+    "wasi-worker.mjs",
+    "wasi-worker-browser.mjs"
+  ],
+  "description": "HWP parser for Node.js, Web, and React Native",
+  "keywords": [
+    "napi-rs",
+    "NAPI",
+    "N-API",
+    "Rust",
+    "node-addon",
+    "node-addon-api",
+    "react-native",
+    "ios",
+    "android",
+    "hwp"
+  ],
+  "author": "ohah <bookyoon173@gmail.com>",
+  "homepage": "https://ohah.github.io/hwpjs",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ohah/hwpjs.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "browser": "hwpjs.wasi-browser.js",
+  "dependencies": {
+    "@napi-rs/wasm-runtime": "^1.0.7"
+  }
+}

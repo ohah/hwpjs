@@ -1,0 +1,41 @@
+{
+  "name": "@ohah/hwpjs-darwin-x64",
+  "version": "0.1.0-rc.1",
+  "cpu": [
+    "x64"
+  ],
+  "main": "hwpjs.darwin-x64.node",
+  "files": [
+    "hwpjs.darwin-x64.node"
+  ],
+  "description": "HWP parser for Node.js, Web, and React Native",
+  "keywords": [
+    "napi-rs",
+    "NAPI",
+    "N-API",
+    "Rust",
+    "node-addon",
+    "node-addon-api",
+    "react-native",
+    "ios",
+    "android",
+    "hwp"
+  ],
+  "author": "ohah <bookyoon173@gmail.com>",
+  "homepage": "https://ohah.github.io/hwpjs",
+  "license": "MIT",
+  "engines": {
+    "node": ">= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ohah/hwpjs.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "os": [
+    "darwin"
+  ]
+}
