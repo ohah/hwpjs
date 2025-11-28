@@ -2,6 +2,7 @@
 members = [
     "crates/*",
     "packages/hwpjs",
+    "packages/hwpjs/crates/lib",
 ]
 resolver = "2"
 
