@@ -52,8 +52,6 @@ typings/
 # TypeScript cache
 *.tsbuildinfo
 
-# Optional npm cache directory
-.npm
 
 # Optional eslint cache
 .eslintcache
@@ -85,7 +83,6 @@ typings/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/
@@ -118,7 +115,6 @@ dist
 
 /target
 
-*.node
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -216,5 +212,3 @@ target/
 android/src/main/jni/libs/
 ios/framework/
 
-# JavaScript build output
-dist/

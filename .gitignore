@@ -8,9 +8,7 @@ coverage/
 *.lcov
 
 # Production
-dist/
 build/
-*.node
 
 # Misc
 .DS_Store
