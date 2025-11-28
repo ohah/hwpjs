@@ -44,7 +44,70 @@ interface ExtractImagesResult {
   - NAPI 바인딩: `packages/hwpjs/src/lib.rs` (추가 필요)
   - TypeScript: `packages/hwpjs/index.d.ts` (추가 필요)
 
+## 테스트 환경
+
+### Node.js 환경 테스트
+
+- **목표**: Node.js 환경에서 HWP 파싱 기능 검증
+- **테스트 프레임워크**: Bun
+- **테스트 명령어**: `bun run test:node`
+- **상태**: 구현됨
+- **테스트 위치**: `packages/hwpjs/__test__/`
+- **테스트 범위**:
+  - 기본 HWP 파일 파싱
+  - 다양한 HWP 파일 형식 지원 확인
+  - 에러 핸들링 검증
+- **CI/CD**: GitHub Actions에서 자동 실행
+
+### Web 환경 테스트
+
+- **목표**: 웹 브라우저 환경에서 WASM 빌드 동작 검증
+- **테스트 프레임워크**: (계획 중)
+- **상태**: 계획됨
+- **필요 작업**:
+  1. 웹 환경 테스트 프레임워크 설정 (예: Vitest + jsdom 또는 Playwright)
+  2. WASM 빌드 로드 테스트
+  3. SharedArrayBuffer 지원 확인
+  4. COOP/COEP 헤더 설정 검증
+  5. 브라우저 호환성 테스트 (Chrome, Firefox, Safari, Edge)
+- **고려사항**:
+  - SharedArrayBuffer는 보안 정책으로 인해 특정 헤더 설정 필요
+  - 메모리 제약사항 테스트
+  - 다양한 브라우저 환경에서의 동작 검증
+
 ## 빌드 및 배포
+
+### 크로스 플랫폼 빌드 설정
+
+- **목표**: 리눅스를 제외한 크로스 플랫폼 빌드 지원 (Windows, macOS)
+- **상태**: 구현됨
+- **지원 플랫폼**:
+  - Windows (x64, x86, arm64)
+  - macOS (x64, arm64)
+- **빌드 스크립트**:
+  - `build:node:windows-x64`: Windows x64 빌드 (`--cross-compile` 플래그 사용)
+  - `build:node:windows-x86`: Windows x86 빌드 (`--cross-compile` 플래그 사용)
+  - `build:node:windows-arm64`: Windows ARM64 빌드 (`--cross-compile` 플래그 사용)
+  - `build:node:macos-x64`: macOS x64 빌드 (네이티브 빌드)
+  - `build:node:macos-arm64`: macOS ARM64 빌드 (네이티브 빌드)
+- **크로스 컴파일 도구**:
+  - Windows: `cargo-xwin` (자동 감지)
+  - macOS: 네이티브 빌드 (Mac에서만 가능)
+- **구현 위치**: `packages/hwpjs/package.json` (빌드 스크립트)
+
+### Node.js 및 WASM 빌드 설정
+
+- **목표**: Node.js와 Web 환경을 위한 빌드 설정
+- **상태**: 구현됨
+- **빌드 타겟**:
+  - Node.js: NAPI-RS를 통한 네이티브 모듈 빌드
+  - Web: WASM 빌드 (`wasm32-wasip1-threads`)
+- **빌드 스크립트**:
+  - `build:node`: 모든 Node.js 플랫폼 빌드 (Windows, macOS)
+  - `build:wasm`: WASM 빌드
+  - `build`: 전체 빌드 (Node.js + WASM + React Native)
+- **구현 위치**: `packages/hwpjs/package.json` (빌드 스크립트)
+- **NAPI 타겟 설정**: `packages/hwpjs/package.json`의 `napi.targets` 필드
 
 ### Web WASM 빌드
 
