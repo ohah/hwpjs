@@ -1,0 +1,21 @@
+{
+  "name": "@hwpjs/node",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --import tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ohah/hwpjs": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "~5.9.3"
+  },
+  "engines": {
+    "node": ">=20.6.0"
+  }
+}
