@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "browser": "./dist/web/browser.js",
+  "browser": "./dist/hwpjs.wasi-browser.js",
   "exports": {
     ".": {
       "react-native": {
@@ -20,7 +20,7 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       },
-      "browser": "./dist/web/browser.js",
+      "browser": "./dist/hwpjs.wasi-browser.js",
       "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
