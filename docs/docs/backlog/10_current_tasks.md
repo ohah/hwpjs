@@ -87,7 +87,7 @@ interface ExtractImagesResult {
   6. ✅ README 작성 (설정 방법, 실행 방법 등)
 - **고려사항**:
   - Node.js 버전 호환성 (>= 20.6.0)
-  - 플랫폼별 네이티브 모듈 로드 (Windows, macOS 지원, Linux 지원 예정)
+  - 플랫폼별 네이티브 모듈 로드 (Windows, macOS, Linux 지원)
   - 파일 시스템 접근 예제
 
 ## 테스트 환경
