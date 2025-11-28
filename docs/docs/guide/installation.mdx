@@ -57,9 +57,6 @@ React Native 환경에서는 Craby를 통해 네이티브 모듈로 사용할 �
 
 iOS 프로젝트에서 CocoaPods를 사용하는 경우, `Podfile`에 다음을 추가합니다:
 
-```ruby
-pod 'ReactNative', :path => '../node_modules/@ohah/hwpjs'
-```
 
 그리고 CocoaPods 의존성을 설치합니다:
 
@@ -95,11 +92,67 @@ console.log(result);
 
 - Node.js >= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0
 
-### Rust (개발 시)
+### 개발 환경 설정
 
-개발 환경에서는 Rust가 필요합니다. [rustup](https://rustup.rs/)을 통해 설치할 수 있습니다.
+개발 환경에서는 mise를 사용하여 필요한 도구를 설치합니다.
 
+#### mise 설치
+
+mise는 버전 관리 도구로, 프로젝트에 필요한 모든 도구를 자동으로 설치하고 관리합니다.
+
+**macOS / Linux**:
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+curl https://mise.run | sh
 ```
 
+**Windows**:
+```powershell
+powershell -c "irm https://mise.run | iex"
+```
+
+또는 [공식 문서](https://mise.jdx.dev/getting-started.html)를 참고하여 설치할 수 있습니다.
+
+#### 프로젝트 도구 설치
+
+프로젝트 루트 디렉토리에서 다음 명령어를 실행하면 `.mise.toml`에 정의된 모든 도구가 자동으로 설치됩니다:
+
+```bash
+mise install
+```
+
+설치되는 도구:
+- **Rust**: stable (LTS)
+- **Bun**: latest (LTS)
+- **Node.js**: 24.11.1 (LTS)
+- **Ruby**: 3.3
+
+#### 크로스 컴파일 (다중 플랫폼 빌드)
+
+다양한 플랫폼을 위한 크로스 컴파일을 위해서는 필요한 Rust 타겟을 설치해야 합니다:
+
+```bash
+# 모든 타겟 설치 (WASM 제외)
+rustup target add x86_64-pc-windows-msvc
+rustup target add x86_64-apple-darwin
+rustup target add x86_64-unknown-linux-gnu
+rustup target add i686-pc-windows-msvc
+rustup target add aarch64-apple-darwin
+rustup target add aarch64-pc-windows-msvc
+
+# WASM 타겟 (별도 설치)
+rustup target add wasm32-wasip1-threads
+```
+
+**크로스 컴파일 도구**:
+
+- **Windows 크로스 컴파일**: `cargo-xwin` 설치 필요
+  ```bash
+  cargo install cargo-xwin
+  ```
+
+**빌드 스크립트**:
+
+- `build:node:windows-*`: `--cross-compile` 플래그 사용 (cargo-xwin 자동 감지)
+- `build:node:linux-*`: `--use-cross` 플래그 사용 (Docker 필요)
+- `build:node:macos-*`: 네이티브 빌드 (Mac만 가능)
+- `build:wasm`: WASM 빌드
