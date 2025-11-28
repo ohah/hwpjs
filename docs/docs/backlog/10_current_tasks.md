@@ -44,20 +44,47 @@ interface ExtractImagesResult {
   - NAPI 바인딩: `packages/hwpjs/src/lib.rs` (추가 필요)
   - TypeScript: `packages/hwpjs/index.d.ts` (추가 필요)
 
+## 예제 프로젝트
+
+### Web 예제 설정
+
+- **목표**: React Native 예제처럼 Web 환경에서 사용할 수 있는 예제 프로젝트 구성
+- **상태**: 계획됨
+- **우선순위**: 중간
+- **구현 위치**: `examples/web/`
+- **필요 작업**:
+  1. Web 예제 프로젝트 디렉토리 생성 (`examples/web/`)
+  2. 빌드 도구 설정 (Vite)
+  3. WASM 빌드 로드 및 사용 예제 작성
+  4. SharedArrayBuffer를 위한 서버 설정 예제 (COOP/COEP 헤더)
+  5. 다양한 브라우저 환경에서의 동작 확인
+  6. 파일 업로드 및 파싱 UI 예제
+  7. README 작성 (설정 방법, 실행 방법 등)
+- **고려사항**:
+  - SharedArrayBuffer 지원을 위한 서버 헤더 설정 필요
+  - 개발 서버 설정 (예: Vite dev server)
+  - 프로덕션 빌드 설정
+  - 다양한 브라우저 호환성
+
+### Node.js 예제 설정
+
+- **목표**: React Native 예제처럼 Node.js 환경에서 사용할 수 있는 예제 프로젝트 구성
+- **상태**: 계획됨
+- **우선순위**: 중간
+- **구현 위치**: `examples/node/`
+- **필요 작업**:
+  1. Node.js 예제 프로젝트 디렉토리 생성 (`examples/node/`)
+  2. TypeScript 설정 (선택사항)
+  3. 파일 읽기 및 파싱 예제 작성
+  4. 다양한 사용 사례 예제 (CLI, 서버 등)
+  5. 에러 핸들링 예제
+  6. README 작성 (설정 방법, 실행 방법 등)
+- **고려사항**:
+  - Node.js 버전 호환성
+  - 플랫폼별 네이티브 모듈 로드
+  - 파일 시스템 접근 예제
+
 ## 테스트 환경
-
-### Node.js 환경 테스트
-
-- **목표**: Node.js 환경에서 HWP 파싱 기능 검증
-- **테스트 프레임워크**: Bun
-- **테스트 명령어**: `bun run test:node`
-- **상태**: 구현됨
-- **테스트 위치**: `packages/hwpjs/__test__/`
-- **테스트 범위**:
-  - 기본 HWP 파일 파싱
-  - 다양한 HWP 파일 형식 지원 확인
-  - 에러 핸들링 검증
-- **CI/CD**: GitHub Actions에서 자동 실행
 
 ### Web 환경 테스트
 
@@ -74,66 +101,6 @@ interface ExtractImagesResult {
   - SharedArrayBuffer는 보안 정책으로 인해 특정 헤더 설정 필요
   - 메모리 제약사항 테스트
   - 다양한 브라우저 환경에서의 동작 검증
-
-## 빌드 및 배포
-
-### 크로스 플랫폼 빌드 설정
-
-- **목표**: 리눅스를 제외한 크로스 플랫폼 빌드 지원 (Windows, macOS)
-- **상태**: 구현됨
-- **지원 플랫폼**:
-  - Windows (x64, x86, arm64)
-  - macOS (x64, arm64)
-- **빌드 스크립트**:
-  - `build:node:windows-x64`: Windows x64 빌드 (`--cross-compile` 플래그 사용)
-  - `build:node:windows-x86`: Windows x86 빌드 (`--cross-compile` 플래그 사용)
-  - `build:node:windows-arm64`: Windows ARM64 빌드 (`--cross-compile` 플래그 사용)
-  - `build:node:macos-x64`: macOS x64 빌드 (네이티브 빌드)
-  - `build:node:macos-arm64`: macOS ARM64 빌드 (네이티브 빌드)
-- **크로스 컴파일 도구**:
-  - Windows: `cargo-xwin` (자동 감지)
-  - macOS: 네이티브 빌드 (Mac에서만 가능)
-- **구현 위치**: `packages/hwpjs/package.json` (빌드 스크립트)
-
-### Node.js 및 WASM 빌드 설정
-
-- **목표**: Node.js와 Web 환경을 위한 빌드 설정
-- **상태**: 구현됨
-- **빌드 타겟**:
-  - Node.js: NAPI-RS를 통한 네이티브 모듈 빌드
-  - Web: WASM 빌드 (`wasm32-wasip1-threads`)
-- **빌드 스크립트**:
-  - `build:node`: 모든 Node.js 플랫폼 빌드 (Windows, macOS)
-  - `build:wasm`: WASM 빌드
-  - `build`: 전체 빌드 (Node.js + WASM + React Native)
-- **구현 위치**: `packages/hwpjs/package.json` (빌드 스크립트)
-- **NAPI 타겟 설정**: `packages/hwpjs/package.json`의 `napi.targets` 필드
-
-### Web WASM 빌드
-
-- **목표**: 웹 브라우저 환경에서 직접 사용 가능한 WASM 빌드 제공
-- **기능**: Node.js/React Native 외에 웹 브라우저에서도 HWP 파싱 지원
-- **상태**: 계획됨
-- **우선순위**: 중간
-- **구현 방식**: [NAPI-RS WebAssembly 지원](https://napi.rs/docs/concepts/webassembly) 사용
-- **타겟**: `wasm32-wasip1-threads` (NAPI-RS 기본 지원 타겟)
-- **구현 위치**:
-  - 빌드 설정: `packages/hwpjs/package.json` (napi 설정에 wasm32 타겟 추가)
-  - 빌드 설정: `packages/hwpjs/Cargo.toml` (wasm32 타겟 지원 확인)
-  - 패키지 설정: `cpu: ["wasm32"]` 필드 추가 필요
-- **필요 작업**:
-  1. `packages/hwpjs/package.json`의 `napi.targets`에 `wasm32-wasip1-threads` 추가
-  2. WASM 전용 패키지에 `cpu: ["wasm32"]` 필드 추가
-  3. C/C++ 의존성 확인 및 WASI SDK 설정 (`WASI_SDK_PATH` 환경 변수)
-  4. 서버 설정 문서화 (SharedArrayBuffer를 위한 COOP/COEP 헤더)
-- **고려사항**:
-  - SharedArrayBuffer 사용을 위한 서버 헤더 설정 필요:
-    - `Cross-Origin-Embedder-Policy: require-corp`
-    - `Cross-Origin-Opener-Policy: same-origin`
-  - 파일 시스템 접근 제한 (브라우저 환경)
-  - 메모리 제약사항
-  - 번들 크기 최적화 (약 308.7KB 런타임 JavaScript 코드 포함)
-- **참고 문서**: https://napi.rs/docs/concepts/webassembly
 
 ## 알 수 없는 요소 (미지원 기능)
 
