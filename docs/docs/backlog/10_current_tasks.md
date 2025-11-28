@@ -31,24 +31,6 @@ interface ExtractImagesResult {
 }
 ```
 
-## 테스트 환경
-
-### Web 환경 테스트
-
-- **목표**: 웹 브라우저 환경에서 WASM 빌드 동작 검증
-- **테스트 프레임워크**: (계획 중)
-- **상태**: 계획됨
-- **필요 작업**:
-  1. 웹 환경 테스트 프레임워크 설정 (예: Vitest + jsdom 또는 Playwright)
-  2. WASM 빌드 로드 테스트
-  3. SharedArrayBuffer 지원 확인
-  4. COOP/COEP 헤더 설정 검증
-  5. 브라우저 호환성 테스트 (Chrome, Firefox, Safari, Edge)
-- **고려사항**:
-  - SharedArrayBuffer는 보안 정책으로 인해 특정 헤더 설정 필요
-  - 메모리 제약사항 테스트
-  - 다양한 브라우저 환경에서의 동작 검증
-
 ## 알 수 없는 요소 (미지원 기능)
 
 ### 알 수 없는 Ctrl ID
