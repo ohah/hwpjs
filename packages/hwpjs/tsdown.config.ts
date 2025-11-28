@@ -6,4 +6,5 @@ export default defineConfig({
   format: ['esm', 'cjs'],
   sourcemap: true,
   dts: true,
+  external: [/^react-native/],
 });

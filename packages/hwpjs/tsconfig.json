@@ -17,5 +17,11 @@
     "noUnusedParameters": true
   },
   "include": ["."],
-  "exclude": ["node_modules", "bench", "__test__", "**/dist/*"]
+  "exclude": [
+    "node_modules",
+    "bench",
+    "__test__",
+    "**/dist/*",
+    "**/node_modules/**"
+  ]
 }

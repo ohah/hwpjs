@@ -2,10 +2,10 @@
   "name": "@ohah/hwpjs",
   "version": "1.0.0",
   "description": "HWP parser for Node.js, Web, and React Native",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "browser": "browser.js",
+  "browser": "./dist/web/browser.js",
   "exports": {
     ".": {
       "react-native": {
@@ -20,8 +20,8 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       },
-      "browser": "./browser.js",
-      "default": "./index.js"
+      "browser": "./dist/web/browser.js",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -71,11 +71,10 @@
     "targets": [
       "x86_64-pc-windows-msvc",
       "x86_64-apple-darwin",
-      "x86_64-unknown-linux-gnu",
       "i686-pc-windows-msvc",
       "aarch64-apple-darwin",
-      "aarch64-linux-android",
-      "aarch64-pc-windows-msvc"
+      "aarch64-pc-windows-msvc",
+      "wasm32-wasip1-threads"
     ]
   },
   "engines": {
@@ -88,13 +87,17 @@
   "scripts": {
     "artifacts": "napi artifacts",
     "bench": "node --import @oxc-node/core/register benchmark/bench.ts",
-    "build": "napi build --platform --release --package hwpjs && craby build && tsdown",
-    "build:debug": "napi build --platform --package hwpjs && craby build && tsdown",
+    "build:node:windows-x64": "napi build --platform --target x86_64-pc-windows-msvc --release --package hwpjs --output-dir dist --cross-compile",
+    "build:node:windows-x86": "napi build --platform --target i686-pc-windows-msvc --release --package hwpjs --output-dir dist --cross-compile",
+    "build:node:windows-arm64": "napi build --platform --target aarch64-pc-windows-msvc --release --package hwpjs --output-dir dist --cross-compile",
+    "build:node:macos-x64": "napi build --platform --target x86_64-apple-darwin --release --package hwpjs --output-dir dist",
+    "build:node:macos-arm64": "napi build --platform --target aarch64-apple-darwin --release --package hwpjs --output-dir dist",
     "build:react-native": "craby build && tsdown",
-    "build:napi": "napi build --platform --release --package hwpjs",
+    "build:wasm": "napi build --target wasm32-wasip1-threads --release --package hwpjs --output-dir dist",
+    "build:node": "bun run build:node:windows-x64 && bun run build:node:windows-x86 && bun run build:node:windows-arm64 && bun run build:node:macos-x64 && bun run build:node:macos-arm64 && bun run build:wasm",
+    "build": "bun run build:node && bun run build:react-native",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "bun test",
-    "preversion": "napi build --platform --package hwpjs && craby build && tsdown && git add .",
     "version": "napi version",
     "typecheck": "tsc --noEmit",
     "clean": "craby clean"
@@ -114,7 +117,7 @@
     "react": "19.1.1",
     "react-native": "0.82.1",
     "tinybench": "^5.0.1",
-    "tsdown": "^0.15.10",
+    "tsdown": "^0.16.8",
     "@types/bun": "latest",
     "@types/node": "^20.0.0",
     "typescript": "^5.9.3"
