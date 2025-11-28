@@ -2,57 +2,150 @@
 node_modules/
 .pnp
 .pnp.js
+jspm_packages/
+bower_components/
 
 # Testing
 coverage/
 *.lcov
+.nyc_output/
+lib-cov/
 
-# Production
+# Production / Build
 build/
+dist/
+dist-ssr/
+*.so
+*.dylib
+*.dll
+*.tgz
+*.jsbundle
+.next/
+.nuxt/
+.cache/
+.serverless/
+.fusebox/
+.vuepress/dist/
 
 # Misc
 .DS_Store
 *.pem
+*.pid
+*.seed
+*.pid.lock
+*.tsbuildinfo
+.tern-port
+.node_repl_history
+.yarn-integrity
+.report.*.json
+
+# Environment
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+*.local
 
-# Debug
+# Debug / Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
+*.maestro.log
+.metro-health-check*
 
 # IDEs
 .idea/
+.vscode/
+!.vscode/extensions.json
 *.swp
 *.swo
 *~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+jsconfig.json
 
 # Rust
 target/
 Cargo.lock
 **/*.rs.bk
 
-# Build artifacts
-*.so
-*.dylib
-*.dll
+# React Native / Mobile
+.expo/
+ios/generated/
+android/generated/
+ios/framework/
+android/src/main/jni/libs/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.xcuserstate
+**/.xcode.env.local
+project.xcworkspace
+.classpath
+.cxx/
+.gradle/
+.project
+.settings/
+local.properties
+*.iml
+android.iml
+*.hprof
+*.keystore
+!debug.keystore
+.kotlin/
+buck-out/
+.buckd/
+android/app/libs/
+android/keystores/debug.keystore
+**/Pods/
+vendor/bundle/
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# Yarn / pnpm
+.yarn/
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
 
 # Maestro
-# .maestro/ config files should be committed
-# .maestro/
 maestro-debug/
-*.maestro.log
 
 # Rspress
 .rspress/
+doc_build/
+
+# Turborepo
+.turbo/
+
+# Craby
+.craby/
 
 # Legacy reference repositories
 legacy/hwp.js/
 legacy/java-hwp/
 legacy/pyhwp/
-
