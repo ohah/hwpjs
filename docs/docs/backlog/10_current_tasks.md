@@ -31,6 +31,31 @@ interface ExtractImagesResult {
 }
 ```
 
+## 개선 작업
+
+### 입력 타입 변경: Array<number> → Uint8Array
+
+- **현재 상태**: 함수들이 `Array<number>` (또는 `number[]`)를 입력으로 받고 있음
+- **변경 필요**: `Uint8Array`로 변경하여 타입 안정성 및 성능 개선
+- **영향 범위**:
+  - React Native 바인딩: `packages/hwpjs/crates/lib/src/react_native_impl.rs`
+  - NAPI 바인딩: `packages/hwpjs/src/lib.rs`
+  - TypeScript 타입 정의: `packages/hwpjs/index.d.ts`
+  - 예제 코드: `examples/web/src/App.tsx`, `examples/react-native/src/App.tsx`
+- **우선순위**: 높음
+- **상태**: 계획됨
+
+### Craby에 Uint8Array 지원 추가
+
+- **현재 상태**: Craby가 `Array<Number>`만 지원하고 있음
+- **변경 필요**: Craby에 `Uint8Array` (또는 `Array<u8>`) 타입 지원 추가
+- **목적**: React Native 바인딩에서 직접 `Uint8Array`를 받을 수 있도록 개선
+- **영향 범위**:
+  - Craby 라이브러리 자체 수정 필요
+  - React Native 바인딩 코드 수정
+- **우선순위**: 높음
+- **상태**: 계획됨
+
 ## 알 수 없는 요소 (미지원 기능)
 
 ### 알 수 없는 Ctrl ID
