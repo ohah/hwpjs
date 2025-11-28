@@ -44,6 +44,34 @@ interface ExtractImagesResult {
   - NAPI 바인딩: `packages/hwpjs/src/lib.rs` (추가 필요)
   - TypeScript: `packages/hwpjs/index.d.ts` (추가 필요)
 
+## 빌드 및 배포
+
+### Web WASM 빌드
+
+- **목표**: 웹 브라우저 환경에서 직접 사용 가능한 WASM 빌드 제공
+- **기능**: Node.js/React Native 외에 웹 브라우저에서도 HWP 파싱 지원
+- **상태**: 계획됨
+- **우선순위**: 중간
+- **구현 방식**: [NAPI-RS WebAssembly 지원](https://napi.rs/docs/concepts/webassembly) 사용
+- **타겟**: `wasm32-wasip1-threads` (NAPI-RS 기본 지원 타겟)
+- **구현 위치**:
+  - 빌드 설정: `packages/hwpjs/package.json` (napi 설정에 wasm32 타겟 추가)
+  - 빌드 설정: `packages/hwpjs/Cargo.toml` (wasm32 타겟 지원 확인)
+  - 패키지 설정: `cpu: ["wasm32"]` 필드 추가 필요
+- **필요 작업**:
+  1. `packages/hwpjs/package.json`의 `napi.targets`에 `wasm32-wasip1-threads` 추가
+  2. WASM 전용 패키지에 `cpu: ["wasm32"]` 필드 추가
+  3. C/C++ 의존성 확인 및 WASI SDK 설정 (`WASI_SDK_PATH` 환경 변수)
+  4. 서버 설정 문서화 (SharedArrayBuffer를 위한 COOP/COEP 헤더)
+- **고려사항**:
+  - SharedArrayBuffer 사용을 위한 서버 헤더 설정 필요:
+    - `Cross-Origin-Embedder-Policy: require-corp`
+    - `Cross-Origin-Opener-Policy: same-origin`
+  - 파일 시스템 접근 제한 (브라우저 환경)
+  - 메모리 제약사항
+  - 번들 크기 최적화 (약 308.7KB 런타임 JavaScript 코드 포함)
+- **참고 문서**: https://napi.rs/docs/concepts/webassembly
+
 ## 알 수 없는 요소 (미지원 기능)
 
 ### 알 수 없는 Ctrl ID
