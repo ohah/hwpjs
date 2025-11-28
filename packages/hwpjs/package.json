@@ -1,27 +1,20 @@
 {
   "name": "@ohah/hwpjs",
-  "version": "1.0.0",
+  "version": "0.1.0-rc.1",
   "description": "HWP parser for Node.js, Web, and React Native",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "main": "./dist/browser.js",
   "types": "./dist/index.d.ts",
-  "browser": "./dist/hwpjs.wasi-browser.js",
   "exports": {
     ".": {
+      "node": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
       "react-native": {
         "types": "./dist/react-native/index.d.mts",
         "default": "./dist/react-native/index.mjs"
       },
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "browser": "./dist/hwpjs.wasi-browser.js",
-      "default": "./dist/index.js"
+      "default": "./dist/browser.js"
     },
     "./package.json": "./package.json"
   },
@@ -85,7 +78,8 @@
     "access": "public"
   },
   "scripts": {
-    "artifacts": "napi artifacts",
+    "napi": "napi new",
+    "artifacts": "napi artifacts --output-dir dist --build-output-dir dist",
     "bench": "node --import @oxc-node/core/register benchmark/bench.ts",
     "build:node:windows-x64": "napi build --platform --target x86_64-pc-windows-msvc --release --package hwpjs --output-dir dist --cross-compile",
     "build:node:windows-x86": "napi build --platform --target i686-pc-windows-msvc --release --package hwpjs --output-dir dist --cross-compile",
@@ -95,8 +89,13 @@
     "build:react-native": "craby build && tsdown",
     "build:wasm": "napi build --target wasm32-wasip1-threads --release --package hwpjs --output-dir dist",
     "build:node": "bun run build:node:windows-x64 && bun run build:node:windows-x86 && bun run build:node:windows-arm64 && bun run build:node:macos-x64 && bun run build:node:macos-arm64 && bun run build:wasm",
+    "build:node:all": "bun run build:node:windows-x64 || true && bun run build:node:windows-x86 || true && bun run build:node:windows-arm64 || true && bun run build:node:macos-x64 || true && bun run build:node:macos-arm64 || true && bun run build:wasm",
     "build": "bun run build:node && bun run build:react-native",
-    "prepublishOnly": "napi prepublish -t npm",
+    "prepare:artifacts": "napi create-npm-dirs",
+    "postbuild:node:all": "bun run scripts/rename-wasm.ts && bun run scripts/cleanup-root.ts",
+    "postprepublishOnly": "bun run scripts/cleanup-root.ts",
+    "build:release": "bun run build:node:all && bun run postbuild:node:all && bun run prepare:artifacts && bun run artifacts && bun run prepublishOnly",
+    "prepublishOnly": "napi prepublish -t npm --dry-run",
     "test": "bun test",
     "version": "napi version",
     "typecheck": "tsc --noEmit",
@@ -121,5 +120,13 @@
     "@types/bun": "latest",
     "@types/node": "^20.0.0",
     "typescript": "^5.9.3"
+  },
+  "optionalDependencies": {
+    "@ohah/hwpjs-win32-x64-msvc": "1.0.0",
+    "@ohah/hwpjs-darwin-x64": "1.0.0",
+    "@ohah/hwpjs-win32-ia32-msvc": "1.0.0",
+    "@ohah/hwpjs-darwin-arm64": "1.0.0",
+    "@ohah/hwpjs-win32-arm64-msvc": "1.0.0",
+    "@ohah/hwpjs-wasm32-wasi": "1.0.0"
   }
 }
