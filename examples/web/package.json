@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "@hwpjs/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,10 +11,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tslib": "^2.8.1",
-    "@napi-rs/wasm-runtime": "^1.0.0",
-    "@emnapi/wasi-threads": "^1.1.0",
-    "@emnapi/core": "^1.7.1",
-    "@emnapi/runtime": "^1.7.1",
+    "@ohah/hwpjs-wasm32-wasi": "workspace:*",
     "@ohah/hwpjs": "workspace:*"
   },
   "devDependencies": {
@@ -24,9 +21,6 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "globals": "^16.5.0",
     "typescript": "~5.9.3",
-    "vite": "npm:rolldown-vite@7.2.5"
-  },
-  "overrides": {
-    "vite": "npm:rolldown-vite@7.2.5"
+    "vite": "^7.2.4"
   }
 }

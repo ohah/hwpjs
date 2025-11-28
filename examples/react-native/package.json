@@ -1,11 +1,12 @@
 {
-  "name": "hwpjs",
+  "name": "@hwpjs/react-native",
   "version": "0.0.1",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start"
+    "start": "react-native start",
+    "dev": "react-native dev"
   },
   "dependencies": {
     "react": "19.1.1",
