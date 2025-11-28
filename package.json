@@ -6,10 +6,15 @@
   "workspaces": [
     "packages/*",
     "examples/*",
+    "packages/hwpjs/npm/*",
     "docs"
   ],
   "scripts": {
     "dev:docs": "bun run --filter=@hwpjs/docs dev",
+    "dev:web": "bun run --filter=@hwpjs/web dev",
+    "dev:react-native": "bun run --filter=@hwpjs/react-native dev",
+    "dev:react-native:android": "bun run --filter=@hwpjs/react-native dev",
+    "dev:react-native:ios": "bun run --filter=@hwpjs/react-native dev",
     "napi": "napi",
     "test:rust": "cargo test --workspace",
     "test:rust-core": "cargo test --package hwp-core",
