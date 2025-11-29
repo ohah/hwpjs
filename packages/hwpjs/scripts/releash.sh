@@ -124,13 +124,68 @@ if command -v gh &> /dev/null; then
     echo -e "\n${GREEN}📦 Uploading artifacts...${NC}"
     cd "$PACKAGE_DIR"
     
-    # 모든 .node 및 .wasm 파일 찾아서 업로드
-    find npm -type f \( -name "*.node" -o -name "*.wasm" \) | while read -r file; do
-        echo -e "${GREEN}   Uploading $(basename "$file")...${NC}"
-        gh release upload "$TAG_NAME" "$file" --repo ohah/hwpjs || {
-            echo -e "${YELLOW}   ⚠️  Failed to upload $(basename "$file"), may already exist${NC}"
-        }
+    # 임시 디렉토리 생성
+    TEMP_DIR=$(mktemp -d)
+    trap "rm -rf $TEMP_DIR" EXIT
+    
+    # 1. Node.js 플랫폼별 아티팩트 압축 및 업로드
+    echo -e "${GREEN}   Compressing Node.js platform artifacts...${NC}"
+    for platform_dir in npm/*/; do
+        if [ -d "$platform_dir" ]; then
+            platform=$(basename "$platform_dir")
+            echo -e "${GREEN}     Compressing ${platform}...${NC}"
+            
+            # zip 파일 생성
+            zip_file="$TEMP_DIR/node-${platform}.zip"
+            cd "$platform_dir"
+            zip -r "$zip_file" . -q
+            cd "$PACKAGE_DIR"
+            
+            # 업로드
+            echo -e "${GREEN}     Uploading node-${platform}.zip...${NC}"
+            gh release upload "$TAG_NAME" "$zip_file" --repo ohah/hwpjs || {
+                echo -e "${YELLOW}     ⚠️  Failed to upload node-${platform}.zip, may already exist${NC}"
+            }
+        fi
     done
+    
+    # 2. React Native iOS 아티팩트 압축 및 업로드
+    if [ -d "ios" ]; then
+        echo -e "${GREEN}   Compressing React Native iOS artifacts...${NC}"
+        zip_file="$TEMP_DIR/react-native-ios.zip"
+        # ios/build 제외하고 압축
+        zip -r "$zip_file" ios -q -x "ios/build/*" "ios/**/build/*"
+        
+        echo -e "${GREEN}     Uploading react-native-ios.zip...${NC}"
+        gh release upload "$TAG_NAME" "$zip_file" --repo ohah/hwpjs || {
+            echo -e "${YELLOW}     ⚠️  Failed to upload react-native-ios.zip, may already exist${NC}"
+        }
+    fi
+    
+    # 3. React Native Android 아티팩트 압축 및 업로드
+    if [ -d "android" ]; then
+        echo -e "${GREEN}   Compressing React Native Android artifacts...${NC}"
+        zip_file="$TEMP_DIR/react-native-android.zip"
+        # android/build 제외하고 압축
+        zip -r "$zip_file" android -q -x "android/build/*" "android/**/build/*" "android/gradle/*" "android/gradlew" "android/gradlew.bat" "android/local.properties"
+        
+        echo -e "${GREEN}     Uploading react-native-android.zip...${NC}"
+        gh release upload "$TAG_NAME" "$zip_file" --repo ohah/hwpjs || {
+            echo -e "${YELLOW}     ⚠️  Failed to upload react-native-android.zip, may already exist${NC}"
+        }
+    fi
+    
+    # 4. dist 전체 압축 및 업로드
+    if [ -d "dist" ]; then
+        echo -e "${GREEN}   Compressing dist artifacts...${NC}"
+        zip_file="$TEMP_DIR/dist.zip"
+        zip -r "$zip_file" dist -q
+        
+        echo -e "${GREEN}     Uploading dist.zip...${NC}"
+        gh release upload "$TAG_NAME" "$zip_file" --repo ohah/hwpjs || {
+            echo -e "${YELLOW}     ⚠️  Failed to upload dist.zip, may already exist${NC}"
+        }
+    fi
     
     echo -e "${GREEN}✓ All artifacts uploaded${NC}"
 else
