@@ -1,9 +1,9 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parseHwpToMarkdown } from '@ohah/hwpjs';
+import { toMarkdown } from '@ohah/hwpjs';
 
 /**
- * parseHwpToMarkdown 이미지 옵션 테스트
+ * toMarkdown 이미지 옵션 테스트
  */
 function testMarkdownImageOptions() {
   try {
@@ -11,11 +11,11 @@ function testMarkdownImageOptions() {
     const hwpFilePath = join(process.cwd(), 'noori.hwp');
     const fileBuffer = readFileSync(hwpFilePath);
 
-    console.log('Testing parseHwpToMarkdown with image options...\n');
+    console.log('Testing toMarkdown with image options...\n');
 
     // Test with base64 option
     console.log('=== Base64 Option Test ===');
-    const resultBase64 = parseHwpToMarkdown(fileBuffer, { image: 'base64' });
+    const resultBase64 = toMarkdown(fileBuffer, { image: 'base64' });
 
     console.log('Images array length:', resultBase64.images.length);
     console.log('Markdown contains "data:image/":', resultBase64.markdown.includes('data:image/'));
@@ -37,7 +37,7 @@ function testMarkdownImageOptions() {
     }
 
     console.log('\n=== Blob Option Test ===');
-    const resultBlob = parseHwpToMarkdown(fileBuffer, { image: 'blob' });
+    const resultBlob = toMarkdown(fileBuffer, { image: 'blob' });
 
     console.log('Images array length:', resultBlob.images.length);
     console.log('Markdown contains "image-0":', resultBlob.markdown.includes('image-0'));
@@ -57,7 +57,7 @@ function testMarkdownImageOptions() {
     }
 
     console.log('\n=== Default Option Test (should be blob) ===');
-    const resultDefault = parseHwpToMarkdown(fileBuffer);
+    const resultDefault = toMarkdown(fileBuffer);
 
     console.log('Images array length:', resultDefault.images.length);
     console.log('Markdown contains "image-0":', resultDefault.markdown.includes('image-0'));

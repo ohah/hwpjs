@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parseHwp, parseHwpFileheader } from '@ohah/hwpjs';
+import { toJson, fileHeader } from '@ohah/hwpjs';
 
 /**
  * 기본 예제: HWP 파일 읽기 및 파싱
@@ -18,21 +18,21 @@ function main() {
 
     console.log(`파일 크기: ${byteArray.length} bytes`);
 
-    // HWP 파일 파싱
-    console.log('\n=== HWP 파일 파싱 중... ===');
-    const parsedResult = parseHwp(byteArray);
+    // HWP 파일을 JSON으로 변환
+    console.log('\n=== HWP 파일을 JSON으로 변환 중... ===');
+    const parsedResult = toJson(fileBuffer);
     const parsedJson = JSON.parse(parsedResult);
 
-    console.log('파싱 성공!');
+    console.log('변환 성공!');
     console.log('문서 정보:', {
       version: parsedJson,
     });
 
-    // FileHeader만 파싱하는 예제
-    console.log('\n=== FileHeader만 파싱 ===');
-    const fileHeaderResult = parseHwpFileheader(byteArray);
-    const fileHeader = JSON.parse(fileHeaderResult);
-    console.log('FileHeader:', fileHeader);
+    // FileHeader만 추출하는 예제
+    console.log('\n=== FileHeader만 추출 ===');
+    const fileHeaderResult = fileHeader(fileBuffer);
+    const header = JSON.parse(fileHeaderResult);
+    console.log('FileHeader:', header);
   } catch (error) {
     console.error('오류 발생:', error);
     if (error instanceof Error) {

@@ -24,7 +24,7 @@ function App() {
       const data = new Uint8Array(arrayBuffer);
 
       // 마크다운 변환 (이미지는 base64로 임베드됨)
-      const markdownResult = hwpjs.parseHwpToMarkdown(data, {
+      const markdownResult = hwpjs.toMarkdown(data, {
         image: 'base64',
         useHtml: false,
         includeVersion: false,
@@ -47,7 +47,7 @@ function App() {
       }
 
       // JSON 변환
-      const jsonString = hwpjs.parseHwp(data);
+      const jsonString = hwpjs.toJson(data);
       setJson(jsonString);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'HWP 파일 파싱 실패';

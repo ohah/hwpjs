@@ -45,11 +45,11 @@ Node.js의 `fs` 모듈을 사용하여 HWP 파일을 읽고 파싱합니다.
 
 ```typescript
 import { readFileSync } from 'fs';
-import { parseHwp } from '@ohah/hwpjs';
+import { toJson } from '@ohah/hwpjs';
 
 const fileBuffer = readFileSync('noori.hwp');
-const byteArray = Array.from(fileBuffer);
-const parsedResult = parseHwp(byteArray);
+const data = new Uint8Array(fileBuffer);
+const parsedResult = toJson(data);
 const parsedJson = JSON.parse(parsedResult);
 ```
 
@@ -59,7 +59,9 @@ const parsedJson = JSON.parse(parsedResult);
 
 ```typescript
 try {
-  const parsedResult = parseHwp(byteArray);
+  const fileBuffer = readFileSync('noori.hwp');
+  const data = new Uint8Array(fileBuffer);
+  const parsedResult = toJson(data);
   // ...
 } catch (error) {
   console.error('오류 발생:', error);
@@ -71,8 +73,9 @@ try {
 
 ## 사용 가능한 함수
 
-- `parseHwp(data: Array<number>): string` - HWP 파일 전체 파싱
-- `parseHwpFileheader(data: Array<number>): string` - FileHeader만 파싱
+- `toJson(data: Buffer): string` - HWP 파일을 JSON 형식으로 변환
+- `toMarkdown(data: Buffer, options?): ToMarkdownResult` - HWP 파일을 마크다운 형식으로 변환
+- `fileHeader(data: Buffer): string` - FileHeader만 추출
 
 ## 참고사항
 
