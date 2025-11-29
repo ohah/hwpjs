@@ -959,21 +959,62 @@ std::size_t align_of() {
 } // namespace cxxbridge1
 } // namespace rust
 
+#if __cplusplus >= 201402L
+#define CXX_DEFAULT_VALUE(value) = value
+#else
+#define CXX_DEFAULT_VALUE(value)
+#endif
+
 namespace craby {
-  namespace reactnative {
+  namespace hwpjs {
     namespace bridging {
-      struct ReactNative;
+      struct NullableString;
+      struct ToMarkdownResult;
+      struct ToMarkdownOptions;
+      struct Hwpjs;
     }
   }
 }
 
 namespace craby {
-namespace reactnative {
+namespace hwpjs {
 namespace bridging {
-#ifndef CXXBRIDGE1_STRUCT_craby$reactnative$bridging$ReactNative
-#define CXXBRIDGE1_STRUCT_craby$reactnative$bridging$ReactNative
-struct ReactNative final : public ::rust::Opaque {
-  ~ReactNative() = delete;
+#ifndef CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$NullableString
+#define CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$NullableString
+struct NullableString final {
+  bool null CXX_DEFAULT_VALUE(false);
+  ::rust::String val;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$NullableString
+
+#ifndef CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownResult
+#define CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownResult
+struct ToMarkdownResult final {
+  ::rust::String markdown;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownResult
+
+#ifndef CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownOptions
+#define CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownOptions
+struct ToMarkdownOptions final {
+  ::craby::hwpjs::bridging::NullableString image_output_dir;
+  ::craby::hwpjs::bridging::NullableString image;
+  bool use_html CXX_DEFAULT_VALUE(false);
+  bool include_version CXX_DEFAULT_VALUE(false);
+  bool include_page_info CXX_DEFAULT_VALUE(false);
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownOptions
+
+#ifndef CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$Hwpjs
+#define CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$Hwpjs
+struct Hwpjs final : public ::rust::Opaque {
+  ~Hwpjs() = delete;
 
 private:
   friend ::rust::layout;
@@ -982,21 +1023,17 @@ private:
     static ::std::size_t align() noexcept;
   };
 };
-#endif // CXXBRIDGE1_STRUCT_craby$reactnative$bridging$ReactNative
+#endif // CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$Hwpjs
 
-::rust::Box<::craby::reactnative::bridging::ReactNative> createReactNative(::std::size_t id, ::rust::Str data_path) noexcept;
+::rust::Box<::craby::hwpjs::bridging::Hwpjs> createHwpjs(::std::size_t id, ::rust::Str data_path) noexcept;
 
-double add(::craby::reactnative::bridging::ReactNative &it_, double a, double b);
+::rust::String fileHeader(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data);
 
-double divide(::craby::reactnative::bridging::ReactNative &it_, double a, double b);
+::rust::String toJson(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data);
 
-::rust::String hwpParser(::craby::reactnative::bridging::ReactNative &it_, ::rust::Vec<double> data);
-
-double multiply(::craby::reactnative::bridging::ReactNative &it_, double a, double b);
-
-double subtract(::craby::reactnative::bridging::ReactNative &it_, double a, double b);
+::craby::hwpjs::bridging::ToMarkdownResult toMarkdown(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data, ::craby::hwpjs::bridging::ToMarkdownOptions options);
 } // namespace bridging
-} // namespace reactnative
+} // namespace hwpjs
 } // namespace craby
 
 #ifdef __clang__

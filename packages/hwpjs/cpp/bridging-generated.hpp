@@ -62,5 +62,97 @@ struct Bridging<rust::Vec<T>> {
   }
 };
 
+template <>
+struct Bridging<craby::hwpjs::bridging::NullableString> {
+  static craby::hwpjs::bridging::NullableString fromJs(jsi::Runtime &rt, const jsi::Value& value, std::shared_ptr<CallInvoker> callInvoker) {
+    if (value.isNull()) {
+      return craby::hwpjs::bridging::NullableString{true, rust::String()};
+    }
+
+    auto val = react::bridging::fromJs<rust::String>(rt, value, callInvoker);
+    auto ret = craby::hwpjs::bridging::NullableString{false, val};
+
+    return ret;
+  }
+
+  static jsi::Value toJs(jsi::Runtime &rt, craby::hwpjs::bridging::NullableString value) {
+    if (value.null) {
+      return jsi::Value::null();
+    }
+
+    return react::bridging::toJs(rt, value.val);
+  }
+};
+
+template <>
+struct Bridging<craby::hwpjs::bridging::ToMarkdownOptions> {
+  static craby::hwpjs::bridging::ToMarkdownOptions fromJs(jsi::Runtime &rt, const jsi::Value& value, std::shared_ptr<CallInvoker> callInvoker) {
+    auto obj = value.asObject(rt);
+    auto obj$imageOutputDir = obj.getProperty(rt, "imageOutputDir");
+    auto obj$image = obj.getProperty(rt, "image");
+    auto obj$useHtml = obj.getProperty(rt, "useHtml");
+    auto obj$includeVersion = obj.getProperty(rt, "includeVersion");
+    auto obj$includePageInfo = obj.getProperty(rt, "includePageInfo");
+
+    auto _obj$imageOutputDir = react::bridging::fromJs<craby::hwpjs::bridging::NullableString>(rt, obj$imageOutputDir, callInvoker);
+    auto _obj$image = react::bridging::fromJs<craby::hwpjs::bridging::NullableString>(rt, obj$image, callInvoker);
+    auto _obj$useHtml = react::bridging::fromJs<bool>(rt, obj$useHtml, callInvoker);
+    auto _obj$includeVersion = react::bridging::fromJs<bool>(rt, obj$includeVersion, callInvoker);
+    auto _obj$includePageInfo = react::bridging::fromJs<bool>(rt, obj$includePageInfo, callInvoker);
+
+    craby::hwpjs::bridging::ToMarkdownOptions ret = {
+      _obj$imageOutputDir,
+      _obj$image,
+      _obj$useHtml,
+      _obj$includeVersion,
+      _obj$includePageInfo
+    };
+
+    return ret;
+  }
+
+  static jsi::Value toJs(jsi::Runtime &rt, craby::hwpjs::bridging::ToMarkdownOptions value) {
+    jsi::Object obj = jsi::Object(rt);
+    auto _obj$imageOutputDir = react::bridging::toJs(rt, value.image_output_dir);
+    auto _obj$image = react::bridging::toJs(rt, value.image);
+    auto _obj$useHtml = react::bridging::toJs(rt, value.use_html);
+    auto _obj$includeVersion = react::bridging::toJs(rt, value.include_version);
+    auto _obj$includePageInfo = react::bridging::toJs(rt, value.include_page_info);
+
+    obj.setProperty(rt, "imageOutputDir", _obj$imageOutputDir);
+    obj.setProperty(rt, "image", _obj$image);
+    obj.setProperty(rt, "useHtml", _obj$useHtml);
+    obj.setProperty(rt, "includeVersion", _obj$includeVersion);
+    obj.setProperty(rt, "includePageInfo", _obj$includePageInfo);
+
+    return jsi::Value(rt, obj);
+  }
+};
+
+template <>
+struct Bridging<craby::hwpjs::bridging::ToMarkdownResult> {
+  static craby::hwpjs::bridging::ToMarkdownResult fromJs(jsi::Runtime &rt, const jsi::Value& value, std::shared_ptr<CallInvoker> callInvoker) {
+    auto obj = value.asObject(rt);
+    auto obj$markdown = obj.getProperty(rt, "markdown");
+
+    auto _obj$markdown = react::bridging::fromJs<rust::String>(rt, obj$markdown, callInvoker);
+
+    craby::hwpjs::bridging::ToMarkdownResult ret = {
+      _obj$markdown
+    };
+
+    return ret;
+  }
+
+  static jsi::Value toJs(jsi::Runtime &rt, craby::hwpjs::bridging::ToMarkdownResult value) {
+    jsi::Object obj = jsi::Object(rt);
+    auto _obj$markdown = react::bridging::toJs(rt, value.markdown);
+
+    obj.setProperty(rt, "markdown", _obj$markdown);
+
+    return jsi::Value(rt, obj);
+  }
+};
+
 } // namespace react
 } // namespace facebook

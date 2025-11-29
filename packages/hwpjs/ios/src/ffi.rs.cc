@@ -1030,21 +1030,62 @@ public:
 } // namespace cxxbridge1
 } // namespace rust
 
+#if __cplusplus >= 201402L
+#define CXX_DEFAULT_VALUE(value) = value
+#else
+#define CXX_DEFAULT_VALUE(value)
+#endif
+
 namespace craby {
-  namespace reactnative {
+  namespace hwpjs {
     namespace bridging {
-      struct ReactNative;
+      struct NullableString;
+      struct ToMarkdownResult;
+      struct ToMarkdownOptions;
+      struct Hwpjs;
     }
   }
 }
 
 namespace craby {
-namespace reactnative {
+namespace hwpjs {
 namespace bridging {
-#ifndef CXXBRIDGE1_STRUCT_craby$reactnative$bridging$ReactNative
-#define CXXBRIDGE1_STRUCT_craby$reactnative$bridging$ReactNative
-struct ReactNative final : public ::rust::Opaque {
-  ~ReactNative() = delete;
+#ifndef CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$NullableString
+#define CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$NullableString
+struct NullableString final {
+  bool null CXX_DEFAULT_VALUE(false);
+  ::rust::String val;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$NullableString
+
+#ifndef CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownResult
+#define CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownResult
+struct ToMarkdownResult final {
+  ::rust::String markdown;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownResult
+
+#ifndef CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownOptions
+#define CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownOptions
+struct ToMarkdownOptions final {
+  ::craby::hwpjs::bridging::NullableString image_output_dir;
+  ::craby::hwpjs::bridging::NullableString image;
+  bool use_html CXX_DEFAULT_VALUE(false);
+  bool include_version CXX_DEFAULT_VALUE(false);
+  bool include_page_info CXX_DEFAULT_VALUE(false);
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$ToMarkdownOptions
+
+#ifndef CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$Hwpjs
+#define CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$Hwpjs
+struct Hwpjs final : public ::rust::Opaque {
+  ~Hwpjs() = delete;
 
 private:
   friend ::rust::layout;
@@ -1053,105 +1094,86 @@ private:
     static ::std::size_t align() noexcept;
   };
 };
-#endif // CXXBRIDGE1_STRUCT_craby$reactnative$bridging$ReactNative
+#endif // CXXBRIDGE1_STRUCT_craby$hwpjs$bridging$Hwpjs
 
 extern "C" {
-::std::size_t craby$reactnative$bridging$cxxbridge1$189$ReactNative$operator$sizeof() noexcept;
-::std::size_t craby$reactnative$bridging$cxxbridge1$189$ReactNative$operator$alignof() noexcept;
+::std::size_t craby$hwpjs$bridging$cxxbridge1$190$Hwpjs$operator$sizeof() noexcept;
+::std::size_t craby$hwpjs$bridging$cxxbridge1$190$Hwpjs$operator$alignof() noexcept;
 
-::craby::reactnative::bridging::ReactNative *craby$reactnative$bridging$cxxbridge1$189$create_react_native(::std::size_t id, ::rust::Str data_path) noexcept;
+::craby::hwpjs::bridging::Hwpjs *craby$hwpjs$bridging$cxxbridge1$190$create_hwpjs(::std::size_t id, ::rust::Str data_path) noexcept;
 
-::rust::repr::PtrLen craby$reactnative$bridging$cxxbridge1$189$react_native_add(::craby::reactnative::bridging::ReactNative &it_, double a, double b, double *return$) noexcept;
+::rust::repr::PtrLen craby$hwpjs$bridging$cxxbridge1$190$hwpjs_file_header(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> *data, ::rust::String *return$) noexcept;
 
-::rust::repr::PtrLen craby$reactnative$bridging$cxxbridge1$189$react_native_divide(::craby::reactnative::bridging::ReactNative &it_, double a, double b, double *return$) noexcept;
+::rust::repr::PtrLen craby$hwpjs$bridging$cxxbridge1$190$hwpjs_to_json(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> *data, ::rust::String *return$) noexcept;
 
-::rust::repr::PtrLen craby$reactnative$bridging$cxxbridge1$189$react_native_hwp_parser(::craby::reactnative::bridging::ReactNative &it_, ::rust::Vec<double> *data, ::rust::String *return$) noexcept;
-
-::rust::repr::PtrLen craby$reactnative$bridging$cxxbridge1$189$react_native_multiply(::craby::reactnative::bridging::ReactNative &it_, double a, double b, double *return$) noexcept;
-
-::rust::repr::PtrLen craby$reactnative$bridging$cxxbridge1$189$react_native_subtract(::craby::reactnative::bridging::ReactNative &it_, double a, double b, double *return$) noexcept;
+::rust::repr::PtrLen craby$hwpjs$bridging$cxxbridge1$190$hwpjs_to_markdown(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> *data, ::craby::hwpjs::bridging::ToMarkdownOptions *options, ::craby::hwpjs::bridging::ToMarkdownResult *return$) noexcept;
 } // extern "C"
 
-::std::size_t ReactNative::layout::size() noexcept {
-  return craby$reactnative$bridging$cxxbridge1$189$ReactNative$operator$sizeof();
+::std::size_t Hwpjs::layout::size() noexcept {
+  return craby$hwpjs$bridging$cxxbridge1$190$Hwpjs$operator$sizeof();
 }
 
-::std::size_t ReactNative::layout::align() noexcept {
-  return craby$reactnative$bridging$cxxbridge1$189$ReactNative$operator$alignof();
+::std::size_t Hwpjs::layout::align() noexcept {
+  return craby$hwpjs$bridging$cxxbridge1$190$Hwpjs$operator$alignof();
 }
 
-::rust::Box<::craby::reactnative::bridging::ReactNative> createReactNative(::std::size_t id, ::rust::Str data_path) noexcept {
-  return ::rust::Box<::craby::reactnative::bridging::ReactNative>::from_raw(craby$reactnative$bridging$cxxbridge1$189$create_react_native(id, data_path));
+::rust::Box<::craby::hwpjs::bridging::Hwpjs> createHwpjs(::std::size_t id, ::rust::Str data_path) noexcept {
+  return ::rust::Box<::craby::hwpjs::bridging::Hwpjs>::from_raw(craby$hwpjs$bridging$cxxbridge1$190$create_hwpjs(id, data_path));
 }
 
-double add(::craby::reactnative::bridging::ReactNative &it_, double a, double b) {
-  ::rust::MaybeUninit<double> return$;
-  ::rust::repr::PtrLen error$ = craby$reactnative$bridging$cxxbridge1$189$react_native_add(it_, a, b, &return$.value);
-  if (error$.ptr) {
-    throw ::rust::impl<::rust::Error>::error(error$);
-  }
-  return ::std::move(return$.value);
-}
-
-double divide(::craby::reactnative::bridging::ReactNative &it_, double a, double b) {
-  ::rust::MaybeUninit<double> return$;
-  ::rust::repr::PtrLen error$ = craby$reactnative$bridging$cxxbridge1$189$react_native_divide(it_, a, b, &return$.value);
-  if (error$.ptr) {
-    throw ::rust::impl<::rust::Error>::error(error$);
-  }
-  return ::std::move(return$.value);
-}
-
-::rust::String hwpParser(::craby::reactnative::bridging::ReactNative &it_, ::rust::Vec<double> data) {
+::rust::String fileHeader(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data) {
   ::rust::ManuallyDrop<::rust::Vec<double>> data$(::std::move(data));
   ::rust::MaybeUninit<::rust::String> return$;
-  ::rust::repr::PtrLen error$ = craby$reactnative$bridging$cxxbridge1$189$react_native_hwp_parser(it_, &data$.value, &return$.value);
+  ::rust::repr::PtrLen error$ = craby$hwpjs$bridging$cxxbridge1$190$hwpjs_file_header(it_, &data$.value, &return$.value);
   if (error$.ptr) {
     throw ::rust::impl<::rust::Error>::error(error$);
   }
   return ::std::move(return$.value);
 }
 
-double multiply(::craby::reactnative::bridging::ReactNative &it_, double a, double b) {
-  ::rust::MaybeUninit<double> return$;
-  ::rust::repr::PtrLen error$ = craby$reactnative$bridging$cxxbridge1$189$react_native_multiply(it_, a, b, &return$.value);
+::rust::String toJson(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data) {
+  ::rust::ManuallyDrop<::rust::Vec<double>> data$(::std::move(data));
+  ::rust::MaybeUninit<::rust::String> return$;
+  ::rust::repr::PtrLen error$ = craby$hwpjs$bridging$cxxbridge1$190$hwpjs_to_json(it_, &data$.value, &return$.value);
   if (error$.ptr) {
     throw ::rust::impl<::rust::Error>::error(error$);
   }
   return ::std::move(return$.value);
 }
 
-double subtract(::craby::reactnative::bridging::ReactNative &it_, double a, double b) {
-  ::rust::MaybeUninit<double> return$;
-  ::rust::repr::PtrLen error$ = craby$reactnative$bridging$cxxbridge1$189$react_native_subtract(it_, a, b, &return$.value);
+::craby::hwpjs::bridging::ToMarkdownResult toMarkdown(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data, ::craby::hwpjs::bridging::ToMarkdownOptions options) {
+  ::rust::ManuallyDrop<::rust::Vec<double>> data$(::std::move(data));
+  ::rust::ManuallyDrop<::craby::hwpjs::bridging::ToMarkdownOptions> options$(::std::move(options));
+  ::rust::MaybeUninit<::craby::hwpjs::bridging::ToMarkdownResult> return$;
+  ::rust::repr::PtrLen error$ = craby$hwpjs$bridging$cxxbridge1$190$hwpjs_to_markdown(it_, &data$.value, &options$.value, &return$.value);
   if (error$.ptr) {
     throw ::rust::impl<::rust::Error>::error(error$);
   }
   return ::std::move(return$.value);
 }
 } // namespace bridging
-} // namespace reactnative
+} // namespace hwpjs
 } // namespace craby
 
 extern "C" {
-::craby::reactnative::bridging::ReactNative *cxxbridge1$box$craby$reactnative$bridging$ReactNative$alloc() noexcept;
-void cxxbridge1$box$craby$reactnative$bridging$ReactNative$dealloc(::craby::reactnative::bridging::ReactNative *) noexcept;
-void cxxbridge1$box$craby$reactnative$bridging$ReactNative$drop(::rust::Box<::craby::reactnative::bridging::ReactNative> *ptr) noexcept;
+::craby::hwpjs::bridging::Hwpjs *cxxbridge1$box$craby$hwpjs$bridging$Hwpjs$alloc() noexcept;
+void cxxbridge1$box$craby$hwpjs$bridging$Hwpjs$dealloc(::craby::hwpjs::bridging::Hwpjs *) noexcept;
+void cxxbridge1$box$craby$hwpjs$bridging$Hwpjs$drop(::rust::Box<::craby::hwpjs::bridging::Hwpjs> *ptr) noexcept;
 } // extern "C"
 
 namespace rust {
 inline namespace cxxbridge1 {
 template <>
-::craby::reactnative::bridging::ReactNative *Box<::craby::reactnative::bridging::ReactNative>::allocation::alloc() noexcept {
-  return cxxbridge1$box$craby$reactnative$bridging$ReactNative$alloc();
+::craby::hwpjs::bridging::Hwpjs *Box<::craby::hwpjs::bridging::Hwpjs>::allocation::alloc() noexcept {
+  return cxxbridge1$box$craby$hwpjs$bridging$Hwpjs$alloc();
 }
 template <>
-void Box<::craby::reactnative::bridging::ReactNative>::allocation::dealloc(::craby::reactnative::bridging::ReactNative *ptr) noexcept {
-  cxxbridge1$box$craby$reactnative$bridging$ReactNative$dealloc(ptr);
+void Box<::craby::hwpjs::bridging::Hwpjs>::allocation::dealloc(::craby::hwpjs::bridging::Hwpjs *ptr) noexcept {
+  cxxbridge1$box$craby$hwpjs$bridging$Hwpjs$dealloc(ptr);
 }
 template <>
-void Box<::craby::reactnative::bridging::ReactNative>::drop() noexcept {
-  cxxbridge1$box$craby$reactnative$bridging$ReactNative$drop(this);
+void Box<::craby::hwpjs::bridging::Hwpjs>::drop() noexcept {
+  cxxbridge1$box$craby$hwpjs$bridging$Hwpjs$drop(this);
 }
 } // namespace cxxbridge1
 } // namespace rust

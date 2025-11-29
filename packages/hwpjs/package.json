@@ -6,13 +6,13 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "node": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
       "react-native": {
         "types": "./dist/react-native/index.d.mts",
         "default": "./dist/react-native/index.mjs"
+      },
+      "node": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
       "default": "./dist/browser.js",
       "types": "./dist/index.d.ts"
@@ -83,14 +83,15 @@
     "napi": "napi new",
     "artifacts": "napi artifacts --output-dir dist --build-output-dir dist",
     "bench": "node --import @oxc-node/core/register benchmark/bench.ts",
-    "build:node:windows-x64": "napi build --platform --target x86_64-pc-windows-msvc --release --package hwpjs --output-dir dist --cross-compile",
-    "build:node:windows-x86": "napi build --platform --target i686-pc-windows-msvc --release --package hwpjs --output-dir dist --cross-compile",
-    "build:node:windows-arm64": "napi build --platform --target aarch64-pc-windows-msvc --release --package hwpjs --output-dir dist --cross-compile",
-    "build:node:macos-x64": "napi build --platform --target x86_64-apple-darwin --release --package hwpjs --output-dir dist",
-    "build:node:macos-arm64": "napi build --platform --target aarch64-apple-darwin --release --package hwpjs --output-dir dist",
-    "build:node:linux-x64": "napi build --platform --target x86_64-unknown-linux-gnu --release --package hwpjs --output-dir dist --use-cross",
+    "prepare:target-link": "bun run scripts/create-target-link.ts",
+    "build:node:windows-x64": "napi build --platform --target x86_64-pc-windows-msvc --release --package hwpjs-napi --output-dir dist --cross-compile",
+    "build:node:windows-x86": "napi build --platform --target i686-pc-windows-msvc --release --package hwpjs-napi --output-dir dist --cross-compile",
+    "build:node:windows-arm64": "napi build --platform --target aarch64-pc-windows-msvc --release --package hwpjs-napi --output-dir dist --cross-compile",
+    "build:node:macos-x64": "napi build --platform --target x86_64-apple-darwin --release --package hwpjs-napi --output-dir dist",
+    "build:node:macos-arm64": "napi build --platform --target aarch64-apple-darwin --release --package hwpjs-napi --output-dir dist",
+    "build:node:linux-x64": "napi build --platform --target x86_64-unknown-linux-gnu --release --package hwpjs-napi --output-dir dist --use-cross",
     "build:react-native": "craby build && tsdown",
-    "build:web:wasm": "napi build --target wasm32-wasip1-threads --release --package hwpjs --output-dir dist",
+    "build:web:wasm": "napi build --target wasm32-wasip1-threads --release --package hwpjs-napi --output-dir dist",
     "build:node": "bun run build:node:windows-x64 && bun run build:node:windows-x86 && bun run build:node:windows-arm64 && bun run build:node:macos-x64 && bun run build:node:macos-arm64 && bun run build:web:wasm && bun run build:node:linux-x64",
     "build:node:all": "bun run build:node:windows-x64 || true && bun run build:node:windows-x86 || true && bun run build:node:windows-arm64 || true && bun run build:node:macos-x64 || true && bun run build:node:macos-arm64 || true && bun run build:web:wasm || true && bun run build:node:linux-x64",
     "build": "bun run build:node && bun run build:react-native",
@@ -102,7 +103,10 @@
     "test": "bun test",
     "version": "napi version",
     "typecheck": "tsc --noEmit",
-    "clean": "craby clean"
+    "crabygen:codegen": "crabygen codegen",
+    "crabygen:build": "crabygen build",
+    "craby:build": "craby build",
+    "craby:clean": "craby clean"
   },
   "devDependencies": {
     "@emnapi/core": "^1.5.0",
@@ -127,12 +131,10 @@
   "optionalDependencies": {
     "@ohah/hwpjs-win32-x64-msvc": "0.1.0-rc.1",
     "@ohah/hwpjs-darwin-x64": "0.1.0-rc.1",
+    "@ohah/hwpjs-linux-x64-gnu": "0.1.0-rc.1",
     "@ohah/hwpjs-win32-ia32-msvc": "0.1.0-rc.1",
     "@ohah/hwpjs-darwin-arm64": "0.1.0-rc.1",
     "@ohah/hwpjs-win32-arm64-msvc": "0.1.0-rc.1",
     "@ohah/hwpjs-wasm32-wasi": "0.1.0-rc.1"
-  },
-  "dependencies": {
-    "buffer": "^6.0.3"
   }
 }
