@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import * as hwpjs from '@ohah/hwpjs';
@@ -36,7 +36,7 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
       const buffer = Buffer.from(data);
 
       // 마크다운 변환 (이미지는 base64로 임베드됨)
-      const markdownResult = hwpjs.parseHwpToMarkdown(buffer, {
+      const markdownResult = hwpjs.toMarkdown(buffer, {
         image: 'base64',
         useHtml: false,
         includeVersion: false,
@@ -45,7 +45,7 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
       setMarkdown(markdownResult.markdown);
 
       // JSON 변환
-      const jsonString = hwpjs.parseHwp(buffer);
+      const jsonString = hwpjs.toJson(buffer);
       setJson(jsonString);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'HWP 파일 파싱 실패';
