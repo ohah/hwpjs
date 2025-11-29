@@ -7,7 +7,7 @@
 
 import { StatusBar, StyleSheet, useColorScheme, View, Text, ScrollView } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ReactNative } from '@ohah/hwpjs';
+import { Hwpjs } from '@ohah/hwpjs';
 import { useEffect, useState } from 'react';
 import RNFS from 'react-native-fs';
 import { Platform } from 'react-native';
@@ -48,7 +48,7 @@ function App() {
         const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
 
         // HWP 파일 파싱
-        const result = ReactNative.hwp_parser(numberArray);
+        const result = Hwpjs.toJson(numberArray);
         setHwpData(result);
         console.log('HWP 파싱 결과:', result);
       } catch (err) {

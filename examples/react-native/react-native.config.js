@@ -1,4 +1,3 @@
-const path = require('node:path');
 const { withWorkspaceModule } = require('@craby/devkit');
 
 const modulePackagePath = __dirname;

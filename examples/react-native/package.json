@@ -9,11 +9,12 @@
     "dev": "react-native dev"
   },
   "dependencies": {
+    "@ohah/hwpjs": "workspace:*",
+    "@react-native/new-app-screen": "0.82.1",
     "react": "19.1.1",
     "react-native": "^0.82.1",
-    "@react-native/new-app-screen": "0.82.1",
-    "@ohah/hwpjs": "workspace:*",
     "react-native-fs": "^2.20.0",
+    "react-native-markdown-display": "^7.0.2",
     "react-native-safe-area-context": "^5.5.2"
   },
   "devDependencies": {
