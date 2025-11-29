@@ -1,5 +1,10 @@
 .hwp-demo {
   margin: 2rem 0;
+  color: #333;
+}
+
+.hwp-demo * {
+  color: inherit;
 }
 
 .hwp-demo-header {
@@ -45,6 +50,12 @@
   padding: 3rem;
   background: #f8f9fa;
   border-radius: 12px;
+  color: #333;
+}
+
+.loading p {
+  color: #333;
+  margin: 0;
 }
 
 .spinner {
@@ -246,5 +257,10 @@
   color: #666;
   background: #f8f9fa;
   border-radius: 12px;
+}
+
+.empty-state p {
+  color: #666;
+  margin: 0;
 }
 
