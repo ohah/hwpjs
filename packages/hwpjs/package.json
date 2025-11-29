@@ -104,6 +104,7 @@
     "postprepublishOnly": "bun run scripts/cleanup-root.ts",
     "build:release": "bun run build:node:all && bun run postbuild:node:all && bun run prepare:artifacts && bun run artifacts && bun run prepublishOnly",
     "prepublishOnly": "napi prepublish -t npm --dry-run",
+    "release": "bash scripts/releash.sh",
     "test": "bun test",
     "version": "napi version",
     "typecheck": "tsc --noEmit",
