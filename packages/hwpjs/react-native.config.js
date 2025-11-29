@@ -16,7 +16,7 @@ module.exports = {
          * To address this, I provide stub files that do not interfere with autolinking behavior.
          */
         cmakeListsPath: 'stubs/CMakeLists.txt',
-        libraryName: 'ReactNative_stub',
+        libraryName: 'Hwpjs_stub',
       },
       ios: {},
     },

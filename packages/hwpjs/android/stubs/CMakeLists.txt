@@ -4,15 +4,15 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 file(GLOB react_codegen_SRCS CONFIGURE_DEPENDS *.cpp)
 
 add_library(
-  react_codegen_ReactNative_stub
+  react_codegen_Hwpjs_stub
   OBJECT
   ${react_codegen_SRCS}
 )
 
-target_include_directories(react_codegen_ReactNative_stub PUBLIC .)
+target_include_directories(react_codegen_Hwpjs_stub PUBLIC .)
 
 target_link_libraries(
-  react_codegen_ReactNative_stub
+  react_codegen_Hwpjs_stub
   fbjni
   jsi
   # We need to link different libraries based on whether we are building rncore or not, that's necessary
@@ -21,9 +21,9 @@ target_link_libraries(
 )
 
 target_compile_options(
-  react_codegen_ReactNative_stub
+  react_codegen_Hwpjs_stub
   PRIVATE
-  -DLOG_TAG=\"ReactNative\"
+  -DLOG_TAG=\"Hwpjs\"
   -fexceptions
   -frtti
   -std=c++20

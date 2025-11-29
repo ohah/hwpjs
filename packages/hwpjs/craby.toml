@@ -1,8 +1,8 @@
 [project]
-name = "reactnative"
-source_dir = "src"
+name = "hwpjs"
+source_dir = "src-reactnative"
 
 [android]
-package_name = "rs.craby.reactnative"
+package_name = "rs.craby.hwpjs"
 
 [ios]
