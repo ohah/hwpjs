@@ -16,4 +16,21 @@ export default defineConfig({
       },
     ],
   },
+  builderConfig: {
+    output: {
+      // SSG 빌드 시 @ohah/hwpjs 관련 모듈을 번들링하지 않도록 external 처리
+      externals: [
+        '@ohah/hwpjs',
+        '@napi-rs/wasm-runtime',
+        /^@ohah\/hwpjs/,
+        /^@napi-rs\/wasm-runtime/,
+      ],
+    },
+    resolve: {
+      // SSG 빌드 시 WASM 관련 파일을 번들링하지 않도록 처리
+      alias: {
+        '@ohah/hwpjs/dist/hwpjs.wasi.cjs': false,
+      },
+    },
+  },
 });
