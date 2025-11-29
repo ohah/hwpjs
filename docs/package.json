@@ -16,6 +16,9 @@
     "remark-gfm": "^4.0.1",
     "buffer": "^6.0.3"
   },
+  "optionalDependencies": {
+    "@napi-rs/wasm-runtime": "^1.0.7"
+  },
   "devDependencies": {
     "@types/node": "^22.8.1",
     "@types/react": "^19.2.5",
