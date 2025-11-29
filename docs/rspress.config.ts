@@ -18,8 +18,15 @@ export default defineConfig({
   },
   builderConfig: {
     output: {
-      externals: {
-        '@napi-rs/wasm-runtime': 'commonjs @napi-rs/wasm-runtime',
+      // @napi-rs/wasm-runtime을 번들에 포함시켜 브라우저에서 require 에러 방지
+      // externals 설정 제거
+    },
+    tools: {
+      rspack: {
+        resolve: {
+          // 브라우저 환경에서 ESM으로 처리
+          conditionNames: ['browser', 'import', 'module', 'require'],
+        },
       },
     },
   },
