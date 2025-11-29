@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import * as hwpjs from '@ohah/hwpjs';
 import './App.css';
@@ -26,13 +26,25 @@ function App() {
       // 마크다운 변환 (이미지는 base64로 임베드됨)
       const markdownResult = hwpjs.parseHwpToMarkdown(data, {
         image: 'base64',
-        useHtml: true,
-        includeVersion: true,
-        includePageInfo: true,
+        useHtml: false,
+        includeVersion: false,
+        includePageInfo: false,
       });
       setMarkdown(markdownResult.markdown);
 
-      console.log(markdownResult);
+      // Debug: Check if markdown contains base64 images
+      console.log('Markdown result:', markdownResult);
+      const hasBase64 = markdownResult.markdown.includes('data:image/');
+      const hasPlaceholder = markdownResult.markdown.includes('image-0');
+      console.log('Has base64 URI:', hasBase64);
+      console.log('Has placeholder:', hasPlaceholder);
+
+      // Find first image in markdown
+      const imageMatch = markdownResult.markdown.match(/!\[이미지\]\(([^)]+)\)/);
+      if (imageMatch) {
+        console.log('First image reference:', imageMatch[1].substring(0, 100));
+        console.log('Is base64:', imageMatch[1].startsWith('data:image/'));
+      }
 
       // JSON 변환
       const jsonString = hwpjs.parseHwp(data);
@@ -78,6 +90,12 @@ function App() {
     } catch {
       return jsonString;
     }
+  };
+
+  // urlTransform to allow data: URLs (base64 images) to pass through
+  // See: https://stackoverflow.com/questions/79542604/issue-rendering-base64-images-with-react-markdown-v10
+  const urlTransform = (url: string) => {
+    return url.startsWith('data:') ? url : defaultUrlTransform(url);
   };
 
   return (
@@ -146,7 +164,28 @@ function App() {
             <div className="tab-content">
               {activeTab === 'markdown' && markdown && (
                 <div className="markdown-container">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    urlTransform={urlTransform}
+                    components={{
+                      img: ({ src, alt, ...props }) => {
+                        // Handle base64 data URIs and regular images
+                        if (src) {
+                          return (
+                            <img
+                              src={src}
+                              alt={alt || 'Image'}
+                              className="markdown-image"
+                              {...props}
+                            />
+                          );
+                        }
+                        return null;
+                      },
+                    }}
+                  >
+                    {markdown}
+                  </ReactMarkdown>
                 </div>
               )}
 
