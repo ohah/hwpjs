@@ -4,9 +4,6 @@
   "workspaces": {
     "": {
       "name": "hwpjs",
-      "dependencies": {
-        "buffer": "^6.0.3",
-      },
       "devDependencies": {
         "@napi-rs/cli": "^3.4.1",
         "oxfmt": "^0.14.0",
@@ -29,6 +26,9 @@
         "@types/node": "^22.8.1",
         "@types/react": "^19.2.5",
         "@types/react-dom": "^19.2.3",
+      },
+      "optionalDependencies": {
+        "@napi-rs/wasm-runtime": "^1.0.7",
       },
     },
     "examples/node": {

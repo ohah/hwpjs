@@ -38,8 +38,5 @@
     "@napi-rs/cli": "^3.4.1",
     "oxfmt": "^0.14.0",
     "oxlint": "^1.29.0"
-  },
-  "dependencies": {
-    "buffer": "^6.0.3"
   }
 }
