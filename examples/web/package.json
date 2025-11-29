@@ -8,10 +8,14 @@
     "build": "tsc -b && vite build"
   },
   "dependencies": {
+    "@ohah/hwpjs": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tslib": "^2.8.1",
-    "@ohah/hwpjs": "workspace:*"
+    "react-markdown": "^10.1.0",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-html": "^16.0.1",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.5",
@@ -20,6 +24,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "globals": "^16.5.0",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vite-plugin-node-polyfills": "^0.24.0"
   }
 }
