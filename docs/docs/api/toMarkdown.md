@@ -68,14 +68,14 @@ println!("{}", markdown);
 
 ```typescript
 import { readFileSync } from 'fs';
-import { parseHwpToMarkdown } from '@ohah/hwpjs';
+import { toMarkdown } from '@ohah/hwpjs';
 
 // HWP 파일 읽기
 const fileBuffer = readFileSync('./document.hwp');
 const data = new Uint8Array(fileBuffer);
 
 // 마크다운으로 변환 (base64 이미지 포함)
-const result = parseHwpToMarkdown(data, {
+const result = toMarkdown(data, {
   image: 'base64', // 또는 'blob'으로 별도 이미지 배열 받기
   useHtml: true,
   includeVersion: true,

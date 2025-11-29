@@ -8,9 +8,7 @@ HWPJS의 모든 API 함수를 확인하세요.
 
 ## 함수 목록
 
-- [parseHwp](./parseHwp) - HWP 파일을 파싱하여 내용을 반환하는 함수
-
-:::warning
-API는 현재 개발 중이며, 지원 예정입니다.
-:::
+- [toJson](./toJson) - HWP 파일을 JSON 형식으로 변환하는 함수
+- [toMarkdown](./toMarkdown) - HWP 파일을 마크다운 형식으로 변환하는 함수
+- [fileHeader](./fileHeader) - HWP 파일의 FileHeader만 추출하는 함수
 
