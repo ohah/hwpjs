@@ -25,6 +25,7 @@ lib-cov/
 .serverless/
 .fusebox/
 .vuepress/dist/
+examples/**/dist
 
 # Misc
 .DS_Store
