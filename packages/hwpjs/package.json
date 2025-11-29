@@ -46,7 +46,6 @@
     "index.d.ts",
     "index.js",
     "browser.js",
-    "src",
     "dist",
     "android",
     "ios",
@@ -103,8 +102,11 @@
     "postbuild:node:all": "bun run scripts/rename-wasm.ts",
     "postprepublishOnly": "bun run scripts/cleanup-root.ts",
     "build:release": "bun run build:node:all && bun run postbuild:node:all && bun run prepare:artifacts && bun run artifacts && bun run prepublishOnly",
-    "prepublishOnly": "napi prepublish -t npm --dry-run",
+    "prepublishOnly": "napi prepublish -t npm --dry-run --no-gh-release",
     "release": "bash scripts/releash.sh",
+    "publish:npm": "bash scripts/publish.sh",
+    "publish:npm:next": "bash scripts/publish.sh --tag next",
+    "publish:npm:latest": "bash scripts/publish.sh --tag latest",
     "test": "bun test",
     "version": "napi version",
     "typecheck": "tsc --noEmit",
@@ -136,10 +138,10 @@
   "optionalDependencies": {
     "@ohah/hwpjs-win32-x64-msvc": "0.1.0-rc.1",
     "@ohah/hwpjs-darwin-x64": "0.1.0-rc.1",
-    "@ohah/hwpjs-linux-x64-gnu": "0.1.0-rc.1",
     "@ohah/hwpjs-win32-ia32-msvc": "0.1.0-rc.1",
     "@ohah/hwpjs-darwin-arm64": "0.1.0-rc.1",
     "@ohah/hwpjs-win32-arm64-msvc": "0.1.0-rc.1",
+    "@ohah/hwpjs-linux-x64-gnu": "0.1.0-rc.1",
     "@ohah/hwpjs-wasm32-wasi": "0.1.0-rc.1"
   }
 }

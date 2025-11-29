@@ -70,11 +70,77 @@ $ ava --verbose
 
 ## Release package
 
-Ensure you have set your **NPM_TOKEN** in the `GitHub` project setting.
+### 사전 준비
 
-In `Settings -> Secrets`, add **NPM_TOKEN** into it.
+1. **NPM 인증 설정**
+   - `.npmrc` 파일에 토큰 설정 또는 `NPM_OHAH_TOKEN` 환경변수 설정
+   - 또는 `npm login` 실행
 
-When you want to release the package:
+2. **GitHub CLI 설치** (GitHub Release 생성을 위해)
+   ```bash
+   brew install gh
+   gh auth login
+   ```
+
+### 배포 프로세스
+
+#### 1. 빌드 및 준비
+
+```bash
+# 모든 플랫폼 빌드 및 아티팩트 준비
+bun run build:release
+```
+
+#### 2. GitHub Release 생성
+
+```bash
+# 현재 버전으로 GitHub Release 생성 및 아티팩트 업로드
+bun run release
+
+# 또는 특정 버전 지정
+bash scripts/releash.sh 0.1.0-rc.2
+```
+
+이 스크립트는 다음을 수행합니다:
+- 태그 생성 및 푸시
+- GitHub Release 생성
+- 플랫폼별 아티팩트 압축 및 업로드 (node-*.zip, react-native-*.zip, dist.zip)
+
+#### 3. npm 배포
+
+```bash
+# Pre-release 버전 배포 (자동으로 --tag next 사용)
+bun run publish:npm:next
+
+# 또는 정식 릴리스 배포
+bun run publish:npm:latest
+
+# 또는 태그 자동 결정 (rc/beta/alpha면 next, 아니면 latest)
+bun run publish:npm
+```
+
+이 스크립트는 다음을 수행합니다:
+- 플랫폼별 패키지들 배포 (`npm/*/` 폴더의 각 패키지)
+- 메인 패키지 배포 (`@ohah/hwpjs`)
+
+### 전체 배포 예시
+
+```bash
+# 1. 빌드
+bun run build:release
+
+# 2. GitHub Release 생성
+bun run release
+
+# 3. npm 배포
+bun run publish:npm:next  # Pre-release인 경우
+# 또는
+bun run publish:npm:latest  # 정식 릴리스인 경우
+```
+
+### GitHub Actions를 통한 자동 배포
+
+GitHub Actions를 사용하는 경우:
 
 ```bash
 npm version [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease [--preid=<prerelease-id>] | from-git]
@@ -82,6 +148,6 @@ npm version [<newversion> | major | minor | patch | premajor | preminor | prepat
 git push
 ```
 
-GitHub actions will do the rest job for you.
+GitHub Actions가 자동으로 빌드 및 배포를 수행합니다.
 
-> WARN: Don't run `npm publish` manually.
+> **참고**: Pre-release 버전(rc, beta, alpha)은 `--tag next` 옵션이 필요합니다.
