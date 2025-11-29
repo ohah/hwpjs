@@ -73,7 +73,6 @@ jsconfig.json
 
 # Rust
 target/
-Cargo.lock
 **/*.rs.bk
 
 # React Native / Mobile

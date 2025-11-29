@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace craby {
-namespace reactnative {
+namespace hwpjs {
 namespace utils {
 
 class ThreadPool {
@@ -87,5 +87,5 @@ inline std::string errorMessage(const std::exception &err) {
 }
 
 } // namespace utils
-} // namespace reactnative
+} // namespace hwpjs
 } // namespace craby

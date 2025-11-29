@@ -1,5 +1,5 @@
 [package]
-name = "reactnative"
+name = "hwpjs"
 version.workspace = true
 edition.workspace = true
 
@@ -15,5 +15,5 @@ serde_json = "1.0.145"
 craby_build = { version = "0.1.0-rc", features = ["cxx"] }
 
 [lib]
-name = "reactnative"
+name = "hwpjs"
 crate-type = ["staticlib"]

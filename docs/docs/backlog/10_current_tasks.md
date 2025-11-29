@@ -78,6 +78,24 @@ interface ExtractImagesResult {
 - **우선순위**: 높음
 - **상태**: 계획됨
 
+### Craby에 객체 배열(Array<Object>) 지원 추가
+
+- **현재 상태**: Craby가 객체 배열을 지원하지 않음. 예: `Array<ImageData>` 형태의 타입을 인식하지 못함
+- **문제 상황**: 
+  - `ToMarkdownResult` 인터페이스에서 `images: ImageData[]` 형태를 사용할 수 없음
+  - 중첩된 타입 참조(`ToMarkdownResult` 내부의 `ImageData[]`)를 인식하지 못함
+  - 에러: `ERROR [as_rs_type] Unsupported type annotation: Ref(RefTypeAnnotation { ref_id: ReferenceId(0), name: "ImageData" })`
+- **임시 해결책**: 
+  - `ToMarkdownResult`에서 `images` 필드를 제거하고 마크다운만 반환
+  - 또는 `ImageData`를 `Spec` 인터페이스에서도 직접 참조하도록 추가 (`_imageDataRef?: ImageData`)
+- **변경 필요**: Craby에 객체 배열 타입 지원 추가
+- **목적**: React Native 바인딩에서 복잡한 객체 구조를 반환할 수 있도록 개선
+- **영향 범위**:
+  - Craby 라이브러리 자체 수정 필요
+  - React Native 바인딩: `to_markdown` 함수의 반환 타입 수정 가능
+- **우선순위**: 중간
+- **상태**: 계획됨
+
 ### React Native API 함수명 통일
 
 - **현재 상태**: React Native는 `ReactNative.hwp_parser()` 형태로 사용되며, Node.js/Web과 다른 API 구조를 가짐
