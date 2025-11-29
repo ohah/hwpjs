@@ -29,7 +29,27 @@ const data = new Uint8Array(fileBuffer);
 
 ## 예제
 
-### 기본 사용법
+### Web
+
+Web 환경에서는 Buffer polyfill이 필요합니다. 자세한 설정 방법은 [설치하기 가이드](../guide/installation#web)를 참고하세요.
+
+```typescript
+import { toJson } from '@ohah/hwpjs';
+
+// 파일 입력을 통한 사용
+const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+fileInput.addEventListener('change', async (event) => {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const data = new Uint8Array(arrayBuffer);
+  const result = toJson(data);
+  console.log(result);
+});
+```
+
+### Node.js
 
 ```typescript
 import { readFileSync } from 'fs';
@@ -38,6 +58,29 @@ import { toJson } from '@ohah/hwpjs';
 const fileBuffer = readFileSync('./document.hwp');
 const data = new Uint8Array(fileBuffer);
 const result = toJson(data);
+console.log(result);
+```
+
+### React Native
+
+```typescript
+import RNFS from 'react-native-fs';
+import { Platform } from 'react-native';
+import { Hwpjs } from '@ohah/hwpjs';
+
+// 파일 경로 설정
+const filePath = Platform.OS === 'ios'
+  ? `${RNFS.MainBundlePath}/document.hwp`
+  : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+
+// 파일 읽기
+const fileData = await RNFS.readFile(filePath, 'base64');
+
+// base64를 number[]로 변환
+const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+// HWP 파일 파싱
+const result = Hwpjs.toJson(numberArray);
 console.log(result);
 ```
 

@@ -6,5 +6,5 @@
 
 ## 현재 작업
 
-- [현재 작업 항목](10_current_tasks.md): React Native Android 환경 셋팅 및 Maestro E2E 테스트
+- [현재 작업 항목](10_current_tasks.md): Example 예시 및 E2E 환경 설정
 

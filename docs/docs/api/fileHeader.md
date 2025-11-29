@@ -36,7 +36,29 @@ FileHeader에는 다음 정보가 포함됩니다:
 
 ## 예제
 
-### 기본 사용법
+### Web
+
+Web 환경에서는 Buffer polyfill이 필요합니다. 자세한 설정 방법은 [설치하기 가이드](../guide/installation#web)를 참고하세요.
+
+```typescript
+import { fileHeader } from '@ohah/hwpjs';
+
+// 파일 입력을 통한 사용
+const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+fileInput.addEventListener('change', async (event) => {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const data = new Uint8Array(arrayBuffer);
+  const result = fileHeader(data);
+  const header = JSON.parse(result);
+
+  console.log('FileHeader:', header);
+});
+```
+
+### Node.js
 
 ```typescript
 import { readFileSync } from 'fs';
@@ -50,6 +72,31 @@ const header = JSON.parse(result);
 console.log('버전:', header.version);
 console.log('압축 여부:', header.is_compressed);
 console.log('암호화 여부:', header.is_encrypted);
+```
+
+### React Native
+
+```typescript
+import RNFS from 'react-native-fs';
+import { Platform } from 'react-native';
+import { Hwpjs } from '@ohah/hwpjs';
+
+// 파일 경로 설정
+const filePath = Platform.OS === 'ios'
+  ? `${RNFS.MainBundlePath}/document.hwp`
+  : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+
+// 파일 읽기
+const fileData = await RNFS.readFile(filePath, 'base64');
+
+// base64를 number[]로 변환
+const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+// FileHeader 추출
+const result = Hwpjs.fileHeader(numberArray);
+const header = JSON.parse(result);
+
+console.log('FileHeader:', header);
 ```
 
 ### 에러 처리

@@ -2,69 +2,125 @@
 
 HWP 문서를 마크다운 형식으로 변환하는 함수입니다.
 
-:::info
-이 기능은 `hwp-core`의 `viewer` 모듈에서 제공됩니다.
-:::
-
 ## 시그니처
 
-```rust
-pub fn to_markdown(document: &HwpDocument) -> String
-```
-
-또는 `HwpDocument`의 메서드로 사용할 수 있습니다:
-
-```rust
-impl HwpDocument {
-    pub fn to_markdown(&self) -> String
-}
+```typescript
+function toMarkdown(data: Buffer, options?: ToMarkdownOptions): ToMarkdownResult
 ```
 
 ## 매개변수
 
-### `document: &HwpDocument`
+### `data: Buffer`
 
-변환할 HWP 문서 객체입니다.
+변환할 HWP 파일의 바이트 배열입니다 (Buffer 또는 Uint8Array).
 
-`hwp-core`의 `HwpParser::parse()` 메서드로 파싱된 문서를 전달합니다.
+**예제:**
+```typescript
+import { readFileSync } from 'fs';
+const fileBuffer = readFileSync('./document.hwp');
+const data = new Uint8Array(fileBuffer);
+```
+
+### `options?: ToMarkdownOptions`
+
+마크다운 변환 옵션입니다 (선택 사항).
+
+```typescript
+interface ToMarkdownOptions {
+  /** 이미지 형식: 'base64'는 마크다운에 base64 데이터 URI를 직접 포함, 'blob'은 별도 ImageData 배열로 반환 (기본값: 'blob') */
+  image?: 'base64' | 'blob';
+  /** HTML 태그 사용 여부 (true인 경우 테이블 등 개행 불가 영역에 <br> 태그 사용) */
+  useHtml?: boolean;
+  /** 버전 정보 포함 여부 */
+  includeVersion?: boolean;
+  /** 페이지 정보 포함 여부 */
+  includePageInfo?: boolean;
+  /** 이미지를 파일로 저장할 디렉토리 경로 (선택) */
+  imageOutputDir?: string;
+}
+```
 
 ## 반환값
 
-### `String`
+### `ToMarkdownResult`
 
-변환된 마크다운 문자열입니다.
+변환된 마크다운 문자열과 이미지 데이터를 포함하는 객체입니다.
+
+**Web/Node.js:**
+```typescript
+interface ToMarkdownResult {
+  /** 이미지 참조가 포함된 마크다운 문자열 */
+  markdown: string;
+  /** 추출된 이미지 데이터 (image: 'blob' 옵션 사용 시) */
+  images: ImageData[];
+}
+
+interface ImageData {
+  /** 이미지 ID (예: "image-0") */
+  id: string;
+  /** 이미지 데이터 (Uint8Array) */
+  data: Buffer;
+  /** 이미지 형식 (예: "jpg", "png", "bmp") */
+  format: string;
+}
+```
+
+**React Native:**
+```typescript
+interface ToMarkdownResult {
+  /** 이미지 참조가 포함된 마크다운 문자열 */
+  markdown: string;
+  // 주의: React Native에서는 images 필드가 지원되지 않습니다.
+  // 이미지는 base64 데이터 URI로 마크다운에 직접 포함됩니다.
+}
+```
+
+:::warning
+**플랫폼별 차이점:**
+- **Web/Node.js**: `image: 'blob'` 옵션 사용 시 `images` 배열에 `ImageData` 객체가 포함됩니다.
+- **React Native**: `images` 필드가 지원되지 않으며, 이미지는 항상 base64 데이터 URI로 마크다운에 직접 포함됩니다.
+:::
 
 다음 내용이 포함됩니다:
 
-- 문서 제목 및 버전 정보
+- 문서 제목 및 버전 정보 (옵션에 따라)
 - 본문 텍스트
-- 컨트롤 객체 (표, 글상자 등)
-- 페이지 구분선 (페이지 나누기 시)
+- 표 (Table) - 마크다운 테이블 형식으로 변환
+- 이미지 - base64 데이터 URI 또는 별도 이미지 배열
+- 컨트롤 객체 (글상자 등)
+- 페이지 구분선 (페이지 나누기 시, 옵션에 따라)
 
 ## 예제
 
-### 기본 사용법
+### Web
 
-```rust
-use hwp_core::{HwpParser, HwpDocument};
-use std::fs;
+Web 환경에서는 Buffer polyfill이 필요합니다. 자세한 설정 방법은 [설치하기 가이드](../guide/installation#web)를 참고하세요.
 
-// HWP 파일 읽기
-let data = fs::read("document.hwp")?;
+```typescript
+import { toMarkdown } from '@ohah/hwpjs';
 
-// 문서 파싱
-let parser = HwpParser::new();
-let document = parser.parse(&data)?;
+// 파일 입력을 통한 사용
+const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+fileInput.addEventListener('change', async (event) => {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
 
-// 마크다운으로 변환
-let markdown = document.to_markdown();
-// 또는
-// use hwp_core::viewer::to_markdown;
-// let markdown = to_markdown(&document);
-println!("{}", markdown);
+  const arrayBuffer = await file.arrayBuffer();
+  const data = new Uint8Array(arrayBuffer);
+
+  // 마크다운으로 변환 (base64 이미지 포함)
+  const result = toMarkdown(data, {
+    image: 'base64',
+    useHtml: false,
+    includeVersion: false,
+    includePageInfo: false,
+  });
+
+  console.log(result.markdown);
+});
 ```
 
-### Node.js에서 사용
+### Node.js
 
 ```typescript
 import { readFileSync } from 'fs';
@@ -76,15 +132,74 @@ const data = new Uint8Array(fileBuffer);
 
 // 마크다운으로 변환 (base64 이미지 포함)
 const result = toMarkdown(data, {
-  image: 'base64', // 또는 'blob'으로 별도 이미지 배열 받기
+  image: 'base64', // 마크다운에 base64 데이터 URI 직접 포함
+  useHtml: false,
+  includeVersion: false,
+  includePageInfo: false,
+});
+
+console.log(result.markdown);
+// base64 옵션 사용 시: result.images는 빈 배열
+```
+
+### React Native
+
+```typescript
+import RNFS from 'react-native-fs';
+import { Platform } from 'react-native';
+import { Hwpjs } from '@ohah/hwpjs';
+
+// 파일 경로 설정
+const filePath = Platform.OS === 'ios'
+  ? `${RNFS.MainBundlePath}/document.hwp`
+  : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+
+// 파일 읽기
+const fileData = await RNFS.readFile(filePath, 'base64');
+
+// base64를 number[]로 변환
+const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+// 마크다운으로 변환
+const result = Hwpjs.toMarkdown(numberArray, {
+  image: 'base64', // React Native에서는 base64만 지원
+  useHtml: false,
+  includeVersion: false,
+  includePageInfo: false,
+});
+
+console.log(result.markdown);
+// 주의: React Native에서는 result.images가 없습니다.
+// 이미지는 base64 데이터 URI로 마크다운에 직접 포함됩니다.
+```
+
+### 이미지를 별도로 받기 (Web/Node.js만 지원)
+
+:::warning
+**React Native에서는 지원되지 않습니다.** React Native에서는 이미지가 항상 base64 데이터 URI로 마크다운에 직접 포함됩니다.
+:::
+
+```typescript
+import { readFileSync } from 'fs';
+import { toMarkdown } from '@ohah/hwpjs';
+
+const fileBuffer = readFileSync('./document.hwp');
+const data = new Uint8Array(fileBuffer);
+
+// 마크다운으로 변환 (이미지를 별도 배열로 받기)
+const result = toMarkdown(data, {
+  image: 'blob', // 별도 ImageData 배열로 반환 (Web/Node.js만 지원)
   useHtml: true,
   includeVersion: true,
   includePageInfo: false,
 });
 
 console.log(result.markdown);
-// base64 옵션 사용 시: result.images는 빈 배열
-// blob 옵션 사용 시: result.images에 ImageData 배열 포함
+// result.images에 ImageData 배열 포함
+// 마크다운에는 "![이미지](image-0)" 형식으로 참조됨
+result.images.forEach((img) => {
+  console.log(`이미지 ${img.id}: ${img.format} 형식, ${img.data.length} bytes`);
+});
 ```
 
 ## 지원 기능
@@ -99,44 +214,51 @@ console.log(result.markdown);
 
 다음 컨트롤 객체가 감지되고 마크다운으로 변환됩니다:
 
-- **표 (Table)**: `*[표 내용은 추출되지 않았습니다]*`
-- **그리기 개체 (Shape Object)**: 글상자, 그림 등
+- **표 (Table)**: 마크다운 테이블 형식으로 변환
+- **이미지**: base64 데이터 URI 또는 별도 이미지 배열로 제공
+- **그리기 개체 (Shape Object)**: 글상자 등
 - **머리말/꼬리말 (Header/Footer)**: `*[머리말]*`, `*[꼬리말]*`
 - **단 정의 (Column Definition)**: `*[단 정의]*`
-
-:::warning
-표와 그리기 개체의 실제 내용 추출은 아직 구현되지 않았습니다.
-현재는 플레이스홀더만 표시됩니다.
-:::
 
 ## 출력 형식
 
 ```markdown
 # HWP 문서
 
-**버전**: 5.00.03.00
+본문 내용이 여기에 표시됩니다.
 
-[본문 내용...]
+| 열1 | 열2 | 열3 |
+|-----|-----|-----|
+| 셀1 | 셀2 | 셀3 |
+| 셀4 | 셀5 | 셀6 |
 
-**표**: [표 설명]
+![이미지](data:image/jpeg;base64,/9j/4AAQSkZJRg...)
 
-*[표 내용은 추출되지 않았습니다]*
+또는 이미지를 별도로 받은 경우:
+
+![이미지](image-0)
 
 ---
 
 [다음 페이지 내용...]
 ```
 
+### 옵션에 따른 출력 차이
+
+- `includeVersion: true`: 문서 버전 정보가 포함됩니다.
+- `includePageInfo: true`: 페이지 구분선이 포함됩니다.
+- `useHtml: true`: 테이블 등 개행 불가 영역에 `<br>` 태그가 사용됩니다.
+- `image: 'base64'`: 이미지가 마크다운에 base64 데이터 URI로 직접 포함됩니다.
+- `image: 'blob'`: 이미지가 별도 배열로 반환되고, 마크다운에는 참조만 포함됩니다.
+
 ## 제한사항
 
-1. **표 내용**: 표의 셀 데이터는 아직 추출되지 않습니다.
-2. **그리기 개체**: 글상자, 그림 등의 실제 내용은 추출되지 않습니다.
-3. **스타일링**: 글자 모양, 문단 모양 등의 서식 정보는 반영되지 않습니다.
-4. **이미지**: 이미지 데이터는 추출되지 않습니다.
+1. **그리기 개체**: 일부 그리기 개체의 실제 내용은 추출되지 않을 수 있습니다.
+2. **스타일링**: 글자 모양, 문단 모양 등의 서식 정보는 반영되지 않습니다.
+3. **복잡한 레이아웃**: 일부 복잡한 레이아웃은 완벽하게 변환되지 않을 수 있습니다.
 
 ## 참고
 
-- 이 함수는 `hwp-core`의 `viewer` 모듈에 있습니다.
-- `hwp-core`는 파싱(`document/`)과 변환(`viewer/`) 기능을 모두 포함하며, 모듈로 관심사를 분리합니다.
-- `HwpDocument::to_markdown()` 메서드를 사용하거나 `hwp_core::viewer::to_markdown()` 함수를 직접 사용할 수 있습니다.
-- 향후 PDF 등 다른 형식으로의 변환도 지원할 예정입니다.
+- 이 함수는 Rust로 구현된 `hwp-core` 라이브러리를 사용하여 HWP 파일을 파싱하고 마크다운으로 변환합니다.
+- 표 내용은 마크다운 테이블 형식으로 변환됩니다.
+- 이미지는 base64 데이터 URI로 임베드하거나 별도 배열로 받을 수 있습니다.

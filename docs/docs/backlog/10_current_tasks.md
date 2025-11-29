@@ -81,29 +81,6 @@ interface ExtractImagesResult {
 - **우선순위**: 높음
 - **상태**: 계획됨
 
-### HwpDemo 컴포넌트 SSG 렌더링 문제 해결
-
-- **현재 상태**: `docs/docs/components/HwpDemo.tsx` 컴포넌트가 Rspress SSG 빌드 시 에러 발생
-  - 에러: `TypeError: Cannot read properties of undefined (reading '__RSPRESS_PAGE_META')`
-  - 원인: SSG 환경에서 `@ohah/hwpjs` import 시 WASM 런타임 의존성 트리거
-- **임시 조치**: `docs/docs/guide/demo.mdx`에서 HwpDemo 컴포넌트 사용 부분 제거
-- **변경 필요**: 
-  - SSG 환경에서 안전하게 렌더링되도록 수정
-  - `'use client'` 지시어 추가 완료
-  - 동적 import로 변경 완료
-  - SSG 시점 안전 처리 추가 완료
-  - 하지만 여전히 `__RSPRESS_PAGE_META` 에러 발생
-- **해결 방법**:
-  - Rspress 설정에서 해당 컴포넌트를 클라이언트 전용으로 처리
-  - 또는 컴포넌트를 완전히 동적 import로 변경
-  - 또는 SSG에서 해당 페이지를 제외
-- **영향 범위**:
-  - `docs/docs/components/HwpDemo.tsx`
-  - `docs/docs/guide/demo.mdx`
-  - `docs/rspress.config.ts` (설정 변경 필요할 수 있음)
-- **우선순위**: 중간
-- **상태**: 조사 필요
-
 ### Craby 심링크(symlink) 기능 추가
 
 - **현재 상태**: `packages/hwpjs/target` 디렉토리가 별도로 생성되어 빌드 아티팩트가 중복 저장됨
@@ -185,7 +162,7 @@ interface ExtractImagesResult {
 - **우선순위**: 높음
 - **상태**: 계획됨
 
-### Craby에 객체 배열(Array<Object>) 지원 추가
+### Craby에 객체 배열(Object[]) 지원 추가
 
 - **현재 상태**: Craby가 객체 배열을 지원하지 않음. 예: `Array<ImageData>` 형태의 타입을 인식하지 못함
 - **문제 상황**: 
@@ -194,7 +171,6 @@ interface ExtractImagesResult {
   - 에러: `ERROR [as_rs_type] Unsupported type annotation: Ref(RefTypeAnnotation { ref_id: ReferenceId(0), name: "ImageData" })`
 - **임시 해결책**: 
   - `ToMarkdownResult`에서 `images` 필드를 제거하고 마크다운만 반환
-  - 또는 `ImageData`를 `Spec` 인터페이스에서도 직접 참조하도록 추가 (`_imageDataRef?: ImageData`)
 - **변경 필요**: Craby에 객체 배열 타입 지원 추가
 - **목적**: React Native 바인딩에서 복잡한 객체 구조를 반환할 수 있도록 개선
 - **영향 범위**:
@@ -203,51 +179,45 @@ interface ExtractImagesResult {
 - **우선순위**: 중간
 - **상태**: 계획됨
 
-### React Native API 함수명 통일
 
-- **현재 상태**: React Native는 `ReactNative.hwp_parser()` 형태로 사용되며, Node.js/Web과 다른 API 구조를 가짐
-- **변경 필요**: React Native도 Node.js/Web과 동일한 함수명으로 통일
-  - `ReactNative.hwp_parser()` → `toJson()`
-  - `toMarkdown()`, `fileHeader()` 함수 추가
-- **영향 범위**:
-  - React Native 바인딩: `packages/hwpjs/crates/lib/src/react_native_impl.rs`
-  - TypeScript 타입 정의: `packages/hwpjs/dist/react-native/index.d.mts`
-  - 예제 코드: `examples/react-native/src/App.tsx`
-  - 문서: `docs/docs/guide/installation.mdx`, `docs/docs/guide/examples.md`
-- **구현 방법**:
-  - `react_native_impl.rs`에 `toJson`, `toMarkdown`, `fileHeader` 함수 추가
-  - `ReactNative` 네임스페이스 제거하고 직접 export
-  - 기존 `hwp_parser` 함수는 deprecated 처리하거나 제거
-- **고려사항**:
-  - 기존 코드와의 호환성을 위해 마이그레이션 가이드 제공 필요
-  - Craby의 타입 지원이 완료된 후 진행하는 것이 좋음
-- **우선순위**: 높음
-- **상태**: 계획됨
+### Example 예시 및 E2E 환경 설정
 
-### 각 환경별 E2E 테스트 구축
-
-- **현재 상태**: E2E 테스트가 부분적으로만 구현되어 있음
-- **변경 필요**: Node.js, Web, React Native 각 환경에 대한 E2E 테스트 구축
+- **현재 상태**: 예제 코드가 기본적인 수준이며, E2E 테스트 환경이 완전히 구축되지 않음
+- **변경 필요**: 
+  - 각 플랫폼별 예제 코드 보완 및 개선
+  - E2E 테스트 환경 설정 및 테스트 케이스 작성
 - **구현 범위**:
-  - **Node.js E2E 테스트**:
-    - 실제 HWP 파일을 읽어서 파싱하는 테스트
-    - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
-    - 다양한 HWP 파일 형식에 대한 테스트
-  - **Web E2E 테스트**:
-    - 브라우저 환경에서 WASM 빌드 동작 확인
-    - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
-  - **React Native E2E 테스트**:
-    - iOS/Android 실제 디바이스/에뮬레이터에서 테스트
-    - Maestro 사용한 E2E 테스트
-    - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
+  - **예제 코드 개선**:
+    - `examples/node/`: 다양한 사용 시나리오 예제 추가
+    - `examples/web/`: 인터랙티브 데모 기능 강화
+    - `examples/react-native/`: 실제 앱에서 사용할 수 있는 완성도 높은 예제
+    - 각 예제에 에러 처리, 로딩 상태, 다양한 옵션 사용 예시 포함
+  - **E2E 테스트 환경 설정**:
+    - **Node.js E2E 테스트**:
+      - Vitest 설정 및 테스트 스크립트 작성
+      - 실제 HWP 파일을 읽어서 파싱하는 테스트
+      - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
+      - 다양한 HWP 파일 형식에 대한 테스트
+    - **Web E2E 테스트**:
+      - Playwright 또는 Puppeteer 설정
+      - 브라우저 환경에서 WASM 빌드 동작 확인
+      - 파일 업로드 및 변환 결과 확인 테스트
+      - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
+    - **React Native E2E 테스트**:
+      - Maestro 설정 및 테스트 플로우 작성
+      - iOS/Android 실제 디바이스/에뮬레이터에서 테스트
+      - 파일 읽기 및 파싱 결과 확인 테스트
+      - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
 - **테스트 도구**:
   - Node.js: Vitest
-  - Web: Vitest
+  - Web: Playwright 또는 Puppeteer
   - React Native: Maestro
 - **영향 범위**:
+  - 예제 코드: `examples/` 디렉토리
   - 테스트 스크립트 추가: `package.json`
   - CI/CD 파이프라인 업데이트: `.github/workflows/`
   - 테스트 파일: `tests/e2e/` 또는 각 예제 프로젝트 내
+  - 문서: `docs/docs/guide/examples.md` 업데이트
 - **우선순위**: 중간
 - **상태**: 계획됨
 
