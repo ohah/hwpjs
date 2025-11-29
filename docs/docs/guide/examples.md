@@ -7,23 +7,29 @@ HWPJS를 사용하는 다양한 예제를 확인하세요.
 ### 파일 경로로 파싱
 
 ```typescript
-import { parseHwp } from '@ohah/hwpjs';
+import { readFileSync } from 'fs';
+import { toJson } from '@ohah/hwpjs';
 
-const result = parseHwp('./document.hwp');
+const fileBuffer = readFileSync('./document.hwp');
+const data = new Uint8Array(fileBuffer);
+const result = toJson(data);
 console.log(result);
 ```
 
 ### 에러 처리
 
 ```typescript
-import { parseHwp } from '@ohah/hwpjs';
+import { readFileSync } from 'fs';
+import { toJson } from '@ohah/hwpjs';
 
 try {
-  const result = parseHwp('./document.hwp');
-  console.log('파싱 성공:', result);
+  const fileBuffer = readFileSync('./document.hwp');
+  const data = new Uint8Array(fileBuffer);
+  const result = toJson(data);
+  console.log('변환 성공:', result);
 } catch (error) {
   if (error instanceof Error) {
-    console.error('파싱 실패:', error.message);
+    console.error('변환 실패:', error.message);
   }
 }
 ```
@@ -33,9 +39,9 @@ try {
 ### 여러 파일 일괄 처리
 
 ```typescript
-import { parseHwp } from '@ohah/hwpjs';
-import { readdirSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { toJson } from '@ohah/hwpjs';
 
 const hwpFiles = readdirSync('./documents')
   .filter(file => file.endsWith('.hwp'))
@@ -43,10 +49,12 @@ const hwpFiles = readdirSync('./documents')
 
 hwpFiles.forEach(file => {
   try {
-    const result = parseHwp(file);
-    console.log(`${file} 파싱 완료:`, result);
+    const fileBuffer = readFileSync(file);
+    const data = new Uint8Array(fileBuffer);
+    const result = toJson(data);
+    console.log(`${file} 변환 완료:`, result);
   } catch (error) {
-    console.error(`${file} 파싱 실패:`, error);
+    console.error(`${file} 변환 실패:`, error);
   }
 });
 ```
@@ -54,13 +62,15 @@ hwpFiles.forEach(file => {
 ### 비동기 처리
 
 ```typescript
-import { parseHwp } from '@ohah/hwpjs';
-import { promisify } from 'util';
+import { readFileSync } from 'fs';
+import { toJson } from '@ohah/hwpjs';
 
-async function parseHwpAsync(filePath: string): Promise<string> {
+async function toJsonAsync(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
-      const result = parseHwp(filePath);
+      const fileBuffer = readFileSync(filePath);
+      const data = new Uint8Array(fileBuffer);
+      const result = toJson(data);
       resolve(result);
     } catch (error) {
       reject(error);
@@ -71,7 +81,7 @@ async function parseHwpAsync(filePath: string): Promise<string> {
 // 사용 예제
 async function main() {
   try {
-    const result = await parseHwpAsync('./document.hwp');
+    const result = await toJsonAsync('./document.hwp');
     console.log(result);
   } catch (error) {
     console.error('에러:', error);
@@ -90,7 +100,7 @@ import { ReactNative } from '@ohah/hwpjs';
 import RNFS from 'react-native-fs';
 import { Platform } from 'react-native';
 
-async function parseHwpFile() {
+async function loadHwpFile() {
   try {
     // 파일 경로 설정 (플랫폼별)
     let filePath: string;
@@ -164,11 +174,15 @@ function HwpViewer() {
 
 ```typescript
 import { test, expect } from 'bun:test';
-import { parseHwp } from '@ohah/hwpjs';
+import { readFileSync } from 'fs';
+import { toJson } from '@ohah/hwpjs';
 
-test('parseHwp should parse HWP file', () => {
-  const result = parseHwp('test.hwp');
-  expect(result).toBe('Hello from hwp-core!');
+test('toJson should convert HWP file to JSON', () => {
+  const fileBuffer = readFileSync('test.hwp');
+  const data = new Uint8Array(fileBuffer);
+  const result = toJson(data);
+  const parsed = JSON.parse(result);
+  expect(parsed).toHaveProperty('file_header');
 });
 ```
 

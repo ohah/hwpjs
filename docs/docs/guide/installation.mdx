@@ -15,7 +15,7 @@ Node.js 환경에서는 다양한 패키지 매니저를 통해 설치할 수 �
 Deno에서는 npm 스펙을 사용하여 설치할 수 있습니다:
 
 ```typescript
-import { parseHwp } from 'npm:@ohah/hwpjs';
+import { toJson } from 'npm:@ohah/hwpjs';
 ```
 
 또는 `deno.json`에 의존성을 추가할 수 있습니다:
@@ -31,19 +31,59 @@ import { parseHwp } from 'npm:@ohah/hwpjs';
 ### 사용 예제
 
 ```typescript
-import { parseHwp } from '@ohah/hwpjs';
+import { readFileSync } from 'fs';
+import { toJson } from '@ohah/hwpjs';
 
-const result = parseHwp('./document.hwp');
+const fileBuffer = readFileSync('./document.hwp');
+const data = new Uint8Array(fileBuffer);
+const result = toJson(data);
 console.log(result);
 ```
 
 ## Web
 
-:::warning
-Web 지원은 현재 개발 중입니다. 곧 제공될 예정입니다.
-:::
+Web 환경에서는 WASM을 통해 사용할 수 있습니다.
 
-Web 환경에서는 WASM을 통해 사용할 수 있습니다. (예정)
+### 설치
+
+npm, yarn, pnpm 등 패키지 매니저를 통해 설치할 수 있습니다:
+
+<PackageManagerTabs command="install @ohah/hwpjs" />
+
+### 사용 예제
+
+```typescript
+import * as hwpjs from '@ohah/hwpjs';
+
+// 파일 입력에서 HWP 파일 읽기
+const fileInput = document.querySelector('input[type="file"]');
+fileInput.addEventListener('change', async (e) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const data = new Uint8Array(arrayBuffer);
+
+  // JSON으로 변환
+  const jsonResult = hwpjs.toJson(data);
+  console.log(jsonResult);
+
+  // 마크다운으로 변환
+  const markdownResult = hwpjs.toMarkdown(data, {
+    image: 'base64', // 또는 'blob'
+    useHtml: true,
+    includeVersion: true,
+    includePageInfo: false,
+  });
+  console.log(markdownResult.markdown);
+});
+```
+
+### Vite/Webpack 등 번들러 사용 시
+
+Web 환경에서는 자동으로 WASM 빌드가 사용됩니다. 추가 설정이 필요하지 않습니다.
+
+더 자세한 예제는 [예제 페이지](./examples)를 참고하세요.
 
 ## React Native
 
@@ -54,15 +94,9 @@ React Native 환경에서는 Craby를 통해 네이티브 모듈로 사용할 �
 <PackageManagerTabs command="install @ohah/hwpjs" />
 
 ### iOS 설정
+iOS 프로젝트는 자동으로 설정됩니다. 추가 설정이 필요하지 않습니다.
 
-iOS 프로젝트에서 CocoaPods를 사용하는 경우, `Podfile`에 다음을 추가합니다:
 
-
-그리고 CocoaPods 의존성을 설치합니다:
-
-```bash
-cd ios && pod install
-```
 
 ### Android 설정
 
