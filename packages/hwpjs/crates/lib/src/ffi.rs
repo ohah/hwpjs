@@ -2,77 +2,72 @@
 #[rustfmt::skip]
 use craby::prelude::*;
 
-use crate::react_native_impl::*;
+use crate::hwpjs_impl::*;
 use crate::generated::*;
 
 use bridging::*;
 
-#[cxx::bridge(namespace = "craby::reactnative::bridging")]
+#[cxx::bridge(namespace = "craby::hwpjs::bridging")]
 pub mod bridging {
+    struct NullableString {
+        null: bool,
+        val: String,
+    }
 
+    struct ToMarkdownResult {
+        markdown: String,
+    }
+
+    struct ToMarkdownOptions {
+        image_output_dir: NullableString,
+        image: NullableString,
+        use_html: bool,
+        include_version: bool,
+        include_page_info: bool,
+    }
 
 
 
     extern "Rust" {
-        type ReactNative;
+        type Hwpjs;
 
-        #[cxx_name = "createReactNative"]
-        fn create_react_native(id: usize, data_path: &str) -> Box<ReactNative>;
+        #[cxx_name = "createHwpjs"]
+        fn create_hwpjs(id: usize, data_path: &str) -> Box<Hwpjs>;
 
-        #[cxx_name = "add"]
-        fn react_native_add(it_: &mut ReactNative, a: f64, b: f64) -> Result<f64>;
+        #[cxx_name = "fileHeader"]
+        fn hwpjs_file_header(it_: &mut Hwpjs, data: Vec<f64>) -> Result<String>;
 
-        #[cxx_name = "divide"]
-        fn react_native_divide(it_: &mut ReactNative, a: f64, b: f64) -> Result<f64>;
+        #[cxx_name = "toJson"]
+        fn hwpjs_to_json(it_: &mut Hwpjs, data: Vec<f64>) -> Result<String>;
 
-        #[cxx_name = "hwpParser"]
-        fn react_native_hwp_parser(it_: &mut ReactNative, data: Vec<f64>) -> Result<String>;
-
-        #[cxx_name = "multiply"]
-        fn react_native_multiply(it_: &mut ReactNative, a: f64, b: f64) -> Result<f64>;
-
-        #[cxx_name = "subtract"]
-        fn react_native_subtract(it_: &mut ReactNative, a: f64, b: f64) -> Result<f64>;
+        #[cxx_name = "toMarkdown"]
+        fn hwpjs_to_markdown(it_: &mut Hwpjs, data: Vec<f64>, options: ToMarkdownOptions) -> Result<ToMarkdownResult>;
     }
 
 }
 
-fn create_react_native(id: usize, data_path: &str) -> Box<ReactNative> {
+fn create_hwpjs(id: usize, data_path: &str) -> Box<Hwpjs> {
     let ctx = Context::new(id, data_path);
-    Box::new(ReactNative::new(ctx))
+    Box::new(Hwpjs::new(ctx))
 }
 
-fn react_native_add(it_: &mut ReactNative, a: f64, b: f64) -> Result<f64, anyhow::Error> {
+fn hwpjs_file_header(it_: &mut Hwpjs, data: Vec<f64>) -> Result<String, anyhow::Error> {
     craby::catch_panic!({
-        let ret = it_.add(a, b);
+        let ret = it_.file_header(data);
         ret
     })
 }
 
-fn react_native_divide(it_: &mut ReactNative, a: f64, b: f64) -> Result<f64, anyhow::Error> {
+fn hwpjs_to_json(it_: &mut Hwpjs, data: Vec<f64>) -> Result<String, anyhow::Error> {
     craby::catch_panic!({
-        let ret = it_.divide(a, b);
+        let ret = it_.to_json(data);
         ret
     })
 }
 
-fn react_native_hwp_parser(it_: &mut ReactNative, data: Vec<f64>) -> Result<String, anyhow::Error> {
+fn hwpjs_to_markdown(it_: &mut Hwpjs, data: Vec<f64>, options: ToMarkdownOptions) -> Result<ToMarkdownResult, anyhow::Error> {
     craby::catch_panic!({
-        let ret = it_.hwp_parser(data);
-        ret
-    })
-}
-
-fn react_native_multiply(it_: &mut ReactNative, a: f64, b: f64) -> Result<f64, anyhow::Error> {
-    craby::catch_panic!({
-        let ret = it_.multiply(a, b);
-        ret
-    })
-}
-
-fn react_native_subtract(it_: &mut ReactNative, a: f64, b: f64) -> Result<f64, anyhow::Error> {
-    craby::catch_panic!({
-        let ret = it_.subtract(a, b);
+        let ret = it_.to_markdown(data, options);
         ret
     })
 }

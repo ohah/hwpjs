@@ -1,9 +1,10 @@
 # napi-rs용 패키지 (Node.js/Web)
 [package]
-name = "hwpjs"
+name = "hwpjs-napi"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
+build = "build.rs"
 
 [lib]
 crate-type = ["cdylib"]
