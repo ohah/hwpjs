@@ -61,6 +61,11 @@ export interface ParseHwpToMarkdownOptions {
    */
   imageOutputDir?: string
   /**
+   * Image format: 'base64' to embed base64 data URI directly in markdown, 'blob' to return as separate ImageData array (default: 'blob')
+   * 이미지 형식: 'base64'는 마크다운에 base64 데이터 URI를 직접 포함, 'blob'은 별도 ImageData 배열로 반환 (기본값: 'blob')
+   */
+  image?: string
+  /**
    * Whether to use HTML tags (if Some(true), use <br> tags in areas where line breaks are not possible, such as tables)
    * HTML 태그 사용 여부 (Some(true)인 경우 테이블 등 개행 불가 영역에 <br> 태그 사용)
    */

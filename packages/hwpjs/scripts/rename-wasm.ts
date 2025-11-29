@@ -15,6 +15,8 @@ if (existsSync(wasmSrc)) {
   }
   renameSync(wasmSrc, wasmDest);
   console.log('✓ Renamed hwpjs.wasm to hwpjs.wasm32-wasi.wasm');
+
+  console.log('✓ Copied hwpjs.wasm32-wasi.wasm to npm/wasm32-wasi/');
 }
 
 // hwpjs.debug.wasm 삭제
@@ -23,4 +25,4 @@ if (existsSync(wasmDebug)) {
   console.log('✓ Removed hwpjs.debug.wasm');
 }
 
-console.log('✓ WASM rename completed');
+console.log('✓ WASM rename and copy completed');
