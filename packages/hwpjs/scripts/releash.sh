@@ -98,44 +98,27 @@ echo -e "\n${GREEN}📤 Pushing tag to remote...${NC}"
 git push origin "$TAG_NAME"
 echo -e "${GREEN}✓ Tag pushed${NC}"
 
-# 6. GitHub Release 생성
-echo -e "\n${GREEN}📝 Creating GitHub Release...${NC}"
-
-if command -v gh &> /dev/null; then
-    if [ "$IS_PRERELEASE" = true ]; then
-        gh release create "$TAG_NAME" \
-            --title "$TAG_NAME" \
-            --generate-notes \
-            --prerelease
-    else
-        gh release create "$TAG_NAME" \
-            --title "$TAG_NAME" \
-            --generate-notes
-    fi
-    echo -e "${GREEN}✓ GitHub Release created${NC}"
-else
-    echo -e "${YELLOW}⚠️  GitHub CLI (gh) not found. Skipping release creation.${NC}"
-    echo -e "${YELLOW}   Please create release manually at:${NC}"
-    echo -e "${YELLOW}   https://github.com/ohah/hwpjs/releases/new${NC}"
-    echo -e "${YELLOW}   Tag: ${TAG_NAME}${NC}"
-fi
-
 # 6. GitHub Release 생성 및 아티팩트 업로드
 echo -e "\n${GREEN}📝 Creating GitHub Release...${NC}"
 
 if command -v gh &> /dev/null; then
-    # Release 생성
-    if [ "$IS_PRERELEASE" = true ]; then
-        gh release create "$TAG_NAME" \
-            --title "$TAG_NAME" \
-            --generate-notes \
-            --prerelease
+    # Release가 이미 존재하는지 확인
+    if gh release view "$TAG_NAME" --repo ohah/hwpjs >/dev/null 2>&1; then
+        echo -e "${YELLOW}⚠️  Release ${TAG_NAME} already exists. Skipping creation.${NC}"
     else
-        gh release create "$TAG_NAME" \
-            --title "$TAG_NAME" \
-            --generate-notes
+        # Release 생성
+        if [ "$IS_PRERELEASE" = true ]; then
+            gh release create "$TAG_NAME" \
+                --title "$TAG_NAME" \
+                --generate-notes \
+                --prerelease
+        else
+            gh release create "$TAG_NAME" \
+                --title "$TAG_NAME" \
+                --generate-notes
+        fi
+        echo -e "${GREEN}✓ GitHub Release created${NC}"
     fi
-    echo -e "${GREEN}✓ GitHub Release created${NC}"
     
     # 아티팩트 업로드
     echo -e "\n${GREEN}📦 Uploading artifacts...${NC}"
@@ -144,7 +127,9 @@ if command -v gh &> /dev/null; then
     # 모든 .node 및 .wasm 파일 찾아서 업로드
     find npm -type f \( -name "*.node" -o -name "*.wasm" \) | while read -r file; do
         echo -e "${GREEN}   Uploading $(basename "$file")...${NC}"
-        gh release upload "$TAG_NAME" "$file" --repo ohah/hwpjs
+        gh release upload "$TAG_NAME" "$file" --repo ohah/hwpjs || {
+            echo -e "${YELLOW}   ⚠️  Failed to upload $(basename "$file"), may already exist${NC}"
+        }
     done
     
     echo -e "${GREEN}✓ All artifacts uploaded${NC}"
