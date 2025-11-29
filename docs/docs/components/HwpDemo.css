@@ -33,7 +33,6 @@
 .file-input-label:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  background: #5568d3;
 }
 
 .file-input {
@@ -110,7 +109,6 @@
 }
 
 .tab:hover {
-  background: #e9ecef;
   color: #333;
 }
 
@@ -214,6 +212,14 @@
 }
 
 .markdown-container tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.markdown-container tr:hover {
+  background: inherit;
+}
+
+.markdown-container tr:nth-child(even):hover {
   background: #fafafa;
 }
 
