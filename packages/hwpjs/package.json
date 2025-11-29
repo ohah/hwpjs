@@ -88,7 +88,7 @@
     "build:node:windows-arm64": "napi build --platform --target aarch64-pc-windows-msvc --release --package hwpjs --output-dir dist --cross-compile",
     "build:node:macos-x64": "napi build --platform --target x86_64-apple-darwin --release --package hwpjs --output-dir dist",
     "build:node:macos-arm64": "napi build --platform --target aarch64-apple-darwin --release --package hwpjs --output-dir dist",
-    "build:node:linux-x64": "napi build --platform --target x86_64-unknown-linux-gnu --release --package hwpjs --output-dir dist --cross-compile",
+    "build:node:linux-x64": "napi build --platform --target x86_64-unknown-linux-gnu --release --package hwpjs --output-dir dist --use-cross",
     "build:react-native": "craby build && tsdown",
     "build:wasm": "napi build --target wasm32-wasip1-threads --release --package hwpjs --output-dir dist",
     "build:node": "bun run build:node:windows-x64 && bun run build:node:windows-x86 && bun run build:node:windows-arm64 && bun run build:node:macos-x64 && bun run build:node:macos-arm64 && bun run build:wasm",
