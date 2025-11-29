@@ -572,6 +572,6 @@ if (!nativeBinding) {
 }
 
 module.exports = nativeBinding
-module.exports.parseHwp = nativeBinding.parseHwp
-module.exports.parseHwpFileheader = nativeBinding.parseHwpFileheader
-module.exports.parseHwpToMarkdown = nativeBinding.parseHwpToMarkdown
+module.exports.fileHeader = nativeBinding.fileHeader
+module.exports.toJson = nativeBinding.toJson
+module.exports.toMarkdown = nativeBinding.toMarkdown

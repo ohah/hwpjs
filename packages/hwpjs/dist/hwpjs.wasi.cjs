@@ -108,6 +108,6 @@ const { instance: __napiInstance, module: __wasiModule, napiModule: __napiModule
   },
 })
 module.exports = __napiModule.exports
-module.exports.parseHwp = __napiModule.exports.parseHwp
-module.exports.parseHwpFileheader = __napiModule.exports.parseHwpFileheader
-module.exports.parseHwpToMarkdown = __napiModule.exports.parseHwpToMarkdown
+module.exports.fileHeader = __napiModule.exports.fileHeader
+module.exports.toJson = __napiModule.exports.toJson
+module.exports.toMarkdown = __napiModule.exports.toMarkdown
