@@ -32,9 +32,9 @@ const NativeModuleRegistry = {
 };
 
 //#endregion
-//#region src/NativeReactNative.ts
-var NativeReactNative_default = NativeModuleRegistry.getEnforcing("ReactNative");
+//#region src-reactnative/NativeReactNative.ts
+var NativeReactNative_default = NativeModuleRegistry.getEnforcing("Hwpjs");
 
 //#endregion
-exports.ReactNative = NativeReactNative_default;
+exports.Hwpjs = NativeReactNative_default;
 //# sourceMappingURL=index.cjs.map
