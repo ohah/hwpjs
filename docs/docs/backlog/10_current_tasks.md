@@ -33,6 +33,29 @@ interface ExtractImagesResult {
 
 ## 개선 작업
 
+### HwpDemo 컴포넌트 SSG 렌더링 문제 해결
+
+- **현재 상태**: `docs/docs/components/HwpDemo.tsx` 컴포넌트가 Rspress SSG 빌드 시 에러 발생
+  - 에러: `TypeError: Cannot read properties of undefined (reading '__RSPRESS_PAGE_META')`
+  - 원인: SSG 환경에서 `@ohah/hwpjs` import 시 WASM 런타임 의존성 트리거
+- **임시 조치**: `docs/docs/guide/demo.mdx`에서 HwpDemo 컴포넌트 사용 부분 제거
+- **변경 필요**: 
+  - SSG 환경에서 안전하게 렌더링되도록 수정
+  - `'use client'` 지시어 추가 완료
+  - 동적 import로 변경 완료
+  - SSG 시점 안전 처리 추가 완료
+  - 하지만 여전히 `__RSPRESS_PAGE_META` 에러 발생
+- **해결 방법**:
+  - Rspress 설정에서 해당 컴포넌트를 클라이언트 전용으로 처리
+  - 또는 컴포넌트를 완전히 동적 import로 변경
+  - 또는 SSG에서 해당 페이지를 제외
+- **영향 범위**:
+  - `docs/docs/components/HwpDemo.tsx`
+  - `docs/docs/guide/demo.mdx`
+  - `docs/rspress.config.ts` (설정 변경 필요할 수 있음)
+- **우선순위**: 중간
+- **상태**: 조사 필요
+
 ### Craby 심링크(symlink) 기능 추가
 
 - **현재 상태**: `packages/hwpjs/target` 디렉토리가 별도로 생성되어 빌드 아티팩트가 중복 저장됨
@@ -211,4 +234,4 @@ interface ExtractImagesResult {
 
 ## 버전 관리
 
-- **0.1.0-rc.1**: 초기 배포 시작 (이미지 추출 함수 포함 예정)
+- **0.1.0-rc.1**: 초기 배포 시작
