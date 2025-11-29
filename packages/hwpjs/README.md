@@ -1,153 +1,194 @@
-# `@napi-rs/package-template`
+# @ohah/hwpjs
 
-![https://github.com/napi-rs/package-template/actions](https://github.com/napi-rs/package-template/workflows/CI/badge.svg)
+HWP parser for Node.js, Web, and React Native
 
-> Template project for writing node packages with napi-rs.
+한글과컴퓨터의 한/글 문서 파일(.hwp)을 읽고 파싱하는 라이브러리입니다. Rust로 구현된 핵심 로직을 Node.js, Web, React Native 환경에서 사용할 수 있도록 제공합니다.
 
-# Usage
-
-1. Click **Use this template**.
-2. **Clone** your project.
-3. Run `yarn install` to install dependencies.
-4. Run `yarn napi rename -n [@your-scope/package-name] -b [binary-name]` command under the project folder to rename your package.
-
-## Install this test package
+## 설치
 
 ```bash
-yarn add @napi-rs/package-template
-```
-
-## Ability
-
-### Build
-
-After `yarn build/npm run build` command, you can see `package-template.[darwin|win32|linux].node` file in project root. This is the native addon built from [lib.rs](./src/lib.rs).
-
-### Test
-
-With [ava](https://github.com/avajs/ava), run `yarn test/npm run test` to testing native addon. You can also switch to another testing framework if you want.
-
-### CI
-
-With GitHub Actions, each commit and pull request will be built and tested automatically in [`node@20`, `@node22`] x [`macOS`, `Linux`, `Windows`] matrix. You will never be afraid of the native addon broken in these platforms.
-
-### Release
-
-Release native package is very difficult in old days. Native packages may ask developers who use it to install `build toolchain` like `gcc/llvm`, `node-gyp` or something more.
-
-With `GitHub actions`, we can easily prebuild a `binary` for major platforms. And with `N-API`, we should never be afraid of **ABI Compatible**.
-
-The other problem is how to deliver prebuild `binary` to users. Downloading it in `postinstall` script is a common way that most packages do it right now. The problem with this solution is it introduced many other packages to download binary that has not been used by `runtime codes`. The other problem is some users may not easily download the binary from `GitHub/CDN` if they are behind a private network (But in most cases, they have a private NPM mirror).
-
-In this package, we choose a better way to solve this problem. We release different `npm packages` for different platforms. And add it to `optionalDependencies` before releasing the `Major` package to npm.
-
-`NPM` will choose which native package should download from `registry` automatically. You can see [npm](./npm) dir for details. And you can also run `yarn add @napi-rs/package-template` to see how it works.
-
-## Develop requirements
-
-- Install the latest `Rust`
-- Install `Node.js@10+` which fully supported `Node-API`
-- Install `yarn@1.x`
-
-## Test in local
-
-- yarn
-- yarn build
-- yarn test
-
-And you will see:
-
-```bash
-$ ava --verbose
-
-  ✔ sync function from native code
-  ✔ sleep function from native code (201ms)
-  ─
-
-  2 tests passed
-✨  Done in 1.12s.
-```
-
-## Release package
-
-### 사전 준비
-
-1. **NPM 인증 설정**
-   - `.npmrc` 파일에 토큰 설정 또는 `NPM_OHAH_TOKEN` 환경변수 설정
-   - 또는 `npm login` 실행
-
-2. **GitHub CLI 설치** (GitHub Release 생성을 위해)
-   ```bash
-   brew install gh
-   gh auth login
-   ```
-
-### 배포 프로세스
-
-#### 1. 빌드 및 준비
-
-```bash
-# 모든 플랫폼 빌드 및 아티팩트 준비
-bun run build:release
-```
-
-#### 2. GitHub Release 생성
-
-```bash
-# 현재 버전으로 GitHub Release 생성 및 아티팩트 업로드
-bun run release
-
-# 또는 특정 버전 지정
-bash scripts/releash.sh 0.1.0-rc.2
-```
-
-이 스크립트는 다음을 수행합니다:
-- 태그 생성 및 푸시
-- GitHub Release 생성
-- 플랫폼별 아티팩트 압축 및 업로드 (node-*.zip, react-native-*.zip, dist.zip)
-
-#### 3. npm 배포
-
-```bash
-# Pre-release 버전 배포 (자동으로 --tag next 사용)
-bun run publish:npm:next
-
-# 또는 정식 릴리스 배포
-bun run publish:npm:latest
-
-# 또는 태그 자동 결정 (rc/beta/alpha면 next, 아니면 latest)
-bun run publish:npm
-```
-
-이 스크립트는 다음을 수행합니다:
-- 플랫폼별 패키지들 배포 (`npm/*/` 폴더의 각 패키지)
-- 메인 패키지 배포 (`@ohah/hwpjs`)
-
-### 전체 배포 예시
-
-```bash
-# 1. 빌드
-bun run build:release
-
-# 2. GitHub Release 생성
-bun run release
-
-# 3. npm 배포
-bun run publish:npm:next  # Pre-release인 경우
+npm install @ohah/hwpjs
 # 또는
-bun run publish:npm:latest  # 정식 릴리스인 경우
+yarn add @ohah/hwpjs
+# 또는
+pnpm add @ohah/hwpjs
+# 또는
+bun add @ohah/hwpjs
 ```
 
-### GitHub Actions를 통한 자동 배포
+## 사용법
 
-GitHub Actions를 사용하는 경우:
+### Node.js
 
-```bash
-npm version [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease [--preid=<prerelease-id>] | from-git]
+```typescript
+import { readFileSync } from 'fs';
+import { toJson, toMarkdown, fileHeader } from '@ohah/hwpjs';
 
-git push
+// HWP 파일 읽기
+const fileBuffer = readFileSync('./document.hwp');
+
+// JSON으로 변환
+const jsonString = toJson(fileBuffer);
+const document = JSON.parse(jsonString);
+console.log(document);
+
+// Markdown으로 변환
+const { markdown, images } = toMarkdown(fileBuffer, {
+  image: 'blob', // 또는 'base64'
+  use_html: true,
+  include_version: true,
+  include_page_info: true,
+});
+
+// FileHeader만 추출
+const headerString = fileHeader(fileBuffer);
+const header = JSON.parse(headerString);
+console.log(header);
 ```
 
-GitHub Actions가 자동으로 빌드 및 배포를 수행합니다.
+### Web (Browser)
 
-> **참고**: Pre-release 버전(rc, beta, alpha)은 `--tag next` 옵션이 필요합니다.
+```typescript
+import { toJson, toMarkdown } from '@ohah/hwpjs';
+
+// File input에서 HWP 파일 읽기
+const fileInput = document.querySelector('input[type="file"]');
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  const arrayBuffer = await file.arrayBuffer();
+  const uint8Array = new Uint8Array(arrayBuffer);
+
+  // JSON으로 변환
+  const jsonString = toJson(uint8Array);
+  const document = JSON.parse(jsonString);
+
+  // Markdown으로 변환 (base64 이미지 포함)
+  const { markdown } = toMarkdown(uint8Array, {
+    image: 'base64',
+  });
+
+  // 결과 표시
+  document.getElementById('output').innerHTML = markdown;
+});
+```
+
+### React Native
+
+```typescript
+import { toJson, toMarkdown } from '@ohah/hwpjs';
+import * as FileSystem from 'expo-file-system';
+
+// HWP 파일 읽기
+const fileUri = 'file:///path/to/document.hwp';
+const base64 = await FileSystem.readAsStringAsync(fileUri, {
+  encoding: FileSystem.EncodingType.Base64,
+});
+const uint8Array = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+
+// JSON으로 변환
+const jsonString = toJson(uint8Array);
+const document = JSON.parse(jsonString);
+
+// Markdown으로 변환
+const { markdown, images } = toMarkdown(uint8Array, {
+  image: 'blob',
+});
+```
+
+## API
+
+### `toJson(data: Buffer | Uint8Array): string`
+
+HWP 파일을 JSON 문자열로 변환합니다.
+
+**Parameters:**
+- `data`: HWP 파일의 바이트 배열 (Buffer 또는 Uint8Array)
+
+**Returns:**
+- JSON 문자열 (파싱된 HWP 문서)
+
+**Example:**
+```typescript
+const fileBuffer = readFileSync('./document.hwp');
+const jsonString = toJson(fileBuffer);
+const document = JSON.parse(jsonString);
+```
+
+### `toMarkdown(data: Buffer | Uint8Array, options?: ToMarkdownOptions): ToMarkdownResult`
+
+HWP 파일을 Markdown 형식으로 변환합니다.
+
+**Parameters:**
+- `data`: HWP 파일의 바이트 배열 (Buffer 또는 Uint8Array)
+- `options`: 변환 옵션 (선택)
+  - `image`: 이미지 형식 (`'base64'` 또는 `'blob'`, 기본값: `'blob'`)
+  - `use_html`: HTML 태그 사용 여부 (기본값: `false`)
+  - `include_version`: 버전 정보 포함 여부 (기본값: `false`)
+  - `include_page_info`: 페이지 정보 포함 여부 (기본값: `false`)
+
+**Returns:**
+- `ToMarkdownResult` 객체:
+  - `markdown`: Markdown 문자열
+  - `images`: 이미지 데이터 배열 (blob 형식인 경우)
+
+**Example:**
+```typescript
+// Base64 이미지 포함
+const { markdown } = toMarkdown(fileBuffer, {
+  image: 'base64',
+  use_html: true,
+});
+
+// Blob 이미지 (별도 배열로 반환)
+const { markdown, images } = toMarkdown(fileBuffer, {
+  image: 'blob',
+});
+// images 배열에서 이미지 데이터 사용
+images.forEach(img => {
+  console.log(`Image ${img.id}: ${img.format}, ${img.data.length} bytes`);
+});
+```
+
+### `fileHeader(data: Buffer | Uint8Array): string`
+
+HWP 파일의 FileHeader만 추출하여 JSON 문자열로 반환합니다.
+
+**Parameters:**
+- `data`: HWP 파일의 바이트 배열 (Buffer 또는 Uint8Array)
+
+**Returns:**
+- JSON 문자열 (FileHeader 정보)
+
+**Example:**
+```typescript
+const fileBuffer = readFileSync('./document.hwp');
+const headerString = fileHeader(fileBuffer);
+const header = JSON.parse(headerString);
+console.log(header.version);
+```
+
+## 예제
+
+더 자세한 예제는 [예제 디렉토리](../../examples)를 참고하세요.
+
+- [Node.js 예제](../../examples/node)
+- [Web 예제](../../examples/web)
+- [React Native 예제](../../examples/react-native)
+
+## 지원 플랫폼
+
+### Node.js
+- Windows (x64, x86, arm64)
+- macOS (x64, arm64)
+- Linux (x64)
+
+### Web
+- WASM (WebAssembly)
+
+### React Native
+- iOS
+- Android
+
+## 라이선스
+
+MIT
