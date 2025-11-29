@@ -33,6 +33,23 @@ interface ExtractImagesResult {
 
 ## 개선 작업
 
+### parseHwpToMarkdown 이미지 옵션 추가
+
+- **현재 상태**: `parseHwpToMarkdown` 함수가 항상 이미지를 blob 형태(`ImageData` 배열)로 반환
+- **변경 필요**: 이미지 처리 방식을 선택할 수 있는 옵션 추가
+  - `image: 'base64'`: 마크다운에 base64 데이터 URI를 직접 포함 (예: `![이미지](data:image/jpeg;base64,...)`)
+  - `image: 'blob'`: 현재처럼 이미지를 별도 `ImageData` 배열로 반환 (기본값)
+- **영향 범위**:
+  - NAPI 바인딩: `packages/hwpjs/src/lib.rs`의 `ParseHwpToMarkdownOptions` 구조체
+  - Rust 코어: `crates/hwp-core/src/viewer/markdown/mod.rs`의 `MarkdownOptions` (필요시)
+  - TypeScript 타입 정의: `packages/hwpjs/dist/index.d.ts`
+- **구현 방법**:
+  - `ParseHwpToMarkdownOptions`에 `image?: 'base64' | 'blob'` 필드 추가
+  - `image: 'base64'`일 때: 마크다운 변환 시 base64 데이터 URI를 그대로 유지하고 `images` 배열은 비우거나 제외
+  - `image: 'blob'`일 때: 현재 동작 유지 (기본값)
+- **우선순위**: 중간
+- **상태**: 계획됨
+
 ### 입력 타입 변경: Array<number> → Uint8Array
 
 - **현재 상태**: 함수들이 `Array<number>` (또는 `number[]`)를 입력으로 받고 있음
