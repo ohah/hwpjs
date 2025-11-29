@@ -11,6 +11,7 @@ for (const file of nodeFiles) {
   unlinkSync(filePath);
   console.log(`✓ Removed ${file} from root`);
 }
+
 // dist 폴더의 .node 파일도 정리
 const distDir = join(rootDir, 'dist');
 const distFiles = readdirSync(distDir);
