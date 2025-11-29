@@ -25,11 +25,14 @@ function App() {
 
       // 마크다운 변환 (이미지는 base64로 임베드됨)
       const markdownResult = hwpjs.parseHwpToMarkdown(data, {
+        image: 'base64',
         useHtml: true,
         includeVersion: true,
         includePageInfo: true,
       });
       setMarkdown(markdownResult.markdown);
+
+      console.log(markdownResult);
 
       // JSON 변환
       const jsonString = hwpjs.parseHwp(data);
@@ -143,9 +146,7 @@ function App() {
             <div className="tab-content">
               {activeTab === 'markdown' && markdown && (
                 <div className="markdown-container">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {markdown}
-                  </ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
                 </div>
               )}
 

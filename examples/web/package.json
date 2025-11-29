@@ -24,7 +24,9 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "globals": "^16.5.0",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4",
-    "vite-plugin-node-polyfills": "^0.24.0"
+    "vite": "npm:rolldown-vite@7.2.5"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@7.2.5"
   }
 }
