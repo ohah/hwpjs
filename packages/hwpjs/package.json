@@ -10,6 +10,10 @@
         "types": "./dist/react-native/index.d.mts",
         "default": "./dist/react-native/index.mjs"
       },
+      "browser": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/browser.js"
+      },
       "node": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
