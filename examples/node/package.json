@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --import tsx src/index.ts",
+    "test:markdown": "node --import tsx src/test-markdown.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
