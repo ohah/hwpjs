@@ -4,12 +4,6 @@ import remarkGfm from 'remark-gfm';
 import * as hwpjs from '@ohah/hwpjs';
 import './HwpDemo.css';
 
-// Buffer polyfill for browser environment
-if (typeof Buffer === 'undefined') {
-  // @ts-ignore
-  global.Buffer = require('buffer').Buffer;
-}
-
 type TabType = 'markdown' | 'json';
 
 interface HwpDemoProps {
@@ -32,8 +26,8 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const data = new Uint8Array(arrayBuffer);
-      // Convert Uint8Array to Buffer for NAPI
-      const buffer = Buffer.from(data);
+      // Web 환경에서 Buffer 타입으로 변환 (napi-rs WASM 호환)
+      const buffer = data as unknown as Buffer;
 
       // 마크다운 변환 (이미지는 base64로 임베드됨)
       const markdownResult = hwpjs.toMarkdown(buffer, {

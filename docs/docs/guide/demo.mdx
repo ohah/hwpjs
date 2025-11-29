@@ -1,3 +1,6 @@
+import { NoSSR } from '@rspress/core/runtime';
+import { HwpDemo } from '../../components/HwpDemo';
+
 # 데모
 
 실제 HWP 파일을 파싱한 결과를 확인할 수 있습니다.
@@ -9,6 +12,12 @@
 - 이미지
 - 문단 서식
 - 페이지 레이아웃
+
+## 인터랙티브 데모
+
+<NoSSR>
+  <HwpDemo hwpPath="/hwpjs/demo/noori.hwp" />
+</NoSSR>
 
 ## 사용 방법
 

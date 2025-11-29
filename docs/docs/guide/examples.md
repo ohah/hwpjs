@@ -96,7 +96,7 @@ main();
 ### 기본 사용법
 
 ```typescript
-import { ReactNative } from '@ohah/hwpjs';
+import { Hwpjs } from '@ohah/hwpjs';
 import RNFS from 'react-native-fs';
 import { Platform } from 'react-native';
 
@@ -124,7 +124,7 @@ async function loadHwpFile() {
     const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
 
     // HWP 파일 파싱
-    const result = ReactNative.hwp_parser(numberArray);
+    const result = Hwpjs.toJson(numberArray);
     console.log('파싱 결과:', result);
   } catch (error) {
     console.error('HWP 파일 파싱 실패:', error);
@@ -136,7 +136,8 @@ async function loadHwpFile() {
 
 ```typescript
 import { useEffect, useState } from 'react';
-import { ReactNative } from '@ohah/hwpjs';
+import { Text } from 'react-native';
+import { Hwpjs } from '@ohah/hwpjs';
 import RNFS from 'react-native-fs';
 
 function HwpViewer() {
@@ -149,7 +150,7 @@ function HwpViewer() {
         const filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
         const fileData = await RNFS.readFile(filePath, 'base64');
         const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
-        const result = ReactNative.hwp_parser(numberArray);
+        const result = Hwpjs.toJson(numberArray);
         setHwpData(result);
       } catch (error) {
         console.error('파싱 실패:', error);
@@ -165,6 +166,68 @@ function HwpViewer() {
   if (!hwpData) return <Text>파일을 읽을 수 없습니다.</Text>;
 
   return <Text>{hwpData}</Text>;
+}
+```
+
+## Web 예제
+
+### 기본 사용법
+
+Web 환경에서는 WASM을 사용하기 위해 `buffer-polyfill.ts`를 먼저 import해야 합니다.
+
+```typescript
+// main.tsx 또는 진입점 파일에서 가장 먼저 import
+import './buffer-polyfill';
+import * as hwpjs from '@ohah/hwpjs';
+
+// 파일 입력에서 HWP 파일 읽기
+const fileInput = document.querySelector('input[type="file"]');
+fileInput.addEventListener('change', async (e) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const data = new Uint8Array(arrayBuffer);
+
+  // JSON으로 변환
+  const jsonResult = hwpjs.toJson(data);
+  console.log(jsonResult);
+
+  // 마크다운으로 변환
+  const markdownResult = hwpjs.toMarkdown(data, {
+    image: 'base64', // 또는 'blob'
+    useHtml: true,
+    includeVersion: true,
+    includePageInfo: false,
+  });
+  console.log(markdownResult.markdown);
+});
+```
+
+### buffer-polyfill.ts 파일 생성
+
+프로젝트에 `buffer-polyfill.ts` 파일을 생성하고 다음 내용을 추가하세요:
+
+```typescript
+// Buffer polyfill for napi-rs WASM compatibility
+// This must be imported before any WASM modules
+if (typeof globalThis.Buffer === 'undefined') {
+  globalThis.Buffer = class Buffer extends Uint8Array {
+    static from(data: any) {
+      if (data instanceof Uint8Array) return data;
+      if (data instanceof ArrayBuffer) return new Uint8Array(data);
+      if (Array.isArray(data)) return new Uint8Array(data);
+      return new Uint8Array(data);
+    }
+    static isBuffer(obj: any) {
+      return obj instanceof Uint8Array;
+    }
+  } as any;
+}
+
+// Ensure Buffer is set on window as well for compatibility
+if (typeof window !== 'undefined' && typeof window.Buffer === 'undefined') {
+  (window as any).Buffer = globalThis.Buffer;
 }
 ```
 
