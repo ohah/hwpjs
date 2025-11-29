@@ -4,9 +4,12 @@ import remarkGfm from 'remark-gfm';
 import * as hwpjs from '@ohah/hwpjs';
 import './App.css';
 
+type TabType = 'markdown' | 'json';
+
 function App() {
   const [markdown, setMarkdown] = useState<string>('');
-  const [images, setImages] = useState<Map<string, string>>(new Map());
+  const [json, setJson] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<TabType>('markdown');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,85 +17,23 @@ function App() {
     setLoading(true);
     setError(null);
     setMarkdown('');
-    setImages(new Map());
+    setJson('');
 
     try {
       const arrayBuffer = await file.arrayBuffer();
       const data = new Uint8Array(arrayBuffer);
 
-      const result = hwpjs.parseHwpToMarkdown(data, {
+      // 마크다운 변환 (이미지는 base64로 임베드됨)
+      const markdownResult = hwpjs.parseHwpToMarkdown(data, {
         useHtml: true,
         includeVersion: true,
         includePageInfo: true,
       });
+      setMarkdown(markdownResult.markdown);
 
-      // Create Blob URLs for images
-      const blobUrls = new Map<string, string>();
-      let processedMarkdown = result.markdown;
-
-      // <br> 태그를 개행으로 변환
-      processedMarkdown = processedMarkdown.replace(/<br\s*\/?>/gi, '\n');
-
-      result.images.forEach((img) => {
-        // SharedArrayBuffer를 피하기 위해 복사본 생성
-        const imageData = new Uint8Array(img.data);
-        const mimeType =
-          img.format === 'jpg' || img.format === 'jpeg'
-            ? 'image/jpeg'
-            : img.format === 'png'
-              ? 'image/png'
-              : img.format === 'gif'
-                ? 'image/gif'
-                : img.format === 'bmp'
-                  ? 'image/bmp'
-                  : `image/${img.format}`;
-
-        const blob = new Blob([imageData], { type: mimeType });
-        const blobUrl = URL.createObjectURL(blob);
-        blobUrls.set(img.id, blobUrl);
-
-        // Markdown 텍스트에서 이미지 참조를 Blob URL로 직접 교체
-        // 여러 패턴 시도
-        const escapedId = img.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const patterns = [
-          // 기본 패턴: ![이미지](image-0)
-          new RegExp(`!\\[이미지\\]\\(${escapedId}\\)`, 'g'),
-          // alt 텍스트가 있는 경우: ![alt](image-0)
-          new RegExp(`!\\[([^\\]]*)\\]\\(${escapedId}\\)`, 'g'),
-          // 괄호 없이: ![이미지]image-0 (드물지만 가능)
-          new RegExp(`!\\[이미지\\]${escapedId}`, 'g'),
-        ];
-
-        let replaced = false;
-        patterns.forEach((pattern) => {
-          if (pattern.test(processedMarkdown)) {
-            processedMarkdown = processedMarkdown.replace(pattern, (_match, alt) => {
-              replaced = true;
-              return `![${alt || '이미지'}](${blobUrl})`;
-            });
-          }
-        });
-
-        // 디버깅
-        if (!replaced) {
-          console.warn(`Image ID ${img.id} not found in markdown. Searching for patterns...`);
-          // 실제로 어떤 패턴이 있는지 확인
-          const imagePatterns = processedMarkdown.match(
-            new RegExp(`!\\[.*?\\]\\(.*?${img.id}.*?\\)`, 'g')
-          );
-          if (imagePatterns) {
-            console.log('Found potential image patterns:', imagePatterns);
-          }
-        } else {
-          console.log(`✓ Replaced ${img.id} with blob URL`);
-        }
-      });
-
-      console.log('Processed markdown preview:', processedMarkdown.substring(0, 500));
-      console.log('Blob URLs:', Array.from(blobUrls.entries()));
-
-      setMarkdown(processedMarkdown);
-      setImages(blobUrls);
+      // JSON 변환
+      const jsonString = hwpjs.parseHwp(data);
+      setJson(jsonString);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'HWP 파일 파싱 실패';
       setError(errorMessage);
@@ -120,13 +61,6 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Cleanup Blob URLs on unmount
-  useEffect(() => {
-    return () => {
-      images.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [images]);
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -134,11 +68,20 @@ function App() {
     }
   };
 
+  const formatJson = (jsonString: string): string => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      return jsonString;
+    }
+  };
+
   return (
     <div className="app">
       <header className="app-header">
-        <h1>HWP to Markdown Viewer</h1>
-        <p className="subtitle">HWP 파일을 마크다운으로 변환하여 보기</p>
+        <h1>hwpjs</h1>
+        <p className="subtitle">HWP 파일을 마크다운 또는 JSON으로 변환하여 보기</p>
 
         <div className="file-input-wrapper">
           <label htmlFor="hwp-file" className="file-input-label">
@@ -180,45 +123,42 @@ function App() {
           </div>
         )}
 
-        {markdown && !loading && (
-          <div className="markdown-container">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                img: ({ src, alt }) => {
-                  // 디버깅
-                  console.log('Rendering image with src:', src);
+        {(markdown || json) && !loading && (
+          <div className="content-container">
+            <div className="tabs">
+              <button
+                className={`tab ${activeTab === 'markdown' ? 'active' : ''}`}
+                onClick={() => setActiveTab('markdown')}
+              >
+                마크다운 보기
+              </button>
+              <button
+                className={`tab ${activeTab === 'json' ? 'active' : ''}`}
+                onClick={() => setActiveTab('json')}
+              >
+                toJSON
+              </button>
+            </div>
 
-                  if (!src) {
-                    console.warn('Image src is undefined');
-                    return null;
-                  }
+            <div className="tab-content">
+              {activeTab === 'markdown' && markdown && (
+                <div className="markdown-container">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {markdown}
+                  </ReactMarkdown>
+                </div>
+              )}
 
-                  // Markdown 텍스트에서 이미 Blob URL로 교체되었으므로
-                  // 단순히 렌더링만 하면 됨
-                  return (
-                    <img
-                      src={src}
-                      alt={alt || '이미지'}
-                      className="markdown-image"
-                      onLoad={() => {
-                        console.log('Image loaded successfully:', src);
-                      }}
-                      onError={(e) => {
-                        console.error('Image load error:', src, e);
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  );
-                },
-              }}
-            >
-              {markdown}
-            </ReactMarkdown>
+              {activeTab === 'json' && json && (
+                <div className="json-container">
+                  <pre className="json-content">{formatJson(json)}</pre>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {!markdown && !loading && !error && (
+        {!markdown && !json && !loading && !error && (
           <div className="empty-state">
             <p>HWP 파일을 선택하거나 기본 파일을 기다리는 중...</p>
           </div>

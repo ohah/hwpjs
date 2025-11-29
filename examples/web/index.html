@@ -7,20 +7,6 @@
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>web</title>
-  <script>
-    // Buffer polyfill - 모든 모듈 로드 전에 실행
-    if (typeof globalThis.Buffer === 'undefined') {
-      globalThis.Buffer = Uint8Array;
-      globalThis.Buffer.from = function (data) {
-        if (data instanceof Uint8Array) return data;
-        if (Array.isArray(data)) return new Uint8Array(data);
-        return new Uint8Array(data);
-      };
-      globalThis.Buffer.isBuffer = function (obj) {
-        return obj instanceof Uint8Array;
-      };
-    }
-  </script>
 </head>
 
 <body>
