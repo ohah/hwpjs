@@ -5,7 +5,7 @@ use napi::bindgen_prelude::Buffer;
 use napi_derive::napi;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 
-/// Parse HWP file from byte array (Buffer or Uint8Array)
+/// Convert HWP file to JSON
 ///
 /// # Arguments
 /// * `data` - Byte array containing HWP file data (Buffer or Uint8Array)
@@ -13,7 +13,7 @@ use base64::{engine::general_purpose::STANDARD, Engine as _};
 /// # Returns
 /// Parsed HWP document as JSON string
 #[napi]
-pub fn parse_hwp(data: Buffer) -> Result<String, napi::Error> {
+pub fn to_json(data: Buffer) -> Result<String, napi::Error> {
     let parser = HwpParser::new();
     let data_vec: Vec<u8> = data.into();
     let document = parser.parse(&data_vec).map_err(napi::Error::from_reason)?;
@@ -38,7 +38,7 @@ pub enum ImageFormat {
 
 /// Markdown conversion options
 #[napi(object)]
-pub struct ParseHwpToMarkdownOptions {
+pub struct ToMarkdownOptions {
     /// Optional directory path to save images as files. If None, images are embedded as base64 data URIs.
     /// 이미지를 파일로 저장할 디렉토리 경로 (선택). None이면 base64 데이터 URI로 임베드됩니다.
     pub image_output_dir: Option<String>,
@@ -70,9 +70,9 @@ pub struct ImageData {
     pub format: String,
 }
 
-/// Parse HWP to Markdown result
+/// Markdown conversion result
 #[napi(object)]
-pub struct ParseHwpToMarkdownResult {
+pub struct ToMarkdownResult {
     /// Markdown string with image references (e.g., "![이미지](image-0)")
     /// 이미지 참조가 포함된 마크다운 문자열 (예: "![이미지](image-0)")
     pub markdown: String,
@@ -81,19 +81,19 @@ pub struct ParseHwpToMarkdownResult {
     pub images: Vec<ImageData>,
 }
 
-/// Parse HWP file and convert to Markdown format
+/// Convert HWP file to Markdown format
 ///
 /// # Arguments
 /// * `data` - Byte array containing HWP file data (Buffer or Uint8Array)
 /// * `options` - Optional markdown conversion options
 ///
 /// # Returns
-/// ParseHwpToMarkdownResult containing markdown string and image data
+/// ToMarkdownResult containing markdown string and image data
 #[napi]
-pub fn parse_hwp_to_markdown(
+pub fn to_markdown(
     data: Buffer,
-    options: Option<ParseHwpToMarkdownOptions>,
-) -> Result<ParseHwpToMarkdownResult, napi::Error> {
+    options: Option<ToMarkdownOptions>,
+) -> Result<ToMarkdownResult, napi::Error> {
     let parser = HwpParser::new();
     let data_vec: Vec<u8> = data.into();
     let document = parser.parse(&data_vec).map_err(napi::Error::from_reason)?;
@@ -178,7 +178,7 @@ pub fn parse_hwp_to_markdown(
         }
     }
 
-    Ok(ParseHwpToMarkdownResult { markdown, images })
+    Ok(ToMarkdownResult { markdown, images })
 }
 
 /// Get file extension from BinData ID
@@ -212,7 +212,7 @@ fn get_mime_type_from_bindata_id(document: &hwp_core::HwpDocument, bindata_id: h
     "image/jpeg".to_string()
 }
 
-/// Parse HWP file and return only FileHeader as JSON
+/// Extract FileHeader from HWP file as JSON
 ///
 /// # Arguments
 /// * `data` - Byte array containing HWP file data (Buffer or Uint8Array)
@@ -220,7 +220,7 @@ fn get_mime_type_from_bindata_id(document: &hwp_core::HwpDocument, bindata_id: h
 /// # Returns
 /// FileHeader as JSON string
 #[napi]
-pub fn parse_hwp_fileheader(data: Buffer) -> Result<String, napi::Error> {
+pub fn file_header(data: Buffer) -> Result<String, napi::Error> {
     let parser = HwpParser::new();
     let data_vec: Vec<u8> = data.into();
     parser
