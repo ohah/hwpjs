@@ -3,7 +3,6 @@ import { NoSSR } from '@rspress/core/runtime';
 import React, { useEffect, useState, useCallback } from 'react';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import * as hwpjs from '@ohah/hwpjs';
 import './HwpDemo.css';
 
 type TabType = 'markdown' | 'json';
@@ -26,6 +25,9 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
     setJson('');
 
     try {
+      // 동적 import로 hwpjs 로드 (SSG 빌드 시 문제 방지)
+      const hwpjs = await import('@ohah/hwpjs');
+      
       const arrayBuffer = await file.arrayBuffer();
       const data = new Uint8Array(arrayBuffer);
       // Web 환경에서 Buffer 타입으로 변환 (napi-rs WASM 호환)
