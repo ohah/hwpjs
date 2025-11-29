@@ -120,6 +120,41 @@ else
     echo -e "${YELLOW}   Tag: ${TAG_NAME}${NC}"
 fi
 
+# 6. GitHub Release 생성 및 아티팩트 업로드
+echo -e "\n${GREEN}📝 Creating GitHub Release...${NC}"
+
+if command -v gh &> /dev/null; then
+    # Release 생성
+    if [ "$IS_PRERELEASE" = true ]; then
+        gh release create "$TAG_NAME" \
+            --title "$TAG_NAME" \
+            --generate-notes \
+            --prerelease
+    else
+        gh release create "$TAG_NAME" \
+            --title "$TAG_NAME" \
+            --generate-notes
+    fi
+    echo -e "${GREEN}✓ GitHub Release created${NC}"
+    
+    # 아티팩트 업로드
+    echo -e "\n${GREEN}📦 Uploading artifacts...${NC}"
+    cd "$PACKAGE_DIR"
+    
+    # 모든 .node 및 .wasm 파일 찾아서 업로드
+    find npm -type f \( -name "*.node" -o -name "*.wasm" \) | while read -r file; do
+        echo -e "${GREEN}   Uploading $(basename "$file")...${NC}"
+        gh release upload "$TAG_NAME" "$file" --repo ohah/hwpjs
+    done
+    
+    echo -e "${GREEN}✓ All artifacts uploaded${NC}"
+else
+    echo -e "${YELLOW}⚠️  GitHub CLI (gh) not found. Skipping release creation.${NC}"
+    echo -e "${YELLOW}   Please create release manually at:${NC}"
+    echo -e "${YELLOW}   https://github.com/ohah/hwpjs/releases/new${NC}"
+    echo -e "${YELLOW}   Tag: ${TAG_NAME}${NC}"
+fi
+
 echo -e "\n${GREEN}✅ Release process completed!${NC}"
 echo -e "${GREEN}   Tag: ${TAG_NAME}${NC}"
 echo -e "${GREEN}   Next step: npm publish --access public${NC}"
