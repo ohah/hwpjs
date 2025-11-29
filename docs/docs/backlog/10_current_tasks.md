@@ -56,8 +56,6 @@ interface ExtractImagesResult {
 - **변경 필요**: `Uint8Array`로 변경하여 타입 안정성 및 성능 개선
 - **영향 범위**:
   - React Native 바인딩: `packages/hwpjs/crates/lib/src/react_native_impl.rs`
-  - NAPI 바인딩: `packages/hwpjs/src/lib.rs`
-  - TypeScript 타입 정의: `packages/hwpjs/index.d.ts`
   - 예제 코드: `examples/web/src/App.tsx`, `examples/react-native/src/App.tsx`
 - **우선순위**: 높음
 - **상태**: 계획됨
