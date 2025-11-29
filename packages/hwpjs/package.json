@@ -107,6 +107,7 @@
     "publish:npm": "bash scripts/publish.sh",
     "publish:npm:next": "bash scripts/publish.sh --tag next",
     "publish:npm:latest": "bash scripts/publish.sh --tag latest",
+    "check:size": "bash scripts/check-package-size.sh",
     "test": "bun test",
     "version": "napi version",
     "typecheck": "tsc --noEmit",
