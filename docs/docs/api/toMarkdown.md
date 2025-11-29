@@ -67,13 +67,24 @@ println!("{}", markdown);
 ### Node.js에서 사용
 
 ```typescript
-import { parseHwp } from '@ohah/hwpjs';
+import { readFileSync } from 'fs';
+import { parseHwpToMarkdown } from '@ohah/hwpjs';
 
-const jsonString = parseHwp('./document.hwp');
-const document = JSON.parse(jsonString);
-// HwpDocument 객체에 toMarkdown() 메서드가 포함됨
-const markdown = document.toMarkdown();
-console.log(markdown);
+// HWP 파일 읽기
+const fileBuffer = readFileSync('./document.hwp');
+const data = new Uint8Array(fileBuffer);
+
+// 마크다운으로 변환 (base64 이미지 포함)
+const result = parseHwpToMarkdown(data, {
+  image: 'base64', // 또는 'blob'으로 별도 이미지 배열 받기
+  useHtml: true,
+  includeVersion: true,
+  includePageInfo: false,
+});
+
+console.log(result.markdown);
+// base64 옵션 사용 시: result.images는 빈 배열
+// blob 옵션 사용 시: result.images에 ImageData 배열 포함
 ```
 
 ## 지원 기능

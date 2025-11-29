@@ -48,6 +48,30 @@ interface ExtractImagesResult {
   - `image: 'base64'`일 때: 마크다운 변환 시 base64 데이터 URI를 그대로 유지하고 `images` 배열은 비우거나 제외
   - `image: 'blob'`일 때: 현재 동작 유지 (기본값)
 - **우선순위**: 중간
+- **상태**: 구현됨
+
+### 이미지 렌더링 크기 정보 추가
+
+- **현재 상태**: `parseHwpToMarkdown`과 `extract_images` 함수가 이미지 데이터만 반환하고, 실제 HWP 문서에서 렌더링되는 크기 정보는 포함하지 않음
+- **변경 필요**: 이미지의 실제 렌더링 크기 정보를 반환하도록 개선
+  - HWP 문서에서 이미지가 표시되는 실제 크기 (너비, 높이)
+  - HWPUNIT 단위로 저장된 크기 정보를 픽셀 또는 밀리미터로 변환
+- **영향 범위**:
+  - `ImageData` 구조체에 `width`, `height` 필드 추가 (옵션)
+  - Rust: `crates/hwp-core/src/document/bodytext/shape_component_picture.rs`에서 크기 정보 추출
+  - NAPI 바인딩: `packages/hwpjs/src/lib.rs`의 `ImageData` 구조체
+  - TypeScript 타입 정의: `packages/hwpjs/dist/index.d.ts`
+- **구현 방법**:
+  - `ShapeComponentPicture`에서 `border_rectangle_x`, `border_rectangle_y`의 크기 정보 추출
+  - HWPUNIT을 픽셀 또는 밀리미터로 변환 (DPI 정보 필요할 수 있음)
+  - `ImageData`에 `width?: number`, `height?: number` 필드 추가 (옵션)
+  - 크기 정보가 없는 경우 `undefined` 반환
+- **고려사항**:
+  - HWP 문서의 DPI 설정에 따라 실제 픽셀 크기가 달라질 수 있음
+  - 기본 DPI 값 (예: 96 DPI 또는 72 DPI) 사용 여부 결정 필요
+  - 이미지 원본 크기와 렌더링 크기가 다를 수 있음
+  - `border_rectangle_x`와 `border_rectangle_y`의 차이로 인한 크기 계산 방법 결정 필요
+- **우선순위**: 중간
 - **상태**: 계획됨
 
 ### 입력 타입 변경: Array<number> → Uint8Array

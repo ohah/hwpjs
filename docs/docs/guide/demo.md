@@ -37,21 +37,23 @@ JSON 파일은 약 1.4MB 크기이며, HWP 문서의 모든 구조 정보를 포
 이 데모 파일을 사용하여 HWPJS의 기능을 테스트할 수 있습니다:
 
 ```typescript
-import { parseHwp } from '@ohah/hwpjs';
+import { readFileSync } from 'fs';
+import { parseHwpToMarkdown } from '@ohah/hwpjs';
 
-// noori.hwp 파일 파싱
-const jsonString = parseHwp('./noori.hwp');
-const document = JSON.parse(jsonString);
+// noori.hwp 파일 읽기
+const fileBuffer = readFileSync('./noori.hwp');
+const data = new Uint8Array(fileBuffer);
 
-// Markdown으로 변환
-const markdown = document.toMarkdown({
-  image_output_dir: './images',
-  use_html: true,
-  include_version: true,
-  include_page_info: true
+// 마크다운으로 변환 (base64 이미지 포함)
+const result = parseHwpToMarkdown(data, {
+  image: 'base64', // 마크다운에 base64 데이터 URI 직접 포함
+  useHtml: true,
+  includeVersion: true,
+  includePageInfo: true,
 });
 
-console.log(markdown);
+console.log(result.markdown);
+// result.images는 빈 배열 (base64 옵션 사용 시)
 ```
 
 ## 파일 정보
