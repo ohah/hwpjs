@@ -1,3 +1,5 @@
+import { NoSSR } from '@rspress/core/runtime';
+
 import React, { useEffect, useState, useCallback } from 'react';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -90,105 +92,107 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
   };
 
   return (
-    <div className="hwp-demo">
-      <div className="hwp-demo-header">
-        <div className="file-input-wrapper">
-          <label htmlFor="hwp-file" className="file-input-label">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            HWP 파일 선택
-          </label>
-          <input
-            id="hwp-file"
-            type="file"
-            accept=".hwp"
-            onChange={handleFileSelect}
-            className="file-input"
-          />
+    <NoSSR>
+      <div className="hwp-demo">
+        <div className="hwp-demo-header">
+          <div className="file-input-wrapper">
+            <label htmlFor="hwp-file" className="file-input-label">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              HWP 파일 선택
+            </label>
+            <input
+              id="hwp-file"
+              type="file"
+              accept=".hwp"
+              onChange={handleFileSelect}
+              className="file-input"
+            />
+          </div>
         </div>
+
+        {loading && (
+          <div className="loading">
+            <div className="spinner"></div>
+            <p>HWP 파일을 파싱하는 중...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="error">
+            <p>❌ {error}</p>
+          </div>
+        )}
+
+        {(markdown || json) && !loading && (
+          <div className="content-container">
+            <div className="tabs">
+              <button
+                className={`tab ${activeTab === 'markdown' ? 'active' : ''}`}
+                onClick={() => setActiveTab('markdown')}
+              >
+                마크다운 보기
+              </button>
+              <button
+                className={`tab ${activeTab === 'json' ? 'active' : ''}`}
+                onClick={() => setActiveTab('json')}
+              >
+                toJSON
+              </button>
+            </div>
+
+            <div className="tab-content">
+              {activeTab === 'markdown' && markdown && (
+                <div className="markdown-container">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    urlTransform={urlTransform}
+                    components={{
+                      img: ({ src, alt, ...props }) => {
+                        if (src) {
+                          return (
+                            <img
+                              src={src}
+                              alt={alt || 'Image'}
+                              className="markdown-image"
+                              {...props}
+                            />
+                          );
+                        }
+                        return null;
+                      },
+                    }}
+                  >
+                    {markdown}
+                  </ReactMarkdown>
+                </div>
+              )}
+
+              {activeTab === 'json' && json && (
+                <div className="json-container">
+                  <pre className="json-content">{formatJson(json)}</pre>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!markdown && !json && !loading && !error && (
+          <div className="empty-state">
+            <p>HWP 파일을 선택하거나 기본 파일을 기다리는 중...</p>
+          </div>
+        )}
       </div>
-
-      {loading && (
-        <div className="loading">
-          <div className="spinner"></div>
-          <p>HWP 파일을 파싱하는 중...</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="error">
-          <p>❌ {error}</p>
-        </div>
-      )}
-
-      {(markdown || json) && !loading && (
-        <div className="content-container">
-          <div className="tabs">
-            <button
-              className={`tab ${activeTab === 'markdown' ? 'active' : ''}`}
-              onClick={() => setActiveTab('markdown')}
-            >
-              마크다운 보기
-            </button>
-            <button
-              className={`tab ${activeTab === 'json' ? 'active' : ''}`}
-              onClick={() => setActiveTab('json')}
-            >
-              toJSON
-            </button>
-          </div>
-
-          <div className="tab-content">
-            {activeTab === 'markdown' && markdown && (
-              <div className="markdown-container">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  urlTransform={urlTransform}
-                  components={{
-                    img: ({ src, alt, ...props }) => {
-                      if (src) {
-                        return (
-                          <img
-                            src={src}
-                            alt={alt || 'Image'}
-                            className="markdown-image"
-                            {...props}
-                          />
-                        );
-                      }
-                      return null;
-                    },
-                  }}
-                >
-                  {markdown}
-                </ReactMarkdown>
-              </div>
-            )}
-
-            {activeTab === 'json' && json && (
-              <div className="json-container">
-                <pre className="json-content">{formatJson(json)}</pre>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {!markdown && !json && !loading && !error && (
-        <div className="empty-state">
-          <p>HWP 파일을 선택하거나 기본 파일을 기다리는 중...</p>
-        </div>
-      )}
-    </div>
+    </NoSSR>
   );
 }
