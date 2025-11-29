@@ -78,6 +78,54 @@ interface ExtractImagesResult {
 - **우선순위**: 높음
 - **상태**: 계획됨
 
+### React Native API 함수명 통일
+
+- **현재 상태**: React Native는 `ReactNative.hwp_parser()` 형태로 사용되며, Node.js/Web과 다른 API 구조를 가짐
+- **변경 필요**: React Native도 Node.js/Web과 동일한 함수명으로 통일
+  - `ReactNative.hwp_parser()` → `toJson()`
+  - `toMarkdown()`, `fileHeader()` 함수 추가
+- **영향 범위**:
+  - React Native 바인딩: `packages/hwpjs/crates/lib/src/react_native_impl.rs`
+  - TypeScript 타입 정의: `packages/hwpjs/dist/react-native/index.d.mts`
+  - 예제 코드: `examples/react-native/src/App.tsx`
+  - 문서: `docs/docs/guide/installation.mdx`, `docs/docs/guide/examples.md`
+- **구현 방법**:
+  - `react_native_impl.rs`에 `toJson`, `toMarkdown`, `fileHeader` 함수 추가
+  - `ReactNative` 네임스페이스 제거하고 직접 export
+  - 기존 `hwp_parser` 함수는 deprecated 처리하거나 제거
+- **고려사항**:
+  - 기존 코드와의 호환성을 위해 마이그레이션 가이드 제공 필요
+  - Craby의 타입 지원이 완료된 후 진행하는 것이 좋음
+- **우선순위**: 높음
+- **상태**: 계획됨
+
+### 각 환경별 E2E 테스트 구축
+
+- **현재 상태**: E2E 테스트가 부분적으로만 구현되어 있음
+- **변경 필요**: Node.js, Web, React Native 각 환경에 대한 E2E 테스트 구축
+- **구현 범위**:
+  - **Node.js E2E 테스트**:
+    - 실제 HWP 파일을 읽어서 파싱하는 테스트
+    - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
+    - 다양한 HWP 파일 형식에 대한 테스트
+  - **Web E2E 테스트**:
+    - 브라우저 환경에서 WASM 빌드 동작 확인
+    - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
+  - **React Native E2E 테스트**:
+    - iOS/Android 실제 디바이스/에뮬레이터에서 테스트
+    - Maestro 사용한 E2E 테스트
+    - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
+- **테스트 도구**:
+  - Node.js: Vitest
+  - Web: Vitest
+  - React Native: Maestro
+- **영향 범위**:
+  - 테스트 스크립트 추가: `package.json`
+  - CI/CD 파이프라인 업데이트: `.github/workflows/`
+  - 테스트 파일: `tests/e2e/` 또는 각 예제 프로젝트 내
+- **우선순위**: 중간
+- **상태**: 계획됨
+
 ## 알 수 없는 요소 (미지원 기능)
 
 ### 알 수 없는 Ctrl ID
