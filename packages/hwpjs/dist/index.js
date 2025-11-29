@@ -574,4 +574,4 @@ if (!nativeBinding) {
 module.exports = nativeBinding
 module.exports.parseHwp = nativeBinding.parseHwp
 module.exports.parseHwpFileheader = nativeBinding.parseHwpFileheader
-module.exports.plus100 = nativeBinding.plus100
+module.exports.parseHwpToMarkdown = nativeBinding.parseHwpToMarkdown

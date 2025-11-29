@@ -58,4 +58,4 @@ const {
 export default __napiModule.exports
 export const parseHwp = __napiModule.exports.parseHwp
 export const parseHwpFileheader = __napiModule.exports.parseHwpFileheader
-export const plus100 = __napiModule.exports.plus100
+export const parseHwpToMarkdown = __napiModule.exports.parseHwpToMarkdown

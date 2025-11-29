@@ -2,17 +2,17 @@
 ///
 /// This library provides core functionality for parsing HWP files.
 /// It accepts byte arrays as input to support cross-platform usage.
-mod cfb;
-mod decompress;
-mod document;
-mod types;
-mod viewer;
+pub mod cfb;
+pub mod decompress;
+pub mod document;
+pub mod types;
+pub mod viewer;
 
 pub use cfb::CfbParser;
 pub use decompress::{decompress_deflate, decompress_zlib};
 pub use document::{
-    BinData, BodyText, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName,
-    FileHeader, HwpDocument, IdMappings, Numbering, ParaShape, Section, TabDef,
+    BinData, BinDataRecord, BodyText, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties,
+    FaceName, FileHeader, HwpDocument, IdMappings, Numbering, ParaShape, Section, TabDef,
 };
 pub use types::{
     RecordHeader, BYTE, COLORREF, DWORD, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT,

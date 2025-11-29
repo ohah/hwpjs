@@ -110,4 +110,4 @@ const { instance: __napiInstance, module: __wasiModule, napiModule: __napiModule
 module.exports = __napiModule.exports
 module.exports.parseHwp = __napiModule.exports.parseHwp
 module.exports.parseHwpFileheader = __napiModule.exports.parseHwpFileheader
-module.exports.plus100 = __napiModule.exports.plus100
+module.exports.parseHwpToMarkdown = __napiModule.exports.parseHwpToMarkdown

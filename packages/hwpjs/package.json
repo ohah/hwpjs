@@ -14,7 +14,8 @@
         "types": "./dist/react-native/index.d.mts",
         "default": "./dist/react-native/index.mjs"
       },
-      "default": "./dist/browser.js"
+      "default": "./dist/browser.js",
+      "types": "./dist/index.d.ts"
     },
     "./package.json": "./package.json"
   },
@@ -130,5 +131,8 @@
     "@ohah/hwpjs-darwin-arm64": "0.1.0-rc.1",
     "@ohah/hwpjs-win32-arm64-msvc": "0.1.0-rc.1",
     "@ohah/hwpjs-wasm32-wasi": "0.1.0-rc.1"
+  },
+  "dependencies": {
+    "buffer": "^6.0.3"
   }
 }
