@@ -12,12 +12,14 @@
 ```
 hwpjs/
 ├── crates/
-│   └── hwp-core/          # 공유 Rust 라이브러리
+│   └── hwp-core/          # 공유 Rust 라이브러리 (핵심 HWP 파싱 로직)
 ├── packages/
-│   ├── react-native/      # React Native용 래퍼
-│   └── node/              # Node.js용 래퍼
+│   └── hwpjs/             # 멀티 플랫폼 패키지 (Node.js, Web, React Native)
 ├── examples/              # 사용 예제
-├── docs/                  # 문서 사이트
+│   ├── node/              # Node.js 예제
+│   ├── web/               # Web 예제
+│   └── react-native/      # React Native 예제
+├── docs/                  # 문서 사이트 (Rspress)
 └── legacy/                # 기존 JavaScript 구현
 ```
 
