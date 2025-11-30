@@ -408,7 +408,7 @@ pub struct InlineControlParam {
 
 ## 참고
 
-- **스펙 문서**: [HWP 5.0 명세서 - 표 1: 자료형](../spec/hwp-5.0.md#2-자료형-설명)
+- **스펙 문서**: [HWP 5.0 명세서 - 표 1: 자료형](./hwp-5.0.md#2-자료형-설명)
 - **소스 코드**: `crates/hwp-core/src/types.rs`
 - **플래그 상수**: `crates/hwp-core/src/fileheader.rs`의 `document_flags`, `license_flags` 모듈
 - **제어 문자**: `crates/hwp-core/src/document/bodytext/control_char.rs`
