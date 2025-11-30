@@ -585,25 +585,16 @@ NAPI-RS는 `napi prepublish` 명령을 통해 플랫폼별 바이너리를 별�
    - TypeScript 소스를 ESM/CJS로 변환
    - React Native용 별도 번들 생성
 
-### 배포 흐름
+### 배포 구조
 
-배포 전 `prepublishOnly` 훅에서 다음 작업을 수행합니다:
+패키지는 플랫폼별 바이너리를 `optionalDependencies`로 분리하여 배포합니다:
 
-1. `napi prepublish -t npm`: 플랫폼별 패키지 준비
-2. 각 플랫폼별 바이너리를 별도 디렉토리로 분리
-3. npm 패키지 메타데이터 생성
-
-배포 시:
-- 메인 패키지 (`@ohah/hwpjs`)가 npm에 게시됨
-- 플랫폼별 패키지들이 `optionalDependencies`로 참조됨
-- 사용자가 설치할 때 npm이 자동으로 적절한 플랫폼 패키지를 선택
-
-### 파일 구조
+- 메인 패키지 (`@ohah/hwpjs`)는 공통 코드와 메타데이터를 포함
+- 플랫폼별 패키지 (`@ohah/hwpjs-{platform}-{arch}`)는 네이티브 바이너리를 포함
+- npm이 자동으로 적절한 플랫폼 패키지를 선택하여 설치
 
 배포되는 파일은 `package.json`의 `files` 필드로 제어됩니다:
-
-- `index.js`, `index.d.ts`: Node.js 진입점
-- `dist/`: 번들된 TypeScript 파일
+- `dist/`: 번들된 TypeScript 파일 및 바이너리
 - `android/`, `ios/`: React Native 네이티브 모듈
 - `cpp/`: C++ 바인딩 코드
 - `*.podspec`: iOS CocoaPods 설정
