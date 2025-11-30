@@ -95,24 +95,70 @@ hwpjs/
 src/
 ├── document/                 # HWP 문서 구조 (표 2: 전체 구조)
 │   ├── mod.rs               # HwpDocument 통합 구조체
+│   ├── constants.rs         # 문서 관련 상수
 │   ├── fileheader/          # FileHeader 스트림 (파일 인식 정보)
 │   │   ├── mod.rs           # 구조체 정의 및 파싱 로직
 │   │   ├── constants.rs     # 플래그 상수 (document_flags, license_flags)
 │   │   └── serialize.rs     # JSON 직렬화 함수
 │   ├── docinfo/             # DocInfo 스트림 (문서 정보)
-│   │   └── mod.rs
+│   │   ├── mod.rs           # DocInfo 통합 구조체
+│   │   ├── doc_data.rs      # 문서 데이터
+│   │   ├── document_properties.rs
+│   │   ├── char_shape.rs    # 문자 모양
+│   │   ├── para_shape.rs    # 문단 모양
+│   │   ├── style.rs         # 스타일
+│   │   ├── tab_def.rs       # 탭 정의
+│   │   ├── border_fill.rs   # 테두리/배경
+│   │   ├── bullet.rs        # 글머리표
+│   │   ├── numbering.rs     # 번호
+│   │   ├── face_name.rs     # 글꼴 이름
+│   │   ├── bin_data.rs      # 바이너리 데이터
+│   │   ├── memo_shape.rs    # 메모 모양
+│   │   ├── track_change.rs  # 변경 추적
+│   │   └── ...              # 기타 DocInfo 관련 모듈
 │   ├── bodytext/            # BodyText 스토리지 (본문)
+│   │   ├── mod.rs           # BodyText 통합 구조체
+│   │   ├── para_header.rs   # 문단 헤더
+│   │   ├── line_seg.rs      # 줄 단위
+│   │   ├── char_shape.rs    # 문자 모양
+│   │   ├── range_tag.rs     # 범위 태그
+│   │   ├── table.rs         # 표
+│   │   ├── shape_component.rs # 도형 컴포넌트
+│   │   ├── shape_component_picture.rs # 그림
+│   │   ├── shape_component_container.rs # 컨테이너
+│   │   ├── ctrl_header.rs   # 컨트롤 헤더
+│   │   └── ...              # 기타 BodyText 관련 모듈
+│   ├── bindata/             # BinData 스토리지 (바이너리 데이터)
 │   │   └── mod.rs
-│   └── bindata/             # BinData 스토리지 (바이너리 데이터)
-│       └── mod.rs
+│   ├── preview_image.rs     # 미리보기 이미지
+│   ├── preview_text.rs      # 미리보기 텍스트
+│   ├── scripts/             # 스크립트
+│   │   ├── mod.rs
+│   │   ├── script.rs
+│   │   └── script_version.rs
+│   └── xml_template.rs      # XML 템플릿
 ├── viewer/                   # 문서 변환/뷰어 모듈
 │   ├── mod.rs               # 뷰어 모듈 진입점
-│   └── markdown.rs          # 마크다운 변환 로직
+│   └── markdown/            # 마크다운 변환
+│       ├── mod.rs           # 마크다운 변환 진입점
+│       ├── common.rs        # 공통 유틸리티
+│       ├── para_text.rs     # 문단 텍스트 변환
+│       ├── table.rs         # 표 변환
+│       ├── list_header.rs   # 목록 헤더 변환
+│       ├── shape_component.rs # 도형 컴포넌트 변환
+│       ├── shape_component_picture.rs # 그림 변환
+│       └── ctrl_header/     # 컨트롤 헤더 변환
+│           ├── mod.rs
+│           ├── table.rs
+│           ├── footnote.rs
+│           ├── header_footer.rs
+│           └── ...          # 기타 컨트롤 헤더 변환
 ├── types.rs                  # HWP 자료형 정의 (표 1: 자료형)
 ├── cfb.rs                    # CFB (Compound File Binary) 파싱
 │                             # - read_stream(): 루트 레벨 스트림 접근
 │                             # - read_nested_stream(): 중첩 스토리지 접근 (폴백 지원)
 ├── decompress.rs             # zlib 압축 해제
+├── snapshots/                # 스냅샷 테스트 파일
 └── lib.rs                    # 라이브러리 진입점 및 HwpParser
 ```
 
