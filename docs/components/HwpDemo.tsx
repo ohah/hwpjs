@@ -1,11 +1,11 @@
 import { NoSSR } from '@rspress/core/runtime';
+// @ts-expect-error - @theme is provided by Rspress at runtime
+import { Tab, Tabs } from '@theme';
 
 import React, { useEffect, useState, useCallback } from 'react';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './HwpDemo.css';
-
-type TabType = 'markdown' | 'json';
 
 interface HwpDemoProps {
   hwpPath?: string;
@@ -14,7 +14,6 @@ interface HwpDemoProps {
 export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
   const [markdown, setMarkdown] = useState<string>('');
   const [json, setJson] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<TabType>('markdown');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -138,54 +137,91 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
 
         {(markdown || json) && !loading && (
           <div className="content-container">
-            <div className="tabs">
-              <button
-                className={`tab ${activeTab === 'markdown' ? 'active' : ''}`}
-                onClick={() => setActiveTab('markdown')}
-              >
-                마크다운 보기
-              </button>
-              <button
-                className={`tab ${activeTab === 'json' ? 'active' : ''}`}
-                onClick={() => setActiveTab('json')}
-              >
-                toJSON
-              </button>
-            </div>
-
-            <div className="tab-content">
-              {activeTab === 'markdown' && markdown && (
-                <div className="markdown-container">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    urlTransform={urlTransform}
-                    components={{
-                      img: ({ src, alt, ...props }) => {
-                        if (src) {
-                          return (
-                            <img
-                              src={src}
-                              alt={alt || 'Image'}
-                              className="markdown-image"
-                              {...props}
-                            />
-                          );
-                        }
-                        return null;
-                      },
-                    }}
+            <Tabs
+              groupId="demo-view"
+              values={[
+                <div
+                  key="markdown"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: 15,
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="platform-icon-web"
                   >
-                    {markdown}
-                  </ReactMarkdown>
-                </div>
-              )}
-
-              {activeTab === 'json' && json && (
-                <div className="json-container">
-                  <pre className="json-content">{formatJson(json)}</pre>
-                </div>
-              )}
-            </div>
+                    <path
+                      d="M20.501 6.028V6h-.02A10.28 10.28 0 0 0 4.519 6H4.5v.028a10.262 10.262 0 0 0 0 12.944V19h.02a10.28 10.28 0 0 0 15.962 0h.021v-.028a10.262 10.262 0 0 0 0-12.944zM13 6V3.272A4.533 4.533 0 0 1 15.54 6zm2.935 1a16.827 16.827 0 0 1 .853 5H13V7zM12 3.272V6H9.46A4.533 4.533 0 0 1 12 3.272zM12 7v5H8.212a16.827 16.827 0 0 1 .853-5zm-4.787 5H3.226a9.234 9.234 0 0 1 1.792-5h2.984a17.952 17.952 0 0 0-.79 5zm0 1a17.952 17.952 0 0 0 .789 5H5.018a9.234 9.234 0 0 1-1.792-5zm1 0H12v5H9.065a16.827 16.827 0 0 1-.853-5zM12 19v2.728A4.533 4.533 0 0 1 9.46 19zm1 2.728V19h2.54A4.533 4.533 0 0 1 13 21.728zM13 18v-5h3.788a16.827 16.827 0 0 1-.853 5zm4.787-5h3.987a9.234 9.234 0 0 1-1.792 5h-2.984a17.952 17.952 0 0 0 .79-5zm0-1a17.952 17.952 0 0 0-.789-5h2.984a9.234 9.234 0 0 1 1.792 5zm1.352-6h-2.501a8.524 8.524 0 0 0-1.441-2.398A9.306 9.306 0 0 1 19.139 6zM9.803 3.602A8.524 8.524 0 0 0 8.363 6H5.86a9.306 9.306 0 0 1 3.942-2.398zM5.861 19h2.501a8.524 8.524 0 0 0 1.441 2.398A9.306 9.306 0 0 1 5.861 19zm9.336 2.398A8.524 8.524 0 0 0 16.637 19h2.502a9.306 9.306 0 0 1-3.942 2.398z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <span style={{ marginLeft: 6, marginBottom: 2 }}>마크다운 보기</span>
+                </div>,
+                <div
+                  key="json"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: 15,
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="platform-icon-web"
+                  >
+                    <path
+                      d="M20.501 6.028V6h-.02A10.28 10.28 0 0 0 4.519 6H4.5v.028a10.262 10.262 0 0 0 0 12.944V19h.02a10.28 10.28 0 0 0 15.962 0h.021v-.028a10.262 10.262 0 0 0 0-12.944zM13 6V3.272A4.533 4.533 0 0 1 15.54 6zm2.935 1a16.827 16.827 0 0 1 .853 5H13V7zM12 3.272V6H9.46A4.533 4.533 0 0 1 12 3.272zM12 7v5H8.212a16.827 16.827 0 0 1 .853-5zm-4.787 5H3.226a9.234 9.234 0 0 1 1.792-5h2.984a17.952 17.952 0 0 0-.79 5zm0 1a17.952 17.952 0 0 0 .789 5H5.018a9.234 9.234 0 0 1-1.792-5zm1 0H12v5H9.065a16.827 16.827 0 0 1-.853-5zM12 19v2.728A4.533 4.533 0 0 1 9.46 19zm1 2.728V19h2.54A4.533 4.533 0 0 1 13 21.728zM13 18v-5h3.788a16.827 16.827 0 0 1-.853 5zm4.787-5h3.987a9.234 9.234 0 0 1-1.792 5h-2.984a17.952 17.952 0 0 0 .79-5zm0-1a17.952 17.952 0 0 0-.789-5h2.984a9.234 9.234 0 0 1 1.792 5zm1.352-6h-2.501a8.524 8.524 0 0 0-1.441-2.398A9.306 9.306 0 0 1 19.139 6zM9.803 3.602A8.524 8.524 0 0 0 8.363 6H5.86a9.306 9.306 0 0 1 3.942-2.398zM5.861 19h2.501a8.524 8.524 0 0 0 1.441 2.398A9.306 9.306 0 0 1 5.861 19zm9.336 2.398A8.524 8.524 0 0 0 16.637 19h2.502a9.306 9.306 0 0 1-3.942 2.398z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <span style={{ marginLeft: 6, marginBottom: 2 }}>toJSON</span>
+                </div>,
+              ]}
+              defaultIndex={0}
+            >
+              <Tab>
+                {markdown && (
+                  <div className="markdown-container">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      urlTransform={urlTransform}
+                      components={{
+                        img: ({ src, alt, ...props }) => {
+                          if (src) {
+                            return (
+                              <img
+                                src={src}
+                                alt={alt || 'Image'}
+                                className="markdown-image"
+                                {...props}
+                              />
+                            );
+                          }
+                          return null;
+                        },
+                      }}
+                    >
+                      {markdown}
+                    </ReactMarkdown>
+                  </div>
+                )}
+              </Tab>
+              <Tab>
+                {json && (
+                  <div className="json-container">
+                    <pre className="json-content">{formatJson(json)}</pre>
+                  </div>
+                )}
+              </Tab>
+            </Tabs>
           </div>
         )}
 
