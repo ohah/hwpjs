@@ -73,6 +73,7 @@ lerna-debug.log*
 jsconfig.json
 
 # Rust
+**/target
 target/
 **/*.rs.bk
 
