@@ -461,10 +461,12 @@ refactor(core): reorganize modules to match HWP file structure
 
 ## 주의사항
 
-1. hwp-core를 제외한 나머지는 초기설정 단계이며 "Hello World" 수준의 코드만 포함
-2. 실제 Rust 구현은 이후 단계에서 진행
-3. Craby와 NAPI-RS 프로젝트 초기화는 각각의 CLI 도구로 진행 예정
-4. 파일 읽기 로직은 환경별로 다르게 구현되지만, 핵심 파싱 로직은 공유
+1. **hwp-core**: 핵심 HWP 파싱 로직이 구현되어 있으며, HWP 5.0 형식의 주요 기능을 지원합니다.
+2. **packages/hwpjs**: 멀티 플랫폼 패키지로 Node.js, Web, React Native 환경을 모두 지원합니다.
+   - NAPI-RS를 통한 Node.js/Web 바인딩
+   - Craby를 통한 React Native 바인딩
+3. **파일 읽기**: 환경별로 파일 읽기 로직이 다르게 구현되지만, 핵심 파싱 로직은 `hwp-core`에서 공유됩니다.
+4. **문서 변환**: 현재 마크다운 변환을 지원하며, 향후 PDF 등 추가 형식 지원 예정입니다.
 
 ## 로드맵 및 백로그
 
