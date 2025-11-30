@@ -515,25 +515,27 @@ refactor(core): reorganize modules to match HWP file structure
         "types": "./dist/react-native/index.d.mts",
         "default": "./dist/react-native/index.mjs"
       },
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
+      "browser": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/browser.js"
       },
-      "require": {
+      "node": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       },
-      "browser": "./browser.js",
-      "default": "./index.js"
-    }
+      "default": "./dist/browser.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
   }
 }
 ```
 
 - **react-native**: React Native 환경에서 자동으로 `dist/react-native/` 경로 사용
-- **import**: ESM 환경에서 `dist/index.mjs` 사용
-- **require**: CommonJS 환경에서 `dist/index.js` 사용
-- **browser**: 브라우저 환경에서 `browser.js` 사용 (WASI 폴백)
+- **browser**: 브라우저 환경에서 `dist/browser.js` 사용 (WASM 빌드)
+- **node**: Node.js 환경에서 `dist/index.js` 사용 (네이티브 모듈)
+- **default**: 기본값으로 `dist/browser.js` 사용
+- **./package.json**: 패키지 메타데이터 접근용 export
 
 ### 플랫폼별 바이너리 패키징
 
