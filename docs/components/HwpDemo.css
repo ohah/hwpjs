@@ -203,8 +203,35 @@
   color: #333;
 }
 
+.markdown-container tr:hover {
+  background: transparent !important;
+}
+
+.markdown-container tr:hover td,
+.markdown-container td:hover {
+  background: inherit !important;
+}
+
 .markdown-container tr:nth-child(even) {
   background: #fafafa;
+}
+
+.markdown-container tr:nth-child(even):hover {
+  background: #fafafa !important;
+}
+
+.markdown-container tr:nth-child(even):hover td,
+.markdown-container tr:nth-child(even) td:hover {
+  background: #fafafa !important;
+}
+
+.markdown-container tr:nth-child(odd):hover {
+  background: transparent !important;
+}
+
+.markdown-container tr:nth-child(odd):hover td,
+.markdown-container tr:nth-child(odd) td:hover {
+  background: transparent !important;
 }
 
 .markdown-image {
