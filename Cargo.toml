@@ -14,3 +14,9 @@ license = "MIT"
 
 [workspace.dependencies]
 
+[profile.release]
+lto = "fat"
+strip = true
+codegen-units = 1
+opt-level = "z"
+panic = "abort"

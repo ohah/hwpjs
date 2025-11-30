@@ -35,51 +35,59 @@ interface ExtractImagesResult {
 
 ### 배포 패키지 용량 최적화
 
-- **현재 상태**: npm 패키지 크기가 약 200MB로 매우 큼
+- **현재 상태**: npm 패키지 크기가 **131.67 MB** (이전 205.10 MB에서 약 36% 감소)
   - 주요 원인: React Native용 `.a` 정적 라이브러리 파일들이 여러 아키텍처에 대해 포함됨
   - Android: `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64` (4개 아키텍처)
   - iOS: `ios-arm64`, `ios-arm64_x86_64-simulator` (2개 아키텍처)
 - **목표**: 패키지 크기를 100MB 이하로 줄이기
-- **최적화 방법**:
-  1. **Rust 빌드 최적화**:
-     - `packages/hwpjs/crates/lib/Cargo.toml`에 `[profile.release]` 추가
-       - `lto = true` (Link Time Optimization)
-       - `strip = "symbols"` (디버그 심볼 제거)
+- **완료된 최적화**:
+  1. **Rust 빌드 최적화** ✅:
+     - 루트 `Cargo.toml`에 `[profile.release]` 추가 (workspace 전체 적용)
+       - `lto = "fat"` (Link Time Optimization - 공격적 최적화)
+       - `strip = true` (모든 디버그 정보 제거)
        - `codegen-units = 1` (단일 코드 생성 단위)
        - `opt-level = "z"` (최대 크기 최적화)
-       - `panic = "abort"` (unwind보다 작음, 약 5-10% 추가 감소)
+       - `panic = "abort"` (unwind보다 작음)
      - `crates/hwp-core/Cargo.toml`에도 동일한 최적화 적용
-  2. **빌드 산출물 제외 강화**:
+  2. **빌드 산출물 제외 강화** ✅:
      - `package.json`의 `files` 필드에 추가 제외 항목:
        - `!android/build/**`
+       - `!android/.cxx/**`
        - `!android/.gradle/**`
        - `!android/.idea/**`
        - `!ios/build/**`
        - `!ios/Pods/**`
        - `!ios/*.xcworkspace`
        - `!**/*.log`
-  3. **Android CMake 빌드 최적화**:
+  3. **Android CMake 빌드 최적화** ✅:
      - `packages/hwpjs/android/build.gradle`의 release 빌드에 최적화 플래그 추가:
        - `cppFlags "-O3 -flto -ffunction-sections -fdata-sections"`
+- **최적화 결과**:
+  - 이전 크기: 205.10 MB
+  - 현재 크기: 131.67 MB
+  - 감소량: 약 73.43 MB (36% 감소)
+  - 총 파일 수: 237개
+- **추가 최적화 가능 방법**:
   4. **선택적 아키텍처 제외** (트레이드오프):
-     - Android `x86`, `x86_64` 제외 시 약 30-50% 용량 감소 가능
+     - Android `x86`, `x86_64` 제외 시 약 37MB 추가 감소 가능
      - 하지만 에뮬레이터 사용 불가능해짐
      - 대안: postinstall 스크립트로 GitHub Releases에서 선택적 다운로드
-- **예상 효과**:
-  - Rust 빌드 최적화: 약 30-50% 크기 감소
-  - 빌드 산출물 제외: 약 5-10% 추가 감소
-  - 총 예상: 100-150MB 수준으로 감소 가능
+  5. **의존성 최적화**:
+     - `default-features = false` 적용으로 추가 3-7% 감소 가능
+  6. **링커 플래그 추가**:
+     - `--gc-sections`, `--as-needed` 플래그로 추가 2-5% 감소 가능
 - **영향 범위**:
-  - `packages/hwpjs/crates/lib/Cargo.toml`
+  - `Cargo.toml` (workspace 루트)
   - `crates/hwp-core/Cargo.toml`
   - `packages/hwpjs/package.json` (files 필드)
   - `packages/hwpjs/android/build.gradle`
+  - `packages/hwpjs/scripts/check-package-size.sh`
 - **참고사항**:
   - `.a` 파일 크기는 최종 앱 번들 크기에 직접적으로 영향을 줌
   - React Native 앱 빌드 시 `.a` 파일이 앱 번들에 포함됨
   - 따라서 패키지 크기 최적화는 앱 번들 크기 최적화로도 이어짐
 - **우선순위**: 높음
-- **상태**: 계획됨
+- **상태**: 진행 중 (131.67 MB → 목표 100MB 이하)
 
 ### Craby 심링크(symlink) 기능 추가
 
