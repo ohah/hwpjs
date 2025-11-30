@@ -6,7 +6,9 @@ export default defineConfig({
   base: '/hwpjs/',
   title: 'HWPJS',
   description: '한글과컴퓨터의 한/글 문서 파일(.hwp)을 읽고 파싱하는 라이브러리',
-  icon: '/logo.png',
+  icon: '/logo.svg',
+  logo: '/logo.svg',
+  logoText: 'HWPJS',
   themeConfig: {
     socialLinks: [
       {
