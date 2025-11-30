@@ -88,7 +88,6 @@
   color: #333;
   background: white;
   padding: 2rem;
-  border-radius: 8px;
 }
 
 .markdown-container h1 {
@@ -226,7 +225,6 @@
 
 .json-container {
   background: #f8f9fa;
-  border-radius: 8px;
   padding: 1rem;
   overflow-x: auto;
 }
