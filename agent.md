@@ -436,6 +436,24 @@ refactor(core): reorganize modules to match HWP file structure
 - **도구**: 
   - NAPI-RS: Node.js/Web용 네이티브 모듈 빌드
   - Craby: React Native 바인딩
+- **코드 위치**:
+  - **NAPI-RS 코드**: 
+    - `src/lib.rs`: NAPI-RS 바인딩 코드 (Node.js/Web용)
+    - `build.rs`: NAPI-RS 빌드 스크립트
+    - `npm/`: 플랫폼별 빌드 결과물 (`.node` 파일들)
+  - **Craby 코드**:
+    - `src-reactnative/`: TypeScript 바인딩 코드
+      - `index.ts`: React Native 모듈 진입점
+      - `NativeReactNative.ts`: 네이티브 모듈 타입 정의
+    - `crates/lib/`: Rust FFI 코드
+      - `src/ffi.rs`: CXX 브릿지 FFI 정의
+      - `src/generated.rs`: Crabygen으로 생성된 코드
+      - `src/hwpjs_impl.rs`: React Native 구현 로직
+      - `src/lib.rs`: 라이브러리 진입점
+    - `cpp/`: C++ 바인딩 코드
+      - `CxxHwpjsModule.cpp/hpp`: C++ 모듈 구현
+      - `bridging-generated.hpp`: CXX 브릿지 생성 코드
+    - `android/`, `ios/`: 플랫폼별 네이티브 코드
 - **테스트**: 
   - Node.js: Bun
   - React Native: Maestro (E2E)
