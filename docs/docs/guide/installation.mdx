@@ -1,56 +1,17 @@
 import { PackageManagerTabs } from '@theme';
+import { PlatformTabs } from '../../components/PlatformTabs';
 
 # 설치하기
 
 HWPJS는 여러 플랫폼에서 사용할 수 있습니다. 사용할 환경에 맞는 설치 방법을 선택하세요.
 
-## Node.js
-
-Node.js 환경에서는 다양한 패키지 매니저를 통해 설치할 수 있습니다.
+## 설치
 
 <PackageManagerTabs command="install @ohah/hwpjs" />
 
-### Deno 사용법
+## 플랫폼별 설정
 
-Deno에서는 npm 스펙을 사용하여 설치할 수 있습니다:
-
-```typescript
-import { toJson } from 'npm:@ohah/hwpjs';
-```
-
-또는 `deno.json`에 의존성을 추가할 수 있습니다:
-
-```json title="deno.json"
-{
-  "imports": {
-    "@ohah/hwpjs": "npm:@ohah/hwpjs@^1.0.0"
-  }
-}
-```
-
-### 사용 예제
-
-```typescript
-import { readFileSync } from 'fs';
-import { toJson } from '@ohah/hwpjs';
-
-const fileBuffer = readFileSync('./document.hwp');
-const data = new Uint8Array(fileBuffer);
-const result = toJson(data);
-console.log(result);
-```
-
-## Web
-
-Web 환경에서는 WASM을 통해 사용할 수 있습니다.
-
-### 설치
-
-npm, yarn, pnpm 등 패키지 매니저를 통해 설치할 수 있습니다:
-
-<PackageManagerTabs command="install @ohah/hwpjs" />
-
-### Buffer Polyfill 설정
+### Web - Buffer Polyfill 설정
 
 Web 환경에서는 napi-rs WASM 호환성을 위해 `Buffer` polyfill이 필요합니다. 진입점 파일(예: `main.tsx`, `index.ts`)에서 **가장 먼저** `buffer-polyfill.ts`를 import해야 합니다.
 
@@ -87,72 +48,89 @@ import * as hwpjs from '@ohah/hwpjs';
 // ... 나머지 코드
 ```
 
-### 사용 예제
+### React Native
+
+iOS와 Android 프로젝트는 자동으로 설정됩니다. 추가 설정이 필요하지 않습니다.
+
+### Deno
+
+Deno에서는 npm 스펙을 사용하여 설치할 수 있습니다:
 
 ```typescript
-// buffer-polyfill을 먼저 import한 후
-import * as hwpjs from '@ohah/hwpjs';
-
-// 파일 입력에서 HWP 파일 읽기
-const fileInput = document.querySelector('input[type="file"]');
-fileInput.addEventListener('change', async (e) => {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-
-  const arrayBuffer = await file.arrayBuffer();
-  const data = new Uint8Array(arrayBuffer);
-
-  // JSON으로 변환
-  const jsonResult = hwpjs.toJson(data);
-  console.log(jsonResult);
-
-  // 마크다운으로 변환
-  const markdownResult = hwpjs.toMarkdown(data, {
-    image: 'base64', // 또는 'blob'
-    useHtml: true,
-    includeVersion: true,
-    includePageInfo: false,
-  });
-  console.log(markdownResult.markdown);
-});
+import { toJson } from 'npm:@ohah/hwpjs';
 ```
 
-### Vite/Webpack 등 번들러 사용 시
+또는 `deno.json`에 의존성을 추가할 수 있습니다:
 
-Web 환경에서는 자동으로 WASM 빌드가 사용됩니다. 단, `buffer-polyfill.ts`를 가장 먼저 import하는 것을 잊지 마세요.
-
-더 자세한 예제는 [예제 페이지](./examples)를 참고하세요.
-
-## React Native
-
-React Native 환경에서는 Craby를 통해 네이티브 모듈로 사용할 수 있습니다.
-
-### 설치
-
-<PackageManagerTabs command="install @ohah/hwpjs" />
-
-### iOS 설정
-iOS 프로젝트는 자동으로 설정됩니다. 추가 설정이 필요하지 않습니다.
-
-### Android 설정
-
-Android 프로젝트는 자동으로 설정됩니다. 추가 설정이 필요하지 않습니다.
-
-### 사용 예제
-
-```typescript
-import { Hwpjs } from '@ohah/hwpjs';
-import RNFS from 'react-native-fs';
-
-// 파일을 읽어서 number[]로 변환
-const filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
-const fileData = await RNFS.readFile(filePath, 'base64');
-const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
-
-// HWP 파일 파싱
-const result = Hwpjs.toJson(numberArray);
-console.log(result);
+```json title="deno.json"
+{
+  "imports": {
+    "@ohah/hwpjs": "npm:@ohah/hwpjs@^1.0.0"
+  }
+}
 ```
+
+## 사용 예제
+
+<PlatformTabs defaultPlatform="web">
+  <div data-platform="node">
+    ```typescript
+    import { readFileSync } from 'fs';
+    import { toJson } from '@ohah/hwpjs';
+
+    const fileBuffer = readFileSync('./document.hwp');
+    const data = new Uint8Array(fileBuffer);
+    const result = toJson(data);
+    console.log(result);
+    ```
+  </div>
+
+  <div data-platform="web">
+    ```typescript
+    // buffer-polyfill을 먼저 import한 후
+    import * as hwpjs from '@ohah/hwpjs';
+
+    // 파일 입력에서 HWP 파일 읽기
+    const fileInput = document.querySelector('input[type="file"]');
+    fileInput.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const arrayBuffer = await file.arrayBuffer();
+      const data = new Uint8Array(arrayBuffer);
+
+      // JSON으로 변환
+      const jsonResult = hwpjs.toJson(data);
+      console.log(jsonResult);
+
+      // 마크다운으로 변환
+      const markdownResult = hwpjs.toMarkdown(data, {
+        image: 'base64', // 또는 'blob'
+        useHtml: true,
+        includeVersion: true,
+        includePageInfo: false,
+      });
+      console.log(markdownResult.markdown);
+    });
+    ```
+  </div>
+
+  <div data-platform="react-native">
+    ```typescript
+    import { Hwpjs } from '@ohah/hwpjs';
+    import RNFS from 'react-native-fs';
+
+    // 파일을 읽어서 number[]로 변환
+    const filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
+    const fileData = await RNFS.readFile(filePath, 'base64');
+    const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+    // HWP 파일 파싱
+    const result = Hwpjs.toJson(numberArray);
+    console.log(result);
+    ```
+  </div>
+</PlatformTabs>
 
 더 자세한 예제는 [예제 페이지](./examples)를 참고하세요.
 
