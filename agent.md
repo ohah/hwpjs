@@ -32,9 +32,11 @@ hwpjs/
 │           ├── document/  # 문서 파싱 모듈
 │           └── viewer/     # 문서 변환/뷰어 모듈 (마크다운, PDF(지원 예정) 등)
 ├── packages/
-│   ├── react-native/      # React Native용 래퍼 (Craby 사용)
-│   └── hwpjs/             # Node.js용 래퍼 (NAPI-RS 사용)
+│   └── hwpjs/             # 멀티 플랫폼 패키지 (Node.js, Web, React Native)
 ├── examples/              # 사용 예제 코드
+│   ├── node/              # Node.js 예제
+│   ├── web/               # Web 예제
+│   └── react-native/      # React Native 예제
 ├── docs/                  # 문서 사이트 (Rspress)
 └── legacy/                # 기존 JavaScript 구현
 ```
@@ -123,18 +125,17 @@ src/
 
 ### 환경별 래퍼
 
-#### `packages/react-native`
-- Craby를 사용하여 React Native 환경에서 사용 가능
-- `hwp-core`를 의존성으로 사용
-- React Native 환경의 파일 읽기 구현
-- Maestro를 사용한 E2E 테스트
-
-#### `packages/node`
-- NAPI-RS를 사용하여 Node.js 네이티브 모듈 생성
-- `hwp-core`를 의존성으로 사용
-- Node.js 환경의 파일 읽기 구현
-- Vitest를 사용한 유닛 테스트
-- tsdown을 사용한 배포
+#### `packages/hwpjs`
+- 멀티 플랫폼 패키지 (Node.js, Web, React Native 모두 지원)
+- **Node.js/Web**: NAPI-RS를 사용하여 네이티브 모듈 생성
+  - `hwp-core`를 의존성으로 사용
+  - Node.js 환경의 파일 읽기 구현
+  - Bun을 사용한 유닛 테스트
+  - tsdown을 사용한 배포
+- **React Native**: Craby를 사용하여 React Native 바인딩
+  - `hwp-core`를 의존성으로 사용
+  - React Native 환경의 파일 읽기 구현
+  - Maestro를 사용한 E2E 테스트
 
 ## 워크스페이스 설정
 
@@ -383,17 +384,15 @@ refactor(core): reorganize modules to match HWP file structure
   - 스냅샷 파일은 `src/snapshots/` 디렉토리에 저장
   - 스냅샷 변경 시 `cargo insta review`로 검토 및 승인
 
-### `packages/react-native(지원 X)`
-- **역할**: React Native 환경에서 HWP 파일 읽기
-- **의존성**: `hwp-core`
-- **도구**: Craby
-- **테스트**: Maestro
-
 ### `packages/hwpjs`
-- **역할**: Node.js 환경에서 HWP 파일 읽기
+- **역할**: 멀티 플랫폼 패키지 (Node.js, Web, React Native 모두 지원)
 - **의존성**: `hwp-core`
-- **도구**: NAPI-RS
-- **테스트**: Bun
+- **도구**: 
+  - NAPI-RS: Node.js/Web용 네이티브 모듈 빌드
+  - Craby: React Native 바인딩
+- **테스트**: 
+  - Node.js: Bun
+  - React Native: Maestro (E2E)
 - **배포**: tsdown
 
 ### `examples/`
