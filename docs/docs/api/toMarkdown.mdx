@@ -16,7 +16,6 @@ function toMarkdown(data: Buffer, options?: ToMarkdownOptions): ToMarkdownResult
 
 변환할 HWP 파일의 바이트 배열입니다 (Buffer 또는 Uint8Array).
 
-<<<<<<< HEAD
 **예제:**
 ```typescript
 import { readFileSync } from 'fs';
@@ -47,7 +46,6 @@ interface ToMarkdownOptions {
 
 ### `ToMarkdownResult`
 
-<<<<<<< HEAD
 변환된 마크다운 문자열과 이미지 데이터를 포함하는 객체입니다.
 
 **Web/Node.js:**
@@ -235,9 +233,6 @@ interface ToMarkdownResult {
 ## 참고
 
 - 이 함수는 Rust로 구현된 `hwp-core` 라이브러리를 사용하여 HWP 파일을 파싱하고 마크다운으로 변환합니다.
-<<<<<<< HEAD
 - 표 내용은 마크다운 테이블 형식으로 변환됩니다.
 - 이미지는 base64 데이터 URI로 임베드하거나 별도 배열로 받을 수 있습니다.
-=======
 - 향후 PDF 등 다른 형식으로의 변환도 지원할 예정입니다.
->>>>>>> 6446b29 (fix(docs): update API documentation examples to match actual code)
