@@ -12,7 +12,7 @@
 - **반환 타입**: 옵션으로 파일 경로 리스트 또는 이미지 데이터(바이트) 배열 지원
 - **TypeScript 선언**: `extractImages(data: Array<number>, options?: ExtractImagesOptions): ExtractImagesResult`
 - **관련 함수**: `extract_images_to_dir` (디렉토리에 저장하는 버전)
-- **버전**: 0.1.0-rc.1부터 지원 예정
+- **버전**: 0.1.0-rc.2부터 지원 예정
 - **상태**: 계획됨
 - **구현 위치**:
   - Rust: `crates/hwp-core/src/viewer/image.rs` (새 파일)
