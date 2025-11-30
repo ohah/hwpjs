@@ -57,16 +57,23 @@ const data = new Uint8Array(fileBuffer);
 
   <div data-platform="react-native">
     ```typescript
-    import { toJson } from '@ohah/hwpjs';
+    import { Hwpjs } from '@ohah/hwpjs';
     import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
 
-    // 파일을 읽어서 number[]로 변환
-    const filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
+    // 파일 경로 설정
+    const filePath = Platform.OS === 'ios' 
+      ? `${RNFS.MainBundlePath}/document.hwp`
+      : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+
+    // 파일을 base64로 읽기
     const fileData = await RNFS.readFile(filePath, 'base64');
+
+    // base64를 number[]로 변환
     const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
 
     // HWP 파일 파싱
-    const result = toJson(numberArray);
+    const result = Hwpjs.toJson(numberArray);
     console.log(result);
     ```
   </div>
@@ -77,8 +84,7 @@ const data = new Uint8Array(fileBuffer);
     import { toJson } from '@ohah/hwpjs';
 
     const fileBuffer = readFileSync('./document.hwp');
-    const data = new Uint8Array(fileBuffer);
-    const result = toJson(data);
+    const result = toJson(fileBuffer);
     console.log(result);
     ```
   </div>
@@ -104,14 +110,17 @@ const data = new Uint8Array(fileBuffer);
 
   <div data-platform="react-native">
     ```typescript
-    import { toJson } from '@ohah/hwpjs';
+    import { Hwpjs } from '@ohah/hwpjs';
     import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
 
     try {
-      const filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
+      const filePath = Platform.OS === 'ios' 
+        ? `${RNFS.MainBundlePath}/document.hwp`
+        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
       const fileData = await RNFS.readFile(filePath, 'base64');
       const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
-      const result = toJson(numberArray);
+      const result = Hwpjs.toJson(numberArray);
       console.log(result);
     } catch (error) {
       console.error('변환 실패:', error);
@@ -126,8 +135,7 @@ const data = new Uint8Array(fileBuffer);
 
     try {
       const fileBuffer = readFileSync('./document.hwp');
-      const data = new Uint8Array(fileBuffer);
-      const result = toJson(data);
+      const result = toJson(fileBuffer);
       console.log(result);
     } catch (error) {
       console.error('변환 실패:', error);

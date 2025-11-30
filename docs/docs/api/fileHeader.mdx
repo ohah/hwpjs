@@ -68,16 +68,23 @@ FileHeader에는 다음 정보가 포함됩니다:
 
   <div data-platform="react-native">
     ```typescript
-    import { fileHeader } from '@ohah/hwpjs';
+    import { Hwpjs } from '@ohah/hwpjs';
     import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
 
-    // 파일을 읽어서 number[]로 변환
-    const filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
+    // 파일 경로 설정
+    const filePath = Platform.OS === 'ios' 
+      ? `${RNFS.MainBundlePath}/document.hwp`
+      : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+
+    // 파일을 base64로 읽기
     const fileData = await RNFS.readFile(filePath, 'base64');
+
+    // base64를 number[]로 변환
     const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
 
     // FileHeader 추출
-    const result = fileHeader(numberArray);
+    const result = Hwpjs.fileHeader(numberArray);
     const header = JSON.parse(result);
 
     console.log('버전:', header.version);
@@ -92,8 +99,7 @@ FileHeader에는 다음 정보가 포함됩니다:
     import { fileHeader } from '@ohah/hwpjs';
 
     const fileBuffer = readFileSync('./document.hwp');
-    const data = new Uint8Array(fileBuffer);
-    const result = fileHeader(data);
+    const result = fileHeader(fileBuffer);
     const header = JSON.parse(result);
 
     console.log('버전:', header.version);
@@ -124,14 +130,17 @@ FileHeader에는 다음 정보가 포함됩니다:
 
   <div data-platform="react-native">
     ```typescript
-    import { fileHeader } from '@ohah/hwpjs';
+    import { Hwpjs } from '@ohah/hwpjs';
     import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
 
     try {
-      const filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
+      const filePath = Platform.OS === 'ios' 
+        ? `${RNFS.MainBundlePath}/document.hwp`
+        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
       const fileData = await RNFS.readFile(filePath, 'base64');
       const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
-      const result = fileHeader(numberArray);
+      const result = Hwpjs.fileHeader(numberArray);
       const header = JSON.parse(result);
       console.log('FileHeader:', header);
     } catch (error) {
@@ -147,8 +156,7 @@ FileHeader에는 다음 정보가 포함됩니다:
 
     try {
       const fileBuffer = readFileSync('./document.hwp');
-      const data = new Uint8Array(fileBuffer);
-      const result = fileHeader(data);
+      const result = fileHeader(fileBuffer);
       const header = JSON.parse(result);
       console.log('FileHeader:', header);
     } catch (error) {
