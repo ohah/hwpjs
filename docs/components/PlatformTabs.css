@@ -1,0 +1,24 @@
+/* Web icon: 기본적으로 currentColor를 따름 (텍스트 색상과 동일) */
+.platform-icon-web {
+  color: currentColor;
+}
+
+/* 다크 테마에서 활성화된 탭의 웹 아이콘: 원래 색상(흰색) 유지 */
+@media (prefers-color-scheme: dark) {
+  .rp-tabs__label__item--selected .platform-icon-web {
+    color: #fff;
+  }
+}
+
+:root[data-theme='dark'] .rp-tabs__label__item--selected .platform-icon-web,
+html[data-theme='dark'] .rp-tabs__label__item--selected .platform-icon-web {
+  color: #fff;
+}
+
+/* 아이콘 스타일 */
+.rp-tabs__label__item svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
