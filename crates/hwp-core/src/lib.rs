@@ -12,7 +12,8 @@ pub use cfb::CfbParser;
 pub use decompress::{decompress_deflate, decompress_zlib};
 pub use document::{
     BinData, BinDataRecord, BodyText, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties,
-    FaceName, FileHeader, HwpDocument, IdMappings, Numbering, ParaShape, Section, TabDef,
+    FaceName, FileHeader, HwpDocument, IdMappings, Numbering, ParaShape, Section,
+    SummaryInformation, TabDef,
 };
 pub use types::{
     RecordHeader, BYTE, COLORREF, DWORD, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT,
@@ -136,6 +137,75 @@ impl HwpParser {
                 Err(e) => {
                     eprintln!("Warning: Failed to parse XMLTemplate storage: {}", e);
                 }
+            }
+        }
+
+        // Parse SummaryInformation stream
+        // 문서 요약 스트림 파싱 / Parse summary information stream
+        // 스펙 문서 3.2.4: \005HwpSummaryInformation 스트림에는 문서 요약 정보가 MSDN Property Set 형식으로 저장됩니다.
+        // Spec 3.2.4: \005HwpSummaryInformation stream contains document summary information stored in MSDN Property Set format.
+        // 스트림 이름은 "\005HwpSummaryInformation" (바이트: 0x05 + "HwpSummaryInformation")
+        // Stream name is "\005HwpSummaryInformation" (bytes: 0x05 + "HwpSummaryInformation")
+        // 여러 가능한 스트림 이름 시도 / Try multiple possible stream names
+        // CFB 라이브러리는 특수 문자를 포함한 스트림 이름을 처리할 수 있도록 바이트 배열로 변환 필요
+        // CFB library may need byte array conversion for stream names with special characters
+
+        // 여러 가능한 스트림 이름 시도 / Try multiple possible stream names
+        let summary_data = CfbParser::read_stream(&mut cfb, "\u{0005}HwpSummaryInformation")
+            .or_else(|e| {
+                eprintln!(
+                    "Debug: Failed to read with \\u{{0005}}HwpSummaryInformation: {}",
+                    e
+                );
+                CfbParser::read_stream(&mut cfb, "\x05HwpSummaryInformation")
+            })
+            .or_else(|e| {
+                eprintln!(
+                    "Debug: Failed to read with \\x05HwpSummaryInformation: {}",
+                    e
+                );
+                // CFB 라이브러리는 문자열만 받으므로, 다른 방법 시도
+                // CFB library only accepts strings, so try alternative
+                CfbParser::read_stream(&mut cfb, "HwpSummaryInformation")
+            })
+            .or_else(|e| {
+                // If all string-based attempts fail, try parsing CFB bytes directly
+                // 모든 문자열 기반 시도가 실패하면 CFB 바이트를 직접 파싱 시도
+                eprintln!("Debug: All string-based attempts failed, trying direct byte parsing for \\005HwpSummaryInformation. Last error: {}", e);
+                let stream_name_bytes = b"\x05HwpSummaryInformation";
+                CfbParser::read_stream_by_bytes(data, stream_name_bytes)
+            });
+
+        match summary_data {
+            Ok(data) => {
+                eprintln!(
+                    "Debug: Successfully read SummaryInformation stream, size: {} bytes",
+                    data.len()
+                );
+                if data.len() >= 2 {
+                    eprintln!("Debug: Byte order: 0x{:02X}{:02X}", data[0], data[1]);
+                }
+                match crate::document::SummaryInformation::parse(&data) {
+                    Ok(summary_information) => {
+                        eprintln!("Debug: Successfully parsed SummaryInformation");
+                        document.summary_information = Some(summary_information);
+                    }
+                    Err(e) => {
+                        eprintln!("Warning: Failed to parse SummaryInformation stream: {}", e);
+                        eprintln!("  Stream size: {} bytes", data.len());
+                        if data.len() >= 40 {
+                            eprintln!("  First 40 bytes: {:?}", &data[..40]);
+                            eprintln!("  Byte order: 0x{:02X}{:02X}", data[0], data[1]);
+                            eprintln!("  Version: 0x{:02X}{:02X}", data[2], data[3]);
+                        }
+                        // 파싱 실패 시 None으로 유지 (raw_data 저장 안 함) / Keep None on parse failure (don't store raw_data)
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Warning: Failed to read SummaryInformation stream: {}", e);
+                eprintln!("  Tried: \\u{{0005}}HwpSummaryInformation, \\x05HwpSummaryInformation, HwpSummaryInformation");
+                // 스트림이 없으면 None으로 유지 (정상) / Keep None if stream doesn't exist (normal)
             }
         }
 

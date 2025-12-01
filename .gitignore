@@ -150,3 +150,6 @@ doc_build/
 legacy/hwp.js/
 legacy/java-hwp/
 legacy/pyhwp/
+legacy/hwp-rs/
+legacy/libhwp/
+legacy/hwplib/
