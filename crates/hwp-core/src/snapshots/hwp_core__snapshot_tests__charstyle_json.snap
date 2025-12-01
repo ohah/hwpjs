@@ -1615,5 +1615,20 @@ expression: json
     },
     "default_script": null
   },
-  "xml_template": null
+  "xml_template": null,
+  "summary_information": {
+    "title": "",
+    "subject": "",
+    "author": "user",
+    "keywords": "",
+    "comments": "",
+    "last_saved_by": "user",
+    "revision_number": "6, 5, 0, 825 WIN6",
+    "last_printed": "1970-01-01T00:00:00+09:00",
+    "create_time": "2013-06-13T06:58:57+09:00",
+    "last_saved_time": "2013-06-13T06:59:55+09:00",
+    "page_count": 0,
+    "date_string": "2013년 6월 13일 목요일 오전 6:58:57",
+    "para_count": 0
+  }
 }

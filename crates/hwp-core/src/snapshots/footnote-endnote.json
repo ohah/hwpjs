@@ -2071,5 +2071,20 @@
     },
     "default_script": null
   },
-  "xml_template": null
+  "xml_template": null,
+  "summary_information": {
+    "title": "각주참조",
+    "subject": "",
+    "author": "user",
+    "keywords": "",
+    "comments": "",
+    "last_saved_by": "user",
+    "revision_number": "6, 5, 0, 825 WIN6",
+    "last_printed": "1970-01-01T00:00:00+09:00",
+    "create_time": "2014-03-03T15:26:12+09:00",
+    "last_saved_time": "2014-03-03T15:49:46+09:00",
+    "page_count": 0,
+    "date_string": "2014년 3월 3일 월요일 오후 3:26:12",
+    "para_count": 0
+  }
 }

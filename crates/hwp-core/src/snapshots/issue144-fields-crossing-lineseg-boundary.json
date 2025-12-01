@@ -1974,5 +1974,20 @@
     },
     "default_script": null
   },
-  "xml_template": null
+  "xml_template": null,
+  "summary_information": {
+    "title": "issue144-fields-crossing-lineseg-boundary",
+    "subject": "fields crossing lineseg/paragraph boundary",
+    "author": "user",
+    "keywords": "",
+    "comments": "",
+    "last_saved_by": "user",
+    "revision_number": "6, 5, 0, 825 WIN6",
+    "last_printed": "1970-01-01T00:00:00+09:00",
+    "create_time": "2014-02-25T15:33:29+09:00",
+    "last_saved_time": "2014-02-25T15:41:32+09:00",
+    "page_count": 1,
+    "date_string": "2014년 2월 25일 화요일 오후 3:33:29",
+    "para_count": 3
+  }
 }

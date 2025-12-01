@@ -2446,5 +2446,20 @@ expression: json
     },
     "default_script": null
   },
-  "xml_template": null
+  "xml_template": null,
+  "summary_information": {
+    "title": "문단1",
+    "subject": "",
+    "author": "mete0r",
+    "keywords": "",
+    "comments": "",
+    "last_saved_by": "mete0r",
+    "revision_number": "6, 7, 9, 1053 WIN6",
+    "last_printed": "1970-01-01T00:00:00+09:00",
+    "create_time": "2011-08-24T22:32:04+09:00",
+    "last_saved_time": "2011-08-24T23:35:12+09:00",
+    "page_count": 0,
+    "date_string": "2011년 8월 24일 수요일 오후 10:32:04",
+    "para_count": 0
+  }
 }

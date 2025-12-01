@@ -12024,5 +12024,20 @@
     },
     "default_script": null
   },
-  "xml_template": null
+  "xml_template": null,
+  "summary_information": {
+    "title": "",
+    "subject": "",
+    "author": "user",
+    "keywords": "",
+    "comments": "",
+    "last_saved_by": "user",
+    "revision_number": "6, 5, 0, 825 WIN6",
+    "last_printed": "1970-01-01T00:00:00+09:00",
+    "create_time": "2014-11-06T13:51:07+09:00",
+    "last_saved_time": "2014-11-06T17:08:44+09:00",
+    "page_count": 0,
+    "date_string": "2014년 11월 6일 목요일 오후 1:51:07",
+    "para_count": 0
+  }
 }

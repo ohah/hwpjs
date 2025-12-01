@@ -19807,5 +19807,20 @@ expression: json
     },
     "default_script": null
   },
-  "xml_template": null
+  "xml_template": null,
+  "summary_information": {
+    "title": "2",
+    "subject": "",
+    "author": "이은지",
+    "keywords": "",
+    "comments": "",
+    "last_saved_by": "Administrator",
+    "revision_number": "8, 0, 0, 466 WIN32LEWindows_7",
+    "last_printed": "1970-01-01T00:00:00+09:00",
+    "create_time": "2014-02-11T11:24:40+09:00",
+    "last_saved_time": "2021-07-26T18:29:14+09:00",
+    "page_count": 0,
+    "date_string": "2014년 2월 11일 화요일 오전 11:24:40",
+    "para_count": 0
+  }
 }

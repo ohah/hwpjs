@@ -3764,5 +3764,20 @@ expression: json
     },
     "default_script": null
   },
-  "xml_template": null
+  "xml_template": null,
+  "summary_information": {
+    "title": "",
+    "subject": "",
+    "author": "",
+    "keywords": "",
+    "comments": "",
+    "last_saved_by": "mete0r",
+    "revision_number": "6, 7, 9, 1053 WIN6",
+    "last_printed": "1970-01-01T00:00:00+09:00",
+    "create_time": "2011-08-06T02:00:06+09:00",
+    "last_saved_time": "2011-08-14T19:57:32+09:00",
+    "page_count": 1,
+    "date_string": "2011년 8월 14일 일요일 오후 7:57:32",
+    "para_count": 26
+  }
 }

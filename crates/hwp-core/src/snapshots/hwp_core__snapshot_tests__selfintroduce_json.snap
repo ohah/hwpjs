@@ -2986,5 +2986,20 @@ expression: json
     },
     "default_script": null
   },
-  "xml_template": null
+  "xml_template": null,
+  "summary_information": {
+    "title": "나를 소개 합니다",
+    "subject": "",
+    "author": "지현",
+    "keywords": "",
+    "comments": "",
+    "last_saved_by": "지현",
+    "revision_number": "8, 0, 0, 466 WIN32LEWindows_7",
+    "last_printed": "1970-01-01T00:00:00+09:00",
+    "create_time": "2022-11-10T06:14:21+09:00",
+    "last_saved_time": "2022-11-10T06:39:47+09:00",
+    "page_count": 0,
+    "date_string": "2022년 11월 10일 목요일 오전 6:14:21",
+    "para_count": 0
+  }
 }

@@ -3574,5 +3574,20 @@ expression: json
     },
     "default_script": null
   },
-  "xml_template": null
+  "xml_template": null,
+  "summary_information": {
+    "title": "◆ 삼강오륜",
+    "subject": "",
+    "author": "dongk",
+    "keywords": "",
+    "comments": "",
+    "last_saved_by": "지현",
+    "revision_number": "8, 0, 0, 466 WIN32LEWindows_7",
+    "last_printed": "1970-01-01T00:00:00+09:00",
+    "create_time": "2019-09-14T12:22:19+09:00",
+    "last_saved_time": "2022-11-10T06:48:50+09:00",
+    "page_count": 0,
+    "date_string": "2019년 9월 14일 토요일 오후 12:22:19",
+    "para_count": 0
+  }
 }

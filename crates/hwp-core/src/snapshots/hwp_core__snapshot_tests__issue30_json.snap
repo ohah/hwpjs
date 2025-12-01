@@ -1654,5 +1654,20 @@ expression: json
     },
     "default_script": null
   },
-  "xml_template": null
+  "xml_template": null,
+  "summary_information": {
+    "title": "ODT 변환 시 원문에 없는 공백이 띄엄띄엄 나타남 ODT 변환 시 중간 중간에 공백 문자들이 들어가는 현상이 발생한다",
+    "subject": "",
+    "author": "mete0r",
+    "keywords": "",
+    "comments": "",
+    "last_saved_by": "mete0r",
+    "revision_number": "6, 7, 9, 1053 WIN6",
+    "last_printed": "1970-01-01T00:00:00+09:00",
+    "create_time": "2011-12-07T10:33:23+09:00",
+    "last_saved_time": "2011-12-07T10:37:44+09:00",
+    "page_count": 0,
+    "date_string": "2011년 12월 7일 수요일 오전 10:33:23",
+    "para_count": 0
+  }
 }
