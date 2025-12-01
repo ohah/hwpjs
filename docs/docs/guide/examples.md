@@ -249,6 +249,44 @@ test('toJson should convert HWP file to JSON', () => {
 });
 ```
 
+## CLI 예제
+
+명령줄에서 직접 HWP 파일을 변환할 수 있습니다.
+
+### 기본 사용법
+
+```bash
+# 전역 설치
+npm install -g @ohah/hwpjs
+
+# JSON 변환
+hwpjs to-json document.hwp -o output.json --pretty
+
+# Markdown 변환
+hwpjs to-markdown document.hwp -o output.md --include-images
+
+# 파일 정보 확인
+hwpjs info document.hwp
+
+# 이미지 추출
+hwpjs extract-images document.hwp -o ./images
+
+# 배치 변환
+hwpjs batch ./documents -o ./output --format json --recursive
+```
+
+### 스크립트에서 사용
+
+```bash
+#!/bin/bash
+# 모든 HWP 파일을 JSON으로 변환
+for file in *.hwp; do
+  hwpjs to-json "$file" -o "${file%.hwp}.json" --pretty
+done
+```
+
+더 자세한 내용은 [CLI 가이드](./cli)를 참고하세요.
+
 ## 참고
 
 더 많은 예제는 프로젝트의 [examples 디렉토리](https://github.com/ohah/hwpjs/tree/main/examples)를 확인하세요.

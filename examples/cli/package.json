@@ -1,0 +1,20 @@
+{
+  "name": "@hwpjs/cli-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "example:json": "hwpjs to-json ../fixtures/example.hwp -o output.json --pretty",
+    "example:markdown": "hwpjs to-markdown ../fixtures/example.hwp -o output.md",
+    "example:info": "hwpjs info ../fixtures/example.hwp",
+    "example:images": "hwpjs extract-images ../fixtures/sample-5017-pics.hwp -o ./images",
+    "example:batch": "hwpjs batch ../fixtures -o ./output --format json --recursive"
+  },
+  "dependencies": {
+    "@ohah/hwpjs": "workspace:*"
+  },
+  "engines": {
+    "node": ">=20.6.0"
+  }
+}
+
