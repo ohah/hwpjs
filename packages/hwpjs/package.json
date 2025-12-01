@@ -46,6 +46,7 @@
     "index.d.ts",
     "index.js",
     "browser.js",
+    "bin",
     "dist",
     "android",
     "ios",
@@ -97,7 +98,8 @@
     "build:web:wasm": "napi build --target wasm32-wasip1-threads --release --package hwpjs-napi --output-dir dist",
     "build:node": "bun run build:node:windows-x64 && bun run build:node:windows-x86 && bun run build:node:windows-arm64 && bun run build:node:macos-x64 && bun run build:node:macos-arm64 && bun run build:web:wasm && bun run build:node:linux-x64",
     "build:node:all": "bun run build:node:windows-x64 || true && bun run build:node:windows-x86 || true && bun run build:node:windows-arm64 || true && bun run build:node:macos-x64 || true && bun run build:node:macos-arm64 || true && bun run build:web:wasm || true && bun run build:node:linux-x64",
-    "build": "bun run build:node && bun run build:react-native",
+    "build:cli": "tsc --project tsconfig.cli.json",
+    "build": "bun run build:node && bun run build:react-native && bun run build:cli",
     "prepare:artifacts": "napi create-npm-dirs",
     "postbuild:node:all": "bun run scripts/rename-wasm.ts",
     "postprepublishOnly": "bun run scripts/cleanup-root.ts",
@@ -116,11 +118,15 @@
     "craby:build": "craby build",
     "craby:clean": "craby clean"
   },
+  "bin": {
+    "hwpjs": "./bin/hwpjs.js"
+  },
   "devDependencies": {
     "@emnapi/core": "^1.5.0",
     "@emnapi/runtime": "^1.5.0",
     "@napi-rs/cli": "^3.2.0",
     "@oxc-node/core": "^0.0.34",
+    "commander": "^14.0.0",
     "craby-modules": "^0.1.0-rc.2",
     "@react-native-community/cli-types": "^20.0.2",
     "@taplo/cli": "^0.7.0",
