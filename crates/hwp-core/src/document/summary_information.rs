@@ -16,7 +16,7 @@ use crate::types::{INT32, UINT32};
 use serde::{Deserialize, Serialize};
 
 /// 문서 요약 정보 / Document summary information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SummaryInformation {
     /// 제목 / Title (PIDSI_TITLE, 0x00000002)
     pub title: Option<String>,
@@ -185,38 +185,10 @@ impl SummaryInformation {
     /// Parses MSDN Property Set format.
     pub fn parse(data: &[u8]) -> Result<Self, String> {
         if data.is_empty() {
-            return Ok(SummaryInformation {
-                title: None,
-                subject: None,
-                author: None,
-                keywords: None,
-                comments: None,
-                last_saved_by: None,
-                revision_number: None,
-                last_printed: None,
-                create_time: None,
-                last_saved_time: None,
-                page_count: None,
-                date_string: None,
-                para_count: None,
-            });
+            return Ok(SummaryInformation::default());
         }
 
-        let mut result = SummaryInformation {
-            title: None,
-            subject: None,
-            author: None,
-            keywords: None,
-            comments: None,
-            last_saved_by: None,
-            revision_number: None,
-            last_printed: None,
-            create_time: None,
-            last_saved_time: None,
-            page_count: None,
-            date_string: None,
-            para_count: None,
-        };
+        let mut result = SummaryInformation::default();
 
         // MSDN Property Set 형식 파싱 / Parse MSDN Property Set format
         // PropertySetStreamHeader 구조:
@@ -399,11 +371,6 @@ impl SummaryInformation {
         // Property 파싱: 먼저 codepage를 찾고, 그 다음 모든 property 파싱
         let mut codepage: u16 = 0xFFFF; // Default: invalid codepage
 
-        eprintln!("=== SummaryInformation Parsing Debug ===");
-        eprintln!("Total properties: {}", num_properties);
-        eprintln!("Property set start: {}", property_set_start);
-        eprintln!("Property entries start: {}", property_entries_start);
-
         for i in 0..num_properties {
             let entry_offset = property_entries_start + (i as usize * 8);
 
@@ -448,184 +415,66 @@ impl SummaryInformation {
 
             // Find codepage first
             if property_id == property_ids::PID_CODEPAGE {
-                let raw_bytes = if value_data_offset + 16 <= data.len() {
-                    &data[value_data_offset..value_data_offset + 16]
-                } else {
-                    &data[value_data_offset..]
-                };
-                eprintln!(
-                    "PID_CODEPAGE (0x{:08X}) raw data at offset {}: {:02X?}",
-                    property_id, value_data_offset, raw_bytes
-                );
                 if let Ok(cp) = Self::parse_vt_i2(&data[value_data_offset..], is_big_endian) {
                     codepage = cp as u16;
-                    eprintln!("Codepage found: {} (0x{:04X})", codepage, codepage);
-                } else {
-                    eprintln!("Failed to parse codepage");
                 }
                 continue;
             }
 
-            eprintln!(
-                "Property ID: 0x{:08X}, value_offset: {}, value_data_offset: {}",
-                property_id, value_offset, value_data_offset
-            );
-
             // Parse property value
             match property_id {
                 property_ids::PIDSI_TITLE => {
-                    let raw_bytes = if value_data_offset + 64 <= data.len() {
-                        &data[value_data_offset..value_data_offset + 64]
-                    } else {
-                        &data[value_data_offset..]
-                    };
-                    eprintln!(
-                        "PIDSI_TITLE (0x{:08X}) raw data at offset {}: {:02X?}",
-                        property_id, value_data_offset, raw_bytes
-                    );
-                    if let Ok(title) =
+                    result.title =
                         Self::parse_vt_lpstr(&data[value_data_offset..], is_big_endian, codepage)
-                    {
-                        eprintln!("PIDSI_TITLE parsed: {:?}", title);
-                        result.title = Some(title);
-                    } else {
-                        eprintln!("PIDSI_TITLE parse failed");
-                    }
+                            .ok();
                 }
                 property_ids::PIDSI_SUBJECT => {
-                    let raw_bytes = if value_data_offset + 64 <= data.len() {
-                        &data[value_data_offset..value_data_offset + 64]
-                    } else {
-                        &data[value_data_offset..]
-                    };
-                    eprintln!(
-                        "PIDSI_SUBJECT (0x{:08X}) raw data at offset {}: {:02X?}",
-                        property_id, value_data_offset, raw_bytes
-                    );
-                    if let Ok(subject) =
+                    result.subject =
                         Self::parse_vt_lpstr(&data[value_data_offset..], is_big_endian, codepage)
-                    {
-                        eprintln!("PIDSI_SUBJECT parsed: {:?}", subject);
-                        result.subject = Some(subject);
-                    } else {
-                        eprintln!("PIDSI_SUBJECT parse failed");
-                    }
+                            .ok();
                 }
                 property_ids::PIDSI_AUTHOR => {
-                    let raw_bytes = if value_data_offset + 64 <= data.len() {
-                        &data[value_data_offset..value_data_offset + 64]
-                    } else {
-                        &data[value_data_offset..]
-                    };
-                    eprintln!(
-                        "PIDSI_AUTHOR (0x{:08X}) raw data at offset {}: {:02X?}",
-                        property_id, value_data_offset, raw_bytes
-                    );
-                    if let Ok(author) =
+                    result.author =
                         Self::parse_vt_lpstr(&data[value_data_offset..], is_big_endian, codepage)
-                    {
-                        eprintln!("PIDSI_AUTHOR parsed: {:?}", author);
-                        result.author = Some(author);
-                    } else {
-                        eprintln!("PIDSI_AUTHOR parse failed");
-                    }
+                            .ok();
                 }
                 property_ids::PIDSI_KEYWORDS => {
-                    let raw_bytes = if value_data_offset + 64 <= data.len() {
-                        &data[value_data_offset..value_data_offset + 64]
-                    } else {
-                        &data[value_data_offset..]
-                    };
-                    eprintln!(
-                        "PIDSI_KEYWORDS (0x{:08X}) raw data at offset {}: {:02X?}",
-                        property_id, value_data_offset, raw_bytes
-                    );
-                    if let Ok(keywords) =
+                    result.keywords =
                         Self::parse_vt_lpstr(&data[value_data_offset..], is_big_endian, codepage)
-                    {
-                        eprintln!("PIDSI_KEYWORDS parsed: {:?}", keywords);
-                        result.keywords = Some(keywords);
-                    } else {
-                        eprintln!("PIDSI_KEYWORDS parse failed");
-                    }
+                            .ok();
                 }
                 property_ids::PIDSI_COMMENTS => {
-                    let raw_bytes = if value_data_offset + 64 <= data.len() {
-                        &data[value_data_offset..value_data_offset + 64]
-                    } else {
-                        &data[value_data_offset..]
-                    };
-                    eprintln!(
-                        "PIDSI_COMMENTS (0x{:08X}) raw data at offset {}: {:02X?}",
-                        property_id, value_data_offset, raw_bytes
-                    );
-                    if let Ok(comments) =
+                    result.comments =
                         Self::parse_vt_lpstr(&data[value_data_offset..], is_big_endian, codepage)
-                    {
-                        eprintln!("PIDSI_COMMENTS parsed: {:?}", comments);
-                        result.comments = Some(comments);
-                    } else {
-                        eprintln!("PIDSI_COMMENTS parse failed");
-                    }
+                            .ok();
                 }
                 property_ids::PIDSI_LASTAUTHOR => {
-                    let raw_bytes = if value_data_offset + 64 <= data.len() {
-                        &data[value_data_offset..value_data_offset + 64]
-                    } else {
-                        &data[value_data_offset..]
-                    };
-                    eprintln!(
-                        "PIDSI_LASTAUTHOR (0x{:08X}) raw data at offset {}: {:02X?}",
-                        property_id, value_data_offset, raw_bytes
-                    );
-                    if let Ok(last_saved_by) =
+                    result.last_saved_by =
                         Self::parse_vt_lpstr(&data[value_data_offset..], is_big_endian, codepage)
-                    {
-                        eprintln!("PIDSI_LASTAUTHOR parsed: {:?}", last_saved_by);
-                        result.last_saved_by = Some(last_saved_by);
-                    } else {
-                        eprintln!("PIDSI_LASTAUTHOR parse failed");
-                    }
+                            .ok();
                 }
                 property_ids::PIDSI_REVNUMBER => {
-                    let raw_bytes = if value_data_offset + 64 <= data.len() {
-                        &data[value_data_offset..value_data_offset + 64]
-                    } else {
-                        &data[value_data_offset..]
-                    };
-                    eprintln!(
-                        "PIDSI_REVNUMBER (0x{:08X}) raw data at offset {}: {:02X?}",
-                        property_id, value_data_offset, raw_bytes
-                    );
-                    if let Ok(revision_number) =
+                    result.revision_number =
                         Self::parse_vt_lpstr(&data[value_data_offset..], is_big_endian, codepage)
-                    {
-                        eprintln!("PIDSI_REVNUMBER parsed: {:?}", revision_number);
-                        result.revision_number = Some(revision_number);
-                    } else {
-                        eprintln!("PIDSI_REVNUMBER parse failed");
-                    }
+                            .ok();
                 }
                 property_ids::PIDSI_LASTPRINTED => {
-                    if let Ok(filetime) =
+                    result.last_printed =
                         Self::parse_vt_filetime(&data[value_data_offset..], is_big_endian)
-                    {
-                        result.last_printed = Some(filetime.to_utc9_string());
-                    }
+                            .ok()
+                            .map(|ft| ft.to_utc9_string());
                 }
                 property_ids::PIDSI_CREATE_DTM => {
-                    if let Ok(filetime) =
+                    result.create_time =
                         Self::parse_vt_filetime(&data[value_data_offset..], is_big_endian)
-                    {
-                        result.create_time = Some(filetime.to_utc9_string());
-                    }
+                            .ok()
+                            .map(|ft| ft.to_utc9_string());
                 }
                 property_ids::PIDSI_LASTSAVE_DTM => {
-                    if let Ok(filetime) =
+                    result.last_saved_time =
                         Self::parse_vt_filetime(&data[value_data_offset..], is_big_endian)
-                    {
-                        result.last_saved_time = Some(filetime.to_utc9_string());
-                    }
+                            .ok()
+                            .map(|ft| ft.to_utc9_string());
                 }
                 property_ids::PIDSI_PAGECOUNT => {
                     result.page_count =
