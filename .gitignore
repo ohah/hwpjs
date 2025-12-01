@@ -26,6 +26,7 @@ lib-cov/
 .fusebox/
 .vuepress/dist/
 examples/**/dist
+**/output/
 
 # Misc
 .DS_Store

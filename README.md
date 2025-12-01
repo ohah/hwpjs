@@ -18,7 +18,8 @@ hwpjs/
 ├── examples/              # 사용 예제
 │   ├── node/              # Node.js 예제
 │   ├── web/               # Web 예제
-│   └── react-native/      # React Native 예제
+│   ├── react-native/      # React Native 예제
+│   └── cli/               # CLI 사용 예제
 ├── docs/                  # 문서 사이트 (Rspress)
 └── legacy/                # 기존 JavaScript 구현
 ```
@@ -63,6 +64,34 @@ mise install
 - `bun run build` - 전체 빌드
 
 ## 사용법
+
+### CLI 사용
+
+명령줄에서 직접 HWP 파일을 변환할 수 있습니다:
+
+```bash
+# 전역 설치
+npm install -g @ohah/hwpjs
+
+# JSON 변환
+hwpjs to-json document.hwp -o output.json --pretty
+
+# Markdown 변환
+hwpjs to-markdown document.hwp -o output.md --include-images
+
+# 파일 정보 확인
+hwpjs info document.hwp
+
+# 이미지 추출
+hwpjs extract-images document.hwp -o ./images
+
+# 배치 변환
+hwpjs batch ./documents -o ./output --format json --recursive
+```
+
+더 자세한 내용은 [CLI 가이드](https://ohah.github.io/hwpjs/guide/cli)를 참고하세요.
+
+### 프로그래밍 방식 사용
 
 ## 이슈 제안 및 건의
 
