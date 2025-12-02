@@ -230,6 +230,45 @@ impl HwpParser {
         // Convert to JSON
         fileheader.to_json()
     }
+
+    /// Parse HWP file and return SummaryInformation as JSON
+    ///
+    /// # Arguments
+    /// * `data` - Byte array containing the HWP file data
+    ///
+    /// # Returns
+    /// SummaryInformation as JSON string, or empty JSON object if not found
+    pub fn parse_summary_information_json(&self, data: &[u8]) -> Result<String, String> {
+        // Parse CFB structure
+        let mut cfb = CfbParser::parse(data)?;
+
+        // 여러 가능한 스트림 이름 시도 / Try multiple possible stream names
+        let summary_data = CfbParser::read_stream(&mut cfb, "\u{0005}HwpSummaryInformation")
+            .or_else(|_| CfbParser::read_stream(&mut cfb, "\x05HwpSummaryInformation"))
+            .or_else(|_| CfbParser::read_stream(&mut cfb, "HwpSummaryInformation"))
+            .or_else(|_| {
+                // If all string-based attempts fail, try parsing CFB bytes directly
+                let stream_name_bytes = b"\x05HwpSummaryInformation";
+                CfbParser::read_stream_by_bytes(data, stream_name_bytes)
+            });
+
+        match summary_data {
+            Ok(summary_bytes) => {
+                let summary_information =
+                    crate::document::SummaryInformation::parse(&summary_bytes)?;
+                // Convert to JSON
+                serde_json::to_string_pretty(&summary_information)
+                    .map_err(|e| format!("Failed to serialize SummaryInformation to JSON: {}", e))
+            }
+            Err(_) => {
+                // 스트림이 없으면 빈 SummaryInformation을 JSON으로 반환
+                // If stream doesn't exist, return empty SummaryInformation as JSON
+                let empty_summary = crate::document::SummaryInformation::default();
+                serde_json::to_string_pretty(&empty_summary)
+                    .map_err(|e| format!("Failed to serialize SummaryInformation to JSON: {}", e))
+            }
+        }
+    }
 }
 
 impl Default for HwpParser {

@@ -31,6 +31,41 @@ interface ExtractImagesResult {
 }
 ```
 
+### 문서 요약 정보 함수
+
+- **함수명**: `parse_summary_information_json`
+- **NAPI 함수명**: `parse_summary_information_json` (node/web/react-native 공통)
+- **기능**: HWP 문서에서 SummaryInformation을 파싱하여 JSON으로 반환
+- **반환 타입**: JSON 문자열
+- **TypeScript 선언**: `parseSummaryInformationJson(data: Array<number>): string`
+- **버전**: 0.1.0-rc.2부터 지원 예정
+- **상태**: Rust 구현 완료, 바인딩 필요
+- **구현 위치**:
+  - Rust: `crates/hwp-core/src/lib.rs` (완료)
+  - NAPI 바인딩: `packages/hwpjs/src/lib.rs` (필요)
+  - Node CLI: `examples/cli/` (필요)
+  - Web: `examples/web/` (필요)
+  - TypeScript: `packages/hwpjs/index.d.ts` (필요)
+
+**반환 형식**:
+```typescript
+interface SummaryInformation {
+  title?: string;
+  subject?: string;
+  author?: string;
+  keywords?: string;
+  comments?: string;
+  last_saved_by?: string;
+  revision_number?: string;
+  last_printed?: string;
+  create_time?: string;
+  last_saved_time?: string;
+  page_count?: number;
+  date_string?: string;
+  para_count?: number;
+}
+```
+
 ## 개선 작업
 
 ### 배포 패키지 용량 최적화
