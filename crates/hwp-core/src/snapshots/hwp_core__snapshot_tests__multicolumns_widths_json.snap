@@ -1586,11 +1586,11 @@ expression: json
                   "column_type": "normal",
                   "column_count": 1,
                   "column_direction": "left",
-                  "equal_width": true,
-                  "attribute_high": 0
+                  "equal_width": true
                 },
                 "column_spacing": 0,
                 "column_widths": [],
+                "attribute_high": 0,
                 "divider_line_type": 1,
                 "divider_line_thickness": 2,
                 "divider_line_color": 255
@@ -1672,14 +1672,14 @@ expression: json
                   "column_type": "normal",
                   "column_count": 2,
                   "column_direction": "left",
-                  "equal_width": false,
-                  "attribute_high": 15733
+                  "equal_width": false
                 },
                 "column_spacing": 0,
                 "column_widths": [
                   15291,
                   1744
                 ],
+                "attribute_high": 15733,
                 "divider_line_type": 0,
                 "divider_line_thickness": 0,
                 "divider_line_color": 16712193
@@ -1761,8 +1761,7 @@ expression: json
                   "column_type": "normal",
                   "column_count": 3,
                   "column_direction": "left",
-                  "equal_width": false,
-                  "attribute_high": 434
+                  "equal_width": false
                 },
                 "column_spacing": 0,
                 "column_widths": [
@@ -1770,6 +1769,7 @@ expression: json
                   870,
                   10336
                 ],
+                "attribute_high": 434,
                 "divider_line_type": 40,
                 "divider_line_thickness": 42,
                 "divider_line_color": 33619968

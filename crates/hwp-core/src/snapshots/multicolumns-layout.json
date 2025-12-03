@@ -1917,11 +1917,11 @@
                   "column_type": "normal",
                   "column_count": 1,
                   "column_direction": "left",
-                  "equal_width": true,
-                  "attribute_high": 0
+                  "equal_width": true
                 },
                 "column_spacing": 2268,
                 "column_widths": [],
+                "attribute_high": 0,
                 "divider_line_type": 0,
                 "divider_line_thickness": 0,
                 "divider_line_color": 0
@@ -2179,11 +2179,11 @@
                   "column_type": "normal",
                   "column_count": 2,
                   "column_direction": "left",
-                  "equal_width": true,
-                  "attribute_high": 0
+                  "equal_width": true
                 },
                 "column_spacing": 2268,
                 "column_widths": [],
+                "attribute_high": 0,
                 "divider_line_type": 0,
                 "divider_line_thickness": 0,
                 "divider_line_color": 0
@@ -2566,11 +2566,11 @@
                   "column_type": "normal",
                   "column_count": 3,
                   "column_direction": "left",
-                  "equal_width": true,
-                  "attribute_high": 0
+                  "equal_width": true
                 },
                 "column_spacing": 1134,
                 "column_widths": [],
+                "attribute_high": 0,
                 "divider_line_type": 0,
                 "divider_line_thickness": 0,
                 "divider_line_color": 0
@@ -2835,11 +2835,11 @@
                   "column_type": "normal",
                   "column_count": 2,
                   "column_direction": "left",
-                  "equal_width": true,
-                  "attribute_high": 0
+                  "equal_width": true
                 },
                 "column_spacing": 2268,
                 "column_widths": [],
+                "attribute_high": 0,
                 "divider_line_type": 0,
                 "divider_line_thickness": 0,
                 "divider_line_color": 0
@@ -3368,11 +3368,11 @@
                                   "column_type": "normal",
                                   "column_count": 2,
                                   "column_direction": "left",
-                                  "equal_width": true,
-                                  "attribute_high": 0
+                                  "equal_width": true
                                 },
                                 "column_spacing": 2268,
                                 "column_widths": [],
+                                "attribute_high": 0,
                                 "divider_line_type": 0,
                                 "divider_line_thickness": 0,
                                 "divider_line_color": 0
@@ -3734,11 +3734,11 @@
                               "column_type": "normal",
                               "column_count": 2,
                               "column_direction": "left",
-                              "equal_width": true,
-                              "attribute_high": 0
+                              "equal_width": true
                             },
                             "column_spacing": 2268,
                             "column_widths": [],
+                            "attribute_high": 0,
                             "divider_line_type": 0,
                             "divider_line_thickness": 0,
                             "divider_line_color": 0
@@ -4092,11 +4092,11 @@
                                     "column_type": "normal",
                                     "column_count": 2,
                                     "column_direction": "left",
-                                    "equal_width": true,
-                                    "attribute_high": 0
+                                    "equal_width": true
                                   },
                                   "column_spacing": 2268,
                                   "column_widths": [],
+                                  "attribute_high": 0,
                                   "divider_line_type": 0,
                                   "divider_line_thickness": 0,
                                   "divider_line_color": 0

@@ -1596,11 +1596,11 @@ expression: json
                   "column_type": "normal",
                   "column_count": 1,
                   "column_direction": "left",
-                  "equal_width": true,
-                  "attribute_high": 0
+                  "equal_width": true
                 },
                 "column_spacing": 0,
                 "column_widths": [],
+                "attribute_high": 0,
                 "divider_line_type": 0,
                 "divider_line_thickness": 0,
                 "divider_line_color": 0
@@ -1610,16 +1610,16 @@ expression: json
                 "ctrl_id": "fn  ",
                 "ctrl_id_value": 1718493216,
                 "data_type": "footnote_endnote",
-                "data": [
-                  1,
+                "number": 1,
+                "reserved": [
                   0,
                   0,
                   0,
                   0,
-                  0,
-                  41,
                   0
                 ],
+                "attribute": 41,
+                "reserved2": 0,
                 "children": [
                   {
                     "type": "list_header",
@@ -1717,16 +1717,16 @@ expression: json
                 "ctrl_id": "fn  ",
                 "ctrl_id_value": 1718493216,
                 "data_type": "footnote_endnote",
-                "data": [
-                  2,
+                "number": 2,
+                "reserved": [
                   0,
                   0,
                   0,
                   0,
-                  0,
-                  41,
                   0
                 ],
+                "attribute": 41,
+                "reserved2": 0,
                 "children": [
                   {
                     "type": "list_header",
@@ -1895,16 +1895,16 @@ expression: json
                 "ctrl_id": "en  ",
                 "ctrl_id_value": 1701716000,
                 "data_type": "footnote_endnote",
-                "data": [
-                  1,
+                "number": 1,
+                "reserved": [
                   0,
                   0,
                   0,
                   0,
-                  0,
-                  41,
                   0
                 ],
+                "attribute": 41,
+                "reserved2": 0,
                 "children": [
                   {
                     "type": "list_header",
@@ -2002,16 +2002,16 @@ expression: json
                 "ctrl_id": "en  ",
                 "ctrl_id_value": 1701716000,
                 "data_type": "footnote_endnote",
-                "data": [
-                  2,
+                "number": 2,
+                "reserved": [
                   0,
                   0,
                   0,
                   0,
-                  0,
-                  41,
                   0
                 ],
+                "attribute": 41,
+                "reserved2": 0,
                 "children": [
                   {
                     "type": "list_header",
