@@ -184,27 +184,31 @@ interface SummaryInformation {
 - **우선순위**: 중간
 - **상태**: 계획됨
 
-### ArrayBuffer 지원 구현 (완료)
+### ArrayBuffer 지원 구현 (코드젠 버그로 인한 커스텀 수정)
 
-- **완료된 작업**: React Native 바인딩에서 `ArrayBuffer` 타입 지원 구현
-- **구현 내용**:
+- **문제 상황**: Craby 코드젠이 생성한 `bridging-generated.hpp`에서 `ArrayBuffer`를 `rust::Vec<uint8_t>`로 변환하는 코드가 크래시 발생
+  - 생성된 코드: `vec.reserve(size); std::memcpy(vec.data(), data, size);`
+  - 문제: CXX 브릿지의 `rust::Vec`는 `set_len`이 private이어서 `reserve`만으로는 크기가 설정되지 않음
+  - 결과: `memcpy`가 유효하지 않은 메모리에 접근하여 크래시 발생
+- **커스텀 수정 내용**:
   - `packages/hwpjs/crates/lib/src/ffi.rs`에 `create_vec_from_slice` 함수 추가
     - `ArrayBuffer`를 `rust::Vec<uint8_t>`로 안전하게 변환하는 Rust 함수
     - `data.to_vec()`를 사용하여 최적화된 메모리 복사 수행
-  - `packages/hwpjs/cpp/bridging-generated.hpp`에서 `createVecFromSlice` 사용
+  - `packages/hwpjs/cpp/bridging-generated.hpp`에서 `createVecFromSlice` 사용하도록 수정
+    - 코드젠이 생성한 `memcpy` 방식 대신 Rust 함수 호출로 변경
     - C++에서 `ArrayBuffer`를 받아 `rust::Slice<const uint8_t>`로 변환
     - Rust 함수를 호출하여 안전하게 `rust::Vec<uint8_t>` 생성
-  - iOS/Android 모두 동일한 구현 적용
-- **커스텀 수정 사항**:
+  - iOS/Android 모두 동일한 커스텀 수정 적용
+- **수정 이유**:
   - CXX 브릿지의 `rust::Vec`는 `set_len`이 private이어서 직접 `memcpy` 사용 불가
   - Rust 함수를 통해 벡터 생성하여 메모리 안전성 보장
   - 성능: Rust의 `to_vec()`이 SIMD 최적화 가능하여 충분히 빠름
 - **영향 범위**:
-  - `packages/hwpjs/crates/lib/src/ffi.rs`: `create_vec_from_slice` 함수 추가
-  - `packages/hwpjs/cpp/bridging-generated.hpp`: `Bridging<rust::Vec<uint8_t>>` 수정
+  - `packages/hwpjs/crates/lib/src/ffi.rs`: `create_vec_from_slice` 함수 추가 (커스텀)
+  - `packages/hwpjs/cpp/bridging-generated.hpp`: `Bridging<rust::Vec<uint8_t>>` 수정 (커스텀)
   - `packages/hwpjs/src-reactnative/NativeReactNative.ts`: `ArrayBuffer` 타입 사용
   - `examples/react-native/src/App.tsx`: `ArrayBuffer` 변환 로직 수정
-- **상태**: 완료 ✅
+- **상태**: 코드젠 버그로 인해 커스텀 수정 완료 ⚠️
 
 ### Craby에 객체 배열(Object[]) 지원 추가
 
