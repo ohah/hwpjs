@@ -1454,7 +1454,13 @@
           {
             "para_header": {
               "text_char_count": 25,
-              "control_mask": 2052,
+              "control_mask": {
+                "value": 2052,
+                "flags": [
+                  "section_column_definition",
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [
@@ -1727,7 +1733,12 @@
                       {
                         "para_header": {
                           "text_char_count": 16,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 12,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -1816,7 +1827,10 @@
                       {
                         "para_header": {
                           "text_char_count": 1,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -1919,7 +1933,10 @@
                             {
                               "para_header": {
                                 "text_char_count": 1,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -1978,7 +1995,12 @@
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -2089,7 +2111,12 @@
                       {
                         "para_header": {
                           "text_char_count": 17,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 12,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -2178,7 +2205,10 @@
                       {
                         "para_header": {
                           "text_char_count": 1,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -2281,7 +2311,10 @@
                             {
                               "para_header": {
                                 "text_char_count": 1,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -2340,7 +2373,12 @@
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -2451,7 +2489,12 @@
                       {
                         "para_header": {
                           "text_char_count": 14,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -2540,7 +2583,10 @@
                       {
                         "para_header": {
                           "text_char_count": 1,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -2643,7 +2689,10 @@
                             {
                               "para_header": {
                                 "text_char_count": 1,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -2702,7 +2751,12 @@
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -2813,7 +2867,12 @@
                       {
                         "para_header": {
                           "text_char_count": 15,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -2902,7 +2961,10 @@
                       {
                         "para_header": {
                           "text_char_count": 1,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -3005,7 +3067,10 @@
                             {
                               "para_header": {
                                 "text_char_count": 1,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -3064,7 +3129,12 @@
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -3175,7 +3245,12 @@
                       {
                         "para_header": {
                           "text_char_count": 16,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -3264,7 +3339,10 @@
                       {
                         "para_header": {
                           "text_char_count": 1,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -3367,7 +3445,10 @@
                             {
                               "para_header": {
                                 "text_char_count": 1,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -3426,7 +3507,12 @@
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -3537,7 +3623,12 @@
                       {
                         "para_header": {
                           "text_char_count": 18,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -3626,7 +3717,10 @@
                       {
                         "para_header": {
                           "text_char_count": 1,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -3729,7 +3823,10 @@
                             {
                               "para_header": {
                                 "text_char_count": 1,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -3788,7 +3885,12 @@
           {
             "para_header": {
               "text_char_count": 17,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -3904,7 +4006,12 @@
                       {
                         "para_header": {
                           "text_char_count": 19,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 12,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -3976,7 +4083,10 @@
                       {
                         "para_header": {
                           "text_char_count": 43,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 12,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -4058,7 +4168,10 @@
                       {
                         "para_header": {
                           "text_char_count": 1,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -4161,7 +4274,10 @@
                             {
                               "para_header": {
                                 "text_char_count": 1,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -4265,7 +4381,12 @@
                       {
                         "para_header": {
                           "text_char_count": 19,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 12,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -4337,7 +4458,10 @@
                       {
                         "para_header": {
                           "text_char_count": 43,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 12,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -4423,7 +4547,10 @@
                       {
                         "para_header": {
                           "text_char_count": 1,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -4526,7 +4653,10 @@
                             {
                               "para_header": {
                                 "text_char_count": 1,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [],

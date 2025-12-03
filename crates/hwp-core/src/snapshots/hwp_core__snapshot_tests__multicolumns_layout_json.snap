@@ -1712,7 +1712,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 30,
-              "control_mask": 4,
+              "control_mask": {
+                "value": 4,
+                "flags": [
+                  "section_column_definition"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [
@@ -1935,7 +1940,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 35,
-              "control_mask": 4,
+              "control_mask": {
+                "value": 4,
+                "flags": [
+                  "section_column_definition"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [
@@ -2197,7 +2207,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -2298,7 +2311,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 45,
-              "control_mask": 4,
+              "control_mask": {
+                "value": 4,
+                "flags": [
+                  "section_column_definition"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [
@@ -2584,7 +2602,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 6,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -2665,7 +2686,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -2766,7 +2790,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 29,
-              "control_mask": 4,
+              "control_mask": {
+                "value": 4,
+                "flags": [
+                  "section_column_definition"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [
@@ -2853,7 +2882,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 1,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -2903,7 +2935,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 15,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -3084,7 +3119,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 17,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -3280,7 +3320,12 @@ expression: json
                           {
                             "para_header": {
                               "text_char_count": 19,
-                              "control_mask": 4,
+                              "control_mask": {
+                                "value": 4,
+                                "flags": [
+                                  "section_column_definition"
+                                ]
+                              },
                               "para_shape_id": 0,
                               "para_style_id": 0,
                               "column_divide_type": [
@@ -3386,7 +3431,10 @@ expression: json
                           {
                             "para_header": {
                               "text_char_count": 72,
-                              "control_mask": 0,
+                              "control_mask": {
+                                "value": 0,
+                                "flags": []
+                              },
                               "para_shape_id": 0,
                               "para_style_id": 0,
                               "column_divide_type": [],
@@ -3666,7 +3714,12 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 18,
-                          "control_mask": 4,
+                          "control_mask": {
+                            "value": 4,
+                            "flags": [
+                              "section_column_definition"
+                            ]
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [
@@ -3752,7 +3805,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 68,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -3913,7 +3969,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 1,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 0,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -4024,7 +4083,12 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 18,
-                                "control_mask": 4,
+                                "control_mask": {
+                                  "value": 4,
+                                  "flags": [
+                                    "section_column_definition"
+                                  ]
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [
@@ -4110,7 +4174,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 68,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -4271,7 +4338,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 1,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 0,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -4330,7 +4400,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 1,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [],

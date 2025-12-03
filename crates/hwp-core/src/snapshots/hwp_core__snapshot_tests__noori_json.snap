@@ -9072,7 +9072,13 @@ expression: json
           {
             "para_header": {
               "text_char_count": 25,
-              "control_mask": 2052,
+              "control_mask": {
+                "value": 2052,
+                "flags": [
+                  "section_column_definition",
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 26,
               "para_style_id": 0,
               "column_divide_type": [
@@ -9446,7 +9452,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 26,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -9561,7 +9572,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 5,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -9639,7 +9653,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 53,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -9741,7 +9758,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 5,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 9,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -9819,7 +9839,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 21,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 10,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -9897,7 +9920,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 5,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 9,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -9975,7 +10001,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 10,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 10,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -10057,7 +10086,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 5,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 9,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -10135,7 +10167,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 18,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 44,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -10217,7 +10252,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 6,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 9,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -10295,7 +10333,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 23,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 22,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -10411,7 +10452,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 5,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -10497,7 +10541,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 53,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -10607,7 +10654,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 5,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 9,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -10693,7 +10743,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 21,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 10,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -10779,7 +10832,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 5,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 9,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -10865,7 +10921,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 10,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 10,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -10955,7 +11014,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 5,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 9,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -11041,7 +11103,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 18,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 44,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -11131,7 +11196,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 6,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 9,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -11217,7 +11285,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 23,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 22,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -11287,7 +11358,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2097152,
+              "control_mask": {
+                "value": 2097152,
+                "flags": [
+                  "page_control"
+                ]
+              },
               "para_shape_id": 26,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -11366,7 +11442,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 26,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -11481,7 +11562,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 28,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 25,
                           "para_style_id": 4,
                           "column_divide_type": [],
@@ -11542,7 +11626,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 18,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 25,
                           "para_style_id": 4,
                           "column_divide_type": [],
@@ -11603,7 +11690,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 37,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 31,
                           "para_style_id": 4,
                           "column_divide_type": [],
@@ -11664,7 +11754,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 30,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 31,
                           "para_style_id": 4,
                           "column_divide_type": [],
@@ -11790,7 +11883,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 28,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 25,
                                 "para_style_id": 4,
                                 "column_divide_type": [],
@@ -11851,7 +11947,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 18,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 25,
                                 "para_style_id": 4,
                                 "column_divide_type": [],
@@ -11912,7 +12011,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 37,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 31,
                                 "para_style_id": 4,
                                 "column_divide_type": [],
@@ -11973,7 +12075,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 30,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 31,
                                 "para_style_id": 4,
                                 "column_divide_type": [],
@@ -12043,7 +12148,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 100,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 35,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -12192,7 +12300,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 110,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 29,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -12309,7 +12420,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 68,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 30,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -12390,7 +12504,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 111,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 37,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -12515,7 +12632,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 94,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 38,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -12636,7 +12756,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 106,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 34,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -12753,7 +12876,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 74,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 32,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -12850,7 +12976,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 94,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 39,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -12979,7 +13108,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 135,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 40,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -13140,7 +13272,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 59,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 36,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -13229,7 +13364,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 137,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 33,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -13370,7 +13508,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 1,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 33,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -13420,7 +13561,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 1,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 33,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -13470,7 +13614,10 @@ expression: json
           {
             "para_header": {
               "text_char_count": 1,
-              "control_mask": 0,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
               "para_shape_id": 27,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -13520,7 +13667,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 27,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -13631,7 +13783,12 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 9,
-                          "control_mask": 2048,
+                          "control_mask": {
+                            "value": 2048,
+                            "flags": [
+                              "gso_table"
+                            ]
+                          },
                           "para_shape_id": 23,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -13856,7 +14013,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 26,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 24,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -13917,7 +14077,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 48,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 24,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -14035,7 +14198,12 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 9,
-                                "control_mask": 2048,
+                                "control_mask": {
+                                  "value": 2048,
+                                  "flags": [
+                                    "gso_table"
+                                  ]
+                                },
                                 "para_shape_id": 23,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -14268,7 +14436,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 26,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 24,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -14329,7 +14500,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 48,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 24,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -14399,7 +14573,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 27,
               "para_style_id": 0,
               "column_divide_type": [
@@ -14512,7 +14691,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 3,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 41,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -14590,7 +14772,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 1,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 3,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -14657,7 +14842,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 23,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 22,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -14771,7 +14959,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 3,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 41,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -14857,7 +15048,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 1,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 3,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -14932,7 +15126,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 23,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 22,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -15002,7 +15199,12 @@ expression: json
           {
             "para_header": {
               "text_char_count": 9,
-              "control_mask": 2048,
+              "control_mask": {
+                "value": 2048,
+                "flags": [
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 27,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -15113,7 +15315,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 4,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 23,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -15191,7 +15396,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 12,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 23,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -15269,7 +15477,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 6,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 23,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -15347,7 +15558,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 4,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 42,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -15425,7 +15639,12 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 9,
-                          "control_mask": 2048,
+                          "control_mask": {
+                            "value": 2048,
+                            "flags": [
+                              "gso_table"
+                            ]
+                          },
                           "para_shape_id": 23,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -15650,7 +15869,12 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 9,
-                          "control_mask": 2048,
+                          "control_mask": {
+                            "value": 2048,
+                            "flags": [
+                              "gso_table"
+                            ]
+                          },
                           "para_shape_id": 23,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -15875,7 +16099,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 4,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 43,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -15953,7 +16180,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 33,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16071,7 +16301,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 24,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16169,7 +16402,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 5,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 43,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16247,7 +16483,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 7,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16325,7 +16564,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 7,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16403,7 +16645,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 6,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 43,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16481,7 +16726,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 6,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16559,7 +16807,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 6,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16637,7 +16888,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 6,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 43,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16715,7 +16969,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 6,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16793,7 +17050,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 7,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16871,7 +17131,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 7,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 43,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -16949,7 +17212,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 6,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -17027,7 +17293,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 2,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -17105,7 +17374,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 5,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 43,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -17183,7 +17455,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 3,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -17261,7 +17536,10 @@ expression: json
                       {
                         "para_header": {
                           "text_char_count": 3,
-                          "control_mask": 0,
+                          "control_mask": {
+                            "value": 0,
+                            "flags": []
+                          },
                           "para_shape_id": 8,
                           "para_style_id": 0,
                           "column_divide_type": [],
@@ -17382,7 +17660,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 4,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 23,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -17468,7 +17749,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 12,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 23,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -17554,7 +17838,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 6,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 23,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -17640,7 +17927,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 4,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 42,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -17726,7 +18016,12 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 9,
-                                "control_mask": 2048,
+                                "control_mask": {
+                                  "value": 2048,
+                                  "flags": [
+                                    "gso_table"
+                                  ]
+                                },
                                 "para_shape_id": 23,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -17959,7 +18254,12 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 9,
-                                "control_mask": 2048,
+                                "control_mask": {
+                                  "value": 2048,
+                                  "flags": [
+                                    "gso_table"
+                                  ]
+                                },
                                 "para_shape_id": 23,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -18192,7 +18492,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 4,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 43,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -18278,7 +18581,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 33,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -18404,7 +18710,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 24,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -18510,7 +18819,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 5,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 43,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -18596,7 +18908,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 7,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -18682,7 +18997,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 7,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -18768,7 +19086,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 6,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 43,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -18854,7 +19175,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 6,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -18940,7 +19264,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 6,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -19026,7 +19353,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 6,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 43,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -19112,7 +19442,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 6,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -19198,7 +19531,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 7,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -19284,7 +19620,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 7,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 43,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -19370,7 +19709,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 6,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -19456,7 +19798,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 2,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -19542,7 +19887,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 5,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 43,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -19628,7 +19976,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 3,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],
@@ -19714,7 +20065,10 @@ expression: json
                             {
                               "para_header": {
                                 "text_char_count": 3,
-                                "control_mask": 0,
+                                "control_mask": {
+                                  "value": 0,
+                                  "flags": []
+                                },
                                 "para_shape_id": 8,
                                 "para_style_id": 0,
                                 "column_divide_type": [],

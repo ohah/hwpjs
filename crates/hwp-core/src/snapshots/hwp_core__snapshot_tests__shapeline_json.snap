@@ -1385,7 +1385,13 @@ expression: json
           {
             "para_header": {
               "text_char_count": 33,
-              "control_mask": 2052,
+              "control_mask": {
+                "value": 2052,
+                "flags": [
+                  "section_column_definition",
+                  "gso_table"
+                ]
+              },
               "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [

@@ -1373,7 +1373,13 @@
           {
             "para_header": {
               "text_char_count": 37,
-              "control_mask": 131076,
+              "control_mask": {
+                "value": 131076,
+                "flags": [
+                  "section_column_definition",
+                  "footnote_endnote"
+                ]
+              },
               "para_shape_id": 11,
               "para_style_id": 0,
               "column_divide_type": [
@@ -1631,7 +1637,12 @@
                       {
                         "para_header": {
                           "text_char_count": 16,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 10,
                           "para_style_id": 11,
                           "column_divide_type": [],
@@ -1738,7 +1749,12 @@
                       {
                         "para_header": {
                           "text_char_count": 16,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 10,
                           "para_style_id": 11,
                           "column_divide_type": [],
@@ -1820,7 +1836,12 @@
           {
             "para_header": {
               "text_char_count": 21,
-              "control_mask": 131072,
+              "control_mask": {
+                "value": 131072,
+                "flags": [
+                  "footnote_endnote"
+                ]
+              },
               "para_shape_id": 11,
               "para_style_id": 0,
               "column_divide_type": [],
@@ -1916,7 +1937,12 @@
                       {
                         "para_header": {
                           "text_char_count": 16,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 10,
                           "para_style_id": 11,
                           "column_divide_type": [],
@@ -2023,7 +2049,12 @@
                       {
                         "para_header": {
                           "text_char_count": 16,
-                          "control_mask": 262144,
+                          "control_mask": {
+                            "value": 262144,
+                            "flags": [
+                              "auto_number"
+                            ]
+                          },
                           "para_shape_id": 10,
                           "para_style_id": 11,
                           "column_divide_type": [],
