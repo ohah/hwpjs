@@ -131,30 +131,39 @@ pub fn to_markdown(document: &HwpDocument, options: &MarkdownOptions) -> String 
     // Convert body text to markdown / 본문 텍스트를 마크다운으로 변환
     for section in &document.body_text.sections {
         for paragraph in &section.paragraphs {
-            // 머리말/꼬리말 컨트롤 찾기 / Find header/footer controls
+            // control_mask를 사용하여 빠른 필터링 (최적화) / Use control_mask for quick filtering (optimization)
+            let control_mask = &paragraph.para_header.control_mask;
+
+            // control_mask로 머리말/꼬리말/각주/미주가 있는지 빠르게 확인 / Quickly check if header/footer/footnote/endnote exists using control_mask
+            // 주의: control_mask는 머리말/꼬리말을 구분하지 못하고, 각주/미주도 구분하지 못함
+            // Note: control_mask cannot distinguish header/footer or footnote/endnote
+            let has_header_footer = control_mask.has_header_footer();
+            let has_footnote_endnote = control_mask.has_footnote_endnote();
+
+            // 머리말/꼬리말/각주/미주 컨트롤 찾기 / Find header/footer/footnote/endnote controls
             let mut is_header_paragraph = false;
             let mut is_footer_paragraph = false;
-
-            // 문단의 레코드를 순회하여 머리말/꼬리말/각주/미주 확인 / Check if paragraph contains header/footer/footnote/endnote
             let mut is_footnote_paragraph = false;
             let mut is_endnote_paragraph = false;
-            for record in &paragraph.records {
-                if let ParagraphRecord::CtrlHeader { header, .. } = record {
-                    use crate::document::CtrlId;
-                    if header.ctrl_id.as_str() == CtrlId::HEADER {
-                        is_header_paragraph = true;
-                        break;
-                    } else if header.ctrl_id.as_str() == CtrlId::FOOTER {
-                        is_footer_paragraph = true;
-                        break;
-                    } else if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
-                        // 각주 / Footnote
-                        is_footnote_paragraph = true;
-                        break;
-                    } else if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
-                        // 미주 / Endnote
-                        is_endnote_paragraph = true;
-                        break;
+
+            // control_mask로 필터링하여 불필요한 순회 방지 / Filter with control_mask to avoid unnecessary iteration
+            if has_header_footer || has_footnote_endnote {
+                for record in &paragraph.records {
+                    if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                        use crate::document::CtrlId;
+                        if header.ctrl_id.as_str() == CtrlId::HEADER {
+                            is_header_paragraph = true;
+                            break;
+                        } else if header.ctrl_id.as_str() == CtrlId::FOOTER {
+                            is_footer_paragraph = true;
+                            break;
+                        } else if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
+                            is_footnote_paragraph = true;
+                            break;
+                        } else if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
+                            is_endnote_paragraph = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -403,6 +412,12 @@ pub(crate) fn convert_paragraph_to_markdown(
                 let mut has_table = false;
                 let mut has_image = false;
                 let mut has_content = false; // 자식 레코드에서 내용이 추출되었는지 여부 / Whether content was extracted from child records
+
+                // control_mask를 사용하여 표가 있는지 빠르게 확인 (최적화) / Quickly check if table exists using control_mask (optimization)
+                // 주의: control_mask는 문단 레벨의 정보이므로, 자식 레코드의 표는 확인할 수 없음
+                // Note: control_mask is paragraph-level info, so cannot check table in child records
+                // 따라서 여전히 children을 확인해야 하지만, 문단의 control_mask로 사전 필터링 가능
+                // So we still need to check children, but can pre-filter with paragraph's control_mask
 
                 // 먼저 표가 있는지 확인 / First check if table exists
                 for child in children.iter() {
