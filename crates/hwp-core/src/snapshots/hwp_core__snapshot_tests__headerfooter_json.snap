@@ -1690,6 +1690,13 @@ expression: json
                 "ctrl_id": "head",
                 "ctrl_id_value": 1751474532,
                 "data_type": "header_footer",
+                "attribute": {
+                  "apply_page": "both"
+                },
+                "text_width": 0,
+                "text_height": 0,
+                "text_ref": 0,
+                "number_ref": 0,
                 "children": [
                   {
                     "type": "list_header",
@@ -1792,6 +1799,13 @@ expression: json
                 "ctrl_id": "foot",
                 "ctrl_id_value": 1718579060,
                 "data_type": "header_footer",
+                "attribute": {
+                  "apply_page": "odd_only"
+                },
+                "text_width": 0,
+                "text_height": 0,
+                "text_ref": 0,
+                "number_ref": 0,
                 "children": [
                   {
                     "type": "list_header",
