@@ -636,54 +636,71 @@ impl CtrlHeader {
         // pyhwp: CHID.TBL = 'tbl ', CHID.GSO = 'gso '
         // 컨트롤 ID 상수 사용 / Use control ID constants
         let ctrl_id_str = ctrl_id.as_str();
-        let parsed_data = if ctrl_id_str == CtrlId::TABLE || ctrl_id_str == CtrlId::SHAPE_OBJECT {
-            // 개체 공통 속성 (표 69) / Object common properties (Table 69)
-            parse_object_common(remaining_data)?
-        } else if ctrl_id_str == CtrlId::COLUMN_DEF {
-            // 단 정의 (표 138) / Column definition (Table 138)
-            parse_column_definition(remaining_data)?
-        } else if ctrl_id_str == CtrlId::FOOTNOTE || ctrl_id_str == CtrlId::ENDNOTE {
-            // 각주/미주 (표 4.3.10.4) / Footnote/Endnote (Table 4.3.10.4)
-            parse_footnote_endnote(remaining_data)?
-        } else if ctrl_id_str == CtrlId::HEADER || ctrl_id_str == CtrlId::FOOTER {
-            // 머리말/꼬리말 (표 140) / Header/Footer (Table 140)
-            parse_header_footer(remaining_data)?
-        } else if ctrl_id_str == CtrlId::PAGE_NUMBER || ctrl_id_str == CtrlId::PAGE_NUMBER_POS {
-            // 쪽 번호 위치 (표 147) / Page number position (Table 147)
-            parse_page_number_position(remaining_data)?
-        } else if ctrl_id_str == CtrlId::FIELD_START {
-            // 필드 시작 (표 152) / Field start (Table 152)
-            parse_field(remaining_data)?
-        } else if ctrl_id_str == CtrlId::SECTION_DEF {
-            // 구역 정의 (표 129) / Section definition (Table 129)
-            parse_section_definition(remaining_data)?
-        } else if ctrl_id_str == CtrlId::AUTO_NUMBER {
-            // 자동번호 (표 142) / Auto number (Table 142)
-            parse_auto_number(remaining_data)?
-        } else if ctrl_id_str == CtrlId::NEW_NUMBER {
-            // 새 번호 지정 (표 144) / New number specification (Table 144)
-            parse_new_number(remaining_data)?
-        } else if ctrl_id_str == CtrlId::HIDE {
-            // 감추기 (표 145) / Hide (Table 145)
-            parse_hide(remaining_data)?
-        } else if ctrl_id_str == CtrlId::PAGE_ADJUST {
-            // 홀/짝수 조정 (표 146) / Page adjustment (Table 146)
-            parse_page_adjust(remaining_data)?
-        } else if ctrl_id_str == CtrlId::BOOKMARK_MARKER {
-            // 찾아보기 표식 (표 149) / Bookmark marker (Table 149)
-            parse_bookmark_marker(remaining_data)?
-        } else if ctrl_id_str == CtrlId::OVERLAP {
-            // 글자 겹침 (표 150) / Character overlap (Table 150)
-            parse_overlap(remaining_data)?
-        } else if ctrl_id_str == CtrlId::COMMENT {
-            // 덧말 (표 151) / Comment (Table 151)
-            parse_comment(remaining_data)?
-        } else if ctrl_id_str == CtrlId::HIDDEN_DESC {
-            // 숨은 설명 / Hidden description
-            CtrlHeaderData::HiddenDescription
-        } else {
-            // 표 127, 128의 다른 컨트롤 ID들 (현재는 Other로 처리) / Other control IDs from Table 127, 128 (currently handled as Other)
-            CtrlHeaderData::Other
+        let parsed_data = match ctrl_id_str {
+            CtrlId::TABLE | CtrlId::SHAPE_OBJECT => {
+                // 개체 공통 속성 (표 69) / Object common properties (Table 69)
+                parse_object_common(remaining_data)?
+            }
+            CtrlId::COLUMN_DEF => {
+                // 단 정의 (표 138) / Column definition (Table 138)
+                parse_column_definition(remaining_data)?
+            }
+            CtrlId::FOOTNOTE | CtrlId::ENDNOTE => {
+                // 각주/미주 (표 4.3.10.4) / Footnote/Endnote (Table 4.3.10.4)
+                parse_footnote_endnote(remaining_data)?
+            }
+            CtrlId::HEADER | CtrlId::FOOTER => {
+                // 머리말/꼬리말 (표 140) / Header/Footer (Table 140)
+                parse_header_footer(remaining_data)?
+            }
+            CtrlId::PAGE_NUMBER | CtrlId::PAGE_NUMBER_POS => {
+                // 쪽 번호 위치 (표 147) / Page number position (Table 147)
+                parse_page_number_position(remaining_data)?
+            }
+            CtrlId::FIELD_START => {
+                // 필드 시작 (표 152) / Field start (Table 152)
+                parse_field(remaining_data)?
+            }
+            CtrlId::SECTION_DEF => {
+                // 구역 정의 (표 129) / Section definition (Table 129)
+                parse_section_definition(remaining_data)?
+            }
+            CtrlId::AUTO_NUMBER => {
+                // 자동번호 (표 142) / Auto number (Table 142)
+                parse_auto_number(remaining_data)?
+            }
+            CtrlId::NEW_NUMBER => {
+                // 새 번호 지정 (표 144) / New number specification (Table 144)
+                parse_new_number(remaining_data)?
+            }
+            CtrlId::HIDE => {
+                // 감추기 (표 145) / Hide (Table 145)
+                parse_hide(remaining_data)?
+            }
+            CtrlId::PAGE_ADJUST => {
+                // 홀/짝수 조정 (표 146) / Page adjustment (Table 146)
+                parse_page_adjust(remaining_data)?
+            }
+            CtrlId::BOOKMARK_MARKER => {
+                // 찾아보기 표식 (표 149) / Bookmark marker (Table 149)
+                parse_bookmark_marker(remaining_data)?
+            }
+            CtrlId::OVERLAP => {
+                // 글자 겹침 (표 150) / Character overlap (Table 150)
+                parse_overlap(remaining_data)?
+            }
+            CtrlId::COMMENT => {
+                // 덧말 (표 151) / Comment (Table 151)
+                parse_comment(remaining_data)?
+            }
+            CtrlId::HIDDEN_DESC => {
+                // 숨은 설명 / Hidden description
+                CtrlHeaderData::HiddenDescription
+            }
+            _ => {
+                // 표 127, 128의 다른 컨트롤 ID들 (현재는 Other로 처리) / Other control IDs from Table 127, 128 (currently handled as Other)
+                CtrlHeaderData::Other
+            }
         };
 
         Ok(CtrlHeader {
@@ -1310,11 +1327,32 @@ fn parse_column_definition(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 머리말/꼬리말 파싱 (표 140) / Parse header/footer (Table 140)
+///
+/// **가변 길이 처리** / **Variable length handling**
+///
+/// 스펙 문서에는 14바이트로 명시되어 있지만, 실제 파일에서는 가변 길이일 수 있습니다.
+/// libhwp의 구현을 참고하면, 레코드 헤더의 크기와 현재까지 읽은 바이트 수를 비교하여
+/// 가변 길이를 처리합니다. 현재 구현에서는 데이터 길이를 기준으로 가변 처리합니다.
+///
+/// **처리 기준** / **Processing criteria**:
+/// - 최소 4바이트: `applyPage` (속성) 필수
+/// - 8바이트 이상: `textWidth` 읽기
+/// - 12바이트 이상: `textHeight` 읽기
+/// - 13바이트 이상: `text_ref` 읽기
+/// - 14바이트 이상: `number_ref` 읽기
+///
+/// **참고** / **Reference**:
+/// - libhwp: `if (!sr.isEndOfRecord())` 또는 `if (sr.header.size > sr.readAfterHeader)`로 체크
+/// - hwpjs.js: "이때는 사이즈가 8로 아무것도 없음" (컨트롤 ID 4바이트 + 데이터 4바이트)
+///
+/// Spec says 14 bytes, but actual files may have variable length.
+/// Based on libhwp implementation, variable length is handled by comparing
+/// record header size with bytes read so far. Current implementation uses data length as criteria.
 fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, String> {
-    // 최소 14바이트 필요 / Need at least 14 bytes
-    if data.len() < 14 {
+    // 최소 4바이트(속성)는 필요 / Need at least 4 bytes (attribute)
+    if data.len() < 4 {
         return Err(format!(
-            "Header/Footer must be at least 14 bytes, got {} bytes",
+            "Header/Footer must be at least 4 bytes, got {} bytes",
             data.len()
         ));
     }
@@ -1322,6 +1360,7 @@ fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, String> {
     let mut offset = 0;
 
     // UINT32 속성 (표 141 참조) / UINT32 attribute (see Table 141)
+    // 최소 4바이트는 보장되므로 안전하게 읽을 수 있음 / At least 4 bytes guaranteed, safe to read
     let attribute_value = UINT32::from_le_bytes([
         data[offset],
         data[offset + 1],
@@ -1341,29 +1380,49 @@ fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, String> {
     let attribute = HeaderFooterAttribute { apply_page };
 
     // HWPUNIT 텍스트 영역의 폭 / HWPUNIT text area width
-    let text_width = HWPUNIT::from(UINT32::from_le_bytes([
-        data[offset],
-        data[offset + 1],
-        data[offset + 2],
-        data[offset + 3],
-    ]));
+    // 가변 길이: 8바이트 이상일 때만 읽기 / Variable length: read only if 8+ bytes
+    let text_width = if offset + 4 <= data.len() {
+        HWPUNIT::from(UINT32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ]))
+    } else {
+        HWPUNIT::from(0)
+    };
     offset += 4;
 
     // HWPUNIT 텍스트 영역의 높이 / HWPUNIT text area height
-    let text_height = HWPUNIT::from(UINT32::from_le_bytes([
-        data[offset],
-        data[offset + 1],
-        data[offset + 2],
-        data[offset + 3],
-    ]));
+    // 가변 길이: 12바이트 이상일 때만 읽기 / Variable length: read only if 12+ bytes
+    let text_height = if offset + 4 <= data.len() {
+        HWPUNIT::from(UINT32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ]))
+    } else {
+        HWPUNIT::from(0)
+    };
     offset += 4;
 
     // BYTE 각 비트가 해당 레벨의 텍스트에 대한 참조를 했는지 여부 / BYTE whether each bit references text at that level
-    let text_ref = data[offset];
+    // 가변 길이: 13바이트 이상일 때만 읽기 / Variable length: read only if 13+ bytes
+    let text_ref = if offset < data.len() {
+        data[offset]
+    } else {
+        0
+    };
     offset += 1;
 
     // BYTE 각 비트가 해당 레벨의 번호에 대한 참조를 했는지 여부 / BYTE whether each bit references number at that level
-    let number_ref = data[offset];
+    // 가변 길이: 14바이트 이상일 때만 읽기 / Variable length: read only if 14+ bytes
+    let number_ref = if offset < data.len() {
+        data[offset]
+    } else {
+        0
+    };
 
     Ok(CtrlHeaderData::HeaderFooter {
         attribute,

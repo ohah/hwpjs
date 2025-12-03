@@ -2804,6 +2804,27 @@ Tag ID: MAKE_4CHID('h', 'e', 'a', 'd')
 | BYTE | 1 | 각 비트가 해당 레벨의 번호에 대한 참조를 했는지 여부 |
 | 전체 길이 | 14 | |
 
+**참고: 가변 길이 처리** / **Note: Variable length handling**
+
+스펙 문서에는 14바이트로 명시되어 있지만, 실제 파일에서는 **가변 길이**일 수 있습니다.
+레거시 라이브러리들(libhwp, hwpjs.js)의 구현을 보면 다음과 같이 처리합니다:
+
+- **libhwp**: 레코드 헤더의 크기(`header.size`)와 현재까지 읽은 바이트 수(`readAfterHeader`)를 비교하여 가변 길이를 처리합니다.
+  - `applyPage` (4바이트)는 항상 읽습니다.
+  - `if (!sr.isEndOfRecord())` 또는 `if (sr.header.size > sr.readAfterHeader)`로 체크하여 추가 필드를 읽습니다.
+
+- **hwpjs.js**: 주석에 "이때는 사이즈가 8로 아무것도 없음"이라고 명시되어 있어, 컨트롤 ID(4바이트) + 데이터(4바이트) = 8바이트인 경우도 있습니다.
+
+**현재 구현의 가변 길이 처리 기준** / **Current implementation's variable length handling criteria**:
+
+- 최소 4바이트: `applyPage` (속성) 필수
+- 8바이트 이상: `textWidth` 읽기
+- 12바이트 이상: `textHeight` 읽기
+- 13바이트 이상: `text_ref` 읽기
+- 14바이트 이상: `number_ref` 읽기
+
+데이터가 없는 필드는 기본값(0)을 사용합니다.
+
 **표 141: 머리말/꼬리말 속성**
 
 | 범위 | 구분 | 값 | 설명 |
