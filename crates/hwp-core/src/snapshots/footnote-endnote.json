@@ -1593,7 +1593,7 @@
                 "type": "ctrl_header",
                 "ctrl_id": "fn  ",
                 "ctrl_id_value": 1718493216,
-                "data_type": "other",
+                "data_type": "header_footer",
                 "children": [
                   {
                     "type": "list_header",
@@ -1690,7 +1690,7 @@
                 "type": "ctrl_header",
                 "ctrl_id": "fn  ",
                 "ctrl_id_value": 1718493216,
-                "data_type": "other",
+                "data_type": "header_footer",
                 "children": [
                   {
                     "type": "list_header",
@@ -1858,7 +1858,7 @@
                 "type": "ctrl_header",
                 "ctrl_id": "en  ",
                 "ctrl_id_value": 1701716000,
-                "data_type": "other",
+                "data_type": "header_footer",
                 "children": [
                   {
                     "type": "list_header",
@@ -1955,7 +1955,7 @@
                 "type": "ctrl_header",
                 "ctrl_id": "en  ",
                 "ctrl_id_value": 1701716000,
-                "data_type": "other",
+                "data_type": "header_footer",
                 "children": [
                   {
                     "type": "list_header",
