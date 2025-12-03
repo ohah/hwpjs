@@ -2666,7 +2666,19 @@ expression: json
                 "type": "ctrl_header",
                 "ctrl_id": "cold",
                 "ctrl_id_value": 1668246628,
-                "data_type": "column_definition"
+                "data_type": "column_definition",
+                "attribute": {
+                  "column_type": "normal",
+                  "column_count": 1,
+                  "column_direction": "left",
+                  "equal_width": true,
+                  "attribute_high": 0
+                },
+                "column_spacing": 0,
+                "column_widths": [],
+                "divider_line_type": 0,
+                "divider_line_thickness": 0,
+                "divider_line_color": 0
               }
             ]
           },

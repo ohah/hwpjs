@@ -147,10 +147,8 @@ pub fn to_markdown(document: &HwpDocument, options: &MarkdownOptions) -> String 
                     } else if header.ctrl_id.as_str() == CtrlId::FOOTER {
                         is_footer_paragraph = true;
                         break;
-                    } else if header.ctrl_id.as_str() == CtrlId::FOOTNOTE
-                        && !matches!(header.data, CtrlHeaderData::HeaderFooter)
-                    {
-                        // 각주 (HeaderFooter 데이터 타입이 아닌 경우) / Footnote (when not HeaderFooter data type)
+                    } else if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
+                        // 각주 / Footnote
                         is_footnote_paragraph = true;
                         break;
                     } else if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
@@ -739,12 +737,9 @@ fn should_process_control_header(header: &crate::document::CtrlHeader) -> bool {
         CtrlId::SHAPE_OBJECT => true, // 이미지는 자식 레코드에서 처리 / Images are processed from child records
         CtrlId::HEADER => true,       // 머리말 처리 / Process header
         CtrlId::FOOTER => true,       // 꼬리말 처리 / Process footer
-        CtrlId::FOOTNOTE => {
-            // 각주 처리 (HeaderFooter 데이터 타입이 아닌 경우) / Process footnote (when not HeaderFooter data type)
-            !matches!(header.data, CtrlHeaderData::HeaderFooter)
-        }
-        CtrlId::ENDNOTE => true,     // 미주 처리 / Process endnote
-        CtrlId::COLUMN_DEF => false, // 마크다운으로 표현 불가 / Cannot be expressed in markdown
+        CtrlId::FOOTNOTE => true,     // 각주 처리 / Process footnote
+        CtrlId::ENDNOTE => true,      // 미주 처리 / Process endnote
+        CtrlId::COLUMN_DEF => false,  // 마크다운으로 표현 불가 / Cannot be expressed in markdown
         CtrlId::PAGE_NUMBER | CtrlId::PAGE_NUMBER_POS => false, // 마크다운으로 표현 불가 / Cannot be expressed in markdown
         _ => false, // 기타 컨트롤도 마크다운으로 표현 불가 / Other controls also cannot be expressed in markdown
     }
