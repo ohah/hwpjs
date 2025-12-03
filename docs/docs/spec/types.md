@@ -406,10 +406,111 @@ pub struct InlineControlParam {
 - 바이너리 데이터는 저장하지 않습니다
 - `width`와 `chid`는 제어 문자 타입에 따라 하나만 설정됩니다
 
+## 컨트롤 헤더 데이터 구조
+
+### FootnoteEndnote
+
+각주/미주 컨트롤 헤더의 8바이트 데이터 구조입니다.
+
+**스펙 문서 매핑**: 표 4.3.10.4 - 각주/미주
+
+**구조**:
+```rust
+pub struct FootnoteEndnote {
+    pub number: UINT8,           // 각주/미주 번호
+    pub reserved: [UINT8; 5],     // 예약 영역 (5 bytes)
+    pub attribute: UINT8,         // 속성 또는 플래그
+    pub reserved2: UINT8,         // 예약 영역
+}
+```
+
+**JSON 예시**:
+```json
+{
+  "data_type": "footnote_endnote",
+  "number": 1,
+  "reserved": [0, 0, 0, 0, 0],
+  "attribute": 41,
+  "reserved2": 0
+}
+```
+
+**필드 설명**:
+- `number`: 각주/미주 번호 (첫 번째 바이트)
+- `reserved`: 예약 영역 (바이트 1-5)
+- `attribute`: 속성 또는 플래그 (바이트 6, 현재 41)
+- `reserved2`: 예약 영역 (바이트 7)
+
+**참고**:
+- 스펙 문서에서는 "쓰레기 값이나 불필요한 업데이트를 줄이기 위해 8 byte를 serialize한다"고 명시되어 있지만, 실제 데이터에는 각주/미주 번호 등 유용한 정보가 포함되어 있습니다.
+- 각주 참조 위치(본문)에서 사용되는 번호 정보입니다.
+
+### ColumnDefinition
+
+단 정의 컨트롤 헤더의 데이터 구조입니다.
+
+**스펙 문서 매핑**: 표 138 - 단 정의, 표 139 - 단 정의 속성
+
+**구조**:
+```rust
+pub struct ColumnDefinition {
+    pub attribute: ColumnDefinitionAttribute,
+    pub column_spacing: HWPUNIT16,
+    pub column_widths: Vec<HWPUNIT16>,
+    pub attribute_high: UINT16,
+    pub divider_line_type: UINT8,
+    pub divider_line_thickness: UINT8,
+    pub divider_line_color: UINT32,
+}
+
+pub struct ColumnDefinitionAttribute {
+    pub column_type: ColumnType,        // 단 종류
+    pub column_count: UINT8,            // 단 개수
+    pub column_direction: ColumnDirection, // 단 방향 지정
+    pub equal_width: bool,              // 단 너비 동일하게 여부
+}
+```
+
+**JSON 예시**:
+```json
+{
+  "data_type": "column_definition",
+  "attribute": {
+    "column_type": "normal",
+    "column_count": 1,
+    "column_direction": "left",
+    "equal_width": true
+  },
+  "column_spacing": 0,
+  "column_widths": [],
+  "attribute_high": 0,
+  "divider_line_type": 0,
+  "divider_line_thickness": 0,
+  "divider_line_color": 0
+}
+```
+
+**필드 설명**:
+- `attribute.column_type`: 단 종류 (`normal`, `distributed`, `parallel`)
+- `attribute.column_count`: 단 개수 (1-255)
+- `attribute.column_direction`: 단 방향 지정 (`left`, `right`, `both`)
+- `attribute.equal_width`: 단 너비 동일하게 여부 (bit 12)
+- `column_spacing`: 단 사이 간격 (HWPUNIT16)
+- `column_widths`: 단 너비 배열 (단 너비가 동일하지 않을 때만)
+- `attribute_high`: 속성의 bit 16-31
+- `divider_line_type`: 단 구분선 종류
+- `divider_line_thickness`: 단 구분선 굵기
+- `divider_line_color`: 단 구분선 색상 (COLORREF)
+
+**참고**:
+- `equal_width`가 `true`이면 `column_widths`는 빈 배열입니다.
+- `attribute_high`는 속성의 상위 16비트로, 스펙 문서에 명시되지 않은 추가 속성 정보를 포함할 수 있습니다.
+
 ## 참고
 
 - **스펙 문서**: [HWP 5.0 명세서 - 표 1: 자료형](./hwp-5.0.md#2-자료형-설명)
 - **소스 코드**: `crates/hwp-core/src/types.rs`
 - **플래그 상수**: `crates/hwp-core/src/fileheader.rs`의 `document_flags`, `license_flags` 모듈
 - **제어 문자**: `crates/hwp-core/src/document/bodytext/control_char.rs`
+- **컨트롤 헤더**: `crates/hwp-core/src/document/bodytext/ctrl_header.rs`
 
