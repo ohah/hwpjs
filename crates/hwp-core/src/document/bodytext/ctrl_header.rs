@@ -227,8 +227,34 @@ pub enum CtrlHeaderData {
         description: Option<String>,
     },
     /// 단 정의 / Column definition
-    ColumnDefinition,
-    /// 머리말/꼬리말 / Header/Footer
+    ColumnDefinition {
+        /// 속성 (표 139 참조) / Attribute (see Table 139)
+        attribute: ColumnDefinitionAttribute,
+        /// 단 사이 간격 / Column spacing
+        column_spacing: HWPUNIT16,
+        /// 단 너비 배열 (단 너비가 동일하지 않을 때만) / Column widths array (only when widths are not equal)
+        column_widths: Vec<HWPUNIT16>,
+        /// 속성의 bit 16-31 / Attribute bits 16-31
+        attribute_high: UINT16,
+        /// 단 구분선 종류 / Divider line type
+        divider_line_type: UINT8,
+        /// 단 구분선 굵기 / Divider line thickness
+        divider_line_thickness: UINT8,
+        /// 단 구분선 색상 / Divider line color
+        divider_line_color: UINT32,
+    },
+    /// 각주/미주 / Footnote/Endnote
+    FootnoteEndnote {
+        /// 각주/미주 번호 / Footnote/endnote number
+        number: UINT8,
+        /// 예약 영역 (5 bytes) / Reserved area (5 bytes)
+        reserved: [UINT8; 5],
+        /// 속성 또는 플래그 / Attribute or flag
+        attribute: UINT8,
+        /// 예약 영역 / Reserved area
+        reserved2: UINT8,
+    },
+    /// 머리말/꼬리말 / Header/Footer (각주/미주와 분리)
     HeaderFooter,
     /// 쪽 번호 위치 / Page number position
     PageNumberPosition {
@@ -457,6 +483,43 @@ pub enum ObjectCategory {
     Equation,
 }
 
+/// 단 정의 속성 (표 139) / Column definition attribute (Table 139)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ColumnDefinitionAttribute {
+    /// 단 종류 / Column type
+    pub column_type: ColumnType,
+    /// 단 개수 / Column count
+    pub column_count: UINT8,
+    /// 단 방향 지정 / Column direction
+    pub column_direction: ColumnDirection,
+    /// 단 너비 동일하게 여부 / Equal width
+    pub equal_width: bool,
+}
+
+/// 단 종류 / Column type
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ColumnType {
+    /// 일반 다단 / Normal multi-column
+    Normal,
+    /// 배분 다단 / Distributed multi-column
+    Distributed,
+    /// 평행 다단 / Parallel multi-column
+    Parallel,
+}
+
+/// 단 방향 지정 / Column direction
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ColumnDirection {
+    /// 왼쪽부터 / From left
+    Left,
+    /// 오른쪽부터 / From right
+    Right,
+    /// 맞쪽 / Both sides
+    Both,
+}
+
 /// 오브젝트의 바깥 4방향 여백 / Object outer margins (4 directions)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Margin {
@@ -547,12 +610,14 @@ impl CtrlHeader {
             // 개체 공통 속성 (표 69) / Object common properties (Table 69)
             parse_object_common(remaining_data)?
         } else if ctrl_id_str == CtrlId::COLUMN_DEF {
-            CtrlHeaderData::ColumnDefinition
-        } else if ctrl_id_str == CtrlId::HEADER
-            || ctrl_id_str == CtrlId::FOOTER
-            || ctrl_id_str == CtrlId::FOOTNOTE
-            || ctrl_id_str == CtrlId::ENDNOTE
-        {
+            // 단 정의 (표 138) / Column definition (Table 138)
+            parse_column_definition(remaining_data)?
+        } else if ctrl_id_str == CtrlId::FOOTNOTE || ctrl_id_str == CtrlId::ENDNOTE {
+            // 각주/미주 (표 4.3.10.4) / Footnote/Endnote (Table 4.3.10.4)
+            parse_footnote_endnote(remaining_data)?
+        } else if ctrl_id_str == CtrlId::HEADER || ctrl_id_str == CtrlId::FOOTER {
+            // 머리말/꼬리말 (표 140) / Header/Footer (Table 140)
+            // TODO: 머리말/꼬리말 데이터 구조 파싱 구현 필요
             CtrlHeaderData::HeaderFooter
         } else if ctrl_id_str == CtrlId::PAGE_NUMBER || ctrl_id_str == CtrlId::PAGE_NUMBER_POS {
             // 쪽 번호 위치 (표 147) / Page number position (Table 147)
@@ -1109,6 +1174,140 @@ fn parse_section_definition(data: &[u8]) -> Result<CtrlHeaderData, String> {
         table_number,
         equation_number,
         language,
+    })
+}
+
+/// 단 정의 파싱 (표 138) / Parse column definition (Table 138)
+fn parse_column_definition(data: &[u8]) -> Result<CtrlHeaderData, String> {
+    // 최소 12바이트 필요 (기본 필드만) / Need at least 12 bytes (basic fields only)
+    if data.len() < 12 {
+        return Err(format!(
+            "Column definition must be at least 12 bytes, got {} bytes",
+            data.len()
+        ));
+    }
+
+    let mut offset = 0;
+
+    // UINT16 속성의 bit 0-15 (표 139 참조) / UINT16 attribute bits 0-15 (see Table 139)
+    let attribute_low = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
+    offset += 2;
+
+    // 속성 파싱 (표 139) / Parse attribute (Table 139)
+    // bit 0-1: 단 종류 / bit 0-1: column type
+    let column_type = match attribute_low & 0x03 {
+        0 => ColumnType::Normal,
+        1 => ColumnType::Distributed,
+        2 => ColumnType::Parallel,
+        _ => ColumnType::Normal,
+    };
+
+    // bit 2-9: 단 개수(cnt) / bit 2-9: column count
+    let column_count = ((attribute_low >> 2) & 0xFF) as UINT8;
+    let column_count_u8 = if column_count == 0 { 1 } else { column_count }; // 최소 1개 / minimum 1
+
+    // bit 10-11: 단 방향 지정 / bit 10-11: column direction
+    let column_direction = match (attribute_low >> 10) & 0x03 {
+        0 => ColumnDirection::Left,
+        1 => ColumnDirection::Right,
+        2 => ColumnDirection::Both,
+        _ => ColumnDirection::Left,
+    };
+
+    // bit 12: 단 너비 동일하게 여부 / bit 12: equal width
+    let equal_width = (attribute_low & 0x1000) != 0;
+
+    let attribute = ColumnDefinitionAttribute {
+        column_type,
+        column_count: column_count_u8,
+        column_direction,
+        equal_width,
+    };
+
+    // HWPUNIT16 단 사이 간격 / HWPUNIT16 column spacing
+    let column_spacing = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
+    offset += 2;
+
+    // WORD array[cnt] 단 너비가 동일하지 않으면, 단의 개수만큼 단의 폭 / WORD array[cnt] column widths if not equal
+    let mut column_widths = Vec::new();
+    if !equal_width {
+        for _ in 0..column_count_u8 {
+            if offset + 2 <= data.len() {
+                column_widths.push(HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]));
+                offset += 2;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // UINT16 속성의 bit 16-31 (표 139 참조) / UINT16 attribute bits 16-31 (see Table 139)
+    let attribute_high = if offset + 2 <= data.len() {
+        UINT16::from_le_bytes([data[offset], data[offset + 1]])
+    } else {
+        0
+    };
+    offset += 2;
+
+    // UINT8 단 구분선 종류 / UINT8 divider line type
+    let divider_line_type = if offset < data.len() { data[offset] } else { 0 };
+    offset += 1;
+
+    // UINT8 단 구분선 굵기 / UINT8 divider line thickness
+    let divider_line_thickness = if offset < data.len() { data[offset] } else { 0 };
+    offset += 1;
+
+    // COLORREF 단 구분선 색상 / COLORREF divider line color
+    let divider_line_color = if offset + 4 <= data.len() {
+        UINT32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ])
+    } else {
+        0
+    };
+
+    Ok(CtrlHeaderData::ColumnDefinition {
+        attribute,
+        column_spacing,
+        column_widths,
+        attribute_high,
+        divider_line_type,
+        divider_line_thickness,
+        divider_line_color,
+    })
+}
+
+/// 각주/미주 파싱 (표 4.3.10.4) / Parse footnote/endnote (Table 4.3.10.4)
+fn parse_footnote_endnote(data: &[u8]) -> Result<CtrlHeaderData, String> {
+    // 8바이트 필요 / Need 8 bytes
+    if data.len() < 8 {
+        return Err(format!(
+            "Footnote/endnote must be at least 8 bytes, got {} bytes",
+            data.len()
+        ));
+    }
+
+    // 바이트 0: 각주/미주 번호 (UINT8) / Byte 0: Footnote/endnote number (UINT8)
+    let number = data[0];
+
+    // 바이트 1-5: 예약 영역 (5 bytes) / Bytes 1-5: Reserved area (5 bytes)
+    let mut reserved = [0u8; 5];
+    reserved.copy_from_slice(&data[1..6]);
+
+    // 바이트 6: 속성 또는 플래그 (UINT8) / Byte 6: Attribute or flag (UINT8)
+    let attribute = data[6];
+
+    // 바이트 7: 예약 영역 (UINT8) / Byte 7: Reserved area (UINT8)
+    let reserved2 = data[7];
+
+    Ok(CtrlHeaderData::FootnoteEndnote {
+        number,
+        reserved,
+        attribute,
+        reserved2,
     })
 }
 
