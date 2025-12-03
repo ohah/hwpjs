@@ -27,10 +27,18 @@ impl CtrlId {
     pub const SECTION_DEF: &str = "secd";
     /// 단 정의 / Column definition
     pub const COLUMN_DEF: &str = "cold";
-    /// 머리말/꼬리말 / Header/Footer
+    /// 머리말 / Header
+    pub const HEADER: &str = "head";
+    /// 꼬리말 / Footer
+    pub const FOOTER: &str = "foot";
+    /// 각주 / Footnote (공백 포함)
+    pub const FOOTNOTE: &str = "fn  ";
+    /// 미주 / Endnote (공백 포함)
+    pub const ENDNOTE: &str = "en  ";
+    /// 머리말/꼬리말 (레거시 호환용) / Header/Footer (legacy compatibility)
+    /// 실제로는 HEADER와 FOOTER를 사용해야 함 / Should use HEADER and FOOTER instead
+    #[deprecated(note = "Use HEADER or FOOTER instead")]
     pub const HEADER_FOOTER: &str = "head";
-    /// 각주/미주 / Footnote/Endnote
-    pub const FOOTNOTE: &str = "foot";
     /// 자동번호 / Auto numbering
     /// 스펙 문서: 표 127, 표 142 참조 / Spec: See Table 127, Table 142
     pub const AUTO_NUMBER: &str = "autn";
@@ -540,7 +548,11 @@ impl CtrlHeader {
             parse_object_common(remaining_data)?
         } else if ctrl_id_str == CtrlId::COLUMN_DEF {
             CtrlHeaderData::ColumnDefinition
-        } else if ctrl_id_str == CtrlId::HEADER_FOOTER || ctrl_id_str == CtrlId::FOOTNOTE {
+        } else if ctrl_id_str == CtrlId::HEADER
+            || ctrl_id_str == CtrlId::FOOTER
+            || ctrl_id_str == CtrlId::FOOTNOTE
+            || ctrl_id_str == CtrlId::ENDNOTE
+        {
             CtrlHeaderData::HeaderFooter
         } else if ctrl_id_str == CtrlId::PAGE_NUMBER || ctrl_id_str == CtrlId::PAGE_NUMBER_POS {
             // 쪽 번호 위치 (표 147) / Page number position (Table 147)

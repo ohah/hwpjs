@@ -144,8 +144,12 @@ impl ControlChar {
     /// 숨은 설명 / Hidden description
     pub const HIDDEN_DESC: u8 = 15;
     /// 머리말/꼬리말 / Header/footer
+    /// 제어 문자 코드는 16으로 동일하며, 실제 구분은 컨트롤 헤더의 컨트롤 ID로 이루어짐 ("head" = 머리말, "foot" = 꼬리말)
+    /// Control character code is 16 for both, actual distinction is made by control ID in control header ("head" = header, "foot" = footer)
     pub const HEADER_FOOTER: u8 = 16;
     /// 각주/미주 / Footnote/endnote
+    /// 제어 문자 코드는 17로 동일하지만, 실제 컨트롤 ID로 구분됨 ("fn  " = 각주, "en  " = 미주)
+    /// Control character code is 17 for both, but distinguished by control ID ("fn  " = footnote, "en  " = endnote)
     pub const FOOTNOTE: u8 = 17;
     /// 자동번호(각주, 표 등) / Auto number (footnote, table, etc.)
     pub const AUTO_NUMBER: u8 = 18;

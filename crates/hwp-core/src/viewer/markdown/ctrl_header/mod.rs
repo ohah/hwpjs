@@ -4,8 +4,10 @@
 /// 스펙 문서 매핑: 표 57 - 본문의 데이터 레코드, CTRL_HEADER (HWPTAG_BEGIN + 55)
 /// Spec mapping: Table 57 - BodyText data records, CTRL_HEADER (HWPTAG_BEGIN + 55)
 mod column_def;
+mod endnote;
+mod footer;
 mod footnote;
-mod header_footer;
+mod header;
 mod page_number;
 mod shape_object;
 mod table;
@@ -13,8 +15,10 @@ mod table;
 use crate::document::{CtrlHeader, CtrlId};
 
 use column_def::convert_column_def_ctrl_to_markdown;
+use endnote::convert_endnote_ctrl_to_markdown;
+use footer::convert_footer_ctrl_to_markdown;
 use footnote::convert_footnote_ctrl_to_markdown;
-use header_footer::convert_header_footer_ctrl_to_markdown;
+use header::convert_header_ctrl_to_markdown;
 use page_number::convert_page_number_ctrl_to_markdown;
 use shape_object::convert_shape_object_ctrl_to_markdown;
 use table::convert_table_ctrl_to_markdown;
@@ -32,8 +36,10 @@ pub fn convert_control_to_markdown(header: &CtrlHeader, has_table: bool) -> Stri
     match header.ctrl_id.as_str() {
         CtrlId::TABLE => convert_table_ctrl_to_markdown(header, has_table),
         CtrlId::SHAPE_OBJECT => convert_shape_object_ctrl_to_markdown(header),
-        CtrlId::HEADER_FOOTER => convert_header_footer_ctrl_to_markdown(),
-        CtrlId::FOOTNOTE => convert_footnote_ctrl_to_markdown(),
+        CtrlId::HEADER => convert_header_ctrl_to_markdown(header),
+        CtrlId::FOOTER => convert_footer_ctrl_to_markdown(header),
+        CtrlId::FOOTNOTE => convert_footnote_ctrl_to_markdown(header),
+        CtrlId::ENDNOTE => convert_endnote_ctrl_to_markdown(header),
         CtrlId::COLUMN_DEF => convert_column_def_ctrl_to_markdown(),
         CtrlId::PAGE_NUMBER | CtrlId::PAGE_NUMBER_POS => {
             convert_page_number_ctrl_to_markdown(header)

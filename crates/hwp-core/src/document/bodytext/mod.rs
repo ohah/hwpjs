@@ -72,6 +72,7 @@ use crate::cfb::CfbParser;
 use crate::decompress::decompress_deflate;
 use crate::document::fileheader::FileHeader;
 use crate::types::{decode_utf16le, RecordHeader, WORD};
+use crate::INT16;
 use cfb::CompoundFile;
 use record_tree::RecordTreeNode;
 use serde::{Deserialize, Serialize};
@@ -629,8 +630,8 @@ impl Section {
                         use crate::types::{HWPUNIT, HWPUNIT16, UINT16, UINT32};
 
                         // LIST_HEADER에서 셀 생성 / Create cells from LIST_HEADER
-                        let row_count = table.attributes.row_count as usize;
-                        let col_count = table.attributes.col_count as usize;
+                        let row_count = table.attributes.row_count.into();
+                        let col_count = table.attributes.col_count.into();
 
                         // row_address와 col_address를 사용하여 셀 매핑 / Map cells using row_address and col_address
                         let mut cell_map: Vec<Vec<Option<(usize, Vec<super::Paragraph>)>>> =
@@ -778,7 +779,7 @@ impl Section {
                                     * table.attributes.col_count as usize
                                     + col_addr as usize;
                                 if cell_index < table.cells.len() {
-                                    table.cells[cell_index].paragraphs = paragraphs;
+                                    table.cells[cell_index].paragraphs = paragraphs.clone();
                                 }
                             }
                         }
