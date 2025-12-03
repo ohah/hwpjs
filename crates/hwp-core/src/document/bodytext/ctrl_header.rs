@@ -1409,20 +1409,12 @@ fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, String> {
 
     // BYTE 각 비트가 해당 레벨의 텍스트에 대한 참조를 했는지 여부 / BYTE whether each bit references text at that level
     // 가변 길이: 13바이트 이상일 때만 읽기 / Variable length: read only if 13+ bytes
-    let text_ref = if offset < data.len() {
-        data[offset]
-    } else {
-        0
-    };
+    let text_ref = if offset < data.len() { data[offset] } else { 0 };
     offset += 1;
 
     // BYTE 각 비트가 해당 레벨의 번호에 대한 참조를 했는지 여부 / BYTE whether each bit references number at that level
     // 가변 길이: 14바이트 이상일 때만 읽기 / Variable length: read only if 14+ bytes
-    let number_ref = if offset < data.len() {
-        data[offset]
-    } else {
-        0
-    };
+    let number_ref = if offset < data.len() { data[offset] } else { 0 };
 
     Ok(CtrlHeaderData::HeaderFooter {
         attribute,
