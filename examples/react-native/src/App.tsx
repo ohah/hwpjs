@@ -44,11 +44,16 @@ function App() {
         // 파일을 base64로 읽기
         const fileData = await RNFS.readFile(filePath, 'base64');
 
-        // base64를 number[]로 직접 변환
-        const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+        // base64를 ArrayBuffer로 변환 (안전한 방법)
+        const binaryString = atob(fileData);
+        const length = binaryString.length;
+        const bytes = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
 
         // HWP 파일 파싱
-        const result = Hwpjs.toJson(numberArray);
+        const result = Hwpjs.toJson(bytes.buffer);
         setHwpData(result);
         console.log('HWP 파싱 결과:', result);
       } catch (err) {

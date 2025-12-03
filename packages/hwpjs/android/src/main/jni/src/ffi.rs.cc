@@ -1102,11 +1102,13 @@ extern "C" {
 
 ::craby::hwpjs::bridging::Hwpjs *craby$hwpjs$bridging$cxxbridge1$190$create_hwpjs(::std::size_t id, ::rust::Str data_path) noexcept;
 
-::rust::repr::PtrLen craby$hwpjs$bridging$cxxbridge1$190$hwpjs_file_header(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> *data, ::rust::String *return$) noexcept;
+void craby$hwpjs$bridging$cxxbridge1$190$create_vec_from_slice(::rust::Slice<::std::uint8_t const> data, ::rust::Vec<::std::uint8_t> *return$) noexcept;
 
-::rust::repr::PtrLen craby$hwpjs$bridging$cxxbridge1$190$hwpjs_to_json(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> *data, ::rust::String *return$) noexcept;
+::rust::repr::PtrLen craby$hwpjs$bridging$cxxbridge1$190$hwpjs_file_header(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<::std::uint8_t> *data, ::rust::String *return$) noexcept;
 
-::rust::repr::PtrLen craby$hwpjs$bridging$cxxbridge1$190$hwpjs_to_markdown(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> *data, ::craby::hwpjs::bridging::ToMarkdownOptions *options, ::craby::hwpjs::bridging::ToMarkdownResult *return$) noexcept;
+::rust::repr::PtrLen craby$hwpjs$bridging$cxxbridge1$190$hwpjs_to_json(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<::std::uint8_t> *data, ::rust::String *return$) noexcept;
+
+::rust::repr::PtrLen craby$hwpjs$bridging$cxxbridge1$190$hwpjs_to_markdown(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<::std::uint8_t> *data, ::craby::hwpjs::bridging::ToMarkdownOptions *options, ::craby::hwpjs::bridging::ToMarkdownResult *return$) noexcept;
 } // extern "C"
 
 ::std::size_t Hwpjs::layout::size() noexcept {
@@ -1121,8 +1123,14 @@ extern "C" {
   return ::rust::Box<::craby::hwpjs::bridging::Hwpjs>::from_raw(craby$hwpjs$bridging$cxxbridge1$190$create_hwpjs(id, data_path));
 }
 
-::rust::String fileHeader(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data) {
-  ::rust::ManuallyDrop<::rust::Vec<double>> data$(::std::move(data));
+::rust::Vec<::std::uint8_t> createVecFromSlice(::rust::Slice<::std::uint8_t const> data) noexcept {
+  ::rust::MaybeUninit<::rust::Vec<::std::uint8_t>> return$;
+  craby$hwpjs$bridging$cxxbridge1$190$create_vec_from_slice(data, &return$.value);
+  return ::std::move(return$.value);
+}
+
+::rust::String fileHeader(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<::std::uint8_t> data) {
+  ::rust::ManuallyDrop<::rust::Vec<::std::uint8_t>> data$(::std::move(data));
   ::rust::MaybeUninit<::rust::String> return$;
   ::rust::repr::PtrLen error$ = craby$hwpjs$bridging$cxxbridge1$190$hwpjs_file_header(it_, &data$.value, &return$.value);
   if (error$.ptr) {
@@ -1131,8 +1139,8 @@ extern "C" {
   return ::std::move(return$.value);
 }
 
-::rust::String toJson(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data) {
-  ::rust::ManuallyDrop<::rust::Vec<double>> data$(::std::move(data));
+::rust::String toJson(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<::std::uint8_t> data) {
+  ::rust::ManuallyDrop<::rust::Vec<::std::uint8_t>> data$(::std::move(data));
   ::rust::MaybeUninit<::rust::String> return$;
   ::rust::repr::PtrLen error$ = craby$hwpjs$bridging$cxxbridge1$190$hwpjs_to_json(it_, &data$.value, &return$.value);
   if (error$.ptr) {
@@ -1141,8 +1149,8 @@ extern "C" {
   return ::std::move(return$.value);
 }
 
-::craby::hwpjs::bridging::ToMarkdownResult toMarkdown(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data, ::craby::hwpjs::bridging::ToMarkdownOptions options) {
-  ::rust::ManuallyDrop<::rust::Vec<double>> data$(::std::move(data));
+::craby::hwpjs::bridging::ToMarkdownResult toMarkdown(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<::std::uint8_t> data, ::craby::hwpjs::bridging::ToMarkdownOptions options) {
+  ::rust::ManuallyDrop<::rust::Vec<::std::uint8_t>> data$(::std::move(data));
   ::rust::ManuallyDrop<::craby::hwpjs::bridging::ToMarkdownOptions> options$(::std::move(options));
   ::rust::MaybeUninit<::craby::hwpjs::bridging::ToMarkdownResult> return$;
   ::rust::repr::PtrLen error$ = craby$hwpjs$bridging$cxxbridge1$190$hwpjs_to_markdown(it_, &data$.value, &options$.value, &return$.value);

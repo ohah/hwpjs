@@ -10,7 +10,6 @@ pub use script::Script;
 pub use script_version::ScriptVersion;
 
 use crate::cfb::CfbParser;
-use crate::types::{decode_utf16le, DWORD};
 use serde::{Deserialize, Serialize};
 
 /// Scripts structure

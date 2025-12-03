@@ -184,26 +184,27 @@ interface SummaryInformation {
 - **우선순위**: 중간
 - **상태**: 계획됨
 
-### 입력 타입 변경: Array<number> → Uint8Array
+### ArrayBuffer 지원 구현 (완료)
 
-- **현재 상태**: 함수들이 `Array<number>` (또는 `number[]`)를 입력으로 받고 있음
-- **변경 필요**: `Uint8Array`로 변경하여 타입 안정성 및 성능 개선
+- **완료된 작업**: React Native 바인딩에서 `ArrayBuffer` 타입 지원 구현
+- **구현 내용**:
+  - `packages/hwpjs/crates/lib/src/ffi.rs`에 `create_vec_from_slice` 함수 추가
+    - `ArrayBuffer`를 `rust::Vec<uint8_t>`로 안전하게 변환하는 Rust 함수
+    - `data.to_vec()`를 사용하여 최적화된 메모리 복사 수행
+  - `packages/hwpjs/cpp/bridging-generated.hpp`에서 `createVecFromSlice` 사용
+    - C++에서 `ArrayBuffer`를 받아 `rust::Slice<const uint8_t>`로 변환
+    - Rust 함수를 호출하여 안전하게 `rust::Vec<uint8_t>` 생성
+  - iOS/Android 모두 동일한 구현 적용
+- **커스텀 수정 사항**:
+  - CXX 브릿지의 `rust::Vec`는 `set_len`이 private이어서 직접 `memcpy` 사용 불가
+  - Rust 함수를 통해 벡터 생성하여 메모리 안전성 보장
+  - 성능: Rust의 `to_vec()`이 SIMD 최적화 가능하여 충분히 빠름
 - **영향 범위**:
-  - React Native 바인딩: `packages/hwpjs/crates/lib/src/react_native_impl.rs`
-  - 예제 코드: `examples/web/src/App.tsx`, `examples/react-native/src/App.tsx`
-- **우선순위**: 높음
-- **상태**: 계획됨
-
-### Craby에 Uint8Array 지원 추가
-
-- **현재 상태**: Craby가 `Array<Number>`만 지원하고 있음
-- **변경 필요**: Craby에 `Uint8Array` (또는 `Array<u8>`) 타입 지원 추가
-- **목적**: React Native 바인딩에서 직접 `Uint8Array`를 받을 수 있도록 개선
-- **영향 범위**:
-  - Craby 라이브러리 자체 수정 필요
-  - React Native 바인딩 코드 수정
-- **우선순위**: 높음
-- **상태**: 계획됨
+  - `packages/hwpjs/crates/lib/src/ffi.rs`: `create_vec_from_slice` 함수 추가
+  - `packages/hwpjs/cpp/bridging-generated.hpp`: `Bridging<rust::Vec<uint8_t>>` 수정
+  - `packages/hwpjs/src-reactnative/NativeReactNative.ts`: `ArrayBuffer` 타입 사용
+  - `examples/react-native/src/App.tsx`: `ArrayBuffer` 변환 로직 수정
+- **상태**: 완료 ✅
 
 ### Craby에 객체 배열(Object[]) 지원 추가
 

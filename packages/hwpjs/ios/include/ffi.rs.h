@@ -1027,11 +1027,13 @@ private:
 
 ::rust::Box<::craby::hwpjs::bridging::Hwpjs> createHwpjs(::std::size_t id, ::rust::Str data_path) noexcept;
 
-::rust::String fileHeader(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data);
+::rust::Vec<::std::uint8_t> createVecFromSlice(::rust::Slice<::std::uint8_t const> data) noexcept;
 
-::rust::String toJson(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data);
+::rust::String fileHeader(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<::std::uint8_t> data);
 
-::craby::hwpjs::bridging::ToMarkdownResult toMarkdown(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<double> data, ::craby::hwpjs::bridging::ToMarkdownOptions options);
+::rust::String toJson(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<::std::uint8_t> data);
+
+::craby::hwpjs::bridging::ToMarkdownResult toMarkdown(::craby::hwpjs::bridging::Hwpjs &it_, ::rust::Vec<::std::uint8_t> data, ::craby::hwpjs::bridging::ToMarkdownOptions options);
 } // namespace bridging
 } // namespace hwpjs
 } // namespace craby

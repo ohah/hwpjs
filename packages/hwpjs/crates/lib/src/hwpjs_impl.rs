@@ -18,10 +18,7 @@ impl HwpjsSpec for Hwpjs {
         self.ctx.id
     }
 
-    fn to_json(&mut self, data: Array<Number>) -> String {
-        // Array<Number> (Vec<f64>)를 Vec<u8>로 변환
-        let data: Vec<u8> = data.iter().map(|&n| n as u8).collect();
-
+    fn to_json(&mut self, data: Vec<u8>) -> String {
         let parser = HwpParser::new();
         let document = parser.parse(&data).unwrap_or_else(|e| throw!("{}", e));
 
@@ -29,10 +26,7 @@ impl HwpjsSpec for Hwpjs {
             .unwrap_or_else(|e| throw!("Failed to serialize to JSON: {}", e))
     }
 
-    fn to_markdown(&mut self, data: Array<Number>, options: ToMarkdownOptions) -> ToMarkdownResult {
-        // Array<Number> (Vec<f64>)를 Vec<u8>로 변환
-        let data: Vec<u8> = data.iter().map(|&n| n as u8).collect();
-
+    fn to_markdown(&mut self, data: Vec<u8>, options: ToMarkdownOptions) -> ToMarkdownResult {
         let parser = HwpParser::new();
         let document = parser.parse(&data).unwrap_or_else(|e| throw!("{}", e));
 
@@ -55,10 +49,7 @@ impl HwpjsSpec for Hwpjs {
         ToMarkdownResult { markdown }
     }
 
-    fn file_header(&mut self, data: Array<Number>) -> String {
-        // Array<Number> (Vec<f64>)를 Vec<u8>로 변환
-        let data: Vec<u8> = data.iter().map(|&n| n as u8).collect();
-
+    fn file_header(&mut self, data: Vec<u8>) -> String {
         let parser = HwpParser::new();
         parser
             .parse_fileheader_json(&data)

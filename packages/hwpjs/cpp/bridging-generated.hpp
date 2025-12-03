@@ -4,11 +4,46 @@
 #include "cxx.h"
 #include "ffi.rs.h"
 #include <react/bridging/Bridging.h>
+#include <variant>
 
 using namespace facebook;
 
+namespace hwpjs {
+
+class RustVecBuffer : public jsi::MutableBuffer {
+public:
+  explicit RustVecBuffer(rust::Vec<uint8_t> vec)
+    : vec_(std::move(vec)) {}
+
+  ~RustVecBuffer() override = default;
+
+  size_t size() const override {
+    return vec_.size();
+  }
+
+  uint8_t* data() override {
+    return const_cast<uint8_t*>(vec_.data());
+  }
+
+private:
+  rust::Vec<uint8_t> vec_;
+};
+
+} // namespace hwpjs
+
 namespace facebook {
 namespace react {
+
+template <>
+struct Bridging<std::monostate> {
+  static std::monostate fromJs(jsi::Runtime& rt, const jsi::Value &value, std::shared_ptr<CallInvoker> callInvoker) {
+    return std::monostate{};
+  }
+
+  static jsi::Value toJs(jsi::Runtime& rt, const std::monostate& value) {
+    return jsi::Value::undefined();
+  }
+};
 
 template <>
 struct Bridging<rust::Str> {
@@ -31,6 +66,24 @@ struct Bridging<rust::String> {
 
   static jsi::Value toJs(jsi::Runtime& rt, const rust::String& value) {
     return react::bridging::toJs(rt, std::string(value.data(), value.size()));
+  }
+};
+
+template <>
+struct Bridging<rust::Vec<uint8_t>> {
+  static rust::Vec<uint8_t> fromJs(jsi::Runtime& rt, const jsi::Value &value, std::shared_ptr<CallInvoker> callInvoker) {
+    auto arrayBuffer = value.asObject(rt).getArrayBuffer(rt);
+    uint8_t* data = arrayBuffer.data(rt);
+    size_t size = arrayBuffer.size(rt);
+    rust::Slice<const uint8_t> slice{data, size};
+    rust::Vec<uint8_t> vec = craby::hwpjs::bridging::createVecFromSlice(slice);
+
+    return vec;
+  }
+
+  static jsi::Value toJs(jsi::Runtime& rt, const rust::Vec<uint8_t>& vec) {
+    auto buffer = std::make_shared<hwpjs::RustVecBuffer>(std::move(vec));
+    return jsi::ArrayBuffer(rt, buffer);
   }
 };
 

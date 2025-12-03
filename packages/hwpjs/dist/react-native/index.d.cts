@@ -12,9 +12,9 @@ interface ToMarkdownResult {
   markdown: string;
 }
 interface Spec extends NativeModule {
-  toJson(data: number[]): string;
-  toMarkdown(data: number[], options: ToMarkdownOptions): ToMarkdownResult;
-  fileHeader(data: number[]): string;
+  toJson(data: ArrayBuffer): string;
+  toMarkdown(data: ArrayBuffer, options: ToMarkdownOptions): ToMarkdownResult;
+  fileHeader(data: ArrayBuffer): string;
 }
 declare const _default: Spec;
 //#endregion

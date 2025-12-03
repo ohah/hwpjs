@@ -140,7 +140,7 @@ pub fn to_markdown(document: &HwpDocument, options: &MarkdownOptions) -> String 
             let mut is_endnote_paragraph = false;
             for record in &paragraph.records {
                 if let ParagraphRecord::CtrlHeader { header, .. } = record {
-                    use crate::document::{CtrlHeaderData, CtrlId};
+                    use crate::document::CtrlId;
                     if header.ctrl_id.as_str() == CtrlId::HEADER {
                         is_header_paragraph = true;
                         break;
@@ -730,7 +730,7 @@ fn is_block_element(part: &str) -> bool {
 /// Check if control header should be processed for markdown
 /// 컨트롤 헤더가 마크다운 변환에서 처리되어야 하는지 확인
 fn should_process_control_header(header: &crate::document::CtrlHeader) -> bool {
-    use crate::document::{CtrlHeaderData, CtrlId};
+    use crate::document::CtrlId;
     match header.ctrl_id.as_str() {
         // 마크다운으로 표현 가능한 컨트롤만 처리 / Only process controls that can be expressed in markdown
         CtrlId::TABLE => true,

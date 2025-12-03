@@ -60,7 +60,7 @@ jsi::Value CxxHwpjsModule::fileHeader(jsi::Runtime &rt,
       throw jsi::JSError(rt, "Expected 1 argument");
     }
 
-    auto arg0 = react::bridging::fromJs<rust::Vec<double>>(rt, args[0], callInvoker);
+    auto arg0 = react::bridging::fromJs<rust::Vec<uint8_t>>(rt, args[0], callInvoker);
     auto ret = craby::hwpjs::bridging::fileHeader(*it_, arg0);
 
     return react::bridging::toJs(rt, ret);
@@ -84,7 +84,7 @@ jsi::Value CxxHwpjsModule::toJson(jsi::Runtime &rt,
       throw jsi::JSError(rt, "Expected 1 argument");
     }
 
-    auto arg0 = react::bridging::fromJs<rust::Vec<double>>(rt, args[0], callInvoker);
+    auto arg0 = react::bridging::fromJs<rust::Vec<uint8_t>>(rt, args[0], callInvoker);
     auto ret = craby::hwpjs::bridging::toJson(*it_, arg0);
 
     return react::bridging::toJs(rt, ret);
@@ -108,7 +108,7 @@ jsi::Value CxxHwpjsModule::toMarkdown(jsi::Runtime &rt,
       throw jsi::JSError(rt, "Expected 2 arguments");
     }
 
-    auto arg0 = react::bridging::fromJs<rust::Vec<double>>(rt, args[0], callInvoker);
+    auto arg0 = react::bridging::fromJs<rust::Vec<uint8_t>>(rt, args[0], callInvoker);
     auto arg1 = react::bridging::fromJs<craby::hwpjs::bridging::ToMarkdownOptions>(rt, args[1], callInvoker);
     auto ret = craby::hwpjs::bridging::toMarkdown(*it_, arg0, arg1);
 

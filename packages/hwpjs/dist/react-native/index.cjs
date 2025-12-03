@@ -1,6 +1,6 @@
 let react_native = require("react-native");
 
-//#region ../../node_modules/.bun/craby-modules@0.1.0-rc.2+0891b211bdee886f/node_modules/craby-modules/dist/index.mjs
+//#region ../../node_modules/.bun/craby-modules@0.1.0-rc.3+0891b211bdee886f/node_modules/craby-modules/dist/index.mjs
 /**
 * Android JNI initialization workaround
 *

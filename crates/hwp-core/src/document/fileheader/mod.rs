@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 mod constants;
 mod serialize;
 
-pub use constants::{document_flags, license_flags};
 use serialize::{serialize_document_flags, serialize_license_flags, serialize_version};
 
 /// FileHeader structure for HWP 5.0

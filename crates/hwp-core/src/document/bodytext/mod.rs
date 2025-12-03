@@ -72,7 +72,6 @@ use crate::cfb::CfbParser;
 use crate::decompress::decompress_deflate;
 use crate::document::fileheader::FileHeader;
 use crate::types::{decode_utf16le, RecordHeader, WORD};
-use crate::INT16;
 use cfb::CompoundFile;
 use record_tree::RecordTreeNode;
 use serde::{Deserialize, Serialize};

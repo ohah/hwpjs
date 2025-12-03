@@ -11,7 +11,7 @@ export interface ToMarkdownOptions {
 
 export interface ImageData {
   id: string;
-  data: number[];
+  data: ArrayBuffer;
   format: string;
 }
 
@@ -20,9 +20,9 @@ export interface ToMarkdownResult {
 }
 
 interface Spec extends NativeModule {
-  toJson(data: number[]): string;
-  toMarkdown(data: number[], options: ToMarkdownOptions): ToMarkdownResult;
-  fileHeader(data: number[]): string;
+  toJson(data: ArrayBuffer): string;
+  toMarkdown(data: ArrayBuffer, options: ToMarkdownOptions): ToMarkdownResult;
+  fileHeader(data: ArrayBuffer): string;
 }
 
 export default NativeModuleRegistry.getEnforcing<Spec>('Hwpjs');

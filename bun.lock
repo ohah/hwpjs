@@ -124,8 +124,8 @@
         "@types/node": "^20.0.0",
         "chalk": "^5.6.2",
         "commander": "^14.0.0",
-        "craby-modules": "^0.1.0-rc.2",
-        "crabygen": "^0.1.0-rc.2",
+        "craby-modules": "^0.1.0-rc.3",
+        "crabygen": "^0.1.0-rc.3",
         "npm-run-all2": "^8.0.4",
         "react": "19.1.1",
         "react-native": "0.82.1",
@@ -159,7 +159,7 @@
       "name": "@ohah/hwpjs-wasm32-wasi",
       "version": "0.1.0-rc.1",
       "dependencies": {
-        "@napi-rs/wasm-runtime": "^1.0.7",
+        "@napi-rs/wasm-runtime": "^1.1.0",
       },
     },
     "packages/hwpjs/npm/win32-arm64-msvc": {
@@ -418,27 +418,27 @@
 
     "@commander-js/extra-typings": ["@commander-js/extra-typings@14.0.0", "", { "peerDependencies": { "commander": "~14.0.0" } }, "sha512-hIn0ncNaJRLkZrxBIp5AsW/eXEHNKYQBh0aPdoUqNgD+Io3NIykQqpKFyKcuasZhicGaEZJX/JBSIkZ4e5x8Dg=="],
 
-    "@craby/cli-bindings": ["@craby/cli-bindings@0.1.0-rc.2", "", { "optionalDependencies": { "@craby/cli-bindings-darwin-arm64": "0.1.0-rc.2", "@craby/cli-bindings-darwin-x64": "0.1.0-rc.2", "@craby/cli-bindings-linux-arm-gnueabihf": "0.1.0-rc.2", "@craby/cli-bindings-linux-arm64-gnu": "0.1.0-rc.2", "@craby/cli-bindings-linux-arm64-musl": "0.1.0-rc.2", "@craby/cli-bindings-linux-x64-gnu": "0.1.0-rc.2", "@craby/cli-bindings-linux-x64-musl": "0.1.0-rc.2", "@craby/cli-bindings-win32-arm64-msvc": "0.1.0-rc.2", "@craby/cli-bindings-win32-ia32-msvc": "0.1.0-rc.2", "@craby/cli-bindings-win32-x64-msvc": "0.1.0-rc.2" } }, "sha512-UrG+Yt/Kw5aIHFa9Bi23OUI5paq3+4L63ueFvsWyqJh3TbF0fjm8+owQQ/QSt3Gq1mVKInKQxLU1ciZ8PNwPWQ=="],
+    "@craby/cli-bindings": ["@craby/cli-bindings@0.1.0-rc.3", "", { "optionalDependencies": { "@craby/cli-bindings-darwin-arm64": "0.1.0-rc.3", "@craby/cli-bindings-darwin-x64": "0.1.0-rc.3", "@craby/cli-bindings-linux-arm-gnueabihf": "0.1.0-rc.3", "@craby/cli-bindings-linux-arm64-gnu": "0.1.0-rc.3", "@craby/cli-bindings-linux-arm64-musl": "0.1.0-rc.3", "@craby/cli-bindings-linux-x64-gnu": "0.1.0-rc.3", "@craby/cli-bindings-linux-x64-musl": "0.1.0-rc.3", "@craby/cli-bindings-win32-arm64-msvc": "0.1.0-rc.3", "@craby/cli-bindings-win32-ia32-msvc": "0.1.0-rc.3", "@craby/cli-bindings-win32-x64-msvc": "0.1.0-rc.3" } }, "sha512-EQ3IBRjIwZ6eOPe9mTLVMNX0QlA0hklXG3zskgpgmGeXRKUkkNFxvucOb5j7wdONx/RmAUtb30sgAhQ8V3C8sw=="],
 
-    "@craby/cli-bindings-darwin-arm64": ["@craby/cli-bindings-darwin-arm64@0.1.0-rc.2", "", { "os": "darwin", "cpu": "arm64" }, "sha512-tuHv3bBrrXZJuGAmEhqa8JJ30/Wv79VaSPk0H8aHOiAEj1Bt3rBGHDvz7+Y6HaKmjqxnStaPkIUH3TdrAi3bsQ=="],
+    "@craby/cli-bindings-darwin-arm64": ["@craby/cli-bindings-darwin-arm64@0.1.0-rc.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-8H8h5A3PMpsaLvh0zF7gnMakHQOqeD6NuKW6N8KvVX2tBYDcHdrTWMI83cDzS+X8jPDp0YhUf4L2A5QBBDFx0Q=="],
 
-    "@craby/cli-bindings-darwin-x64": ["@craby/cli-bindings-darwin-x64@0.1.0-rc.2", "", { "os": "darwin", "cpu": "x64" }, "sha512-6gJ8frm1YQBg4hLSRiDqAYjl7Xy7u3B/NzULjgwg9FwUGcV4PBt7y9w0vZffKNWu5vliuy+9fd8qV2nJQtnI2A=="],
+    "@craby/cli-bindings-darwin-x64": ["@craby/cli-bindings-darwin-x64@0.1.0-rc.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-J/3HXaNcw+/kvD0aVAllDZhgoSFGRuxlajHP6I8+oyqKHdCymrkbtxX+SqWCRFbcSG0vYOd/C0OoOxErhWZK4g=="],
 
-    "@craby/cli-bindings-linux-arm-gnueabihf": ["@craby/cli-bindings-linux-arm-gnueabihf@0.1.0-rc.2", "", { "os": "linux", "cpu": "arm" }, "sha512-3AvgzRndiiSH/hBHQ4+JRQvy0A88e31aq5h4OvVagaFeV6jqbwoV8tgHlSIeOFyCTgX5gIgwN67jmT3OyiFSxw=="],
+    "@craby/cli-bindings-linux-arm-gnueabihf": ["@craby/cli-bindings-linux-arm-gnueabihf@0.1.0-rc.3", "", { "os": "linux", "cpu": "arm" }, "sha512-DZLkH0irSwNKzqj9HKcejxi+obP6QWKzWKvUylR8tZxF0EZge3CQsMJEDf9arhNl7r5yRXg1O1uzseLs8AlLoA=="],
 
-    "@craby/cli-bindings-linux-arm64-gnu": ["@craby/cli-bindings-linux-arm64-gnu@0.1.0-rc.2", "", { "os": "linux", "cpu": "arm64" }, "sha512-foJJSI4DpyGjYuPxy2Ef8iTWpSOQLlhrLVpLyi/eB2pE9/MBh8P2wZV4c0ITQqEGfXElYiGU2ZrBJWru3mLY0w=="],
+    "@craby/cli-bindings-linux-arm64-gnu": ["@craby/cli-bindings-linux-arm64-gnu@0.1.0-rc.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-MGXgBepidhu7LJA4BOAFMOrY0nwA7Rk8tXC+QVQ3hRm0bDY40xntDagNpOeeXay65IsbYJwbX8jJGdZo/H+fFg=="],
 
-    "@craby/cli-bindings-linux-arm64-musl": ["@craby/cli-bindings-linux-arm64-musl@0.1.0-rc.2", "", { "os": "linux", "cpu": "arm64" }, "sha512-5GKmtLgsjW4YEJFELaRopSm6AxsfJrfIA22zVw5GFQ095DPRR/g5/2QYSilPx6JAKVI/wuMzEQ9LgMWIUudKaQ=="],
+    "@craby/cli-bindings-linux-arm64-musl": ["@craby/cli-bindings-linux-arm64-musl@0.1.0-rc.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-FGWBkmMB/oXZrVuTLO7Zq8asd5BxTYZVOoqxjTPdvn3nAPSLgQQuGWLNqGiaRl9NOcaWgN1ZezY8ybnGVoDD6w=="],
 
-    "@craby/cli-bindings-linux-x64-gnu": ["@craby/cli-bindings-linux-x64-gnu@0.1.0-rc.2", "", { "os": "linux", "cpu": "x64" }, "sha512-guCT72xOe94ryGnPvF00xP1EGil6XOIcNN+vaG5jLNbOQyvTi5U43sZ7pcQftQqSxkw+GkZEW6Njka02dWTr+A=="],
+    "@craby/cli-bindings-linux-x64-gnu": ["@craby/cli-bindings-linux-x64-gnu@0.1.0-rc.3", "", { "os": "linux", "cpu": "x64" }, "sha512-T4jyt04d2WK1k/h8x1WoC3pPC4XINu5NNuBuuSLWA+HbUdrF96nRDgSsUsYo/MdRlWy+J0CrN4DwIcY9AulxLQ=="],
 
-    "@craby/cli-bindings-linux-x64-musl": ["@craby/cli-bindings-linux-x64-musl@0.1.0-rc.2", "", { "os": "linux", "cpu": "x64" }, "sha512-6y+TAYV4ij3l8l/qNl1ecFnXELDtdNEaVx5wv7TdI2yKpb5j8O6FfH/7/GDDXgUh6D8P56I8uKH2iZkMoMh46g=="],
+    "@craby/cli-bindings-linux-x64-musl": ["@craby/cli-bindings-linux-x64-musl@0.1.0-rc.3", "", { "os": "linux", "cpu": "x64" }, "sha512-WrQOWybWdGICq50NrRDjABulde6k5brnBVJjt6lp8twMtDkVzf9T7ZYC7lP+tlE1D59pWqPHpoj2M68clCon5g=="],
 
-    "@craby/cli-bindings-win32-arm64-msvc": ["@craby/cli-bindings-win32-arm64-msvc@0.1.0-rc.2", "", { "os": "win32", "cpu": "arm64" }, "sha512-SBpbjT/y7lnVp4d7BiD/afYnA6/VFoXBbClIcW2DsqCIlenR4P/iojaoxSnLv6SROWTd26lVYv/C/+USprFDJA=="],
+    "@craby/cli-bindings-win32-arm64-msvc": ["@craby/cli-bindings-win32-arm64-msvc@0.1.0-rc.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-FiTLhvY2hZGUjIZlh0GI9AgRUNqeB2FuwD9jDj3t6HgoLuu3ghxrbDlLB0jh2DqsSy3H1XafaDKfifeZF7M6WQ=="],
 
-    "@craby/cli-bindings-win32-ia32-msvc": ["@craby/cli-bindings-win32-ia32-msvc@0.1.0-rc.2", "", { "os": "win32", "cpu": "ia32" }, "sha512-HRudCHONOekNSXsJAsqfJPLe+2+U/3HuPkkHfKCLGY+f87Z37ODyV6jvbYW8C5awisAnmoD4ZsPI4Dk9Q6JEmw=="],
+    "@craby/cli-bindings-win32-ia32-msvc": ["@craby/cli-bindings-win32-ia32-msvc@0.1.0-rc.3", "", { "os": "win32", "cpu": "ia32" }, "sha512-7j6PeP/UAHlQjKvGZIVUtepBtkvus5kQu/ybpz6hj1LJ3YkcAe5zVRVsDuLmC8mZ/1//02/Ggiqmg6IdZ47Jnw=="],
 
-    "@craby/cli-bindings-win32-x64-msvc": ["@craby/cli-bindings-win32-x64-msvc@0.1.0-rc.2", "", { "os": "win32", "cpu": "x64" }, "sha512-br0OvZABOaUmLVib16Yp15GCmKBxCb+149iLTg5HNckSsI8So1qhsNULxNrkK01GPkTBSmxS2G+B9agyBEVc4g=="],
+    "@craby/cli-bindings-win32-x64-msvc": ["@craby/cli-bindings-win32-x64-msvc@0.1.0-rc.3", "", { "os": "win32", "cpu": "x64" }, "sha512-fL7sr6BuZWAggwUODU9DeGXDU+LaFcy4zJJh3lD2gueMJBELFqbjeAkryndZ+AENiZM5zsCABC8Krf3lCYQufQ=="],
 
     "@craby/devkit": ["@craby/devkit@0.1.0-rc.2", "", { "dependencies": { "oxc-resolver": "^11.11.1" } }, "sha512-x7OjX2I1umhvkjXwSq2SX+D8INOJsvEA7UX6G18zpP4II2Q8DvidbZHdu2i3VU0zYUx+87Mo8uE0P0dgCW72Og=="],
 
@@ -1380,9 +1380,9 @@
 
     "cosmiconfig": ["cosmiconfig@9.0.0", "", { "dependencies": { "env-paths": "^2.2.1", "import-fresh": "^3.3.0", "js-yaml": "^4.1.0", "parse-json": "^5.2.0" }, "peerDependencies": { "typescript": ">=4.9.5" }, "optionalPeers": ["typescript"] }, "sha512-itvL5h8RETACmOTFc4UfIyB2RfEHi71Ax6E/PivVxq9NseKbOWpeyHEOIbmAw1rs8Ak0VursQNww7lf7YtUwzg=="],
 
-    "craby-modules": ["craby-modules@0.1.0-rc.2", "", { "peerDependencies": { "react-native": ">=0.76.0" } }, "sha512-6PVourJCiDXxg29EaYkgKBqc+CeE7oNvsdSpLFb99ngYH1YfNh8Ps6BFShWUepGzlxIssAcL2W6Tqm3FC+Wo9Q=="],
+    "craby-modules": ["craby-modules@0.1.0-rc.3", "", { "peerDependencies": { "react-native": ">=0.76.0" } }, "sha512-v1WUu6KUAIl8S3a0v8bVwVAnE90oE8lGQMrAHlHygP60dna8zRhqgGWxcxtA3m8ULBbcyxdr8A7J/cwO8yuE/g=="],
 
-    "crabygen": ["crabygen@0.1.0-rc.2", "", { "dependencies": { "@commander-js/extra-typings": "^14.0.0", "@craby/cli-bindings": "0.1.0-rc.2", "commander": "^14.0.1", "es-toolkit": "^1.39.10" }, "bin": { "craby": "./bin-craby.js", "crabygen": "./bin.js" } }, "sha512-+fV9tcTMVIJ3N7LJleEiUGgAUlrxWdFb3XZWgsyxO2eSf9eD1NfXHDLKGK9l3WUAeIfUjjUems2w1RSX1W/S2w=="],
+    "crabygen": ["crabygen@0.1.0-rc.3", "", { "dependencies": { "@commander-js/extra-typings": "^14.0.0", "@craby/cli-bindings": "0.1.0-rc.3", "commander": "^14.0.1", "es-toolkit": "^1.39.10" }, "bin": { "craby": "./bin-craby.js", "crabygen": "./bin.js" } }, "sha512-M9XJjv3C1U9HTdNHbEGiLs217FCqqcid+9m7G0YxauewdTWdcnWjVb7bVbDbK7QhSBSwo0+OApyTuvnw48QdpQ=="],
 
     "create-jest": ["create-jest@29.7.0", "", { "dependencies": { "@jest/types": "^29.6.3", "chalk": "^4.0.0", "exit": "^0.1.2", "graceful-fs": "^4.2.9", "jest-config": "^29.7.0", "jest-util": "^29.7.0", "prompts": "^2.0.1" }, "bin": { "create-jest": "bin/create-jest.js" } }, "sha512-Adz2bdH0Vq3F53KEMJOoftQFutWCukm6J24wbPWRO4k1kMY7gS7ds/uoJkNuV8wDCtWWnuwGcJwpWcih+zEW1Q=="],
 
@@ -2783,6 +2783,8 @@
     "@ohah/hwpjs/@types/node": ["@types/node@20.19.25", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-ZsJzA5thDQMSQO788d7IocwwQbI8B5OPzmqNvpf3NY/+MHDAS759Wo0gd2WQeXYt5AAAQjzcrTVC6SKCuYgoCQ=="],
 
     "@ohah/hwpjs/react": ["react@19.1.1", "", {}, "sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ=="],
+
+    "@ohah/hwpjs-wasm32-wasi/@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.0", "", { "dependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1", "@tybys/wasm-util": "^0.10.1" } }, "sha512-Fq6DJW+Bb5jaWE69/qOE0D1TUN9+6uWhCeZpdnSBk14pjLcCWR7Q8n49PTSPHazM37JqrsdpEthXy2xn6jWWiA=="],
 
     "@react-native-community/cli/@react-native-community/cli-types": ["@react-native-community/cli-types@20.0.0", "", { "dependencies": { "joi": "^17.2.1" } }, "sha512-7J4hzGWOPTBV1d30Pf2NidV+bfCWpjfCOiGO3HUhz1fH4MvBM0FbbBmE9LE5NnMz7M8XSRSi68ZGYQXgLBB2Qw=="],
 

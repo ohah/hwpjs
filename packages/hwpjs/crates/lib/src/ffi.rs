@@ -2,22 +2,25 @@
 #[rustfmt::skip]
 use craby::prelude::*;
 
-use crate::hwpjs_impl::*;
 use crate::generated::*;
+use crate::hwpjs_impl::*;
 
 use bridging::*;
 
 #[cxx::bridge(namespace = "craby::hwpjs::bridging")]
 pub mod bridging {
+    #[derive(Clone)]
     struct NullableString {
         null: bool,
         val: String,
     }
 
+    #[derive(Clone)]
     struct ToMarkdownResult {
         markdown: String,
     }
 
+    #[derive(Clone)]
     struct ToMarkdownOptions {
         image_output_dir: NullableString,
         image: NullableString,
@@ -26,24 +29,28 @@ pub mod bridging {
         include_page_info: bool,
     }
 
-
-
     extern "Rust" {
         type Hwpjs;
 
         #[cxx_name = "createHwpjs"]
         fn create_hwpjs(id: usize, data_path: &str) -> Box<Hwpjs>;
 
+        #[cxx_name = "createVecFromSlice"]
+        fn create_vec_from_slice(data: &[u8]) -> Vec<u8>;
+
         #[cxx_name = "fileHeader"]
-        fn hwpjs_file_header(it_: &mut Hwpjs, data: Vec<f64>) -> Result<String>;
+        fn hwpjs_file_header(it_: &mut Hwpjs, data: Vec<u8>) -> Result<String>;
 
         #[cxx_name = "toJson"]
-        fn hwpjs_to_json(it_: &mut Hwpjs, data: Vec<f64>) -> Result<String>;
+        fn hwpjs_to_json(it_: &mut Hwpjs, data: Vec<u8>) -> Result<String>;
 
         #[cxx_name = "toMarkdown"]
-        fn hwpjs_to_markdown(it_: &mut Hwpjs, data: Vec<f64>, options: ToMarkdownOptions) -> Result<ToMarkdownResult>;
+        fn hwpjs_to_markdown(
+            it_: &mut Hwpjs,
+            data: Vec<u8>,
+            options: ToMarkdownOptions,
+        ) -> Result<ToMarkdownResult>;
     }
-
 }
 
 fn create_hwpjs(id: usize, data_path: &str) -> Box<Hwpjs> {
@@ -51,21 +58,29 @@ fn create_hwpjs(id: usize, data_path: &str) -> Box<Hwpjs> {
     Box::new(Hwpjs::new(ctx))
 }
 
-fn hwpjs_file_header(it_: &mut Hwpjs, data: Vec<f64>) -> Result<String, anyhow::Error> {
+fn create_vec_from_slice(data: &[u8]) -> Vec<u8> {
+    data.to_vec()
+}
+
+fn hwpjs_file_header(it_: &mut Hwpjs, data: Vec<u8>) -> Result<String, anyhow::Error> {
     craby::catch_panic!({
         let ret = it_.file_header(data);
         ret
     })
 }
 
-fn hwpjs_to_json(it_: &mut Hwpjs, data: Vec<f64>) -> Result<String, anyhow::Error> {
+fn hwpjs_to_json(it_: &mut Hwpjs, data: Vec<u8>) -> Result<String, anyhow::Error> {
     craby::catch_panic!({
         let ret = it_.to_json(data);
         ret
     })
 }
 
-fn hwpjs_to_markdown(it_: &mut Hwpjs, data: Vec<f64>, options: ToMarkdownOptions) -> Result<ToMarkdownResult, anyhow::Error> {
+fn hwpjs_to_markdown(
+    it_: &mut Hwpjs,
+    data: Vec<u8>,
+    options: ToMarkdownOptions,
+) -> Result<ToMarkdownResult, anyhow::Error> {
     craby::catch_panic!({
         let ret = it_.to_markdown(data, options);
         ret

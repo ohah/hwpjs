@@ -124,9 +124,9 @@ dependencies = [
 
 [[package]]
 name = "craby"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a89493adfc26ac24902b698d7a9434c7b29b6ceeebe1f811ba9292f9a0e1c060"
+checksum = "c395a1b88b0c7ee9bfc4489e3db125d03d5cf0d8fb4b0f070d06116243d7c87b"
 dependencies = [
  "anyhow",
  "craby_macro",
@@ -144,9 +144,9 @@ dependencies = [
 
 [[package]]
 name = "craby_macro"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e60ac3a46fda5e3e5c2b08d0d38f08b30aa876ad0ea1f4fb26817e6408b7168"
+checksum = "4d5c1dfba287100b35f8a3dd8e5fc114d318dbed077ddb7f76f9a6876fd6feab"
 dependencies = [
  "proc-macro2",
  "quote",

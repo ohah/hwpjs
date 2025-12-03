@@ -35,7 +35,7 @@ pub use char_shape::CharShape;
 pub use compatible_document::CompatibleDocument;
 pub use constants::HwpTag;
 pub use distribute_doc_data::DistributeDocData;
-pub use doc_data::{DocData, ParameterItem, ParameterItemData, ParameterItemType, ParameterSet};
+pub use doc_data::{DocData, ParameterSet};
 pub use document_properties::DocumentProperties;
 pub use face_name::FaceName;
 pub use forbidden_char::ForbiddenChar;
