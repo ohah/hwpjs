@@ -445,6 +445,61 @@ pub struct FootnoteEndnote {
 - 스펙 문서에서는 "쓰레기 값이나 불필요한 업데이트를 줄이기 위해 8 byte를 serialize한다"고 명시되어 있지만, 실제 데이터에는 각주/미주 번호 등 유용한 정보가 포함되어 있습니다.
 - 각주 참조 위치(본문)에서 사용되는 번호 정보입니다.
 
+### HeaderFooter
+
+머리말/꼬리말 컨트롤 헤더의 데이터 구조입니다.
+
+**스펙 문서 매핑**: 표 140 - 머리말/꼬리말, 표 141 - 머리말/꼬리말 속성
+
+**구조**:
+```rust
+pub struct HeaderFooter {
+    pub attribute: HeaderFooterAttribute,  // 속성 (표 141 참조)
+    pub text_width: HWPUNIT,              // 텍스트 영역의 폭
+    pub text_height: HWPUNIT,              // 텍스트 영역의 높이
+    pub text_ref: UINT8,                   // 각 비트가 해당 레벨의 텍스트에 대한 참조를 했는지 여부
+    pub number_ref: UINT8,                 // 각 비트가 해당 레벨의 번호에 대한 참조를 했는지 여부
+}
+
+pub struct HeaderFooterAttribute {
+    pub apply_page: ApplyPage,            // 머리말이 적용될 범위(페이지 종류)
+}
+
+pub enum ApplyPage {
+    Both,        // 양쪽
+    EvenOnly,    // 짝수 쪽만
+    OddOnly,     // 홀수 쪽만
+}
+```
+
+**JSON 예시**:
+```json
+{
+  "data_type": "header_footer",
+  "attribute": {
+    "apply_page": "both"
+  },
+  "text_width": 42520,
+  "text_height": 0,
+  "text_ref": 0,
+  "number_ref": 0
+}
+```
+
+**필드 설명**:
+- `attribute.apply_page`: 머리말이 적용될 범위(페이지 종류)
+  - `both`: 양쪽 페이지에 적용
+  - `even_only`: 짝수 쪽에만 적용
+  - `odd_only`: 홀수 쪽에만 적용
+- `text_width`: 텍스트 영역의 폭 (HWPUNIT)
+- `text_height`: 텍스트 영역의 높이 (HWPUNIT)
+- `text_ref`: 각 비트가 해당 레벨의 텍스트에 대한 참조를 했는지 여부 (BYTE)
+- `number_ref`: 각 비트가 해당 레벨의 번호에 대한 참조를 했는지 여부 (BYTE)
+
+**참고**:
+- 머리말/꼬리말은 문단 리스트를 포함합니다.
+- `text_ref`와 `number_ref`는 각 비트가 해당 레벨(문서 레벨, 구역 레벨 등)의 텍스트/번호에 대한 참조를 했는지 여부를 나타냅니다.
+
 ### ColumnDefinition
 
 단 정의 컨트롤 헤더의 데이터 구조입니다.

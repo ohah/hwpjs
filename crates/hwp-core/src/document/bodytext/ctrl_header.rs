@@ -254,8 +254,19 @@ pub enum CtrlHeaderData {
         /// 예약 영역 / Reserved area
         reserved2: UINT8,
     },
-    /// 머리말/꼬리말 / Header/Footer (각주/미주와 분리)
-    HeaderFooter,
+    /// 머리말/꼬리말 / Header/Footer (표 140) / Header/Footer (Table 140)
+    HeaderFooter {
+        /// 속성 (표 141 참조) / Attribute (see Table 141)
+        attribute: HeaderFooterAttribute,
+        /// 텍스트 영역의 폭 / Text area width
+        text_width: HWPUNIT,
+        /// 텍스트 영역의 높이 / Text area height
+        text_height: HWPUNIT,
+        /// 각 비트가 해당 레벨의 텍스트에 대한 참조를 했는지 여부 / Whether each bit references text at that level
+        text_ref: UINT8,
+        /// 각 비트가 해당 레벨의 번호에 대한 참조를 했는지 여부 / Whether each bit references number at that level
+        number_ref: UINT8,
+    },
     /// 쪽 번호 위치 / Page number position
     PageNumberPosition {
         /// 속성 (표 148 참조) / Attribute (see Table 148)
@@ -570,6 +581,25 @@ pub enum PageNumberPosition {
     InsideBottom,
 }
 
+/// 머리말/꼬리말 속성 (표 141) / Header/Footer attribute (Table 141)
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct HeaderFooterAttribute {
+    /// 머리말이 적용될 범위(페이지 종류) (bit 0-1) / Page range where header applies (bit 0-1)
+    pub apply_page: ApplyPage,
+}
+
+/// 머리말이 적용될 범위(페이지 종류) / Page range where header applies
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ApplyPage {
+    /// 양쪽 / Both sides
+    Both,
+    /// 짝수 쪽만 / Even pages only
+    EvenOnly,
+    /// 홀수 쪽만 / Odd pages only
+    OddOnly,
+}
+
 impl CtrlHeader {
     /// CtrlHeader를 바이트 배열에서 파싱합니다. / Parse CtrlHeader from byte array.
     ///
@@ -617,8 +647,7 @@ impl CtrlHeader {
             parse_footnote_endnote(remaining_data)?
         } else if ctrl_id_str == CtrlId::HEADER || ctrl_id_str == CtrlId::FOOTER {
             // 머리말/꼬리말 (표 140) / Header/Footer (Table 140)
-            // TODO: 머리말/꼬리말 데이터 구조 파싱 구현 필요
-            CtrlHeaderData::HeaderFooter
+            parse_header_footer(remaining_data)?
         } else if ctrl_id_str == CtrlId::PAGE_NUMBER || ctrl_id_str == CtrlId::PAGE_NUMBER_POS {
             // 쪽 번호 위치 (표 147) / Page number position (Table 147)
             parse_page_number_position(remaining_data)?
@@ -1277,6 +1306,71 @@ fn parse_column_definition(data: &[u8]) -> Result<CtrlHeaderData, String> {
         divider_line_type,
         divider_line_thickness,
         divider_line_color,
+    })
+}
+
+/// 머리말/꼬리말 파싱 (표 140) / Parse header/footer (Table 140)
+fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, String> {
+    // 최소 14바이트 필요 / Need at least 14 bytes
+    if data.len() < 14 {
+        return Err(format!(
+            "Header/Footer must be at least 14 bytes, got {} bytes",
+            data.len()
+        ));
+    }
+
+    let mut offset = 0;
+
+    // UINT32 속성 (표 141 참조) / UINT32 attribute (see Table 141)
+    let attribute_value = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
+    offset += 4;
+
+    // bit 0-1: 머리말이 적용될 범위(페이지 종류) / bit 0-1: Page range where header applies
+    let apply_page = match attribute_value & 0x03 {
+        0 => ApplyPage::Both,
+        1 => ApplyPage::EvenOnly,
+        2 => ApplyPage::OddOnly,
+        _ => ApplyPage::Both,
+    };
+
+    let attribute = HeaderFooterAttribute { apply_page };
+
+    // HWPUNIT 텍스트 영역의 폭 / HWPUNIT text area width
+    let text_width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
+    offset += 4;
+
+    // HWPUNIT 텍스트 영역의 높이 / HWPUNIT text area height
+    let text_height = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
+    offset += 4;
+
+    // BYTE 각 비트가 해당 레벨의 텍스트에 대한 참조를 했는지 여부 / BYTE whether each bit references text at that level
+    let text_ref = data[offset];
+    offset += 1;
+
+    // BYTE 각 비트가 해당 레벨의 번호에 대한 참조를 했는지 여부 / BYTE whether each bit references number at that level
+    let number_ref = data[offset];
+
+    Ok(CtrlHeaderData::HeaderFooter {
+        attribute,
+        text_width,
+        text_height,
+        text_ref,
+        number_ref,
     })
 }
 
