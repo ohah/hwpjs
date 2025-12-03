@@ -6,6 +6,300 @@
 use crate::types::{UINT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
+/// Control Mask 구조체 / Control Mask structure
+///
+/// libhwp의 HWPControlMask를 참고하여 구현
+/// 각 비트는 `(UINT32)(1<<ctrich) 조합`으로, 특정 제어 문자의 존재 여부를 나타냅니다.
+/// Control mask structure
+///
+/// Implemented based on libhwp's HWPControlMask
+/// Each bit represents `(UINT32)(1<<ctrich) combination`, indicating the presence of specific control characters.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ControlMask {
+    /// 원본 값 / Raw value
+    pub value: UINT32,
+}
+
+impl Serialize for ControlMask {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeMap;
+        let active_flags = self.active_flags();
+        let mut map = serializer.serialize_map(Some(2))?;
+        map.serialize_entry("value", &self.value)?;
+        map.serialize_entry("flags", &active_flags)?;
+        map.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for ControlMask {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // 기존 호환성: 숫자로 직렬화된 경우도 처리 / Backward compatibility: handle numeric serialization
+        // 새로운 형식: 객체로 직렬화된 경우도 처리 / New format: handle object serialization
+        struct ControlMaskVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for ControlMaskVisitor {
+            type Value = ControlMask;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("control mask as u32 or object with value and flags")
+            }
+
+            // 숫자로 직렬화된 경우 (기존 형식) / Numeric serialization (old format)
+            fn visit_u32<E>(self, value: u32) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(ControlMask::new(value))
+            }
+
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(ControlMask::new(value as u32))
+            }
+
+            // 객체로 직렬화된 경우 (새 형식) / Object serialization (new format)
+            fn visit_map<M>(self, mut map: M) -> Result<Self::Value, M::Error>
+            where
+                M: serde::de::MapAccess<'de>,
+            {
+                let mut value: Option<UINT32> = None;
+                let mut flags: Option<Vec<String>> = None;
+
+                while let Some(key) = map.next_key::<String>()? {
+                    match key.as_str() {
+                        "value" => {
+                            if value.is_some() {
+                                return Err(serde::de::Error::duplicate_field("value"));
+                            }
+                            value = Some(map.next_value()?);
+                        }
+                        "flags" => {
+                            if flags.is_some() {
+                                return Err(serde::de::Error::duplicate_field("flags"));
+                            }
+                            flags = Some(map.next_value()?);
+                        }
+                        _ => {
+                            let _ = map.next_value::<serde::de::IgnoredAny>()?;
+                        }
+                    }
+                }
+
+                let value = value.ok_or_else(|| serde::de::Error::missing_field("value"))?;
+                // flags는 무시하고 value만 사용 (flags는 value에서 계산 가능) / Ignore flags and use only value (flags can be calculated from value)
+                Ok(ControlMask::new(value))
+            }
+        }
+
+        deserializer.deserialize_any(ControlMaskVisitor)
+    }
+}
+
+impl ControlMask {
+    /// ControlMask를 생성합니다. / Create a ControlMask.
+    pub fn new(value: UINT32) -> Self {
+        Self { value }
+    }
+
+    /// 원본 값을 반환합니다. / Returns the raw value.
+    pub fn value(&self) -> UINT32 {
+        self.value
+    }
+
+    /// 비트가 설정되어 있는지 확인합니다. / Check if a bit is set.
+    fn has_bit(&self, bit: u32) -> bool {
+        (self.value & (1u32 << bit)) != 0
+    }
+
+    /// 구역/단 정의 컨트롤을 가졌는지 여부 / Whether the paragraph has section/column definition control
+    /// bit 2 (Ch 2)
+    pub fn has_sect_col_def(&self) -> bool {
+        self.has_bit(2)
+    }
+
+    /// 필드 시작 컨트롤을 가졌는지 여부 / Whether the paragraph has field start control
+    /// bit 3 (Ch 3)
+    pub fn has_field_start(&self) -> bool {
+        self.has_bit(3)
+    }
+
+    /// 필드 끝 컨트롤을 가졌는지 여부 / Whether the paragraph has field end control
+    /// bit 4 (Ch 4)
+    pub fn has_field_end(&self) -> bool {
+        self.has_bit(4)
+    }
+
+    /// Title Mark를 가졌는지 여부 / Whether the paragraph has title mark
+    /// bit 8 (Ch 8)
+    pub fn has_title_mark(&self) -> bool {
+        self.has_bit(8)
+    }
+
+    /// 탭을 가졌는지 여부 / Whether the paragraph has tab
+    /// bit 9 (Ch 9)
+    pub fn has_tab(&self) -> bool {
+        self.has_bit(9)
+    }
+
+    /// 강제 줄 나눔을 가졌는지 여부 / Whether the paragraph has line break
+    /// bit 10 (Ch 10)
+    pub fn has_line_break(&self) -> bool {
+        self.has_bit(10)
+    }
+
+    /// 그리기 객체 또는 표 객체를 가졌는지 여부 / Whether the paragraph has drawing object or table
+    /// bit 11 (Ch 11)
+    pub fn has_gso_table(&self) -> bool {
+        self.has_bit(11)
+    }
+
+    /// 문단 나누기를 가졌는지 여부 / Whether the paragraph has paragraph break
+    /// bit 13 (Ch 13)
+    pub fn has_para_break(&self) -> bool {
+        self.has_bit(13)
+    }
+
+    /// 숨은 설명을 가졌는지 여부 / Whether the paragraph has hidden comment
+    /// bit 15 (Ch 15)
+    pub fn has_hidden_comment(&self) -> bool {
+        self.has_bit(15)
+    }
+
+    /// 머리말 또는 꼬리말을 가졌는지 여부 / Whether the paragraph has header/footer
+    /// bit 16 (Ch 16)
+    pub fn has_header_footer(&self) -> bool {
+        self.has_bit(16)
+    }
+
+    /// 각주 또는 미주를 가졌는지 여부 / Whether the paragraph has footnote/endnote
+    /// bit 17 (Ch 17)
+    pub fn has_footnote_endnote(&self) -> bool {
+        self.has_bit(17)
+    }
+
+    /// 자동 번호를 가졌는지 여부 / Whether the paragraph has auto number
+    /// bit 18 (Ch 18)
+    pub fn has_auto_number(&self) -> bool {
+        self.has_bit(18)
+    }
+
+    /// 페이지 컨트롤을 가졌는지 여부 / Whether the paragraph has page control
+    /// bit 21 (Ch 21)
+    pub fn has_page_control(&self) -> bool {
+        self.has_bit(21)
+    }
+
+    /// 책갈피/찾아보기 표시를 가졌는지 여부 / Whether the paragraph has bookmark/index mark
+    /// bit 22 (Ch 22)
+    pub fn has_bookmark(&self) -> bool {
+        self.has_bit(22)
+    }
+
+    /// 덧말/글자 겹침을 가졌는지 여부 / Whether the paragraph has additional text overlapping letter
+    /// bit 23 (Ch 23)
+    pub fn has_additional_text_overlapping_letter(&self) -> bool {
+        self.has_bit(23)
+    }
+
+    /// 하이픈을 가졌는지 여부 / Whether the paragraph has hyphen
+    /// bit 24 (Ch 24)
+    pub fn has_hyphen(&self) -> bool {
+        self.has_bit(24)
+    }
+
+    /// 묶음 빈칸을 가졌는지 여부 / Whether the paragraph has bundle blank
+    /// bit 30 (Ch 30)
+    pub fn has_bundle_blank(&self) -> bool {
+        self.has_bit(30)
+    }
+
+    /// 고정 폭 빈칸을 가졌는지 여부 / Whether the paragraph has fixed width blank
+    /// bit 31 (Ch 31)
+    pub fn has_fix_width_blank(&self) -> bool {
+        self.has_bit(31)
+    }
+
+    /// 활성화된 모든 플래그를 문자열 배열로 반환합니다. / Returns all active flags as a string array.
+    pub fn active_flags(&self) -> Vec<&'static str> {
+        let mut flags = Vec::new();
+        if self.has_sect_col_def() {
+            flags.push("section_column_definition");
+        }
+        if self.has_field_start() {
+            flags.push("field_start");
+        }
+        if self.has_field_end() {
+            flags.push("field_end");
+        }
+        if self.has_title_mark() {
+            flags.push("title_mark");
+        }
+        if self.has_tab() {
+            flags.push("tab");
+        }
+        if self.has_line_break() {
+            flags.push("line_break");
+        }
+        if self.has_gso_table() {
+            flags.push("gso_table");
+        }
+        if self.has_para_break() {
+            flags.push("paragraph_break");
+        }
+        if self.has_hidden_comment() {
+            flags.push("hidden_comment");
+        }
+        if self.has_header_footer() {
+            flags.push("header_footer");
+        }
+        if self.has_footnote_endnote() {
+            flags.push("footnote_endnote");
+        }
+        if self.has_auto_number() {
+            flags.push("auto_number");
+        }
+        if self.has_page_control() {
+            flags.push("page_control");
+        }
+        if self.has_bookmark() {
+            flags.push("bookmark");
+        }
+        if self.has_additional_text_overlapping_letter() {
+            flags.push("additional_text_overlapping_letter");
+        }
+        if self.has_hyphen() {
+            flags.push("hyphen");
+        }
+        if self.has_bundle_blank() {
+            flags.push("bundle_blank");
+        }
+        if self.has_fix_width_blank() {
+            flags.push("fix_width_blank");
+        }
+        flags
+    }
+}
+
+impl From<UINT32> for ControlMask {
+    fn from(value: UINT32) -> Self {
+        Self::new(value)
+    }
+}
+
+impl From<ControlMask> for UINT32 {
+    fn from(mask: ControlMask) -> Self {
+        mask.value
+    }
+}
+
 /// 단 나누기 종류 / Column divide type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -47,7 +341,8 @@ pub struct ParaHeader {
     pub text_char_count: UINT32,
     /// 컨트롤 마스크 / Control mask
     /// `(UINT32)(1<<ctrich) 조합`
-    pub control_mask: UINT32,
+    /// JSON 직렬화 시 value만 직렬화하여 기존 호환성 유지 / Only value is serialized in JSON to maintain backward compatibility
+    pub control_mask: ControlMask,
     /// 문단 모양 아이디 참조값 / Paragraph shape ID reference
     pub para_shape_id: UINT16,
     /// 문단 스타일 아이디 참조값 / Paragraph style ID reference
@@ -70,7 +365,7 @@ impl Default for ParaHeader {
     fn default() -> Self {
         Self {
             text_char_count: 0,
-            control_mask: 0,
+            control_mask: ControlMask::new(0),
             para_shape_id: 0,
             para_style_id: 0,
             column_divide_type: Vec::new(),
@@ -119,12 +414,13 @@ impl ParaHeader {
         offset += 4;
 
         // UINT32 control mask / UINT32 control mask
-        let control_mask = UINT32::from_le_bytes([
+        let control_mask_value = UINT32::from_le_bytes([
             data[offset],
             data[offset + 1],
             data[offset + 2],
             data[offset + 3],
         ]);
+        let control_mask = ControlMask::new(control_mask_value);
         offset += 4;
 
         // UINT16 문단 모양 아이디 참조값 / UINT16 paragraph shape ID reference

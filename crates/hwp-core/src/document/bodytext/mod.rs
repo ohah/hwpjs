@@ -51,7 +51,7 @@ pub use memo_list::MemoList;
 pub use memo_shape::MemoShape;
 pub use page_border_fill::PageBorderFill;
 pub use page_def::PageDef;
-pub use para_header::{ColumnDivideType, ParaHeader};
+pub use para_header::{ColumnDivideType, ControlMask, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
 pub use shape_component::ShapeComponent;
 pub use shape_component_arc::ShapeComponentArc;
