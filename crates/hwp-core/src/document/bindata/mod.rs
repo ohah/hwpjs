@@ -106,7 +106,7 @@ impl BinData {
                                     //                  pyhwp는 zlib.decompress(..., -15) 사용
                                     // Reference: hwpjs.js uses pako.inflate(..., { windowBits: -15 })
                                     //            pyhwp uses zlib.decompress(..., -15)
-                                    let compressed_size = buffer.len();
+                                    let _compressed_size = buffer.len();
                                     let decompressed_buffer = match decompress_deflate(&buffer) {
                                         Ok(decompressed) => decompressed,
                                         Err(e) => {
