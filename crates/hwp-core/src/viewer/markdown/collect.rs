@@ -77,4 +77,3 @@ pub(crate) fn collect_text_and_images_from_paragraph(
         }
     }
 }
-

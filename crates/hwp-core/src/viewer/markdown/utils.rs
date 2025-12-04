@@ -1,6 +1,6 @@
 /// Utility functions for Markdown conversion
 /// 마크다운 변환을 위한 유틸리티 함수들
-use crate::document::{HwpDocument, HeaderShapeType};
+use crate::document::{HeaderShapeType, HwpDocument};
 
 /// 버전 번호를 읽기 쉬운 문자열로 변환
 /// Convert version number to readable string
@@ -86,4 +86,3 @@ pub(crate) fn convert_to_heading_if_outline(
     }
     text.to_string()
 }
-

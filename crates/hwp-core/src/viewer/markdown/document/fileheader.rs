@@ -13,4 +13,3 @@ pub fn format_version(document: &HwpDocument) -> String {
 
     format!("{}.{:02}.{:02}.{:02}", major, minor, patch, build)
 }
-

@@ -39,4 +39,3 @@ pub(crate) fn convert_shape_component_picture_to_markdown(
     }
     None
 }
-
