@@ -1810,10 +1810,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -1936,10 +1932,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "table",
@@ -2103,6 +2095,196 @@
                         }
                       ]
                     }
+                  }
+                ],
+                "paragraphs": [
+                  {
+                    "para_header": {
+                      "text_char_count": 12,
+                      "control_mask": {
+                        "value": 262144,
+                        "flags": [
+                          "auto_number"
+                        ]
+                      },
+                      "para_shape_id": 0,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "표  ",
+                        "control_char_positions": [
+                          {
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER"
+                          },
+                          {
+                            "position": 11,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 1
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 41952,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ctrl_header",
+                        "ctrl_id": "atno",
+                        "ctrl_id_value": 1635020399,
+                        "data_type": "other"
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 57,
+                      "control_mask": {
+                        "value": 4,
+                        "flags": [
+                          "section_column_definition"
+                        ]
+                      },
+                      "para_shape_id": 12,
+                      "para_style_id": 0,
+                      "column_divide_type": [
+                        "multi_column"
+                      ],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 2,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 ",
+                        "control_char_positions": [
+                          {
+                            "position": 0,
+                            "code": 2,
+                            "name": "RESERVED_2"
+                          },
+                          {
+                            "position": 56,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 1
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 19700,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          },
+                          {
+                            "text_start_position": 32,
+                            "vertical_position": 0,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 19700,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ctrl_header",
+                        "ctrl_id": "cold",
+                        "ctrl_id_value": 1668246628,
+                        "data_type": "column_definition",
+                        "attribute": {
+                          "column_type": "normal",
+                          "column_count": 2,
+                          "column_direction": "left",
+                          "equal_width": true
+                        },
+                        "column_spacing": 2268,
+                        "column_widths": [],
+                        "attribute_high": 0,
+                        "divider_line_type": 1,
+                        "divider_line_thickness": 1,
+                        "divider_line_color": 0
+                      }
+                    ]
                   }
                 ]
               }
@@ -2302,10 +2484,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "shape_component",
@@ -2608,12 +2786,239 @@
                                 "divider_line_color": 0
                               }
                             ]
+                          },
+                          {
+                            "para_header": {
+                              "text_char_count": 81,
+                              "control_mask": {
+                                "value": 4,
+                                "flags": [
+                                  "section_column_definition"
+                                ]
+                              },
+                              "para_shape_id": 12,
+                              "para_style_id": 0,
+                              "column_divide_type": [
+                                "multi_column"
+                              ],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 8,
+                              "instance_id": 0,
+                              "section_merge": null
+                            },
+                            "records": [
+                              {
+                                "type": "para_text",
+                                "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 ",
+                                "control_char_positions": [
+                                  {
+                                    "position": 0,
+                                    "code": 2,
+                                    "name": "RESERVED_2"
+                                  },
+                                  {
+                                    "position": 80,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8752,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 17,
+                                    "vertical_position": 1600,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8752,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 26,
+                                    "vertical_position": 3200,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8752,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 35,
+                                    "vertical_position": 4800,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8752,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 44,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8752,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 53,
+                                    "vertical_position": 1600,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8752,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 62,
+                                    "vertical_position": 3200,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8752,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 71,
+                                    "vertical_position": 4800,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8752,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "ctrl_header",
+                                "ctrl_id": "cold",
+                                "ctrl_id_value": 1668246628,
+                                "data_type": "column_definition",
+                                "attribute": {
+                                  "column_type": "normal",
+                                  "column_count": 2,
+                                  "column_direction": "left",
+                                  "equal_width": true
+                                },
+                                "column_spacing": 2268,
+                                "column_widths": [],
+                                "attribute_high": 0,
+                                "divider_line_type": 1,
+                                "divider_line_thickness": 1,
+                                "divider_line_color": 0
+                              }
+                            ]
                           }
                         ]
-                      },
-                      {
-                        "type": "other",
-                        "tag_id": 66
                       },
                       {
                         "type": "shape_component_rectangle",
@@ -2632,6 +3037,85 @@
                             "left": 6240
                           }
                         }
+                      }
+                    ]
+                  }
+                ],
+                "paragraphs": [
+                  {
+                    "para_header": {
+                      "text_char_count": 13,
+                      "control_mask": {
+                        "value": 262144,
+                        "flags": [
+                          "auto_number"
+                        ]
+                      },
+                      "para_shape_id": 0,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "그림  ",
+                        "control_char_positions": [
+                          {
+                            "position": 3,
+                            "code": 18,
+                            "name": "AUTO_NUMBER"
+                          },
+                          {
+                            "position": 12,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 1
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 20340,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ctrl_header",
+                        "ctrl_id": "atno",
+                        "ctrl_id_value": 1635020399,
+                        "data_type": "other"
                       }
                     ]
                   }

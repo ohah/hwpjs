@@ -146,8 +146,17 @@ pub enum ParagraphRecord {
         #[serde(flatten)]
         header: CtrlHeader,
         /// 컨트롤 헤더의 자식 레코드 (레벨 2) / Child records of control header (level 2)
+        /// 각주/미주, 머리말/꼬리말 등의 컨트롤 헤더 내부에 PARA_HEADER가 직접 올 수 있음
+        /// PARA_HEADER는 Paragraph로 변환되어 paragraphs에 저장됨
+        /// PARA_HEADER can appear directly inside control headers like footnotes/endnotes, headers/footers, etc.
+        /// PARA_HEADER is converted to Paragraph and stored in paragraphs
         #[serde(skip_serializing_if = "Vec::is_empty", default)]
         children: Vec<ParagraphRecord>,
+        /// 컨트롤 헤더 내부의 문단들 (레벨 2 이상의 PARA_HEADER) / Paragraphs inside control header (PARA_HEADER at level 2 or higher)
+        /// 각주/미주, 머리말/꼬리말 등의 컨트롤 헤더 내부에 직접 나타나는 문단들
+        /// Paragraphs that appear directly inside control headers like footnotes/endnotes, headers/footers, etc.
+        #[serde(skip_serializing_if = "Vec::is_empty", default)]
+        paragraphs: Vec<Paragraph>,
     },
     /// 문단 리스트 헤더 / Paragraph list header
     ListHeader {
@@ -280,7 +289,6 @@ pub enum ParagraphRecord {
         /// Tag ID
         tag_id: WORD,
         /// Raw data
-        #[serde(skip)]
         data: Vec<u8>,
     },
 }
@@ -503,11 +511,24 @@ impl Section {
                 let is_table = ctrl_header.ctrl_id == CtrlId::TABLE
                     || ctrl_header.ctrl_id_value == 0x74626C20u32;
 
+                let mut paragraphs = Vec::new();
                 for child in node.children() {
                     if child.tag_id() == HwpTag::TABLE {
                         // TABLE은 별도로 처리 / TABLE is processed separately
                         let table_data = Table::parse(child.data(), version)?;
                         table_opt = Some(table_data);
+                    } else if child.tag_id() == HwpTag::PARA_HEADER {
+                        // CTRL_HEADER 내부의 PARA_HEADER는 Paragraph로 변환
+                        // PARA_HEADER inside CTRL_HEADER is converted to Paragraph
+                        // 각주/미주, 머리말/꼬리말 등의 컨트롤 헤더 내부에 직접 나타나는 문단
+                        // Paragraphs that appear directly inside control headers like footnotes/endnotes, headers/footers, etc.
+                        // 레거시 코드 참고: legacy/ruby-hwp/lib/hwp/model.rb의 Footnote, Header, Footer 등에서
+                        // @ctrl_header.para_headers << para_header로 처리
+                        // Reference: legacy/ruby-hwp/lib/hwp/model.rb's Footnote, Header, Footer, etc.
+                        // where @ctrl_header.para_headers << para_header
+                        let paragraph =
+                            Self::parse_paragraph_from_tree(child, version, original_data)?;
+                        paragraphs.push(paragraph);
                     } else if child.tag_id() == HwpTag::LIST_HEADER && is_table {
                         // LIST_HEADER가 테이블의 셀인 경우 / LIST_HEADER is a table cell
                         // hwp.js: visitListHeader에서 LIST_HEADER를 파싱하고 테이블 셀로 처리
@@ -791,6 +812,7 @@ impl Section {
                 Ok(ParagraphRecord::CtrlHeader {
                     header: ctrl_header,
                     children,
+                    paragraphs,
                 })
             }
             HwpTag::LIST_HEADER => {
@@ -980,9 +1002,80 @@ impl Section {
                 // Recursively process SHAPE_COMPONENT's children
                 // SHAPE_COMPONENT_PICTURE는 SHAPE_COMPONENT의 자식으로 올 수 있음
                 // SHAPE_COMPONENT_PICTURE can be a child of SHAPE_COMPONENT
+                // LIST_HEADER 다음에 PARA_HEADER가 올 수 있음 (글상자 텍스트)
+                // PARA_HEADER can appear after LIST_HEADER (textbox text)
+                // 레거시 참고: libhwp의 forTextBox, hwp-rs의 DrawText, pyhwp의 TextboxParagraphList
+                // Reference: libhwp's forTextBox, hwp-rs's DrawText, pyhwp's TextboxParagraphList
                 let mut children = Vec::new();
-                for child in node.children() {
-                    children.push(Self::parse_record_from_tree(child, version, original_data)?);
+                let children_slice = node.children();
+                let mut index = 0;
+
+                while index < children_slice.len() {
+                    let child = &children_slice[index];
+
+                    if child.tag_id() == HwpTag::LIST_HEADER {
+                        // LIST_HEADER 파싱 / Parse LIST_HEADER
+                        let list_header_record =
+                            Self::parse_record_from_tree(child, version, original_data)?;
+
+                        // LIST_HEADER 다음에 PARA_HEADER가 있는지 확인하고 처리
+                        // Check if PARA_HEADER follows LIST_HEADER and process it
+                        let mut list_header_with_paragraphs = list_header_record;
+                        let mut para_headers_found = Vec::new();
+
+                        // 다음 형제 노드들을 확인하여 PARA_HEADER들을 찾기
+                        // Check following sibling nodes to find PARA_HEADERs
+                        let mut next_index = index + 1;
+                        while next_index < children_slice.len() {
+                            let next_child = &children_slice[next_index];
+
+                            if next_child.tag_id() == HwpTag::PARA_HEADER
+                                && next_child.level() == child.level()
+                            {
+                                // PARA_HEADER를 Paragraph로 변환
+                                // Convert PARA_HEADER to Paragraph
+                                if let Ok(paragraph) = Self::parse_paragraph_from_tree(
+                                    next_child,
+                                    version,
+                                    original_data,
+                                ) {
+                                    para_headers_found.push(paragraph);
+                                    next_index += 1;
+                                } else {
+                                    break;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+
+                        // 찾은 PARA_HEADER들을 LIST_HEADER의 paragraphs에 추가
+                        // Add found PARA_HEADERs to LIST_HEADER's paragraphs
+                        if !para_headers_found.is_empty() {
+                            if let ParagraphRecord::ListHeader {
+                                header,
+                                mut paragraphs,
+                            } = list_header_with_paragraphs
+                            {
+                                paragraphs.extend(para_headers_found);
+                                list_header_with_paragraphs =
+                                    ParagraphRecord::ListHeader { header, paragraphs };
+
+                                // 처리한 PARA_HEADER들만큼 index 건너뛰기
+                                // Skip processed PARA_HEADERs
+                                index = next_index;
+                            } else {
+                                index += 1;
+                            }
+                        } else {
+                            index += 1;
+                        }
+
+                        children.push(list_header_with_paragraphs);
+                    } else {
+                        children.push(Self::parse_record_from_tree(child, version, original_data)?);
+                        index += 1;
+                    }
                 }
 
                 Ok(ParagraphRecord::ShapeComponent {

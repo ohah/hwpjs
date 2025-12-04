@@ -184,13 +184,28 @@ pub fn to_markdown(document: &HwpDocument, options: &MarkdownOptions) -> String 
                 // 각주 문단 처리 / Process footnote paragraph
                 // 각주 컨트롤 헤더의 자식 레코드(ListHeader)에 있는 모든 문단 처리 / Process all paragraphs in ListHeader children of footnote control header
                 for record in &paragraph.records {
-                    if let ParagraphRecord::CtrlHeader { header, children } = record {
+                    if let ParagraphRecord::CtrlHeader {
+                        header,
+                        children,
+                        paragraphs: ctrl_paragraphs,
+                        ..
+                    } = record
+                    {
                         use crate::document::CtrlId;
                         if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
                             // 컨트롤 헤더 마크다운 / Control header markdown
                             let control_md = convert_control_to_markdown(header, false);
                             if !control_md.is_empty() {
                                 footnotes.push(control_md);
+                            }
+
+                            // CTRL_HEADER 내부의 직접 문단 처리 (각주 내부의 문단) / Process direct paragraphs inside CTRL_HEADER (paragraphs inside footnote)
+                            for para in ctrl_paragraphs {
+                                let para_md =
+                                    convert_paragraph_to_markdown(para, document, options);
+                                if !para_md.is_empty() {
+                                    footnotes.push(para_md);
+                                }
                             }
 
                             // 자식 레코드 처리 (ListHeader의 문단들) / Process child records (paragraphs in ListHeader)
@@ -213,13 +228,28 @@ pub fn to_markdown(document: &HwpDocument, options: &MarkdownOptions) -> String 
                 // 미주 문단 처리 / Process endnote paragraph
                 // 미주 컨트롤 헤더의 자식 레코드(ListHeader)에 있는 모든 문단 처리 / Process all paragraphs in ListHeader children of endnote control header
                 for record in &paragraph.records {
-                    if let ParagraphRecord::CtrlHeader { header, children } = record {
+                    if let ParagraphRecord::CtrlHeader {
+                        header,
+                        children,
+                        paragraphs: ctrl_paragraphs,
+                        ..
+                    } = record
+                    {
                         use crate::document::CtrlId;
                         if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
                             // 컨트롤 헤더 마크다운 / Control header markdown
                             let control_md = convert_control_to_markdown(header, false);
                             if !control_md.is_empty() {
                                 endnotes.push(control_md);
+                            }
+
+                            // CTRL_HEADER 내부의 직접 문단 처리 (미주 내부의 문단) / Process direct paragraphs inside CTRL_HEADER (paragraphs inside endnote)
+                            for para in ctrl_paragraphs {
+                                let para_md =
+                                    convert_paragraph_to_markdown(para, document, options);
+                                if !para_md.is_empty() {
+                                    endnotes.push(para_md);
+                                }
                             }
 
                             // 자식 레코드 처리 (ListHeader의 문단들) / Process child records (paragraphs in ListHeader)
@@ -372,9 +402,22 @@ pub(crate) fn convert_paragraph_to_markdown(
                     parts.push(image_md);
                 }
             }
-            ParagraphRecord::CtrlHeader { header, children } => {
+            ParagraphRecord::CtrlHeader {
+                header,
+                children,
+                paragraphs: ctrl_paragraphs,
+                ..
+            } => {
                 // 마크다운으로 표현할 수 없는 컨트롤 헤더는 건너뜀 / Skip control headers that cannot be expressed in markdown
                 if !should_process_control_header(header) {
+                    // CTRL_HEADER 내부의 직접 문단 처리 / Process direct paragraphs inside CTRL_HEADER
+                    for para in ctrl_paragraphs {
+                        let para_md = convert_paragraph_to_markdown(para, document, options);
+                        if !para_md.is_empty() {
+                            parts.push(para_md);
+                        }
+                    }
+
                     // 자식 레코드만 처리 (예: SHAPE_OBJECT 내부의 이미지) / Only process children (e.g., images inside SHAPE_OBJECT)
                     for child in children {
                         match child {
@@ -542,7 +585,18 @@ pub(crate) fn convert_paragraph_to_markdown(
                         ParagraphRecord::CtrlHeader {
                             header: _child_header,
                             children: child_children,
+                            paragraphs: child_paragraphs,
+                            ..
                         } => {
+                            // 중첩된 CtrlHeader 내부의 직접 문단 처리 / Process direct paragraphs inside nested CtrlHeader
+                            for para in child_paragraphs {
+                                let para_md =
+                                    convert_paragraph_to_markdown(para, document, options);
+                                if para_md.contains("![이미지]") {
+                                    has_image = true;
+                                }
+                            }
+
                             // 중첩된 CtrlHeader의 자식들을 재귀적으로 처리 / Recursively process nested CtrlHeader children
                             for grandchild in child_children {
                                 match grandchild {

@@ -1414,6 +1414,24 @@ Tag ID: HWPTAG_PARA_HEADER
 | 0x04 | 쪽 나누기 |
 | 0x08 | 단 나누기 |
 
+**레벨별 사용 / Usage by Level**
+
+> **참고 / Note**: 아래 내용은 공식 스펙 문서에 명시되지 않았지만, 실제 HWP 파일과 레거시 구현(libhwp, hwp-rs, pyhwp, hwpjs.js, ruby-hwp)에서 확인된 동작입니다.
+> The following information is not explicitly stated in the official spec document, but has been confirmed through actual HWP files and legacy implementations (libhwp, hwp-rs, pyhwp, hwpjs.js, ruby-hwp).
+
+- **Level 0**: 본문의 문단 헤더 (일반적인 사용)
+  - Section의 최상위 레벨에서 나타나며, 문단의 시작을 나타냅니다.
+
+- **Level 1 이상**: 컨트롤 헤더 내부의 문단 헤더 / Paragraph header inside control header
+  - 각주/미주(`fn  `, `en  `), 머리말/꼬리말(`head`, `foot`) 등의 컨트롤 헤더 내부에 직접 나타날 수 있습니다.
+  - 이러한 경우 PARA_HEADER는 해당 컨트롤 헤더의 자식 레코드로 처리되며, 컨트롤 헤더 내부의 문단 내용을 나타냅니다.
+
+- **SHAPE_COMPONENT 내부**: LIST_HEADER 다음의 PARA_HEADER / PARA_HEADER after LIST_HEADER inside SHAPE_COMPONENT
+  - SHAPE_COMPONENT(개체 요소) 내부에서 LIST_HEADER 다음에 PARA_HEADER가 나타날 수 있습니다 (글상자 텍스트).
+  - PARA_HEADER can appear after LIST_HEADER inside SHAPE_COMPONENT (shape component) (textbox text).
+  - 이러한 경우 PARA_HEADER는 LIST_HEADER의 형제 레코드로 나타나며, LIST_HEADER의 `paragraphs` 필드에 포함되어야 합니다.
+  - In such cases, PARA_HEADER appears as a sibling record of LIST_HEADER and should be included in LIST_HEADER's `paragraphs` field.
+
 ##### 4.3.2. 문단의 텍스트
 
 Tag ID: HWPTAG_PARA_TEXT

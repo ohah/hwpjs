@@ -3,6 +3,22 @@
 /// 스펙 문서 매핑: 표 58 - 문단 헤더 / Spec mapping: Table 58 - Paragraph header
 /// Tag ID: HWPTAG_PARA_HEADER
 /// 전체 길이: 24바이트 (5.0.3.2 이상) / Total length: 24 bytes (5.0.3.2 and above)
+///
+/// **레벨별 사용 / Usage by Level**
+///
+/// - **Level 0**: 본문의 문단 헤더 (일반적인 사용) / Paragraph header in body text (normal usage)
+///   - `Section::parse_data`에서 처리되어 `Paragraph` 구조체의 `para_header` 필드로 저장됨
+///   - Processed in `Section::parse_data` and stored in `Paragraph` struct's `para_header` field
+///
+/// - **Level 1 이상**: 컨트롤 헤더 내부의 문단 헤더 / Paragraph header inside control header
+///   - 각주/미주(`fn  `, `en  `), 머리말/꼬리말(`head`, `foot`) 등의 컨트롤 헤더 내부에 직접 나타날 수 있음
+///   - Can appear directly inside control headers like footnotes/endnotes (`fn  `, `en  `), headers/footers (`head`, `foot`), etc.
+///   - `CtrlHeader`의 children에서 처리되어 `ParagraphRecord::CtrlHeader`의 `paragraphs` 필드에 저장됨
+///   - Processed in `CtrlHeader`'s children and stored in `ParagraphRecord::CtrlHeader`'s `paragraphs` field
+///   - 레거시 코드 참고: `legacy/ruby-hwp/lib/hwp/model.rb`의 `Footnote`, `Header`, `Footer` 등에서
+///     `@ctrl_header.para_headers << para_header`로 처리됨
+///   - Reference: `legacy/ruby-hwp/lib/hwp/model.rb`'s `Footnote`, `Header`, `Footer`, etc.
+///     where `@ctrl_header.para_headers << para_header`
 use crate::types::{UINT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 

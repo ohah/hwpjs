@@ -9632,10 +9632,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -9737,10 +9733,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -9816,10 +9808,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -9899,10 +9887,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -9978,10 +9962,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -10065,10 +10045,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -10144,10 +10120,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -10231,10 +10203,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -10312,10 +10280,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -10391,10 +10355,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "table",
@@ -11347,6 +11307,680 @@
                       ]
                     }
                   }
+                ],
+                "paragraphs": [
+                  {
+                    "para_header": {
+                      "text_char_count": 5,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "보도일시",
+                        "control_char_positions": [
+                          {
+                            "position": 4,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 13
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 5720,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 53,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 7,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "2018. 9. 4.(화) 조간(온라인 9. 3. 12:00)부터 보도해 주시기 바랍니다.  ",
+                        "control_char_positions": [
+                          {
+                            "position": 52,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 20
+                          },
+                          {
+                            "position": 17,
+                            "shape_id": 15
+                          },
+                          {
+                            "position": 28,
+                            "shape_id": 18
+                          },
+                          {
+                            "position": 33,
+                            "shape_id": 15
+                          },
+                          {
+                            "position": 34,
+                            "shape_id": 20
+                          },
+                          {
+                            "position": 50,
+                            "shape_id": 16
+                          },
+                          {
+                            "position": 52,
+                            "shape_id": 17
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 42508,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 5,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 9,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "배포일시",
+                        "control_char_positions": [
+                          {
+                            "position": 4,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 13
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 520,
+                            "column_start_position": 0,
+                            "segment_width": 5720,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 21,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 10,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "2018. 9. 3.(월) 09:00",
+                        "control_char_positions": [
+                          {
+                            "position": 20,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 44
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 18408,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 5,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 9,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "담당부서",
+                        "control_char_positions": [
+                          {
+                            "position": 4,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 13
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 520,
+                            "column_start_position": 0,
+                            "segment_width": 5736,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 10,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 10,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 2,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "거대공공연구정책과",
+                        "control_char_positions": [
+                          {
+                            "position": 9,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 32
+                          },
+                          {
+                            "position": 9,
+                            "shape_id": 24
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 18360,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 5,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 9,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "담당과장",
+                        "control_char_positions": [
+                          {
+                            "position": 4,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 13
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 520,
+                            "column_start_position": 0,
+                            "segment_width": 5720,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 18,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 44,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 2,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "장인숙(02-2110-2430)",
+                        "control_char_positions": [
+                          {
+                            "position": 17,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 33
+                          },
+                          {
+                            "position": 17,
+                            "shape_id": 44
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 392,
+                            "column_start_position": 0,
+                            "segment_width": 18408,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 6,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 9,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "담 당 자",
+                        "control_char_positions": [
+                          {
+                            "position": 5,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 13
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 520,
+                            "column_start_position": 0,
+                            "segment_width": 5736,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 23,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 22,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": " 용찬재 사무관(02-2110-2428)",
+                        "control_char_positions": [
+                          {
+                            "position": 22,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 44
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 392,
+                            "column_start_position": 0,
+                            "segment_width": 18360,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
                 ]
               }
             ]
@@ -11814,22 +12448,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "table",
                     "table": {
                       "attributes": {
@@ -12136,6 +12754,264 @@
                         }
                       ]
                     }
+                  }
+                ],
+                "paragraphs": [
+                  {
+                    "para_header": {
+                      "text_char_count": 28,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 25,
+                      "para_style_id": 4,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "우리가 독자 개발하여 최초 발사하는 한국형발사체,",
+                        "control_char_positions": [
+                          {
+                            "position": 27,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 34
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1800,
+                            "text_height": 1800,
+                            "baseline_distance": 1530,
+                            "line_spacing": 900,
+                            "column_start_position": 330,
+                            "segment_width": 47294,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 18,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 25,
+                      "para_style_id": 4,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "국민이 정한 그 이름은 ｢누리｣",
+                        "control_char_positions": [
+                          {
+                            "position": 17,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 34
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 2700,
+                            "line_height": 1800,
+                            "text_height": 1800,
+                            "baseline_distance": 1530,
+                            "line_spacing": 900,
+                            "column_start_position": 330,
+                            "segment_width": 47294,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 37,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 31,
+                      "para_style_id": 4,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "“세상”의 옛말로, 우주까지 확장된 새로운 세상을 연다는 의미 -",
+                        "control_char_positions": [
+                          {
+                            "position": 36,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 23
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 6000,
+                            "line_height": 1600,
+                            "text_height": 1600,
+                            "baseline_distance": 1360,
+                            "line_spacing": 800,
+                            "column_start_position": 330,
+                            "segment_width": 47294,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": true
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 30,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 31,
+                      "para_style_id": 4,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "명칭공모전에 1만건 이상 응모, 뜨거운 관심 보여 -",
+                        "control_char_positions": [
+                          {
+                            "position": 29,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 23
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 9000,
+                            "line_height": 1600,
+                            "text_height": 1600,
+                            "baseline_distance": 1360,
+                            "line_spacing": 800,
+                            "column_start_position": 330,
+                            "segment_width": 47294,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": true
+                            }
+                          }
+                        ]
+                      }
+                    ]
                   }
                 ]
               }
@@ -13992,10 +14868,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 2,
@@ -14135,14 +15007,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "table",
@@ -14562,6 +15426,353 @@
                       ]
                     }
                   }
+                ],
+                "paragraphs": [
+                  {
+                    "para_header": {
+                      "text_char_count": 9,
+                      "control_mask": {
+                        "value": 2048,
+                        "flags": [
+                          "gso_table"
+                        ]
+                      },
+                      "para_shape_id": 23,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "",
+                        "control_char_positions": [
+                          {
+                            "position": 0,
+                            "code": 11,
+                            "name": "SHAPE_OBJECT"
+                          },
+                          {
+                            "position": 8,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 31
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 3245,
+                            "text_height": 3245,
+                            "baseline_distance": 2758,
+                            "line_spacing": 720,
+                            "column_start_position": 0,
+                            "segment_width": 10364,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ctrl_header",
+                        "ctrl_id": "gso ",
+                        "ctrl_id_value": 1735618336,
+                        "data_type": "object_common",
+                        "attribute": {
+                          "like_letters": true,
+                          "affect_line_spacing": false,
+                          "vert_rel_to": "para",
+                          "vert_relative": 0,
+                          "horz_rel_to": "para",
+                          "horz_relative": 0,
+                          "vert_rel_to_para_limit": true,
+                          "overlap": true,
+                          "object_width_standard": "absolute",
+                          "object_height_standard": "absolute",
+                          "object_text_option": "tight",
+                          "object_text_position_option": "both_sides",
+                          "object_category": "figure",
+                          "size_protect": false
+                        },
+                        "offset_y": 0,
+                        "offset_x": 0,
+                        "width": 9178,
+                        "height": 3245,
+                        "z_order": 2,
+                        "margin": {
+                          "top": 0,
+                          "right": 0,
+                          "bottom": 0,
+                          "left": 0
+                        },
+                        "instance_id": 1629878412,
+                        "page_divide": 0,
+                        "description": null,
+                        "children": [
+                          {
+                            "type": "shape_component",
+                            "shape_component": {
+                              "object_control_id": "cip$",
+                              "object_control_id2": "cip$",
+                              "group_offset": {
+                                "x": 15,
+                                "y": 0
+                              },
+                              "group_count": 0,
+                              "local_version": 1,
+                              "initial_width": 6082,
+                              "initial_height": 2457,
+                              "width": 9178,
+                              "height": 3244,
+                              "attributes": "vertical_flip",
+                              "rotation_angle": 0,
+                              "rotation_center": {
+                                "x": 4589,
+                                "y": 1622
+                              },
+                              "rendering": {
+                                "matrix_count": 1,
+                                "translation_matrix": {
+                                  "elements": [
+                                    1.0,
+                                    0.0,
+                                    15.0,
+                                    0.0,
+                                    1.0,
+                                    0.0
+                                  ]
+                                },
+                                "matrix_sequence": [
+                                  {
+                                    "scale": {
+                                      "elements": [
+                                        1.5090430779348898,
+                                        0.0,
+                                        -15.0,
+                                        0.0,
+                                        1.3207163207163206,
+                                        0.0
+                                      ]
+                                    },
+                                    "rotation": {
+                                      "elements": [
+                                        1.0,
+                                        -0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0,
+                                        0.0
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "children": [
+                              {
+                                "type": "shape_component_picture",
+                                "shape_component_picture": {
+                                  "border_color": 0,
+                                  "border_width": 0,
+                                  "border_attributes": 0,
+                                  "border_rectangle_x": {
+                                    "left": 0,
+                                    "top": 0,
+                                    "right": 6082,
+                                    "bottom": 0
+                                  },
+                                  "border_rectangle_y": {
+                                    "left": 6082,
+                                    "top": 2457,
+                                    "right": 0,
+                                    "bottom": 2457
+                                  },
+                                  "crop_rectangle": {
+                                    "left": 0,
+                                    "top": 0,
+                                    "right": 9540,
+                                    "bottom": 3360
+                                  },
+                                  "padding": {
+                                    "left": 0,
+                                    "right": 0,
+                                    "top": 0,
+                                    "bottom": 0
+                                  },
+                                  "picture_info": {
+                                    "brightness": 0,
+                                    "contrast": 0,
+                                    "effect": 0,
+                                    "bindata_id": 4
+                                  },
+                                  "border_opacity": 0,
+                                  "instance_id": 609025014,
+                                  "effect_data": [
+                                    0,
+                                    0,
+                                    0,
+                                    0
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 26,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 24,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "이 자료에 대하여 더욱 자세한 내용을 원하시면",
+                        "control_char_positions": [
+                          {
+                            "position": 25,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 14
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 900,
+                            "text_height": 900,
+                            "baseline_distance": 765,
+                            "line_spacing": 360,
+                            "column_start_position": 0,
+                            "segment_width": 36968,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 48,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 24,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "과학기술정보통신부 용찬재 사무관(☎ 02-2110-2428)에게 연락주시기 바랍니다.",
+                        "control_char_positions": [
+                          {
+                            "position": 47,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 14
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 1260,
+                            "line_height": 900,
+                            "text_height": 900,
+                            "baseline_distance": 765,
+                            "line_spacing": 360,
+                            "column_start_position": 0,
+                            "segment_width": 36968,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
                 ]
               }
             ]
@@ -14751,10 +15962,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -14819,10 +16026,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -14900,10 +16103,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "table",
@@ -15188,6 +16387,189 @@
                       ]
                     }
                   }
+                ],
+                "paragraphs": [
+                  {
+                    "para_header": {
+                      "text_char_count": 3,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 41,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "붙임",
+                        "control_char_positions": [
+                          {
+                            "position": 2,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 7
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1600,
+                            "text_height": 1600,
+                            "baseline_distance": 1360,
+                            "line_spacing": 960,
+                            "column_start_position": 0,
+                            "segment_width": 5684,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 1,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 3,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 5
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1550,
+                            "text_height": 1550,
+                            "baseline_distance": 1318,
+                            "line_spacing": 928,
+                            "column_start_position": 0,
+                            "segment_width": 1440,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 23,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 22,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": " 한국형발사체(누리호)와 시험발사체 비교",
+                        "control_char_positions": [
+                          {
+                            "position": 22,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 8
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1600,
+                            "text_height": 1600,
+                            "baseline_distance": 1360,
+                            "line_spacing": 480,
+                            "column_start_position": 0,
+                            "segment_width": 41344,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
                 ]
               }
             ]
@@ -15375,10 +16757,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -15454,10 +16832,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -15537,10 +16911,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -15616,10 +16986,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -15848,10 +17214,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -16078,10 +17440,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -16157,10 +17515,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -16280,10 +17634,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -16381,10 +17731,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -16460,10 +17806,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -16543,10 +17885,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -16622,10 +17960,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -16705,10 +18039,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -16784,10 +18114,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -16867,10 +18193,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -16946,10 +18268,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -17029,10 +18347,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -17108,10 +18422,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -17191,10 +18501,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -17270,10 +18576,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -17353,10 +18655,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -17432,10 +18730,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "list_header",
@@ -17515,10 +18809,6 @@
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "list_header",
                     "header": {
                       "paragraph_count": 1,
@@ -17594,10 +18884,6 @@
                         ]
                       }
                     ]
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
                   },
                   {
                     "type": "table",
@@ -20126,6 +21412,1910 @@
                         }
                       ]
                     }
+                  }
+                ],
+                "paragraphs": [
+                  {
+                    "para_header": {
+                      "text_char_count": 4,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 23,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "구 분",
+                        "control_char_positions": [
+                          {
+                            "position": 3,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 51
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1500,
+                            "text_height": 1500,
+                            "baseline_distance": 1275,
+                            "line_spacing": 900,
+                            "column_start_position": 0,
+                            "segment_width": 8076,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 12,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 23,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "한국형발사체(누리호)",
+                        "control_char_positions": [
+                          {
+                            "position": 11,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 51
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1500,
+                            "text_height": 1500,
+                            "baseline_distance": 1275,
+                            "line_spacing": 900,
+                            "column_start_position": 0,
+                            "segment_width": 17696,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 6,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 23,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "시험발사체",
+                        "control_char_positions": [
+                          {
+                            "position": 5,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 51
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1500,
+                            "text_height": 1500,
+                            "baseline_distance": 1275,
+                            "line_spacing": 900,
+                            "column_start_position": 0,
+                            "segment_width": 19396,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 4,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 42,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "형 상",
+                        "control_char_positions": [
+                          {
+                            "position": 3,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 51
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1500,
+                            "text_height": 1500,
+                            "baseline_distance": 1275,
+                            "line_spacing": 900,
+                            "column_start_position": -400,
+                            "segment_width": 8476,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 9,
+                      "control_mask": {
+                        "value": 2048,
+                        "flags": [
+                          "gso_table"
+                        ]
+                      },
+                      "para_shape_id": 23,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "",
+                        "control_char_positions": [
+                          {
+                            "position": 0,
+                            "code": 11,
+                            "name": "SHAPE_OBJECT"
+                          },
+                          {
+                            "position": 8,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 10
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 0,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ctrl_header",
+                        "ctrl_id": "gso ",
+                        "ctrl_id_value": 1735618336,
+                        "data_type": "object_common",
+                        "attribute": {
+                          "like_letters": false,
+                          "affect_line_spacing": false,
+                          "vert_rel_to": "para",
+                          "vert_relative": 0,
+                          "horz_rel_to": "column",
+                          "horz_relative": 0,
+                          "vert_rel_to_para_limit": true,
+                          "overlap": false,
+                          "object_width_standard": "absolute",
+                          "object_height_standard": "absolute",
+                          "object_text_option": "tight",
+                          "object_text_position_option": "both_sides",
+                          "object_category": "figure",
+                          "size_protect": false
+                        },
+                        "offset_y": 0,
+                        "offset_x": 6411,
+                        "width": 8649,
+                        "height": 45540,
+                        "z_order": 6,
+                        "margin": {
+                          "top": 0,
+                          "right": 0,
+                          "bottom": 0,
+                          "left": 0
+                        },
+                        "instance_id": 1878870827,
+                        "page_divide": 0,
+                        "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel",
+                        "children": [
+                          {
+                            "type": "shape_component",
+                            "shape_component": {
+                              "object_control_id": "cip$",
+                              "object_control_id2": "cip$",
+                              "group_offset": {
+                                "x": -6411,
+                                "y": 0
+                              },
+                              "group_count": 0,
+                              "local_version": 1,
+                              "initial_width": 15060,
+                              "initial_height": 54000,
+                              "width": 8649,
+                              "height": 45540,
+                              "attributes": "vertical_flip",
+                              "rotation_angle": 0,
+                              "rotation_center": {
+                                "x": 4324,
+                                "y": 22770
+                              },
+                              "rendering": {
+                                "matrix_count": 1,
+                                "translation_matrix": {
+                                  "elements": [
+                                    1.0,
+                                    0.0,
+                                    -6411.0,
+                                    0.0,
+                                    1.0,
+                                    0.0
+                                  ]
+                                },
+                                "matrix_sequence": [
+                                  {
+                                    "scale": {
+                                      "elements": [
+                                        0.5743027888446215,
+                                        0.0,
+                                        6411.0,
+                                        0.0,
+                                        0.8433333333333334,
+                                        0.0
+                                      ]
+                                    },
+                                    "rotation": {
+                                      "elements": [
+                                        1.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0,
+                                        0.0
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "children": [
+                              {
+                                "type": "shape_component_picture",
+                                "shape_component_picture": {
+                                  "border_color": 0,
+                                  "border_width": 0,
+                                  "border_attributes": 0,
+                                  "border_rectangle_x": {
+                                    "left": 0,
+                                    "top": 0,
+                                    "right": 15060,
+                                    "bottom": 0
+                                  },
+                                  "border_rectangle_y": {
+                                    "left": 15060,
+                                    "top": 54000,
+                                    "right": 0,
+                                    "bottom": 54000
+                                  },
+                                  "crop_rectangle": {
+                                    "left": 0,
+                                    "top": 0,
+                                    "right": 8640,
+                                    "bottom": 54000
+                                  },
+                                  "padding": {
+                                    "left": 0,
+                                    "right": 0,
+                                    "top": 0,
+                                    "bottom": 0
+                                  },
+                                  "picture_info": {
+                                    "brightness": 0,
+                                    "contrast": 0,
+                                    "effect": 0,
+                                    "bindata_id": 2
+                                  },
+                                  "border_opacity": 0,
+                                  "instance_id": 805129004,
+                                  "effect_data": [
+                                    0,
+                                    0,
+                                    0,
+                                    0
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 9,
+                      "control_mask": {
+                        "value": 2048,
+                        "flags": [
+                          "gso_table"
+                        ]
+                      },
+                      "para_shape_id": 23,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "",
+                        "control_char_positions": [
+                          {
+                            "position": 0,
+                            "code": 11,
+                            "name": "SHAPE_OBJECT"
+                          },
+                          {
+                            "position": 8,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 10
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 23691,
+                            "text_height": 23691,
+                            "baseline_distance": 20137,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 19396,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ctrl_header",
+                        "ctrl_id": "gso ",
+                        "ctrl_id_value": 1735618336,
+                        "data_type": "object_common",
+                        "attribute": {
+                          "like_letters": true,
+                          "affect_line_spacing": false,
+                          "vert_rel_to": "para",
+                          "vert_relative": 0,
+                          "horz_rel_to": "para",
+                          "horz_relative": 0,
+                          "vert_rel_to_para_limit": true,
+                          "overlap": false,
+                          "object_width_standard": "absolute",
+                          "object_height_standard": "absolute",
+                          "object_text_option": "tight",
+                          "object_text_position_option": "both_sides",
+                          "object_category": "figure",
+                          "size_protect": false
+                        },
+                        "offset_y": 0,
+                        "offset_x": 0,
+                        "width": 6965,
+                        "height": 23691,
+                        "z_order": 7,
+                        "margin": {
+                          "top": 0,
+                          "right": 0,
+                          "bottom": 0,
+                          "left": 0
+                        },
+                        "instance_id": 1878870839,
+                        "page_divide": 0,
+                        "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel",
+                        "children": [
+                          {
+                            "type": "shape_component",
+                            "shape_component": {
+                              "object_control_id": "cip$",
+                              "object_control_id2": "cip$",
+                              "group_offset": {
+                                "x": 0,
+                                "y": -1648
+                              },
+                              "group_count": 0,
+                              "local_version": 1,
+                              "initial_width": 15060,
+                              "initial_height": 54000,
+                              "width": 6965,
+                              "height": 23691,
+                              "attributes": "vertical_flip",
+                              "rotation_angle": 0,
+                              "rotation_center": {
+                                "x": 3482,
+                                "y": 11845
+                              },
+                              "rendering": {
+                                "matrix_count": 1,
+                                "translation_matrix": {
+                                  "elements": [
+                                    1.0,
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0,
+                                    -1648.0
+                                  ]
+                                },
+                                "matrix_sequence": [
+                                  {
+                                    "scale": {
+                                      "elements": [
+                                        0.46248339973439573,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.43872222222222224,
+                                        1648.0
+                                      ]
+                                    },
+                                    "rotation": {
+                                      "elements": [
+                                        1.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0,
+                                        0.0
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "children": [
+                              {
+                                "type": "shape_component_picture",
+                                "shape_component_picture": {
+                                  "border_color": 0,
+                                  "border_width": 0,
+                                  "border_attributes": 0,
+                                  "border_rectangle_x": {
+                                    "left": 0,
+                                    "top": 0,
+                                    "right": 15060,
+                                    "bottom": 0
+                                  },
+                                  "border_rectangle_y": {
+                                    "left": 15060,
+                                    "top": 54000,
+                                    "right": 0,
+                                    "bottom": 54000
+                                  },
+                                  "crop_rectangle": {
+                                    "left": 0,
+                                    "top": 0,
+                                    "right": 6900,
+                                    "bottom": 30780
+                                  },
+                                  "padding": {
+                                    "left": 0,
+                                    "right": 0,
+                                    "top": 0,
+                                    "bottom": 0
+                                  },
+                                  "picture_info": {
+                                    "brightness": 0,
+                                    "contrast": 0,
+                                    "effect": 0,
+                                    "bindata_id": 3
+                                  },
+                                  "border_opacity": 0,
+                                  "instance_id": 805129016,
+                                  "effect_data": [
+                                    0,
+                                    0,
+                                    0,
+                                    0
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 4,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 43,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "목 적",
+                        "control_char_positions": [
+                          {
+                            "position": 3,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 51
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1500,
+                            "text_height": 1500,
+                            "baseline_distance": 1275,
+                            "line_spacing": 300,
+                            "column_start_position": -400,
+                            "segment_width": 8476,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 33,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 6,
+                      "range_tag_count": 0,
+                      "line_align_count": 2,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "1.5톤급 실용위성을 지구저궤도(600~800km)에 투입",
+                        "control_char_positions": [
+                          {
+                            "position": 32,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          },
+                          {
+                            "position": 11,
+                            "shape_id": 53
+                          },
+                          {
+                            "position": 12,
+                            "shape_id": 54
+                          },
+                          {
+                            "position": 17,
+                            "shape_id": 55
+                          },
+                          {
+                            "position": 28,
+                            "shape_id": 54
+                          },
+                          {
+                            "position": 32,
+                            "shape_id": 54
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 17696,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          },
+                          {
+                            "text_start_position": 12,
+                            "vertical_position": 1560,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 17696,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 24,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 2,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "한국형발사체 75톤급 엔진의 비행성능 검증",
+                        "control_char_positions": [
+                          {
+                            "position": 23,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 19396,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          },
+                          {
+                            "text_start_position": 16,
+                            "vertical_position": 1560,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 19396,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 5,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 43,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "총 길이",
+                        "control_char_positions": [
+                          {
+                            "position": 4,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 51
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1500,
+                            "text_height": 1500,
+                            "baseline_distance": 1275,
+                            "line_spacing": 300,
+                            "column_start_position": -400,
+                            "segment_width": 8476,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 7,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "47.2 m",
+                        "control_char_positions": [
+                          {
+                            "position": 6,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 17696,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 7,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "25.8 m",
+                        "control_char_positions": [
+                          {
+                            "position": 6,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 19396,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 6,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 43,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "최대 직경",
+                        "control_char_positions": [
+                          {
+                            "position": 5,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 51
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1500,
+                            "text_height": 1500,
+                            "baseline_distance": 1275,
+                            "line_spacing": 300,
+                            "column_start_position": -400,
+                            "segment_width": 8476,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 6,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "3.5 m",
+                        "control_char_positions": [
+                          {
+                            "position": 5,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 17696,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 6,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "2.6 m",
+                        "control_char_positions": [
+                          {
+                            "position": 5,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 19396,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 6,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 43,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "이륙 중량",
+                        "control_char_positions": [
+                          {
+                            "position": 5,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 51
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1500,
+                            "text_height": 1500,
+                            "baseline_distance": 1275,
+                            "line_spacing": 300,
+                            "column_start_position": -400,
+                            "segment_width": 8476,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 6,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "200 톤",
+                        "control_char_positions": [
+                          {
+                            "position": 5,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 17696,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 7,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "52.1 톤",
+                        "control_char_positions": [
+                          {
+                            "position": 6,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 19396,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 7,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 43,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "탑재체 중량",
+                        "control_char_positions": [
+                          {
+                            "position": 6,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 51
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1500,
+                            "text_height": 1500,
+                            "baseline_distance": 1275,
+                            "line_spacing": 300,
+                            "column_start_position": -400,
+                            "segment_width": 8476,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 6,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "1.5 톤",
+                        "control_char_positions": [
+                          {
+                            "position": 5,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 17696,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 2,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "-",
+                        "control_char_positions": [
+                          {
+                            "position": 1,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 19396,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 5,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 43,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "단 수 ",
+                        "control_char_positions": [
+                          {
+                            "position": 4,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 51
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1500,
+                            "text_height": 1500,
+                            "baseline_distance": 1275,
+                            "line_spacing": 300,
+                            "column_start_position": -400,
+                            "segment_width": 8476,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 3,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "3단",
+                        "control_char_positions": [
+                          {
+                            "position": 2,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 17696,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 3,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 8,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 2147483648,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "1단",
+                        "control_char_positions": [
+                          {
+                            "position": 2,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 52
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1300,
+                            "text_height": 1300,
+                            "baseline_distance": 1105,
+                            "line_spacing": 260,
+                            "column_start_position": 0,
+                            "segment_width": 19396,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
                   }
                 ]
               }

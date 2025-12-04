@@ -3631,16 +3631,323 @@ expression: json
                                 ]
                               }
                             ]
+                          },
+                          {
+                            "para_header": {
+                              "text_char_count": 19,
+                              "control_mask": {
+                                "value": 4,
+                                "flags": [
+                                  "section_column_definition"
+                                ]
+                              },
+                              "para_shape_id": 0,
+                              "para_style_id": 0,
+                              "column_divide_type": [
+                                "multi_column"
+                              ],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 2,
+                              "instance_id": 0,
+                              "section_merge": null
+                            },
+                            "records": [
+                              {
+                                "type": "para_text",
+                                "text": "글 상자 안의 다단",
+                                "control_char_positions": [
+                                  {
+                                    "position": 0,
+                                    "code": 2,
+                                    "name": "RESERVED_2"
+                                  },
+                                  {
+                                    "position": 18,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8296,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 17,
+                                    "vertical_position": 1600,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8296,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "ctrl_header",
+                                "ctrl_id": "cold",
+                                "ctrl_id_value": 1668246628,
+                                "data_type": "column_definition",
+                                "attribute": {
+                                  "column_type": "normal",
+                                  "column_count": 2,
+                                  "column_direction": "left",
+                                  "equal_width": true
+                                },
+                                "column_spacing": 2268,
+                                "column_widths": [],
+                                "attribute_high": 0,
+                                "divider_line_type": 0,
+                                "divider_line_thickness": 0,
+                                "divider_line_color": 0
+                              }
+                            ]
+                          },
+                          {
+                            "para_header": {
+                              "text_char_count": 72,
+                              "control_mask": {
+                                "value": 0,
+                                "flags": []
+                              },
+                              "para_shape_id": 0,
+                              "para_style_id": 0,
+                              "column_divide_type": [],
+                              "char_shape_count": 1,
+                              "range_tag_count": 0,
+                              "line_align_count": 8,
+                              "instance_id": 0,
+                              "section_merge": null
+                            },
+                            "records": [
+                              {
+                                "type": "para_text",
+                                "text": "글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자",
+                                "control_char_positions": [
+                                  {
+                                    "position": 71,
+                                    "code": 13,
+                                    "name": "PARA_BREAK"
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "para_char_shape",
+                                "shapes": [
+                                  {
+                                    "position": 0,
+                                    "shape_id": 1
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "para_line_seg",
+                                "segments": [
+                                  {
+                                    "text_start_position": 0,
+                                    "vertical_position": 3200,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8296,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 9,
+                                    "vertical_position": 4800,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8296,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 18,
+                                    "vertical_position": 6400,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8296,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 28,
+                                    "vertical_position": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8296,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 37,
+                                    "vertical_position": 1600,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8296,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 46,
+                                    "vertical_position": 3200,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8296,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 56,
+                                    "vertical_position": 4800,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8296,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  },
+                                  {
+                                    "text_start_position": 65,
+                                    "vertical_position": 6400,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_position": 0,
+                                    "segment_width": 8296,
+                                    "tag": {
+                                      "is_first_line_of_page": false,
+                                      "is_first_line_of_column": false,
+                                      "is_empty_segment": false,
+                                      "is_first_segment_of_line": true,
+                                      "is_last_segment_of_line": true,
+                                      "has_auto_hyphenation": false,
+                                      "has_indentation": false,
+                                      "has_paragraph_header_shape": false
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
                           }
                         ]
-                      },
-                      {
-                        "type": "other",
-                        "tag_id": 66
-                      },
-                      {
-                        "type": "other",
-                        "tag_id": 66
                       },
                       {
                         "type": "shape_component_rectangle",
@@ -4022,18 +4329,6 @@ expression: json
                     ]
                   },
                   {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
-                    "type": "other",
-                    "tag_id": 66
-                  },
-                  {
                     "type": "table",
                     "table": {
                       "attributes": {
@@ -4392,6 +4687,316 @@ expression: json
                         }
                       ]
                     }
+                  }
+                ],
+                "paragraphs": [
+                  {
+                    "para_header": {
+                      "text_char_count": 18,
+                      "control_mask": {
+                        "value": 4,
+                        "flags": [
+                          "section_column_definition"
+                        ]
+                      },
+                      "para_shape_id": 0,
+                      "para_style_id": 0,
+                      "column_divide_type": [
+                        "multi_column"
+                      ],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "표 셀 안의 다단",
+                        "control_char_positions": [
+                          {
+                            "position": 0,
+                            "code": 2,
+                            "name": "RESERVED_2"
+                          },
+                          {
+                            "position": 17,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 1
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 0,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 9212,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ctrl_header",
+                        "ctrl_id": "cold",
+                        "ctrl_id_value": 1668246628,
+                        "data_type": "column_definition",
+                        "attribute": {
+                          "column_type": "normal",
+                          "column_count": 2,
+                          "column_direction": "left",
+                          "equal_width": true
+                        },
+                        "column_spacing": 2268,
+                        "column_widths": [],
+                        "attribute_high": 0,
+                        "divider_line_type": 0,
+                        "divider_line_thickness": 0,
+                        "divider_line_color": 0
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 68,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 0,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 6,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_text",
+                        "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀",
+                        "control_char_positions": [
+                          {
+                            "position": 67,
+                            "code": 13,
+                            "name": "PARA_BREAK"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 1
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 1600,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 9212,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          },
+                          {
+                            "text_start_position": 12,
+                            "vertical_position": 3200,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 9212,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          },
+                          {
+                            "text_start_position": 24,
+                            "vertical_position": 4800,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 9212,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          },
+                          {
+                            "text_start_position": 36,
+                            "vertical_position": 0,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 9212,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          },
+                          {
+                            "text_start_position": 48,
+                            "vertical_position": 1600,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 9212,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          },
+                          {
+                            "text_start_position": 60,
+                            "vertical_position": 3200,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 9212,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "para_header": {
+                      "text_char_count": 1,
+                      "control_mask": {
+                        "value": 0,
+                        "flags": []
+                      },
+                      "para_shape_id": 0,
+                      "para_style_id": 0,
+                      "column_divide_type": [],
+                      "char_shape_count": 1,
+                      "range_tag_count": 0,
+                      "line_align_count": 1,
+                      "instance_id": 0,
+                      "section_merge": null
+                    },
+                    "records": [
+                      {
+                        "type": "para_char_shape",
+                        "shapes": [
+                          {
+                            "position": 0,
+                            "shape_id": 1
+                          }
+                        ]
+                      },
+                      {
+                        "type": "para_line_seg",
+                        "segments": [
+                          {
+                            "text_start_position": 0,
+                            "vertical_position": 4800,
+                            "line_height": 1000,
+                            "text_height": 1000,
+                            "baseline_distance": 850,
+                            "line_spacing": 600,
+                            "column_start_position": 0,
+                            "segment_width": 9212,
+                            "tag": {
+                              "is_first_line_of_page": false,
+                              "is_first_line_of_column": false,
+                              "is_empty_segment": false,
+                              "is_first_segment_of_line": true,
+                              "is_last_segment_of_line": true,
+                              "has_auto_hyphenation": false,
+                              "has_indentation": false,
+                              "has_paragraph_header_shape": false
+                            }
+                          }
+                        ]
+                      }
+                    ]
                   }
                 ]
               }
