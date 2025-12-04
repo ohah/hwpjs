@@ -1,0 +1,218 @@
+/// BodyText conversion to Markdown
+/// 본문 텍스트를 마크다운으로 변환하는 모듈
+///
+/// HWP 문서의 본문 텍스트(bodytext) 관련 레코드들을 마크다운으로 변환하는 모듈
+/// Module for converting BodyText-related records in HWP documents to markdown
+mod list_header;
+mod para_text;
+mod paragraph;
+mod shape_component;
+pub mod shape_component_picture;
+mod table;
+
+use crate::document::{ColumnDivideType, HwpDocument, ParagraphRecord};
+use crate::viewer::markdown::MarkdownOptions;
+
+pub use para_text::convert_para_text_to_markdown;
+pub use paragraph::convert_paragraph_to_markdown;
+pub(crate) use shape_component::convert_shape_component_children_to_markdown;
+pub(crate) use shape_component_picture::convert_shape_component_picture_to_markdown;
+pub use table::convert_table_to_markdown;
+
+/// Convert body text to markdown
+/// 본문 텍스트를 마크다운으로 변환
+pub fn convert_bodytext_to_markdown(
+    document: &HwpDocument,
+    options: &MarkdownOptions,
+) -> (
+    Vec<String>, // headers
+    Vec<String>, // body_lines
+    Vec<String>, // footers
+    Vec<String>, // footnotes
+    Vec<String>, // endnotes
+) {
+    use crate::viewer::markdown::ctrl_header::convert_control_to_markdown;
+
+    // 머리말, 본문, 꼬리말, 각주, 미주를 분리하여 수집 / Collect headers, body, footers, footnotes, and endnotes separately
+    let mut headers = Vec::new();
+    let mut body_lines = Vec::new();
+    let mut footers = Vec::new();
+    let mut footnotes = Vec::new();
+    let mut endnotes = Vec::new();
+
+    // Convert body text to markdown / 본문 텍스트를 마크다운으로 변환
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            // control_mask를 사용하여 빠른 필터링 (최적화) / Use control_mask for quick filtering (optimization)
+            let control_mask = &paragraph.para_header.control_mask;
+
+            // control_mask로 머리말/꼬리말/각주/미주가 있는지 빠르게 확인 / Quickly check if header/footer/footnote/endnote exists using control_mask
+            // 주의: control_mask는 머리말/꼬리말을 구분하지 못하고, 각주/미주도 구분하지 못함
+            // Note: control_mask cannot distinguish header/footer or footnote/endnote
+            let has_header_footer = control_mask.has_header_footer();
+            let has_footnote_endnote = control_mask.has_footnote_endnote();
+
+            // 머리말/꼬리말/각주/미주 컨트롤 찾기 / Find header/footer/footnote/endnote controls
+            let mut is_header_paragraph = false;
+            let mut is_footer_paragraph = false;
+            let mut is_footnote_paragraph = false;
+            let mut is_endnote_paragraph = false;
+
+            // control_mask로 필터링하여 불필요한 순회 방지 / Filter with control_mask to avoid unnecessary iteration
+            if has_header_footer || has_footnote_endnote {
+                for record in &paragraph.records {
+                    if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                        use crate::document::CtrlId;
+                        if header.ctrl_id.as_str() == CtrlId::HEADER {
+                            is_header_paragraph = true;
+                            break;
+                        } else if header.ctrl_id.as_str() == CtrlId::FOOTER {
+                            is_footer_paragraph = true;
+                            break;
+                        } else if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
+                            is_footnote_paragraph = true;
+                            break;
+                        } else if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
+                            is_endnote_paragraph = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if is_header_paragraph {
+                // 머리말 문단 처리 / Process header paragraph
+                let markdown =
+                    paragraph::convert_paragraph_to_markdown(paragraph, document, options);
+                if !markdown.is_empty() {
+                    headers.push(markdown);
+                }
+            } else if is_footer_paragraph {
+                // 꼬리말 문단 처리 / Process footer paragraph
+                let markdown =
+                    paragraph::convert_paragraph_to_markdown(paragraph, document, options);
+                if !markdown.is_empty() {
+                    footers.push(markdown);
+                }
+            } else if is_footnote_paragraph {
+                // 각주 문단 처리 / Process footnote paragraph
+                // 각주 컨트롤 헤더의 자식 레코드(ListHeader)에 있는 모든 문단 처리 / Process all paragraphs in ListHeader children of footnote control header
+                for record in &paragraph.records {
+                    if let ParagraphRecord::CtrlHeader {
+                        header,
+                        children,
+                        paragraphs: ctrl_paragraphs,
+                        ..
+                    } = record
+                    {
+                        use crate::document::CtrlId;
+                        if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
+                            // 컨트롤 헤더 마크다운 / Control header markdown
+                            let control_md = convert_control_to_markdown(header, false);
+                            if !control_md.is_empty() {
+                                footnotes.push(control_md);
+                            }
+
+                            // CTRL_HEADER 내부의 직접 문단 처리 (각주 내부의 문단) / Process direct paragraphs inside CTRL_HEADER (paragraphs inside footnote)
+                            for para in ctrl_paragraphs {
+                                let para_md = paragraph::convert_paragraph_to_markdown(
+                                    para, document, options,
+                                );
+                                if !para_md.is_empty() {
+                                    footnotes.push(para_md);
+                                }
+                            }
+
+                            // 자식 레코드 처리 (ListHeader의 문단들) / Process child records (paragraphs in ListHeader)
+                            for child in children {
+                                if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
+                                    for para in paragraphs {
+                                        let para_md = paragraph::convert_paragraph_to_markdown(
+                                            para, document, options,
+                                        );
+                                        if !para_md.is_empty() {
+                                            footnotes.push(para_md);
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            } else if is_endnote_paragraph {
+                // 미주 문단 처리 / Process endnote paragraph
+                // 미주 컨트롤 헤더의 자식 레코드(ListHeader)에 있는 모든 문단 처리 / Process all paragraphs in ListHeader children of endnote control header
+                for record in &paragraph.records {
+                    if let ParagraphRecord::CtrlHeader {
+                        header,
+                        children,
+                        paragraphs: ctrl_paragraphs,
+                        ..
+                    } = record
+                    {
+                        use crate::document::CtrlId;
+                        if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
+                            // 컨트롤 헤더 마크다운 / Control header markdown
+                            let control_md = convert_control_to_markdown(header, false);
+                            if !control_md.is_empty() {
+                                endnotes.push(control_md);
+                            }
+
+                            // CTRL_HEADER 내부의 직접 문단 처리 (미주 내부의 문단) / Process direct paragraphs inside CTRL_HEADER (paragraphs inside endnote)
+                            for para in ctrl_paragraphs {
+                                let para_md = paragraph::convert_paragraph_to_markdown(
+                                    para, document, options,
+                                );
+                                if !para_md.is_empty() {
+                                    endnotes.push(para_md);
+                                }
+                            }
+
+                            // 자식 레코드 처리 (ListHeader의 문단들) / Process child records (paragraphs in ListHeader)
+                            for child in children {
+                                if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
+                                    for para in paragraphs {
+                                        let para_md = paragraph::convert_paragraph_to_markdown(
+                                            para, document, options,
+                                        );
+                                        if !para_md.is_empty() {
+                                            endnotes.push(para_md);
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            } else {
+                // 일반 본문 문단 처리 / Process regular body paragraph
+                // Check if we need to add page break / 페이지 나누기가 필요한지 확인
+                let has_page_break = paragraph
+                    .para_header
+                    .column_divide_type
+                    .iter()
+                    .any(|t| matches!(t, ColumnDivideType::Page | ColumnDivideType::Section));
+
+                if has_page_break && !body_lines.is_empty() {
+                    // Only add page break if we have content before / 이전에 내용이 있을 때만 페이지 구분선 추가
+                    let last_line = body_lines.last().map(String::as_str).unwrap_or("");
+                    if !last_line.is_empty() && last_line != "---" {
+                        body_lines.push("---".to_string());
+                        body_lines.push(String::new());
+                    }
+                }
+
+                // Convert paragraph to markdown (includes text and controls) / 문단을 마크다운으로 변환 (텍스트와 컨트롤 포함)
+                let markdown =
+                    paragraph::convert_paragraph_to_markdown(paragraph, document, options);
+                if !markdown.is_empty() {
+                    body_lines.push(markdown);
+                }
+            }
+        }
+    }
+
+    (headers, body_lines, footers, footnotes, endnotes)
+}
