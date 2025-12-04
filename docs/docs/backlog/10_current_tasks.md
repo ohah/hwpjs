@@ -328,6 +328,25 @@ interface SummaryInformation {
 
 ## 알려진 버그
 
+### noori.md 테이블 텍스트 중복 문제
+
+- **문제**: `noori.md` 파일에서 테이블 셀 내부의 텍스트가 중복으로 출력되는 문제
+- **증상**: 
+  - 테이블 셀 내부의 텍스트가 테이블 내부와 외부에 모두 출력됨
+  - 이미지도 중복으로 출력되는 경우가 있음
+- **원인**: 
+  - 테이블 셀 내부의 `ParaText`와 `ShapeComponentPicture`가 테이블 렌더링과 일반 문단 렌더링에서 모두 처리됨
+  - 테이블 셀 내용과 캡션을 구분하는 로직이 완벽하지 않음
+- **해결 방법**:
+  - 테이블 셀 내부의 텍스트와 이미지 ID를 수집하여 중복 출력 방지
+  - 텍스트 내용 비교를 통해 테이블 셀 내용과 캡션 구분
+  - `collect_text_and_images_from_paragraph` 함수를 사용하여 재귀적으로 모든 중첩된 레코드 확인
+- **영향 범위**:
+  - `crates/hwp-core/src/viewer/markdown/document/bodytext/paragraph.rs`의 `CtrlHeader` 처리 로직
+  - `crates/hwp-core/src/viewer/markdown/collect.rs`의 `collect_text_and_images_from_paragraph` 함수
+- **우선순위**: 높음
+- **상태**: 부분 해결됨 (추가 검증 필요)
+
 ### 각주/미주 파싱 버그
 
 - **문제**: 각주/미주 개수는 제대로 맞추나 텍스트와 위치가 첫번째 것으로 중복되어 파싱되는 버그
