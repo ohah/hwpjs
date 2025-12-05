@@ -512,7 +512,20 @@ impl Section {
                     || ctrl_header.ctrl_id_value == 0x74626C20u32;
 
                 let mut paragraphs = Vec::new();
-                for child in node.children() {
+                // libhwp 방식: TABLE 위치를 먼저 찾아서 TABLE 이후의 LIST_HEADER는 children에 추가하지 않음
+                // libhwp approach: Find TABLE position first, then don't add LIST_HEADERs after TABLE to children
+                let mut table_index: Option<usize> = None;
+                let children_slice: Vec<_> = node.children().into_iter().collect();
+
+                // 먼저 TABLE 위치 찾기 / First find TABLE position
+                for (idx, child) in children_slice.iter().enumerate() {
+                    if child.tag_id() == HwpTag::TABLE {
+                        table_index = Some(idx);
+                        break;
+                    }
+                }
+
+                for (idx, child) in children_slice.iter().enumerate() {
                     if child.tag_id() == HwpTag::TABLE {
                         // TABLE은 별도로 처리 / TABLE is processed separately
                         let table_data = Table::parse(child.data(), version)?;
@@ -531,11 +544,10 @@ impl Section {
                         paragraphs.push(paragraph);
                     } else if child.tag_id() == HwpTag::LIST_HEADER && is_table {
                         // LIST_HEADER가 테이블의 셀인 경우 / LIST_HEADER is a table cell
-                        // hwp.js: visitListHeader에서 LIST_HEADER를 파싱하고 테이블 셀로 처리
-                        // hwp.js: visitListHeader parses LIST_HEADER and processes as table cell
+                        // libhwp 방식: TABLE 이후의 LIST_HEADER는 children에 추가하지 않음
+                        // libhwp approach: LIST_HEADERs after TABLE are not added to children
                         let list_header_record =
                             Self::parse_record_from_tree(child, version, original_data)?;
-                        // LIST_HEADER는 children에도 포함되어야 함 / LIST_HEADER should also be included in children
                         // 테이블 셀로 처리하기 위해 paragraphs 추출 / Extract paragraphs for table cell processing
                         let paragraphs_for_cell = if let ParagraphRecord::ListHeader {
                             header: _,
@@ -546,8 +558,14 @@ impl Section {
                         } else {
                             Vec::new()
                         };
-                        // LIST_HEADER를 children에 추가 / Add LIST_HEADER to children
-                        children.push(list_header_record);
+
+                        // libhwp 방식: TABLE 이전/이후의 LIST_HEADER 모두 children에 추가하지 않음
+                        // libhwp approach: Don't add LIST_HEADERs (before or after TABLE) to children
+                        // TABLE 이전의 LIST_HEADER는 캡션으로 별도 처리되고,
+                        // TABLE 이후의 LIST_HEADER는 셀로만 처리됨
+                        // LIST_HEADERs before TABLE are processed as captions separately,
+                        // and LIST_HEADERs after TABLE are only processed as cells
+                        // children에 추가하지 않음 / Don't add to children
 
                         // LIST_HEADER 원시 데이터에서 CellAttributes 파싱 / Parse CellAttributes from LIST_HEADER raw data
                         // LIST_HEADER 데이터 구조: ListHeader (10바이트) + CellAttributes (26바이트)

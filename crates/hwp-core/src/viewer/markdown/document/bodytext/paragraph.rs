@@ -5,7 +5,6 @@
 /// Spec mapping: Table 57 - BodyText data records
 use crate::document::{HwpDocument, Paragraph, ParagraphRecord};
 use crate::viewer::markdown::collect::collect_text_and_images_from_paragraph;
-use crate::viewer::markdown::ctrl_header::convert_control_to_markdown;
 use crate::viewer::markdown::document::bodytext::para_text::convert_para_text_to_markdown;
 use crate::viewer::markdown::document::bodytext::shape_component::convert_shape_component_children_to_markdown;
 use crate::viewer::markdown::document::bodytext::shape_component_picture::convert_shape_component_picture_to_markdown;
@@ -109,8 +108,6 @@ pub fn convert_paragraph_to_markdown(
 
                 // 컨트롤 헤더의 자식 레코드 처리 (레벨 2, 예: 테이블, 그림 등) / Process control header children (level 2, e.g., table, images, etc.)
                 let mut has_table = false;
-                let mut has_image = false;
-                let mut has_content = false; // 자식 레코드에서 내용이 추출되었는지 여부 / Whether content was extracted from child records
 
                 // 표 셀 내부의 텍스트와 이미지를 수집하여 셀 내부 문단인지 확인
                 // Collect text and images from paragraphs in Table.cells to check if they are cell content
@@ -120,6 +117,8 @@ pub fn convert_paragraph_to_markdown(
                     std::collections::HashSet::new();
                 let mut table_cell_image_ids: std::collections::HashSet<u16> =
                     std::collections::HashSet::new();
+                let mut table_cell_para_ids: std::collections::HashSet<u32> =
+                    std::collections::HashSet::new(); // 표 셀 내부 문단의 instance_id 수집
                 let mut table_opt: Option<&crate::document::bodytext::Table> = None;
                 let mut table_index: Option<usize> = None;
                 let is_table_control = header.ctrl_id == crate::document::CtrlId::TABLE;
@@ -137,6 +136,10 @@ pub fn convert_paragraph_to_markdown(
                 if let Some(table) = table_opt {
                     for cell in &table.cells {
                         for para in &cell.paragraphs {
+                            // 문단의 instance_id 수집 (0이 아닌 경우만) / Collect paragraph instance_id (only if not 0)
+                            if para.para_header.instance_id != 0 {
+                                table_cell_para_ids.insert(para.para_header.instance_id);
+                            }
                             // ParaText의 텍스트를 수집 / Collect text from ParaText
                             // 재귀적으로 모든 레코드를 확인하여 이미지 ID 수집 / Recursively check all records to collect image IDs
                             collect_text_and_images_from_paragraph(
@@ -148,43 +151,14 @@ pub fn convert_paragraph_to_markdown(
                     }
                 }
 
-                // TABLE 앞의 LIST_HEADER들 처리 (표 위 캡션) / Process LIST_HEADERs before TABLE (caption above)
-                // 표 셀 내부의 LIST_HEADER는 Table.cells에 포함되어 있으므로 제외
-                // LIST_HEADERs inside table cells are included in Table.cells, so exclude them
-                if let Some(table_idx) = table_index {
-                    for i in 0..table_idx {
-                        if let ParagraphRecord::ListHeader { paragraphs, .. } = &children_slice[i] {
-                            if is_table_control {
-                                // 이 LIST_HEADER의 paragraphs가 Table.cells에 포함되어 있는지 확인
-                                // Check if this LIST_HEADER's paragraphs are included in Table.cells
-                                let is_table_cell = paragraphs.iter().any(|para| {
-                                    // ParaText의 텍스트를 확인 / Check ParaText text
-                                    para.records.iter().any(|record| {
-                                        if let ParagraphRecord::ParaText { text, .. } = record {
-                                            !text.trim().is_empty()
-                                                && table_cell_texts
-                                                    .contains(&text.trim().to_string())
-                                        } else {
-                                            false
-                                        }
-                                    })
-                                });
-
-                                // 표 셀 내부가 아닌 경우에만 캡션으로 처리
-                                // Only process as caption if not inside table cell
-                                if !is_table_cell {
-                                    for para in paragraphs {
-                                        let para_md =
-                                            convert_paragraph_to_markdown(para, document, options);
-                                        if !para_md.is_empty() {
-                                            parts.push(para_md);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                // libhwp 방식: 파서 단계에서 TABLE 이전/이후의 LIST_HEADER를 children에 추가하지 않으므로
+                // 여기서는 처리하지 않음
+                // libhwp approach: LIST_HEADERs (before/after TABLE) are not added to children in parser stage,
+                // so we don't process them here
+                // TABLE 이전의 LIST_HEADER는 캡션으로 별도 처리되고,
+                // TABLE 이후의 LIST_HEADER는 셀로만 처리됨
+                // LIST_HEADERs before TABLE are processed as captions separately,
+                // and LIST_HEADERs after TABLE are only processed as cells
 
                 // 컨트롤 헤더의 자식 레코드들을 순회하며 처리 / Iterate through control header's child records and process them
                 let mut index = 0;
@@ -200,43 +174,21 @@ pub fn convert_paragraph_to_markdown(
                             if !table_md.is_empty() {
                                 parts.push(table_md);
                                 has_table = true;
-                                has_content = true;
                             }
                             index += 1;
                         }
                         ParagraphRecord::ListHeader { paragraphs, .. } => {
                             // LIST_HEADER 처리 (표 아래 캡션 등) / Process LIST_HEADER (caption below, etc.)
-                            // 표 셀 내부의 LIST_HEADER는 Table.cells에 포함되어 있으므로 제외
-                            // LIST_HEADERs inside table cells are included in Table.cells, so exclude them
+                            // libhwp 방식: TABLE 이후의 LIST_HEADER는 Table.cells에 포함되어 있으므로 children에서 처리하지 않음
+                            // libhwp approach: LIST_HEADERs after TABLE are included in Table.cells, so don't process in children
                             if let Some(table_idx) = table_index {
                                 if index > table_idx && is_table_control {
-                                    // 이 LIST_HEADER의 paragraphs가 Table.cells에 포함되어 있는지 확인
-                                    // Check if this LIST_HEADER's paragraphs are included in Table.cells
-                                    let is_table_cell = paragraphs.iter().any(|para| {
-                                        // ParaText의 텍스트를 확인 / Check ParaText text
-                                        para.records.iter().any(|record| {
-                                            if let ParagraphRecord::ParaText { text, .. } = record {
-                                                !text.trim().is_empty()
-                                                    && table_cell_texts
-                                                        .contains(&text.trim().to_string())
-                                            } else {
-                                                false
-                                            }
-                                        })
-                                    });
-
-                                    // 표 셀 내부가 아닌 경우에만 캡션으로 처리
-                                    // Only process as caption if not inside table cell
-                                    if !is_table_cell {
-                                        for para in paragraphs {
-                                            let para_md = convert_paragraph_to_markdown(
-                                                para, document, options,
-                                            );
-                                            if !para_md.is_empty() {
-                                                parts.push(para_md);
-                                            }
-                                        }
-                                    }
+                                    // TABLE 이후의 LIST_HEADER는 이미 Table.cells에 포함되어 있으므로 건너뜀
+                                    // LIST_HEADERs after TABLE are already included in Table.cells, so skip
+                                    // libhwp는 TABLE 이후의 LIST_HEADER를 children에서 처리하지 않고,
+                                    // TABLE을 읽은 후 명시적으로 각 셀을 순회하며 처리함
+                                    // libhwp doesn't process LIST_HEADERs after TABLE in children,
+                                    // but processes them explicitly when iterating through cells after reading TABLE
                                 } else {
                                     // 표 앞의 LIST_HEADER는 이미 처리됨 / LIST_HEADER before table is already processed
                                     // 표가 없거나 표 셀 내부가 아닌 경우 일반 처리 / General processing if no table or not inside table cell
@@ -275,10 +227,9 @@ pub fn convert_paragraph_to_markdown(
                                         shape_component_picture,
                                     } => {
                                         // 표 셀 내부의 이미지인지 확인 (bindata_id로 직접 비교) / Check if image is inside table cell (direct comparison by bindata_id)
-                                        let is_table_cell_image = has_table
-                                            && table_cell_image_ids.contains(
-                                                &shape_component_picture.picture_info.bindata_id,
-                                            );
+                                        let is_table_cell_image = table_cell_image_ids.contains(
+                                            &shape_component_picture.picture_info.bindata_id,
+                                        );
 
                                         if is_table_cell_image {
                                             // 표 셀 내부의 이미지는 표 셀에 이미 포함되므로 여기서는 표시하지 않음
@@ -319,25 +270,15 @@ pub fn convert_paragraph_to_markdown(
                                     // 표가 있고 이미지가 있는 경우, 이미지가 표 셀 내부가 아니므로 출력
                                     // If table exists and image exists, image is not inside table cell, so output
                                     parts.push(shape_part);
-                                    has_image = true;
-                                    has_content = true;
                                 } else if is_shape_object {
                                     // SHAPE_OBJECT의 경우 표 밖에서도 이미지를 처리
                                     // For SHAPE_OBJECT, process image even outside table
                                     parts.push(shape_part);
-                                    has_image = true;
-                                    has_content = true;
                                 } else {
                                     // 기타 경우에는 출력
                                     // For other cases, output
                                     parts.push(shape_part);
-                                    has_image = true;
-                                    has_content = true;
                                 }
-                            }
-
-                            if has_image_in_shape && !has_content {
-                                has_image = true;
                             }
 
                             index += 1;
@@ -350,31 +291,27 @@ pub fn convert_paragraph_to_markdown(
                             let is_table_cell_image = table_cell_image_ids
                                 .contains(&shape_component_picture.picture_info.bindata_id);
 
-                            if let Some(image_md) = convert_shape_component_picture_to_markdown(
-                                shape_component_picture,
-                                document,
-                                options.image_output_dir.as_deref(),
-                            ) {
-                                if has_table && is_table_cell_image {
-                                    // 표 셀 내부의 이미지는 표 셀에 이미 포함되므로 여기서는 표시하지 않음
-                                    // Images inside table cells are already included in table cells, so don't display here
-                                    has_image = true;
-                                } else if has_table {
-                                    // 표가 있지만 셀 내부가 아닌 경우 (표 위/아래 이미지 등)
-                                    // Table exists but not inside cell (e.g., image above/below table)
-                                    parts.push(image_md);
-                                    has_image = true;
-                                    has_content = true;
-                                } else if is_shape_object {
-                                    // SHAPE_OBJECT의 경우 표 밖에서도 이미지를 처리
-                                    // For SHAPE_OBJECT, process image even outside table
-                                    parts.push(image_md);
-                                    has_image = true;
-                                    has_content = true;
-                                } else {
-                                    // 기타 경우에는 has_image만 설정
-                                    // For other cases, only set has_image
-                                    has_image = true;
+                            // 표 셀 내부의 이미지는 표 셀에 이미 포함되므로 여기서는 표시하지 않음
+                            // Images inside table cells are already included in table cells, so don't display here
+                            if !is_table_cell_image {
+                                if let Some(image_md) = convert_shape_component_picture_to_markdown(
+                                    shape_component_picture,
+                                    document,
+                                    options.image_output_dir.as_deref(),
+                                ) {
+                                    if has_table {
+                                        // 표가 있지만 셀 내부가 아닌 경우 (표 위/아래 이미지 등)
+                                        // Table exists but not inside cell (e.g., image above/below table)
+                                        parts.push(image_md);
+                                    } else if is_shape_object {
+                                        // SHAPE_OBJECT의 경우 표 밖에서도 이미지를 처리
+                                        // For SHAPE_OBJECT, process image even outside table
+                                        parts.push(image_md);
+                                    } else {
+                                        // 기타 경우에는 출력
+                                        // For other cases, output
+                                        parts.push(image_md);
+                                    }
                                 }
                             }
                             index += 1;
@@ -389,48 +326,48 @@ pub fn convert_paragraph_to_markdown(
 
                 // CTRL_HEADER 내부의 직접 문단 처리 / Process direct paragraphs inside CTRL_HEADER
                 for para in ctrl_paragraphs {
-                    let para_md = convert_paragraph_to_markdown(para, document, options);
-                    if !para_md.is_empty() {
-                        parts.push(para_md);
-                        has_content = true;
-                    }
-                }
+                    // 표 셀 내부의 문단인지 확인 / Check if paragraph is inside table cell
+                    let is_table_cell = if is_table_control && table_opt.is_some() {
+                        // 먼저 instance_id로 확인 (가장 정확, 0이 아닌 경우만) / First check by instance_id (most accurate, only if not 0)
+                        let is_table_cell_by_id = !table_cell_para_ids.is_empty()
+                            && para.para_header.instance_id != 0
+                            && table_cell_para_ids.contains(&para.para_header.instance_id);
 
-                // Convert control header to markdown / 컨트롤 헤더를 마크다운으로 변환
-                // 표나 이미지 또는 내용이 이미 추출되었다면 메시지를 출력하지 않음 / Don't output message if table, image, or content was already extracted
-                let control_md = convert_control_to_markdown(header, has_table);
-                if !control_md.is_empty() {
-                    // SHAPE_OBJECT의 경우 description이 있으면 내용이 있다고 간주 / For SHAPE_OBJECT, if description exists, consider it as content
-                    let is_shape_object_for_desc =
-                        header.ctrl_id.as_str() == crate::document::CtrlId::SHAPE_OBJECT;
-                    if is_shape_object_for_desc {
-                        if let crate::document::CtrlHeaderData::ObjectCommon {
-                            description, ..
-                        } = &header.data
-                        {
-                            if let Some(desc) = description {
-                                // description이 여러 줄이면 내용이 있다고 간주 / If description has multiple lines, consider it as content
-                                if desc.contains('\n') && desc.lines().count() > 1 {
-                                    has_content = true;
-                                }
-                            }
-                        }
-                    }
+                        // instance_id로 확인되지 않으면 텍스트와 이미지로 확인 / If not found by instance_id, check by text and images
+                        if is_table_cell_by_id {
+                            true
+                        } else {
+                            // 재귀적으로 문단에서 텍스트와 이미지를 수집하여 표 셀 내부인지 확인
+                            // Recursively collect text and images from paragraph to check if inside table cell
+                            let mut para_texts = std::collections::HashSet::new();
+                            let mut para_image_ids = std::collections::HashSet::new();
+                            collect_text_and_images_from_paragraph(
+                                para,
+                                &mut para_texts,
+                                &mut para_image_ids,
+                            );
 
-                    // 내용이 추출되었으면 (이미지 또는 텍스트) 메시지 부분만 제거 / Remove message part if content was extracted (image or text)
-                    if (has_image || has_content)
-                        && control_md.contains("[개체 내용은 추출되지 않았습니다]")
-                    {
-                        let header_info = control_md
-                            .lines()
-                            .take_while(|line| !line.contains("[개체 내용은 추출되지 않았습니다]"))
-                            .collect::<Vec<_>>()
-                            .join("\n");
-                        if !header_info.trim().is_empty() {
-                            parts.push(header_info);
+                            // 수집한 텍스트나 이미지가 표 셀 내부에 포함되어 있는지 확인
+                            // Check if collected text or images are included in table cells
+                            (!para_texts.is_empty()
+                                && para_texts
+                                    .iter()
+                                    .any(|text| table_cell_texts.contains(text)))
+                                || (!para_image_ids.is_empty()
+                                    && para_image_ids
+                                        .iter()
+                                        .any(|id| table_cell_image_ids.contains(id)))
                         }
                     } else {
-                        parts.push(control_md);
+                        false
+                    };
+
+                    // 표 셀 내부가 아닌 경우에만 처리 / Only process if not inside table cell
+                    if !is_table_cell {
+                        let para_md = convert_paragraph_to_markdown(para, document, options);
+                        if !para_md.is_empty() {
+                            parts.push(para_md);
+                        }
                     }
                 }
             }

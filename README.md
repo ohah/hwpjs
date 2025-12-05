@@ -43,6 +43,8 @@ hwpjs/
 
 - [pyhwp](https://github.com/mete0r/pyhwp)
 - [hwpjs](https://github.com/hahnlee/hwp.js)
+- [ruby-hwp](https://github.com/mete0r/ruby-hwp)
+- [libhwp](https://github.com/accforaus/libhwp)
 
 ## 개발 시작하기
 
