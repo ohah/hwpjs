@@ -352,39 +352,6 @@ interface SummaryInformation {
 - **우선순위**: 높음
 - **상태**: 조사 중
 
-### noori.md 테이블 텍스트 중복 문제
-
-- **문제**: `noori.md` 파일에서 테이블 셀 내부의 텍스트가 중복으로 출력되는 문제
-- **증상**: 
-  - 테이블 셀 내부의 텍스트가 테이블 내부와 외부에 모두 출력됨
-  - 이미지도 중복으로 출력되는 경우가 있음
-- **원인**: 
-  - 테이블 셀 내부의 `ParaText`와 `ShapeComponentPicture`가 테이블 렌더링과 일반 문단 렌더링에서 모두 처리됨
-  - 테이블 셀 내용과 캡션을 구분하는 로직이 완벽하지 않음
-- **해결 방법**:
-  - 테이블 셀 내부의 텍스트와 이미지 ID를 수집하여 중복 출력 방지
-  - 텍스트 내용 비교를 통해 테이블 셀 내용과 캡션 구분
-  - `collect_text_and_images_from_paragraph` 함수를 사용하여 재귀적으로 모든 중첩된 레코드 확인
-- **영향 범위**:
-  - `crates/hwp-core/src/viewer/markdown/document/bodytext/paragraph.rs`의 `CtrlHeader` 처리 로직
-  - `crates/hwp-core/src/viewer/markdown/collect.rs`의 `collect_text_and_images_from_paragraph` 함수
-- **우선순위**: 높음
-- **상태**: 부분 해결됨 (추가 검증 필요)
-
-### 각주/미주 파싱 버그
-
-- **문제**: 각주/미주 개수는 제대로 맞추나 텍스트와 위치가 첫번째 것으로 중복되어 파싱되는 버그
-- **증상**: 
-  - 각주/미주 컨트롤 헤더의 개수는 올바르게 파싱됨
-  - 하지만 각각의 텍스트 내용과 위치 정보가 모두 첫번째 각주/미주의 것으로 중복되어 파싱됨
-  - 예: "각주입니다", "각주 두번째입니다"가 모두 "각주입니다"로 파싱됨
-- **원인**: `LIST_HEADER` 파싱 시 원본 데이터에서 같은 데이터를 가진 첫번째 `LIST_HEADER`를 찾아서 잘못된 문단을 읽고 있음
-- **영향 범위**:
-  - `crates/hwp-core/src/document/bodytext/mod.rs`의 `LIST_HEADER` 파싱 로직
-  - 각주/미주 컨트롤 헤더의 자식 `LIST_HEADER` 파싱
-- **우선순위**: 높음
-- **상태**: 조사 중
-
 ## 버전 관리
 
 - **0.1.0-rc.1**: 초기 배포 시작

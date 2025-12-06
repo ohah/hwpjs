@@ -1,3 +1,5 @@
+use crate::document::bodytext::CharShapeInfo;
+use crate::document::CharShape;
 /// Paragraph conversion to Markdown
 /// 문단을 마크다운으로 변환하는 모듈
 ///
@@ -8,8 +10,6 @@ use crate::viewer::markdown::collect::collect_text_and_images_from_paragraph;
 use crate::viewer::markdown::document::bodytext::para_text::{
     convert_para_text_to_markdown, convert_para_text_to_markdown_with_char_shapes,
 };
-use crate::document::bodytext::CharShapeInfo;
-use crate::document::CharShape;
 use crate::viewer::markdown::document::bodytext::shape_component::convert_shape_component_children_to_markdown;
 use crate::viewer::markdown::document::bodytext::shape_component_picture::convert_shape_component_picture_to_markdown;
 use crate::viewer::markdown::document::bodytext::table::convert_table_to_markdown;
@@ -66,7 +66,7 @@ pub fn convert_paragraph_to_markdown(
                 } else {
                     convert_para_text_to_markdown(text, control_char_positions)
                 };
-                
+
                 if let Some(text_md) = text_md {
                     // 같은 문단 내의 텍스트는 나중에 합침 / Text in the same paragraph will be combined later
                     text_parts.push(text_md);
