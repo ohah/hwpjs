@@ -1,6 +1,6 @@
 {
   "name": "@ohah/hwpjs",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "description": "HWP parser for Node.js, Web, and React Native",
   "main": "./dist/browser.js",
   "types": "./dist/index.d.ts",
@@ -143,12 +143,12 @@
     "typescript": "^5.9.3"
   },
   "optionalDependencies": {
-    "@ohah/hwpjs-win32-x64-msvc": "0.1.0-rc.1",
-    "@ohah/hwpjs-darwin-x64": "0.1.0-rc.1",
-    "@ohah/hwpjs-win32-ia32-msvc": "0.1.0-rc.1",
-    "@ohah/hwpjs-darwin-arm64": "0.1.0-rc.1",
-    "@ohah/hwpjs-win32-arm64-msvc": "0.1.0-rc.1",
-    "@ohah/hwpjs-linux-x64-gnu": "0.1.0-rc.1",
-    "@ohah/hwpjs-wasm32-wasi": "0.1.0-rc.1"
+    "@ohah/hwpjs-win32-x64-msvc": "0.1.0-rc.2",
+    "@ohah/hwpjs-darwin-x64": "0.1.0-rc.2",
+    "@ohah/hwpjs-win32-ia32-msvc": "0.1.0-rc.2",
+    "@ohah/hwpjs-darwin-arm64": "0.1.0-rc.2",
+    "@ohah/hwpjs-win32-arm64-msvc": "0.1.0-rc.2",
+    "@ohah/hwpjs-linux-x64-gnu": "0.1.0-rc.2",
+    "@ohah/hwpjs-wasm32-wasi": "0.1.0-rc.2"
   }
 }
