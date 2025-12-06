@@ -3,6 +3,7 @@
 /// 마크다운 변환에 사용되는 공통 함수들을 제공합니다.
 /// Provides common functions used in markdown conversion.
 use crate::document::{BinDataRecord, HwpDocument};
+use crate::error::HwpError;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use std::fs;
 use std::path::Path;
@@ -95,11 +96,13 @@ fn save_image_to_file(
     bindata_id: crate::types::WORD,
     base64_data: &str,
     dir_path: &str,
-) -> Result<String, String> {
+) -> Result<String, HwpError> {
     // base64 디코딩 / Decode base64
     let image_data = STANDARD
         .decode(base64_data)
-        .map_err(|e| format!("Failed to decode base64: {}", e))?;
+        .map_err(|e| HwpError::InternalError {
+            message: format!("Failed to decode base64: {}", e),
+        })?;
 
     // 파일명 생성 / Generate filename
     let extension = get_extension_from_bindata_id(document, bindata_id);
@@ -108,11 +111,11 @@ fn save_image_to_file(
 
     // 디렉토리 생성 / Create directory
     fs::create_dir_all(dir_path)
-        .map_err(|e| format!("Failed to create directory '{}': {}", dir_path, e))?;
+        .map_err(|e| HwpError::Io(format!("Failed to create directory '{}': {}", dir_path, e)))?;
 
     // 파일 저장 / Save file
     fs::write(&file_path, &image_data)
-        .map_err(|e| format!("Failed to write file '{}': {}", file_path.display(), e))?;
+        .map_err(|e| HwpError::Io(format!("Failed to write file '{}': {}", file_path.display(), e)))?;
 
     Ok(file_path.to_string_lossy().to_string())
 }
