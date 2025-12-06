@@ -100,7 +100,11 @@ impl XmlTemplate {
     /// Schema 이름 파싱 (표 10) / Parse schema name (Table 10)
     fn parse_schema_name(data: &[u8]) -> Result<String, HwpError> {
         if data.len() < 4 {
-            return Err(HwpError::insufficient_data("Schema name data", 4, data.len()));
+            return Err(HwpError::insufficient_data(
+                "Schema name data",
+                4,
+                data.len(),
+            ));
         }
 
         // DWORD Schema 이름 길이 (4 bytes) / Schema name length (4 bytes)
@@ -117,10 +121,9 @@ impl XmlTemplate {
 
         if len > 0 {
             let schema_name_bytes = &data[4..4 + (len * 2)];
-            decode_utf16le(schema_name_bytes)
-                .map_err(|e| HwpError::EncodingError {
-                    reason: format!("Failed to decode schema name: {}", e),
-                })
+            decode_utf16le(schema_name_bytes).map_err(|e| HwpError::EncodingError {
+                reason: format!("Failed to decode schema name: {}", e),
+            })
         } else {
             Ok(String::new())
         }
@@ -146,10 +149,9 @@ impl XmlTemplate {
 
         if len > 0 {
             let schema_bytes = &data[4..4 + (len * 2)];
-            decode_utf16le(schema_bytes)
-                .map_err(|e| HwpError::EncodingError {
-                    reason: format!("Failed to decode schema: {}", e),
-                })
+            decode_utf16le(schema_bytes).map_err(|e| HwpError::EncodingError {
+                reason: format!("Failed to decode schema: {}", e),
+            })
         } else {
             Ok(String::new())
         }
@@ -175,10 +177,9 @@ impl XmlTemplate {
 
         if len > 0 {
             let instance_bytes = &data[4..4 + (len * 2)];
-            decode_utf16le(instance_bytes)
-                .map_err(|e| HwpError::EncodingError {
-                    reason: format!("Failed to decode instance: {}", e),
-                })
+            decode_utf16le(instance_bytes).map_err(|e| HwpError::EncodingError {
+                reason: format!("Failed to decode instance: {}", e),
+            })
         } else {
             Ok(String::new())
         }

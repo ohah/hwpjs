@@ -1,6 +1,6 @@
 {
   "name": "@ohah/hwpjs-wasm32-wasi",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "cpu": [
     "wasm32"
   ],
@@ -41,6 +41,6 @@
   },
   "browser": "hwpjs.wasi-browser.js",
   "dependencies": {
-    "@napi-rs/wasm-runtime": "^1.0.7"
+    "@napi-rs/wasm-runtime": "^1.1.0"
   }
 }
