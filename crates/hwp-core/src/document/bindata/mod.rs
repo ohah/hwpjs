@@ -111,6 +111,7 @@ impl BinData {
                                     let decompressed_buffer = match decompress_deflate(&buffer) {
                                         Ok(decompressed) => decompressed,
                                         Err(e) => {
+                                            #[cfg(debug_assertions)]
                                             eprintln!(
                                                 "Warning: Failed to decompress BinData stream '{}' (id={}): {}. Using raw data.",
                                                 path, binary_data_id, e

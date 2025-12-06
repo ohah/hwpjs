@@ -56,6 +56,7 @@ impl XmlTemplate {
                     xml_template.schema_name = Some(schema_name);
                 }
                 Err(e) => {
+                    #[cfg(debug_assertions)]
                     eprintln!("Warning: Failed to parse _SchemaName stream: {}", e);
                 }
             }
@@ -71,6 +72,7 @@ impl XmlTemplate {
                     xml_template.schema = Some(schema);
                 }
                 Err(e) => {
+                    #[cfg(debug_assertions)]
                     eprintln!("Warning: Failed to parse Schema stream: {}", e);
                 }
             }
@@ -86,6 +88,7 @@ impl XmlTemplate {
                     xml_template.instance = Some(instance);
                 }
                 Err(e) => {
+                    #[cfg(debug_assertions)]
                     eprintln!("Warning: Failed to parse Instance stream: {}", e);
                 }
             }

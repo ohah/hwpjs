@@ -164,6 +164,7 @@ impl ParameterSet {
                     // 알 수 없는 타입의 경우 ParameterItem::parse에서 이미 처리하므로 여기 도달하지 않아야 함
                     // Continue on parse error with warning
                     // Unknown types should be handled in ParameterItem::parse, so this shouldn't be reached
+                    #[cfg(debug_assertions)]
                     eprintln!("Failed to parse parameter item: {}", e);
                     // 에러가 발생한 경우 최소한 id와 item_type(4바이트)는 건너뛰고 계속 진행
                     // On error, skip at least id and item_type (4 bytes) and continue
@@ -235,6 +236,7 @@ impl ParameterItem {
                 //
                 // 별도 처리: 알 수 없는 타입의 경우 id와 item_type만 저장하고 데이터는 건너뜀
                 // Special handling: For unknown types, only save id and item_type, skip data
+                #[cfg(debug_assertions)]
                 eprintln!(
                     "Warning: Unknown parameter item type: {} (0x{:04x}) - not in spec Table 52, skipping data",
                     item_type_value, item_type_value
@@ -402,6 +404,7 @@ fn parse_parameter_item_data(
                         parameter_sets.push(set);
                     }
                     Err(e) => {
+                        #[cfg(debug_assertions)]
                         eprintln!("Failed to parse parameter set in array: {}", e);
                         break;
                     }

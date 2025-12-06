@@ -74,6 +74,7 @@ impl CfbParser {
         data: &[u8],
         stream_name_bytes: &[u8],
     ) -> Result<Vec<u8>, HwpError> {
+        #[cfg(debug_assertions)]
         eprintln!(
             "Debug: read_stream_by_bytes called, data len: {}, stream_name: {:?}",
             data.len(),
@@ -136,6 +137,7 @@ impl CfbParser {
         // 예상되는 UTF-16LE 문자 개수 (null 종료 문자 포함)
         let expected_name_length = (stream_name_utf16.len() / 2) as u16;
 
+        #[cfg(debug_assertions)]
         eprintln!(
             "Debug: Stream name UTF-16LE: {:?} (first 20 bytes)",
             &stream_name_utf16[..20.min(stream_name_utf16.len())]
@@ -165,6 +167,7 @@ impl CfbParser {
             (sector_size as usize) + (dir_sector as usize * sector_size as usize)
         };
 
+        #[cfg(debug_assertions)]
         eprintln!(
             "Debug: dir_sector: {}, sector_size: {}, dir_start: {}",
             dir_sector, sector_size, dir_start
@@ -180,6 +183,7 @@ impl CfbParser {
             });
         }
 
+        #[cfg(debug_assertions)]
         eprintln!(
             "Debug: Searching directory entries, dir_start: {}, sector_size: {}",
             dir_start, sector_size
@@ -225,6 +229,7 @@ impl CfbParser {
 
             // Check if entry name starts with our stream name (for debugging)
             // 디버깅을 위해 엔트리 이름이 스트림 이름으로 시작하는지 확인
+            #[cfg(debug_assertions)]
             if i < 20 || entry_type == 2 {
                 let name_str = String::from_utf16_lossy(
                     &entry_name_bytes
@@ -254,6 +259,7 @@ impl CfbParser {
                 && entry_name_bytes[..stream_name_utf16.len()] == stream_name_utf16[..];
 
             if name_matches {
+                #[cfg(debug_assertions)]
                 eprintln!(
                     "Debug: Found matching entry at index {} (type: {})",
                     i, entry_type
@@ -261,6 +267,7 @@ impl CfbParser {
                 // Found matching entry, check if it's a stream (type = 2)
                 // 일치하는 엔트리를 찾았으므로 스트림인지 확인 (타입 = 2)
                 if entry_type != 2 {
+                    #[cfg(debug_assertions)]
                     eprintln!(
                         "Debug: Entry is not a stream (type: {}), continuing...",
                         entry_type

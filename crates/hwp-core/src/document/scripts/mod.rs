@@ -53,6 +53,7 @@ impl Scripts {
                     scripts.version = Some(version);
                 }
                 Err(e) => {
+                    #[cfg(debug_assertions)]
                     eprintln!("Warning: Failed to parse JScriptVersion stream: {}", e);
                 }
             }
@@ -68,6 +69,7 @@ impl Scripts {
                     scripts.default_script = Some(default_script);
                 }
                 Err(e) => {
+                    #[cfg(debug_assertions)]
                     eprintln!("Warning: Failed to parse DefaultJScript stream: {}", e);
                 }
             }

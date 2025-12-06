@@ -391,6 +391,7 @@ impl Section {
                 records.retain(|record| !matches!(record, ParagraphRecord::ParaText { .. }));
                 let after_count = records.len();
                 if before_count != after_count {
+                    #[cfg(debug_assertions)]
                     eprintln!("[DEBUG] Removed {} ParaText records from control paragraph (is_inside_control_header={})", 
                         before_count - after_count, is_inside_control_header);
                 }
@@ -405,6 +406,7 @@ impl Section {
             if para_text_count > 0 {
                 for record in &records {
                     if let ParagraphRecord::ParaText { text, .. } = record {
+                        #[cfg(debug_assertions)]
                         eprintln!("[DEBUG] Body paragraph ParaText: {}", text);
                     }
                 }
@@ -537,31 +539,31 @@ impl Section {
                 })
             }
             HwpTag::PARA_CHAR_SHAPE => {
-                let para_char_shape = ParaCharShape::parse(node.data())
-                    .map_err(|e| HwpError::from(e))?;
+                let para_char_shape =
+                    ParaCharShape::parse(node.data()).map_err(|e| HwpError::from(e))?;
                 Ok(ParagraphRecord::ParaCharShape {
                     shapes: para_char_shape.shapes,
                 })
             }
             HwpTag::PARA_LINE_SEG => {
-                let para_line_seg = ParaLineSeg::parse(node.data())
-                    .map_err(|e| HwpError::from(e))?;
+                let para_line_seg =
+                    ParaLineSeg::parse(node.data()).map_err(|e| HwpError::from(e))?;
                 Ok(ParagraphRecord::ParaLineSeg {
                     segments: para_line_seg.segments,
                 })
             }
             HwpTag::PARA_RANGE_TAG => {
-                let para_range_tag = ParaRangeTag::parse(node.data())
-                    .map_err(|e| HwpError::from(e))?;
+                let para_range_tag =
+                    ParaRangeTag::parse(node.data()).map_err(|e| HwpError::from(e))?;
                 Ok(ParagraphRecord::ParaRangeTag {
                     tags: para_range_tag.tags,
                 })
             }
             HwpTag::CTRL_HEADER => {
-                let ctrl_header = CtrlHeader::parse(node.data())
-                    .map_err(|e| HwpError::from(e))?;
+                let ctrl_header = CtrlHeader::parse(node.data()).map_err(|e| HwpError::from(e))?;
                 // 디버그: CTRL_HEADER 파싱 시작 / Debug: Start parsing CTRL_HEADER
                 use crate::document::bodytext::ctrl_header::CtrlId;
+                #[cfg(debug_assertions)]
                 eprintln!(
                     "[DEBUG] Parsing CTRL_HEADER: ctrl_id={:?}, ctrl_id_value={}",
                     ctrl_header.ctrl_id, ctrl_header.ctrl_id_value
@@ -604,8 +606,8 @@ impl Section {
                 for (idx, child) in children_slice.iter().enumerate() {
                     if child.tag_id() == HwpTag::TABLE {
                         // TABLE은 별도로 처리 / TABLE is processed separately
-                        let table_data = Table::parse(child.data(), version)
-                            .map_err(|e| HwpError::from(e))?;
+                        let table_data =
+                            Table::parse(child.data(), version).map_err(|e| HwpError::from(e))?;
                         table_opt = Some(table_data);
                     } else if child.tag_id() == HwpTag::PARA_HEADER {
                         // CTRL_HEADER 내부의 PARA_HEADER를 Paragraph로 변환
@@ -659,7 +661,7 @@ impl Section {
                             .map_err(|e| HwpError::from(e))?;
                             paragraphs.push(paragraph);
                         }
-                        } else if child.tag_id() == HwpTag::LIST_HEADER && is_table {
+                    } else if child.tag_id() == HwpTag::LIST_HEADER && is_table {
                         // LIST_HEADER가 테이블의 셀인 경우 / LIST_HEADER is a table cell
                         // libhwp 방식: TABLE 이후의 LIST_HEADER는 children에 추가하지 않음
                         // libhwp approach: LIST_HEADERs after TABLE are not added to children
@@ -948,6 +950,7 @@ impl Section {
                     });
                 }
 
+                #[cfg(debug_assertions)]
                 eprintln!(
                     "[DEBUG] CTRL_HEADER {:?}: Final - children_count={}, paragraphs_count={}",
                     ctrl_header.ctrl_id,
@@ -1082,6 +1085,7 @@ impl Section {
                                                         text, ..
                                                     } = &parsed_record
                                                     {
+                                                        #[cfg(debug_assertions)]
                                                         eprintln!(
                                                             "[DEBUG] ListHeader ParaText: {}",
                                                             text
@@ -1491,6 +1495,7 @@ impl BodyText {
                 }
                 Err(e) => {
                     // 스트림이 없으면 경고만 출력하고 계속 진행 / If stream doesn't exist, just warn and continue
+                    #[cfg(debug_assertions)]
                     eprintln!("Warning: Could not read BodyText/{}: {}", stream_name, e);
                 }
             }
