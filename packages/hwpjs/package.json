@@ -1,6 +1,6 @@
 {
   "name": "@ohah/hwpjs",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "description": "HWP parser for Node.js, Web, and React Native",
   "main": "./dist/browser.js",
   "types": "./dist/index.d.ts",
@@ -126,7 +126,6 @@
     "@emnapi/runtime": "^1.5.0",
     "@napi-rs/cli": "^3.2.0",
     "@oxc-node/core": "^0.0.34",
-    "commander": "^14.0.0",
     "craby-modules": "^0.1.0-rc.3",
     "@react-native-community/cli-types": "^20.0.2",
     "@taplo/cli": "^0.7.0",
@@ -142,13 +141,16 @@
     "@types/node": "^20.0.0",
     "typescript": "^5.9.3"
   },
+  "dependencies": {
+    "commander": "^14.0.0"
+  },
   "optionalDependencies": {
-    "@ohah/hwpjs-win32-x64-msvc": "0.1.0-rc.2",
-    "@ohah/hwpjs-darwin-x64": "0.1.0-rc.2",
-    "@ohah/hwpjs-win32-ia32-msvc": "0.1.0-rc.2",
-    "@ohah/hwpjs-darwin-arm64": "0.1.0-rc.2",
-    "@ohah/hwpjs-win32-arm64-msvc": "0.1.0-rc.2",
-    "@ohah/hwpjs-linux-x64-gnu": "0.1.0-rc.2",
-    "@ohah/hwpjs-wasm32-wasi": "0.1.0-rc.2"
+    "@ohah/hwpjs-win32-x64-msvc": "0.1.0-rc.3",
+    "@ohah/hwpjs-darwin-x64": "0.1.0-rc.3",
+    "@ohah/hwpjs-win32-ia32-msvc": "0.1.0-rc.3",
+    "@ohah/hwpjs-darwin-arm64": "0.1.0-rc.3",
+    "@ohah/hwpjs-win32-arm64-msvc": "0.1.0-rc.3",
+    "@ohah/hwpjs-linux-x64-gnu": "0.1.0-rc.3",
+    "@ohah/hwpjs-wasm32-wasi": "0.1.0-rc.3"
   }
 }

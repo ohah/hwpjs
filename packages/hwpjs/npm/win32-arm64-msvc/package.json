@@ -1,6 +1,6 @@
 {
   "name": "@ohah/hwpjs-win32-arm64-msvc",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "cpu": [
     "arm64"
   ],

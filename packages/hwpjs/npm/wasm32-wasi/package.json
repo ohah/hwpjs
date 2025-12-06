@@ -1,6 +1,6 @@
 {
   "name": "@ohah/hwpjs-wasm32-wasi",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "cpu": [
     "wasm32"
   ],
