@@ -1,10 +1,10 @@
-use crate::document::bodytext::CharShapeInfo;
-use crate::document::CharShape;
 /// Paragraph conversion to Markdown
 /// 문단을 마크다운으로 변환하는 모듈
 ///
 /// 스펙 문서 매핑: 표 57 - 본문의 데이터 레코드
 /// Spec mapping: Table 57 - BodyText data records
+use crate::document::bodytext::CharShapeInfo;
+use crate::document::CharShape;
 use crate::document::{HwpDocument, Paragraph, ParagraphRecord};
 use crate::viewer::markdown::collect::collect_text_and_images_from_paragraph;
 use crate::viewer::markdown::document::bodytext::para_text::{
