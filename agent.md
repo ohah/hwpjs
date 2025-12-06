@@ -33,10 +33,15 @@ hwpjs/
 │           └── viewer/     # 문서 변환/뷰어 모듈 (마크다운, PDF(지원 예정) 등)
 ├── packages/
 │   └── hwpjs/             # 멀티 플랫폼 패키지 (Node.js, Web, React Native)
+│       ├── src-cli/       # CLI 도구 소스 코드
+│       │   ├── index.ts   # CLI 진입점
+│       │   └── commands/  # CLI 명령어 (to-json, to-markdown, info, extract-images, batch)
+│       └── bin/           # CLI 실행 파일 (hwpjs.js)
 ├── examples/              # 사용 예제 코드
 │   ├── node/              # Node.js 예제
 │   ├── web/               # Web 예제
-│   └── react-native/      # React Native 예제
+│   ├── react-native/      # React Native 예제
+│   └── cli/               # CLI 사용 예제
 ├── docs/                  # 문서 사이트 (Rspress)
 └── legacy/                # 기존 JavaScript 구현
 ```
@@ -441,6 +446,17 @@ refactor(core): reorganize modules to match HWP file structure
     - `src/lib.rs`: NAPI-RS 바인딩 코드 (Node.js/Web용)
     - `build.rs`: NAPI-RS 빌드 스크립트
     - `npm/`: 플랫폼별 빌드 결과물 (`.node` 파일들)
+  - **CLI 코드**:
+    - `src-cli/`: CLI 도구 소스 코드
+      - `index.ts`: CLI 진입점 (Commander.js 사용)
+      - `commands/`: CLI 명령어 구현
+        - `to-json.ts`: HWP를 JSON으로 변환
+        - `to-markdown.ts`: HWP를 Markdown으로 변환 (이미지 파일 저장 지원)
+        - `info.ts`: HWP 파일 정보 출력
+        - `extract-images.ts`: 이미지 추출
+        - `batch.ts`: 배치 처리
+    - `bin/hwpjs.js`: CLI 실행 파일
+    - `dist/cli/`: 빌드된 CLI 코드 (TypeScript 컴파일 결과)
   - **Craby 코드**:
     - `src-reactnative/`: TypeScript 바인딩 코드
       - `index.ts`: React Native 모듈 진입점
@@ -454,6 +470,12 @@ refactor(core): reorganize modules to match HWP file structure
       - `CxxHwpjsModule.cpp/hpp`: C++ 모듈 구현
       - `bridging-generated.hpp`: CXX 브릿지 생성 코드
     - `android/`, `ios/`: 플랫폼별 네이티브 코드
+- **CLI 명령어**:
+  - `to-json`: HWP 파일을 JSON으로 변환
+  - `to-markdown`: HWP 파일을 Markdown으로 변환 (이미지 파일 저장 옵션 지원)
+  - `info`: HWP 파일의 기본 정보 출력
+  - `extract-images`: HWP 파일에서 이미지 추출
+  - `batch`: 여러 HWP 파일을 배치 처리
 - **테스트**: 
   - Node.js: Bun
   - React Native: Maestro (E2E)
@@ -462,6 +484,10 @@ refactor(core): reorganize modules to match HWP file structure
 ### `examples/`
 - **역할**: 각 환경별 사용 예제
 - **내용**: 기본적인 사용법 예제 코드
+  - `node/`: Node.js 프로그래밍 예제
+  - `web/`: 웹 브라우저 사용 예제
+  - `react-native/`: React Native 앱 예제
+  - `cli/`: CLI 도구 사용 예제
 
 ### `docs/`
 - **역할**: 프로젝트 문서 사이트
