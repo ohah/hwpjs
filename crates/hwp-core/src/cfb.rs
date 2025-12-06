@@ -44,9 +44,9 @@ impl CfbParser {
         match cfb.open_stream(stream_name) {
             Ok(mut stream) => {
                 let mut buffer = Vec::new();
-                stream.read_to_end(&mut buffer).map_err(|e| {
-                    HwpError::stream_read_error(stream_name, e.to_string())
-                })?;
+                stream
+                    .read_to_end(&mut buffer)
+                    .map_err(|e| HwpError::stream_read_error(stream_name, e.to_string()))?;
                 Ok(buffer)
             }
             Err(_) => {
@@ -70,7 +70,10 @@ impl CfbParser {
     ///
     /// # Returns
     /// Stream content as byte vector / 바이트 벡터로 된 스트림 내용
-    pub fn read_stream_by_bytes(data: &[u8], stream_name_bytes: &[u8]) -> Result<Vec<u8>, HwpError> {
+    pub fn read_stream_by_bytes(
+        data: &[u8],
+        stream_name_bytes: &[u8],
+    ) -> Result<Vec<u8>, HwpError> {
         eprintln!(
             "Debug: read_stream_by_bytes called, data len: {}, stream_name: {:?}",
             data.len(),
@@ -338,9 +341,9 @@ impl CfbParser {
         match cfb.open_stream(&path) {
             Ok(mut stream) => {
                 let mut buffer = Vec::new();
-                stream.read_to_end(&mut buffer).map_err(|e| {
-                    HwpError::stream_read_error(&path, e.to_string())
-                })?;
+                stream
+                    .read_to_end(&mut buffer)
+                    .map_err(|e| HwpError::stream_read_error(&path, e.to_string()))?;
                 Ok(buffer)
             }
             Err(_) => {
@@ -350,9 +353,9 @@ impl CfbParser {
                 match cfb.open_stream(&root_path) {
                     Ok(mut stream) => {
                         let mut buffer = Vec::new();
-                        stream.read_to_end(&mut buffer).map_err(|e| {
-                            HwpError::stream_read_error(&root_path, e.to_string())
-                        })?;
+                        stream
+                            .read_to_end(&mut buffer)
+                            .map_err(|e| HwpError::stream_read_error(&root_path, e.to_string()))?;
                         Ok(buffer)
                     }
                     Err(e) => Err(HwpError::stream_not_found(
