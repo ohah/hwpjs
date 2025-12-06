@@ -329,6 +329,19 @@ impl Section {
         version: u32,
         original_data: &[u8],
     ) -> Result<Paragraph, String> {
+        Self::parse_paragraph_from_tree_internal(node, version, original_data, false)
+    }
+
+    /// 문단 헤더 노드와 그 자식들을 재귀적으로 처리합니다 (내부 함수).
+    /// Recursively processes paragraph header node and its children (internal function).
+    /// `is_inside_control_header`: 컨트롤 헤더 내부의 Paragraph인지 여부
+    /// `is_inside_control_header`: Whether this paragraph is inside a control header
+    fn parse_paragraph_from_tree_internal(
+        node: &RecordTreeNode,
+        version: u32,
+        original_data: &[u8],
+        is_inside_control_header: bool,
+    ) -> Result<Paragraph, String> {
         if node.tag_id() != HwpTag::PARA_HEADER {
             return Err(format!(
                 "Expected HwpTag::PARA_HEADER, got tag {}",
@@ -344,24 +357,50 @@ impl Section {
             records.push(Self::parse_record_from_tree(child, version, original_data)?);
         }
 
-        // 머리말/꼬리말 문단인 경우 ParaText 레코드 제거 (중복 방지, hwplib 방식)
-        // Remove ParaText records from header/footer paragraphs to avoid duplication (hwplib approach)
-        // hwplib: 본문 Paragraph의 ParaText에는 ExtendChar만 포함되고, 실제 텍스트는 ControlHeader 내부의 ParagraphList에만 있음
-        // hwplib: ParaText in body Paragraph only contains ExtendChar, actual text is only in ControlHeader's ParagraphList
-        let is_header_footer_paragraph = records.iter().any(|record| {
-            if let ParagraphRecord::CtrlHeader { header, .. } = record {
-                use crate::document::CtrlId;
-                header.ctrl_id.as_str() == CtrlId::HEADER
-                    || header.ctrl_id.as_str() == CtrlId::FOOTER
-            } else {
-                false
-            }
-        });
+        // 컨트롤 헤더 내부의 머리말/꼬리말/각주/미주 문단인 경우에만 ParaText 레코드 제거 (중복 방지, hwplib 방식)
+        // Remove ParaText records only from header/footer/footnote/endnote paragraphs inside control headers (avoid duplication, hwplib approach)
+        // hwplib: 컨트롤 헤더 내부의 Paragraph의 ParaText에는 ExtendChar만 포함되고, 실제 텍스트는 ControlHeader 내부의 ParagraphList에만 있음
+        // hwplib: ParaText in paragraphs inside control headers only contains ExtendChar, actual text is only in ControlHeader's ParagraphList
+        // 본문 Paragraph의 경우 ParaText에 참조 텍스트("각주참조" 등)가 포함되므로 제거하지 않음
+        // For body paragraphs, ParaText contains reference text ("각주참조" etc.), so don't remove it
+        if is_inside_control_header {
+            let is_control_paragraph = records.iter().any(|record| {
+                if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                    use crate::document::CtrlId;
+                    header.ctrl_id.as_str() == CtrlId::HEADER
+                        || header.ctrl_id.as_str() == CtrlId::FOOTER
+                        || header.ctrl_id.as_str() == CtrlId::FOOTNOTE
+                        || header.ctrl_id.as_str() == CtrlId::ENDNOTE
+                } else {
+                    false
+                }
+            });
 
-        if is_header_footer_paragraph {
-            // ParaText 레코드만 필터링 (다른 레코드는 유지)
-            // Filter out only ParaText records (keep other records)
-            records.retain(|record| !matches!(record, ParagraphRecord::ParaText { .. }));
+            if is_control_paragraph {
+                // ParaText 레코드만 필터링 (다른 레코드는 유지)
+                // Filter out only ParaText records (keep other records)
+                let before_count = records.len();
+                records.retain(|record| !matches!(record, ParagraphRecord::ParaText { .. }));
+                let after_count = records.len();
+                if before_count != after_count {
+                    eprintln!("[DEBUG] Removed {} ParaText records from control paragraph (is_inside_control_header={})", 
+                        before_count - after_count, is_inside_control_header);
+                }
+            }
+        } else {
+            // 본문 Paragraph의 경우 ParaText 확인 (디버그)
+            // Check ParaText in body paragraph (debug)
+            let para_text_count = records
+                .iter()
+                .filter(|record| matches!(record, ParagraphRecord::ParaText { .. }))
+                .count();
+            if para_text_count > 0 {
+                for record in &records {
+                    if let ParagraphRecord::ParaText { text, .. } = record {
+                        eprintln!("[DEBUG] Body paragraph ParaText: {}", text);
+                    }
+                }
+            }
         }
 
         Ok(Paragraph {
@@ -509,6 +548,12 @@ impl Section {
             }
             HwpTag::CTRL_HEADER => {
                 let ctrl_header = CtrlHeader::parse(node.data())?;
+                // 디버그: CTRL_HEADER 파싱 시작 / Debug: Start parsing CTRL_HEADER
+                use crate::document::bodytext::ctrl_header::CtrlId;
+                eprintln!(
+                    "[DEBUG] Parsing CTRL_HEADER: ctrl_id={:?}, ctrl_id_value={}",
+                    ctrl_header.ctrl_id, ctrl_header.ctrl_id_value
+                );
 
                 // 자식 레코드들을 재귀적으로 처리 / Recursively process child records
                 // hwp.js: visitControlHeader에서 record.children를 모두 처리
@@ -534,19 +579,10 @@ impl Section {
                 let mut paragraphs = Vec::new();
                 // libhwp 방식: TABLE 위치를 먼저 찾아서 TABLE 이후의 LIST_HEADER는 children에 추가하지 않음
                 // libhwp approach: Find TABLE position first, then don't add LIST_HEADERs after TABLE to children
-                let mut table_index: Option<usize> = None;
                 let children_slice: Vec<_> = node.children().iter().collect();
 
-                // 먼저 TABLE 위치 찾기 / First find TABLE position
-                for (idx, child) in children_slice.iter().enumerate() {
-                    if child.tag_id() == HwpTag::TABLE {
-                        table_index = Some(idx);
-                        break;
-                    }
-                }
-
-                // CTRL_HEADER가 LIST_HEADER를 가지고 있는지 먼저 확인 (머리말/꼬리말의 경우)
-                // Check if CTRL_HEADER has LIST_HEADER first (for headers/footers)
+                // CTRL_HEADER가 LIST_HEADER를 가지고 있는지 먼저 확인 (머리말/꼬리말/각주/미주의 경우)
+                // Check if CTRL_HEADER has LIST_HEADER first (for headers/footers/footnotes/endnotes)
                 // PARA_HEADER 처리 전에 확인하여 중복 방지
                 // Check before processing PARA_HEADER to avoid duplication
                 let has_list_header = children_slice
@@ -559,22 +595,54 @@ impl Section {
                         let table_data = Table::parse(child.data(), version)?;
                         table_opt = Some(table_data);
                     } else if child.tag_id() == HwpTag::PARA_HEADER {
-                        // CTRL_HEADER 내부의 PARA_HEADER는 Paragraph로 변환
-                        // PARA_HEADER inside CTRL_HEADER is converted to Paragraph
-                        // 각주/미주, 머리말/꼬리말 등의 컨트롤 헤더 내부에 직접 나타나는 문단
-                        // Paragraphs that appear directly inside control headers like footnotes/endnotes, headers/footers, etc.
-                        // 레거시 코드 참고: legacy/ruby-hwp/lib/hwp/model.rb의 Footnote, Header, Footer 등에서
-                        // @ctrl_header.para_headers << para_header로 처리
-                        // Reference: legacy/ruby-hwp/lib/hwp/model.rb's Footnote, Header, Footer, etc.
-                        // where @ctrl_header.para_headers << para_header
+                        // CTRL_HEADER 내부의 PARA_HEADER를 Paragraph로 변환
+                        // Convert PARA_HEADER inside CTRL_HEADER to Paragraph
                         //
-                        // 머리말/꼬리말의 경우 LIST_HEADER가 있으면 paragraphs에 추가하지 않음 (중복 방지)
-                        // For headers/footers, don't add to paragraphs if LIST_HEADER exists (avoid duplication)
-                        // 실제 텍스트는 LIST_HEADER 내부의 paragraphs에만 있음
-                        // Actual text is only in LIST_HEADER's internal paragraphs
-                        if !has_list_header {
-                            let paragraph =
-                                Self::parse_paragraph_from_tree(child, version, original_data)?;
+                        // 원리: CTRL_HEADER 내부에는 LIST_HEADER와 PARA_HEADER가 모두 올 수 있음
+                        // Principle: Both LIST_HEADER and PARA_HEADER can appear inside CTRL_HEADER
+                        // 이 둘의 역할과 실제 텍스트 위치가 컨트롤 타입에 따라 다름
+                        // Their roles and actual text locations differ depending on control type
+                        //
+                        // 머리말/꼬리말의 경우:
+                        // For headers/footers:
+                        // - LIST_HEADER가 있으면 실제 텍스트는 LIST_HEADER 내부의 paragraphs에 저장됨
+                        //   If LIST_HEADER exists, actual text is stored in LIST_HEADER's internal paragraphs
+                        // - PARA_HEADER의 ParaText는 ExtendChar(확장 문자)만 포함하고 실제 텍스트는 없음
+                        //   PARA_HEADER's ParaText only contains ExtendChar (extended characters), no actual text
+                        // - 따라서 LIST_HEADER가 있으면 PARA_HEADER를 추가하지 않아야 중복 방지
+                        //   Therefore, if LIST_HEADER exists, don't add PARA_HEADER to avoid duplication
+                        //
+                        // 각주/미주의 경우:
+                        // For footnotes/endnotes:
+                        // - LIST_HEADER는 문단 리스트 헤더 정보만 포함 (paragraph_count, 속성 등)
+                        //   LIST_HEADER only contains paragraph list header info (paragraph_count, attributes, etc.)
+                        // - LIST_HEADER 내부의 ParaText는 자동 번호 템플릿("각주입니다." 등)만 포함 (AUTO_NUMBER 제어 문자 포함)
+                        //   ParaText inside LIST_HEADER only contains auto-number template ("각주입니다." etc.) with AUTO_NUMBER control char
+                        // - 실제 텍스트는 PARA_HEADER의 ParaText에 저장됨
+                        //   Actual text is stored in PARA_HEADER's ParaText
+                        // - 따라서 LIST_HEADER가 있어도 PARA_HEADER를 처리해야 실제 텍스트를 얻을 수 있음
+                        //   Therefore, even if LIST_HEADER exists, process PARA_HEADER to get actual text
+                        //
+                        // is_inside_control_header=true로 전달하여:
+                        // Pass is_inside_control_header=true to:
+                        // - 컨트롤 헤더 내부의 Paragraph임을 표시
+                        //   Indicate this is a paragraph inside a control header
+                        // - parse_paragraph_from_tree_internal에서 중복 ParaText 제거 (ExtendChar만 있는 ParaText 제거)
+                        //   Remove duplicate ParaText in parse_paragraph_from_tree_internal (remove ParaText containing only ExtendChar)
+                        let is_header_footer = {
+                            use crate::document::bodytext::ctrl_header::CtrlId;
+                            ctrl_header.ctrl_id.as_str() == CtrlId::HEADER
+                                || ctrl_header.ctrl_id.as_str() == CtrlId::FOOTER
+                        };
+                        if !has_list_header || !is_header_footer {
+                            // 각주/미주는 LIST_HEADER가 있어도 PARA_HEADER 처리
+                            // For footnotes/endnotes, process PARA_HEADER even if LIST_HEADER exists
+                            let paragraph = Self::parse_paragraph_from_tree_internal(
+                                child,
+                                version,
+                                original_data,
+                                true, // 컨트롤 헤더 내부이므로 true / true because inside control header
+                            )?;
                             paragraphs.push(paragraph);
                         }
                     } else if child.tag_id() == HwpTag::LIST_HEADER && is_table {
@@ -862,6 +930,13 @@ impl Section {
                     });
                 }
 
+                eprintln!(
+                    "[DEBUG] CTRL_HEADER {:?}: Final - children_count={}, paragraphs_count={}",
+                    ctrl_header.ctrl_id,
+                    children.len(),
+                    paragraphs.len()
+                );
+
                 Ok(ParagraphRecord::CtrlHeader {
                     header: ctrl_header,
                     children,
@@ -978,13 +1053,23 @@ impl Section {
                                                         children: Vec::new(),
                                                     };
 
-                                                    para_records.push(
+                                                    let parsed_record =
                                                         Self::parse_record_from_tree(
                                                             &child_node,
                                                             version,
                                                             original_data,
-                                                        )?,
-                                                    );
+                                                        )?;
+                                                    // 디버그: ListHeader 내부의 ParaText 확인 / Debug: Check ParaText inside ListHeader
+                                                    if let ParagraphRecord::ParaText {
+                                                        text, ..
+                                                    } = &parsed_record
+                                                    {
+                                                        eprintln!(
+                                                            "[DEBUG] ListHeader ParaText: {}",
+                                                            text
+                                                        );
+                                                    }
+                                                    para_records.push(parsed_record);
                                                 } else {
                                                     break;
                                                 }

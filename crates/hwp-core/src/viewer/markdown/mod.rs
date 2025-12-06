@@ -25,8 +25,6 @@ pub use ctrl_header::convert_control_to_markdown;
 pub use document::bodytext::convert_paragraph_to_markdown;
 pub use document::bodytext::convert_table_to_markdown;
 
-use document::bodytext::shape_component_picture::convert_shape_component_picture_to_markdown;
-
 /// Markdown 변환 옵션 / Markdown conversion options
 #[derive(Debug, Clone)]
 pub struct MarkdownOptions {
@@ -139,12 +137,18 @@ pub fn to_markdown(document: &HwpDocument, options: &MarkdownOptions) -> String 
         if !lines.is_empty() && !lines.last().unwrap().is_empty() {
             lines.push(String::new());
         }
+        // 각주 섹션 헤더 추가 / Add footnote section header
+        lines.push("## 각주".to_string());
+        lines.push(String::new());
         lines.extend(footnotes);
     }
     if !endnotes.is_empty() {
         if !lines.is_empty() && !lines.last().unwrap().is_empty() {
             lines.push(String::new());
         }
+        // 미주 섹션 헤더 추가 / Add endnote section header
+        lines.push("## 미주".to_string());
+        lines.push(String::new());
         lines.extend(endnotes);
     }
 

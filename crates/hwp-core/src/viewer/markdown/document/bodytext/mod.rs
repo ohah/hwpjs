@@ -28,8 +28,6 @@ pub fn convert_bodytext_to_markdown(
     Vec<String>, // footnotes
     Vec<String>, // endnotes
 ) {
-    use crate::viewer::markdown::ctrl_header::convert_control_to_markdown;
-
     // 머리말, 본문, 꼬리말, 각주, 미주를 분리하여 수집 / Collect headers, body, footers, footnotes, and endnotes separately
     let mut headers = Vec::new();
     let mut body_lines = Vec::new();
@@ -132,14 +130,10 @@ pub fn convert_bodytext_to_markdown(
                             }
                         } else if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
                             // 각주 문단 처리 / Process footnote paragraph
-                            // 각주 컨트롤 헤더의 자식 레코드(ListHeader)에 있는 모든 문단 처리 / Process all paragraphs in ListHeader children of footnote control header
-                            // 컨트롤 헤더 마크다운 / Control header markdown
-                            let control_md = convert_control_to_markdown(header, false);
-                            if !control_md.is_empty() {
-                                footnotes.push(control_md);
-                            }
-
-                            // CTRL_HEADER 내부의 직접 문단 처리 (각주 내부의 문단) / Process direct paragraphs inside CTRL_HEADER (paragraphs inside footnote)
+                            // hwplib 방식: LIST_HEADER는 문단 리스트 헤더 정보만 포함하고,
+                            // 실제 텍스트는 ParagraphList(paragraphs)에 있음
+                            // hwplib approach: LIST_HEADER only contains paragraph list header info,
+                            // actual text is in ParagraphList (paragraphs)
                             for para in ctrl_paragraphs {
                                 let para_md = paragraph::convert_paragraph_to_markdown(
                                     para, document, options,
@@ -148,30 +142,14 @@ pub fn convert_bodytext_to_markdown(
                                     footnotes.push(para_md);
                                 }
                             }
-
-                            // 자식 레코드 처리 (ListHeader의 문단들) / Process child records (paragraphs in ListHeader)
-                            for child in children {
-                                if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
-                                    for para in paragraphs {
-                                        let para_md = paragraph::convert_paragraph_to_markdown(
-                                            para, document, options,
-                                        );
-                                        if !para_md.is_empty() {
-                                            footnotes.push(para_md);
-                                        }
-                                    }
-                                }
-                            }
+                            // LIST_HEADER는 건너뜀 (자동 번호 템플릿, 실제 텍스트 아님)
+                            // Skip LIST_HEADER (auto-number template, not actual text)
                         } else if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
                             // 미주 문단 처리 / Process endnote paragraph
-                            // 미주 컨트롤 헤더의 자식 레코드(ListHeader)에 있는 모든 문단 처리 / Process all paragraphs in ListHeader children of endnote control header
-                            // 컨트롤 헤더 마크다운 / Control header markdown
-                            let control_md = convert_control_to_markdown(header, false);
-                            if !control_md.is_empty() {
-                                endnotes.push(control_md);
-                            }
-
-                            // CTRL_HEADER 내부의 직접 문단 처리 (미주 내부의 문단) / Process direct paragraphs inside CTRL_HEADER (paragraphs inside endnote)
+                            // hwplib 방식: LIST_HEADER는 문단 리스트 헤더 정보만 포함하고,
+                            // 실제 텍스트는 ParagraphList(paragraphs)에 있음
+                            // hwplib approach: LIST_HEADER only contains paragraph list header info,
+                            // actual text is in ParagraphList (paragraphs)
                             for para in ctrl_paragraphs {
                                 let para_md = paragraph::convert_paragraph_to_markdown(
                                     para, document, options,
@@ -180,20 +158,8 @@ pub fn convert_bodytext_to_markdown(
                                     endnotes.push(para_md);
                                 }
                             }
-
-                            // 자식 레코드 처리 (ListHeader의 문단들) / Process child records (paragraphs in ListHeader)
-                            for child in children {
-                                if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
-                                    for para in paragraphs {
-                                        let para_md = paragraph::convert_paragraph_to_markdown(
-                                            para, document, options,
-                                        );
-                                        if !para_md.is_empty() {
-                                            endnotes.push(para_md);
-                                        }
-                                    }
-                                }
-                            }
+                            // LIST_HEADER는 건너뜀 (자동 번호 템플릿, 실제 텍스트 아님)
+                            // Skip LIST_HEADER (auto-number template, not actual text)
                         }
                     }
                 }
