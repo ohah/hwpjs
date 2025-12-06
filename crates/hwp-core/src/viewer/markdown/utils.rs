@@ -56,9 +56,9 @@ pub(crate) fn should_process_control_header(header: &crate::document::CtrlHeader
         CtrlId::SHAPE_OBJECT => true, // 이미지는 자식 레코드에서 처리 / Images are processed from child records
         CtrlId::HEADER => true,       // 머리말 처리 / Process header
         CtrlId::FOOTER => true,       // 꼬리말 처리 / Process footer
-        CtrlId::FOOTNOTE => false,    // 각주는 convert_bodytext_to_markdown에서 처리 / Footnotes are processed in convert_bodytext_to_markdown
-        CtrlId::ENDNOTE => false,     // 미주는 convert_bodytext_to_markdown에서 처리 / Endnotes are processed in convert_bodytext_to_markdown
-        CtrlId::COLUMN_DEF => false,  // 마크다운으로 표현 불가 / Cannot be expressed in markdown
+        CtrlId::FOOTNOTE => false, // 각주는 convert_bodytext_to_markdown에서 처리 / Footnotes are processed in convert_bodytext_to_markdown
+        CtrlId::ENDNOTE => false, // 미주는 convert_bodytext_to_markdown에서 처리 / Endnotes are processed in convert_bodytext_to_markdown
+        CtrlId::COLUMN_DEF => false, // 마크다운으로 표현 불가 / Cannot be expressed in markdown
         CtrlId::PAGE_NUMBER | CtrlId::PAGE_NUMBER_POS => false, // 마크다운으로 표현 불가 / Cannot be expressed in markdown
         _ => false, // 기타 컨트롤도 마크다운으로 표현 불가 / Other controls also cannot be expressed in markdown
     }
