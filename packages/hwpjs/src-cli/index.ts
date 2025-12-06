@@ -9,10 +9,7 @@ import { batchCommand } from './commands/batch';
 
 const program = new Command();
 
-program
-  .name('hwpjs')
-  .description('HWP file parser CLI')
-  .version('0.1.0-rc.1');
+program.name('hwpjs').description('HWP file parser CLI').version('0.1.0-rc.3');
 
 // Register commands
 toJsonCommand(program);
@@ -22,4 +19,3 @@ extractImagesCommand(program);
 batchCommand(program);
 
 program.parse();
-
