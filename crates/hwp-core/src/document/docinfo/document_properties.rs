@@ -3,6 +3,7 @@
 /// 스펙 문서 매핑: 표 14 - 문서 속성 / Spec mapping: Table 14 - Document properties
 /// Tag ID: HWPTAG_DOCUMENT_PROPERTIES
 /// 전체 길이: 26 바이트 / Total length: 26 bytes
+use crate::error::HwpError;
 use crate::types::{UINT16, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -41,14 +42,11 @@ impl DocumentProperties {
     ///
     /// # Returns
     /// 파싱된 DocumentProperties 구조체 / Parsed DocumentProperties structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 레거시 코드 기준으로 26바이트를 읽음
         // Read 26 bytes based on legacy code
         if data.len() < 26 {
-            return Err(format!(
-                "DocumentProperties must be at least 26 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("DocumentProperties", 26, data.len()));
         }
 
         let mut offset = 0;

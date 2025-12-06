@@ -4,6 +4,7 @@
 /// According to HWP 5.0 spec, FileHeader is 256 bytes.
 ///
 /// 스펙 문서 매핑: 표 2 - 파일 인식 정보 (FileHeader 스트림)
+use crate::error::HwpError;
 use crate::types::{BYTE, DWORD};
 use serde::{Deserialize, Serialize};
 
@@ -46,12 +47,9 @@ impl FileHeader {
     ///
     /// # Returns
     /// Parsed FileHeader structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 256 {
-            return Err(format!(
-                "FileHeader must be 256 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("FileHeader", 256, data.len()));
         }
 
         // Parse signature (32 bytes)
@@ -59,6 +57,11 @@ impl FileHeader {
         let signature = String::from_utf8_lossy(signature_bytes)
             .trim_end_matches('\0')
             .to_string();
+
+        // Validate signature
+        if signature != "HWP Document File" {
+            return Err(HwpError::InvalidSignature { found: signature });
+        }
 
         // Parse version (4 bytes, DWORD, little-endian)
         let version = DWORD::from_le_bytes([data[32], data[33], data[34], data[35]]);
@@ -106,9 +109,8 @@ impl FileHeader {
     }
 
     /// Convert FileHeader to JSON string
-    pub fn to_json(&self) -> Result<String, String> {
-        serde_json::to_string_pretty(self)
-            .map_err(|e| format!("Failed to serialize FileHeader to JSON: {}", e))
+    pub fn to_json(&self) -> Result<String, HwpError> {
+        serde_json::to_string_pretty(self).map_err(HwpError::from)
     }
 
     /// Get version as string (e.g., "5.0.3.0")

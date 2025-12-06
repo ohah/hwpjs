@@ -3,6 +3,7 @@
 /// 스펙 문서 매핑: 표 43 - 문단 모양 / Spec mapping: Table 43 - Paragraph shape
 /// Tag ID: HWPTAG_PARA_SHAPE
 /// 전체 길이: 54바이트 / Total length: 54 bytes
+use crate::error::HwpError;
 use crate::types::{INT16, INT32, UINT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
@@ -271,13 +272,10 @@ impl ParaShape {
     ///
     /// # Returns
     /// 파싱된 ParaShape 구조체 / Parsed ParaShape structure
-    pub fn parse(data: &[u8], version: u32) -> Result<Self, String> {
+    pub fn parse(data: &[u8], version: u32) -> Result<Self, HwpError> {
         // 최소 46바이트 필요 (속성1 4 + 여백/간격 28 + ID 6 + 테두리 간격 8) / Need at least 46 bytes
         if data.len() < 46 {
-            return Err(format!(
-                "ParaShape must be at least 46 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ParaShape", 46, data.len()));
         }
 
         let mut offset = 0;

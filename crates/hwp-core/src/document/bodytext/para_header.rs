@@ -19,6 +19,7 @@
 ///     `@ctrl_header.para_headers << para_header`로 처리됨
 ///   - Reference: `legacy/ruby-hwp/lib/hwp/model.rb`'s `Footnote`, `Header`, `Footer`, etc.
 ///     where `@ctrl_header.para_headers << para_header`
+use crate::error::HwpError;
 use crate::types::{UINT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
@@ -403,15 +404,11 @@ impl ParaHeader {
     ///
     /// # Returns
     /// 파싱된 ParaHeader 구조체 / Parsed ParaHeader structure
-    pub fn parse(data: &[u8], version: u32) -> Result<Self, String> {
+    pub fn parse(data: &[u8], version: u32) -> Result<Self, HwpError> {
         // 최소 22바이트 필요 (5.0.3.2 이상은 24바이트) / Need at least 22 bytes (24 bytes for 5.0.3.2 and above)
         let min_size = if version >= 0x05000302 { 24 } else { 22 };
         if data.len() < min_size {
-            return Err(format!(
-                "ParaHeader must be at least {} bytes, got {} bytes",
-                min_size,
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ParaHeader", min_size, data.len()));
         }
 
         let mut offset = 0;

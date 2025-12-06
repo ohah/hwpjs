@@ -1,6 +1,7 @@
 /// ListHeader 구조체 / ListHeader structure
 ///
 /// 스펙 문서 매핑: 표 65 - 문단 리스트 헤더 / Spec mapping: Table 65 - Paragraph list header
+use crate::error::HwpError;
 use crate::types::{INT16, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -66,12 +67,9 @@ impl ListHeader {
     ///
     /// # Returns
     /// 파싱된 ListHeader 구조체 / Parsed ListHeader structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 6 {
-            return Err(format!(
-                "ListHeader must be at least 6 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ListHeader", 6, data.len()));
         }
 
         // INT16 문단 수 / INT16 paragraph count

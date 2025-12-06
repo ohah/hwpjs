@@ -2,6 +2,7 @@
 ///
 /// 스펙 문서 매핑: 표 23 - 테두리/배경 속성 / Spec mapping: Table 23 - Border/fill properties
 /// Tag ID: HWPTAG_BORDER_FILL
+use crate::error::HwpError;
 use crate::types::{BYTE, COLORREF, INT16, INT32, UINT, UINT16, UINT8};
 use serde::{Deserialize, Serialize};
 
@@ -146,9 +147,9 @@ impl BorderFill {
     ///
     /// # Returns
     /// 파싱된 BorderFill 구조체 / Parsed BorderFill structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 32 {
-            return Err("BorderFill must be at least 32 bytes".to_string());
+            return Err(HwpError::insufficient_data("BorderFill", 32, data.len()));
         }
 
         let mut offset = 0;
@@ -261,7 +262,7 @@ impl BorderFill {
     }
 
     /// 채우기 정보 파싱 / Parse fill information
-    fn parse_fill_info(data: &[u8]) -> Result<FillInfo, String> {
+    fn parse_fill_info(data: &[u8]) -> Result<FillInfo, HwpError> {
         if data.len() < 4 {
             return Ok(FillInfo::None);
         }
@@ -293,7 +294,11 @@ impl BorderFill {
             FillType::None => Ok(FillInfo::None),
             FillType::Solid => {
                 if offset + 12 > data.len() {
-                    return Err("Solid fill data incomplete".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "Solid fill data",
+                        12,
+                        data.len() - offset,
+                    ));
                 }
                 let background_color = COLORREF(u32::from_le_bytes([
                     data[offset],
@@ -323,7 +328,11 @@ impl BorderFill {
             }
             FillType::Gradient => {
                 if offset + 12 > data.len() {
-                    return Err("Gradient fill data incomplete".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "Gradient fill data",
+                        12,
+                        data.len() - offset,
+                    ));
                 }
                 let gradient_type = INT16::from_le_bytes([data[offset], data[offset + 1]]);
                 offset += 2;
@@ -340,7 +349,11 @@ impl BorderFill {
 
                 let positions = if color_count > 2 {
                     if offset + (4 * color_count as usize) > data.len() {
-                        return Err("Gradient positions data incomplete".to_string());
+                        return Err(HwpError::insufficient_data(
+                            "Gradient positions data",
+                            4 * color_count as usize,
+                            data.len() - offset,
+                        ));
                     }
                     let mut pos_vec = Vec::new();
                     for _ in 0..color_count {
@@ -358,7 +371,11 @@ impl BorderFill {
                 };
 
                 if offset + (4 * color_count as usize) > data.len() {
-                    return Err("Gradient colors data incomplete".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "Gradient colors data",
+                        4 * color_count as usize,
+                        data.len() - offset,
+                    ));
                 }
                 let mut colors = Vec::new();
                 for _ in 0..color_count {
@@ -385,13 +402,21 @@ impl BorderFill {
             FillType::Image => {
                 // 이미지 채우기는 복잡하므로 기본 구조만 파싱 / Image fill is complex, so only parse basic structure
                 if offset + 1 > data.len() {
-                    return Err("Image fill type missing".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "Image fill type",
+                        1,
+                        data.len() - offset,
+                    ));
                 }
                 let image_fill_type = data[offset];
                 offset += 1;
 
                 if offset + 5 > data.len() {
-                    return Err("Image info incomplete".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "Image info",
+                        5,
+                        data.len() - offset,
+                    ));
                 }
                 let image_info = data[offset..offset + 5].to_vec();
                 offset += 5;

@@ -3,6 +3,7 @@
 /// 스펙 문서 매핑: 표 36 - 탭 정의 / Spec mapping: Table 36 - Tab definition
 /// Tag ID: HWPTAG_TAB_DEF
 /// 전체 길이: 가변 (8 + 8×count 바이트) / Total length: variable (8 + 8×count bytes)
+use crate::error::HwpError;
 use crate::types::{HWPUNIT, INT16, UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
@@ -71,13 +72,10 @@ impl TabDef {
     ///
     /// # Returns
     /// 파싱된 TabDef 구조체 / Parsed TabDef structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 최소 6바이트 필요 (속성 4바이트 + count 2바이트) / Need at least 6 bytes (attributes 4 bytes + count 2 bytes)
         if data.len() < 6 {
-            return Err(format!(
-                "TabDef must be at least 6 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("TabDef", 6, data.len()));
         }
 
         let mut offset = 0;
@@ -104,11 +102,11 @@ impl TabDef {
         let mut tabs = Vec::new();
         for _ in 0..count {
             if offset + 8 > data.len() {
-                return Err(format!(
-                    "Tab item extends beyond data: offset={}, data_len={}",
-                    offset,
-                    data.len()
-                ));
+                return Err(HwpError::InsufficientData {
+                    field: format!("TabDef tab item at offset {}", offset),
+                    expected: offset + 8,
+                    actual: data.len(),
+                });
             }
 
             // HWPUNIT 탭의 위치 / HWPUNIT tab position

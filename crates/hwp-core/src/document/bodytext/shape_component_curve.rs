@@ -6,6 +6,7 @@
 /// - 구현 완료 / Implementation complete
 /// - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_CURVE 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_CURVE records
+use crate::error::HwpError;
 use crate::types::{INT16, INT32};
 use serde::{Deserialize, Serialize};
 
@@ -51,13 +52,10 @@ impl ShapeComponentCurve {
     /// 실제 HWP 파일에 SHAPE_COMPONENT_CURVE 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_CURVE records, so it has not been verified with actual files.
     /// If an actual HWP file contains SHAPE_COMPONENT_CURVE records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 최소 2바이트 필요 (점의 개수) / Need at least 2 bytes (point count)
         if data.len() < 2 {
-            return Err(format!(
-                "ShapeComponentCurve must be at least 2 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ShapeComponentCurve", 2, data.len()));
         }
 
         let mut offset = 0;
@@ -68,10 +66,11 @@ impl ShapeComponentCurve {
 
         // 점의 개수가 음수이거나 0이면 오류 / If point count is negative or zero, error
         if point_count <= 0 {
-            return Err(format!(
-                "ShapeComponentCurve point_count must be positive, got {}",
-                point_count
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: "ShapeComponentCurve point_count".to_string(),
+                expected: "positive number".to_string(),
+                found: point_count.to_string(),
+            });
         }
 
         let point_count_usize = point_count as usize;
@@ -80,12 +79,11 @@ impl ShapeComponentCurve {
         // INT16(2) + INT32 array[cnt](4×cnt) + INT32 array[cnt](4×cnt) + BYTE array[cnt-1](cnt-1) = 2 + 8×cnt + cnt-1
         let required_bytes = 2 + 8 * point_count_usize + point_count_usize - 1;
         if data.len() < required_bytes {
-            return Err(format!(
-                "ShapeComponentCurve must be at least {} bytes for {} points, got {} bytes",
-                required_bytes,
-                point_count_usize,
-                data.len()
-            ));
+            return Err(HwpError::InsufficientData {
+                field: format!("ShapeComponentCurve (point_count={})", point_count_usize),
+                expected: required_bytes,
+                actual: data.len(),
+            });
         }
 
         // 표 103: X 좌표 배열 (INT32 array[cnt], 4×cnt 바이트) / Table 103: X coordinates array (INT32 array[cnt], 4×cnt bytes)

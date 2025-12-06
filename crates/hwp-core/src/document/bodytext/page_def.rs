@@ -1,6 +1,7 @@
 /// PageDef 구조체 / PageDef structure
 ///
 /// 스펙 문서 매핑: 표 131 - 용지 설정 / Spec mapping: Table 131 - Page definition
+use crate::error::HwpError;
 use crate::types::{HWPUNIT, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -68,12 +69,9 @@ impl PageDef {
     ///
     /// # Returns
     /// 파싱된 PageDef 구조체 / Parsed PageDef structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 40 {
-            return Err(format!(
-                "PageDef must be at least 40 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("PageDef", 40, data.len()));
         }
 
         let mut offset = 0;

@@ -7,6 +7,7 @@
 /// - 테스트 파일(`noori.hwp`)에 CTRL_DATA 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain CTRL_DATA records
 use crate::document::docinfo::ParameterSet;
+use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
 /// 컨트롤 임의의 데이터 / Control arbitrary data
@@ -40,13 +41,18 @@ impl CtrlData {
     /// 실제 HWP 파일에 CTRL_DATA 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain CTRL_DATA records, so it has not been verified with actual files.
     /// If an actual HWP file contains CTRL_DATA records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.is_empty() {
-            return Err("CtrlData data is empty".to_string());
+            return Err(HwpError::InsufficientData {
+                field: "CtrlData data".to_string(),
+                expected: 1,
+                actual: 0,
+            });
         }
 
         // 파라미터 셋 파싱 (표 50) / Parse parameter set (Table 50)
-        let parameter_set = ParameterSet::parse(data)?;
+        let parameter_set = ParameterSet::parse(data)
+            .map_err(|e| HwpError::from(e))?;
 
         Ok(CtrlData { parameter_set })
     }

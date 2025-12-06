@@ -4,6 +4,7 @@
 ///
 /// `PrvImage` 스트림에는 미리보기 이미지가 BMP 또는 GIF 형식으로 저장됩니다.
 /// The `PrvImage` stream contains preview image stored as BMP or GIF format.
+use crate::error::HwpError;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -37,9 +38,13 @@ impl PreviewImage {
     /// Image format is detected by checking file signature.
     /// 이미지 데이터는 항상 base64로 인코딩되어 저장되며, 선택적으로 파일로도 저장할 수 있습니다.
     /// Image data is always stored as base64 encoded string, and optionally saved as file.
-    pub fn parse(data: &[u8], save_to_file: Option<&str>) -> Result<Self, String> {
+    pub fn parse(data: &[u8], save_to_file: Option<&str>) -> Result<Self, HwpError> {
         if data.is_empty() {
-            return Err("PreviewImage data is empty".to_string());
+            return Err(HwpError::InsufficientData {
+                field: "PreviewImage data".to_string(),
+                expected: 1,
+                actual: 0,
+            });
         }
 
         // 이미지 형식 감지 / Detect image format

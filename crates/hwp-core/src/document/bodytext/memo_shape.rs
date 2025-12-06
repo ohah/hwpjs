@@ -9,6 +9,7 @@
 /// **참고 / Note**
 /// DocInfo의 MEMO_SHAPE는 22바이트로 정의되어 있지만, BodyText의 MEMO_SHAPE는 가변 길이입니다.
 /// DocInfo's MEMO_SHAPE is defined as 22 bytes, but BodyText's MEMO_SHAPE is variable length.
+use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
 /// 메모 모양 / Memo shape
@@ -41,7 +42,7 @@ impl MemoShape {
     /// 실제 HWP 파일에 MEMO_SHAPE 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain MEMO_SHAPE records, so it has not been verified with actual files.
     /// If an actual HWP file contains MEMO_SHAPE records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         Ok(MemoShape {
             raw_data: data.to_vec(),
         })

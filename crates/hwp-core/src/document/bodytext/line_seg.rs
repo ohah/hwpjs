@@ -2,6 +2,7 @@
 ///
 /// 스펙 문서 매핑: 표 62 - 문단의 레이아웃 / Spec mapping: Table 62 - Paragraph line segment
 /// 각 항목: 36바이트
+use crate::error::HwpError;
 use crate::types::{INT32, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -73,12 +74,9 @@ impl LineSegmentInfo {
     ///
     /// # Returns
     /// 파싱된 LineSegmentInfo 구조체 / Parsed LineSegmentInfo structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 36 {
-            return Err(format!(
-                "LineSegmentInfo must be at least 36 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("LineSegmentInfo", 36, data.len()));
         }
 
         let mut offset = 0;
@@ -193,12 +191,13 @@ impl ParaLineSeg {
     ///
     /// # Returns
     /// 파싱된 ParaLineSeg 구조체 / Parsed ParaLineSeg structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() % 36 != 0 {
-            return Err(format!(
-                "ParaLineSeg data length must be multiple of 36, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: "ParaLineSeg data length".to_string(),
+                expected: "multiple of 36".to_string(),
+                found: format!("{} bytes", data.len()),
+            });
         }
 
         let count = data.len() / 36;
@@ -207,7 +206,8 @@ impl ParaLineSeg {
         for i in 0..count {
             let offset = i * 36;
             let segment_data = &data[offset..offset + 36];
-            let segment_info = LineSegmentInfo::parse(segment_data)?;
+            let segment_info = LineSegmentInfo::parse(segment_data)
+                .map_err(|e| HwpError::from(e))?;
             segments.push(segment_info);
         }
 

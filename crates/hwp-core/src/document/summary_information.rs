@@ -12,6 +12,7 @@
 ///
 /// 스펙 문서 표 7: 문서 요약 Property ID 정의
 /// Spec document Table 7: Document summary Property ID definitions
+use crate::error::HwpError;
 use crate::types::{INT32, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -183,7 +184,7 @@ impl SummaryInformation {
     /// # Note
     /// MSDN Property Set 형식을 파싱합니다.
     /// Parses MSDN Property Set format.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.is_empty() {
             return Ok(SummaryInformation::default());
         }
@@ -200,7 +201,7 @@ impl SummaryInformation {
         //   - 각 PropertySetDesc: FMTID (16 bytes) + Offset (4 bytes) = 20 bytes
         //   - N_ARRAY는 먼저 개수(UINT32, 4 bytes)를 읽고, 그 다음 항목들을 읽음
         if data.len() < 24 {
-            return Err("Property Set header must be at least 24 bytes".to_string());
+            return Err(HwpError::insufficient_data("Property Set header", 24, data.len()));
         }
 
         let mut offset = 0;
@@ -221,10 +222,11 @@ impl SummaryInformation {
         let is_big_endian = byte_order == 0xFFFE;
 
         if byte_order != 0xFEFF && byte_order != 0xFFFE {
-            return Err(format!(
-                "Invalid byte order: expected 0xFEFF or 0xFFFE, got 0x{:04X}",
-                byte_order
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: "Property Set byte order".to_string(),
+                expected: "0xFEFF or 0xFFFE".to_string(),
+                found: format!("0x{:04X}", byte_order),
+            });
         }
         offset += 2;
 
@@ -244,7 +246,11 @@ impl SummaryInformation {
         // N_ARRAY는 counttype (UINT32)로 개수를 읽습니다
         // N_ARRAY reads count using counttype (UINT32)
         if offset + 4 > data.len() {
-            return Err("Insufficient data for propsetDescList count".to_string());
+            return Err(HwpError::insufficient_data(
+                "propsetDescList count",
+                4,
+                data.len() - offset,
+            ));
         }
         let num_property_sets = if is_big_endian {
             UINT32::from_be_bytes([
@@ -272,11 +278,11 @@ impl SummaryInformation {
         // 각 PropertySetDesc는 FMTID (16 bytes) + Offset (4 bytes) = 20 bytes
         // Each PropertySetDesc is FMTID (16 bytes) + Offset (4 bytes) = 20 bytes
         if offset + 20 > data.len() {
-            return Err(format!(
-                "Insufficient data for PropertySetDesc: need {} bytes, have {}",
-                offset + 20,
-                data.len()
-            ));
+            return Err(HwpError::InsufficientData {
+                field: "PropertySetDesc".to_string(),
+                expected: offset + 20,
+                actual: data.len(),
+            });
         }
 
         // FMTID (16 bytes) 건너뛰기 / Skip FMTID (16 bytes)
@@ -287,7 +293,11 @@ impl SummaryInformation {
         // PropertySetDesc 구조: FMTID (16 bytes) + Offset (4 bytes)
         // PropertySetDesc structure: FMTID (16 bytes) + Offset (4 bytes)
         if offset + 4 > data.len() {
-            return Err("Insufficient data for PropertySetDesc offset".to_string());
+            return Err(HwpError::insufficient_data(
+                "PropertySetDesc offset",
+                4,
+                data.len() - offset,
+            ));
         }
 
         // PropertySetDesc의 offset은 byte order에 따라 읽어야 함
@@ -312,16 +322,20 @@ impl SummaryInformation {
 
         let property_set_start = property_set_offset;
         if property_set_start >= data.len() {
-            return Err(format!(
-                "Property Set offset is beyond data length: offset={}, data_len={}",
-                property_set_start,
-                data.len()
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: format!("Property Set offset (start={})", property_set_start),
+                expected: format!("< {}", data.len()),
+                found: property_set_start.to_string(),
+            });
         }
 
         // Property Set Header: Size (4) + NumProperties (4) + Property entries
         if property_set_start + 8 > data.len() {
-            return Err("Insufficient data for Property Set header".to_string());
+            return Err(HwpError::insufficient_data(
+                "Property Set header",
+                8,
+                data.len() - property_set_start,
+            ));
         }
 
         // Size (4 bytes): Size of property set (from current offset to end of property set)
@@ -364,7 +378,11 @@ impl SummaryInformation {
         let property_entries_start = offset;
         let property_entries_size = (num_properties as usize) * 8;
         if offset + property_entries_size > data.len() {
-            return Err("Insufficient data for property entries".to_string());
+            return Err(HwpError::InsufficientData {
+                field: "property entries".to_string(),
+                expected: offset + property_entries_size,
+                actual: data.len(),
+            });
         }
 
         // Parse properties: find codepage first, then parse all properties
@@ -500,9 +518,9 @@ impl SummaryInformation {
 
     /// VT_I2 파싱 (16-bit signed integer, codepage에 사용) / Parse VT_I2 (16-bit signed integer, used for codepage)
     /// Format: VT type (4 bytes) + Value (2 bytes)
-    fn parse_vt_i2(data: &[u8], is_big_endian: bool) -> Result<i16, String> {
+    fn parse_vt_i2(data: &[u8], is_big_endian: bool) -> Result<i16, HwpError> {
         if data.len() < 6 {
-            return Err("Insufficient data for VT_I2".to_string());
+            return Err(HwpError::insufficient_data("VT_I2", 6, data.len()));
         }
 
         // VT type (4 bytes): Should be VT_I2 (0x0002)
@@ -512,10 +530,11 @@ impl SummaryInformation {
             UINT32::from_le_bytes([data[0], data[1], data[2], data[3]])
         };
         if vt_type != VT_I2 {
-            return Err(format!(
-                "Expected VT_I2 (0x{:08X}), got 0x{:08X}",
-                VT_I2, vt_type
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: "VT_I2 type".to_string(),
+                expected: format!("0x{:08X}", VT_I2),
+                found: format!("0x{:08X}", vt_type),
+            });
         }
 
         // Value (2 bytes): Signed 16-bit integer
@@ -531,9 +550,9 @@ impl SummaryInformation {
     /// VT_LPSTR 또는 VT_LPWSTR 파싱 (문자열) / Parse VT_LPSTR or VT_LPWSTR (string)
     /// Format: VT type (4 bytes) + Length (4 bytes) + String (null-terminated)
     /// codepage에 따라 적절한 인코딩으로 디코딩 / Decode using appropriate encoding based on codepage
-    fn parse_vt_lpstr(data: &[u8], is_big_endian: bool, codepage: u16) -> Result<String, String> {
+    fn parse_vt_lpstr(data: &[u8], is_big_endian: bool, codepage: u16) -> Result<String, HwpError> {
         if data.len() < 8 {
-            return Err("Insufficient data for VT_LPSTR/VT_LPWSTR".to_string());
+            return Err(HwpError::insufficient_data("VT_LPSTR/VT_LPWSTR", 8, data.len()));
         }
 
         // VT type (4 bytes): Should be VT_LPSTR (0x001E) or VT_LPWSTR (0x001F)
@@ -549,10 +568,11 @@ impl SummaryInformation {
         }
 
         if vt_type != VT_LPSTR {
-            return Err(format!(
-                "Expected VT_LPSTR (0x{:08X}) or VT_LPWSTR (0x{:08X}), got 0x{:08X}",
-                VT_LPSTR, VT_LPWSTR, vt_type
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: "VT_LPSTR/VT_LPWSTR type".to_string(),
+                expected: format!("0x{:08X} or 0x{:08X}", VT_LPSTR, VT_LPWSTR),
+                found: format!("0x{:08X}", vt_type),
+            });
         }
 
         // Length (4 bytes): String length in bytes (including null terminator)
@@ -564,7 +584,11 @@ impl SummaryInformation {
         };
 
         if data.len() < 8 + size {
-            return Err("Insufficient data for VT_LPSTR string".to_string());
+            return Err(HwpError::InsufficientData {
+                field: "VT_LPSTR string".to_string(),
+                expected: 8 + size,
+                actual: data.len(),
+            });
         }
 
         // String data: size만큼 읽음 (hwplib의 CodePageString처럼)
@@ -572,19 +596,20 @@ impl SummaryInformation {
 
         // Decode string based on codepage
         // codepage에 따라 적절한 인코딩으로 디코딩
-        Self::decode_string_by_codepage(string_data, codepage).map_err(|e| {
-            format!(
-                "Failed to decode VT_LPSTR string with codepage {}: {}",
-                codepage, e
-            )
-        })
+        Self::decode_string_by_codepage(string_data, codepage)
+            .map_err(|e| HwpError::EncodingError {
+                reason: format!(
+                    "Failed to decode VT_LPSTR string with codepage {}: {}",
+                    codepage, e
+                ),
+            })
     }
 
     /// VT_FILETIME 파싱 (날짜/시간) / Parse VT_FILETIME (date/time)
     /// Format: VT type (4 bytes) + FILETIME (8 bytes: low 4 bytes + high 4 bytes)
-    fn parse_vt_filetime(data: &[u8], is_big_endian: bool) -> Result<FileTime, String> {
+    fn parse_vt_filetime(data: &[u8], is_big_endian: bool) -> Result<FileTime, HwpError> {
         if data.len() < 12 {
-            return Err("Insufficient data for VT_FILETIME".to_string());
+            return Err(HwpError::insufficient_data("VT_FILETIME", 12, data.len()));
         }
 
         // VT type (4 bytes): Should be VT_FILETIME (0x0040)
@@ -594,10 +619,11 @@ impl SummaryInformation {
             UINT32::from_le_bytes([data[0], data[1], data[2], data[3]])
         };
         if vt_type != VT_FILETIME {
-            return Err(format!(
-                "Expected VT_FILETIME (0x{:08X}), got 0x{:08X}",
-                VT_FILETIME, vt_type
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: "VT_FILETIME type".to_string(),
+                expected: format!("0x{:08X}", VT_FILETIME),
+                found: format!("0x{:08X}", vt_type),
+            });
         }
 
         // FILETIME: Low 32 bits (4 bytes) + High 32 bits (4 bytes)
@@ -618,9 +644,9 @@ impl SummaryInformation {
     /// VT_LPWSTR 파싱 (Wide string, UTF-16LE) / Parse VT_LPWSTR (Wide string, UTF-16LE)
     /// Format: VT type (4 bytes) + Length (4 bytes, character count) + String (UTF-16LE, null-terminated)
     /// hwplib의 UnicodeString 구현 참고
-    fn parse_vt_lpwstr(data: &[u8], is_big_endian: bool) -> Result<String, String> {
+    fn parse_vt_lpwstr(data: &[u8], is_big_endian: bool) -> Result<String, HwpError> {
         if data.len() < 8 {
-            return Err("Insufficient data for VT_LPWSTR".to_string());
+            return Err(HwpError::insufficient_data("VT_LPWSTR", 8, data.len()));
         }
 
         // VT type (4 bytes): Should be VT_LPWSTR (0x001F)
@@ -630,10 +656,11 @@ impl SummaryInformation {
             UINT32::from_le_bytes([data[0], data[1], data[2], data[3]])
         };
         if vt_type != VT_LPWSTR {
-            return Err(format!(
-                "Expected VT_LPWSTR (0x{:08X}), got 0x{:08X}",
-                VT_LPWSTR, vt_type
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: "VT_LPWSTR type".to_string(),
+                expected: format!("0x{:08X}", VT_LPWSTR),
+                found: format!("0x{:08X}", vt_type),
+            });
         }
 
         // Length (4 bytes): Character count (not byte count)
@@ -651,7 +678,11 @@ impl SummaryInformation {
         // UTF-16LE: 각 character는 2 bytes
         let byte_count = char_count * 2;
         if data.len() < 8 + byte_count {
-            return Err("Insufficient data for VT_LPWSTR string".to_string());
+            return Err(HwpError::InsufficientData {
+                field: "VT_LPWSTR string".to_string(),
+                expected: 8 + byte_count,
+                actual: data.len(),
+            });
         }
 
         // String data: UTF-16LE bytes
@@ -677,7 +708,7 @@ impl SummaryInformation {
 
     /// Codepage에 따라 문자열 디코딩 / Decode string based on codepage
     /// hwplib의 CodePageString.getJavaValue() 로직 참고
-    fn decode_string_by_codepage(data: &[u8], codepage: u16) -> Result<String, String> {
+    fn decode_string_by_codepage(data: &[u8], codepage: u16) -> Result<String, HwpError> {
         use encoding_rs::*;
 
         if data.is_empty() {
@@ -727,7 +758,9 @@ impl SummaryInformation {
                     chars.into_iter().collect()
                 }
                 CP_UTF8 => String::from_utf8(data.to_vec())
-                    .map_err(|e| format!("UTF-8 decode error: {}", e))?,
+                    .map_err(|e| HwpError::EncodingError {
+                        reason: format!("UTF-8 decode error: {}", e),
+                    })?,
                 CP_MS949 => EUC_KR.decode(data).0.to_string(),
                 CP_WINDOWS_1252 => WINDOWS_1252.decode(data).0.to_string(),
                 _ => {
@@ -750,9 +783,9 @@ impl SummaryInformation {
 
     /// VT_I4 파싱 (32-bit signed integer) / Parse VT_I4 (32-bit signed integer)
     /// Format: VT type (4 bytes) + Value (4 bytes)
-    fn parse_vt_i4(data: &[u8], is_big_endian: bool) -> Result<INT32, String> {
+    fn parse_vt_i4(data: &[u8], is_big_endian: bool) -> Result<INT32, HwpError> {
         if data.len() < 8 {
-            return Err("Insufficient data for VT_I4".to_string());
+            return Err(HwpError::insufficient_data("VT_I4", 8, data.len()));
         }
 
         // VT type (4 bytes): Should be VT_I4 (0x0003)
@@ -762,10 +795,11 @@ impl SummaryInformation {
             UINT32::from_le_bytes([data[0], data[1], data[2], data[3]])
         };
         if vt_type != VT_I4 {
-            return Err(format!(
-                "Expected VT_I4 (0x{:08X}), got 0x{:08X}",
-                VT_I4, vt_type
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: "VT_I4 type".to_string(),
+                expected: format!("0x{:08X}", VT_I4),
+                found: format!("0x{:08X}", vt_type),
+            });
         }
 
         // Value (4 bytes): Signed 32-bit integer

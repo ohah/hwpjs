@@ -1,6 +1,7 @@
 /// ShapeComponent 구조체 / ShapeComponent structure
 ///
 /// 스펙 문서 매핑: 표 82, 83 - 개체 요소 속성 / Spec mapping: Table 82, 83 - Shape component attributes
+use crate::error::HwpError;
 use crate::types::{HWPUNIT16, INT32, UINT16, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -101,12 +102,9 @@ impl ShapeComponent {
     ///
     /// # Returns
     /// 파싱된 ShapeComponent 구조체 / Parsed ShapeComponent structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 4 {
-            return Err(format!(
-                "ShapeComponent must be at least 4 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ShapeComponent", 4, data.len()));
         }
 
         let mut offset = 0;
@@ -153,11 +151,11 @@ impl ShapeComponent {
 
         // 표 83: 개체 요소 속성 / Table 83: Shape component attributes
         if data.len() < offset + 42 {
-            return Err(format!(
-                "ShapeComponent must be at least {} bytes for attributes, got {} bytes",
-                offset + 42,
-                data.len()
-            ));
+            return Err(HwpError::InsufficientData {
+                field: format!("ShapeComponent attributes at offset {}", offset),
+                expected: offset + 42,
+                actual: data.len(),
+            });
         }
 
         // INT32: 개체가 속한 그룹 내에서의 X offset / INT32: X offset within group
@@ -261,10 +259,10 @@ impl ShapeComponent {
 
         // 표 84: Rendering 정보 / Table 84: Rendering information
         if data.len() < offset + 2 {
-            return Err(format!(
-                "ShapeComponent must be at least {} bytes for rendering info, got {} bytes",
-                offset + 2,
-                data.len()
+            return Err(HwpError::insufficient_data(
+                "ShapeComponent rendering info",
+                2,
+                data.len() - offset,
             ));
         }
 
@@ -274,30 +272,33 @@ impl ShapeComponent {
 
         // BYTE stream (48바이트): translation matrix / BYTE stream (48 bytes): Translation matrix
         if data.len() < offset + 48 {
-            return Err(format!(
-                "ShapeComponent must be at least {} bytes for translation matrix, got {} bytes",
-                offset + 48,
-                data.len()
-            ));
+            return Err(HwpError::InsufficientData {
+                field: format!("ShapeComponent translation matrix at offset {}", offset),
+                expected: offset + 48,
+                actual: data.len(),
+            });
         }
-        let translation_matrix = parse_matrix(&data[offset..offset + 48])?;
+        let translation_matrix = parse_matrix(&data[offset..offset + 48])
+            .map_err(|e| HwpError::from(e))?;
         offset += 48;
 
         // BYTE stream (cnt×48×2): scale matrix/rotation matrix sequence
         let matrix_sequence_size = matrix_count as usize * 48 * 2;
         if data.len() < offset + matrix_sequence_size {
-            return Err(format!(
-                "ShapeComponent must be at least {} bytes for matrix sequence, got {} bytes",
-                offset + matrix_sequence_size,
-                data.len()
-            ));
+            return Err(HwpError::InsufficientData {
+                field: format!("ShapeComponent matrix sequence at offset {}", offset),
+                expected: offset + matrix_sequence_size,
+                actual: data.len(),
+            });
         }
 
         let mut matrix_sequence = Vec::new();
         for i in 0..matrix_count as usize {
             let seq_offset = offset + (i * 48 * 2);
-            let scale_matrix = parse_matrix(&data[seq_offset..seq_offset + 48])?;
-            let rotation_matrix = parse_matrix(&data[seq_offset + 48..seq_offset + 96])?;
+            let scale_matrix = parse_matrix(&data[seq_offset..seq_offset + 48])
+                .map_err(|e| HwpError::from(e))?;
+            let rotation_matrix = parse_matrix(&data[seq_offset + 48..seq_offset + 96])
+                .map_err(|e| HwpError::from(e))?;
             matrix_sequence.push(MatrixPair {
                 scale: scale_matrix,
                 rotation: rotation_matrix,
@@ -335,9 +336,9 @@ impl ShapeComponent {
 
 /// Matrix 파싱 (표 85) / Parse matrix (Table 85)
 /// double array[6] (48바이트) - 3X2 matrix의 원소 / double array[6] (48 bytes) - Elements of 3X2 matrix
-fn parse_matrix(data: &[u8]) -> Result<Matrix, String> {
+fn parse_matrix(data: &[u8]) -> Result<Matrix, HwpError> {
     if data.len() < 48 {
-        return Err(format!("Matrix must be 48 bytes, got {} bytes", data.len()));
+        return Err(HwpError::insufficient_data("Matrix", 48, data.len()));
     }
 
     let mut elements = [0.0; 6];

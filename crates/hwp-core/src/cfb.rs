@@ -4,6 +4,7 @@
 /// HWP 파일은 CFB 형식을 사용하여 여러 스토리지와 스트림을 포함합니다.
 ///
 /// 스펙 문서 매핑: 표 2 - 파일 구조 (CFB 구조)
+use crate::error::HwpError;
 use cfb::CompoundFile;
 use std::io::{Cursor, Read};
 
@@ -20,9 +21,9 @@ impl CfbParser {
     ///
     /// # Returns
     /// Parsed CompoundFile structure / 파싱된 CompoundFile 구조체
-    pub fn parse(data: &[u8]) -> Result<CompoundFile<Cursor<&[u8]>>, String> {
+    pub fn parse(data: &[u8]) -> Result<CompoundFile<Cursor<&[u8]>>, HwpError> {
         let cursor = Cursor::new(data);
-        CompoundFile::open(cursor).map_err(|e| format!("Failed to parse CFB: {}", e))
+        CompoundFile::open(cursor).map_err(|e| HwpError::CfbParse(e.to_string()))
     }
 
     /// Read a stream from CFB structure (root level)
@@ -37,15 +38,15 @@ impl CfbParser {
     pub fn read_stream(
         cfb: &mut CompoundFile<Cursor<&[u8]>>,
         stream_name: &str,
-    ) -> Result<Vec<u8>, String> {
+    ) -> Result<Vec<u8>, HwpError> {
         // Try to open stream with the given name
         // 주어진 이름으로 스트림 열기 시도
         match cfb.open_stream(stream_name) {
             Ok(mut stream) => {
                 let mut buffer = Vec::new();
-                stream
-                    .read_to_end(&mut buffer)
-                    .map_err(|e| format!("Failed to read stream '{}': {}", stream_name, e))?;
+                stream.read_to_end(&mut buffer).map_err(|e| {
+                    HwpError::stream_read_error(stream_name, e.to_string())
+                })?;
                 Ok(buffer)
             }
             Err(_) => {
@@ -55,10 +56,7 @@ impl CfbParser {
                 // 스트림 이름에 특수 문자가 포함된 경우 (예: \x05),
                 // cfb crate의 open_stream이 이를 올바르게 처리하지 못할 수 있습니다.
                 // CFB 파일의 바이트를 직접 파싱하여 스트림을 찾아야 합니다.
-                Err(format!(
-                    "Failed to open stream '{}' (may contain special characters)",
-                    stream_name
-                ))
+                Err(HwpError::stream_not_found(stream_name, "root"))
             }
         }
     }
@@ -72,14 +70,17 @@ impl CfbParser {
     ///
     /// # Returns
     /// Stream content as byte vector / 바이트 벡터로 된 스트림 내용
-    pub fn read_stream_by_bytes(data: &[u8], stream_name_bytes: &[u8]) -> Result<Vec<u8>, String> {
+    pub fn read_stream_by_bytes(data: &[u8], stream_name_bytes: &[u8]) -> Result<Vec<u8>, HwpError> {
         eprintln!(
             "Debug: read_stream_by_bytes called, data len: {}, stream_name: {:?}",
             data.len(),
             stream_name_bytes
         );
         if data.len() < 512 {
-            return Err("CFB file too small".to_string());
+            return Err(HwpError::CfbFileTooSmall {
+                expected: 512,
+                actual: data.len(),
+            });
         }
 
         // CFB Header structure (first 512 bytes)
@@ -92,7 +93,9 @@ impl CfbParser {
         let sector_size = if data.len() >= 0x20 {
             let sector_size_shift = u16::from_le_bytes([data[0x1E], data[0x1F]]) as u32;
             if sector_size_shift > 12 {
-                return Err("Invalid sector size shift".to_string());
+                return Err(HwpError::InvalidSectorSize {
+                    value: sector_size_shift,
+                });
             }
             1 << sector_size_shift // Usually 512 (2^9)
         } else {
@@ -104,7 +107,10 @@ impl CfbParser {
         let dir_sector = if data.len() >= 0x34 {
             u32::from_le_bytes([data[0x30], data[0x31], data[0x32], data[0x33]])
         } else {
-            return Err("CFB file too small for directory sector".to_string());
+            return Err(HwpError::CfbFileTooSmall {
+                expected: 0x34,
+                actual: data.len(),
+            });
         };
 
         // Convert stream name to UTF-16LE bytes for comparison
@@ -149,7 +155,9 @@ impl CfbParser {
         // 하지만 dir_sector가 -1 (ENDOFCHAIN)이면 디렉토리가 없음
         let dir_entry_size = 128;
         let dir_start = if dir_sector == 0xFFFFFFFF {
-            return Err("Invalid directory sector (ENDOFCHAIN)".to_string());
+            return Err(HwpError::InvalidDirectorySector {
+                reason: "ENDOFCHAIN marker found".to_string(),
+            });
         } else {
             (sector_size as usize) + (dir_sector as usize * sector_size as usize)
         };
@@ -160,7 +168,13 @@ impl CfbParser {
         );
 
         if dir_start >= data.len() {
-            return Err("Directory sector beyond file size".to_string());
+            return Err(HwpError::InvalidDirectorySector {
+                reason: format!(
+                    "Directory sector offset {} is beyond file size {}",
+                    dir_start,
+                    data.len()
+                ),
+            });
         }
 
         eprintln!(
@@ -278,14 +292,24 @@ impl CfbParser {
                 // 스트림 데이터 읽기
                 let stream_start = (start_sector as usize + 1) * (sector_size as usize);
                 if stream_start + stream_size > data.len() {
-                    return Err("Stream data beyond file size".to_string());
+                    return Err(HwpError::InvalidDirectorySector {
+                        reason: format!(
+                            "Stream data offset {} + size {} is beyond file size {}",
+                            stream_start,
+                            stream_size,
+                            data.len()
+                        ),
+                    });
                 }
 
                 return Ok(data[stream_start..stream_start + stream_size].to_vec());
             }
         }
 
-        Err(format!("Stream not found: {:?}", stream_name_bytes))
+        Err(HwpError::stream_not_found(
+            String::from_utf8_lossy(stream_name_bytes),
+            "root (byte search)",
+        ))
     }
 
     /// Read a stream from nested storage (e.g., BodyText/Section0)
@@ -302,7 +326,7 @@ impl CfbParser {
         cfb: &mut CompoundFile<Cursor<&[u8]>>,
         storage_name: &str,
         stream_name: &str,
-    ) -> Result<Vec<u8>, String> {
+    ) -> Result<Vec<u8>, HwpError> {
         // First, try to open the storage and then the stream
         // If open_storage is not available, fall back to path-based approach
         // 먼저 스토리지를 열고 그 안에서 스트림을 열려고 시도합니다.
@@ -315,10 +339,7 @@ impl CfbParser {
             Ok(mut stream) => {
                 let mut buffer = Vec::new();
                 stream.read_to_end(&mut buffer).map_err(|e| {
-                    format!(
-                        "Failed to read stream '{}/{}': {}",
-                        storage_name, stream_name, e
-                    )
+                    HwpError::stream_read_error(&path, e.to_string())
                 })?;
                 Ok(buffer)
             }
@@ -329,14 +350,14 @@ impl CfbParser {
                 match cfb.open_stream(&root_path) {
                     Ok(mut stream) => {
                         let mut buffer = Vec::new();
-                        stream
-                            .read_to_end(&mut buffer)
-                            .map_err(|e| format!("Failed to read stream '{}': {}", root_path, e))?;
+                        stream.read_to_end(&mut buffer).map_err(|e| {
+                            HwpError::stream_read_error(&root_path, e.to_string())
+                        })?;
                         Ok(buffer)
                     }
-                    Err(e) => Err(format!(
-                        "Failed to open nested stream '{}/{}': Tried '{}' and '{}', last error: {}",
-                        storage_name, stream_name, path, root_path, e
+                    Err(e) => Err(HwpError::stream_not_found(
+                        format!("{}/{}", storage_name, stream_name),
+                        format!("Tried '{}' and '{}', last error: {}", path, root_path, e),
                     )),
                 }
             }

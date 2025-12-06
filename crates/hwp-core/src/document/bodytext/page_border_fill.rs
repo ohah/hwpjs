@@ -1,6 +1,7 @@
 /// PageBorderFill 구조체 / PageBorderFill structure
 ///
 /// 스펙 문서 매핑: 표 135 - 쪽 테두리/배경 / Spec mapping: Table 135 - Page border/fill
+use crate::error::HwpError;
 use crate::types::{HWPUNIT16, UINT16, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -64,12 +65,9 @@ impl PageBorderFill {
     ///
     /// # Returns
     /// 파싱된 PageBorderFill 구조체 / Parsed PageBorderFill structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 12 {
-            return Err(format!(
-                "PageBorderFill must be at least 12 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("PageBorderFill", 12, data.len()));
         }
 
         let mut offset = 0;

@@ -6,6 +6,7 @@
 /// - 구현 완료 / Implementation complete
 /// - 테스트 파일(`noori.hwp`)에 VIDEO_DATA 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain VIDEO_DATA records
+use crate::error::HwpError;
 use crate::types::{decode_utf16le, INT32, UINT16};
 use serde::{Deserialize, Serialize};
 
@@ -66,13 +67,10 @@ impl VideoData {
     /// 실제 HWP 파일에 VIDEO_DATA 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain VIDEO_DATA records, so it has not been verified with actual files.
     /// If an actual HWP file contains VIDEO_DATA records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 최소 4바이트 필요 (동영상 타입) / Need at least 4 bytes (video type)
         if data.len() < 4 {
-            return Err(format!(
-                "VideoData must be at least 4 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("VideoData", 4, data.len()));
         }
 
         let mut offset = 0;
@@ -91,7 +89,11 @@ impl VideoData {
             0 => {
                 // 로컬 동영상 속성 (표 125) / Local video attributes (Table 125)
                 if data.len() < offset + 4 {
-                    return Err("Insufficient data for local video attributes".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "VideoData local video attributes",
+                        4,
+                        data.len() - offset,
+                    ));
                 }
                 let video_bindata_id = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
                 offset += 2;
@@ -107,16 +109,27 @@ impl VideoData {
                 // 웹 태그는 가변 길이이므로, 나머지 데이터에서 썸네일 BinData ID(2바이트)를 제외한 부분이 웹 태그
                 // Web tag is variable length, so remaining data minus thumbnail BinData ID (2 bytes) is web tag
                 if data.len() < offset + 2 {
-                    return Err("Insufficient data for web video attributes".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "VideoData web video attributes",
+                        2,
+                        data.len() - offset,
+                    ));
                 }
                 // 웹 태그 길이 계산: 전체 길이 - offset - 썸네일 BinData ID(2바이트)
                 // Calculate web tag length: total length - offset - thumbnail BinData ID (2 bytes)
                 let web_tag_length = data.len().saturating_sub(offset + 2);
                 if web_tag_length == 0 {
-                    return Err("Invalid web tag length".to_string());
+                    return Err(HwpError::UnexpectedValue {
+                        field: "VideoData web tag length".to_string(),
+                        expected: "positive number".to_string(),
+                        found: "0".to_string(),
+                    });
                 }
                 let web_tag_bytes = &data[offset..offset + web_tag_length];
-                let web_tag = decode_utf16le(web_tag_bytes)?;
+                let web_tag = decode_utf16le(web_tag_bytes)
+                    .map_err(|e| HwpError::EncodingError {
+                        reason: format!("Failed to decode web tag: {}", e),
+                    })?;
                 offset += web_tag_length;
                 let thumbnail_bindata_id = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
                 offset += 2;
@@ -126,7 +139,11 @@ impl VideoData {
                 }
             }
             _ => {
-                return Err(format!("Unknown video type: {}", video_type));
+                return Err(HwpError::UnexpectedValue {
+                    field: "VideoData video_type".to_string(),
+                    expected: "0 or 1".to_string(),
+                    found: video_type.to_string(),
+                });
             }
         };
 

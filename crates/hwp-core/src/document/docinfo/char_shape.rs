@@ -3,6 +3,7 @@
 /// 스펙 문서 매핑: 표 33 - 글자 모양 / Spec mapping: Table 33 - Character shape
 /// Tag ID: HWPTAG_CHAR_SHAPE
 /// 전체 길이: 72 바이트 / Total length: 72 bytes
+use crate::error::HwpError;
 use crate::types::{COLORREF, INT32, INT8, UINT16, UINT32, UINT8, WORD};
 use serde::{Deserialize, Serialize};
 
@@ -142,13 +143,10 @@ impl CharShape {
     ///
     /// # Returns
     /// 파싱된 CharShape 구조체 / Parsed CharShape structure
-    pub fn parse(data: &[u8], _version: u32) -> Result<Self, String> {
+    pub fn parse(data: &[u8], _version: u32) -> Result<Self, HwpError> {
         // 최소 66바이트 필요 / Need at least 66 bytes
         if data.len() < 66 {
-            return Err(format!(
-                "CharShape must be at least 66 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("CharShape", 66, data.len()));
         }
 
         let mut offset = 0;

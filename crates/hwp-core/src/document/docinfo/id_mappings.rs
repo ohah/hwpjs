@@ -3,6 +3,7 @@
 /// 스펙 문서 매핑: 표 15 - 아이디 매핑 헤더 / Spec mapping: Table 15 - ID mappings header
 /// Tag ID: HWPTAG_ID_MAPPINGS
 /// 전체 길이: 72 바이트 (18개 INT32) / Total length: 72 bytes (18 INT32 values)
+use crate::error::HwpError;
 use crate::types::INT32;
 use serde::{Deserialize, Serialize};
 
@@ -62,13 +63,10 @@ impl IdMappings {
     ///
     /// # Returns
     /// 파싱된 IdMappings 구조체 / Parsed IdMappings structure
-    pub fn parse(data: &[u8], _version: u32) -> Result<Self, String> {
+    pub fn parse(data: &[u8], _version: u32) -> Result<Self, HwpError> {
         // 최소 60바이트 (15개 INT32) 필요 / Need at least 60 bytes (15 INT32 values)
         if data.len() < 60 {
-            return Err(format!(
-                "IdMappings must be at least 60 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("IdMappings", 60, data.len()));
         }
 
         let mut offset = 0;

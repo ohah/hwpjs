@@ -6,6 +6,7 @@
 /// - 구현 완료 / Implementation complete
 /// - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_CONTAINER 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_CONTAINER records
+use crate::error::HwpError;
 use crate::types::{UINT16, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -46,13 +47,10 @@ impl ShapeComponentContainer {
     /// 실제 HWP 파일에 SHAPE_COMPONENT_CONTAINER 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_CONTAINER records, so it has not been verified with actual files.
     /// If an actual HWP file contains SHAPE_COMPONENT_CONTAINER records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 최소 2바이트 필요 (개체의 개수) / Need at least 2 bytes (object count)
         if data.len() < 2 {
-            return Err(format!(
-                "ShapeComponentContainer must be at least 2 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ShapeComponentContainer", 2, data.len()));
         }
 
         let mut offset = 0;
@@ -67,12 +65,11 @@ impl ShapeComponentContainer {
         // WORD(2) + UINT32 array[n](4×n) = 2 + 4×n
         let required_bytes = 2 + 4 * object_count_usize;
         if data.len() < required_bytes {
-            return Err(format!(
-                "ShapeComponentContainer must be at least {} bytes for {} objects, got {} bytes",
-                required_bytes,
-                object_count_usize,
-                data.len()
-            ));
+            return Err(HwpError::InsufficientData {
+                field: format!("ShapeComponentContainer (object_count={})", object_count_usize),
+                expected: required_bytes,
+                actual: data.len(),
+            });
         }
 
         // 표 121: 개체의 컨트롤 ID 배열 (UINT32 array[n], 4×n 바이트) / Table 121: Control ID array (UINT32 array[n], 4×n bytes)

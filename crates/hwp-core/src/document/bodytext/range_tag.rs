@@ -2,6 +2,7 @@
 ///
 /// 스펙 문서 매핑: 표 63 - 문단의 영역 태그 / Spec mapping: Table 63 - Paragraph range tag
 /// 각 항목: 12바이트
+use crate::error::HwpError;
 use crate::types::{UINT32, UINT8};
 use serde::{Deserialize, Serialize};
 
@@ -26,12 +27,9 @@ impl RangeTagInfo {
     ///
     /// # Returns
     /// 파싱된 RangeTagInfo 구조체 / Parsed RangeTagInfo structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 12 {
-            return Err(format!(
-                "RangeTagInfo must be at least 12 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("RangeTagInfo", 12, data.len()));
         }
 
         // UINT32 영역 시작 / UINT32 range start
@@ -70,12 +68,13 @@ impl ParaRangeTag {
     ///
     /// # Returns
     /// 파싱된 ParaRangeTag 구조체 / Parsed ParaRangeTag structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() % 12 != 0 {
-            return Err(format!(
-                "ParaRangeTag data length must be multiple of 12, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: "ParaRangeTag data length".to_string(),
+                expected: "multiple of 12".to_string(),
+                found: format!("{} bytes", data.len()),
+            });
         }
 
         let count = data.len() / 12;
@@ -84,7 +83,8 @@ impl ParaRangeTag {
         for i in 0..count {
             let offset = i * 12;
             let tag_data = &data[offset..offset + 12];
-            let tag_info = RangeTagInfo::parse(tag_data)?;
+            let tag_info = RangeTagInfo::parse(tag_data)
+                .map_err(|e| HwpError::from(e))?;
             tags.push(tag_info);
         }
 

@@ -2,6 +2,7 @@
 ///
 /// 스펙 문서 매핑: 표 61 - 문단의 글자 모양 / Spec mapping: Table 61 - Paragraph character shape
 /// 각 항목: 8바이트
+use crate::error::HwpError;
 use crate::types::UINT32;
 use serde::{Deserialize, Serialize};
 
@@ -22,12 +23,9 @@ impl CharShapeInfo {
     ///
     /// # Returns
     /// 파싱된 CharShapeInfo 구조체 / Parsed CharShapeInfo structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 8 {
-            return Err(format!(
-                "CharShapeInfo must be at least 8 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("CharShapeInfo", 8, data.len()));
         }
 
         // UINT32 글자 모양이 바뀌는 시작 위치 / UINT32 position where character shape changes
@@ -55,12 +53,13 @@ impl ParaCharShape {
     ///
     /// # Returns
     /// 파싱된 ParaCharShape 구조체 / Parsed ParaCharShape structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() % 8 != 0 {
-            return Err(format!(
-                "ParaCharShape data length must be multiple of 8, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::UnexpectedValue {
+                field: "ParaCharShape data length".to_string(),
+                expected: "multiple of 8".to_string(),
+                found: format!("{} bytes", data.len()),
+            });
         }
 
         let count = data.len() / 8;
@@ -69,7 +68,8 @@ impl ParaCharShape {
         for i in 0..count {
             let offset = i * 8;
             let shape_data = &data[offset..offset + 8];
-            let shape_info = CharShapeInfo::parse(shape_data)?;
+            let shape_info = CharShapeInfo::parse(shape_data)
+                .map_err(|e| HwpError::from(e))?;
             shapes.push(shape_info);
         }
 

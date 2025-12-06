@@ -4,6 +4,7 @@
 ///
 /// 스펙 문서 매핑: 표 17 - 바이너리 데이터 / Spec mapping: Table 17 - Binary data
 /// Tag ID: HWPTAG_BIN_DATA
+use crate::error::HwpError;
 use crate::types::{decode_utf16le, UINT16, WORD};
 use serde::{Deserialize, Serialize};
 
@@ -169,9 +170,9 @@ impl BinDataRecord {
     ///
     /// # 스펙 문서 매핑 / Spec mapping
     /// 표 17: 바이너리 데이터 / Table 17: Binary data
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 2 {
-            return Err("BinDataRecord must be at least 2 bytes for attributes".to_string());
+            return Err(HwpError::insufficient_data("BinDataRecord attributes", 2, data.len()));
         }
 
         let mut offset = 0;
@@ -187,32 +188,54 @@ impl BinDataRecord {
                 // 표 17: Type이 "LINK"일 때 / Table 17: When Type is "LINK"
                 // 연결 파일의 절대 경로 길이 (len1) / Absolute path length (len1)
                 if data.len() < offset + 2 {
-                    return Err("Insufficient data for LINK absolute path length".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "BinDataRecord LINK absolute path length",
+                        2,
+                        data.len() - offset,
+                    ));
                 }
                 let len1 = WORD::from_le_bytes([data[offset], data[offset + 1]]) as usize;
                 offset += 2;
 
                 // 연결 파일의 절대 경로 / Absolute path
                 if data.len() < offset + (len1 * 2) {
-                    return Err("Insufficient data for LINK absolute path".to_string());
+                    return Err(HwpError::InsufficientData {
+                        field: format!("BinDataRecord LINK absolute path at offset {}", offset),
+                        expected: offset + (len1 * 2),
+                        actual: data.len(),
+                    });
                 }
                 let absolute_path_bytes = &data[offset..offset + (len1 * 2)];
-                let absolute_path = decode_utf16le(absolute_path_bytes)?;
+                let absolute_path = decode_utf16le(absolute_path_bytes)
+                    .map_err(|e| HwpError::EncodingError {
+                        reason: format!("Failed to decode absolute path: {}", e),
+                    })?;
                 offset += len1 * 2;
 
                 // 연결 파일의 상대 경로 길이 (len2) / Relative path length (len2)
                 if data.len() < offset + 2 {
-                    return Err("Insufficient data for LINK relative path length".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "BinDataRecord LINK relative path length",
+                        2,
+                        data.len() - offset,
+                    ));
                 }
                 let len2 = WORD::from_le_bytes([data[offset], data[offset + 1]]) as usize;
                 offset += 2;
 
                 // 연결 파일의 상대 경로 / Relative path
                 if data.len() < offset + (len2 * 2) {
-                    return Err("Insufficient data for LINK relative path".to_string());
+                    return Err(HwpError::InsufficientData {
+                        field: format!("BinDataRecord LINK relative path at offset {}", offset),
+                        expected: offset + (len2 * 2),
+                        actual: data.len(),
+                    });
                 }
                 let relative_path_bytes = &data[offset..offset + (len2 * 2)];
-                let relative_path = decode_utf16le(relative_path_bytes)?;
+                let relative_path = decode_utf16le(relative_path_bytes)
+                    .map_err(|e| HwpError::EncodingError {
+                        reason: format!("Failed to decode relative path: {}", e),
+                    })?;
 
                 Ok(BinDataRecord::Link {
                     attributes,
@@ -226,24 +249,39 @@ impl BinDataRecord {
                 // 표 17: Type이 "EMBEDDING"일 때 / Table 17: When Type is "EMBEDDING"
                 // BINDATASTORAGE에 저장된 바이너리 데이터의 아이디 / Binary data ID
                 if data.len() < offset + 2 {
-                    return Err("Insufficient data for EMBEDDING binary_data_id".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "BinDataRecord EMBEDDING binary_data_id",
+                        2,
+                        data.len() - offset,
+                    ));
                 }
                 let binary_data_id = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
                 offset += 2;
 
                 // 바이너리 데이터의 형식 이름의 길이 (len3) / Format name length (len3)
                 if data.len() < offset + 2 {
-                    return Err("Insufficient data for EMBEDDING extension length".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "BinDataRecord EMBEDDING extension length",
+                        2,
+                        data.len() - offset,
+                    ));
                 }
                 let len3 = WORD::from_le_bytes([data[offset], data[offset + 1]]) as usize;
                 offset += 2;
 
                 // 바이너리 데이터의 형식 이름 (extension) / Format name (extension)
                 if data.len() < offset + (len3 * 2) {
-                    return Err("Insufficient data for EMBEDDING extension".to_string());
+                    return Err(HwpError::InsufficientData {
+                        field: format!("BinDataRecord EMBEDDING extension at offset {}", offset),
+                        expected: offset + (len3 * 2),
+                        actual: data.len(),
+                    });
                 }
                 let extension_bytes = &data[offset..offset + (len3 * 2)];
-                let extension = decode_utf16le(extension_bytes)?;
+                let extension = decode_utf16le(extension_bytes)
+                    .map_err(|e| HwpError::EncodingError {
+                        reason: format!("Failed to decode extension: {}", e),
+                    })?;
 
                 Ok(BinDataRecord::Embedding {
                     attributes,
@@ -257,7 +295,11 @@ impl BinDataRecord {
                 // 표 17: Type이 "STORAGE"일 때 / Table 17: When Type is "STORAGE"
                 // BINDATASTORAGE에 저장된 바이너리 데이터의 아이디 / Binary data ID
                 if data.len() < offset + 2 {
-                    return Err("Insufficient data for STORAGE binary_data_id".to_string());
+                    return Err(HwpError::insufficient_data(
+                        "BinDataRecord STORAGE binary_data_id",
+                        2,
+                        data.len() - offset,
+                    ));
                 }
                 let binary_data_id = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
 

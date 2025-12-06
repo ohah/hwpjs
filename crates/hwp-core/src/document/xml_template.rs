@@ -5,6 +5,7 @@
 /// `XMLTemplate` 스토리지에는 XML Template 정보가 저장됩니다.
 /// The `XMLTemplate` storage contains XML Template information.
 use crate::cfb::CfbParser;
+use crate::error::HwpError;
 use crate::types::{decode_utf16le, DWORD};
 use serde::{Deserialize, Serialize};
 
@@ -40,7 +41,7 @@ impl XmlTemplate {
     /// - _SchemaName: Schema name (Table 10)
     /// - Schema: Schema string (Table 11)
     /// - Instance: Instance string (Table 12)
-    pub fn parse(cfb: &mut cfb::CompoundFile<std::io::Cursor<&[u8]>>) -> Result<Self, String> {
+    pub fn parse(cfb: &mut cfb::CompoundFile<std::io::Cursor<&[u8]>>) -> Result<Self, HwpError> {
         let mut xml_template = XmlTemplate::default();
 
         // Parse _SchemaName stream
@@ -94,12 +95,9 @@ impl XmlTemplate {
     }
 
     /// Schema 이름 파싱 (표 10) / Parse schema name (Table 10)
-    fn parse_schema_name(data: &[u8]) -> Result<String, String> {
+    fn parse_schema_name(data: &[u8]) -> Result<String, HwpError> {
         if data.len() < 4 {
-            return Err(format!(
-                "Schema name data must be at least 4 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("Schema name data", 4, data.len()));
         }
 
         // DWORD Schema 이름 길이 (4 bytes) / Schema name length (4 bytes)
@@ -107,28 +105,28 @@ impl XmlTemplate {
 
         // WCHAR array[len] Schema 이름 (2×len bytes) / Schema name (2×len bytes)
         if data.len() < 4 + (len * 2) {
-            return Err(format!(
-                "Schema name data must be at least {} bytes, got {} bytes",
-                4 + (len * 2),
-                data.len()
-            ));
+            return Err(HwpError::InsufficientData {
+                field: "Schema name data".to_string(),
+                expected: 4 + (len * 2),
+                actual: data.len(),
+            });
         }
 
         if len > 0 {
             let schema_name_bytes = &data[4..4 + (len * 2)];
             decode_utf16le(schema_name_bytes)
+                .map_err(|e| HwpError::EncodingError {
+                    reason: format!("Failed to decode schema name: {}", e),
+                })
         } else {
             Ok(String::new())
         }
     }
 
     /// Schema 파싱 (표 11) / Parse schema (Table 11)
-    fn parse_schema(data: &[u8]) -> Result<String, String> {
+    fn parse_schema(data: &[u8]) -> Result<String, HwpError> {
         if data.len() < 4 {
-            return Err(format!(
-                "Schema data must be at least 4 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("Schema data", 4, data.len()));
         }
 
         // DWORD Schema 길이 (4 bytes) / Schema length (4 bytes)
@@ -136,28 +134,28 @@ impl XmlTemplate {
 
         // WCHAR array[len] Schema (2×len bytes) / Schema (2×len bytes)
         if data.len() < 4 + (len * 2) {
-            return Err(format!(
-                "Schema data must be at least {} bytes, got {} bytes",
-                4 + (len * 2),
-                data.len()
-            ));
+            return Err(HwpError::InsufficientData {
+                field: "Schema data".to_string(),
+                expected: 4 + (len * 2),
+                actual: data.len(),
+            });
         }
 
         if len > 0 {
             let schema_bytes = &data[4..4 + (len * 2)];
             decode_utf16le(schema_bytes)
+                .map_err(|e| HwpError::EncodingError {
+                    reason: format!("Failed to decode schema: {}", e),
+                })
         } else {
             Ok(String::new())
         }
     }
 
     /// Instance 파싱 (표 12) / Parse instance (Table 12)
-    fn parse_instance(data: &[u8]) -> Result<String, String> {
+    fn parse_instance(data: &[u8]) -> Result<String, HwpError> {
         if data.len() < 4 {
-            return Err(format!(
-                "Instance data must be at least 4 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("Instance data", 4, data.len()));
         }
 
         // DWORD Instance 길이 (4 bytes) / Instance length (4 bytes)
@@ -165,16 +163,19 @@ impl XmlTemplate {
 
         // WCHAR array[len] Instance (2×len bytes) / Instance (2×len bytes)
         if data.len() < 4 + (len * 2) {
-            return Err(format!(
-                "Instance data must be at least {} bytes, got {} bytes",
-                4 + (len * 2),
-                data.len()
-            ));
+            return Err(HwpError::InsufficientData {
+                field: "Instance data".to_string(),
+                expected: 4 + (len * 2),
+                actual: data.len(),
+            });
         }
 
         if len > 0 {
             let instance_bytes = &data[4..4 + (len * 2)];
             decode_utf16le(instance_bytes)
+                .map_err(|e| HwpError::EncodingError {
+                    reason: format!("Failed to decode instance: {}", e),
+                })
         } else {
             Ok(String::new())
         }

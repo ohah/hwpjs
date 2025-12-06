@@ -5,6 +5,7 @@
 /// - 스펙 문서에 상세 구조가 명시되어 있지 않음 / Spec document does not specify detailed structure
 /// - 테스트 파일(`noori.hwp`)에 MEMO_LIST 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain MEMO_LIST records
+use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
 /// 메모 리스트 헤더 / Memo list header
@@ -37,7 +38,7 @@ impl MemoList {
     /// 실제 HWP 파일에 MEMO_LIST 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain MEMO_LIST records, so it has not been verified with actual files.
     /// If an actual HWP file contains MEMO_LIST records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         Ok(MemoList {
             raw_data: data.to_vec(),
         })

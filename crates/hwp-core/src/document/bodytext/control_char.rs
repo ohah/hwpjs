@@ -2,6 +2,7 @@
 /// HWP 5.0 스펙 표 6 기반 제어 문자 상수
 ///
 /// 표 6: 제어 문자 / Table 6: Control characters
+use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
 pub struct ControlChar;
@@ -49,12 +50,9 @@ impl InlineControlParam {
     ///
     /// # Returns
     /// 파싱된 InlineControlParam 구조체 / Parsed InlineControlParam structure
-    pub fn parse(control_code: u8, data: &[u8]) -> Result<Self, String> {
+    pub fn parse(control_code: u8, data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 12 {
-            return Err(format!(
-                "InlineControlParam must be at least 12 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("InlineControlParam", 12, data.len()));
         }
 
         let mut param = InlineControlParam {

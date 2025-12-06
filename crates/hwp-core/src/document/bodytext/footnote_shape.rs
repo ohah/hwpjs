@@ -1,6 +1,7 @@
 /// FootnoteShape 구조체 / FootnoteShape structure
 ///
 /// 스펙 문서 매핑: 표 133 - 각주/미주 모양 / Spec mapping: Table 133 - Footnote/endnote shape
+use crate::error::HwpError;
 use crate::types::{COLORREF, HWPUNIT16, UINT16, UINT32, UINT8, WCHAR};
 use serde::{Deserialize, Serialize};
 
@@ -126,12 +127,9 @@ impl FootnoteShape {
     ///
     /// # Returns
     /// 파싱된 FootnoteShape 구조체 / Parsed FootnoteShape structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 26 {
-            return Err(format!(
-                "FootnoteShape must be at least 26 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("FootnoteShape", 26, data.len()));
         }
 
         let mut offset = 0;

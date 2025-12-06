@@ -1,6 +1,7 @@
 /// ScriptVersion 구조체 / ScriptVersion structure
 ///
 /// 스펙 문서 매핑: 표 8 - 스크립트 버전 / Spec mapping: Table 8 - Script version
+use crate::error::HwpError;
 use crate::types::DWORD;
 use serde::{Deserialize, Serialize};
 
@@ -29,12 +30,9 @@ impl ScriptVersion {
     /// According to spec Table 8, script version is 8 bytes:
     /// - DWORD (4 bytes): Script version HIGH
     /// - DWORD (4 bytes): Script version LOW
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 8 {
-            return Err(format!(
-                "ScriptVersion must be at least 8 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ScriptVersion", 8, data.len()));
         }
 
         // DWORD 스크립트 버전 HIGH (4 bytes) / Script version HIGH (4 bytes)

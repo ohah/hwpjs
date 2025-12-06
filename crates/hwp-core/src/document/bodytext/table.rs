@@ -1,6 +1,7 @@
 /// Table 구조체 / Table structure
 ///
 /// 스펙 문서 매핑: 표 74 - 표 개체 / Spec mapping: Table 74 - Table object
+use crate::error::HwpError;
 use crate::types::{HWPUNIT, HWPUNIT16, UINT16, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -133,9 +134,13 @@ impl Table {
     ///
     /// # Returns
     /// 파싱된 Table 구조체 / Parsed Table structure
-    pub fn parse(data: &[u8], version: u32) -> Result<Self, String> {
+    pub fn parse(data: &[u8], version: u32) -> Result<Self, HwpError> {
         if data.is_empty() {
-            return Err("Table data is empty".to_string());
+            return Err(HwpError::InsufficientData {
+                field: "Table data".to_string(),
+                expected: 1,
+                actual: 0,
+            });
         }
 
         let mut offset = 0;
@@ -162,12 +167,13 @@ fn parse_table_attributes(
     data: &[u8],
     offset: &mut usize,
     version: u32,
-) -> Result<TableAttributes, String> {
+) -> Result<TableAttributes, HwpError> {
     // 최소 22바이트 필요 (기본 필드) / Need at least 22 bytes (basic fields)
     if data.len() < *offset + 22 {
-        return Err(format!(
-            "Table attributes must be at least 22 bytes, got {} bytes",
-            data.len() - *offset
+        return Err(HwpError::insufficient_data(
+            "Table attributes",
+            22,
+            data.len() - *offset,
         ));
     }
 
@@ -205,7 +211,11 @@ fn parse_table_attributes(
     let mut row_sizes = Vec::new();
     for _ in 0..row_count {
         if *offset + 2 > data.len() {
-            return Err("Insufficient data for row sizes".to_string());
+            return Err(HwpError::insufficient_data(
+                "row sizes",
+                2,
+                data.len() - *offset,
+            ));
         }
         row_sizes.push(HWPUNIT16::from_le_bytes([data[*offset], data[*offset + 1]]));
         *offset += 2;
@@ -219,7 +229,11 @@ fn parse_table_attributes(
     let mut zones = Vec::new();
     if version >= 5010 {
         if *offset + 2 > data.len() {
-            return Err("Insufficient data for valid zone info size".to_string());
+            return Err(HwpError::insufficient_data(
+                "valid zone info size",
+                2,
+                data.len() - *offset,
+            ));
         }
         let valid_zone_info_size = UINT16::from_le_bytes([data[*offset], data[*offset + 1]]);
         *offset += 2;
@@ -228,7 +242,11 @@ fn parse_table_attributes(
         let zone_count = valid_zone_info_size as usize / 10;
         for _ in 0..zone_count {
             if *offset + 10 > data.len() {
-                return Err("Insufficient data for zone attributes".to_string());
+                return Err(HwpError::insufficient_data(
+                    "zone attributes",
+                    10,
+                    data.len() - *offset,
+                ));
             }
             zones.push(TableZone {
                 start_col: UINT16::from_le_bytes([data[*offset], data[*offset + 1]]),
@@ -281,7 +299,7 @@ fn parse_cell_list(
     row_count: UINT16,
     col_count: UINT16,
     row_sizes: &[HWPUNIT16], // 각 행의 실제 셀 개수
-) -> Result<Vec<TableCell>, String> {
+) -> Result<Vec<TableCell>, HwpError> {
     let mut cells = Vec::new();
     let mut offset = 0;
 
@@ -300,7 +318,8 @@ fn parse_cell_list(
         // 표 65: INT16(2) + UINT32(4) = 6바이트 (문서 기준)
         // 하지만 실제 구현에서는 UINT16(2) + UINT16(2) + UINT32(4) = 8바이트일 수 있음
         // pyhwp를 참고하면 ListHeader는 8바이트로 파싱됨
-        let list_header = ListHeader::parse(&data[offset..])?;
+        let list_header = ListHeader::parse(&data[offset..])
+            .map_err(|e| HwpError::from(e))?;
         // ListHeader::parse는 6바이트만 파싱하지만, 실제 데이터에는 추가 2바이트가 있을 수 있음
         // pyhwp에서는 UINT16 unknown1이 추가로 있음
         offset += 8; // 실제 구현: UINT16(2) + UINT16(2) + UINT32(4) = 8바이트
@@ -309,7 +328,11 @@ fn parse_cell_list(
         // 표 80: 전체 길이 26바이트
         // UINT16(2) + UINT16(2) + UINT16(2) + UINT16(2) + HWPUNIT(4) + HWPUNIT(4) + HWPUNIT16[4](8) + UINT16(2) = 26
         if offset + 26 > data.len() {
-            return Err("Insufficient data for cell attributes".to_string());
+            return Err(HwpError::insufficient_data(
+                "cell attributes",
+                26,
+                data.len() - offset,
+            ));
         }
 
         let cell_attributes = CellAttributes {

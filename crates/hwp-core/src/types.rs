@@ -2,6 +2,7 @@
 ///
 /// 표 1: 자료형에 따른 타입 정의
 /// 스펙 문서와 1:1 매핑을 위해 모든 자료형을 명시적으로 정의합니다.
+use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
 /// BYTE: 부호 없는 한 바이트(0~255)
@@ -178,9 +179,9 @@ impl RecordHeader {
     ///
     /// # Returns
     /// 파싱된 RecordHeader와 다음 데이터 위치로 이동할 바이트 수 (헤더 크기) / Parsed RecordHeader and number of bytes to advance (header size)
-    pub fn parse(data: &[u8]) -> Result<(Self, usize), String> {
+    pub fn parse(data: &[u8]) -> Result<(Self, usize), HwpError> {
         if data.len() < 4 {
-            return Err("Record header must be at least 4 bytes".to_string());
+            return Err(HwpError::insufficient_data("RecordHeader", 4, data.len()));
         }
 
         // DWORD를 little-endian으로 읽기 / Read DWORD as little-endian
@@ -198,7 +199,11 @@ impl RecordHeader {
         let (size, has_extended_size, header_size) = if size == 0xFFF {
             // 확장 길이 사용: 다음 DWORD가 실제 길이 / Extended size: next DWORD is actual length
             if data.len() < 8 {
-                return Err("Extended size record header requires 8 bytes".to_string());
+                return Err(HwpError::insufficient_data(
+                    "RecordHeader (extended)",
+                    8,
+                    data.len(),
+                ));
             }
             let extended_size = DWORD::from_le_bytes([data[4], data[5], data[6], data[7]]);
             (extended_size, true, 8)
@@ -219,13 +224,18 @@ impl RecordHeader {
 }
 
 /// UTF-16LE 바이트 배열을 String으로 디코딩 / Decode UTF-16LE byte array to String
-pub fn decode_utf16le(bytes: &[u8]) -> Result<String, String> {
+pub fn decode_utf16le(bytes: &[u8]) -> Result<String, HwpError> {
+    use crate::error::HwpError;
     if bytes.len() % 2 != 0 {
-        return Err("UTF-16LE bytes must be even length".to_string());
+        return Err(HwpError::EncodingError {
+            reason: "UTF-16LE bytes must be even length".to_string(),
+        });
     }
     let u16_chars: Vec<u16> = bytes
         .chunks_exact(2)
         .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
         .collect();
-    String::from_utf16(&u16_chars).map_err(|e| format!("Failed to decode UTF-16LE string: {}", e))
+    String::from_utf16(&u16_chars).map_err(|e| HwpError::EncodingError {
+        reason: format!("Failed to decode UTF-16LE string: {}", e),
+    })
 }

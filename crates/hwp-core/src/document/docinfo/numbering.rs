@@ -3,6 +3,7 @@
 /// 스펙 문서 매핑: 표 38 - 문단 번호 / Spec mapping: Table 38 - Paragraph numbering
 /// Tag ID: HWPTAG_NUMBERING
 /// 전체 길이: 가변 / Total length: variable
+use crate::error::HwpError;
 use crate::types::{decode_utf16le, HWPUNIT16, UINT16, UINT32, WORD};
 use serde::{Deserialize, Serialize};
 
@@ -109,7 +110,7 @@ impl Numbering {
     ///
     /// # Returns
     /// 파싱된 Numbering 구조체 / Parsed Numbering structure
-    pub fn parse(data: &[u8], version: u32) -> Result<Self, String> {
+    pub fn parse(data: &[u8], version: u32) -> Result<Self, HwpError> {
         let mut offset = 0;
         let mut levels = Vec::new();
 
@@ -162,7 +163,10 @@ impl Numbering {
                 // WCHAR array[format_length] 번호 형식 문자열 / WCHAR array[format_length] number format string
                 let format_bytes = len as usize * 2;
                 if offset + format_bytes <= data.len() {
-                    let str = decode_utf16le(&data[offset..offset + format_bytes])?;
+                    let str = decode_utf16le(&data[offset..offset + format_bytes])
+                        .map_err(|e| HwpError::EncodingError {
+                            reason: format!("Failed to decode numbering format: {}", e),
+                        })?;
                     offset += format_bytes;
                     (len, str)
                 } else {
@@ -227,7 +231,10 @@ impl Numbering {
                 // 확장 레벨 데이터가 불완전할 수 있음 / Extended level data may be incomplete
                 break;
             }
-            let format_string = decode_utf16le(&data[offset..offset + format_bytes])?;
+            let format_string = decode_utf16le(&data[offset..offset + format_bytes])
+                .map_err(|e| HwpError::EncodingError {
+                    reason: format!("Failed to decode extended numbering format: {}", e),
+                })?;
             offset += format_bytes;
 
             extended_levels.push(ExtendedNumberingLevel {

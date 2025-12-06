@@ -4,6 +4,7 @@
 ///
 /// `PrvText` 스트림에는 미리보기 텍스트가 유니코드 문자열로 저장됩니다.
 /// The `PrvText` stream contains preview text stored as Unicode string.
+use crate::error::HwpError;
 use crate::types::decode_utf16le;
 use serde::{Deserialize, Serialize};
 
@@ -28,9 +29,12 @@ impl PreviewText {
     /// According to spec 3.2.6, the PrvText stream contains preview text stored as Unicode string.
     /// UTF-16LE 형식으로 저장되므로 decode_utf16le 함수를 사용하여 디코딩합니다.
     /// Since it's stored in UTF-16LE format, we use decode_utf16le function to decode it.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // UTF-16LE 디코딩 / Decode UTF-16LE
-        let text = decode_utf16le(data)?;
+        let text = decode_utf16le(data)
+            .map_err(|e| HwpError::EncodingError {
+                reason: format!("Failed to decode preview text: {}", e),
+            })?;
 
         Ok(PreviewText { text })
     }

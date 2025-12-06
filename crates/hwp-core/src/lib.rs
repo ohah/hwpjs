@@ -5,6 +5,7 @@
 pub mod cfb;
 pub mod decompress;
 pub mod document;
+pub mod error;
 pub mod types;
 pub mod viewer;
 
@@ -18,6 +19,7 @@ pub use document::{
     FaceName, FileHeader, HwpDocument, IdMappings, Numbering, ParaShape, Section,
     SummaryInformation, TabDef,
 };
+pub use error::{CompressionFormat, HwpError};
 pub use types::{
     RecordHeader, BYTE, COLORREF, DWORD, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT,
     UINT16, UINT32, UINT8, WCHAR, WORD,
@@ -41,7 +43,7 @@ impl HwpParser {
     ///
     /// # Returns
     /// Parsed HWP document structure
-    pub fn parse(&self, data: &[u8]) -> Result<HwpDocument, String> {
+    pub fn parse(&self, data: &[u8]) -> Result<HwpDocument, HwpError> {
         // Parse CFB structure
         let mut cfb = CfbParser::parse(data)?;
 
@@ -64,9 +66,9 @@ impl HwpParser {
     fn parse_fileheader(
         &self,
         cfb: &mut CompoundFile<Cursor<&[u8]>>,
-    ) -> Result<FileHeader, String> {
+    ) -> Result<FileHeader, HwpError> {
         let fileheader_data = CfbParser::read_stream(cfb, "FileHeader")?;
-        FileHeader::parse(&fileheader_data)
+        FileHeader::parse(&fileheader_data).map_err(|e| error::HwpError::from(e))
     }
 
     /// Parse DocInfo stream
@@ -74,9 +76,9 @@ impl HwpParser {
         &self,
         cfb: &mut CompoundFile<Cursor<&[u8]>>,
         fileheader: &FileHeader,
-    ) -> Result<DocInfo, String> {
+    ) -> Result<DocInfo, HwpError> {
         let docinfo_data = CfbParser::read_stream(cfb, "DocInfo")?;
-        DocInfo::parse(&docinfo_data, fileheader)
+        DocInfo::parse(&docinfo_data, fileheader).map_err(|e| error::HwpError::from(e))
     }
 
     /// Parse BodyText storage
@@ -86,13 +88,13 @@ impl HwpParser {
         cfb: &mut CompoundFile<Cursor<&[u8]>>,
         fileheader: &FileHeader,
         doc_info: &DocInfo,
-    ) -> Result<BodyText, String> {
+    ) -> Result<BodyText, HwpError> {
         let section_count = doc_info
             .document_properties
             .as_ref()
             .map(|props| props.area_count)
             .unwrap_or(1); // 기본값은 1 / Default is 1
-        BodyText::parse(cfb, fileheader, section_count)
+        BodyText::parse(cfb, fileheader, section_count).map_err(|e| error::HwpError::from(e))
     }
 
     /// Parse BinData storage
@@ -102,9 +104,10 @@ impl HwpParser {
         &self,
         cfb: &mut CompoundFile<Cursor<&[u8]>>,
         doc_info: &DocInfo,
-    ) -> Result<BinData, String> {
+    ) -> Result<BinData, HwpError> {
         use crate::document::BinaryDataFormat;
         BinData::parse(cfb, BinaryDataFormat::Base64, &doc_info.bin_data)
+            .map_err(|e| error::HwpError::from(e))
     }
 
     // ===== Optional parsing methods =====
@@ -273,7 +276,7 @@ impl HwpParser {
     fn read_summary_information_stream(
         cfb: &mut CompoundFile<Cursor<&[u8]>>,
         data: &[u8],
-    ) -> Result<Vec<u8>, String> {
+    ) -> Result<Vec<u8>, HwpError> {
         const STREAM_NAMES: &[&str] = &[
             "\u{0005}HwpSummaryInformation",
             "\x05HwpSummaryInformation",
@@ -304,16 +307,17 @@ impl HwpParser {
     ///
     /// # Returns
     /// FileHeader as JSON string
-    pub fn parse_fileheader_json(&self, data: &[u8]) -> Result<String, String> {
+    pub fn parse_fileheader_json(&self, data: &[u8]) -> Result<String, HwpError> {
         // Parse CFB structure
         let mut cfb = CfbParser::parse(data)?;
 
         // Read and parse FileHeader
         let fileheader_data = CfbParser::read_stream(&mut cfb, "FileHeader")?;
-        let fileheader = FileHeader::parse(&fileheader_data)?;
+        let fileheader =
+            FileHeader::parse(&fileheader_data).map_err(|e| error::HwpError::from(e))?;
 
         // Convert to JSON
-        fileheader.to_json()
+        fileheader.to_json().map_err(|e| error::HwpError::from(e))
     }
 
     /// Parse HWP file and return SummaryInformation as JSON
@@ -323,7 +327,7 @@ impl HwpParser {
     ///
     /// # Returns
     /// SummaryInformation as JSON string, or empty JSON object if not found
-    pub fn parse_summary_information_json(&self, data: &[u8]) -> Result<String, String> {
+    pub fn parse_summary_information_json(&self, data: &[u8]) -> Result<String, HwpError> {
         // Parse CFB structure
         let mut cfb = CfbParser::parse(data)?;
 
@@ -331,17 +335,16 @@ impl HwpParser {
         match Self::read_summary_information_stream(&mut cfb, data) {
             Ok(summary_bytes) => {
                 let summary_information =
-                    crate::document::SummaryInformation::parse(&summary_bytes)?;
+                    crate::document::SummaryInformation::parse(&summary_bytes)
+                        .map_err(|e| error::HwpError::from(e))?;
                 // Convert to JSON
-                serde_json::to_string_pretty(&summary_information)
-                    .map_err(|e| format!("Failed to serialize SummaryInformation to JSON: {}", e))
+                serde_json::to_string_pretty(&summary_information).map_err(error::HwpError::from)
             }
             Err(_) => {
                 // 스트림이 없으면 빈 SummaryInformation을 JSON으로 반환
                 // If stream doesn't exist, return empty SummaryInformation as JSON
                 let empty_summary = crate::document::SummaryInformation::default();
-                serde_json::to_string_pretty(&empty_summary)
-                    .map_err(|e| format!("Failed to serialize SummaryInformation to JSON: {}", e))
+                serde_json::to_string_pretty(&empty_summary).map_err(error::HwpError::from)
             }
         }
     }

@@ -5,6 +5,7 @@
 /// - 스펙 문서에 상세 구조가 명시되어 있지 않음 / Spec document does not specify detailed structure
 /// - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_TEXTART 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_TEXTART records
+use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
 /// 글맵시 개체 / Text art shape component
@@ -37,7 +38,7 @@ impl ShapeComponentTextArt {
     /// 실제 HWP 파일에 SHAPE_COMPONENT_TEXTART 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_TEXTART records, so it has not been verified with actual files.
     /// If an actual HWP file contains SHAPE_COMPONENT_TEXTART records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         Ok(ShapeComponentTextArt {
             raw_data: data.to_vec(),
         })

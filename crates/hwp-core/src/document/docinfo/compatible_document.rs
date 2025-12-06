@@ -1,6 +1,7 @@
 /// CompatibleDocument 구조체 / CompatibleDocument structure
 ///
 /// 스펙 문서 매핑: 표 54 - 호환 문서 / Spec mapping: Table 54 - Compatible document
+use crate::error::HwpError;
 use crate::types::UINT32;
 use serde::{Deserialize, Serialize};
 
@@ -31,12 +32,9 @@ impl CompatibleDocument {
     ///
     /// # Returns
     /// 파싱된 CompatibleDocument 구조체 / Parsed CompatibleDocument structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 4 {
-            return Err(format!(
-                "CompatibleDocument must be 4 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("CompatibleDocument", 4, data.len()));
         }
 
         let target_program_value = UINT32::from_le_bytes([data[0], data[1], data[2], data[3]]);
@@ -45,10 +43,11 @@ impl CompatibleDocument {
             1 => TargetProgram::Hwp2007,
             2 => TargetProgram::MsWord,
             _ => {
-                return Err(format!(
-                    "Unknown target program: {} (expected 0, 1, or 2)",
-                    target_program_value
-                ));
+                return Err(HwpError::UnexpectedValue {
+                    field: "CompatibleDocument target_program".to_string(),
+                    expected: "0, 1, or 2".to_string(),
+                    found: target_program_value.to_string(),
+                });
             }
         };
 

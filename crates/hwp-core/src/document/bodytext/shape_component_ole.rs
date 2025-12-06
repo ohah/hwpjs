@@ -6,6 +6,7 @@
 /// - 구현 완료 / Implementation complete
 /// - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_OLE 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_OLE records
+use crate::error::HwpError;
 use crate::types::{COLORREF, INT32, UINT16, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -82,14 +83,11 @@ impl ShapeComponentOle {
     /// 실제 HWP 파일에 SHAPE_COMPONENT_OLE 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_OLE records, so it has not been verified with actual files.
     /// If an actual HWP file contains SHAPE_COMPONENT_OLE records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 표 118: OLE 개체 속성은 24바이트 / Table 118: OLE shape component attributes is 24 bytes
         // UINT16(2) + INT32(4) + INT32(4) + UINT16(2) + COLORREF(4) + INT32(4) + UINT32(4) = 24 bytes
         if data.len() < 24 {
-            return Err(format!(
-                "ShapeComponentOle must be at least 24 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ShapeComponentOle", 24, data.len()));
         }
 
         let mut offset = 0;

@@ -5,6 +5,7 @@
 /// 스펙 문서 매핑: 표 2 - 바이너리 데이터 (BinData 스토리지)
 use crate::decompress::decompress_deflate;
 use crate::document::docinfo::BinDataRecord;
+use crate::error::HwpError;
 use crate::types::WORD;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use cfb::CompoundFile;
@@ -57,7 +58,7 @@ impl BinData {
         cfb: &mut CompoundFile<Cursor<&[u8]>>,
         output_format: BinaryDataFormat,
         bin_data_records: &[BinDataRecord],
-    ) -> Result<Self, String> {
+    ) -> Result<Self, HwpError> {
         let mut items = Vec::new();
 
         // 표 17의 bin_data_records를 사용하여 스트림을 찾습니다 (EMBEDDING/STORAGE 타입만)

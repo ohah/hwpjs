@@ -6,6 +6,7 @@
 /// - 구현 완료 / Implementation complete
 /// - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_ELLIPSE 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_ELLIPSE records
+use crate::error::HwpError;
 use crate::types::{INT32, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -81,14 +82,11 @@ impl ShapeComponentEllipse {
     /// 실제 HWP 파일에 SHAPE_COMPONENT_ELLIPSE 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_ELLIPSE records, so it has not been verified with actual files.
     /// If an actual HWP file contains SHAPE_COMPONENT_ELLIPSE records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 표 96: 타원 개체 속성은 60바이트 / Table 96: Ellipse shape component attributes is 60 bytes
         // UINT32(4) + INT32(4) * 14 = 60 bytes
         if data.len() < 60 {
-            return Err(format!(
-                "ShapeComponentEllipse must be at least 60 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ShapeComponentEllipse", 60, data.len()));
         }
 
         let mut offset = 0;

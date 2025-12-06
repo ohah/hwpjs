@@ -10,6 +10,7 @@ pub use script::Script;
 pub use script_version::ScriptVersion;
 
 use crate::cfb::CfbParser;
+use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
 /// Scripts structure
@@ -39,7 +40,7 @@ impl Scripts {
     /// According to spec 3.2.9, Scripts storage contains the following streams:
     /// - JScriptVersion: Script version (Table 8)
     /// - DefaultJScript: Script content (Table 9)
-    pub fn parse(cfb: &mut cfb::CompoundFile<std::io::Cursor<&[u8]>>) -> Result<Self, String> {
+    pub fn parse(cfb: &mut cfb::CompoundFile<std::io::Cursor<&[u8]>>) -> Result<Self, HwpError> {
         let mut scripts = Scripts::default();
 
         // Parse JScriptVersion stream

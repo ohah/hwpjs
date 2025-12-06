@@ -1,6 +1,7 @@
 /// CtrlHeader 구조체 / CtrlHeader structure
 ///
 /// 스펙 문서 매핑: 표 64 - 컨트롤 헤더 / Spec mapping: Table 64 - Control header
+use crate::error::HwpError;
 use crate::types::{
     decode_utf16le, HWPUNIT, HWPUNIT16, INT32, INT8, SHWPUNIT, UINT16, UINT32, UINT8,
 };
@@ -608,12 +609,9 @@ impl CtrlHeader {
     ///
     /// # Returns
     /// 파싱된 CtrlHeader 구조체 / Parsed CtrlHeader structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 4 {
-            return Err(format!(
-                "CtrlHeader must be at least 4 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("CtrlHeader", 4, data.len()));
         }
 
         // UINT32 컨트롤 ID / UINT32 control ID
@@ -712,14 +710,11 @@ impl CtrlHeader {
 }
 
 /// 필드 파싱 (표 152) / Parse field (Table 152)
-fn parse_field(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_field(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 15바이트 필요 (ctrl ID + attribute + other_attr + command_len + id)
     // Need at least 15 bytes (ctrl ID + attribute + other_attr + command_len + id)
     if data.len() < 15 {
-        return Err(format!(
-            "Field data must be at least 15 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Field data", 15, data.len()));
     }
 
     let mut offset = 0;
@@ -786,7 +781,7 @@ fn parse_field(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 개체 공통 속성 파싱 (표 69) / Parse object common properties (Table 69)
-fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 표 69 구조 분석:
     // 컨트롤 ID 제외 후: attribute(4) + offset_y(4) + offset_x(4) + width(4) + height(4) + z_order(4) + margin(8) + instance_id(4) + page_divide(4) = 40바이트
     // description_len(2) + description(2×len) = 추가 바이트
@@ -796,10 +791,7 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, String> {
     // description_len(2) + description(2×len) = additional bytes
     // Therefore, 40 bytes is a valid size (up to page_divide, without description)
     if data.len() < 40 {
-        return Err(format!(
-            "Object common properties must be at least 40 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Object common properties", 40, data.len()));
     }
 
     let mut offset = 0;
@@ -937,13 +929,10 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 쪽 번호 위치 파싱 (표 147) / Parse page number position (Table 147)
-fn parse_page_number_position(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_page_number_position(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 12바이트 필요 / Need at least 12 bytes
     if data.len() < 12 {
-        return Err(format!(
-            "PageNumberPosition must be at least 12 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("PageNumberPosition", 12, data.len()));
     }
 
     let mut offset = 0;
@@ -1106,14 +1095,11 @@ fn parse_object_attribute(value: UINT32) -> ObjectAttribute {
 }
 
 /// 구역 정의 파싱 (표 129) / Parse section definition (Table 129)
-fn parse_section_definition(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_section_definition(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 24바이트 필요 (기본 필드만) / Need at least 24 bytes (basic fields only)
     // 실제 파일에서는 하위 레코드가 별도로 저장되므로 기본 필드만 파싱 / In actual files, sub-records are stored separately, so only parse basic fields
     if data.len() < 24 {
-        return Err(format!(
-            "Section definition must be at least 24 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Section definition", 24, data.len()));
     }
 
     let mut offset = 0;
@@ -1224,13 +1210,10 @@ fn parse_section_definition(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 단 정의 파싱 (표 138) / Parse column definition (Table 138)
-fn parse_column_definition(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_column_definition(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 12바이트 필요 (기본 필드만) / Need at least 12 bytes (basic fields only)
     if data.len() < 12 {
-        return Err(format!(
-            "Column definition must be at least 12 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Column definition", 12, data.len()));
     }
 
     let mut offset = 0;
@@ -1348,13 +1331,10 @@ fn parse_column_definition(data: &[u8]) -> Result<CtrlHeaderData, String> {
 /// Spec says 14 bytes, but actual files may have variable length.
 /// Based on libhwp implementation, variable length is handled by comparing
 /// record header size with bytes read so far. Current implementation uses data length as criteria.
-fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 4바이트(속성)는 필요 / Need at least 4 bytes (attribute)
     if data.len() < 4 {
-        return Err(format!(
-            "Header/Footer must be at least 4 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Header/Footer", 4, data.len()));
     }
 
     let mut offset = 0;
@@ -1426,13 +1406,10 @@ fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 각주/미주 파싱 (표 4.3.10.4) / Parse footnote/endnote (Table 4.3.10.4)
-fn parse_footnote_endnote(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_footnote_endnote(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 8바이트 필요 / Need 8 bytes
     if data.len() < 8 {
-        return Err(format!(
-            "Footnote/endnote must be at least 8 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Footnote/endnote", 8, data.len()));
     }
 
     // 바이트 0: 각주/미주 번호 (UINT8) / Byte 0: Footnote/endnote number (UINT8)
@@ -1457,13 +1434,10 @@ fn parse_footnote_endnote(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 자동번호 파싱 (표 142) / Parse auto number (Table 142)
-fn parse_auto_number(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_auto_number(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 12바이트 필요 / Need at least 12 bytes
     if data.len() < 12 {
-        return Err(format!(
-            "Auto number must be at least 12 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Auto number", 12, data.len()));
     }
 
     let mut offset = 0;
@@ -1503,13 +1477,10 @@ fn parse_auto_number(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 새 번호 지정 파싱 (표 144) / Parse new number specification (Table 144)
-fn parse_new_number(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_new_number(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 8바이트 필요 / Need at least 8 bytes
     if data.len() < 8 {
-        return Err(format!(
-            "New number must be at least 8 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("New number", 8, data.len()));
     }
 
     let mut offset = 0;
@@ -1531,13 +1502,10 @@ fn parse_new_number(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 감추기 파싱 (표 145) / Parse hide (Table 145)
-fn parse_hide(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_hide(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 2바이트 필요 / Need at least 2 bytes
     if data.len() < 2 {
-        return Err(format!(
-            "Hide must be at least 2 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Hide", 2, data.len()));
     }
 
     // UINT 속성 (감출 대상) / Attribute (hide target)
@@ -1547,13 +1515,10 @@ fn parse_hide(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 홀/짝수 조정 파싱 (표 146) / Parse page adjustment (Table 146)
-fn parse_page_adjust(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_page_adjust(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 4바이트 필요 / Need at least 4 bytes
     if data.len() < 4 {
-        return Err(format!(
-            "Page adjust must be at least 4 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Page adjust", 4, data.len()));
     }
 
     // UINT32 속성 (bit 0-1: 홀/짝수 구분) / Attribute (bit 0-1: odd/even page distinction)
@@ -1563,13 +1528,10 @@ fn parse_page_adjust(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 찾아보기 표식 파싱 (표 149) / Parse bookmark marker (Table 149)
-fn parse_bookmark_marker(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_bookmark_marker(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 6바이트 필요 (키워드 길이 2개 + dummy) / Need at least 6 bytes (2 keyword lengths + dummy)
     if data.len() < 6 {
-        return Err(format!(
-            "Bookmark marker must be at least 6 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Bookmark marker", 6, data.len()));
     }
 
     let mut offset = 0;
@@ -1608,13 +1570,10 @@ fn parse_bookmark_marker(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 글자 겹침 파싱 (표 150) / Parse character overlap (Table 150)
-fn parse_overlap(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_overlap(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 10바이트 필요 / Need at least 10 bytes
     if data.len() < 10 {
-        return Err(format!(
-            "Overlap must be at least 10 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Overlap", 10, data.len()));
     }
 
     let mut offset = 0;
@@ -1703,13 +1662,10 @@ fn parse_overlap(data: &[u8]) -> Result<CtrlHeaderData, String> {
 }
 
 /// 덧말 파싱 (표 151) / Parse comment (Table 151)
-fn parse_comment(data: &[u8]) -> Result<CtrlHeaderData, String> {
+fn parse_comment(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 18바이트 필요 / Need at least 18 bytes
     if data.len() < 18 {
-        return Err(format!(
-            "Comment must be at least 18 bytes, got {} bytes",
-            data.len()
-        ));
+        return Err(HwpError::insufficient_data("Comment", 18, data.len()));
     }
 
     let mut offset = 0;

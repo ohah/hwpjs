@@ -1,6 +1,7 @@
 /// DistributeDocData 구조체 / DistributeDocData structure
 ///
 /// 스펙 문서 매핑: 표 53 - 배포용 문서 데이터 / Spec mapping: Table 53 - Distribution document data
+use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
 /// 배포용 문서 데이터 (표 53) / Distribution document data (Table 53)
@@ -18,12 +19,9 @@ impl DistributeDocData {
     ///
     /// # Returns
     /// 파싱된 DistributeDocData 구조체 / Parsed DistributeDocData structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 256 {
-            return Err(format!(
-                "DistributeDocData must be 256 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("DistributeDocData", 256, data.len()));
         }
 
         let doc_data = data[0..256].to_vec();

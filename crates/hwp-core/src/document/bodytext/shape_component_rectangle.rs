@@ -6,6 +6,7 @@
 /// - 구현 완료 / Implementation complete
 /// - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_RECTANGLE 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_RECTANGLE records
+use crate::error::HwpError;
 use crate::types::INT32;
 use serde::{Deserialize, Serialize};
 
@@ -63,14 +64,11 @@ impl ShapeComponentRectangle {
     /// 실제 HWP 파일에 SHAPE_COMPONENT_RECTANGLE 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_RECTANGLE records, so it has not been verified with actual files.
     /// If an actual HWP file contains SHAPE_COMPONENT_RECTANGLE records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 표 94: 사각형 개체 속성은 33바이트 / Table 94: Rectangle shape component attributes is 33 bytes
         // BYTE(1) + INT32 array[4](16) + INT32 array[4](16) = 33 bytes
         if data.len() < 33 {
-            return Err(format!(
-                "ShapeComponentRectangle must be at least 33 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ShapeComponentRectangle", 33, data.len()));
         }
 
         let mut offset = 0;

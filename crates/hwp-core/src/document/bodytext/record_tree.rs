@@ -2,6 +2,7 @@
 ///
 /// HWP 레코드는 계층 구조로 저장되며, 레벨 정보를 통해 트리 구조를 재구성할 수 있습니다.
 /// HWP records are stored in a hierarchical structure, and the tree structure can be reconstructed using level information.
+use crate::error::HwpError;
 use crate::types::RecordHeader;
 
 /// 레코드 트리 노드 / Record tree node
@@ -33,7 +34,7 @@ impl RecordTreeNode {
     ///
     /// # Returns
     /// 루트 노드 (레벨 0 레코드들이 자식으로 포함됨) / Root node (level 0 records are included as children)
-    pub fn parse_tree(data: &[u8]) -> Result<RecordTreeNode, String> {
+    pub fn parse_tree(data: &[u8]) -> Result<RecordTreeNode, HwpError> {
         let root = RecordTreeNode {
             header: RecordHeader {
                 tag_id: 0,
@@ -58,18 +59,18 @@ impl RecordTreeNode {
         while offset < data.len() {
             // 레코드 헤더 파싱 / Parse record header
             let remaining_data = &data[offset..];
-            let (header, header_size) = RecordHeader::parse(remaining_data)?;
+            let (header, header_size) = RecordHeader::parse(remaining_data)
+                .map_err(|e| HwpError::from(e))?;
             offset += header_size;
 
             // 데이터 영역 읽기 / Read data area
             let data_size = header.size as usize;
             if offset + data_size > data.len() {
-                return Err(format!(
-                    "Record data extends beyond section: offset={}, size={}, section_len={}",
-                    offset,
-                    data_size,
-                    data.len()
-                ));
+                return Err(HwpError::InsufficientData {
+                    field: format!("Record at offset {}", offset),
+                    expected: offset + data_size,
+                    actual: data.len(),
+                });
             }
 
             let record_data = &data[offset..offset + data_size];

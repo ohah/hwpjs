@@ -6,6 +6,7 @@
 /// - 구현 완료 / Implementation complete
 /// - 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_PICTURE 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain SHAPE_COMPONENT_PICTURE records
+use crate::error::HwpError;
 use crate::types::{COLORREF, HWPUNIT16, INT32, INT8, UINT16, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -122,16 +123,13 @@ impl ShapeComponentPicture {
     /// 실제 HWP 파일에 SHAPE_COMPONENT_PICTURE 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_PICTURE records, so it has not been verified with actual files.
     /// If an actual HWP file contains SHAPE_COMPONENT_PICTURE records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         let mut offset = 0;
 
         // 그림 개체 속성(표 107) 파싱 시작 / Start parsing picture shape component attributes (Table 107)
         // 최소 78바이트 필요 (고정 부분) / Need at least 78 bytes (fixed part)
         if data.len() < 78 {
-            return Err(format!(
-                "ShapeComponentPicture must be at least 78 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("ShapeComponentPicture", 78, data.len()));
         }
 
         // 표 107: 테두리 색 (COLORREF, 4바이트) / Table 107: Border color (COLORREF, 4 bytes)

@@ -2,6 +2,7 @@
 ///
 /// 스펙 문서 매핑: 표 4 - 금칙처리 문자 / Spec mapping: Table 4 - Forbidden character
 /// 상세 구조는 스펙 문서에 명시되지 않음 / Detailed structure not specified in spec
+use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
 /// 금칙처리 문자 / Forbidden character
@@ -20,7 +21,7 @@ impl ForbiddenChar {
     ///
     /// # Returns
     /// 파싱된 ForbiddenChar 구조체 / Parsed ForbiddenChar structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         Ok(ForbiddenChar {
             raw_data: data.to_vec(),
         })

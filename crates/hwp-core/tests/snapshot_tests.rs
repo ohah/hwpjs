@@ -510,7 +510,7 @@ fn test_parse_all_fixtures() {
                             .file_name()
                             .and_then(|n| n.to_str())
                             .unwrap_or(file_path);
-                        error_files.push((file_name.to_string(), version_str, e.clone()));
+                        error_files.push((file_name.to_string(), version_str, e.to_string()));
                         eprintln!("Failed to parse {}: {}", file_path, e);
                     }
                 }

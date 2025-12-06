@@ -3,6 +3,7 @@
 /// 스펙 문서 매핑: 표 42 - 글머리표 / Spec mapping: Table 42 - Bullet
 /// Tag ID: HWPTAG_BULLET
 /// 전체 길이: 20바이트 (표 42) 또는 가변 (레거시 코드 기준) / Total length: 20 bytes (Table 42) or variable (legacy code)
+use crate::error::HwpError;
 use crate::types::{BYTE, HWPUNIT16, INT32, UINT32, WCHAR};
 use serde::{Deserialize, Serialize};
 
@@ -105,13 +106,10 @@ impl Bullet {
     ///
     /// # Returns
     /// 파싱된 Bullet 구조체 / Parsed Bullet structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 레거시 코드 기준 최소 12바이트 필요 (속성 4 + 너비 2 + 거리 2 + 글자모양ID 4) / Need at least 12 bytes based on legacy code
         if data.len() < 12 {
-            return Err(format!(
-                "Bullet must be at least 12 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("Bullet", 12, data.len()));
         }
 
         let mut offset = 0;

@@ -6,6 +6,7 @@
 /// - 구현 완료 / Implementation complete
 /// - 테스트 파일(`noori.hwp`)에 EQEDIT 레코드가 없어 실제 파일로 테스트되지 않음
 /// - Implementation complete, but not tested with actual file as test file (`noori.hwp`) does not contain EQEDIT records
+use crate::error::HwpError;
 use crate::types::{decode_utf16le, COLORREF, HWPUNIT, INT16, UINT16, UINT32};
 use serde::{Deserialize, Serialize};
 
@@ -57,13 +58,10 @@ impl EqEdit {
     /// 실제 HWP 파일에 EQEDIT 레코드가 있으면 자동으로 파싱됩니다.
     /// Current test file (`noori.hwp`) does not contain EQEDIT records, so it has not been verified with actual files.
     /// If an actual HWP file contains EQEDIT records, they will be automatically parsed.
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 최소 16바이트 필요 (len=0일 때) / Need at least 16 bytes (when len=0)
         if data.len() < 16 {
-            return Err(format!(
-                "EqEdit must be at least 16 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("EqEdit", 16, data.len()));
         }
 
         let mut offset = 0;
@@ -88,17 +86,19 @@ impl EqEdit {
         // = 16 + 6×len
         let required_bytes = 16 + 6 * script_length_usize;
         if data.len() < required_bytes {
-            return Err(format!(
-                "EqEdit must be at least {} bytes for script length {}, got {} bytes",
-                required_bytes,
-                script_length_usize,
-                data.len()
-            ));
+            return Err(HwpError::InsufficientData {
+                field: format!("EqEdit (script_length={})", script_length_usize),
+                expected: required_bytes,
+                actual: data.len(),
+            });
         }
 
         // 표 105: 한글 수식 스크립트 (WCHAR array[len], 2×len 바이트) / Table 105: HWP equation script (WCHAR array[len], 2×len bytes)
         let script_bytes = &data[offset..offset + 2 * script_length_usize];
-        let script = decode_utf16le(script_bytes)?;
+        let script = decode_utf16le(script_bytes)
+            .map_err(|e| HwpError::EncodingError {
+                reason: format!("Failed to decode EqEdit script: {}", e),
+            })?;
         offset += 2 * script_length_usize;
 
         // 표 105: 수식 글자 크기 (HWPUNIT, 4바이트) / Table 105: Equation character size (HWPUNIT, 4 bytes)
@@ -127,12 +127,18 @@ impl EqEdit {
 
         // 표 105: 수식 버전 정보 (WCHAR array[len], 2×len 바이트) / Table 105: Equation version information (WCHAR array[len], 2×len bytes)
         let version_bytes = &data[offset..offset + 2 * script_length_usize];
-        let version_info = decode_utf16le(version_bytes)?;
+        let version_info = decode_utf16le(version_bytes)
+            .map_err(|e| HwpError::EncodingError {
+                reason: format!("Failed to decode EqEdit version_info: {}", e),
+            })?;
         offset += 2 * script_length_usize;
 
         // 표 105: 수식 폰트 이름 (WCHAR array[len], 2×len 바이트) / Table 105: Equation font name (WCHAR array[len], 2×len bytes)
         let font_bytes = &data[offset..offset + 2 * script_length_usize];
-        let font_name = decode_utf16le(font_bytes)?;
+        let font_name = decode_utf16le(font_bytes)
+            .map_err(|e| HwpError::EncodingError {
+                reason: format!("Failed to decode EqEdit font_name: {}", e),
+            })?;
         offset += 2 * script_length_usize;
 
         Ok(EqEdit {

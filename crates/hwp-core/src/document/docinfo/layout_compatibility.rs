@@ -1,6 +1,7 @@
 /// LayoutCompatibility 구조체 / LayoutCompatibility structure
 ///
 /// 스펙 문서 매핑: 표 56 - 레이아웃 호환성 / Spec mapping: Table 56 - Layout compatibility
+use crate::error::HwpError;
 use crate::types::UINT32;
 use serde::{Deserialize, Serialize};
 
@@ -27,12 +28,9 @@ impl LayoutCompatibility {
     ///
     /// # Returns
     /// 파싱된 LayoutCompatibility 구조체 / Parsed LayoutCompatibility structure
-    pub fn parse(data: &[u8]) -> Result<Self, String> {
+    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 20 {
-            return Err(format!(
-                "LayoutCompatibility must be 20 bytes, got {} bytes",
-                data.len()
-            ));
+            return Err(HwpError::insufficient_data("LayoutCompatibility", 20, data.len()));
         }
 
         Ok(LayoutCompatibility {
