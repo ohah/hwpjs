@@ -1,0 +1,59 @@
+# HWP 문서
+
+
+
+**버전**: 5.00.01.07
+
+
+
+|HHHHHHHHHHHHHH
+
+|HHHHHHHHHHHHHH
+
+|H 글자에 따라 150%
+
+|HHHHHHHHHHHHHH
+
+|H 고정 값 15pt
+
+|HHHHHHHHHHHHHH
+
+|H 여백만 지정 5pt
+
+|HHHHHHHHHHHHHH
+
+|H 글자에 따라 100%
+
+|HHHHHHHHHHHHHH
+
+|H 고정 값 10pt
+
+|HHHHHHHHHHHHHH
+
+|H 여백만 지정 0pt
+
+|HHHHHHHHHHHHHH
+
+|H 글자에 따라 200%
+
+|HHHHHHHHHHHHHH
+
+|H 고정 값 20pt
+
+|HHHHHHHHHHHHHH
+
+|H 여백만 지정 10pt
+
+|HHHHHHHHHHHHHH
+
+|H 글자에 따라 100%
+
+|HHHHHHHHHHHHHH
+
+|H 고정 값 0pt
+
+|HHHHHHHHHHHHHH
+
+|H 여백만 지정 0pt
+
+|HHHHHHHHHHHHHH

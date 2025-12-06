@@ -1,0 +1,4078 @@
+{
+  "file_header": {
+    "signature": "HWP Document File",
+    "version": "5.0.1.7",
+    "document_flags": [
+      "compressed"
+    ],
+    "license_flags": [],
+    "encrypt_version": 0,
+    "kogl_country": 0
+  },
+  "doc_info": {
+    "document_properties": {
+      "area_count": 1,
+      "start_number_info": 0,
+      "page_start_number": 1,
+      "footnote_start_number": 1,
+      "endnote_start_number": 1,
+      "image_start_number": 1,
+      "table_start_number": 1,
+      "formula_start_number": 1,
+      "list_id": 0,
+      "paragraph_id": 11,
+      "character_position": 9
+    },
+    "id_mappings": {
+      "binary_data": 2,
+      "font_korean": 2,
+      "font_english": 2,
+      "font_chinese": 2,
+      "font_japanese": 2,
+      "font_other": 2,
+      "font_symbol": 2,
+      "font_user": 2,
+      "border_fill": 1,
+      "char_shape": 5,
+      "tab_def": 3,
+      "paragraph_numbering": 1,
+      "bullet": 0,
+      "paragraph_shape": 12,
+      "style": 14,
+      "memo_shape": 0,
+      "track_change": null,
+      "track_change_author": null
+    },
+    "bin_data": [
+      {
+        "storage_type": "EMBEDDING",
+        "attributes": {
+          "storage_type": "EMBEDDING",
+          "compression": "storage_default",
+          "access": "never"
+        },
+        "embedding": {
+          "binary_data_id": 12,
+          "extension": "jpg"
+        }
+      },
+      {
+        "storage_type": "EMBEDDING",
+        "attributes": {
+          "storage_type": "EMBEDDING",
+          "compression": "storage_default",
+          "access": "never"
+        },
+        "embedding": {
+          "binary_data_id": 11,
+          "extension": "jpg"
+        }
+      }
+    ],
+    "face_names": [
+      {
+        "name": "굴림",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 11,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Gulim"
+      },
+      {
+        "name": "바탕",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 3,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Batang"
+      },
+      {
+        "name": "굴림",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 11,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Gulim"
+      },
+      {
+        "name": "바탕",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 3,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Batang"
+      },
+      {
+        "name": "굴림",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 11,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Gulim"
+      },
+      {
+        "name": "바탕",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 3,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Batang"
+      },
+      {
+        "name": "굴림",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 11,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Gulim"
+      },
+      {
+        "name": "바탕",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 3,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Batang"
+      },
+      {
+        "name": "굴림",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 11,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Gulim"
+      },
+      {
+        "name": "바탕",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 3,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Batang"
+      },
+      {
+        "name": "굴림",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 11,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Gulim"
+      },
+      {
+        "name": "바탕",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 3,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Batang"
+      },
+      {
+        "name": "굴림",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 11,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Gulim"
+      },
+      {
+        "name": "바탕",
+        "alternative_font_type": null,
+        "alternative_font_name": null,
+        "font_type_info": {
+          "font_family": 2,
+          "serif": 3,
+          "bold": 6,
+          "proportion": 0,
+          "contrast": 0,
+          "stroke_variation": 1,
+          "stroke_type": 1,
+          "letter_type": 1,
+          "middle_line": 1,
+          "x_height": 1
+        },
+        "default_font_name": "Batang"
+      }
+    ],
+    "border_fill": [
+      {
+        "attributes": {
+          "has_3d_effect": false,
+          "has_shadow": false,
+          "slash_shape": 0,
+          "backslash_shape": 0,
+          "slash_broken_line": 0,
+          "backslash_broken_line": false,
+          "slash_rotated_180": false,
+          "backslash_rotated_180": false,
+          "has_center_line": false
+        },
+        "borders": [
+          {
+            "line_type": 0,
+            "width": 0,
+            "color": 0
+          },
+          {
+            "line_type": 0,
+            "width": 0,
+            "color": 0
+          },
+          {
+            "line_type": 0,
+            "width": 0,
+            "color": 0
+          },
+          {
+            "line_type": 0,
+            "width": 0,
+            "color": 0
+          }
+        ],
+        "diagonal": {
+          "line_type": 1,
+          "thickness": 0,
+          "color": 0
+        },
+        "fill": {
+          "type": "solid",
+          "background_color": 4294967295,
+          "pattern_color": 4278190080,
+          "pattern_type": -1
+        }
+      }
+    ],
+    "char_shapes": [
+      {
+        "font_ids": {
+          "korean": 1,
+          "english": 1,
+          "chinese": 1,
+          "japanese": 1,
+          "other": 1,
+          "symbol": 1,
+          "user": 1
+        },
+        "font_stretch": {
+          "korean": 95,
+          "english": 95,
+          "chinese": 95,
+          "japanese": 95,
+          "other": 95,
+          "symbol": 95,
+          "user": 95
+        },
+        "letter_spacing": {
+          "korean": -5,
+          "english": -5,
+          "chinese": -5,
+          "japanese": -5,
+          "other": -5,
+          "symbol": -5,
+          "user": -5
+        },
+        "relative_size": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "text_position": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "base_size": 900,
+        "attributes": {
+          "italic": false,
+          "bold": false,
+          "underline_type": 0,
+          "underline_style": 0,
+          "outline_type": 0,
+          "shadow_type": 0,
+          "emboss": false,
+          "engrave": false,
+          "superscript": false,
+          "subscript": false,
+          "strikethrough": 0,
+          "emphasis_mark": 0,
+          "use_font_spacing": false,
+          "strikethrough_style": 0,
+          "kerning": false
+        },
+        "shadow_spacing_x": 10,
+        "shadow_spacing_y": 10,
+        "text_color": 0,
+        "underline_color": 0,
+        "shading_color": 4294967295,
+        "shadow_color": 11711154,
+        "border_fill_id": null,
+        "strikethrough_color": null
+      },
+      {
+        "font_ids": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "font_stretch": {
+          "korean": 95,
+          "english": 95,
+          "chinese": 95,
+          "japanese": 95,
+          "other": 95,
+          "symbol": 95,
+          "user": 95
+        },
+        "letter_spacing": {
+          "korean": -5,
+          "english": -5,
+          "chinese": -5,
+          "japanese": -5,
+          "other": -5,
+          "symbol": -5,
+          "user": -5
+        },
+        "relative_size": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "text_position": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "base_size": 900,
+        "attributes": {
+          "italic": false,
+          "bold": false,
+          "underline_type": 0,
+          "underline_style": 0,
+          "outline_type": 0,
+          "shadow_type": 0,
+          "emboss": false,
+          "engrave": false,
+          "superscript": false,
+          "subscript": false,
+          "strikethrough": 0,
+          "emphasis_mark": 0,
+          "use_font_spacing": false,
+          "strikethrough_style": 0,
+          "kerning": false
+        },
+        "shadow_spacing_x": 10,
+        "shadow_spacing_y": 10,
+        "text_color": 0,
+        "underline_color": 0,
+        "shading_color": 4294967295,
+        "shadow_color": 11711154,
+        "border_fill_id": null,
+        "strikethrough_color": null
+      },
+      {
+        "font_ids": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "font_stretch": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "letter_spacing": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "relative_size": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "text_position": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "base_size": 1000,
+        "attributes": {
+          "italic": false,
+          "bold": false,
+          "underline_type": 0,
+          "underline_style": 0,
+          "outline_type": 0,
+          "shadow_type": 0,
+          "emboss": false,
+          "engrave": false,
+          "superscript": false,
+          "subscript": false,
+          "strikethrough": 0,
+          "emphasis_mark": 0,
+          "use_font_spacing": false,
+          "strikethrough_style": 0,
+          "kerning": false
+        },
+        "shadow_spacing_x": 10,
+        "shadow_spacing_y": 10,
+        "text_color": 0,
+        "underline_color": 0,
+        "shading_color": 4294967295,
+        "shadow_color": 11711154,
+        "border_fill_id": null,
+        "strikethrough_color": null
+      },
+      {
+        "font_ids": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "font_stretch": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "letter_spacing": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "relative_size": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "text_position": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "base_size": 900,
+        "attributes": {
+          "italic": false,
+          "bold": false,
+          "underline_type": 0,
+          "underline_style": 0,
+          "outline_type": 0,
+          "shadow_type": 0,
+          "emboss": false,
+          "engrave": false,
+          "superscript": false,
+          "subscript": false,
+          "strikethrough": 0,
+          "emphasis_mark": 0,
+          "use_font_spacing": false,
+          "strikethrough_style": 0,
+          "kerning": false
+        },
+        "shadow_spacing_x": 10,
+        "shadow_spacing_y": 10,
+        "text_color": 0,
+        "underline_color": 0,
+        "shading_color": 4294967295,
+        "shadow_color": 11711154,
+        "border_fill_id": null,
+        "strikethrough_color": null
+      },
+      {
+        "font_ids": {
+          "korean": 1,
+          "english": 1,
+          "chinese": 1,
+          "japanese": 1,
+          "other": 1,
+          "symbol": 1,
+          "user": 1
+        },
+        "font_stretch": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "letter_spacing": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "relative_size": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "text_position": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "base_size": 1000,
+        "attributes": {
+          "italic": false,
+          "bold": false,
+          "underline_type": 0,
+          "underline_style": 0,
+          "outline_type": 0,
+          "shadow_type": 0,
+          "emboss": false,
+          "engrave": false,
+          "superscript": false,
+          "subscript": false,
+          "strikethrough": 0,
+          "emphasis_mark": 0,
+          "use_font_spacing": false,
+          "strikethrough_style": 0,
+          "kerning": false
+        },
+        "shadow_spacing_x": 10,
+        "shadow_spacing_y": 10,
+        "text_color": 0,
+        "underline_color": 0,
+        "shading_color": 4294967295,
+        "shadow_color": 11711154,
+        "border_fill_id": null,
+        "strikethrough_color": null
+      }
+    ],
+    "tab_defs": [
+      {
+        "attributes": {
+          "has_left_auto_tab": false,
+          "has_right_auto_tab": false
+        },
+        "count": 0,
+        "tabs": []
+      },
+      {
+        "attributes": {
+          "has_left_auto_tab": true,
+          "has_right_auto_tab": false
+        },
+        "count": 0,
+        "tabs": []
+      },
+      {
+        "attributes": {
+          "has_left_auto_tab": false,
+          "has_right_auto_tab": true
+        },
+        "count": 0,
+        "tabs": []
+      }
+    ],
+    "numbering": [
+      {
+        "levels": [
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^1.",
+            "start_number": 268,
+            "level_start_number": 0
+          },
+          {
+            "attributes": {
+              "align_type": "right",
+              "instance_like": false,
+              "auto_outdent": false,
+              "distance_type": "value"
+            },
+            "width": -1,
+            "distance": 3,
+            "char_shape_id": 3276894,
+            "format_length": 46,
+            "format_string": "\f\u0000\u00002￿￿\u0003^3)Č\u0000\u00002￿￿\u0003^4)\f\u0000\u00002￿￿\u0004(^5)Č\u0000\u00002￿￿\u0004(^6),\u0000\u00002",
+            "start_number": 65535,
+            "level_start_number": 196607
+          }
+        ],
+        "extended_levels": []
+      }
+    ],
+    "bullets": [],
+    "para_shapes": [
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": true,
+          "blank_min_value": 0,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "none",
+          "paragraph_level": 0,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 0,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 160,
+        "line_spacing_old": 0,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": false,
+          "blank_min_value": 0,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "none",
+          "paragraph_level": 0,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 0,
+        "right_margin": 0,
+        "indent": -2620,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 130,
+        "line_spacing_old": 1,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": false,
+          "blank_min_value": 0,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "none",
+          "paragraph_level": 0,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 0,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 160,
+        "line_spacing_old": 0,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": false,
+          "blank_min_value": 0,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "none",
+          "paragraph_level": 0,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 3000,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 160,
+        "line_spacing_old": 0,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": false,
+          "blank_min_value": 20,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "outline",
+          "paragraph_level": 0,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 2000,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 160,
+        "line_spacing_old": 0,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": false,
+          "blank_min_value": 20,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "outline",
+          "paragraph_level": 1,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 4000,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 160,
+        "line_spacing_old": 0,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": false,
+          "blank_min_value": 20,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "outline",
+          "paragraph_level": 2,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 6000,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 160,
+        "line_spacing_old": 0,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": false,
+          "blank_min_value": 20,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "outline",
+          "paragraph_level": 3,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 8000,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 160,
+        "line_spacing_old": 0,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": false,
+          "blank_min_value": 20,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "outline",
+          "paragraph_level": 4,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 10000,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 160,
+        "line_spacing_old": 0,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": false,
+          "blank_min_value": 20,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "outline",
+          "paragraph_level": 5,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 12000,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 160,
+        "line_spacing_old": 0,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": false,
+          "blank_min_value": 20,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "outline",
+          "paragraph_level": 6,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 14000,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 160,
+        "line_spacing_old": 0,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "word",
+          "use_line_grid": false,
+          "blank_min_value": 0,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "none",
+          "paragraph_level": 0,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 0,
+        "right_margin": 0,
+        "indent": 0,
+        "outdent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 150,
+        "line_spacing_old": 2,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 0,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": null,
+        "attributes3": null,
+        "line_spacing": null
+      }
+    ],
+    "styles": [
+      {
+        "local_name": "바탕글",
+        "english_name": "Normal",
+        "style_type": "paragraph",
+        "next_style_id": 0,
+        "lang_id": 1042,
+        "para_shape_id": 2,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "본문",
+        "english_name": "Body",
+        "style_type": "paragraph",
+        "next_style_id": 1,
+        "lang_id": 1042,
+        "para_shape_id": 3,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "개요 1",
+        "english_name": "Outline 1",
+        "style_type": "paragraph",
+        "next_style_id": 2,
+        "lang_id": 1042,
+        "para_shape_id": 4,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "개요 2",
+        "english_name": "Outline 2",
+        "style_type": "paragraph",
+        "next_style_id": 3,
+        "lang_id": 1042,
+        "para_shape_id": 5,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "개요 3",
+        "english_name": "Outline 3",
+        "style_type": "paragraph",
+        "next_style_id": 4,
+        "lang_id": 1042,
+        "para_shape_id": 6,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "개요 4",
+        "english_name": "Outline 4",
+        "style_type": "paragraph",
+        "next_style_id": 5,
+        "lang_id": 1042,
+        "para_shape_id": 7,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "개요 5",
+        "english_name": "Outline 5",
+        "style_type": "paragraph",
+        "next_style_id": 6,
+        "lang_id": 1042,
+        "para_shape_id": 8,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "개요 6",
+        "english_name": "Outline 6",
+        "style_type": "paragraph",
+        "next_style_id": 7,
+        "lang_id": 1042,
+        "para_shape_id": 9,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "개요 7",
+        "english_name": "Outline 7",
+        "style_type": "paragraph",
+        "next_style_id": 8,
+        "lang_id": 1042,
+        "para_shape_id": 10,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "쪽 번호",
+        "english_name": "Page Number",
+        "style_type": "paragraph",
+        "next_style_id": 9,
+        "lang_id": 1042,
+        "para_shape_id": 2,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "머리말",
+        "english_name": "Header",
+        "style_type": "paragraph",
+        "next_style_id": 10,
+        "lang_id": 1042,
+        "para_shape_id": 11,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "각주",
+        "english_name": "Footnote",
+        "style_type": "paragraph",
+        "next_style_id": 11,
+        "lang_id": 1042,
+        "para_shape_id": 1,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "미주",
+        "english_name": "Endnote",
+        "style_type": "paragraph",
+        "next_style_id": 12,
+        "lang_id": 1042,
+        "para_shape_id": 1,
+        "char_shape_id": null
+      },
+      {
+        "local_name": "메모",
+        "english_name": "Memo",
+        "style_type": "paragraph",
+        "next_style_id": 13,
+        "lang_id": 1042,
+        "para_shape_id": 0,
+        "char_shape_id": null
+      }
+    ],
+    "doc_data": [],
+    "distribute_doc_data": null,
+    "compatible_document": null,
+    "layout_compatibility": null,
+    "track_change": null,
+    "memo_shapes": [],
+    "forbidden_chars": [],
+    "track_change_contents": [],
+    "track_change_authors": []
+  },
+  "body_text": {
+    "sections": [
+      {
+        "index": 0,
+        "paragraphs": [
+          {
+            "para_header": {
+              "text_char_count": 29,
+              "control_mask": 2052,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "section",
+                "multi_column"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "글자취급\n",
+                "control_char_positions": [
+                  {
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2"
+                  },
+                  {
+                    "position": 20,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 28,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 0,
+                    "line_height": 7560,
+                    "text_height": 7560,
+                    "baseline_distance": 6426,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "secd",
+                "ctrl_id_value": 1936024420,
+                "data_type": "section_definition",
+                "attribute": 0,
+                "column_spacing": 1134,
+                "vertical_alignment": 0,
+                "horizontal_alignment": 0,
+                "default_tip_spacing": 8000,
+                "number_para_shape_id": 1,
+                "page_number": 0,
+                "figure_number": 0,
+                "table_number": 0,
+                "equation_number": 0,
+                "language": 0,
+                "children": [
+                  {
+                    "type": "page_def",
+                    "page_def": {
+                      "paper_width": 59528,
+                      "paper_height": 84188,
+                      "left_margin": 8504,
+                      "right_margin": 8504,
+                      "top_margin": 5668,
+                      "bottom_margin": 4252,
+                      "header_margin": 4252,
+                      "footer_margin": 4252,
+                      "binding_margin": 0,
+                      "attributes": {
+                        "paper_direction": "vertical",
+                        "binding_method": "single_page"
+                      }
+                    }
+                  },
+                  {
+                    "type": "footnote_shape",
+                    "footnote_shape": {
+                      "attributes": {
+                        "number_shape": "arabic",
+                        "page_position": "separate",
+                        "numbering": "continue",
+                        "superscript": false,
+                        "prefix": false
+                      },
+                      "custom_symbol": 0,
+                      "front_decoration": 0,
+                      "back_decoration": 41,
+                      "start_number": 1,
+                      "breakline_length": -1,
+                      "breakline_top_margin": -1,
+                      "breakline_bottom_margin": 850,
+                      "remark_between_margin": 567,
+                      "breakline_type": 27,
+                      "breakline_thickness": 1,
+                      "breakline_color": 257
+                    }
+                  },
+                  {
+                    "type": "footnote_shape",
+                    "footnote_shape": {
+                      "attributes": {
+                        "number_shape": "arabic",
+                        "page_position": "separate",
+                        "numbering": "continue",
+                        "superscript": false,
+                        "prefix": false
+                      },
+                      "custom_symbol": 0,
+                      "front_decoration": 0,
+                      "back_decoration": 41,
+                      "start_number": 1,
+                      "breakline_length": 12280,
+                      "breakline_top_margin": 224,
+                      "breakline_bottom_margin": 850,
+                      "remark_between_margin": 567,
+                      "breakline_type": 0,
+                      "breakline_thickness": 0,
+                      "breakline_color": 257
+                    }
+                  },
+                  {
+                    "type": "page_border_fill",
+                    "page_border_fill": {
+                      "attributes": {
+                        "position_reference": "paper",
+                        "include_header": false,
+                        "include_footer": false,
+                        "fill_area": "paper"
+                      },
+                      "left_spacing": 1417,
+                      "right_spacing": 1417,
+                      "top_spacing": 1417,
+                      "bottom_spacing": 1417,
+                      "border_fill_id": 0
+                    }
+                  },
+                  {
+                    "type": "page_border_fill",
+                    "page_border_fill": {
+                      "attributes": {
+                        "position_reference": "paper",
+                        "include_header": false,
+                        "include_footer": false,
+                        "fill_area": "paper"
+                      },
+                      "left_spacing": 1417,
+                      "right_spacing": 1417,
+                      "top_spacing": 1417,
+                      "bottom_spacing": 1417,
+                      "border_fill_id": 0
+                    }
+                  },
+                  {
+                    "type": "page_border_fill",
+                    "page_border_fill": {
+                      "attributes": {
+                        "position_reference": "paper",
+                        "include_header": false,
+                        "include_footer": false,
+                        "fill_area": "paper"
+                      },
+                      "left_spacing": 1417,
+                      "right_spacing": 1417,
+                      "top_spacing": 1417,
+                      "bottom_spacing": 1417,
+                      "border_fill_id": 0
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "cold",
+                "ctrl_id_value": 1668246628,
+                "data_type": "column_definition"
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": true,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "para",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 0,
+                "width": 12600,
+                "height": 7560,
+                "z_order": 1,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1465824588,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 12600,
+                      "initial_height": 7560,
+                      "width": 12600,
+                      "height": 7560,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 6300,
+                        "y": 3780
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 20,
+              "control_mask": 2048,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 2,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "어울림 (양쪽 본문)\n",
+                "control_char_positions": [
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 19,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 0,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 19015,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": false,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 20,
+                    "vertical_position": 0,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 34843,
+                    "segment_width": 7677,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": true,
+                      "is_first_segment_of_line": false,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": false,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 1,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "square",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 5669,
+                "width": 15828,
+                "height": 9497,
+                "z_order": 4,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1468402558,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 15828,
+                      "initial_height": 9497,
+                      "width": 15828,
+                      "height": 9497,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 7914,
+                        "y": 4748
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 216,
+              "control_mask": 0,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 2,
+              "range_tag_count": 0,
+              "line_align_count": 12,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림\n",
+                "control_char_positions": [
+                  {
+                    "position": 215,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  },
+                  {
+                    "position": 215,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 1600,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 19015,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": false,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 21,
+                    "vertical_position": 1600,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 34843,
+                    "segment_width": 7677,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": false,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 29,
+                    "vertical_position": 3200,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 19015,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": false,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 50,
+                    "vertical_position": 3200,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 34843,
+                    "segment_width": 7677,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": false,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 58,
+                    "vertical_position": 4800,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 19015,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": false,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 80,
+                    "vertical_position": 4800,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 34843,
+                    "segment_width": 7677,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": false,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 88,
+                    "vertical_position": 6400,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 19015,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": false,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 109,
+                    "vertical_position": 6400,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 34843,
+                    "segment_width": 7677,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": false,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 117,
+                    "vertical_position": 8000,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 19015,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": false,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 138,
+                    "vertical_position": 8000,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 34843,
+                    "segment_width": 7677,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": false,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 146,
+                    "vertical_position": 9600,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 194,
+                    "vertical_position": 11200,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 20,
+              "control_mask": 2048,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "어울림 (왼쪽 본문)\n",
+                "control_char_positions": [
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 19,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 0,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": false,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "para",
+                  "horz_relative": 2,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "square",
+                  "object_text_position_option": "left_only",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 2835,
+                "width": 15828,
+                "height": 9497,
+                "z_order": 2,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1465824589,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 15828,
+                      "initial_height": 9497,
+                      "width": 15828,
+                      "height": 9497,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 7914,
+                        "y": 4748
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 216,
+              "control_mask": 0,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 7,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림\n",
+                "control_char_positions": [
+                  {
+                    "position": 215,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 1600,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 26,
+                    "vertical_position": 3200,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 53,
+                    "vertical_position": 4800,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 80,
+                    "vertical_position": 6400,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 106,
+                    "vertical_position": 8000,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 133,
+                    "vertical_position": 9600,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 181,
+                    "vertical_position": 11200,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 21,
+              "control_mask": 2048,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "어울림 (오른쪽 본문)\n",
+                "control_char_positions": [
+                  {
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 0,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 18663,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": false,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "para",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "square",
+                  "object_text_position_option": "right_only",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 2835,
+                "width": 15828,
+                "height": 9497,
+                "z_order": 5,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1468402559,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 15828,
+                      "initial_height": 9497,
+                      "width": 15828,
+                      "height": 9497,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 7914,
+                        "y": 4748
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 216,
+              "control_mask": 0,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 7,
+              "instance_id": 2147483648,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림\n",
+                "control_char_positions": [
+                  {
+                    "position": 215,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 1600,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 18663,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 26,
+                    "vertical_position": 3200,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 18663,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 53,
+                    "vertical_position": 4800,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 18663,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 80,
+                    "vertical_position": 6400,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 18663,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 106,
+                    "vertical_position": 8000,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 18663,
+                    "segment_width": 23857,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 133,
+                    "vertical_position": 9600,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 181,
+                    "vertical_position": 11200,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 20,
+              "control_mask": 2048,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "자리차지 (왼쪽정렬)\n",
+                "control_char_positions": [
+                  {
+                    "position": 11,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 19,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 9682,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": false,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 2835,
+                "width": 16138,
+                "height": 9682,
+                "z_order": 3,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1465824590,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 16138,
+                      "initial_height": 9682,
+                      "width": 16138,
+                      "height": 9682,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 8069,
+                        "y": 4841
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 21,
+              "control_mask": 2048,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "자리차지 (오른쪽정렬)\n",
+                "control_char_positions": [
+                  {
+                    "position": 12,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 9682,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": false,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 2,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 2835,
+                "width": 16138,
+                "height": 9682,
+                "z_order": 6,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1468402560,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 16138,
+                      "initial_height": 9682,
+                      "width": 16138,
+                      "height": 9682,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 8069,
+                        "y": 4841
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 21,
+              "control_mask": 2048,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "자리차지 (가운데정렬)\n",
+                "control_char_positions": [
+                  {
+                    "position": 12,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 9682,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": false,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 1,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": -2835,
+                "width": 16138,
+                "height": 9682,
+                "z_order": 7,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1468402561,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 16138,
+                      "initial_height": 9682,
+                      "width": 16138,
+                      "height": 9682,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 8069,
+                        "y": 4841
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 20,
+              "control_mask": 2048,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "자리차지 (안쪽정렬)\n",
+                "control_char_positions": [
+                  {
+                    "position": 11,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 19,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 9682,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": false,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 3,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 2835,
+                "width": 16138,
+                "height": 9682,
+                "z_order": 8,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1468402562,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 16138,
+                      "initial_height": 9682,
+                      "width": 16138,
+                      "height": 9682,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 8069,
+                        "y": 4841
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 21,
+              "control_mask": 2048,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "자리차지 (바깥쪽정렬)\n",
+                "control_char_positions": [
+                  {
+                    "position": 12,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 9682,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": false,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 4,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "tight",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 2835,
+                "width": 16138,
+                "height": 9682,
+                "z_order": 9,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1468402563,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 16138,
+                      "initial_height": 9682,
+                      "width": 16138,
+                      "height": 9682,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 8069,
+                        "y": 4841
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 12,
+              "control_mask": 2048,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "글뒤로\n",
+                "control_char_positions": [
+                  {
+                    "position": 3,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 11,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 0,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": false,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "through",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 0,
+                "offset_x": 0,
+                "width": 16635,
+                "height": 9981,
+                "z_order": 0,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1465824591,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 16635,
+                      "initial_height": 9981,
+                      "width": 16635,
+                      "height": 9981,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 8317,
+                        "y": 4990
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 14,
+              "control_mask": 2048,
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [
+                "page"
+              ],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": null
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "글 앞으로\n",
+                "control_char_positions": [
+                  {
+                    "position": 5,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT"
+                  },
+                  {
+                    "position": 13,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 4
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 0,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "ctrl_header",
+                "ctrl_id": "gso ",
+                "ctrl_id_value": 1735618336,
+                "data_type": "object_common",
+                "attribute": {
+                  "like_letters": false,
+                  "affect_line_spacing": false,
+                  "vert_rel_to": "para",
+                  "vert_relative": 0,
+                  "horz_rel_to": "column",
+                  "horz_relative": 0,
+                  "vert_rel_to_para_limit": true,
+                  "overlap": true,
+                  "object_width_standard": "absolute",
+                  "object_height_standard": "absolute",
+                  "object_text_option": "top_and_bottom",
+                  "object_text_position_option": "both_sides",
+                  "object_category": "figure",
+                  "size_protect": false
+                },
+                "offset_y": 62,
+                "offset_x": 7449,
+                "width": 13654,
+                "height": 8193,
+                "z_order": 10,
+                "margin": {
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                },
+                "instance_id": 1465824592,
+                "page_divide": 0,
+                "description": null,
+                "children": [
+                  {
+                    "type": "shape_component",
+                    "shape_component": {
+                      "object_control_id": "cip$",
+                      "object_control_id2": "cip$",
+                      "group_offset": {
+                        "x": 0,
+                        "y": 0
+                      },
+                      "group_count": 0,
+                      "local_version": 1,
+                      "initial_width": 13654,
+                      "initial_height": 8193,
+                      "width": 13654,
+                      "height": 8193,
+                      "attributes": "vertical_flip",
+                      "rotation_angle": 0,
+                      "rotation_center": {
+                        "x": 6827,
+                        "y": 4096
+                      },
+                      "rendering": {
+                        "matrix_count": 1,
+                        "translation_matrix": {
+                          "elements": [
+                            1.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.0
+                          ]
+                        },
+                        "matrix_sequence": [
+                          {
+                            "scale": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            },
+                            "rotation": {
+                              "elements": [
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "bin_data": {
+    "items": [
+      {
+        "index": 12,
+        "data": "/9j/4AAQSkZJRgABAQAAAQABAAD//gA+Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2NjIpLCBkZWZhdWx0IHF1YWxpdHkK/9sAQwAIBgYHBgUIBwcHCQkICgwUDQwLCwwZEhMPFB0aHx4dGhwcICQuJyAiLCMcHCg3KSwwMTQ0NB8nOT04MjwuMzQy/9sAQwEJCQkMCwwYDQ0YMiEcITIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy/8AAEQgBLAH0AwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A68L9KeBQBS1zlCAe1OApQKdigBuKUKKdQBQAmKAKUD86WgBAtGKcBS4oAMUbeaXFOAoC4wLRtFOxS4pDG7fajbinYoxQAmPajFOx7UUANxSYpxozQA3FLtFOz70lSK4m2m4p5FFAXGbaCBTqXFAXGYFKBTsUCgLigVIKaBmnqOKtBcUCpABTQtOAq0K4Y4pQKXFOAqriuAFAFAGKdVCEA4pcUvagUwYoFLigUtMkbz60vFLmlxVBzDeaOadiigOYTFGKXn1owaLhcTFGKUgetGDRcLiYoxRijFMLibfakKj0p2KM+9AXG4pDTjS0CGGkp2KMUAN20mKfikIoGRmkIpxFBoERkdaaQKeRSEUAR49qKfj60UAZQFOAoFOFcZsIBTqAKAKADFOxQBS4oAMUUYpcUAIKcKXFAoAQDilFLn3oxQAgFLilFLQAm2loxQRQAnpS0UUAM+lFLiikMSjPvRRQAUGlz70Z96kVxMUUufekFAXAUA0Ad6VaaHceOlPHSmjpT1HFUiWOxThSDtSgVoiRwGKUUCkFOIDhQKKDVIBRThSClFUhMBS0gpaoQuacKbmnCgBKUUtIBQK4UUtFAXG5ozS5ozTAbto207PvRigBMUlONGKAGkUhFPppHSgBKKWkNADTSEU7FJQA00hFONIRQA000in4ppHFADaKWigDKApwFAFKK5DcAKcBQBSigBAKXFFL/wABoAAKXFGKXHpQAClFFLtoAAKWjFLn3oASijPvRn3pCDPvRn3ooz70ALikpc+9BoASilNJQAUUfSk/hoAbiilNJSGGc0Z4paKADPvQKM+9KKkVx4608fepgp461ohMkApR1ptPFWiQHalFB6UCriA6lpKWhALn3pRSCl5qiRKWilz71QC0UooFArh2pR/Oilz70BcbijPvRn3paYCZ96Wl70lABRiiigAoxRiigAIppp2KKAExSEU/PvSUARkUhpxFIRQAGkIpxpDQAwimmnkU00AJiijFFAGUKeKQUoFcpsApwoFKO1AABQKXPvRQAYpdtFL2pDAUUufejPvQAZ96M+9FFABRRRQAUUUUAFGfeiikIM+9GfeijPvQAlFLn3pKAExSUp60lIYUlLSUAFKKSlFAEgp4pgp4qluIeOlPpopxrREAKcKQcGnY4qkAgpaSgUxDhS0gpRViHUuKSlFACjpSim04UCuHelz70gpwoC42iil/hpgJS4paKAFoFHvS596AEoozRmmA00UppOKACkNOoPWkA0ikNKRQRQA0im08000AIaYaeaaaAG80UUUwMsUooFKK5jcBThQKAKAAClx1oxTs+9IkMUufejPvRSGFKKSigApaKKACiij+GkMSilooAbRS0GkISjPvRQaADPvRRn3oz70AFFLn3pKAG0lLQaQxKUUlKOtAEgp4pY4i3II+lSeSw45ya0jF7mbkhBThzRtI60oHcVaQAKdSAc0uMdaaQCUopwXdnGeKAjno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"
+      },
+      {
+        "index": 11,
+        "data": "/9j/4AAQSkZJRgABAQAAAQABAAD//gA+Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2NjIpLCBkZWZhdWx0IHF1YWxpdHkK/9sAQwAIBgYHBgUIBwcHCQkICgwUDQwLCwwZEhMPFB0aHx4dGhwcICQuJyAiLCMcHCg3KSwwMTQ0NB8nOT04MjwuMzQy/9sAQwEJCQkMCwwYDQ0YMiEcITIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy/8AAEQgBLAH0AwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A68L9KeBQBS1zlCAe1OApQKdigBuKUKKdQBQAmKAKUD86WgBAtGKcBS4oAMUbeaXFOAoC4wLRtFOxS4pDG7fajbinYoxQAmPajFOx7UUANxSYpxozQA3FLtFOz70lSK4m2m4p5FFAXGbaCBTqXFAXGYFKBTsUCgLigVIKaBmnqOKtBcUCpABTQtOAq0K4Y4pQKXFOAqriuAFAFAGKdVCEA4pcUvagUwYoFLigUtMkbz60vFLmlxVBzDeaOadiigOYTFGKXn1owaLhcTFGKUgetGDRcLiYoxRijFMLibfakKj0p2KM+9AXG4pDTjS0CGGkp2KMUAN20mKfikIoGRmkIpxFBoERkdaaQKeRSEUAR49qKfj60UAZQFOAoFOFcZsIBTqAKAKADFOxQBS4oAMUUYpcUAIKcKXFAoAQDilFLn3oxQAgFLilFLQAm2loxQRQAnpS0UUAM+lFLiikMSjPvRRQAUGlz70Z96kVxMUUufekFAXAUA0Ad6VaaHceOlPHSmjpT1HFUiWOxThSDtSgVoiRwGKUUCkFOIDhQKKDVIBRThSClFUhMBS0gpaoQuacKbmnCgBKUUtIBQK4UUtFAXG5ozS5ozTAbto207PvRigBMUlONGKAGkUhFPppHSgBKKWkNADTSEU7FJQA00hFONIRQA000in4ppHFADaKWigDKApwFAFKK5DcAKcBQBSigBAKXFFL/wABoAAKXFGKXHpQAClFFLtoAAKWjFLn3oASijPvRn3pCDPvRn3ooz70ALikpc+9BoASilNJQAUUfSk/hoAbiilNJSGGc0Z4paKADPvQKM+9KKkVx4608fepgp461ohMkApR1ptPFWiQHalFB6UCriA6lpKWhALn3pRSCl5qiRKWilz71QC0UooFArh2pR/Oilz70BcbijPvRn3paYCZ96Wl70lABRiiigAoxRiigAIppp2KKAExSEU/PvSUARkUhpxFIRQAGkIpxpDQAwimmnkU00AJiijFFAGUKeKQUoFcpsApwoFKO1AABQKXPvRQAYpdtFL2pDAUUufejPvQAZ96M+9FFABRRRQAUUUUAFGfeiikIM+9GfeijPvQAlFLn3pKAExSUp60lIYUlLSUAFKKSlFAEgp4pgp4qluIeOlPpopxrREAKcKQcGnY4qkAgpaSgUxDhS0gpRViHUuKSlFACjpSim04UCuHelz70gpwoC42iil/hpgJS4paKAFoFHvS596AEoozRmmA00UppOKACkNOoPWkA0ikNKRQRQA0im08000AIaYaeaaaAG80UUUwMsUooFKK5jcBThQKAKAAClx1oxTs+9IkMUufejPvRSGFKKSigApaKKACiij+GkMSilooAbRS0GkISjPvRQaADPvRRn3oz70AFFLn3pKAG0lLQaQxKUUlKOtAEgp4pY4i3II+lSeSw45ya0jF7mbkhBThzRtI60oHcVaQAKdSAc0uMdaaQCUopwXdnGeKAjno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"
+      }
+    ]
+  },
+  "preview_text": {
+    "text": "글자취급\r\n어울림 (양쪽 본문)\r\n어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림\r\n어울림 (왼쪽 본문)\r\n어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림\r\n어울림 (오른쪽 본문)\r\n어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림\r\n자리차지 (왼쪽정렬)\r\n자리차지 (오른쪽정렬)\r\n자리차지 (가운데정렬)\r\n자리차지 (안쪽정렬)\r\n자리차지 (바깥쪽정렬)\r\n글뒤로\r\n글 앞으로\r\n"
+  },
+  "preview_image": {
+    "data": "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",
+    "format": "GIF"
+  },
+  "scripts": {
+    "version": {
+      "high": 6317155,
+      "low": 3757506563
+    },
+    "default_script": null
+  },
+  "xml_template": null
+}
