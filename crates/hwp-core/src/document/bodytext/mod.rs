@@ -344,6 +344,26 @@ impl Section {
             records.push(Self::parse_record_from_tree(child, version, original_data)?);
         }
 
+        // 머리말/꼬리말 문단인 경우 ParaText 레코드 제거 (중복 방지, hwplib 방식)
+        // Remove ParaText records from header/footer paragraphs to avoid duplication (hwplib approach)
+        // hwplib: 본문 Paragraph의 ParaText에는 ExtendChar만 포함되고, 실제 텍스트는 ControlHeader 내부의 ParagraphList에만 있음
+        // hwplib: ParaText in body Paragraph only contains ExtendChar, actual text is only in ControlHeader's ParagraphList
+        let is_header_footer_paragraph = records.iter().any(|record| {
+            if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                use crate::document::CtrlId;
+                header.ctrl_id.as_str() == CtrlId::HEADER
+                    || header.ctrl_id.as_str() == CtrlId::FOOTER
+            } else {
+                false
+            }
+        });
+
+        if is_header_footer_paragraph {
+            // ParaText 레코드만 필터링 (다른 레코드는 유지)
+            // Filter out only ParaText records (keep other records)
+            records.retain(|record| !matches!(record, ParagraphRecord::ParaText { .. }));
+        }
+
         Ok(Paragraph {
             para_header,
             records,
@@ -489,6 +509,7 @@ impl Section {
             }
             HwpTag::CTRL_HEADER => {
                 let ctrl_header = CtrlHeader::parse(node.data())?;
+
                 // 자식 레코드들을 재귀적으로 처리 / Recursively process child records
                 // hwp.js: visitControlHeader에서 record.children를 모두 처리
                 // hwp.js: visitControlHeader processes all record.children
@@ -507,7 +528,6 @@ impl Section {
                 // hwp.js: CommonCtrlID.Table = makeCtrlID('t', 'b', 'l', ' ') = 0x206C6274 (little-endian: 0x74626C20)
                 // hwp.js: CommonCtrlID.Table = makeCtrlID('t', 'b', 'l', ' ') = 0x206C6274 (little-endian: 0x74626C20)
                 // pyhwp: CHID.TBL = 'tbl ' (바이트 리버스 후) / pyhwp: CHID.TBL = 'tbl ' (after byte reverse)
-                use crate::document::bodytext::ctrl_header::CtrlId;
                 let is_table = ctrl_header.ctrl_id == CtrlId::TABLE
                     || ctrl_header.ctrl_id_value == 0x74626C20u32;
 
@@ -515,7 +535,7 @@ impl Section {
                 // libhwp 방식: TABLE 위치를 먼저 찾아서 TABLE 이후의 LIST_HEADER는 children에 추가하지 않음
                 // libhwp approach: Find TABLE position first, then don't add LIST_HEADERs after TABLE to children
                 let mut table_index: Option<usize> = None;
-                let children_slice: Vec<_> = node.children().into_iter().collect();
+                let children_slice: Vec<_> = node.children().iter().collect();
 
                 // 먼저 TABLE 위치 찾기 / First find TABLE position
                 for (idx, child) in children_slice.iter().enumerate() {
@@ -524,6 +544,14 @@ impl Section {
                         break;
                     }
                 }
+
+                // CTRL_HEADER가 LIST_HEADER를 가지고 있는지 먼저 확인 (머리말/꼬리말의 경우)
+                // Check if CTRL_HEADER has LIST_HEADER first (for headers/footers)
+                // PARA_HEADER 처리 전에 확인하여 중복 방지
+                // Check before processing PARA_HEADER to avoid duplication
+                let has_list_header = children_slice
+                    .iter()
+                    .any(|child| child.tag_id() == HwpTag::LIST_HEADER && !is_table);
 
                 for (idx, child) in children_slice.iter().enumerate() {
                     if child.tag_id() == HwpTag::TABLE {
@@ -539,9 +567,16 @@ impl Section {
                         // @ctrl_header.para_headers << para_header로 처리
                         // Reference: legacy/ruby-hwp/lib/hwp/model.rb's Footnote, Header, Footer, etc.
                         // where @ctrl_header.para_headers << para_header
-                        let paragraph =
-                            Self::parse_paragraph_from_tree(child, version, original_data)?;
-                        paragraphs.push(paragraph);
+                        //
+                        // 머리말/꼬리말의 경우 LIST_HEADER가 있으면 paragraphs에 추가하지 않음 (중복 방지)
+                        // For headers/footers, don't add to paragraphs if LIST_HEADER exists (avoid duplication)
+                        // 실제 텍스트는 LIST_HEADER 내부의 paragraphs에만 있음
+                        // Actual text is only in LIST_HEADER's internal paragraphs
+                        if !has_list_header {
+                            let paragraph =
+                                Self::parse_paragraph_from_tree(child, version, original_data)?;
+                            paragraphs.push(paragraph);
+                        }
                     } else if child.tag_id() == HwpTag::LIST_HEADER && is_table {
                         // LIST_HEADER가 테이블의 셀인 경우 / LIST_HEADER is a table cell
                         // libhwp 방식: TABLE 이후의 LIST_HEADER는 children에 추가하지 않음

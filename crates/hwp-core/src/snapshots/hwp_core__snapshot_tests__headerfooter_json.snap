@@ -1631,27 +1631,6 @@ expression: json
             },
             "records": [
               {
-                "type": "para_text",
-                "text": "",
-                "control_char_positions": [
-                  {
-                    "position": 0,
-                    "code": 16,
-                    "name": "HEADER_FOOTER"
-                  },
-                  {
-                    "position": 8,
-                    "code": 16,
-                    "name": "HEADER_FOOTER"
-                  },
-                  {
-                    "position": 16,
-                    "code": 13,
-                    "name": "PARA_BREAK"
-                  }
-                ]
-              },
-              {
                 "type": "para_char_shape",
                 "shapes": [
                   {
@@ -1788,85 +1767,6 @@ expression: json
                       }
                     ]
                   }
-                ],
-                "paragraphs": [
-                  {
-                    "para_header": {
-                      "text_char_count": 27,
-                      "control_mask": {
-                        "value": 262144,
-                        "flags": [
-                          "auto_number"
-                        ]
-                      },
-                      "para_shape_id": 11,
-                      "para_style_id": 10,
-                      "column_divide_type": [],
-                      "char_shape_count": 1,
-                      "range_tag_count": 0,
-                      "line_align_count": 1,
-                      "instance_id": 2147483648,
-                      "section_merge": null
-                    },
-                    "records": [
-                      {
-                        "type": "para_text",
-                        "text": "Header 이것은 머리말입니다.",
-                        "control_char_positions": [
-                          {
-                            "position": 17,
-                            "code": 18,
-                            "name": "AUTO_NUMBER"
-                          },
-                          {
-                            "position": 26,
-                            "code": 13,
-                            "name": "PARA_BREAK"
-                          }
-                        ]
-                      },
-                      {
-                        "type": "para_char_shape",
-                        "shapes": [
-                          {
-                            "position": 0,
-                            "shape_id": 2
-                          }
-                        ]
-                      },
-                      {
-                        "type": "para_line_seg",
-                        "segments": [
-                          {
-                            "text_start_position": 0,
-                            "vertical_position": 0,
-                            "line_height": 900,
-                            "text_height": 900,
-                            "baseline_distance": 765,
-                            "line_spacing": 452,
-                            "column_start_position": 0,
-                            "segment_width": 42520,
-                            "tag": {
-                              "is_first_line_of_page": false,
-                              "is_first_line_of_column": false,
-                              "is_empty_segment": false,
-                              "is_first_segment_of_line": true,
-                              "is_last_segment_of_line": true,
-                              "has_auto_hyphenation": false,
-                              "has_indentation": false,
-                              "has_paragraph_header_shape": false
-                            }
-                          }
-                        ]
-                      },
-                      {
-                        "type": "ctrl_header",
-                        "ctrl_id": "atno",
-                        "ctrl_id_value": 1635020399,
-                        "data_type": "other"
-                      }
-                    ]
-                  }
                 ]
               },
               {
@@ -1954,72 +1854,6 @@ expression: json
                                 }
                               }
                             ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ],
-                "paragraphs": [
-                  {
-                    "para_header": {
-                      "text_char_count": 19,
-                      "control_mask": {
-                        "value": 0,
-                        "flags": []
-                      },
-                      "para_shape_id": 11,
-                      "para_style_id": 10,
-                      "column_divide_type": [],
-                      "char_shape_count": 1,
-                      "range_tag_count": 0,
-                      "line_align_count": 1,
-                      "instance_id": 0,
-                      "section_merge": null
-                    },
-                    "records": [
-                      {
-                        "type": "para_text",
-                        "text": "Footer 이것은 꼬리말입니다.",
-                        "control_char_positions": [
-                          {
-                            "position": 18,
-                            "code": 13,
-                            "name": "PARA_BREAK"
-                          }
-                        ]
-                      },
-                      {
-                        "type": "para_char_shape",
-                        "shapes": [
-                          {
-                            "position": 0,
-                            "shape_id": 2
-                          }
-                        ]
-                      },
-                      {
-                        "type": "para_line_seg",
-                        "segments": [
-                          {
-                            "text_start_position": 0,
-                            "vertical_position": 0,
-                            "line_height": 900,
-                            "text_height": 900,
-                            "baseline_distance": 765,
-                            "line_spacing": 452,
-                            "column_start_position": 0,
-                            "segment_width": 42520,
-                            "tag": {
-                              "is_first_line_of_page": false,
-                              "is_first_line_of_column": false,
-                              "is_empty_segment": false,
-                              "is_first_segment_of_line": true,
-                              "is_last_segment_of_line": true,
-                              "has_auto_hyphenation": false,
-                              "has_indentation": false,
-                              "has_paragraph_header_shape": false
-                            }
                           }
                         ]
                       }

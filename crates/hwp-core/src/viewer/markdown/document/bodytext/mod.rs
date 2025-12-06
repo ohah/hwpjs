@@ -13,10 +13,7 @@ mod table;
 use crate::document::{ColumnDivideType, HwpDocument, ParagraphRecord};
 use crate::viewer::markdown::MarkdownOptions;
 
-pub use para_text::convert_para_text_to_markdown;
 pub use paragraph::convert_paragraph_to_markdown;
-pub(crate) use shape_component::convert_shape_component_children_to_markdown;
-pub(crate) use shape_component_picture::convert_shape_component_picture_to_markdown;
 pub use table::convert_table_to_markdown;
 
 /// Convert body text to markdown
@@ -52,61 +49,90 @@ pub fn convert_bodytext_to_markdown(
             let has_header_footer = control_mask.has_header_footer();
             let has_footnote_endnote = control_mask.has_footnote_endnote();
 
-            // 머리말/꼬리말/각주/미주 컨트롤 찾기 / Find header/footer/footnote/endnote controls
-            let mut is_header_paragraph = false;
-            let mut is_footer_paragraph = false;
-            let mut is_footnote_paragraph = false;
-            let mut is_endnote_paragraph = false;
-
+            // 머리말/꼬리말/각주/미주 컨트롤 처리 / Process header/footer/footnote/endnote controls
+            // 하나의 문단에 여러 개의 컨트롤이 있을 수 있으므로 break 없이 모두 처리
+            // Multiple controls can exist in one paragraph, so process all without break
             // control_mask로 필터링하여 불필요한 순회 방지 / Filter with control_mask to avoid unnecessary iteration
             if has_header_footer || has_footnote_endnote {
-                for record in &paragraph.records {
-                    if let ParagraphRecord::CtrlHeader { header, .. } = record {
-                        use crate::document::CtrlId;
-                        if header.ctrl_id.as_str() == CtrlId::HEADER {
-                            is_header_paragraph = true;
-                            break;
-                        } else if header.ctrl_id.as_str() == CtrlId::FOOTER {
-                            is_footer_paragraph = true;
-                            break;
-                        } else if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
-                            is_footnote_paragraph = true;
-                            break;
-                        } else if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
-                            is_endnote_paragraph = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if is_header_paragraph {
-                // 머리말 문단 처리 / Process header paragraph
-                let markdown =
-                    paragraph::convert_paragraph_to_markdown(paragraph, document, options);
-                if !markdown.is_empty() {
-                    headers.push(markdown);
-                }
-            } else if is_footer_paragraph {
-                // 꼬리말 문단 처리 / Process footer paragraph
-                let markdown =
-                    paragraph::convert_paragraph_to_markdown(paragraph, document, options);
-                if !markdown.is_empty() {
-                    footers.push(markdown);
-                }
-            } else if is_footnote_paragraph {
-                // 각주 문단 처리 / Process footnote paragraph
-                // 각주 컨트롤 헤더의 자식 레코드(ListHeader)에 있는 모든 문단 처리 / Process all paragraphs in ListHeader children of footnote control header
                 for record in &paragraph.records {
                     if let ParagraphRecord::CtrlHeader {
                         header,
                         children,
                         paragraphs: ctrl_paragraphs,
-                        ..
                     } = record
                     {
                         use crate::document::CtrlId;
-                        if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
+                        if header.ctrl_id.as_str() == CtrlId::HEADER {
+                            // 머리말 문단 처리 / Process header paragraph
+                            // 파서에서 이미 ParaText를 제거하고, LIST_HEADER가 있으면 paragraphs는 비어있음
+                            // Parser already removed ParaText, and if LIST_HEADER exists, paragraphs is empty
+                            // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
+                            // If LIST_HEADER exists, process from children, otherwise from paragraphs
+                            let mut found_list_header = false;
+                            for child_record in children {
+                                if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record
+                                {
+                                    found_list_header = true;
+                                    // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
+                                    for para in paragraphs {
+                                        let para_md = paragraph::convert_paragraph_to_markdown(
+                                            para, document, options,
+                                        );
+                                        if !para_md.is_empty() {
+                                            headers.push(para_md);
+                                        }
+                                    }
+                                }
+                            }
+                            // LIST_HEADER가 없으면 paragraphs 처리 (각주/미주 등)
+                            // If no LIST_HEADER, process paragraphs (for footnotes/endnotes, etc.)
+                            if !found_list_header {
+                                for para in ctrl_paragraphs {
+                                    let para_md = paragraph::convert_paragraph_to_markdown(
+                                        para, document, options,
+                                    );
+                                    if !para_md.is_empty() {
+                                        headers.push(para_md);
+                                    }
+                                }
+                            }
+                        } else if header.ctrl_id.as_str() == CtrlId::FOOTER {
+                            // 꼬리말 문단 처리 / Process footer paragraph
+                            // 파서에서 이미 ParaText를 제거하고, LIST_HEADER가 있으면 paragraphs는 비어있음
+                            // Parser already removed ParaText, and if LIST_HEADER exists, paragraphs is empty
+                            // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
+                            // If LIST_HEADER exists, process from children, otherwise from paragraphs
+                            let mut found_list_header = false;
+                            for child_record in children {
+                                if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record
+                                {
+                                    found_list_header = true;
+                                    // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
+                                    for para in paragraphs {
+                                        let para_md = paragraph::convert_paragraph_to_markdown(
+                                            para, document, options,
+                                        );
+                                        if !para_md.is_empty() {
+                                            footers.push(para_md);
+                                        }
+                                    }
+                                }
+                            }
+                            // LIST_HEADER가 없으면 paragraphs 처리 (각주/미주 등)
+                            // If no LIST_HEADER, process paragraphs (for footnotes/endnotes, etc.)
+                            if !found_list_header {
+                                for para in ctrl_paragraphs {
+                                    let para_md = paragraph::convert_paragraph_to_markdown(
+                                        para, document, options,
+                                    );
+                                    if !para_md.is_empty() {
+                                        footers.push(para_md);
+                                    }
+                                }
+                            }
+                        } else if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
+                            // 각주 문단 처리 / Process footnote paragraph
+                            // 각주 컨트롤 헤더의 자식 레코드(ListHeader)에 있는 모든 문단 처리 / Process all paragraphs in ListHeader children of footnote control header
                             // 컨트롤 헤더 마크다운 / Control header markdown
                             let control_md = convert_control_to_markdown(header, false);
                             if !control_md.is_empty() {
@@ -136,23 +162,9 @@ pub fn convert_bodytext_to_markdown(
                                     }
                                 }
                             }
-                            break;
-                        }
-                    }
-                }
-            } else if is_endnote_paragraph {
-                // 미주 문단 처리 / Process endnote paragraph
-                // 미주 컨트롤 헤더의 자식 레코드(ListHeader)에 있는 모든 문단 처리 / Process all paragraphs in ListHeader children of endnote control header
-                for record in &paragraph.records {
-                    if let ParagraphRecord::CtrlHeader {
-                        header,
-                        children,
-                        paragraphs: ctrl_paragraphs,
-                        ..
-                    } = record
-                    {
-                        use crate::document::CtrlId;
-                        if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
+                        } else if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
+                            // 미주 문단 처리 / Process endnote paragraph
+                            // 미주 컨트롤 헤더의 자식 레코드(ListHeader)에 있는 모든 문단 처리 / Process all paragraphs in ListHeader children of endnote control header
                             // 컨트롤 헤더 마크다운 / Control header markdown
                             let control_md = convert_control_to_markdown(header, false);
                             if !control_md.is_empty() {
@@ -182,11 +194,14 @@ pub fn convert_bodytext_to_markdown(
                                     }
                                 }
                             }
-                            break;
                         }
                     }
                 }
-            } else {
+            }
+
+            // 일반 본문 문단 처리 (컨트롤이 없는 경우) / Process regular body paragraph (when no controls)
+            // control_mask로 일반 문단인지 확인 / Check if regular paragraph using control_mask
+            if !has_header_footer && !has_footnote_endnote {
                 // 일반 본문 문단 처리 / Process regular body paragraph
                 // Check if we need to add page break / 페이지 나누기가 필요한지 확인
                 let has_page_break = paragraph

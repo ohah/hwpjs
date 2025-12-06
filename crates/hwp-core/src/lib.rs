@@ -703,6 +703,17 @@ mod snapshot_tests {
         None
     }
 
+    /// Helper function to find headerfooter.hwp file
+    fn find_headerfooter_file() -> Option<String> {
+        if let Some(dir) = find_fixtures_dir() {
+            let file_path = dir.join("headerfooter.hwp");
+            if file_path.exists() {
+                return Some(file_path.to_string_lossy().to_string());
+            }
+        }
+        None
+    }
+
     /// Helper function to get all HWP files in fixtures directory
     fn find_all_hwp_files() -> Vec<String> {
         if let Some(dir) = find_fixtures_dir() {
@@ -1039,6 +1050,73 @@ mod snapshot_tests {
             std::fs::write(&md_file, &markdown).unwrap_or_else(|e| {
                 eprintln!("Failed to write Markdown file: {}", e);
             });
+        }
+    }
+
+    #[test]
+    fn test_headerfooter_markdown() {
+        // headerfooter.hwp 파일에 대해 Markdown 스냅샷 생성 / Generate Markdown snapshot for headerfooter.hwp
+        let file_path = match find_headerfooter_file() {
+            Some(path) => path,
+            None => {
+                eprintln!("headerfooter.hwp not found, skipping test");
+                return;
+            }
+        };
+
+        let parser = HwpParser::new();
+        let manifest_dir = env!("CARGO_MANIFEST_DIR");
+        let snapshots_dir = std::path::Path::new(manifest_dir)
+            .join("src")
+            .join("snapshots");
+
+        let file_name = std::path::Path::new(&file_path)
+            .file_stem()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown");
+        let snapshot_name = file_name.replace('-', "_").replace('.', "_");
+        let snapshot_name_md = format!("{}_markdown", snapshot_name);
+
+        match std::fs::read(&file_path) {
+            Ok(data) => {
+                match parser.parse(&data) {
+                    Ok(document) => {
+                        // Convert to markdown with image files (not base64)
+                        // 이미지를 파일로 저장하고 파일 경로를 사용 / Save images as files and use file paths
+                        let images_dir = snapshots_dir.join("images").join(file_name);
+                        std::fs::create_dir_all(&images_dir).unwrap_or(());
+
+                        let options = crate::viewer::markdown::MarkdownOptions {
+                            image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+                            use_html: Some(true),
+                            include_version: Some(true),
+                            include_page_info: Some(true),
+                        };
+
+                        let markdown = document.to_markdown(&options);
+
+                        // 스냅샷 생성 / Create snapshot
+                        assert_snapshot!(snapshot_name_md.as_str(), markdown);
+
+                        // 실제 Markdown 파일로도 저장 / Also save as actual Markdown file
+                        let md_file = snapshots_dir.join(format!("{}.md", file_name));
+                        std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
+                        std::fs::write(&md_file, &markdown).unwrap_or_else(|e| {
+                            eprintln!(
+                                "Failed to write Markdown file {}: {}",
+                                md_file.display(),
+                                e
+                            );
+                        });
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to parse {}: {:?}", file_path, e);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed to read {}: {}", file_path, e);
+            }
         }
     }
 
@@ -1563,4 +1641,5 @@ mod snapshot_tests {
             println!("Image file test passed!");
         }
     }
+
 }
