@@ -59,4 +59,3 @@ fn test_cfb_read_fileheader() {
         }
     }
 }
-

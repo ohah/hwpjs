@@ -71,4 +71,3 @@ pub fn find_fixture_file(filename: &str) -> Option<String> {
     }
     None
 }
-
