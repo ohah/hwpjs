@@ -5,7 +5,11 @@
 /// Spec mapping: Table 57 - BodyText data records
 use crate::document::{HwpDocument, Paragraph, ParagraphRecord};
 use crate::viewer::markdown::collect::collect_text_and_images_from_paragraph;
-use crate::viewer::markdown::document::bodytext::para_text::convert_para_text_to_markdown;
+use crate::viewer::markdown::document::bodytext::para_text::{
+    convert_para_text_to_markdown, convert_para_text_to_markdown_with_char_shapes,
+};
+use crate::document::bodytext::CharShapeInfo;
+use crate::document::CharShape;
 use crate::viewer::markdown::document::bodytext::shape_component::convert_shape_component_children_to_markdown;
 use crate::viewer::markdown::document::bodytext::shape_component_picture::convert_shape_component_picture_to_markdown;
 use crate::viewer::markdown::document::bodytext::table::convert_table_to_markdown;
@@ -25,6 +29,19 @@ pub fn convert_paragraph_to_markdown(
 
     let mut parts = Vec::new();
     let mut text_parts = Vec::new(); // 같은 문단 내의 텍스트 레코드들을 모음 / Collect text records in the same paragraph
+    let mut char_shapes: Vec<CharShapeInfo> = Vec::new(); // 문단의 글자 모양 정보 수집 / Collect character shape information for paragraph
+
+    // 먼저 ParaCharShape 레코드를 수집 / First collect ParaCharShape records
+    for record in &paragraph.records {
+        if let ParagraphRecord::ParaCharShape { shapes } = record {
+            char_shapes.extend(shapes.clone());
+        }
+    }
+
+    // CharShape를 가져오는 클로저 / Closure to get CharShape
+    let get_char_shape = |shape_id: u32| -> Option<&CharShape> {
+        document.doc_info.char_shapes.get(shape_id as usize)
+    };
 
     // Process all records in order / 모든 레코드를 순서대로 처리
     for record in &paragraph.records {
@@ -39,7 +56,18 @@ pub fn convert_paragraph_to_markdown(
                 // 여기서는 표 앞뒤의 일반 텍스트도 정상적으로 처리됨
                 // Text inside table cells is already included in Table.cells and processed in convert_table_to_markdown,
                 // so regular text before/after tables is also processed normally here
-                if let Some(text_md) = convert_para_text_to_markdown(text, control_char_positions) {
+                let text_md = if !char_shapes.is_empty() {
+                    convert_para_text_to_markdown_with_char_shapes(
+                        text,
+                        control_char_positions,
+                        &char_shapes,
+                        Some(&get_char_shape),
+                    )
+                } else {
+                    convert_para_text_to_markdown(text, control_char_positions)
+                };
+                
+                if let Some(text_md) = text_md {
                     // 같은 문단 내의 텍스트는 나중에 합침 / Text in the same paragraph will be combined later
                     text_parts.push(text_md);
                 }

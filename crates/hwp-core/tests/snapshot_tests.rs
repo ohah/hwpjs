@@ -4,6 +4,7 @@ mod common;
 use common::*;
 
 use hwp_core::*;
+use hwp_core::document::ParagraphRecord;
 use insta::{assert_snapshot, with_settings};
 
 // insta가 tests/snapshots 디렉토리를 사용하도록 설정하는 헬퍼 매크로
@@ -1129,6 +1130,81 @@ fn test_footnote_endnote_debug() {
                                                     para_idx, text
                                                 );
                                             }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn test_debug_charshape_strikethrough() {
+    use crate::common::find_fixture_file;
+    
+    let file_path = match find_fixture_file("charshape.hwp") {
+        Some(path) => path,
+        None => {
+            eprintln!("charshape.hwp file not found, skipping test");
+            return;
+        }
+    };
+
+    if let Ok(data) = std::fs::read(&file_path) {
+        let parser = HwpParser::new();
+        let result = parser.parse(&data);
+        if let Err(e) = &result {
+            eprintln!("Parse error: {:?}", e);
+        }
+        assert!(result.is_ok(), "Should parse HWP document");
+        let document = result.unwrap();
+
+        // "밑줄없음밑줄가운데줄윗줄" 텍스트가 있는 문단 찾기
+        // Find paragraph with "밑줄없음밑줄가운데줄윗줄" text
+        for section in &document.body_text.sections {
+            for para in &section.paragraphs {
+                for record in &para.records {
+                    if let ParagraphRecord::ParaText { text, .. } = record {
+                        if text.contains("가운데줄") {
+                            eprintln!("\n=== DEBUG: Found paragraph with '가운데줄' ===");
+                            eprintln!("Text: {}", text);
+                            
+                            // ParaCharShape 찾기
+                            // Find ParaCharShape
+                            for record2 in &para.records {
+                                if let ParagraphRecord::ParaCharShape { shapes } = record2 {
+                                    eprintln!("\nParaCharShape shapes:");
+                                    for shape_info in shapes {
+                                        eprintln!("  position: {}, shape_id: {}", shape_info.position, shape_info.shape_id);
+                                        
+                                        // shape_id로 CharShape 가져오기
+                                        // Get CharShape by shape_id
+                                        if let Some(char_shape) = document.doc_info.char_shapes.get(shape_info.shape_id as usize) {
+                                            eprintln!("    shape_id {} attributes:", shape_info.shape_id);
+                                            eprintln!("      bold: {}", char_shape.attributes.bold);
+                                            eprintln!("      italic: {}", char_shape.attributes.italic);
+                                            eprintln!("      strikethrough: {} (0=none, 1-6=type)", char_shape.attributes.strikethrough);
+                                            eprintln!("      strikethrough_style: {}", char_shape.attributes.strikethrough_style);
+                                            
+                                            // "가운데줄" 부분 확인 (position 6에서 shape_id 9)
+                                            // Check "가운데줄" part (shape_id 9 at position 6)
+                                            if shape_info.shape_id == 9 && shape_info.position == 6 {
+                                                eprintln!("\n*** FOUND shape_id 9 at position 6 (가운데줄) ***");
+                                                eprintln!("  strikethrough: {}", char_shape.attributes.strikethrough);
+                                                eprintln!("  strikethrough_style: {}", char_shape.attributes.strikethrough_style);
+                                                eprintln!("  strikethrough != 0: {}", char_shape.attributes.strikethrough != 0);
+                                                eprintln!("  underline_type: {} (0=none, 1=below, 2=above)", char_shape.attributes.underline_type);
+                                                eprintln!("  underline_style: {}", char_shape.attributes.underline_style);
+                                                eprintln!("  NOTE: underline_type=2 might indicate strikethrough in some HWP versions");
+                                            }
+                                        } else {
+                                            eprintln!("    shape_id {} NOT FOUND in char_shapes array (len={})", 
+                                                shape_info.shape_id, 
+                                                document.doc_info.char_shapes.len());
                                         }
                                     }
                                 }

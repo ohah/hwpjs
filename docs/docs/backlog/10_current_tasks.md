@@ -328,6 +328,30 @@ interface SummaryInformation {
 
 ## 알려진 버그
 
+### 취소선 속성 파싱 문제
+
+- **문제**: 취소선 속성을 제대로 가져오지 못함
+- **증상**: 
+  - HWP 문서에서 취소선이 설정된 텍스트의 `strikethrough` 속성이 0으로 파싱됨
+  - 예: "가운데줄" 텍스트에 취소선이 설정되어 있지만 `strikethrough: 0`으로 파싱됨
+- **원인**: 
+  - 스펙 문서 표 35에 따르면 bit 18-20이 취소선 여부를 나타냄
+  - 일부 HWP 파일에서는 취소선이 `underline_type=2` (글자 위)로 표현될 수 있음
+  - 실제 HWP 파일에서 bits 18-20이 0으로 설정되어 있어 취소선이 감지되지 않음
+- **영향 범위**:
+  - `crates/hwp-core/src/document/docinfo/char_shape.rs`의 `strikethrough` 파싱 로직
+  - `crates/hwp-core/src/viewer/markdown/document/bodytext/para_text.rs`의 마크다운 변환 로직
+- **참고**: 
+  - 스펙 문서 표 35: bit 18-20이 취소선 여부
+  - 현재 구현: bits 18-20을 읽어서 0이 아니면 취소선이 있다고 판단
+  - 레거시 라이브러리 비교:
+    - libhwp: bits 18, 19, 20을 각각 OR 연산
+    - hwplib: bit 18만 체크
+    - hwp-rs: bits 18-20 범위 값 읽기
+    - hwpjs.js: bits 18-20 읽기
+- **우선순위**: 높음
+- **상태**: 조사 중
+
 ### noori.md 테이블 텍스트 중복 문제
 
 - **문제**: `noori.md` 파일에서 테이블 셀 내부의 텍스트가 중복으로 출력되는 문제

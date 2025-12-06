@@ -87,8 +87,9 @@ pub struct CharShapeAttributes {
     pub superscript: bool, // bit 15
     /// 아래 첨자 여부 / Subscript
     pub subscript: bool, // bit 16
-    /// 취소선 여부 (0: 없음, 1-6: 종류) / Strikethrough (0: none, 1-6: type)
-    pub strikethrough: UINT8, // bits 18-20
+    /// 취소선 여부 (0: 없음, 1 이상: 있음) / Strikethrough (0: none, 1+: present)
+    /// 스펙 문서 표 35: bit 18-20 / Spec Table 35: bit 18-20
+    pub strikethrough: UINT8,
     /// 강조점 종류 / Emphasis mark type
     pub emphasis_mark: UINT8, // bits 21-24
     /// 글꼴에 어울리는 빈칸 사용 여부 / Use font-appropriate spacing
@@ -229,6 +230,7 @@ impl CharShape {
         ]);
         offset += 4;
 
+        // UINT32 속성 파싱 (표 35) / Parse UINT32 attributes (Table 35)
         let attributes = CharShapeAttributes {
             italic: (attr_value & 0x00000001) != 0,
             bold: (attr_value & 0x00000002) != 0,
@@ -240,7 +242,7 @@ impl CharShape {
             engrave: (attr_value & 0x00004000) != 0,
             superscript: (attr_value & 0x00008000) != 0,
             subscript: (attr_value & 0x00010000) != 0,
-            strikethrough: ((attr_value >> 18) & 0x07) as UINT8,
+            strikethrough: ((attr_value >> 18) & 0x07) as UINT8, // bit 18-20: 취소선 여부 (표 35) / bit 18-20: Strikethrough (Table 35)
             emphasis_mark: ((attr_value >> 21) & 0x0F) as UINT8,
             use_font_spacing: (attr_value & 0x02000000) != 0,
             strikethrough_style: ((attr_value >> 26) & 0x0F) as UINT8,
