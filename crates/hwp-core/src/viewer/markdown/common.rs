@@ -114,8 +114,13 @@ fn save_image_to_file(
         .map_err(|e| HwpError::Io(format!("Failed to create directory '{}': {}", dir_path, e)))?;
 
     // 파일 저장 / Save file
-    fs::write(&file_path, &image_data)
-        .map_err(|e| HwpError::Io(format!("Failed to write file '{}': {}", file_path.display(), e)))?;
+    fs::write(&file_path, &image_data).map_err(|e| {
+        HwpError::Io(format!(
+            "Failed to write file '{}': {}",
+            file_path.display(),
+            e
+        ))
+    })?;
 
     Ok(file_path.to_string_lossy().to_string())
 }
