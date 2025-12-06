@@ -1627,6 +1627,27 @@
             },
             "records": [
               {
+                "type": "para_text",
+                "text": "",
+                "control_char_positions": [
+                  {
+                    "position": 0,
+                    "code": 16,
+                    "name": "HEADER_FOOTER"
+                  },
+                  {
+                    "position": 8,
+                    "code": 16,
+                    "name": "HEADER_FOOTER"
+                  },
+                  {
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
                 "type": "para_char_shape",
                 "shapes": [
                   {

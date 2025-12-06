@@ -1102,11 +1102,7 @@ mod snapshot_tests {
                         let md_file = snapshots_dir.join(format!("{}.md", file_name));
                         std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
                         std::fs::write(&md_file, &markdown).unwrap_or_else(|e| {
-                            eprintln!(
-                                "Failed to write Markdown file {}: {}",
-                                md_file.display(),
-                                e
-                            );
+                            eprintln!("Failed to write Markdown file {}: {}", md_file.display(), e);
                         });
                     }
                     Err(e) => {
@@ -1642,4 +1638,213 @@ mod snapshot_tests {
         }
     }
 
+    #[test]
+    fn test_footnote_endnote_debug() {
+        use crate::decompress::decompress_deflate;
+        use crate::document::bodytext::record_tree::RecordTreeNode;
+        use crate::document::bodytext::HwpTag;
+        use crate::document::CtrlId;
+        use crate::document::ParagraphRecord;
+        use crate::CfbParser;
+        use crate::FileHeader;
+
+        let file_path = match find_fixtures_dir() {
+            Some(dir) => dir
+                .join("footnote-endnote.hwp")
+                .to_string_lossy()
+                .to_string(),
+            None => {
+                eprintln!("footnote-endnote.hwp not found, skipping test");
+                return;
+            }
+        };
+
+        eprintln!("\n=== Parsing footnote-endnote.hwp ===\n");
+        if let Ok(data) = std::fs::read(&file_path) {
+            // 원본 파일의 바이너리 데이터에서 직접 텍스트 확인
+            let mut cfb = CfbParser::parse(&data).expect("Should parse CFB");
+            let fileheader = FileHeader::parse(
+                &CfbParser::read_stream(&mut cfb, "FileHeader").expect("Should read FileHeader"),
+            )
+            .expect("Should parse FileHeader");
+
+            let section_data = CfbParser::read_nested_stream(&mut cfb, "BodyText", "Section0")
+                .expect("Should read Section0");
+
+            let decompressed = if fileheader.is_compressed() {
+                decompress_deflate(&section_data).expect("Should decompress section data")
+            } else {
+                section_data
+            };
+
+            let tree = RecordTreeNode::parse_tree(&decompressed).expect("Should parse tree");
+
+            // 원본 바이너리에서 각주/미주 텍스트 찾기
+            eprintln!("\n=== 원본 바이너리에서 각주/미주 텍스트 찾기 ===\n");
+            fn find_footnote_endnote_text(
+                node: &RecordTreeNode,
+                depth: usize,
+                parent_ctrl_id: Option<&str>,
+            ) {
+                let indent = "  ".repeat(depth);
+
+                if node.tag_id() == HwpTag::CTRL_HEADER {
+                    if node.data().len() >= 4 {
+                        let ctrl_id_bytes = &node.data()[0..4];
+                        let ctrl_id = String::from_utf8_lossy(ctrl_id_bytes);
+                        eprintln!("{}[ORIGINAL] CTRL_HEADER: ctrl_id={:?}", indent, ctrl_id);
+
+                        if ctrl_id.trim() == "fn  " || ctrl_id.trim() == "en  " {
+                            // 각주/미주 내부의 텍스트 찾기
+                            for child in node.children() {
+                                find_footnote_endnote_text(child, depth + 1, Some(&ctrl_id));
+                            }
+                        } else {
+                            for child in node.children() {
+                                find_footnote_endnote_text(child, depth + 1, parent_ctrl_id);
+                            }
+                        }
+                    }
+                } else if node.tag_id() == HwpTag::LIST_HEADER {
+                    if let Some(ctrl_id) = parent_ctrl_id {
+                        eprintln!("{}[ORIGINAL] LIST_HEADER inside {:?}", indent, ctrl_id);
+                        for child in node.children() {
+                            find_footnote_endnote_text(child, depth + 1, parent_ctrl_id);
+                        }
+                    } else {
+                        for child in node.children() {
+                            find_footnote_endnote_text(child, depth + 1, parent_ctrl_id);
+                        }
+                    }
+                } else if node.tag_id() == HwpTag::PARA_TEXT {
+                    if let Some(ctrl_id) = parent_ctrl_id {
+                        // UTF-16LE로 디코딩
+                        let data = node.data();
+                        if let Ok(text) = crate::types::decode_utf16le(data) {
+                            eprintln!(
+                                "{}[ORIGINAL] PARA_TEXT inside {:?}: {}",
+                                indent, ctrl_id, text
+                            );
+                        } else {
+                            eprintln!(
+                                "{}[ORIGINAL] PARA_TEXT inside {:?}: (decode failed, len={})",
+                                indent,
+                                ctrl_id,
+                                data.len()
+                            );
+                        }
+                    }
+                } else {
+                    for child in node.children() {
+                        find_footnote_endnote_text(child, depth + 1, parent_ctrl_id);
+                    }
+                }
+            }
+
+            for child in tree.children() {
+                find_footnote_endnote_text(child, 0, None);
+            }
+
+            // 파서로 파싱한 결과 확인
+            eprintln!("\n=== 파서로 파싱한 결과 ===\n");
+            let parser = HwpParser::new();
+            let result = parser.parse(&data);
+            if let Err(e) = &result {
+                eprintln!("Parse error: {:?}", e);
+            }
+            assert!(result.is_ok(), "Should parse HWP document");
+            let document = result.unwrap();
+
+            // 각주/미주 확인
+            for section in &document.body_text.sections {
+                for (para_idx, paragraph) in section.paragraphs.iter().enumerate() {
+                    eprintln!(
+                        "[TEST] Paragraph {}: control_mask.value={}, has_footnote_endnote={}",
+                        para_idx,
+                        paragraph.para_header.control_mask.value,
+                        paragraph.para_header.control_mask.has_footnote_endnote()
+                    );
+                    for record in &paragraph.records {
+                        if let ParagraphRecord::CtrlHeader {
+                            header,
+                            children,
+                            paragraphs,
+                            ..
+                        } = record
+                        {
+                            if header.ctrl_id.as_str() == CtrlId::FOOTNOTE {
+                                let number =
+                                    if let crate::document::CtrlHeaderData::FootnoteEndnote {
+                                        number,
+                                        ..
+                                    } = &header.data
+                                    {
+                                        Some(*number)
+                                    } else {
+                                        None
+                                    };
+                                eprintln!("[TEST] Found FOOTNOTE number={:?}: children_count={}, paragraphs_count={}", 
+                                    number, children.len(), paragraphs.len());
+                                for child in children {
+                                    if let ParagraphRecord::ListHeader {
+                                        paragraphs: list_paragraphs,
+                                        ..
+                                    } = child
+                                    {
+                                        eprintln!(
+                                            "[TEST] FOOTNOTE ListHeader: paragraphs_count={}",
+                                            list_paragraphs.len()
+                                        );
+                                        for (para_idx, para) in list_paragraphs.iter().enumerate() {
+                                            for para_record in &para.records {
+                                                if let ParagraphRecord::ParaText { text, .. } =
+                                                    para_record
+                                                {
+                                                    eprintln!("[TEST] FOOTNOTE ListHeader Para[{}] ParaText: {}", para_idx, text);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if header.ctrl_id.as_str() == CtrlId::ENDNOTE {
+                                let number =
+                                    if let crate::document::CtrlHeaderData::FootnoteEndnote {
+                                        number,
+                                        ..
+                                    } = &header.data
+                                    {
+                                        Some(*number)
+                                    } else {
+                                        None
+                                    };
+                                eprintln!("[TEST] Found ENDNOTE number={:?}: children_count={}, paragraphs_count={}", 
+                                    number, children.len(), paragraphs.len());
+                                for child in children {
+                                    if let ParagraphRecord::ListHeader {
+                                        paragraphs: list_paragraphs,
+                                        ..
+                                    } = child
+                                    {
+                                        eprintln!(
+                                            "[TEST] ENDNOTE ListHeader: paragraphs_count={}",
+                                            list_paragraphs.len()
+                                        );
+                                        for (para_idx, para) in list_paragraphs.iter().enumerate() {
+                                            for para_record in &para.records {
+                                                if let ParagraphRecord::ParaText { text, .. } =
+                                                    para_record
+                                                {
+                                                    eprintln!("[TEST] ENDNOTE ListHeader Para[{}] ParaText: {}", para_idx, text);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
