@@ -1430,33 +1430,61 @@ expression: json
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "solid",
-          "background_color": 4294967295,
-          "pattern_color": 4278190080,
+          "background_color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "pattern_color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
           "pattern_type": -1
         }
       },
@@ -1476,28 +1504,48 @@ expression: json
           {
             "line_type": 1,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 1,
             "width": 0,
-            "color": 257
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 16842752
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -1519,33 +1567,61 @@ expression: json
           {
             "line_type": 1,
             "width": 96,
-            "color": 6297371
+            "color": {
+              "r": 27,
+              "g": 23,
+              "b": 96
+            }
           },
           {
             "line_type": 7,
             "width": 0,
-            "color": 387647233
+            "color": {
+              "r": 1,
+              "g": 7,
+              "b": 27
+            }
           },
           {
             "line_type": 27,
             "width": 1,
-            "color": 117506144
+            "color": {
+              "r": 96,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 23,
             "width": 7,
-            "color": 6297371
+            "color": {
+              "r": 27,
+              "g": 23,
+              "b": 96
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "solid",
-          "background_color": 12463412,
-          "pattern_color": 0,
+          "background_color": {
+            "r": 52,
+            "g": 45,
+            "b": 190
+          },
+          "pattern_color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
           "pattern_type": -1
         }
       },
@@ -1565,28 +1641,48 @@ expression: json
           {
             "line_type": 1,
             "width": 96,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 7,
             "width": 0,
-            "color": 387647232
+            "color": {
+              "r": 0,
+              "g": 7,
+              "b": 27
+            }
           },
           {
             "line_type": 27,
             "width": 0,
-            "color": 16777312
+            "color": {
+              "r": 96,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 23,
             "width": 1,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -1608,28 +1704,48 @@ expression: json
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 1,
             "width": 0,
-            "color": 387647233
+            "color": {
+              "r": 1,
+              "g": 7,
+              "b": 27
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 117506144
+            "color": {
+              "r": 96,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 6297371
+            "color": {
+              "r": 27,
+              "g": 23,
+              "b": 96
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -1651,33 +1767,61 @@ expression: json
           {
             "line_type": 0,
             "width": 0,
-            "color": 4278190080
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 255,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 65280
+            "color": {
+              "r": 0,
+              "g": 255,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 4278190080
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "solid",
-          "background_color": 4294967295,
-          "pattern_color": 4278190080,
+          "background_color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "pattern_color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
           "pattern_type": -1
         }
       },
@@ -1697,28 +1841,48 @@ expression: json
           {
             "line_type": 1,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 1,
             "width": 0,
-            "color": 257
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 16842752
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 0,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -1740,28 +1904,48 @@ expression: json
           {
             "line_type": 1,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 2,
             "width": 0,
-            "color": 257
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 16842752
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 6,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -1783,28 +1967,48 @@ expression: json
           {
             "line_type": 1,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 2,
             "width": 0,
-            "color": 257
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 100728832
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 6,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -1826,28 +2030,48 @@ expression: json
           {
             "line_type": 1,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 2,
             "width": 0,
-            "color": 257
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 16842752
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 2,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -1869,28 +2093,48 @@ expression: json
           {
             "line_type": 1,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 2,
             "width": 0,
-            "color": 257
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 100728832
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 2,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -1912,28 +2156,48 @@ expression: json
           {
             "line_type": 8,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 7,
             "width": 0,
-            "color": 1800
+            "color": {
+              "r": 8,
+              "g": 7,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 8,
-            "color": 117964800
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 8
+            }
           },
           {
             "line_type": 0,
             "width": 7,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 0,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -1955,28 +2219,48 @@ expression: json
           {
             "line_type": 1,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 6,
             "width": 0,
-            "color": 257
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 16842752
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 2,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -1998,28 +2282,48 @@ expression: json
           {
             "line_type": 1,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 6,
             "width": 0,
-            "color": 257
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 100728832
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 2,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -2041,33 +2345,61 @@ expression: json
           {
             "line_type": 1,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 6,
             "width": 0,
-            "color": 1537
+            "color": {
+              "r": 1,
+              "g": 6,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 16842752
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 2,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "solid",
-          "background_color": 10872807,
-          "pattern_color": 4294967295,
+          "background_color": {
+            "r": 231,
+            "g": 231,
+            "b": 165
+          },
+          "pattern_color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
           "pattern_type": -1
         }
       },
@@ -2087,33 +2419,61 @@ expression: json
           {
             "line_type": 1,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 2,
             "width": 0,
-            "color": 1537
+            "color": {
+              "r": 1,
+              "g": 6,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 16842752
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 1
+            }
           },
           {
             "line_type": 0,
             "width": 6,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "solid",
-          "background_color": 10872807,
-          "pattern_color": 4294967295,
+          "background_color": {
+            "r": 231,
+            "g": 231,
+            "b": 165
+          },
+          "pattern_color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
           "pattern_type": -1
         }
       },
@@ -2133,33 +2493,61 @@ expression: json
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 1,
             "width": 0,
-            "color": 1800
+            "color": {
+              "r": 8,
+              "g": 7,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 117964800
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 8
+            }
           },
           {
             "line_type": 0,
             "width": 1,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "solid",
-          "background_color": 15921906,
-          "pattern_color": 4294967295,
+          "background_color": {
+            "r": 242,
+            "g": 242,
+            "b": 242
+          },
+          "pattern_color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
           "pattern_type": -1
         }
       },
@@ -2179,33 +2567,61 @@ expression: json
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "solid",
-          "background_color": 14277081,
-          "pattern_color": 0,
+          "background_color": {
+            "r": 217,
+            "g": 217,
+            "b": 217
+          },
+          "pattern_color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
           "pattern_type": -1
         }
       }
@@ -2277,12 +2693,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -2350,12 +2786,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -2423,12 +2879,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -2496,12 +2972,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -2569,12 +3065,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -2642,12 +3158,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 0,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -2715,12 +3251,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -2788,12 +3344,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 16777215,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -2861,12 +3437,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -2934,12 +3530,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3007,12 +3623,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3080,12 +3716,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 12632256,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 192,
+          "g": 192,
+          "b": 192
+        },
         "border_fill_id": 0,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3153,12 +3809,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3226,12 +3902,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3299,12 +3995,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3372,12 +4088,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 255,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 255,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3445,12 +4181,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3518,12 +4274,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3591,12 +4367,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 255,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 255,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3664,12 +4460,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3737,12 +4553,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3810,12 +4646,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3883,12 +4739,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -3956,12 +4832,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4029,12 +4925,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4102,12 +5018,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 0,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4175,12 +5111,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4248,12 +5204,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 0,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4321,12 +5297,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4394,12 +5390,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4467,12 +5483,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4540,12 +5576,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 16711680,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 255
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 0,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4613,12 +5669,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4686,12 +5762,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4759,12 +5855,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4832,12 +5948,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 12632256,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 192,
+          "g": 192,
+          "b": 192
+        },
         "border_fill_id": 0,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4905,12 +6041,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -4978,12 +6134,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5051,12 +6227,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5124,12 +6320,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5197,12 +6413,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5270,12 +6506,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5343,12 +6599,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5416,12 +6692,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5489,12 +6785,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5562,12 +6878,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5635,12 +6971,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5708,12 +7064,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5781,12 +7157,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5854,12 +7250,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -5927,12 +7343,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -6000,12 +7436,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -6073,12 +7529,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -6146,12 +7622,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -6219,12 +7715,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -6292,12 +7808,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -6365,12 +7901,32 @@ expression: json
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 11711154,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 178,
+          "g": 178,
+          "b": 178
+        },
         "border_fill_id": 1,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       }
     ],
     "tab_defs": [
@@ -9207,7 +10763,11 @@ expression: json
                       "remark_between_margin": 567,
                       "breakline_type": 27,
                       "breakline_thickness": 1,
-                      "breakline_color": 257
+                      "breakline_color": {
+                        "r": 1,
+                        "g": 1,
+                        "b": 0
+                      }
                     }
                   },
                   {
@@ -9230,7 +10790,11 @@ expression: json
                       "remark_between_margin": 567,
                       "breakline_type": 0,
                       "breakline_thickness": 0,
-                      "breakline_color": 257
+                      "breakline_color": {
+                        "r": 1,
+                        "g": 1,
+                        "b": 0
+                      }
                     }
                   },
                   {
@@ -9400,7 +10964,11 @@ expression: json
                       {
                         "type": "shape_component_picture",
                         "shape_component_picture": {
-                          "border_color": 0,
+                          "border_color": {
+                            "r": 0,
+                            "g": 0,
+                            "b": 0
+                          },
                           "border_width": 0,
                           "border_attributes": 0,
                           "border_rectangle_x": {
@@ -13789,7 +15357,11 @@ expression: json
                                 {
                                   "type": "shape_component_picture",
                                   "shape_component_picture": {
-                                    "border_color": 0,
+                                    "border_color": {
+                                      "r": 0,
+                                      "g": 0,
+                                      "b": 0
+                                    },
                                     "border_width": 0,
                                     "border_attributes": 0,
                                     "border_rectangle_x": {
@@ -14162,7 +15734,11 @@ expression: json
                               {
                                 "type": "shape_component_picture",
                                 "shape_component_picture": {
-                                  "border_color": 0,
+                                  "border_color": {
+                                    "r": 0,
+                                    "g": 0,
+                                    "b": 0
+                                  },
                                   "border_width": 0,
                                   "border_attributes": 0,
                                   "border_rectangle_x": {
@@ -15603,7 +17179,11 @@ expression: json
                                 {
                                   "type": "shape_component_picture",
                                   "shape_component_picture": {
-                                    "border_color": 0,
+                                    "border_color": {
+                                      "r": 0,
+                                      "g": 0,
+                                      "b": 0
+                                    },
                                     "border_width": 0,
                                     "border_attributes": 0,
                                     "border_rectangle_x": {
@@ -15841,7 +17421,11 @@ expression: json
                                 {
                                   "type": "shape_component_picture",
                                   "shape_component_picture": {
-                                    "border_color": 0,
+                                    "border_color": {
+                                      "r": 0,
+                                      "g": 0,
+                                      "b": 0
+                                    },
                                     "border_width": 0,
                                     "border_attributes": 0,
                                     "border_rectangle_x": {
@@ -17979,7 +19563,11 @@ expression: json
                               {
                                 "type": "shape_component_picture",
                                 "shape_component_picture": {
-                                  "border_color": 0,
+                                  "border_color": {
+                                    "r": 0,
+                                    "g": 0,
+                                    "b": 0
+                                  },
                                   "border_width": 0,
                                   "border_attributes": 0,
                                   "border_rectangle_x": {
@@ -18196,7 +19784,11 @@ expression: json
                               {
                                 "type": "shape_component_picture",
                                 "shape_component_picture": {
-                                  "border_color": 0,
+                                  "border_color": {
+                                    "r": 0,
+                                    "g": 0,
+                                    "b": 0
+                                  },
                                   "border_width": 0,
                                   "border_attributes": 0,
                                   "border_rectangle_x": {

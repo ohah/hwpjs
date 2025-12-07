@@ -315,28 +315,48 @@
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "none"
@@ -358,33 +378,61 @@
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           },
           {
             "line_type": 0,
             "width": 0,
-            "color": 0
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
           }
         ],
         "diagonal": {
           "line_type": 1,
           "thickness": 0,
-          "color": 0
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         },
         "fill": {
           "type": "solid",
-          "background_color": 4294967295,
-          "pattern_color": 10066329,
+          "background_color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "pattern_color": {
+            "r": 153,
+            "g": 153,
+            "b": 153
+          },
           "pattern_type": -1
         }
       }
@@ -456,12 +504,32 @@
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 12632256,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 192,
+          "g": 192,
+          "b": 192
+        },
         "border_fill_id": 2,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -529,12 +597,32 @@
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 12632256,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 192,
+          "g": 192,
+          "b": 192
+        },
         "border_fill_id": 2,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -602,12 +690,32 @@
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 12632256,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 192,
+          "g": 192,
+          "b": 192
+        },
         "border_fill_id": 2,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -675,12 +783,32 @@
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 12632256,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 192,
+          "g": 192,
+          "b": 192
+        },
         "border_fill_id": 2,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -748,12 +876,32 @@
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 12632256,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 192,
+          "g": 192,
+          "b": 192
+        },
         "border_fill_id": 2,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -821,12 +969,32 @@
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 11891758,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 12632256,
+        "text_color": {
+          "r": 46,
+          "g": 116,
+          "b": 181
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 192,
+          "g": 192,
+          "b": 192
+        },
         "border_fill_id": 2,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -894,12 +1062,32 @@
         },
         "shadow_spacing_x": 10,
         "shadow_spacing_y": 10,
-        "text_color": 0,
-        "underline_color": 0,
-        "shading_color": 4294967295,
-        "shadow_color": 12632256,
+        "text_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "underline_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "shading_color": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "shadow_color": {
+          "r": 192,
+          "g": 192,
+          "b": 192
+        },
         "border_fill_id": 2,
-        "strikethrough_color": 0
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       }
     ],
     "tab_defs": [
@@ -2219,7 +2407,11 @@
                       "remark_between_margin": 567,
                       "breakline_type": 27,
                       "breakline_thickness": 1,
-                      "breakline_color": 257
+                      "breakline_color": {
+                        "r": 1,
+                        "g": 1,
+                        "b": 0
+                      }
                     }
                   },
                   {
@@ -2242,7 +2434,11 @@
                       "remark_between_margin": 567,
                       "breakline_type": 0,
                       "breakline_thickness": 0,
-                      "breakline_color": 257
+                      "breakline_color": {
+                        "r": 1,
+                        "g": 1,
+                        "b": 0
+                      }
                     }
                   },
                   {

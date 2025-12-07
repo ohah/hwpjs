@@ -15,6 +15,15 @@ expression: html
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+        /* 논리적 속성 초기화 / Reset logical properties */
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
     }
 
     html, body {
@@ -41,14 +50,34 @@ expression: html
     h1, h2, h3, h4, h5, h6 {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
         font-size: 1em;
         font-weight: normal;
         line-height: 1;
+        display: block;
+        unicode-bidi: normal;
     }
 
     p, blockquote, pre {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+        display: block;
+        unicode-bidi: normal;
     }
 
     /* Links */
@@ -68,7 +97,23 @@ expression: html
     ul, ol, li {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
         list-style: none;
+    }
+    
+    ul, ol {
+        display: block;
+    }
+    
+    li {
+        display: list-item;
     }
 
     /* Tables */
@@ -99,7 +144,7 @@ expression: html
     th, td {
         margin: 0;
         padding: 0;
-        border: 0;
+        /* border: 0 제거 - border 클래스가 적용되도록 / Remove border: 0 to allow border classes to apply */
         text-align: left;
         font-weight: normal;
         font-style: normal;
@@ -225,6 +270,32 @@ expression: html
         display: block;
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+    
+    /* Block-level elements reset */
+    div, address, dl, dt, dd, fieldset, form, legend {
+        margin: 0;
+        padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+    
+    div {
+        display: block;
     }
 
     summary {
@@ -328,15 +399,16 @@ expression: html
 
     .ohah-hwpjs-table th,
     .ohah-hwpjs-table td {
-        border: 1px solid #ddd;
         padding: 8px;
         text-align: left;
+        border: 1px solid black;
     }
 
     .ohah-hwpjs-table th {
-        background-color: #f2f2f2;
         font-weight: bold;
     }
+    
+    /* 테이블 셀 배경색은 bg-color 클래스로 처리 / Table cell background colors are handled by bg-color classes */
 
     .ohah-hwpjs-image {
         max-width: 100%;
@@ -480,20 +552,21 @@ expression: html
         margin-right: 3px;
     }
 
-
-    .ohah-hwpjs-size-1000 {
+               
+                   .ohah-hwpjs-size-1000 {
         font-size: 10.00pt;
     }
 
 
-    .ohah-hwpjs-border-fill-1 {
+               
+                   .ohah-hwpjs-bg-color-ffffff {
+        background-color: rgb(255, 255, 255) !important;
     }
 
-    .ohah-hwpjs-border-fill-2 {
-        background-color: rgb(255, 255, 255);
-    }
 
-  </style>
+               
+               
+                 </style>
 </head>
 <body>
   <div class="ohah-hwpjs-document">
@@ -503,35 +576,35 @@ expression: html
     <p><strong>용지 방향</strong>: Vertical</p>
     <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
     <main class="ohah-hwpjs-main">
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 0mm, 글자처럼 취급</span></p>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">전후</span></p>
     <hr class="ohah-hwpjs-page-break" />
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 문단 왼쪽부터 5mm</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 단 왼쪽부터 5mm</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 쪽 왼쪽부터 5mm</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 종이 왼쪽부터 35mm</span></p>
     <hr class="ohah-hwpjs-page-break" />
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 문단 오른쪽부터 5mm</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 단 오른쪽부터 5mm</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 쪽 오른쪽부터 5mm</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 종이 오른쪽부터 35mm</span></p>
     <hr class="ohah-hwpjs-page-break" />
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 문단 가운데로부터 5mm</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 단 가운데로부터 5mm</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 쪽 가운데로부터 5mm</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-1">&nbsp;</th><th class="ohah-hwpjs-border-fill-1">&nbsp;</th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-1">&nbsp;</td><td class="ohah-hwpjs-border-fill-1">&nbsp;</td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th>&nbsp;</th><th>&nbsp;</th></tr></thead><tbody><tr><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  여백 10mm, 종이 가운데로부터 5mm</span></p>
     </main>
   </div>
