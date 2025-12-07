@@ -697,20 +697,24 @@ expression: html
     <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
     <section class="ohah-hwpjs-Section ohah-hwpjs-Section-0">
       <div class="ohah-hwpjs-Paper">
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header"></div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
+        </div>
         <div class="ohah-hwpjs-Page">
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">Section 1: A4 portrait</span></p>
         </div>
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer"></div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
+        </div>
       </div>
     </section>
     <section class="ohah-hwpjs-Section ohah-hwpjs-Section-1">
       <div class="ohah-hwpjs-Paper">
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header"></div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
+        </div>
         <div class="ohah-hwpjs-Page">
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">Section 2: A4 landscape</span></p>
         </div>
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer"></div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
+        </div>
       </div>
     </section>
   </div>

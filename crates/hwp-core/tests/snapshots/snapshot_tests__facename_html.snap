@@ -676,12 +676,12 @@ expression: html
     }
 
                
-                   .ohah-hwpjs-size-900 {
-        font-size: 9.00pt;
+                   .ohah-hwpjs-size-1000 {
+        font-size: 10.00pt;
     }
 
-    .ohah-hwpjs-size-1000 {
-        font-size: 10.00pt;
+    .ohah-hwpjs-size-900 {
+        font-size: 9.00pt;
     }
 
 
@@ -704,7 +704,8 @@ expression: html
     <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
     <section class="ohah-hwpjs-Section ohah-hwpjs-Section-0">
       <div class="ohah-hwpjs-Paper">
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header"></div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
+        </div>
         <div class="ohah-hwpjs-Page">
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">ko바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕</span></p>
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">ko</span><span class="ohah-hwpjs-font-1 ohah-hwpjs-size-1000">한컴바탕</span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">en바탕cn바탕jp바탕other바탕symbol바탕user바탕</span></p>
@@ -719,7 +720,8 @@ expression: html
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">ko바탕en바탕cn바탕jp</span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">MSGothic</span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">other바탕symbol바탕user바탕</span></p>
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">ko바탕en바탕cn바탕jp</span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">MSMinCho</span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">other바탕symbol바탕user바탕</span></p>
         </div>
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer"></div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
+        </div>
       </div>
     </section>
   </div>

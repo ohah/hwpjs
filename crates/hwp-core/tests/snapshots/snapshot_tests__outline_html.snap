@@ -652,7 +652,8 @@ expression: html
     <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
     <section class="ohah-hwpjs-Section ohah-hwpjs-Section-0">
       <div class="ohah-hwpjs-Paper">
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header"></div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
+        </div>
         <div class="ohah-hwpjs-Page">
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-1">1. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 1</span></span></p>
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-2">가. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요2</span></span></p>
@@ -670,7 +671,8 @@ expression: html
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-10"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요10</span></span></p>
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-1">2. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 1-2</span></span></p>
         </div>
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer"></div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
+        </div>
       </div>
     </section>
   </div>

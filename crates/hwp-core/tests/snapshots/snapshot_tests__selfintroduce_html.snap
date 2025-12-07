@@ -688,7 +688,8 @@ expression: html
     <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
     <section class="ohah-hwpjs-Section ohah-hwpjs-Section-0">
       <div class="ohah-hwpjs-Paper">
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header"></div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
+        </div>
         <div class="ohah-hwpjs-Page">
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">나를 소개 합니다</span></p>
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">① </span><span class="ohah-hwpjs-size-1600">이름</span><span class="ohah-hwpjs-size-1600"> : </span></p>
@@ -699,7 +700,8 @@ expression: html
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">어린 시절은 변두리 작은 동네에서 꿈 많은 소녀로 자라났습니다. 할머니, 할아버지, 삼촌들까지 대가족 속에서 막내로 귀여움을 받으면서 살았습니다. 가족들은 저에게 </span><span class="ohah-hwpjs-size-1600"><span class="ohah-hwpjs-emphasis-1">微笑天使</span></span><span class="ohah-hwpjs-size-1600">라고 부르곤 했습니다. 가족들의 사랑 덕분에 잘 자라날 수 있었습니다.</span></p>
           <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">현재 저는 사랑하는 아이들과 남편과 함께 </span><span class="ohah-hwpjs-size-1600"><span class="ohah-hwpjs-emphasis-1">행복</span></span><span class="ohah-hwpjs-size-1600">(幸福)한 삶을 살아가고 있습니다. 앞으로의 꿈은 아이들이 결혼하고 나면 남편과 시골에서 조그마한 텃밭을 가꾸면서 살아가는 것입니다. 그 꿈을 실현할 수 있기를 바랍니다. </span></p>
         </div>
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer"></div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
+        </div>
       </div>
     </section>
   </div>
