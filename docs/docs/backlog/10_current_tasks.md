@@ -31,41 +31,6 @@ interface ExtractImagesResult {
 }
 ```
 
-### 문서 요약 정보 함수
-
-- **함수명**: `parse_summary_information_json`
-- **NAPI 함수명**: `parse_summary_information_json` (node/web/react-native 공통)
-- **기능**: HWP 문서에서 SummaryInformation을 파싱하여 JSON으로 반환
-- **반환 타입**: JSON 문자열
-- **TypeScript 선언**: `parseSummaryInformationJson(data: Array<number>): string`
-- **버전**: 0.1.0-rc.2부터 지원 예정
-- **상태**: Rust 구현 완료, 바인딩 필요
-- **구현 위치**:
-  - Rust: `crates/hwp-core/src/lib.rs` (완료)
-  - NAPI 바인딩: `packages/hwpjs/src/lib.rs` (필요)
-  - Node CLI: `examples/cli/` (필요)
-  - Web: `examples/web/` (필요)
-  - TypeScript: `packages/hwpjs/index.d.ts` (필요)
-
-**반환 형식**:
-```typescript
-interface SummaryInformation {
-  title?: string;
-  subject?: string;
-  author?: string;
-  keywords?: string;
-  comments?: string;
-  last_saved_by?: string;
-  revision_number?: string;
-  last_printed?: string;
-  create_time?: string;
-  last_saved_time?: string;
-  page_count?: number;
-  date_string?: string;
-  para_count?: number;
-}
-```
-
 ## 개선 작업
 
 ### 배포 패키지 용량 최적화
@@ -123,42 +88,6 @@ interface SummaryInformation {
   - 따라서 패키지 크기 최적화는 앱 번들 크기 최적화로도 이어짐
 - **우선순위**: 높음
 - **상태**: 진행 중 (131.67 MB → 목표 100MB 이하)
-
-### Craby 심링크(symlink) 기능 추가
-
-- **현재 상태**: `packages/hwpjs/target` 디렉토리가 별도로 생성되어 빌드 아티팩트가 중복 저장됨
-- **변경 필요**: Craby 빌드 시 `target` 디렉토리를 workspace 루트의 `target`으로 심링크하도록 옵션 추가
-- **목적**: 
-  - 빌드 아티팩트 중복 저장 방지
-  - 디스크 공간 절약
-  - 빌드 캐시 공유로 빌드 시간 단축
-- **구현 방법**:
-  - `craby.toml`에 `target_symlink` 옵션 추가
-  - 옵션 값: `true` (기본값: `false`)
-  - 빌드 전에 자동으로 심링크 생성
-- **설정 예시**:
-  ```toml
-  [project]
-  name = "hwpjs"
-  source_dir = "src-reactnative"
-  target_symlink = true  # workspace 루트의 target으로 심링크
-  
-  [android]
-  package_name = "rs.craby.hwpjs"
-  
-  [ios]
-  ```
-- **영향 범위**:
-  - Craby 빌드 시스템 수정 필요
-  - `packages/hwpjs/scripts/create-target-link.ts` 스크립트를 Craby에 통합
-  - Windows 환경에서 관리자 권한 필요 시 경고 메시지 표시
-- **고려사항**:
-  - Windows에서는 `mklink /D` 명령어 사용 (관리자 권한 필요)
-  - macOS/Linux에서는 `ln -s` 사용
-  - 기존 `target` 디렉토리가 존재하는 경우 처리 방법 결정 필요
-  - 심링크 생성 실패 시 일반 디렉토리로 폴백
-- **우선순위**: 중간
-- **상태**: 계획됨
 
 ### 이미지 렌더링 크기 정보 추가
 
