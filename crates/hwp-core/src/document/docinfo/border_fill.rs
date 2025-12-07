@@ -92,6 +92,7 @@ pub struct ImageFill {
 /// 채우기 정보 / Fill information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
+#[allow(dead_code)]
 pub enum FillInfo {
     /// 채우기 없음 / No fill
     None,

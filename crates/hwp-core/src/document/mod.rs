@@ -21,7 +21,7 @@ pub use bodytext::{
 };
 pub use docinfo::{
     BinDataRecord, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName,
-    HeaderShapeType, IdMappings, Numbering, ParaShape, Style, TabDef,
+    FillInfo, HeaderShapeType, IdMappings, Numbering, ParaShape, Style, TabDef,
 };
 pub use fileheader::FileHeader;
 pub use preview_image::PreviewImage;
@@ -100,5 +100,17 @@ impl HwpDocument {
             include_page_info: Some(true),
         };
         crate::viewer::to_markdown(self, &options)
+    }
+
+    /// Convert HWP document to HTML format
+    /// HWP 문서를 HTML 형식으로 변환
+    ///
+    /// # Arguments / 매개변수
+    /// * `options` - HTML conversion options / HTML 변환 옵션
+    ///
+    /// # Returns / 반환값
+    /// HTML string representation of the document / 문서의 HTML 문자열 표현
+    pub fn to_html(&self, options: &crate::viewer::html::HtmlOptions) -> String {
+        crate::viewer::to_html(self, options)
     }
 }

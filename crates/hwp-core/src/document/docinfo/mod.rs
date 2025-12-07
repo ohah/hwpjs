@@ -30,7 +30,7 @@ use crate::document::fileheader::FileHeader;
 use crate::error::HwpError;
 use crate::types::RecordHeader;
 pub use bin_data::BinDataRecord;
-pub use border_fill::BorderFill;
+pub use border_fill::{BorderFill, FillInfo};
 pub use bullet::Bullet;
 pub use char_shape::CharShape;
 pub use compatible_document::CompatibleDocument;
