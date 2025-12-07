@@ -24,4 +24,3 @@ pub(crate) fn convert_table_ctrl_to_html(
     // Tables are already processed in bodytext/table.rs, so return empty string here
     String::new()
 }
-
