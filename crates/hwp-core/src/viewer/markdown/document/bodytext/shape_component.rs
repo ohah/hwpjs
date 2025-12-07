@@ -72,4 +72,3 @@ pub(crate) fn convert_shape_component_children_to_markdown(
 
     parts
 }
-

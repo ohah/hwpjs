@@ -77,7 +77,10 @@ pub fn convert_bodytext_to_markdown(
                                     // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
                                     for para in paragraphs {
                                         let para_md = paragraph::convert_paragraph_to_markdown(
-                                            para, document, options, &mut outline_tracker,
+                                            para,
+                                            document,
+                                            options,
+                                            &mut outline_tracker,
                                         );
                                         if !para_md.is_empty() {
                                             headers.push(para_md);
@@ -90,7 +93,10 @@ pub fn convert_bodytext_to_markdown(
                             if !found_list_header {
                                 for para in ctrl_paragraphs {
                                     let para_md = paragraph::convert_paragraph_to_markdown(
-                                        para, document, options, &mut outline_tracker,
+                                        para,
+                                        document,
+                                        options,
+                                        &mut outline_tracker,
                                     );
                                     if !para_md.is_empty() {
                                         headers.push(para_md);
@@ -111,7 +117,10 @@ pub fn convert_bodytext_to_markdown(
                                     // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
                                     for para in paragraphs {
                                         let para_md = paragraph::convert_paragraph_to_markdown(
-                                            para, document, options, &mut outline_tracker,
+                                            para,
+                                            document,
+                                            options,
+                                            &mut outline_tracker,
                                         );
                                         if !para_md.is_empty() {
                                             footers.push(para_md);
@@ -124,7 +133,10 @@ pub fn convert_bodytext_to_markdown(
                             if !found_list_header {
                                 for para in ctrl_paragraphs {
                                     let para_md = paragraph::convert_paragraph_to_markdown(
-                                        para, document, options, &mut outline_tracker,
+                                        para,
+                                        document,
+                                        options,
+                                        &mut outline_tracker,
                                     );
                                     if !para_md.is_empty() {
                                         footers.push(para_md);
@@ -139,7 +151,10 @@ pub fn convert_bodytext_to_markdown(
                             // actual text is in ParagraphList (paragraphs)
                             for para in ctrl_paragraphs {
                                 let para_md = paragraph::convert_paragraph_to_markdown(
-                                    para, document, options, &mut outline_tracker,
+                                    para,
+                                    document,
+                                    options,
+                                    &mut outline_tracker,
                                 );
                                 if !para_md.is_empty() {
                                     footnotes.push(para_md);
@@ -155,7 +170,10 @@ pub fn convert_bodytext_to_markdown(
                             // actual text is in ParagraphList (paragraphs)
                             for para in ctrl_paragraphs {
                                 let para_md = paragraph::convert_paragraph_to_markdown(
-                                    para, document, options, &mut outline_tracker,
+                                    para,
+                                    document,
+                                    options,
+                                    &mut outline_tracker,
                                 );
                                 if !para_md.is_empty() {
                                     endnotes.push(para_md);
@@ -189,8 +207,12 @@ pub fn convert_bodytext_to_markdown(
                 }
 
                 // Convert paragraph to markdown (includes text and controls) / 문단을 마크다운으로 변환 (텍스트와 컨트롤 포함)
-                let markdown =
-                    paragraph::convert_paragraph_to_markdown(paragraph, document, options, &mut outline_tracker);
+                let markdown = paragraph::convert_paragraph_to_markdown(
+                    paragraph,
+                    document,
+                    options,
+                    &mut outline_tracker,
+                );
                 if !markdown.is_empty() {
                     body_lines.push(markdown);
                 }

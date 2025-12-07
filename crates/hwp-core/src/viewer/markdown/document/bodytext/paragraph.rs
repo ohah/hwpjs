@@ -13,7 +13,9 @@ use crate::viewer::markdown::document::bodytext::para_text::{
 use crate::viewer::markdown::document::bodytext::shape_component::convert_shape_component_children_to_markdown;
 use crate::viewer::markdown::document::bodytext::shape_component_picture::convert_shape_component_picture_to_markdown;
 use crate::viewer::markdown::document::bodytext::table::convert_table_to_markdown;
-use crate::viewer::markdown::utils::{convert_to_outline_with_number, is_text_part, OutlineNumberTracker};
+use crate::viewer::markdown::utils::{
+    convert_to_outline_with_number, is_text_part, OutlineNumberTracker,
+};
 use crate::viewer::markdown::MarkdownOptions;
 
 /// Convert a paragraph to markdown
@@ -109,7 +111,8 @@ pub fn convert_paragraph_to_markdown(
                 if !should_process_control_header(header) {
                     // CTRL_HEADER 내부의 직접 문단 처리 / Process direct paragraphs inside CTRL_HEADER
                     for para in ctrl_paragraphs {
-                        let para_md = convert_paragraph_to_markdown(para, document, options, tracker);
+                        let para_md =
+                            convert_paragraph_to_markdown(para, document, options, tracker);
                         if !para_md.is_empty() {
                             parts.push(para_md);
                         }
@@ -200,7 +203,8 @@ pub fn convert_paragraph_to_markdown(
                     match child {
                         ParagraphRecord::Table { table } => {
                             // 표 변환 / Convert table
-                            let table_md = convert_table_to_markdown(table, document, options, tracker);
+                            let table_md =
+                                convert_table_to_markdown(table, document, options, tracker);
                             if !table_md.is_empty() {
                                 parts.push(table_md);
                                 has_table = true;
@@ -223,8 +227,9 @@ pub fn convert_paragraph_to_markdown(
                                     // 표 앞의 LIST_HEADER는 이미 처리됨 / LIST_HEADER before table is already processed
                                     // 표가 없거나 표 셀 내부가 아닌 경우 일반 처리 / General processing if no table or not inside table cell
                                     for para in paragraphs {
-                                        let para_md =
-                                            convert_paragraph_to_markdown(para, document, options, tracker);
+                                        let para_md = convert_paragraph_to_markdown(
+                                            para, document, options, tracker,
+                                        );
                                         if !para_md.is_empty() {
                                             parts.push(para_md);
                                         }
@@ -233,8 +238,9 @@ pub fn convert_paragraph_to_markdown(
                             } else {
                                 // 표가 없는 경우 일반 처리 / General processing if no table
                                 for para in paragraphs {
-                                    let para_md =
-                                        convert_paragraph_to_markdown(para, document, options, tracker);
+                                    let para_md = convert_paragraph_to_markdown(
+                                        para, document, options, tracker,
+                                    );
                                     if !para_md.is_empty() {
                                         parts.push(para_md);
                                     }
@@ -394,7 +400,8 @@ pub fn convert_paragraph_to_markdown(
 
                     // 표 셀 내부가 아닌 경우에만 처리 / Only process if not inside table cell
                     if !is_table_cell {
-                        let para_md = convert_paragraph_to_markdown(para, document, options, tracker);
+                        let para_md =
+                            convert_paragraph_to_markdown(para, document, options, tracker);
                         if !para_md.is_empty() {
                             parts.push(para_md);
                         }
@@ -411,8 +418,12 @@ pub fn convert_paragraph_to_markdown(
     if !text_parts.is_empty() {
         let combined_text = text_parts.join("");
         // 개요 레벨 확인 및 개요 번호 추가 / Check outline level and add outline number
-        let outline_md =
-            convert_to_outline_with_number(&combined_text, &paragraph.para_header, document, tracker);
+        let outline_md = convert_to_outline_with_number(
+            &combined_text,
+            &paragraph.para_header,
+            document,
+            tracker,
+        );
         parts.push(outline_md);
     }
 
