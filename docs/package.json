@@ -14,8 +14,7 @@
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "buffer": "^6.0.3",
-    "@napi-rs/wasm-runtime": "^1.0.7"
+    "buffer": "^6.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.8.1",
