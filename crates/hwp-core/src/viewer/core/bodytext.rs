@@ -36,7 +36,6 @@ where
         == std::any::TypeId::of::<crate::viewer::html::HtmlOptions>()
     {
         use crate::viewer::html::document::bodytext::paragraph::convert_paragraph_to_html;
-        use crate::viewer::html::utils::OutlineNumberTracker;
         // 안전하게 타입 캐스팅 / Safely cast type
         unsafe {
             let html_options =
