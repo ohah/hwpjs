@@ -11,7 +11,7 @@ expression: html
   <style>
 
     /* CSS Reset - 브라우저 기본 스타일 초기화 / CSS Reset - Reset browser default styles */
-    * {
+    *, *::before, *::after {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
@@ -20,33 +20,222 @@ expression: html
     html, body {
         margin: 0;
         padding: 0;
+        width: 100%;
+        height: 100%;
     }
 
-    table {
-        border-collapse: collapse;
-        border-spacing: 0;
+    html {
+        font-size: 100%;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
     }
 
-    th, td {
+    body {
+        font-size: 1rem;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Typography reset */
+    h1, h2, h3, h4, h5, h6 {
+        margin: 0;
         padding: 0;
-        text-align: left;
+        font-size: 1em;
+        font-weight: normal;
+        line-height: 1;
     }
 
-    ul, ol {
+    p, blockquote, pre {
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Links */
+    a {
+        margin: 0;
+        padding: 0;
+        text-decoration: none;
+        color: inherit;
+        background-color: transparent;
+    }
+
+    a:active, a:hover {
+        outline: 0;
+    }
+
+    /* Lists */
+    ul, ol, li {
+        margin: 0;
+        padding: 0;
         list-style: none;
     }
 
-    img {
+    /* Tables */
+    table {
+        display: table;
+        border-collapse: collapse;
+        border-spacing: 0;
+        border-color: transparent;
+        width: 100%;
+        table-layout: auto;
+        empty-cells: show;
+    }
+
+    thead, tbody, tfoot {
+        margin: 0;
+        padding: 0;
         border: 0;
+    }
+
+    tr {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        display: table-row;
+        vertical-align: inherit;
+    }
+
+    th, td {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        text-align: left;
+        font-weight: normal;
+        font-style: normal;
+        vertical-align: top;
+        display: table-cell;
+    }
+
+    th {
+        font-weight: normal;
+    }
+
+    caption {
+        margin: 0;
+        padding: 0;
+        text-align: center;
+    }
+
+    /* Forms */
+    button, input, select, textarea {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        vertical-align: baseline;
+    }
+
+    button, input {
+        overflow: visible;
+    }
+
+    button, select {
+        text-transform: none;
+    }
+
+    button, [type="button"], [type="reset"], [type="submit"] {
+        -webkit-appearance: button;
+        cursor: pointer;
+    }
+
+    button::-moz-focus-inner, [type="button"]::-moz-focus-inner, [type="reset"]::-moz-focus-inner, [type="submit"]::-moz-focus-inner {
+        border-style: none;
+        padding: 0;
+    }
+
+    input[type="checkbox"], input[type="radio"] {
+        box-sizing: border-box;
+        padding: 0;
+    }
+
+    textarea {
+        overflow: auto;
+        resize: vertical;
+    }
+
+    /* Images and media */
+    img, svg, video, canvas, audio, iframe, embed, object {
+        display: block;
         max-width: 100%;
         height: auto;
+        border: 0;
+        vertical-align: middle;
+    }
+
+    img {
+        border-style: none;
+    }
+
+    svg:not(:root) {
+        overflow: hidden;
+    }
+
+    /* Other elements */
+    hr {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        height: 0;
+    }
+
+    code, kbd, samp, pre {
+        font-family: monospace, monospace;
+        font-size: 1em;
+    }
+
+    abbr[title] {
+        border-bottom: none;
+        text-decoration: underline;
+        text-decoration: underline dotted;
+    }
+
+    b, strong {
+        font-weight: normal;
+    }
+
+    i, em {
+        font-style: normal;
+    }
+
+    small {
+        font-size: 80%;
+    }
+
+    sub, sup {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+    }
+
+    sub {
+        bottom: -0.25em;
+    }
+
+    sup {
+        top: -0.5em;
+    }
+
+    /* Additional resets */
+    article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section {
+        display: block;
+        margin: 0;
+        padding: 0;
+    }
+
+    summary {
+        display: list-item;
     }
 
     /* HWP Document Styles */
     .ohah-hwpjs-document {
         max-width: 800px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 20px 20px 20px 20px;
         font-family: "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         line-height: 1.6;
     }
@@ -318,6 +507,17 @@ expression: html
         content: "☆";
         margin-right: 3px;
     }
+
+
+    .ohah-hwpjs-size-1600 {
+        font-size: 16.00pt;
+    }
+
+    .ohah-hwpjs-size-900 {
+        font-size: 9.00pt;
+    }
+
+
     .ohah-hwpjs-border-fill-1 {
         background-color: rgb(255, 255, 255);
     }
@@ -332,15 +532,18 @@ expression: html
   <div class="ohah-hwpjs-document">
     <h1>HWP 문서</h1>
     <p><strong>버전</strong>: 5.00.03.00</p>
+    <p><strong>용지 크기</strong>: 8.27인치 x 11.69인치</p>
+    <p><strong>용지 방향</strong>: Horizontal</p>
+    <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
     <main class="ohah-hwpjs-main">
-<p class="ohah-hwpjs-paragraph"><span style="font-size: 16.00pt">나를 소개 합니다</span></p>
-<p class="ohah-hwpjs-paragraph"><span style="font-size: 16.00pt">① </span><span style="font-size: 16.00pt">이름</span><span style="font-size: 16.00pt"> : </span></p>
-<p class="ohah-hwpjs-paragraph"><span style="font-size: 16.00pt">혈액형</span><span style="font-size: 16.00pt"> : O형</span></p>
-<p class="ohah-hwpjs-paragraph"><span style="font-size: 16.00pt">성격</span><span style="font-size: 16.00pt"> : 자유로운 영혼</span></p>
-<p class="ohah-hwpjs-paragraph"><span style="font-size: 16.00pt">좌우명</span><span style="font-size: 16.00pt"> : A sound mind in a sound body.</span></p>
-<p class="ohah-hwpjs-paragraph"><span style="font-size: 16.00pt">소개하는 글</span></p>
-<p class="ohah-hwpjs-paragraph"><span style="font-size: 16.00pt">어린 시절은 변두리 작은 동네에서 꿈 많은 소녀로 자라났습니다. 할머니, 할아버지, 삼촌들까지 대가족 속에서 막내로 귀여움을 받으면서 살았습니다. 가족들은 저에게 </span><span style="font-size: 16.00pt"><span class="ohah-hwpjs-emphasis-1">微笑天使</span></span><span style="font-size: 16.00pt">라고 부르곤 했습니다. 가족들의 사랑 덕분에 잘 자라날 수 있었습니다.</span></p>
-<p class="ohah-hwpjs-paragraph"><span style="font-size: 16.00pt">현재 저는 사랑하는 아이들과 남편과 함께 </span><span style="font-size: 16.00pt"><span class="ohah-hwpjs-emphasis-1">행복</span></span><span style="font-size: 16.00pt">(幸福)한 삶을 살아가고 있습니다. 앞으로의 꿈은 아이들이 결혼하고 나면 남편과 시골에서 조그마한 텃밭을 가꾸면서 살아가는 것입니다. 그 꿈을 실현할 수 있기를 바랍니다. </span></p>
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">나를 소개 합니다</span></p>
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">① </span><span class="ohah-hwpjs-size-1600">이름</span><span class="ohah-hwpjs-size-1600"> : </span></p>
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">혈액형</span><span class="ohah-hwpjs-size-1600"> : O형</span></p>
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">성격</span><span class="ohah-hwpjs-size-1600"> : 자유로운 영혼</span></p>
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">좌우명</span><span class="ohah-hwpjs-size-1600"> : A sound mind in a sound body.</span></p>
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">소개하는 글</span></p>
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">어린 시절은 변두리 작은 동네에서 꿈 많은 소녀로 자라났습니다. 할머니, 할아버지, 삼촌들까지 대가족 속에서 막내로 귀여움을 받으면서 살았습니다. 가족들은 저에게 </span><span class="ohah-hwpjs-size-1600"><span class="ohah-hwpjs-emphasis-1">微笑天使</span></span><span class="ohah-hwpjs-size-1600">라고 부르곤 했습니다. 가족들의 사랑 덕분에 잘 자라날 수 있었습니다.</span></p>
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">현재 저는 사랑하는 아이들과 남편과 함께 </span><span class="ohah-hwpjs-size-1600"><span class="ohah-hwpjs-emphasis-1">행복</span></span><span class="ohah-hwpjs-size-1600">(幸福)한 삶을 살아가고 있습니다. 앞으로의 꿈은 아이들이 결혼하고 나면 남편과 시골에서 조그마한 텃밭을 가꾸면서 살아가는 것입니다. 그 꿈을 실현할 수 있기를 바랍니다. </span></p>
     </main>
   </div>
 </body>
