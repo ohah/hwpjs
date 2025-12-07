@@ -6,16 +6,11 @@
 use crate::document::bodytext::CharShapeInfo;
 use crate::document::CharShape;
 use crate::document::{HwpDocument, Paragraph, ParagraphRecord};
-use crate::viewer::html::HtmlOptions;
 use crate::viewer::html::utils::{convert_to_outline_with_number, OutlineNumberTracker};
+use crate::viewer::html::HtmlOptions;
 
-// TODO: shape_component, shape_component_picture, table 모듈 구현 후 import
-// use crate::viewer::html::document::bodytext::para_text::{
-//     convert_para_text_to_html, convert_para_text_to_html_with_char_shapes,
-// };
-// use crate::viewer::html::document::bodytext::shape_component::convert_shape_component_children_to_html;
-// use crate::viewer::html::document::bodytext::shape_component_picture::convert_shape_component_picture_to_html;
-// use crate::viewer::html::document::bodytext::table::convert_table_to_html;
+// 모듈들이 이미 구현되어 있으므로 필요시 직접 호출하여 사용
+// Modules are already implemented, so call them directly when needed
 
 /// Convert a paragraph to HTML
 /// 문단을 HTML로 변환
@@ -54,45 +49,31 @@ pub fn convert_paragraph_to_html(
                 inline_control_params: _,
             } => {
                 // ParaText 변환 / Convert ParaText
-                // TODO: para_text 모듈 구현 후 활성화
-                // let text_html = if !char_shapes.is_empty() {
-                //     convert_para_text_to_html_with_char_shapes(
-                //         text,
-                //         control_char_positions,
-                //         &char_shapes,
-                //         Some(&get_char_shape),
-                //         &options.css_class_prefix,
-                //     )
-                // } else {
-                //     convert_para_text_to_html(text, control_char_positions, &options.css_class_prefix)
-                // };
-
-                // 임시로 텍스트를 그대로 출력 (나중에 para_text 모듈로 대체)
-                // Temporarily output text as-is (will be replaced with para_text module later)
-                if let Some(text_html) = crate::viewer::html::document::bodytext::para_text::convert_para_text_to_html(
-                    text,
-                    control_char_positions,
-                    &char_shapes,
-                    Some(&get_char_shape),
-                    &options.css_class_prefix,
-                    Some(document),
-                ) {
+                if let Some(text_html) =
+                    crate::viewer::html::document::bodytext::para_text::convert_para_text_to_html(
+                        text,
+                        control_char_positions,
+                        &char_shapes,
+                        Some(&get_char_shape),
+                        &options.css_class_prefix,
+                        Some(document),
+                    )
+                {
                     text_parts.push(text_html);
                 }
             }
             ParagraphRecord::ShapeComponent {
                 shape_component: _,
-                children: _,
+                children,
             } => {
                 // SHAPE_COMPONENT의 children을 재귀적으로 처리 / Recursively process SHAPE_COMPONENT's children
-                // TODO: shape_component 모듈 구현 후 활성화
-                // let shape_parts = convert_shape_component_children_to_html(
-                //     children,
-                //     document,
-                //     options,
-                //     tracker,
-                // );
-                // parts.extend(shape_parts);
+                let shape_parts = crate::viewer::html::document::bodytext::shape_component::convert_shape_component_children_to_html(
+                    children,
+                    document,
+                    options,
+                    tracker,
+                );
+                parts.extend(shape_parts);
             }
             ParagraphRecord::ShapeComponentPicture {
                 shape_component_picture,
@@ -108,12 +89,10 @@ pub fn convert_paragraph_to_html(
             }
             ParagraphRecord::Table { table } => {
                 // 테이블 변환 / Convert table
-                let table_html = crate::viewer::html::document::bodytext::table::convert_table_to_html(
-                    table,
-                    document,
-                    options,
-                    tracker,
-                );
+                let table_html =
+                    crate::viewer::html::document::bodytext::table::convert_table_to_html(
+                        table, document, options, tracker,
+                    );
                 if !table_html.is_empty() {
                     parts.push(table_html);
                 }
@@ -126,7 +105,7 @@ pub fn convert_paragraph_to_html(
             } => {
                 // 컨트롤 헤더 처리 / Process control header
                 use crate::document::CtrlId;
-                
+
                 // 표 셀 내부의 텍스트와 이미지를 수집하여 셀 내부 문단인지 확인
                 // Collect text and images from paragraphs in Table.cells to check if they are cell content
                 let mut table_cell_texts: std::collections::HashSet<String> =
@@ -185,6 +164,20 @@ pub fn convert_paragraph_to_html(
                             }
                             index += 1;
                         }
+                        ParagraphRecord::ShapeComponent {
+                            shape_component: _,
+                            children: sc_children,
+                        } => {
+                            // SHAPE_COMPONENT의 children 처리 / Process SHAPE_COMPONENT's children
+                            let shape_parts = crate::viewer::html::document::bodytext::shape_component::convert_shape_component_children_to_html(
+                                sc_children,
+                                document,
+                                options,
+                                tracker,
+                            );
+                            parts.extend(shape_parts);
+                            index += 1;
+                        }
                         _ => {
                             // 기타 레코드는 무시 / Ignore other records
                             index += 1;
@@ -221,10 +214,10 @@ pub fn convert_paragraph_to_html(
                                 && para_texts
                                     .iter()
                                     .any(|text| table_cell_texts.contains(text)))
-                            || (!para_image_ids.is_empty()
-                                && para_image_ids
-                                    .iter()
-                                    .any(|id| table_cell_image_ids.contains(id)))
+                                || (!para_image_ids.is_empty()
+                                    && para_image_ids
+                                        .iter()
+                                        .any(|id| table_cell_image_ids.contains(id)))
                         }
                     } else {
                         false
@@ -256,7 +249,7 @@ pub fn convert_paragraph_to_html(
             tracker,
             &options.css_class_prefix,
         );
-        
+
         // 문단을 <p> 태그로 감싸기 / Wrap paragraph in <p> tag
         let css_prefix = &options.css_class_prefix;
         if outline_html.contains(&format!("class=\"{}\"", format!("{}outline", css_prefix))) {
@@ -282,4 +275,3 @@ pub fn convert_paragraph_to_html(
 
     parts.join("\n")
 }
-

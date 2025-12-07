@@ -357,8 +357,8 @@ fn apply_html_styles<'a>(
         result = format!(r#"<span class="{}">{}</span>"#, emphasis_class, result);
     }
 
-    // 색상, 크기, 폰트 등은 인라인 스타일로 처리 / Handle color, size, font, etc. with inline styles
-    let mut style_attrs = Vec::new();
+    // 색상, 크기, 폰트 등은 클래스로 처리 / Handle color, size, font, etc. with classes
+    let mut classes = Vec::new();
 
     // 폰트 패밀리 (font_ids를 사용하여 face_names에서 폰트 이름 가져오기)
     // Font family (get font name from face_names using font_ids)
@@ -369,10 +369,7 @@ fn apply_html_styles<'a>(
         if font_id > 0 && font_id <= doc.doc_info.face_names.len() {
             // face_names 인덱스는 0-based이므로 font_id - 1 사용 / face_names index is 0-based, so use font_id - 1
             let font_idx = font_id - 1;
-            if let Some(face_name) = doc.doc_info.face_names.get(font_idx) {
-                let font_name = face_name.name.replace('"', "'");
-                style_attrs.push(format!("font-family: \"{}\", sans-serif", font_name));
-            }
+            classes.push(format!("{}font-{}", css_prefix, font_idx));
         }
     }
 
@@ -381,21 +378,20 @@ fn apply_html_styles<'a>(
         let r = (shape.text_color.0 >> 16) & 0xFF;
         let g = (shape.text_color.0 >> 8) & 0xFF;
         let b = shape.text_color.0 & 0xFF;
-        style_attrs.push(format!("color: rgb({}, {}, {})", r, g, b));
+        // hex 색상 클래스 이름 생성 / Generate hex color class name
+        classes.push(format!("{}color-{:02x}{:02x}{:02x}", css_prefix, r, g, b));
     }
 
     // 기준 크기 / Base size
     if shape.base_size > 0 {
         let size_pt = shape.base_size as f32 / 100.0;
-        style_attrs.push(format!("font-size: {:.2}pt", size_pt));
+        // 크기 클래스 이름 생성 (pt 값을 정수로 변환) / Generate size class name (convert pt to integer)
+        let size_int = (size_pt * 100.0) as u32; // 13.00pt -> 1300
+        classes.push(format!("{}size-{}", css_prefix, size_int));
     }
 
-    if !style_attrs.is_empty() {
-        result = format!(
-            r#"<span style="{}">{}</span>"#,
-            style_attrs.join("; "),
-            result
-        );
+    if !classes.is_empty() {
+        result = format!(r#"<span class="{}">{}</span>"#, classes.join(" "), result);
     }
 
     result

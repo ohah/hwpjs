@@ -227,7 +227,7 @@ pub(crate) fn convert_to_outline_with_number(
 
 /// 한글 개요 번호 형식 생성 / Generate Korean outline number format
 /// 레벨에 따라 다른 번호 형식 사용 / Use different number format based on level
-fn format_outline_number(level: u8, number: u32) -> String {
+pub(crate) fn format_outline_number(level: u8, number: u32) -> String {
     match level {
         1 => format!("{}.", number),                    // 1.
         2 => format!("{}.", number_to_hangul(number)),  // 가.

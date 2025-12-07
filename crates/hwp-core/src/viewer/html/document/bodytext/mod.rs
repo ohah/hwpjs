@@ -151,8 +151,19 @@ pub fn convert_bodytext_to_html(
                             // 각주 문단 처리 / Process footnote paragraph
                             // 본문에 각주 참조 링크 삽입 / Insert footnote reference link in body
                             let footnote_id = footnote_counter;
+                            
+                            // CtrlHeader의 children에서 FootnoteShape 찾기 / Find FootnoteShape in CtrlHeader's children
+                            let footnote_shape = children.iter().find_map(|child| {
+                                if let ParagraphRecord::FootnoteShape { footnote_shape } = child {
+                                    Some(footnote_shape)
+                                } else {
+                                    None
+                                }
+                            });
+                            
                             let footnote_number = format_footnote_number(
                                 footnote_id,
+                                footnote_shape,
                                 document,
                                 &options.css_class_prefix,
                             );
@@ -225,8 +236,19 @@ pub fn convert_bodytext_to_html(
                             // 미주 문단 처리 / Process endnote paragraph
                             // 본문에 미주 참조 링크 삽입 / Insert endnote reference link in body
                             let endnote_id = endnote_counter;
+                            
+                            // CtrlHeader의 children에서 FootnoteShape 찾기 / Find FootnoteShape in CtrlHeader's children
+                            let footnote_shape = children.iter().find_map(|child| {
+                                if let ParagraphRecord::FootnoteShape { footnote_shape } = child {
+                                    Some(footnote_shape)
+                                } else {
+                                    None
+                                }
+                            });
+                            
                             let endnote_number = format_endnote_number(
                                 endnote_id,
+                                footnote_shape,
                                 document,
                                 &options.css_class_prefix,
                             );
@@ -344,25 +366,285 @@ pub fn convert_bodytext_to_html(
 /// FootnoteShape에 따라 각주 번호 형식 지정
 fn format_footnote_number(
     number: u32,
+    footnote_shape: Option<&crate::document::bodytext::FootnoteShape>,
     _document: &HwpDocument,
     _css_prefix: &str,
 ) -> String {
-    // TODO: FootnoteShape에서 번호 형식 가져오기
-    // For now, use Arabic numbers
-    // 나중에 FootnoteShape의 number_shape에 따라 형식 지정
-    format!("{}", number)
+    let number_shape = footnote_shape
+        .map(|fs| &fs.attributes.number_shape)
+        .copied()
+        .unwrap_or(crate::document::bodytext::NumberShape::Arabic);
+    
+    format_number_by_shape(number, number_shape, footnote_shape)
 }
 
 /// Format endnote number according to FootnoteShape
 /// FootnoteShape에 따라 미주 번호 형식 지정
 fn format_endnote_number(
     number: u32,
+    footnote_shape: Option<&crate::document::bodytext::FootnoteShape>,
     _document: &HwpDocument,
     _css_prefix: &str,
 ) -> String {
-    // TODO: FootnoteShape에서 번호 형식 가져오기
-    // For now, use Arabic numbers
-    // 나중에 FootnoteShape의 number_shape에 따라 형식 지정
-    format!("{}", number)
+    let number_shape = footnote_shape
+        .map(|fs| &fs.attributes.number_shape)
+        .copied()
+        .unwrap_or(crate::document::bodytext::NumberShape::Arabic);
+    
+    format_number_by_shape(number, number_shape, footnote_shape)
+}
+
+/// NumberShape에 따라 번호 형식 지정 / Format number according to NumberShape
+fn format_number_by_shape(
+    number: u32,
+    number_shape: crate::document::bodytext::NumberShape,
+    footnote_shape: Option<&crate::document::bodytext::FootnoteShape>,
+) -> String {
+    use crate::document::bodytext::NumberShape;
+    
+    let front_decoration = footnote_shape
+        .map(|fs| fs.front_decoration)
+        .unwrap_or(0);
+    let back_decoration = footnote_shape
+        .map(|fs| fs.back_decoration)
+        .unwrap_or(0);
+    
+    let number_str = match number_shape {
+        NumberShape::Arabic => format!("{}", number),
+        NumberShape::CircledArabic => {
+            if number > 0 && number <= 20 {
+                let code = 0x2460 + number - 1;
+                char::from_u32(code).unwrap_or(' ').to_string()
+            } else {
+                format!("{}", number)
+            }
+        }
+        NumberShape::RomanUpper => number_to_roman_upper(number),
+        NumberShape::RomanLower => number_to_roman_lower(number),
+        NumberShape::AlphaUpper => number_to_alpha_upper(number),
+        NumberShape::AlphaLower => number_to_alpha_lower(number),
+        NumberShape::CircledAlphaUpper => {
+            if number > 0 && number <= 26 {
+                let code = 0x24B6 + number - 1; // Ⓐ-Ⓩ
+                char::from_u32(code).unwrap_or(' ').to_string()
+            } else {
+                number_to_alpha_upper(number)
+            }
+        }
+        NumberShape::CircledAlphaLower => {
+            if number > 0 && number <= 26 {
+                let code = 0x24D0 + number - 1; // ⓐ-ⓩ
+                char::from_u32(code).unwrap_or(' ').to_string()
+            } else {
+                number_to_alpha_lower(number)
+            }
+        }
+        NumberShape::Hangul => number_to_hangul(number),
+        NumberShape::CircledHangul => {
+            if number > 0 && number <= 14 {
+                let hangul = number_to_hangul(number);
+                format!("({})", hangul)
+            } else {
+                number_to_hangul(number)
+            }
+        }
+        NumberShape::HangulJamo => number_to_hangul_jamo(number),
+        NumberShape::CircledHangulJamo => {
+            if number > 0 && number <= 14 {
+                let jamo = number_to_hangul_jamo(number);
+                format!("({})", jamo)
+            } else {
+                number_to_hangul_jamo(number)
+            }
+        }
+        NumberShape::HangulNumber => number_to_hangul_number(number),
+        NumberShape::ChineseNumber => number_to_chinese_number(number),
+        NumberShape::CircledChineseNumber => {
+            let chinese = number_to_chinese_number(number);
+            format!("({})", chinese)
+        }
+        NumberShape::HeavenlyStem => number_to_heavenly_stem(number),
+        NumberShape::HeavenlyStemChinese => number_to_heavenly_stem_chinese(number),
+        NumberShape::FourCharRepeat => {
+            const CHARS: [&str; 4] = ["●", "○", "◆", "◇"];
+            CHARS[((number - 1) % 4) as usize].to_string()
+        }
+        NumberShape::CustomCharRepeat => {
+            let custom_char = footnote_shape
+                .map(|fs| fs.custom_symbol)
+                .unwrap_or(0);
+            if custom_char != 0 {
+                char::from_u32(custom_char as u32).unwrap_or(' ').to_string()
+            } else {
+                format!("{}", number)
+            }
+        }
+    };
+    
+    // 앞뒤 장식 문자 추가 / Add front and back decoration characters
+    let front = if front_decoration != 0 {
+        char::from_u32(front_decoration as u32).unwrap_or(' ').to_string()
+    } else {
+        String::new()
+    };
+    let back = if back_decoration != 0 {
+        char::from_u32(back_decoration as u32).unwrap_or(' ').to_string()
+    } else {
+        String::new()
+    };
+    
+    format!("{}{}{}", front, number_str, back)
+}
+
+/// 숫자를 로마 숫자(대문자)로 변환 / Convert number to uppercase Roman numeral
+fn number_to_roman_upper(n: u32) -> String {
+    if n == 0 {
+        return String::new();
+    }
+    const VALUES: [u32; 13] = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    const SYMBOLS: [&str; 13] = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"];
+    
+    let mut result = String::new();
+    let mut num = n;
+    for (value, symbol) in VALUES.iter().zip(SYMBOLS.iter()) {
+        while num >= *value {
+            result.push_str(symbol);
+            num -= value;
+        }
+    }
+    result
+}
+
+/// 숫자를 로마 숫자(소문자)로 변환 / Convert number to lowercase Roman numeral
+fn number_to_roman_lower(n: u32) -> String {
+    number_to_roman_upper(n).to_lowercase()
+}
+
+/// 숫자를 알파벳(대문자)로 변환 / Convert number to uppercase alphabet
+fn number_to_alpha_upper(n: u32) -> String {
+    if n == 0 {
+        return String::new();
+    }
+    let mut num = n - 1;
+    let mut result = String::new();
+    loop {
+        result.push((b'A' + (num % 26) as u8) as char);
+        if num < 26 {
+            break;
+        }
+        num = num / 26 - 1;
+    }
+    result.chars().rev().collect()
+}
+
+/// 숫자를 알파벳(소문자)로 변환 / Convert number to lowercase alphabet
+fn number_to_alpha_lower(n: u32) -> String {
+    number_to_alpha_upper(n).to_lowercase()
+}
+
+/// 숫자를 한글로 변환 / Convert number to Korean
+fn number_to_hangul(n: u32) -> String {
+    if n == 0 {
+        return String::new();
+    }
+    const HANGUL: [char; 14] = ['가', '나', '다', '라', '마', '바', '사', '아', '자', '차', '카', '타', '파', '하'];
+    let index = ((n - 1) % 14) as usize;
+    HANGUL[index].to_string()
+}
+
+/// 숫자를 한글 자모로 변환 / Convert number to Korean jamo
+fn number_to_hangul_jamo(n: u32) -> String {
+    if n == 0 {
+        return String::new();
+    }
+    const JAMO: [char; 14] = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+    let index = ((n - 1) % 14) as usize;
+    JAMO[index].to_string()
+}
+
+/// 숫자를 한글 숫자로 변환 / Convert number to Korean number
+fn number_to_hangul_number(n: u32) -> String {
+    if n == 0 {
+        return String::new();
+    }
+    const HANGUL_NUMBERS: [&str; 10] = ["영", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구"];
+    const HANGUL_UNITS: [&str; 4] = ["", "십", "백", "천"];
+    
+    if n < 10 {
+        return HANGUL_NUMBERS[n as usize].to_string();
+    }
+    
+    let mut result = String::new();
+    let mut num = n;
+    let mut unit_index = 0;
+    
+    while num > 0 {
+        let digit = num % 10;
+        if digit > 0 {
+            if digit > 1 || unit_index == 0 {
+                result.insert_str(0, HANGUL_NUMBERS[digit as usize]);
+            }
+            if unit_index > 0 {
+                result.insert_str(result.len(), HANGUL_UNITS[unit_index]);
+            }
+        }
+        num /= 10;
+        unit_index += 1;
+    }
+    
+    result
+}
+
+/// 숫자를 한자 숫자로 변환 / Convert number to Chinese number
+fn number_to_chinese_number(n: u32) -> String {
+    if n == 0 {
+        return String::new();
+    }
+    const CHINESE: [char; 10] = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    const UNITS: [char; 4] = ['十', '百', '千', '万'];
+    
+    if n < 10 {
+        return CHINESE[n as usize].to_string();
+    }
+    
+    let mut result = String::new();
+    let mut num = n;
+    let mut unit_index = 0;
+    
+    while num > 0 {
+        let digit = num % 10;
+        if digit > 0 {
+            if digit > 1 || unit_index == 0 {
+                result.insert(0, CHINESE[digit as usize]);
+            }
+            if unit_index > 0 && unit_index <= 3 {
+                result.insert(result.len(), UNITS[unit_index - 1]);
+            }
+        }
+        num /= 10;
+        unit_index += 1;
+    }
+    
+    result
+}
+
+/// 숫자를 천간으로 변환 / Convert number to heavenly stem
+fn number_to_heavenly_stem(n: u32) -> String {
+    if n == 0 {
+        return String::new();
+    }
+    const STEMS: [char; 10] = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
+    let index = ((n - 1) % 10) as usize;
+    STEMS[index].to_string()
+}
+
+/// 숫자를 천간(한자)로 변환 / Convert number to heavenly stem (Chinese)
+fn number_to_heavenly_stem_chinese(n: u32) -> String {
+    if n == 0 {
+        return String::new();
+    }
+    const STEMS: [char; 10] = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+    let index = ((n - 1) % 10) as usize;
+    STEMS[index].to_string()
 }
 

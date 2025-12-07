@@ -100,9 +100,21 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html.push_str("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
     html.push_str("  <title>HWP 문서</title>\n");
 
+    // 페이지 정의 찾기 (재귀적으로) / Find page definition (recursively)
+    let page_def_opt = find_page_def_recursive(document);
+
+    // 문서에서 사용되는 색상과 크기 수집 / Collect colors and sizes used in document
+    let (used_colors, used_sizes) = collect_used_styles(document);
+
     // CSS 스타일 추가 / Add CSS styles
     html.push_str("  <style>\n");
-    html.push_str(&generate_css_styles(css_prefix, document));
+    html.push_str(&generate_css_styles(
+        css_prefix,
+        document,
+        page_def_opt,
+        &used_colors,
+        &used_sizes,
+    ));
     // border_fill CSS 클래스 추가 / Add border_fill CSS classes
     html.push_str(
         &crate::viewer::html::document::bodytext::generate_border_fill_css(document, css_prefix),
@@ -134,20 +146,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
     // 페이지 정보 추가 / Add page information
     if options.include_page_info == Some(true) {
-        use crate::document::ParagraphRecord;
-        let page_def_opt = document
-            .body_text
-            .sections
-            .iter()
-            .flat_map(|section| &section.paragraphs)
-            .flat_map(|paragraph| &paragraph.records)
-            .find_map(|record| {
-                if let ParagraphRecord::PageDef { page_def } = record {
-                    Some(page_def)
-                } else {
-                    None
-                }
-            });
         if let Some(page_def) = page_def_opt {
             let paper_width_inch = page_def.paper_width.to_inches();
             let paper_height_inch = page_def.paper_height.to_inches();
@@ -240,9 +238,129 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html
 }
 
+/// 문서에서 사용되는 색상과 크기 수집 / Collect colors and sizes used in document
+fn collect_used_styles(
+    document: &HwpDocument,
+) -> (
+    std::collections::HashSet<u32>,
+    std::collections::HashSet<u32>,
+) {
+    use crate::document::ParagraphRecord;
+    let mut colors = std::collections::HashSet::new();
+    let mut sizes = std::collections::HashSet::new();
+
+    // 재귀적으로 레코드를 검색하는 내부 함수 / Internal function to recursively search records
+    fn search_in_records(
+        records: &[ParagraphRecord],
+        colors: &mut std::collections::HashSet<u32>,
+        sizes: &mut std::collections::HashSet<u32>,
+        document: &HwpDocument,
+    ) {
+        for record in records {
+            match record {
+                ParagraphRecord::ParaCharShape { shapes } => {
+                    // CharShapeInfo에서 shape_id를 사용하여 실제 CharShape 가져오기
+                    // Get actual CharShape using shape_id from CharShapeInfo
+                    for shape_info in shapes {
+                        let shape_id = shape_info.shape_id as usize;
+                        if shape_id > 0 && shape_id <= document.doc_info.char_shapes.len() {
+                            let shape_idx = shape_id - 1; // 1-based to 0-based
+                            if let Some(char_shape) = document.doc_info.char_shapes.get(shape_idx) {
+                                // 색상 수집 / Collect color
+                                if char_shape.text_color.0 != 0 {
+                                    colors.insert(char_shape.text_color.0);
+                                }
+                                // 크기 수집 / Collect size
+                                if char_shape.base_size > 0 {
+                                    sizes.insert(char_shape.base_size as u32);
+                                }
+                            }
+                        }
+                    }
+                }
+                ParagraphRecord::CtrlHeader {
+                    children,
+                    paragraphs,
+                    ..
+                } => {
+                    // CtrlHeader의 children도 검색 / Search CtrlHeader's children
+                    search_in_records(children, colors, sizes, document);
+                    // CtrlHeader의 paragraphs도 검색 / Search CtrlHeader's paragraphs
+                    for paragraph in paragraphs {
+                        search_in_records(&paragraph.records, colors, sizes, document);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    // 모든 섹션의 문단들을 검색 / Search all paragraphs in all sections
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            search_in_records(&paragraph.records, &mut colors, &mut sizes, document);
+        }
+    }
+
+    (colors, sizes)
+}
+
+/// 재귀적으로 페이지 정의 찾기 / Find page definition recursively
+fn find_page_def_recursive(document: &HwpDocument) -> Option<&crate::document::bodytext::PageDef> {
+    use crate::document::ParagraphRecord;
+
+    // 재귀적으로 레코드를 검색하는 내부 함수 / Internal function to recursively search records
+    fn search_in_records(
+        records: &[ParagraphRecord],
+    ) -> Option<&crate::document::bodytext::PageDef> {
+        for record in records {
+            match record {
+                ParagraphRecord::PageDef { page_def } => {
+                    return Some(page_def);
+                }
+                ParagraphRecord::CtrlHeader {
+                    children,
+                    paragraphs,
+                    ..
+                } => {
+                    // CtrlHeader의 children도 검색 / Search CtrlHeader's children
+                    if let Some(page_def) = search_in_records(children) {
+                        return Some(page_def);
+                    }
+                    // CtrlHeader의 paragraphs도 검색 / Search CtrlHeader's paragraphs
+                    for paragraph in paragraphs {
+                        if let Some(page_def) = search_in_records(&paragraph.records) {
+                            return Some(page_def);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    // 모든 섹션의 문단들을 검색 / Search all paragraphs in all sections
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            if let Some(page_def) = search_in_records(&paragraph.records) {
+                return Some(page_def);
+            }
+        }
+    }
+
+    None
+}
+
 /// Generate CSS styles
 /// CSS 스타일 생성
-fn generate_css_styles(css_prefix: &str, document: &HwpDocument) -> String {
+fn generate_css_styles(
+    css_prefix: &str,
+    document: &HwpDocument,
+    _page_def_opt: Option<&crate::document::bodytext::PageDef>, // TODO: 레이아웃 깨짐 문제로 인해 일단 사용 안 함 / Temporarily unused due to layout issues
+    used_colors: &std::collections::HashSet<u32>,
+    used_sizes: &std::collections::HashSet<u32>,
+) -> String {
     // face_names를 사용하여 폰트 CSS 생성 / Generate font CSS using face_names
     let mut font_css = String::new();
     let mut font_families = Vec::new();
@@ -270,10 +388,66 @@ fn generate_css_styles(css_prefix: &str, document: &HwpDocument) -> String {
         String::new()
     };
 
+    // 색상 클래스 생성 / Generate color classes
+    let mut color_css = String::new();
+    for &color_value in used_colors {
+        let r = (color_value >> 16) & 0xFF;
+        let g = (color_value >> 8) & 0xFF;
+        let b = color_value & 0xFF;
+        color_css.push_str(&format!(
+            "    .{0}color-{1:02x}{2:02x}{3:02x} {{\n        color: rgb({4}, {5}, {6});\n    }}\n\n",
+            css_prefix, r, g, b, r, g, b
+        ));
+    }
+
+    // 크기 클래스 생성 / Generate size classes
+    let mut size_css = String::new();
+    for &size_value in used_sizes {
+        let size_pt = size_value as f32 / 100.0;
+        let size_int = (size_pt * 100.0) as u32; // 13.00pt -> 1300
+        size_css.push_str(&format!(
+            "    .{0}size-{1} {{\n        font-size: {2:.2}pt;\n    }}\n\n",
+            css_prefix, size_int, size_pt
+        ));
+    }
+
+    // 페이지 크기 및 여백 계산 / Calculate page size and margins
+    // TODO: 레이아웃 깨짐 문제로 인해 일단 주석 처리 / Temporarily commented out due to layout issues
+    // let (max_width_px, padding_left_px, padding_right_px, padding_top_px, padding_bottom_px) =
+    //     if let Some(page_def) = page_def_opt {
+    //         // HWP는 72 DPI를 기준으로 함 / HWP uses 72 DPI as standard
+    //         // 1 inch = 72px (HWP 표준) / 1 inch = 72px (HWP standard)
+    //         let paper_width_px = page_def.paper_width.to_inches() * 72.0;
+    //         let left_margin_px = page_def.left_margin.to_inches() * 72.0;
+    //         let right_margin_px = page_def.right_margin.to_inches() * 72.0;
+    //         let top_margin_px = page_def.top_margin.to_inches() * 72.0;
+    //         let bottom_margin_px = page_def.bottom_margin.to_inches() * 72.0;
+    //
+    //         // max-width는 용지 전체 너비로 설정하고, 여백은 padding으로 처리
+    //         // max-width is set to full paper width, margins are handled as padding
+    //         (
+    //             paper_width_px,
+    //             left_margin_px,
+    //             right_margin_px,
+    //             top_margin_px,
+    //             bottom_margin_px,
+    //         )
+    //     } else {
+    //         // 기본값 / Default values
+    //         (800.0, 20.0, 20.0, 20.0, 20.0)
+    //     };
+
+    // 기본값 사용 / Use default values
+    let max_width_px = 800.0;
+    let padding_left_px = 20.0;
+    let padding_right_px = 20.0;
+    let padding_top_px = 20.0;
+    let padding_bottom_px = 20.0;
+
     format!(
         r#"
     /* CSS Reset - 브라우저 기본 스타일 초기화 / CSS Reset - Reset browser default styles */
-    * {{
+    *, *::before, *::after {{
         margin: 0;
         padding: 0;
         box-sizing: border-box;
@@ -282,33 +456,222 @@ fn generate_css_styles(css_prefix: &str, document: &HwpDocument) -> String {
     html, body {{
         margin: 0;
         padding: 0;
+        width: 100%;
+        height: 100%;
     }}
 
-    table {{
-        border-collapse: collapse;
-        border-spacing: 0;
+    html {{
+        font-size: 100%;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
     }}
 
-    th, td {{
+    body {{
+        font-size: 1rem;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }}
+
+    /* Typography reset */
+    h1, h2, h3, h4, h5, h6 {{
+        margin: 0;
         padding: 0;
-        text-align: left;
+        font-size: 1em;
+        font-weight: normal;
+        line-height: 1;
     }}
 
-    ul, ol {{
+    p, blockquote, pre {{
+        margin: 0;
+        padding: 0;
+    }}
+
+    /* Links */
+    a {{
+        margin: 0;
+        padding: 0;
+        text-decoration: none;
+        color: inherit;
+        background-color: transparent;
+    }}
+
+    a:active, a:hover {{
+        outline: 0;
+    }}
+
+    /* Lists */
+    ul, ol, li {{
+        margin: 0;
+        padding: 0;
         list-style: none;
     }}
 
-    img {{
+    /* Tables */
+    table {{
+        display: table;
+        border-collapse: collapse;
+        border-spacing: 0;
+        border-color: transparent;
+        width: 100%;
+        table-layout: auto;
+        empty-cells: show;
+    }}
+
+    thead, tbody, tfoot {{
+        margin: 0;
+        padding: 0;
         border: 0;
+    }}
+
+    tr {{
+        margin: 0;
+        padding: 0;
+        border: 0;
+        display: table-row;
+        vertical-align: inherit;
+    }}
+
+    th, td {{
+        margin: 0;
+        padding: 0;
+        border: 0;
+        text-align: left;
+        font-weight: normal;
+        font-style: normal;
+        vertical-align: top;
+        display: table-cell;
+    }}
+
+    th {{
+        font-weight: normal;
+    }}
+
+    caption {{
+        margin: 0;
+        padding: 0;
+        text-align: center;
+    }}
+
+    /* Forms */
+    button, input, select, textarea {{
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        vertical-align: baseline;
+    }}
+
+    button, input {{
+        overflow: visible;
+    }}
+
+    button, select {{
+        text-transform: none;
+    }}
+
+    button, [type="button"], [type="reset"], [type="submit"] {{
+        -webkit-appearance: button;
+        cursor: pointer;
+    }}
+
+    button::-moz-focus-inner, [type="button"]::-moz-focus-inner, [type="reset"]::-moz-focus-inner, [type="submit"]::-moz-focus-inner {{
+        border-style: none;
+        padding: 0;
+    }}
+
+    input[type="checkbox"], input[type="radio"] {{
+        box-sizing: border-box;
+        padding: 0;
+    }}
+
+    textarea {{
+        overflow: auto;
+        resize: vertical;
+    }}
+
+    /* Images and media */
+    img, svg, video, canvas, audio, iframe, embed, object {{
+        display: block;
         max-width: 100%;
         height: auto;
+        border: 0;
+        vertical-align: middle;
+    }}
+
+    img {{
+        border-style: none;
+    }}
+
+    svg:not(:root) {{
+        overflow: hidden;
+    }}
+
+    /* Other elements */
+    hr {{
+        margin: 0;
+        padding: 0;
+        border: 0;
+        height: 0;
+    }}
+
+    code, kbd, samp, pre {{
+        font-family: monospace, monospace;
+        font-size: 1em;
+    }}
+
+    abbr[title] {{
+        border-bottom: none;
+        text-decoration: underline;
+        text-decoration: underline dotted;
+    }}
+
+    b, strong {{
+        font-weight: normal;
+    }}
+
+    i, em {{
+        font-style: normal;
+    }}
+
+    small {{
+        font-size: 80%;
+    }}
+
+    sub, sup {{
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+    }}
+
+    sub {{
+        bottom: -0.25em;
+    }}
+
+    sup {{
+        top: -0.5em;
+    }}
+
+    /* Additional resets */
+    article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section {{
+        display: block;
+        margin: 0;
+        padding: 0;
+    }}
+
+    summary {{
+        display: list-item;
     }}
 
     /* HWP Document Styles */
     .{0}document {{
-        max-width: 800px;
+        max-width: {3}px;
         margin: 0 auto;
-        padding: 20px;
+        padding: {4}px {5}px {6}px {7}px;
         font-family: {1}-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         line-height: 1.6;
     }}
@@ -496,7 +859,19 @@ fn generate_css_styles(css_prefix: &str, document: &HwpDocument) -> String {
         content: "☆";
         margin-right: 3px;
     }}
+
+{8}
+{9}
 "#,
-        css_prefix, default_font_family, font_css
+        css_prefix,
+        default_font_family,
+        font_css,
+        max_width_px,
+        padding_top_px,
+        padding_right_px,
+        padding_bottom_px,
+        padding_left_px,
+        color_css,
+        size_css
     )
 }

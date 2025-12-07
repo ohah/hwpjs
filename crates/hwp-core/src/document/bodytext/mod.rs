@@ -43,7 +43,7 @@ pub use chart_data::ChartData;
 pub use ctrl_data::CtrlData;
 pub use ctrl_header::{CtrlHeader, CtrlHeaderData, CtrlId, PageNumberPosition};
 pub use eqedit::EqEdit;
-pub use footnote_shape::FootnoteShape;
+pub use footnote_shape::{FootnoteShape, NumberShape};
 pub use form_object::FormObject;
 pub use line_seg::{LineSegmentInfo, ParaLineSeg};
 pub use list_header::ListHeader;

@@ -11,8 +11,48 @@ impl Renderer for HtmlRenderer {
 
     // ===== Text Styling =====
     fn render_text(&self, text: &str, styles: &TextStyles) -> String {
-        // TODO: 스타일 적용
-        text.to_string()
+        let mut result = text.to_string();
+        
+        // 스타일 적용 순서: 안쪽부터 바깥쪽으로 / Apply styles from innermost to outermost
+        if styles.italic {
+            result = format!("<em>{}</em>", result);
+        }
+        if styles.bold {
+            result = format!("<strong>{}</strong>", result);
+        }
+        if styles.underline {
+            result = format!("<u>{}</u>", result);
+        }
+        if styles.strikethrough {
+            result = format!("<s>{}</s>", result);
+        }
+        if styles.superscript {
+            result = format!("<sup>{}</sup>", result);
+        }
+        if styles.subscript {
+            result = format!("<sub>{}</sub>", result);
+        }
+        
+        // 색상 및 폰트 스타일 적용 / Apply color and font styles
+        let mut style_attrs = Vec::new();
+        if let Some(ref color) = styles.color {
+            style_attrs.push(format!("color: {}", color));
+        }
+        if let Some(ref bg_color) = styles.background_color {
+            style_attrs.push(format!("background-color: {}", bg_color));
+        }
+        if let Some(ref font_family) = styles.font_family {
+            style_attrs.push(format!("font-family: {}", font_family));
+        }
+        if let Some(font_size) = styles.font_size {
+            style_attrs.push(format!("font-size: {:.2}pt", font_size));
+        }
+        
+        if !style_attrs.is_empty() {
+            result = format!(r#"<span style="{}">{}</span>"#, style_attrs.join("; "), result);
+        }
+        
+        result
     }
 
     fn render_bold(&self, text: &str) -> String {
@@ -195,9 +235,11 @@ impl Renderer for HtmlRenderer {
         )
     }
 
-    fn render_outline_number(&self, _level: u8, _number: u32, content: &str) -> String {
-        // TODO: 개요 번호 형식 적용
-        content.to_string()
+    fn render_outline_number(&self, level: u8, number: u32, content: &str) -> String {
+        // 개요 번호 형식 적용 / Apply outline number format
+        use crate::viewer::html::utils::format_outline_number;
+        let outline_number = format_outline_number(level, number);
+        format!("{} {}", outline_number, content)
     }
 }
 
