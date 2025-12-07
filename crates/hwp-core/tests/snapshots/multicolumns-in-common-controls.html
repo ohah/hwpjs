@@ -11,6 +11,15 @@
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+        /* 논리적 속성 초기화 / Reset logical properties */
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
     }
 
     html, body {
@@ -37,14 +46,34 @@
     h1, h2, h3, h4, h5, h6 {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
         font-size: 1em;
         font-weight: normal;
         line-height: 1;
+        display: block;
+        unicode-bidi: normal;
     }
 
     p, blockquote, pre {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+        display: block;
+        unicode-bidi: normal;
     }
 
     /* Links */
@@ -64,7 +93,23 @@
     ul, ol, li {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
         list-style: none;
+    }
+    
+    ul, ol {
+        display: block;
+    }
+    
+    li {
+        display: list-item;
     }
 
     /* Tables */
@@ -95,7 +140,7 @@
     th, td {
         margin: 0;
         padding: 0;
-        border: 0;
+        /* border: 0 제거 - border 클래스가 적용되도록 / Remove border: 0 to allow border classes to apply */
         text-align: left;
         font-weight: normal;
         font-style: normal;
@@ -221,6 +266,32 @@
         display: block;
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+    
+    /* Block-level elements reset */
+    div, address, dl, dt, dd, fieldset, form, legend {
+        margin: 0;
+        padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+    
+    div {
+        display: block;
     }
 
     summary {
@@ -324,15 +395,16 @@
 
     .ohah-hwpjs-table th,
     .ohah-hwpjs-table td {
-        border: 1px solid #ddd;
         padding: 8px;
         text-align: left;
+        border: 1px solid black;
     }
 
     .ohah-hwpjs-table th {
-        background-color: #f2f2f2;
         font-weight: bold;
     }
+    
+    /* 테이블 셀 배경색은 bg-color 클래스로 처리 / Table cell background colors are handled by bg-color classes */
 
     .ohah-hwpjs-image {
         max-width: 100%;
@@ -476,20 +548,101 @@
         margin-right: 3px;
     }
 
-
-    .ohah-hwpjs-size-1000 {
+               
+                   .ohah-hwpjs-size-1000 {
         font-size: 10.00pt;
     }
 
 
-    .ohah-hwpjs-border-fill-1 {
-        background-color: rgb(255, 255, 255);
+                   .ohah-hwpjs-border-left-color-000000 {
+        border-left-color: rgb(0, 0, 0) !important;
     }
 
-    .ohah-hwpjs-border-fill-2 {
+    .ohah-hwpjs-border-right-color-000000 {
+        border-right-color: rgb(0, 0, 0) !important;
     }
 
-  </style>
+    .ohah-hwpjs-border-top-color-000000 {
+        border-top-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-000000 {
+        border-bottom-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-010100 {
+        border-left-color: rgb(1, 1, 0) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-010100 {
+        border-right-color: rgb(1, 1, 0) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-010100 {
+        border-top-color: rgb(1, 1, 0) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-010100 {
+        border-bottom-color: rgb(1, 1, 0) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-000001 {
+        border-left-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-000001 {
+        border-right-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-000001 {
+        border-top-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-000001 {
+        border-bottom-color: rgb(0, 0, 1) !important;
+    }
+
+
+                   .ohah-hwpjs-bg-color-ffffff {
+        background-color: rgb(255, 255, 255) !important;
+    }
+
+
+                   .ohah-hwpjs-border-left-style-0-1 {
+        border-left-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-right-style-0-1 {
+        border-right-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-top-style-0-1 {
+        border-top-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-0-1 {
+        border-bottom-style: solid !important;
+    }
+
+
+                   .ohah-hwpjs-border-left-width-0-1 {
+        border-left-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-0-1 {
+        border-right-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-0-1 {
+        border-top-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-0-1 {
+        border-bottom-width: 0.38px !important;
+    }
+
+
+                 </style>
 </head>
 <body>
   <div class="ohah-hwpjs-document">
@@ -499,7 +652,7 @@
     <p><strong>용지 방향</strong>: Vertical</p>
     <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
     <main class="ohah-hwpjs-main">
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 </span></p></th></tr></thead><tbody></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 </span></p></th></tr></thead><tbody></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">표  </span></p>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 </span></p>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 </span></p>

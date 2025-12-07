@@ -103,8 +103,14 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     // 페이지 정의 찾기 (재귀적으로) / Find page definition (recursively)
     let page_def_opt = find_page_def_recursive(document);
 
-    // 문서에서 사용되는 색상과 크기 수집 / Collect colors and sizes used in document
-    let (used_colors, used_sizes) = collect_used_styles(document);
+    // 문서에서 사용되는 색상, 크기, 테두리 색상, 배경색, 테두리 두께 수집 / Collect colors, sizes, border colors, background colors, and border widths used in document
+    let (
+        used_text_colors,
+        used_sizes,
+        used_border_colors,
+        used_background_colors,
+        _used_border_widths, // 더 이상 사용하지 않음 (border_width_info에서 직접 수집) / No longer used (collected directly from border_width_info)
+    ) = collect_used_styles(document);
 
     // CSS 스타일 추가 / Add CSS styles
     html.push_str("  <style>\n");
@@ -112,13 +118,12 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         css_prefix,
         document,
         page_def_opt,
-        &used_colors,
+        &used_text_colors,
         &used_sizes,
+        &used_border_colors,
+        &used_background_colors,
     ));
-    // border_fill CSS 클래스 추가 / Add border_fill CSS classes
-    html.push_str(
-        &crate::viewer::html::document::bodytext::generate_border_fill_css(document, css_prefix),
-    );
+    // border_fill CSS 클래스는 더 이상 사용하지 않음 (개별 클래스로 처리) / border_fill CSS classes no longer used (handled by individual classes)
     html.push_str("  </style>\n");
 
     html.push_str("</head>\n");
@@ -238,21 +243,50 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html
 }
 
-/// 문서에서 사용되는 색상과 크기 수집 / Collect colors and sizes used in document
+/// 문서에서 사용되는 색상, 크기, 테두리 색상, 배경색, 테두리 두께 수집 / Collect colors, sizes, border colors, background colors, and border widths used in document
 fn collect_used_styles(
     document: &HwpDocument,
 ) -> (
-    std::collections::HashSet<u32>,
-    std::collections::HashSet<u32>,
+    std::collections::HashSet<u32>, // text colors
+    std::collections::HashSet<u32>, // sizes
+    std::collections::HashSet<u32>, // border colors
+    std::collections::HashSet<u32>, // background colors
+    std::collections::HashSet<u8>,  // border widths
 ) {
     use crate::document::ParagraphRecord;
-    let mut colors = std::collections::HashSet::new();
+    let mut text_colors = std::collections::HashSet::new();
     let mut sizes = std::collections::HashSet::new();
+    let mut border_colors = std::collections::HashSet::new();
+    let mut background_colors = std::collections::HashSet::new();
+    let mut border_widths = std::collections::HashSet::new();
+
+    // BorderFill에서 색상과 두께 수집 / Collect colors and widths from BorderFill
+    // 조건 제거: 모든 border에 대해 수집 (line_type=0도 실선, width=0도 0.1mm이므로 모두 유효)
+    // Remove condition: Collect all borders (line_type=0 is solid, width=0 is 0.1mm, so all are valid)
+    for border_fill in &document.doc_info.border_fill {
+        // 테두리 색상 수집 / Collect border colors
+        for border in &border_fill.borders {
+            border_colors.insert(border.color.0);
+            border_widths.insert(border.width);
+        }
+
+        // 배경색 수집 / Collect background colors
+        use crate::document::FillInfo;
+        match &border_fill.fill {
+            FillInfo::Solid(solid) => {
+                // 배경색이 0이 아닌 경우 모두 수집 (흰색 포함) / Collect all non-zero background colors (including white)
+                if solid.background_color.0 != 0 {
+                    background_colors.insert(solid.background_color.0);
+                }
+            }
+            _ => {}
+        }
+    }
 
     // 재귀적으로 레코드를 검색하는 내부 함수 / Internal function to recursively search records
     fn search_in_records(
         records: &[ParagraphRecord],
-        colors: &mut std::collections::HashSet<u32>,
+        text_colors: &mut std::collections::HashSet<u32>,
         sizes: &mut std::collections::HashSet<u32>,
         document: &HwpDocument,
     ) {
@@ -266,9 +300,9 @@ fn collect_used_styles(
                         if shape_id > 0 && shape_id <= document.doc_info.char_shapes.len() {
                             let shape_idx = shape_id - 1; // 1-based to 0-based
                             if let Some(char_shape) = document.doc_info.char_shapes.get(shape_idx) {
-                                // 색상 수집 / Collect color
+                                // 텍스트 색상 수집 / Collect text color
                                 if char_shape.text_color.0 != 0 {
-                                    colors.insert(char_shape.text_color.0);
+                                    text_colors.insert(char_shape.text_color.0);
                                 }
                                 // 크기 수집 / Collect size
                                 if char_shape.base_size > 0 {
@@ -284,10 +318,10 @@ fn collect_used_styles(
                     ..
                 } => {
                     // CtrlHeader의 children도 검색 / Search CtrlHeader's children
-                    search_in_records(children, colors, sizes, document);
+                    search_in_records(children, text_colors, sizes, document);
                     // CtrlHeader의 paragraphs도 검색 / Search CtrlHeader's paragraphs
                     for paragraph in paragraphs {
-                        search_in_records(&paragraph.records, colors, sizes, document);
+                        search_in_records(&paragraph.records, text_colors, sizes, document);
                     }
                 }
                 _ => {}
@@ -298,11 +332,17 @@ fn collect_used_styles(
     // 모든 섹션의 문단들을 검색 / Search all paragraphs in all sections
     for section in &document.body_text.sections {
         for paragraph in &section.paragraphs {
-            search_in_records(&paragraph.records, &mut colors, &mut sizes, document);
+            search_in_records(&paragraph.records, &mut text_colors, &mut sizes, document);
         }
     }
 
-    (colors, sizes)
+    (
+        text_colors,
+        sizes,
+        border_colors,
+        background_colors,
+        border_widths,
+    )
 }
 
 /// 재귀적으로 페이지 정의 찾기 / Find page definition recursively
@@ -358,8 +398,10 @@ fn generate_css_styles(
     css_prefix: &str,
     document: &HwpDocument,
     _page_def_opt: Option<&crate::document::bodytext::PageDef>, // TODO: 레이아웃 깨짐 문제로 인해 일단 사용 안 함 / Temporarily unused due to layout issues
-    used_colors: &std::collections::HashSet<u32>,
+    used_text_colors: &std::collections::HashSet<u32>,
     used_sizes: &std::collections::HashSet<u32>,
+    used_border_colors: &std::collections::HashSet<u32>,
+    used_background_colors: &std::collections::HashSet<u32>,
 ) -> String {
     // face_names를 사용하여 폰트 CSS 생성 / Generate font CSS using face_names
     let mut font_css = String::new();
@@ -388,16 +430,142 @@ fn generate_css_styles(
         String::new()
     };
 
-    // 색상 클래스 생성 / Generate color classes
+    // 텍스트 색상 클래스 생성 / Generate text color classes
     let mut color_css = String::new();
-    for &color_value in used_colors {
-        let r = (color_value >> 16) & 0xFF;
-        let g = (color_value >> 8) & 0xFF;
-        let b = color_value & 0xFF;
+    for &color_value in used_text_colors {
+        let color = crate::types::COLORREF(color_value);
+        let r = color.r();
+        let g = color.g();
+        let b = color.b();
         color_css.push_str(&format!(
             "    .{0}color-{1:02x}{2:02x}{3:02x} {{\n        color: rgb({4}, {5}, {6});\n    }}\n\n",
             css_prefix, r, g, b, r, g, b
         ));
+    }
+
+    // 테두리 색상 클래스 생성 (방향별) / Generate border color classes (by direction)
+    let mut border_color_css = String::new();
+    let border_directions = ["left", "right", "top", "bottom"];
+    for &color_value in used_border_colors {
+        let color = crate::types::COLORREF(color_value);
+        let r = color.r();
+        let g = color.g();
+        let b = color.b();
+        // 각 방향별로 클래스 생성 / Generate class for each direction
+        for direction in &border_directions {
+            border_color_css.push_str(&format!(
+                "    .{0}border-{1}-color-{2:02x}{3:02x}{4:02x} {{\n        border-{1}-color: rgb({5}, {6}, {7}) !important;\n    }}\n\n",
+                css_prefix, direction, r, g, b, r, g, b
+            ));
+        }
+    }
+
+    // 배경색 클래스 생성 / Generate background color classes
+    let mut background_color_css = String::new();
+    for &color_value in used_background_colors {
+        let color = crate::types::COLORREF(color_value);
+        let r = color.r();
+        let g = color.g();
+        let b = color.b();
+        // 테이블 셀에 우선 적용되도록 !important 추가 / Add !important to ensure it applies to table cells
+        background_color_css.push_str(&format!(
+            "    .{0}bg-color-{1:02x}{2:02x}{3:02x} {{\n        background-color: rgb({4}, {5}, {6}) !important;\n    }}\n\n",
+            css_prefix, r, g, b, r, g, b
+        ));
+    }
+
+    // 테두리 스타일 및 두께 클래스 생성 (방향별) / Generate border style and width classes (by direction)
+    // width 값과 line_type을 함께 수집하여 double border 처리 / Collect width values with line_type for double border handling
+    // 클래스 이름에 line_type을 포함하여 중복 방지 / Include line_type in class name to prevent duplicates
+    // 레거시 코드: line_type != 0일 때만 border가 있는 것으로 처리 / Legacy code: treat as border only when line_type != 0
+    let mut border_info: std::collections::HashMap<(u8, u8), (bool, String)> =
+        std::collections::HashMap::new(); // (width, line_type) -> (is_double, line_style)
+    for border_fill in &document.doc_info.border_fill {
+        for border in &border_fill.borders {
+            // 레거시 코드: if(border && border.line.top) - line_type이 0이면 falsy이므로 CSS에 추가되지 않음
+            // Legacy code: if(border && border.line.top) - if line_type is 0, it's falsy so CSS is not added
+            if border.line_type == 0 {
+                continue; // border 없음 / No border
+            }
+
+            let is_double = matches!(border.line_type, 7 | 8 | 9 | 10 | 12);
+            // line_type에 따른 스타일 매핑 (레거시 코드 참고) / Map line_type to style (reference legacy code)
+            let line_style = match border.line_type {
+                1 => "solid",
+                2 => "dashed",
+                3 => "dotted",
+                4 => "solid",
+                5 => "dashed",
+                6 => "dotted",
+                7 => "double",
+                8 => "double",
+                9 => "double",
+                10 => "double",
+                11 => "solid",
+                12 => "double",
+                13 => "solid",
+                14 => "solid",
+                15 => "solid",
+                16 => "solid",
+                _ => "solid",
+            };
+            border_info.insert(
+                (border.width, border.line_type),
+                (is_double, line_style.to_string()),
+            );
+        }
+    }
+
+    let mut border_style_css = String::new();
+    let mut border_width_css = String::new();
+    for ((width, line_type), (is_double, line_style)) in &border_info {
+        // 각 방향별로 스타일 클래스 생성 / Generate style class for each direction
+        // TypeScript 버전 참고: 모든 border를 설정하되, line_type=0이면 'none'으로 설정 / Reference TypeScript version: set all borders, but 'none' if line_type=0
+        for direction in &border_directions {
+            border_style_css.push_str(&format!(
+                "    .{0}border-{1}-style-{2}-{3} {{\n        border-{1}-style: {4} !important;\n    }}\n\n",
+                css_prefix, direction, width, line_type, line_style
+            ));
+        }
+
+        // width 변환: 표 26에 따르면 0 = 0.1mm, 1 = 0.12mm, ... / Convert width: Table 26 says 0 = 0.1mm, 1 = 0.12mm, ...
+        let base_width_mm = match width {
+            0 => 0.1,
+            1 => 0.12,
+            2 => 0.15,
+            3 => 0.2,
+            4 => 0.25,
+            5 => 0.3,
+            6 => 0.4,
+            7 => 0.5,
+            8 => 0.6,
+            9 => 0.7,
+            10 => 1.0,
+            11 => 1.5,
+            12 => 2.0,
+            13 => 3.0,
+            14 => 4.0,
+            15 => 5.0,
+            _ => *width as f32 * 0.1, // 기본값 (대략적) / Default (approximate)
+        };
+
+        // double border일 때 width를 2배로 처리 (레거시 코드 참고) / Multiply width by 2 for double border (reference legacy code)
+        let width_mm = if *is_double {
+            base_width_mm * 2.0
+        } else {
+            base_width_mm
+        };
+
+        // mm를 px로 변환 (1mm = 3.779527559px, 72 DPI 기준) / Convert mm to px (1mm = 3.779527559px at 72 DPI)
+        let width_px = width_mm * 3.779527559;
+
+        // 각 방향별로 두께 클래스 생성 / Generate width class for each direction
+        for direction in &border_directions {
+            border_width_css.push_str(&format!(
+                "    .{0}border-{1}-width-{2}-{3} {{\n        border-{1}-width: {4:.2}px !important;\n    }}\n\n",
+                css_prefix, direction, width, line_type, width_px
+            ));
+        }
     }
 
     // 크기 클래스 생성 / Generate size classes
@@ -451,6 +619,15 @@ fn generate_css_styles(
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+        /* 논리적 속성 초기화 / Reset logical properties */
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
     }}
 
     html, body {{
@@ -477,14 +654,34 @@ fn generate_css_styles(
     h1, h2, h3, h4, h5, h6 {{
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
         font-size: 1em;
         font-weight: normal;
         line-height: 1;
+        display: block;
+        unicode-bidi: normal;
     }}
 
     p, blockquote, pre {{
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+        display: block;
+        unicode-bidi: normal;
     }}
 
     /* Links */
@@ -504,7 +701,23 @@ fn generate_css_styles(
     ul, ol, li {{
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
         list-style: none;
+    }}
+    
+    ul, ol {{
+        display: block;
+    }}
+    
+    li {{
+        display: list-item;
     }}
 
     /* Tables */
@@ -535,7 +748,7 @@ fn generate_css_styles(
     th, td {{
         margin: 0;
         padding: 0;
-        border: 0;
+        /* border: 0 제거 - border 클래스가 적용되도록 / Remove border: 0 to allow border classes to apply */
         text-align: left;
         font-weight: normal;
         font-style: normal;
@@ -661,6 +874,32 @@ fn generate_css_styles(
         display: block;
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }}
+    
+    /* Block-level elements reset */
+    div, address, dl, dt, dd, fieldset, form, legend {{
+        margin: 0;
+        padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }}
+    
+    div {{
+        display: block;
     }}
 
     summary {{
@@ -708,15 +947,16 @@ fn generate_css_styles(
 
     .{0}table th,
     .{0}table td {{
-        border: 1px solid #ddd;
         padding: 8px;
         text-align: left;
+        border: 1px solid black;
     }}
 
     .{0}table th {{
-        background-color: #f2f2f2;
         font-weight: bold;
     }}
+    
+    /* 테이블 셀 배경색은 bg-color 클래스로 처리 / Table cell background colors are handled by bg-color classes */
 
     .{0}image {{
         max-width: 100%;
@@ -860,9 +1100,13 @@ fn generate_css_styles(
         margin-right: 3px;
     }}
 
-{8}
-{9}
-"#,
+               {8}
+               {9}
+               {10}
+               {11}
+               {12}
+               {13}
+               "#,
         css_prefix,
         default_font_family,
         font_css,
@@ -872,6 +1116,10 @@ fn generate_css_styles(
         padding_bottom_px,
         padding_left_px,
         color_css,
-        size_css
+        size_css,
+        border_color_css,
+        background_color_css,
+        border_style_css,
+        border_width_css
     )
 }

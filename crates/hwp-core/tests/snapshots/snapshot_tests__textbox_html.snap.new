@@ -1,0 +1,602 @@
+---
+source: crates/hwp-core/tests/snapshot_tests.rs
+assertion_line: 622
+expression: html
+---
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HWP 문서</title>
+  <style>
+
+    /* CSS Reset - 브라우저 기본 스타일 초기화 / CSS Reset - Reset browser default styles */
+    *, *::before, *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        /* 논리적 속성 초기화 / Reset logical properties */
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    html {
+        font-size: 100%;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+    }
+
+    body {
+        font-size: 1rem;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Typography reset */
+    h1, h2, h3, h4, h5, h6 {
+        margin: 0;
+        padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+        font-size: 1em;
+        font-weight: normal;
+        line-height: 1;
+        display: block;
+        unicode-bidi: normal;
+    }
+
+    p, blockquote, pre {
+        margin: 0;
+        padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+        display: block;
+        unicode-bidi: normal;
+    }
+
+    /* Links */
+    a {
+        margin: 0;
+        padding: 0;
+        text-decoration: none;
+        color: inherit;
+        background-color: transparent;
+    }
+
+    a:active, a:hover {
+        outline: 0;
+    }
+
+    /* Lists */
+    ul, ol, li {
+        margin: 0;
+        padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+        list-style: none;
+    }
+    
+    ul, ol {
+        display: block;
+    }
+    
+    li {
+        display: list-item;
+    }
+
+    /* Tables */
+    table {
+        display: table;
+        border-collapse: collapse;
+        border-spacing: 0;
+        border-color: transparent;
+        width: 100%;
+        table-layout: auto;
+        empty-cells: show;
+    }
+
+    thead, tbody, tfoot {
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    tr {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        display: table-row;
+        vertical-align: inherit;
+    }
+
+    th, td {
+        margin: 0;
+        padding: 0;
+        /* border: 0 제거 - border 클래스가 적용되도록 / Remove border: 0 to allow border classes to apply */
+        text-align: left;
+        font-weight: normal;
+        font-style: normal;
+        vertical-align: top;
+        display: table-cell;
+    }
+
+    th {
+        font-weight: normal;
+    }
+
+    caption {
+        margin: 0;
+        padding: 0;
+        text-align: center;
+    }
+
+    /* Forms */
+    button, input, select, textarea {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        vertical-align: baseline;
+    }
+
+    button, input {
+        overflow: visible;
+    }
+
+    button, select {
+        text-transform: none;
+    }
+
+    button, [type="button"], [type="reset"], [type="submit"] {
+        -webkit-appearance: button;
+        cursor: pointer;
+    }
+
+    button::-moz-focus-inner, [type="button"]::-moz-focus-inner, [type="reset"]::-moz-focus-inner, [type="submit"]::-moz-focus-inner {
+        border-style: none;
+        padding: 0;
+    }
+
+    input[type="checkbox"], input[type="radio"] {
+        box-sizing: border-box;
+        padding: 0;
+    }
+
+    textarea {
+        overflow: auto;
+        resize: vertical;
+    }
+
+    /* Images and media */
+    img, svg, video, canvas, audio, iframe, embed, object {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        border: 0;
+        vertical-align: middle;
+    }
+
+    img {
+        border-style: none;
+    }
+
+    svg:not(:root) {
+        overflow: hidden;
+    }
+
+    /* Other elements */
+    hr {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        height: 0;
+    }
+
+    code, kbd, samp, pre {
+        font-family: monospace, monospace;
+        font-size: 1em;
+    }
+
+    abbr[title] {
+        border-bottom: none;
+        text-decoration: underline;
+        text-decoration: underline dotted;
+    }
+
+    b, strong {
+        font-weight: normal;
+    }
+
+    i, em {
+        font-style: normal;
+    }
+
+    small {
+        font-size: 80%;
+    }
+
+    sub, sup {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+    }
+
+    sub {
+        bottom: -0.25em;
+    }
+
+    sup {
+        top: -0.5em;
+    }
+
+    /* Additional resets */
+    article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section {
+        display: block;
+        margin: 0;
+        padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+    
+    /* Block-level elements reset */
+    div, address, dl, dt, dd, fieldset, form, legend {
+        margin: 0;
+        padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+    
+    div {
+        display: block;
+    }
+
+    summary {
+        display: list-item;
+    }
+
+    /* HWP Document Styles */
+    .ohah-hwpjs-document {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px 20px 20px 20px;
+        font-family: "굴림", "바탕", "굴림", "바탕", "굴림", "바탕", "굴림", "바탕", "굴림", "바탕", "굴림", "바탕", "굴림", "바탕", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+    }
+    .ohah-hwpjs-font-0 {
+        font-family: "굴림", sans-serif;
+    }
+
+    .ohah-hwpjs-font-1 {
+        font-family: "바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-2 {
+        font-family: "굴림", sans-serif;
+    }
+
+    .ohah-hwpjs-font-3 {
+        font-family: "바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-4 {
+        font-family: "굴림", sans-serif;
+    }
+
+    .ohah-hwpjs-font-5 {
+        font-family: "바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-6 {
+        font-family: "굴림", sans-serif;
+    }
+
+    .ohah-hwpjs-font-7 {
+        font-family: "바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-8 {
+        font-family: "굴림", sans-serif;
+    }
+
+    .ohah-hwpjs-font-9 {
+        font-family: "바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-10 {
+        font-family: "굴림", sans-serif;
+    }
+
+    .ohah-hwpjs-font-11 {
+        font-family: "바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-12 {
+        font-family: "굴림", sans-serif;
+    }
+
+    .ohah-hwpjs-font-13 {
+        font-family: "바탕", sans-serif;
+    }
+
+
+
+    .ohah-hwpjs-header {
+        margin-bottom: 20px;
+    }
+
+    .ohah-hwpjs-footer {
+        margin-top: 20px;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+    }
+
+    .ohah-hwpjs-main {
+        margin: 20px 0;
+    }
+
+    .ohah-hwpjs-paragraph {
+        margin: 10px 0;
+    }
+
+    .ohah-hwpjs-outline {
+        display: block;
+        margin: 10px 0;
+    }
+
+    .ohah-hwpjs-table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .ohah-hwpjs-table th,
+    .ohah-hwpjs-table td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid black;
+    }
+
+    .ohah-hwpjs-table th {
+        font-weight: bold;
+    }
+    
+    /* 테이블 셀 배경색은 bg-color 클래스로 처리 / Table cell background colors are handled by bg-color classes */
+
+    .ohah-hwpjs-image {
+        max-width: 100%;
+        height: auto;
+        margin: 10px 0;
+    }
+
+    .ohah-hwpjs-footnote-ref,
+    .ohah-hwpjs-endnote-ref {
+        text-decoration: none;
+        color: #0066cc;
+        font-weight: bold;
+    }
+
+    .ohah-hwpjs-footnote-ref:hover,
+    .ohah-hwpjs-endnote-ref:hover {
+        text-decoration: underline;
+    }
+
+    .ohah-hwpjs-footnote,
+    .ohah-hwpjs-endnote {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-left: 3px solid #0066cc;
+    }
+
+    .ohah-hwpjs-footnotes,
+    .ohah-hwpjs-endnotes {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px solid #ddd;
+    }
+
+    .ohah-hwpjs-page-number {
+        font-weight: normal;
+    }
+
+    .ohah-hwpjs-overline {
+        text-decoration: overline;
+    }
+
+    .ohah-hwpjs-emboss {
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+    }
+
+    .ohah-hwpjs-engrave {
+        text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.3);
+    }
+
+    .ohah-hwpjs-underline-solid {
+        text-decoration: underline;
+        text-decoration-style: solid;
+    }
+
+    .ohah-hwpjs-underline-dotted {
+        text-decoration: underline;
+        text-decoration-style: dotted;
+    }
+
+    .ohah-hwpjs-underline-dashed {
+        text-decoration: underline;
+        text-decoration-style: dashed;
+    }
+
+    .ohah-hwpjs-underline-double {
+        text-decoration: underline;
+        text-decoration-style: double;
+    }
+
+    .ohah-hwpjs-strikethrough-solid {
+        text-decoration: line-through;
+        text-decoration-style: solid;
+    }
+
+    .ohah-hwpjs-strikethrough-dotted {
+        text-decoration: line-through;
+        text-decoration-style: dotted;
+    }
+
+    .ohah-hwpjs-strikethrough-dashed {
+        text-decoration: line-through;
+        text-decoration-style: dashed;
+    }
+
+    .ohah-hwpjs-footnote-back,
+    .ohah-hwpjs-endnote-back {
+        text-decoration: none;
+        color: #0066cc;
+        margin-left: 5px;
+    }
+
+    .ohah-hwpjs-footnote-back:hover,
+    .ohah-hwpjs-endnote-back:hover {
+        text-decoration: underline;
+    }
+
+    .ohah-hwpjs-page-break {
+        border: none;
+        border-top: 2px solid #ddd;
+        margin: 20px 0;
+    }
+
+    .ohah-hwpjs-emphasis-1::before {
+        content: "●";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-2::before {
+        content: "○";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-3::before {
+        content: "◆";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-4::before {
+        content: "◇";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-5::before {
+        content: "■";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-6::before {
+        content: "□";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-7::before {
+        content: "★";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-8::before {
+        content: "☆";
+        margin-right: 3px;
+    }
+
+               
+                   .ohah-hwpjs-size-1000 {
+        font-size: 10.00pt;
+    }
+
+
+                   .ohah-hwpjs-border-left-color-000000 {
+        border-left-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-000000 {
+        border-right-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-000000 {
+        border-top-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-000000 {
+        border-bottom-color: rgb(0, 0, 0) !important;
+    }
+
+
+                   .ohah-hwpjs-bg-color-ffffff {
+        background-color: rgb(255, 255, 255) !important;
+    }
+
+
+               
+               
+                 </style>
+</head>
+<body>
+  <div class="ohah-hwpjs-document">
+    <h1>HWP 문서</h1>
+    <p><strong>버전</strong>: 5.00.01.07</p>
+    <p><strong>용지 크기</strong>: 8.27인치 x 11.69인치</p>
+    <p><strong>용지 방향</strong>: Vertical</p>
+    <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
+    <main class="ohah-hwpjs-main">
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">글상자</span></p>
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">글상자</span></p>
+<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">그림  캡션</span></p>
+    </main>
+  </div>
+</body>
+</html>

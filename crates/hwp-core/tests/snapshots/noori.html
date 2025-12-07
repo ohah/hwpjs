@@ -11,6 +11,15 @@
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+        /* 논리적 속성 초기화 / Reset logical properties */
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
     }
 
     html, body {
@@ -37,14 +46,34 @@
     h1, h2, h3, h4, h5, h6 {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
         font-size: 1em;
         font-weight: normal;
         line-height: 1;
+        display: block;
+        unicode-bidi: normal;
     }
 
     p, blockquote, pre {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+        display: block;
+        unicode-bidi: normal;
     }
 
     /* Links */
@@ -64,7 +93,23 @@
     ul, ol, li {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
         list-style: none;
+    }
+    
+    ul, ol {
+        display: block;
+    }
+    
+    li {
+        display: list-item;
     }
 
     /* Tables */
@@ -95,7 +140,7 @@
     th, td {
         margin: 0;
         padding: 0;
-        border: 0;
+        /* border: 0 제거 - border 클래스가 적용되도록 / Remove border: 0 to allow border classes to apply */
         text-align: left;
         font-weight: normal;
         font-style: normal;
@@ -221,6 +266,32 @@
         display: block;
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+    
+    /* Block-level elements reset */
+    div, address, dl, dt, dd, fieldset, form, legend {
+        margin: 0;
+        padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+    
+    div {
+        display: block;
     }
 
     summary {
@@ -560,15 +631,16 @@
 
     .ohah-hwpjs-table th,
     .ohah-hwpjs-table td {
-        border: 1px solid #ddd;
         padding: 8px;
         text-align: left;
+        border: 1px solid black;
     }
 
     .ohah-hwpjs-table th {
-        background-color: #f2f2f2;
         font-weight: bold;
     }
+    
+    /* 테이블 셀 배경색은 bg-color 클래스로 처리 / Table cell background colors are handled by bg-color classes */
 
     .ohah-hwpjs-image {
         max-width: 100%;
@@ -712,7 +784,7 @@
         margin-right: 3px;
     }
 
-    .ohah-hwpjs-color-0000ff {
+                   .ohah-hwpjs-color-0000ff {
         color: rgb(0, 0, 255);
     }
 
@@ -725,114 +797,616 @@
     }
 
 
-    .ohah-hwpjs-size-1400 {
-        font-size: 14.00pt;
-    }
-
-    .ohah-hwpjs-size-1600 {
+                   .ohah-hwpjs-size-1600 {
         font-size: 16.00pt;
-    }
-
-    .ohah-hwpjs-size-1300 {
-        font-size: 13.00pt;
-    }
-
-    .ohah-hwpjs-size-1000 {
-        font-size: 10.00pt;
-    }
-
-    .ohah-hwpjs-size-1200 {
-        font-size: 12.00pt;
-    }
-
-    .ohah-hwpjs-size-900 {
-        font-size: 9.00pt;
     }
 
     .ohah-hwpjs-size-1500 {
         font-size: 15.00pt;
     }
 
-    .ohah-hwpjs-size-1550 {
-        font-size: 15.50pt;
+    .ohah-hwpjs-size-900 {
+        font-size: 9.00pt;
+    }
+
+    .ohah-hwpjs-size-1200 {
+        font-size: 12.00pt;
     }
 
     .ohah-hwpjs-size-1100 {
         font-size: 11.00pt;
     }
 
+    .ohah-hwpjs-size-1400 {
+        font-size: 14.00pt;
+    }
+
+    .ohah-hwpjs-size-1000 {
+        font-size: 10.00pt;
+    }
+
     .ohah-hwpjs-size-1724 {
         font-size: 17.24pt;
     }
 
-
-    .ohah-hwpjs-border-fill-1 {
-        background-color: rgb(255, 255, 255);
+    .ohah-hwpjs-size-1300 {
+        font-size: 13.00pt;
     }
 
-    .ohah-hwpjs-border-fill-2 {
+    .ohah-hwpjs-size-1550 {
+        font-size: 15.50pt;
     }
 
-    .ohah-hwpjs-border-fill-3 {
-        border-left: 72px solid rgb(96, 23, 27);
-        border-top: 0.75px solid rgb(1, 0, 96);
-        border-bottom: 5.25px solid rgb(96, 23, 27);
-        background-color: rgb(190, 45, 52);
+
+                   .ohah-hwpjs-border-left-color-080700 {
+        border-left-color: rgb(8, 7, 0) !important;
     }
 
-    .ohah-hwpjs-border-fill-4 {
-        border-left: 72px solid rgb(0, 0, 0);
-        border-bottom: 0.75px solid rgb(0, 0, 0);
+    .ohah-hwpjs-border-right-color-080700 {
+        border-right-color: rgb(8, 7, 0) !important;
     }
 
-    .ohah-hwpjs-border-fill-5 {
+    .ohah-hwpjs-border-top-color-080700 {
+        border-top-color: rgb(8, 7, 0) !important;
     }
 
-    .ohah-hwpjs-border-fill-6 {
-        background-color: rgb(255, 255, 255);
+    .ohah-hwpjs-border-bottom-color-080700 {
+        border-bottom-color: rgb(8, 7, 0) !important;
     }
 
-    .ohah-hwpjs-border-fill-7 {
+    .ohah-hwpjs-border-left-color-1b1760 {
+        border-left-color: rgb(27, 23, 96) !important;
     }
 
-    .ohah-hwpjs-border-fill-8 {
+    .ohah-hwpjs-border-right-color-1b1760 {
+        border-right-color: rgb(27, 23, 96) !important;
     }
 
-    .ohah-hwpjs-border-fill-9 {
+    .ohah-hwpjs-border-top-color-1b1760 {
+        border-top-color: rgb(27, 23, 96) !important;
     }
 
-    .ohah-hwpjs-border-fill-10 {
+    .ohah-hwpjs-border-bottom-color-1b1760 {
+        border-bottom-color: rgb(27, 23, 96) !important;
     }
 
-    .ohah-hwpjs-border-fill-11 {
+    .ohah-hwpjs-border-left-color-00071b {
+        border-left-color: rgb(0, 7, 27) !important;
     }
 
-    .ohah-hwpjs-border-fill-12 {
+    .ohah-hwpjs-border-right-color-00071b {
+        border-right-color: rgb(0, 7, 27) !important;
     }
 
-    .ohah-hwpjs-border-fill-13 {
+    .ohah-hwpjs-border-top-color-00071b {
+        border-top-color: rgb(0, 7, 27) !important;
     }
 
-    .ohah-hwpjs-border-fill-14 {
+    .ohah-hwpjs-border-bottom-color-00071b {
+        border-bottom-color: rgb(0, 7, 27) !important;
     }
 
-    .ohah-hwpjs-border-fill-15 {
-        background-color: rgb(165, 231, 231);
+    .ohah-hwpjs-border-left-color-600000 {
+        border-left-color: rgb(96, 0, 0) !important;
     }
 
-    .ohah-hwpjs-border-fill-16 {
-        background-color: rgb(165, 231, 231);
+    .ohah-hwpjs-border-right-color-600000 {
+        border-right-color: rgb(96, 0, 0) !important;
     }
 
-    .ohah-hwpjs-border-fill-17 {
-        background-color: rgb(242, 242, 242);
+    .ohah-hwpjs-border-top-color-600000 {
+        border-top-color: rgb(96, 0, 0) !important;
     }
 
-    .ohah-hwpjs-border-fill-18 {
-        background-color: rgb(217, 217, 217);
+    .ohah-hwpjs-border-bottom-color-600000 {
+        border-bottom-color: rgb(96, 0, 0) !important;
     }
 
-  </style>
+    .ohah-hwpjs-border-left-color-000000 {
+        border-left-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-000000 {
+        border-right-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-000000 {
+        border-top-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-000000 {
+        border-bottom-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-000000 {
+        border-left-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-000000 {
+        border-right-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-000000 {
+        border-top-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-000000 {
+        border-bottom-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-000001 {
+        border-left-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-000001 {
+        border-right-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-000001 {
+        border-top-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-000001 {
+        border-bottom-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-000008 {
+        border-left-color: rgb(0, 0, 8) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-000008 {
+        border-right-color: rgb(0, 0, 8) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-000008 {
+        border-top-color: rgb(0, 0, 8) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-000008 {
+        border-bottom-color: rgb(0, 0, 8) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-010600 {
+        border-left-color: rgb(1, 6, 0) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-010600 {
+        border-right-color: rgb(1, 6, 0) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-010600 {
+        border-top-color: rgb(1, 6, 0) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-010600 {
+        border-bottom-color: rgb(1, 6, 0) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-010100 {
+        border-left-color: rgb(1, 1, 0) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-010100 {
+        border-right-color: rgb(1, 1, 0) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-010100 {
+        border-top-color: rgb(1, 1, 0) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-010100 {
+        border-bottom-color: rgb(1, 1, 0) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-600001 {
+        border-left-color: rgb(96, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-600001 {
+        border-right-color: rgb(96, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-600001 {
+        border-top-color: rgb(96, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-600001 {
+        border-bottom-color: rgb(96, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-00ff00 {
+        border-left-color: rgb(0, 255, 0) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-00ff00 {
+        border-right-color: rgb(0, 255, 0) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-00ff00 {
+        border-top-color: rgb(0, 255, 0) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-00ff00 {
+        border-bottom-color: rgb(0, 255, 0) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-000001 {
+        border-left-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-000001 {
+        border-right-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-000001 {
+        border-top-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-000001 {
+        border-bottom-color: rgb(0, 0, 1) !important;
+    }
+
+    .ohah-hwpjs-border-left-color-01071b {
+        border-left-color: rgb(1, 7, 27) !important;
+    }
+
+    .ohah-hwpjs-border-right-color-01071b {
+        border-right-color: rgb(1, 7, 27) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-01071b {
+        border-top-color: rgb(1, 7, 27) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-01071b {
+        border-bottom-color: rgb(1, 7, 27) !important;
+    }
+
+
+                   .ohah-hwpjs-bg-color-342dbe {
+        background-color: rgb(52, 45, 190) !important;
+    }
+
+    .ohah-hwpjs-bg-color-f2f2f2 {
+        background-color: rgb(242, 242, 242) !important;
+    }
+
+    .ohah-hwpjs-bg-color-e7e7a5 {
+        background-color: rgb(231, 231, 165) !important;
+    }
+
+    .ohah-hwpjs-bg-color-ffffff {
+        background-color: rgb(255, 255, 255) !important;
+    }
+
+    .ohah-hwpjs-bg-color-d9d9d9 {
+        background-color: rgb(217, 217, 217) !important;
+    }
+
+
+                   .ohah-hwpjs-border-left-style-0-27 {
+        border-left-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-right-style-0-27 {
+        border-right-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-top-style-0-27 {
+        border-top-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-0-27 {
+        border-bottom-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-left-style-0-6 {
+        border-left-style: dotted !important;
+    }
+
+    .ohah-hwpjs-border-right-style-0-6 {
+        border-right-style: dotted !important;
+    }
+
+    .ohah-hwpjs-border-top-style-0-6 {
+        border-top-style: dotted !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-0-6 {
+        border-bottom-style: dotted !important;
+    }
+
+    .ohah-hwpjs-border-left-style-1-23 {
+        border-left-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-right-style-1-23 {
+        border-right-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-top-style-1-23 {
+        border-top-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-1-23 {
+        border-bottom-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-left-style-0-2 {
+        border-left-style: dashed !important;
+    }
+
+    .ohah-hwpjs-border-right-style-0-2 {
+        border-right-style: dashed !important;
+    }
+
+    .ohah-hwpjs-border-top-style-0-2 {
+        border-top-style: dashed !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-0-2 {
+        border-bottom-style: dashed !important;
+    }
+
+    .ohah-hwpjs-border-left-style-0-7 {
+        border-left-style: double !important;
+    }
+
+    .ohah-hwpjs-border-right-style-0-7 {
+        border-right-style: double !important;
+    }
+
+    .ohah-hwpjs-border-top-style-0-7 {
+        border-top-style: double !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-0-7 {
+        border-bottom-style: double !important;
+    }
+
+    .ohah-hwpjs-border-left-style-0-1 {
+        border-left-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-right-style-0-1 {
+        border-right-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-top-style-0-1 {
+        border-top-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-0-1 {
+        border-bottom-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-left-style-1-27 {
+        border-left-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-right-style-1-27 {
+        border-right-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-top-style-1-27 {
+        border-top-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-1-27 {
+        border-bottom-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-left-style-7-23 {
+        border-left-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-right-style-7-23 {
+        border-right-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-top-style-7-23 {
+        border-top-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-7-23 {
+        border-bottom-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-left-style-0-8 {
+        border-left-style: double !important;
+    }
+
+    .ohah-hwpjs-border-right-style-0-8 {
+        border-right-style: double !important;
+    }
+
+    .ohah-hwpjs-border-top-style-0-8 {
+        border-top-style: double !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-0-8 {
+        border-bottom-style: double !important;
+    }
+
+    .ohah-hwpjs-border-left-style-96-1 {
+        border-left-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-right-style-96-1 {
+        border-right-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-top-style-96-1 {
+        border-top-style: solid !important;
+    }
+
+    .ohah-hwpjs-border-bottom-style-96-1 {
+        border-bottom-style: solid !important;
+    }
+
+
+                   .ohah-hwpjs-border-left-width-0-27 {
+        border-left-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-0-27 {
+        border-right-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-0-27 {
+        border-top-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-0-27 {
+        border-bottom-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-left-width-0-6 {
+        border-left-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-0-6 {
+        border-right-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-0-6 {
+        border-top-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-0-6 {
+        border-bottom-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-left-width-1-23 {
+        border-left-width: 0.45px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-1-23 {
+        border-right-width: 0.45px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-1-23 {
+        border-top-width: 0.45px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-1-23 {
+        border-bottom-width: 0.45px !important;
+    }
+
+    .ohah-hwpjs-border-left-width-0-2 {
+        border-left-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-0-2 {
+        border-right-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-0-2 {
+        border-top-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-0-2 {
+        border-bottom-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-left-width-0-7 {
+        border-left-width: 0.76px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-0-7 {
+        border-right-width: 0.76px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-0-7 {
+        border-top-width: 0.76px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-0-7 {
+        border-bottom-width: 0.76px !important;
+    }
+
+    .ohah-hwpjs-border-left-width-0-1 {
+        border-left-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-0-1 {
+        border-right-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-0-1 {
+        border-top-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-0-1 {
+        border-bottom-width: 0.38px !important;
+    }
+
+    .ohah-hwpjs-border-left-width-1-27 {
+        border-left-width: 0.45px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-1-27 {
+        border-right-width: 0.45px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-1-27 {
+        border-top-width: 0.45px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-1-27 {
+        border-bottom-width: 0.45px !important;
+    }
+
+    .ohah-hwpjs-border-left-width-7-23 {
+        border-left-width: 1.89px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-7-23 {
+        border-right-width: 1.89px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-7-23 {
+        border-top-width: 1.89px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-7-23 {
+        border-bottom-width: 1.89px !important;
+    }
+
+    .ohah-hwpjs-border-left-width-0-8 {
+        border-left-width: 0.76px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-0-8 {
+        border-right-width: 0.76px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-0-8 {
+        border-top-width: 0.76px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-0-8 {
+        border-bottom-width: 0.76px !important;
+    }
+
+    .ohah-hwpjs-border-left-width-96-1 {
+        border-left-width: 36.28px !important;
+    }
+
+    .ohah-hwpjs-border-right-width-96-1 {
+        border-right-width: 36.28px !important;
+    }
+
+    .ohah-hwpjs-border-top-width-96-1 {
+        border-top-width: 36.28px !important;
+    }
+
+    .ohah-hwpjs-border-bottom-width-96-1 {
+        border-bottom-width: 36.28px !important;
+    }
+
+
+                 </style>
 </head>
 <body>
   <div class="ohah-hwpjs-document">
@@ -843,8 +1417,8 @@
     <p><strong>여백</strong>: 좌 0.79인치 / 우 0.79인치 / 상 0.39인치 / 하 0.39인치</p>
     <main class="ohah-hwpjs-main">
 <img src="images/BIN0001.jpg" alt="이미지" class="ohah-hwpjs-image" />
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-15"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>보도일시</strong></span></p></th><th colspan="3" class="ohah-hwpjs-border-fill-16"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>2018. 9. 4.(화) 조간</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-0000ff ohah-hwpjs-size-1300"><strong>(온라인 9. 3. </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-0000ff ohah-hwpjs-size-1300"><strong>12:00</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-0000ff ohah-hwpjs-size-1300"><strong>)</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>부터 보도해 주시기 바랍니다.</strong></span></p></th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-13"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>배포일시</strong></span></p></td><td class="ohah-hwpjs-border-fill-10"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">2018. 9. 3.(월) 09:00</span></p></td><td class="ohah-hwpjs-border-fill-10"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담당부서</strong></span></p></td><td class="ohah-hwpjs-border-fill-8"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">거대공공연구정책과</span></p></td></tr><tr><td class="ohah-hwpjs-border-fill-14"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담당과장</strong></span></p></td><td class="ohah-hwpjs-border-fill-11"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">장인숙(02-2110-2430)</span></p></td><td class="ohah-hwpjs-border-fill-11"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담 당 자</strong></span></p></td><td class="ohah-hwpjs-border-fill-9"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"> 용찬재 사무관(02-2110-2428)</span></p></td></tr></tbody></table>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-17"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1800">우리가 독자 개발하여 최초 발사하는 한국형발사체,</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1800">국민이 정한 그 이름은 ｢누리｣</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600">“세상”의 옛말로, 우주까지 확장된 새로운 세상을 연다는 의미 -</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600">명칭공모전에 1만건 이상 응모, 뜨거운 관심 보여 -</span></p></th></tr></thead><tbody></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>보도일시</strong></span></p></th><th colspan="3"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>2018. 9. 4.(화) 조간</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300"><strong>(온라인 9. 3. </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300"><strong>12:00</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300"><strong>)</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>부터 보도해 주시기 바랍니다.</strong></span></p></th></tr></thead><tbody><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>배포일시</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">2018. 9. 3.(월) 09:00</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담당부서</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">거대공공연구정책과</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담당과장</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">장인숙(02-2110-2430)</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담 당 자</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"> 용찬재 사무관(02-2110-2428)</span></p></td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1800">우리가 독자 개발하여 최초 발사하는 한국형발사체,</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1800">국민이 정한 그 이름은 ｢누리｣</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600">“세상”의 옛말로, 우주까지 확장된 새로운 세상을 연다는 의미 -</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600">명칭공모전에 1만건 이상 응모, 뜨거운 관심 보여 -</span></p></th></tr></thead><tbody></tbody></table>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">□ </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">과학기술정보통신부</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">(장관 유영민, 이하 ‘과기정통부’)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">는 우리나라 최초로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">순수 우리기술로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 개발 중인 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>한국형발사체</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>(KSLV-2)</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>의 새로운 이름</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">으로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>“누리”가 선정</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">되었다고 밝혔다.</span></p>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 한국형발사체는 1.5톤급 실용위성을 지구 저궤도(600km~800km)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">까지 쏘아 올릴 수 있는 3단형 우주발사체로, 연간 130여개 기관</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">이</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 참여하여 2021년 발사를 목표로 개발하고 있다</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">.</span></p>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 올해 10월에는 한국형발사체의 핵심부품인 75톤 액체엔진의 비행성능을 확인하기 위해 시험발사체를 발사할 예정이다.</span></p>
@@ -856,10 +1430,10 @@
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 동 명칭을 제출한 경상대학교 에너지기계공학과 백승엽 학생은 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">‘</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>누리’는 ‘세상’의 옛말</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>우주로까지 확장된 새로운 세상을 </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>연다는</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>의미</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">로, 우리 손으로 만든 발사체로 온 우주를 누비고 미래</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 발전을 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">누리길 희망하는 마음을 담았다고 밝혔다.</span></p>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">백승엽학생에게는 오는 9월 7일(금)에 과기정통부 장관상과 함께 소정의</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 상금이 수여될 예정이다. </span></p>
 <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">□ </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">과기정통부 거대공공연구정책관은 “명칭 공모전을 통해 우리국민의 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>우주에 대한 높은 관심을 확인</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">할 수 있었다”며 “새로운 이름에 걸맞게 무한한 가능성을 갖고 있는 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>우주공간을 우리 발사체로 직접 개척할 수 있도록 최선을 다할 것</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">” 이라고 밝혔다.</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-12"><img src="images/BIN0004.jpg" alt="이미지" class="ohah-hwpjs-image" /></th><th class="ohah-hwpjs-border-fill-12"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-900">이 자료에 대하여 더욱 자세한 내용을 원하시면</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-900">과학기술정보통신부 용찬재 사무관(☎ 02-2110-2428)에게 연락주시기 바랍니다.</span></p></th></tr></thead><tbody></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th><img src="images/BIN0004.jpg" alt="이미지" class="ohah-hwpjs-image" /></th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-900">이 자료에 대하여 더욱 자세한 내용을 원하시면</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-900">과학기술정보통신부 용찬재 사무관(☎ 02-2110-2428)에게 연락주시기 바랍니다.</span></p></th></tr></thead><tbody></tbody></table>
     <hr class="ohah-hwpjs-page-break" />
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-3"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-color-ffffff ohah-hwpjs-size-1600">붙임</span></p></th><th class="ohah-hwpjs-border-fill-4">&nbsp;</th><th class="ohah-hwpjs-border-fill-5"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600"> 한국형발사체(누리호)와 시험발사체 비교</span></p></th></tr></thead><tbody></tbody></table>
-<table class="ohah-hwpjs-table"><thead><tr><th class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">구 분</span></p></th><th class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">한국형발사체(누리호)</span></p></th><th class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">시험발사체</span></p></th></tr></thead><tbody><tr><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">형 상</span></p></td><td class="ohah-hwpjs-border-fill-2"><img src="images/BIN0002.bmp" alt="이미지" class="ohah-hwpjs-image" /></td><td class="ohah-hwpjs-border-fill-2"><img src="images/BIN0003.bmp" alt="이미지" class="ohah-hwpjs-image" /></td></tr><tr><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">목 적</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1.5톤급 실용위성을</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">지구저궤도</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1100">(600~800km)</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">에 투입</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">한국형발사체 75톤급 엔진의 비행성능 검증</span></p></td></tr><tr><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">총 길이</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">47.2 m</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">25.8 m</span></p></td></tr><tr><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">최대 직경</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">3.5 m</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">2.6 m</span></p></td></tr><tr><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">이륙 중량</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">200 톤</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">52.1 톤</span></p></td></tr><tr><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">탑재체 중량</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1.5 톤</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">-</span></p></td></tr><tr><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">단 수 </span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">3단</span></p></td><td class="ohah-hwpjs-border-fill-2"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1단</span></p></td></tr></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-color-ffffff ohah-hwpjs-size-1600">붙임</span></p></th><th>&nbsp;</th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600"> 한국형발사체(누리호)와 시험발사체 비교</span></p></th></tr></thead><tbody></tbody></table>
+<table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">구 분</span></p></th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">한국형발사체(누리호)</span></p></th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">시험발사체</span></p></th></tr></thead><tbody><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">형 상</span></p></td><td><img src="images/BIN0002.bmp" alt="이미지" class="ohah-hwpjs-image" /></td><td><img src="images/BIN0003.bmp" alt="이미지" class="ohah-hwpjs-image" /></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">목 적</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1.5톤급 실용위성을</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">지구저궤도</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1100">(600~800km)</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">에 투입</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">한국형발사체 75톤급 엔진의 비행성능 검증</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">총 길이</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">47.2 m</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">25.8 m</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">최대 직경</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">3.5 m</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">2.6 m</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">이륙 중량</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">200 톤</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">52.1 톤</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">탑재체 중량</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1.5 톤</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">-</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">단 수 </span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">3단</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1단</span></p></td></tr></tbody></table>
     </main>
   </div>
 </body>

@@ -86,8 +86,10 @@ impl From<SHWPUNIT> for i32 {
     }
 }
 
-/// COLORREF: RGB 값 (0x00bbggrr)
-/// rr: red 1 byte, gg: green 1 byte, bb: blue 1 byte
+/// COLORREF: BGR 형식 (0x00bbggrr)
+/// 스펙 문서: RGB값(0x00bbggrr) - 실제로는 BGR 순서로 저장됨
+/// Spec: RGB value (0x00bbggrr) - actually stored in BGR order
+/// rr: red 1 byte (하위 바이트), gg: green 1 byte (중간 바이트), bb: blue 1 byte (상위 바이트)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct COLORREF(pub u32);
 

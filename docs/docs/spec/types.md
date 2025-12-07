@@ -237,10 +237,12 @@ pub type HWPUNIT16 = i16;
 - **길이**: 4 바이트
 - **부호**: 없음
 - **Rust 타입**: `COLORREF` (구조체)
-- **설명**: RGB값(0x00bbggrr)을 십진수로 표시
-  - `rr`: red 1 byte
-  - `gg`: green 1 byte
-  - `bb`: blue 1 byte
+- **설명**: **주의: 스펙 문서에는 "RGB값(0x00bbggrr)"로 표기되어 있으나, 실제로는 BGR 형식으로 저장됩니다.**
+  - 형식: `0x00bbggrr` (BGR 순서)
+  - `rr`: red 1 byte (하위 바이트)
+  - `gg`: green 1 byte (중간 바이트)
+  - `bb`: blue 1 byte (상위 바이트)
+  - **중요**: 스펙 문서의 "RGB값"이라는 표현은 혼동을 줄 수 있으나, 실제 저장 형식은 BGR입니다.
 
 **메서드**:
 - `rgb(r: u8, g: u8, b: u8) -> Self`: RGB 값으로 생성

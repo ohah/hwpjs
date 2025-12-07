@@ -476,8 +476,8 @@ fn format_number_by_shape(
             if custom_char != 0 {
                 char::from_u32(custom_char as u32).unwrap_or(' ').to_string()
             } else {
-                format!("{}", number)
-            }
+    format!("{}", number)
+}
         }
     };
     

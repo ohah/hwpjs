@@ -11,6 +11,15 @@
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+        /* 논리적 속성 초기화 / Reset logical properties */
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
     }
 
     html, body {
@@ -37,14 +46,34 @@
     h1, h2, h3, h4, h5, h6 {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
         font-size: 1em;
         font-weight: normal;
         line-height: 1;
+        display: block;
+        unicode-bidi: normal;
     }
 
     p, blockquote, pre {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+        display: block;
+        unicode-bidi: normal;
     }
 
     /* Links */
@@ -64,7 +93,23 @@
     ul, ol, li {
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
         list-style: none;
+    }
+    
+    ul, ol {
+        display: block;
+    }
+    
+    li {
+        display: list-item;
     }
 
     /* Tables */
@@ -95,7 +140,7 @@
     th, td {
         margin: 0;
         padding: 0;
-        border: 0;
+        /* border: 0 제거 - border 클래스가 적용되도록 / Remove border: 0 to allow border classes to apply */
         text-align: left;
         font-weight: normal;
         font-style: normal;
@@ -221,6 +266,32 @@
         display: block;
         margin: 0;
         padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+    
+    /* Block-level elements reset */
+    div, address, dl, dt, dd, fieldset, form, legend {
+        margin: 0;
+        padding: 0;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        padding-block-start: 0;
+        padding-block-end: 0;
+        padding-inline-start: 0;
+        padding-inline-end: 0;
+    }
+    
+    div {
+        display: block;
     }
 
     summary {
@@ -324,15 +395,16 @@
 
     .ohah-hwpjs-table th,
     .ohah-hwpjs-table td {
-        border: 1px solid #ddd;
         padding: 8px;
         text-align: left;
+        border: 1px solid black;
     }
 
     .ohah-hwpjs-table th {
-        background-color: #f2f2f2;
         font-weight: bold;
     }
+    
+    /* 테이블 셀 배경색은 bg-color 클래스로 처리 / Table cell background colors are handled by bg-color classes */
 
     .ohah-hwpjs-image {
         max-width: 100%;
@@ -476,8 +548,8 @@
         margin-right: 3px;
     }
 
-
-    .ohah-hwpjs-size-900 {
+               
+                   .ohah-hwpjs-size-900 {
         font-size: 9.00pt;
     }
 
@@ -486,11 +558,31 @@
     }
 
 
-    .ohah-hwpjs-border-fill-1 {
-        background-color: rgb(255, 255, 255);
+                   .ohah-hwpjs-border-left-color-000000 {
+        border-left-color: rgb(0, 0, 0) !important;
     }
 
-  </style>
+    .ohah-hwpjs-border-right-color-000000 {
+        border-right-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-top-color-000000 {
+        border-top-color: rgb(0, 0, 0) !important;
+    }
+
+    .ohah-hwpjs-border-bottom-color-000000 {
+        border-bottom-color: rgb(0, 0, 0) !important;
+    }
+
+
+                   .ohah-hwpjs-bg-color-ffffff {
+        background-color: rgb(255, 255, 255) !important;
+    }
+
+
+               
+               
+                 </style>
 </head>
 <body>
   <div class="ohah-hwpjs-document">

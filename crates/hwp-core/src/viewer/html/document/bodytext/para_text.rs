@@ -326,9 +326,9 @@ fn apply_html_styles<'a>(
         let shadow_y = shape.shadow_spacing_y as f32 / 100.0;
         let shadow_color = format!(
             "rgba({}, {}, {}, {})",
-            (shape.shadow_color.0 >> 16) & 0xFF,
-            (shape.shadow_color.0 >> 8) & 0xFF,
-            shape.shadow_color.0 & 0xFF,
+            shape.shadow_color.r(),
+            shape.shadow_color.g(),
+            shape.shadow_color.b(),
             ((shape.shadow_color.0 >> 24) & 0xFF) as f32 / 255.0
         );
         result = format!(
@@ -341,9 +341,9 @@ fn apply_html_styles<'a>(
     if shape.attributes.outline_type != 0 {
         let text_color = format!(
             "rgb({}, {}, {})",
-            (shape.text_color.0 >> 16) & 0xFF,
-            (shape.text_color.0 >> 8) & 0xFF,
-            shape.text_color.0 & 0xFF
+            shape.text_color.r(),
+            shape.text_color.g(),
+            shape.text_color.b()
         );
         result = format!(
             r#"<span style="-webkit-text-stroke: 1px {}; text-stroke: 1px {};">{}</span>"#,
@@ -375,9 +375,9 @@ fn apply_html_styles<'a>(
 
     // 텍스트 색상 / Text color
     if shape.text_color.0 != 0 {
-        let r = (shape.text_color.0 >> 16) & 0xFF;
-        let g = (shape.text_color.0 >> 8) & 0xFF;
-        let b = shape.text_color.0 & 0xFF;
+        let r = shape.text_color.r();
+        let g = shape.text_color.g();
+        let b = shape.text_color.b();
         // hex 색상 클래스 이름 생성 / Generate hex color class name
         classes.push(format!("{}color-{:02x}{:02x}{:02x}", css_prefix, r, g, b));
     }

@@ -168,7 +168,7 @@
 | INT16 | 2 | ✓ | 'signed_int16'에 해당 |
 | INT32 | 4 | ✓ | 'signed_int32'에 해당 |
 | HWPUNIT16 | 2 | ✓ | INT16과 같다 |
-| COLORREF | 4 | | RGB값(0x00bbggrr)을 십진수로 표시 (rr: red 1 byte, gg: green 1 byte, bb: blue 1 byte) |
+| COLORREF | 4 | | **주의**: 스펙 문서에는 "RGB값(0x00bbggrr)"로 표기되어 있으나, 실제로는 **BGR 형식**으로 저장됩니다. 0x00bbggrr 형식에서 rr: red 1 byte (하위 바이트), gg: green 1 byte (중간 바이트), bb: blue 1 byte (상위 바이트) |
 | BYTE stream | | | 일련의 BYTE로 구성됨. 본문 내에서 다른 구조를 참조할 경우에 사용됨. |
 
 WCHAR는 한글의 내부 코드로 표현된 문자 한 글자를 표현하는 자료형이다. 한글의 내부 코드는 한글, 영문, 한자를 비롯해 모든 문자가 2 바이트의 일정한 길이를 가진다.
