@@ -4,6 +4,89 @@ import { PlatformTabs } from '../../components/PlatformTabs';
 
 HWP 파일의 FileHeader만 추출하여 JSON 형식으로 반환하는 함수입니다.
 
+## 예제
+
+<PlatformTabs defaultPlatform="web">
+  <div data-platform="web">
+    ```typescript
+    // buffer-polyfill을 먼저 import한 후
+    import * as hwpjs from '@ohah/hwpjs';
+
+    // 파일 입력에서 HWP 파일 읽기
+    const fileInput = document.querySelector('input[type="file"]');
+    fileInput.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+
+        // FileHeader 추출
+        const headerString = hwpjs.fileHeader(data);
+        const header = JSON.parse(headerString);
+
+        console.log('버전:', header.version);
+        console.log('압축 여부:', header.is_compressed);
+        console.log('암호화 여부:', header.is_encrypted);
+      } catch (error) {
+        console.error('FileHeader 추출 실패:', error);
+      }
+    });
+    ```
+  </div>
+
+  <div data-platform="react-native">
+    ```typescript
+    import { Hwpjs } from '@ohah/hwpjs';
+    import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
+
+    try {
+      // 파일 경로 설정
+      const filePath = Platform.OS === 'ios' 
+        ? `${RNFS.MainBundlePath}/document.hwp`
+        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+
+      // 파일을 base64로 읽기
+      const fileData = await RNFS.readFile(filePath, 'base64');
+
+      // base64를 number[]로 변환
+      const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+      // FileHeader 추출
+      const result = Hwpjs.fileHeader(numberArray);
+      const header = JSON.parse(result);
+
+      console.log('버전:', header.version);
+      console.log('압축 여부:', header.is_compressed);
+      console.log('암호화 여부:', header.is_encrypted);
+    } catch (error) {
+      console.error('FileHeader 추출 실패:', error);
+    }
+    ```
+  </div>
+
+  <div data-platform="node">
+    ```typescript
+    import { readFileSync } from 'fs';
+    import { fileHeader } from '@ohah/hwpjs';
+
+    try {
+      const fileBuffer = readFileSync('./document.hwp');
+      const result = fileHeader(fileBuffer);
+      const header = JSON.parse(result);
+
+      console.log('버전:', header.version);
+      console.log('압축 여부:', header.is_compressed);
+      console.log('암호화 여부:', header.is_encrypted);
+    } catch (error) {
+      console.error('FileHeader 추출 실패:', error);
+    }
+    ```
+  </div>
+</PlatformTabs>
+
 ## 시그니처
 
 ```typescript
@@ -36,136 +119,6 @@ FileHeader에는 다음 정보가 포함됩니다:
 - 암호화 여부 (is_encrypted)
 - 기타 문서 속성
 
-## 예제
-
-### 기본 사용법
-
-<PlatformTabs defaultPlatform="web">
-  <div data-platform="web">
-    ```typescript
-    // buffer-polyfill을 먼저 import한 후
-    import * as hwpjs from '@ohah/hwpjs';
-
-    // 파일 입력에서 HWP 파일 읽기
-    const fileInput = document.querySelector('input[type="file"]');
-    fileInput.addEventListener('change', async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      const arrayBuffer = await file.arrayBuffer();
-      const data = new Uint8Array(arrayBuffer);
-
-      // FileHeader 추출
-      const headerString = hwpjs.fileHeader(data);
-      const header = JSON.parse(headerString);
-
-      console.log('버전:', header.version);
-      console.log('압축 여부:', header.is_compressed);
-      console.log('암호화 여부:', header.is_encrypted);
-    });
-    ```
-  </div>
-
-  <div data-platform="react-native">
-    ```typescript
-    import { Hwpjs } from '@ohah/hwpjs';
-    import RNFS from 'react-native-fs';
-    import { Platform } from 'react-native';
-
-    // 파일 경로 설정
-    const filePath = Platform.OS === 'ios' 
-      ? `${RNFS.MainBundlePath}/document.hwp`
-      : `${RNFS.DocumentDirectoryPath}/document.hwp`;
-
-    // 파일을 base64로 읽기
-    const fileData = await RNFS.readFile(filePath, 'base64');
-
-    // base64를 number[]로 변환
-    const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
-
-    // FileHeader 추출
-    const result = Hwpjs.fileHeader(numberArray);
-    const header = JSON.parse(result);
-
-    console.log('버전:', header.version);
-    console.log('압축 여부:', header.is_compressed);
-    console.log('암호화 여부:', header.is_encrypted);
-    ```
-  </div>
-
-  <div data-platform="node">
-    ```typescript
-    import { readFileSync } from 'fs';
-    import { fileHeader } from '@ohah/hwpjs';
-
-    const fileBuffer = readFileSync('./document.hwp');
-    const result = fileHeader(fileBuffer);
-    const header = JSON.parse(result);
-
-    console.log('버전:', header.version);
-    console.log('압축 여부:', header.is_compressed);
-    console.log('암호화 여부:', header.is_encrypted);
-    ```
-  </div>
-</PlatformTabs>
-
-### 에러 처리
-
-<PlatformTabs defaultPlatform="web">
-  <div data-platform="web">
-    ```typescript
-    import * as hwpjs from '@ohah/hwpjs';
-
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const data = new Uint8Array(arrayBuffer);
-      const result = hwpjs.fileHeader(data);
-      const header = JSON.parse(result);
-      console.log('FileHeader:', header);
-    } catch (error) {
-      console.error('FileHeader 추출 실패:', error);
-    }
-    ```
-  </div>
-
-  <div data-platform="react-native">
-    ```typescript
-    import { Hwpjs } from '@ohah/hwpjs';
-    import RNFS from 'react-native-fs';
-    import { Platform } from 'react-native';
-
-    try {
-      const filePath = Platform.OS === 'ios' 
-        ? `${RNFS.MainBundlePath}/document.hwp`
-        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
-      const fileData = await RNFS.readFile(filePath, 'base64');
-      const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
-      const result = Hwpjs.fileHeader(numberArray);
-      const header = JSON.parse(result);
-      console.log('FileHeader:', header);
-    } catch (error) {
-      console.error('FileHeader 추출 실패:', error);
-    }
-    ```
-  </div>
-
-  <div data-platform="node">
-    ```typescript
-    import { readFileSync } from 'fs';
-    import { fileHeader } from '@ohah/hwpjs';
-
-    try {
-      const fileBuffer = readFileSync('./document.hwp');
-      const result = fileHeader(fileBuffer);
-      const header = JSON.parse(result);
-      console.log('FileHeader:', header);
-    } catch (error) {
-      console.error('FileHeader 추출 실패:', error);
-    }
-    ```
-  </div>
-</PlatformTabs>
-
 ## 에러
 
 HWP 파일 형식이 올바르지 않거나 FileHeader를 읽을 수 없는 경우 에러가 발생합니다.
@@ -177,4 +130,3 @@ HWP 파일 형식이 올바르지 않거나 FileHeader를 읽을 수 없는 경�
 ## 참고
 
 이 함수는 전체 문서를 파싱하지 않고 FileHeader만 빠르게 추출합니다. 문서의 메타데이터만 필요한 경우에 유용합니다.
-

@@ -1,4 +1,5 @@
 import { PackageManagerTabs } from '@theme';
+import { PlatformTabs } from '../../components/PlatformTabs';
 
 # 빠른 시작
 
@@ -10,42 +11,83 @@ HWPJS를 사용하여 첫 번째 HWP 파일을 파싱해보세요.
 
 <PackageManagerTabs command="install @ohah/hwpjs" />
 
-## 기본 사용법
+## 예제
 
 가장 간단한 사용 예제입니다.
 
-```typescript
-import { readFileSync } from 'fs';
-import { toJson } from '@ohah/hwpjs';
+<PlatformTabs defaultPlatform="web">
+  <div data-platform="web">
+    ```typescript
+    // buffer-polyfill을 먼저 import한 후
+    import './buffer-polyfill';
+    import * as hwpjs from '@ohah/hwpjs';
 
-// HWP 파일을 읽어서 JSON으로 변환
-const fileBuffer = readFileSync('./document.hwp');
-const data = new Uint8Array(fileBuffer);
-const result = toJson(data);
-console.log(result);
-```
+    // 파일 입력에서 HWP 파일 읽기
+    const fileInput = document.querySelector('input[type="file"]');
+    fileInput.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
 
-## 예제 코드
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+
+        // JSON으로 변환
+        const jsonResult = hwpjs.toJson(data);
+        console.log(jsonResult);
+      } catch (error) {
+        console.error('변환 실패:', error);
+      }
+    });
+    ```
+  </div>
+
+  <div data-platform="react-native">
+    ```typescript
+    import { Hwpjs } from '@ohah/hwpjs';
+    import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
+
+    try {
+      // 파일 경로 설정
+      const filePath = Platform.OS === 'ios' 
+        ? `${RNFS.MainBundlePath}/document.hwp`
+        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+
+      // 파일을 base64로 읽기
+      const fileData = await RNFS.readFile(filePath, 'base64');
+
+      // base64를 number[]로 변환
+      const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+      // HWP 파일 파싱
+      const result = Hwpjs.toJson(numberArray);
+      console.log('변환 성공:', result);
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+
+  <div data-platform="node">
+    ```typescript
+    import { readFileSync } from 'fs';
+    import { toJson } from '@ohah/hwpjs';
+
+    try {
+      // HWP 파일을 읽어서 JSON으로 변환
+      const fileBuffer = readFileSync('./document.hwp');
+      const data = new Uint8Array(fileBuffer);
+      const result = toJson(data);
+      console.log('변환 성공:', result);
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+</PlatformTabs>
 
 더 자세한 예제는 [예제 페이지](./examples)를 참고하세요.
-
-```typescript
-import { readFileSync } from 'fs';
-import { toJson } from '@ohah/hwpjs';
-
-// HWP 파일을 JSON으로 변환
-const fileBuffer = readFileSync('./document.hwp');
-const data = new Uint8Array(fileBuffer);
-const result1 = toJson(data);
-
-// 에러 처리
-try {
-  const result2 = toJson(data);
-  console.log('변환 성공:', result2);
-} catch (error) {
-  console.error('변환 실패:', error);
-}
-```
 
 ## CLI 사용
 
@@ -65,4 +107,3 @@ hwpjs to-markdown document.hwp -o output.md
 - [CLI 가이드](./cli) - 명령줄 인터페이스 사용법
 - [API 레퍼런스](../api/toJson) - 모든 API 함수 확인
 - [예제](./examples) - 다양한 사용 사례
-

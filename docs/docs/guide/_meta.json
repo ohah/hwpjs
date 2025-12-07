@@ -1,1 +1,9 @@
-["index", "installation", "getting-started", "cli", "examples", "development", "demo"]
+[
+  "index",
+  "getting-started",
+  "installation",
+  "demo",
+  "cli",
+  "examples",
+  "development"
+]

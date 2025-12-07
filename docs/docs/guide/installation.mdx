@@ -52,24 +52,6 @@ import * as hwpjs from '@ohah/hwpjs';
 
 iOS와 Android 프로젝트는 자동으로 설정됩니다. 추가 설정이 필요하지 않습니다.
 
-### Deno
-
-Deno에서는 npm 스펙을 사용하여 설치할 수 있습니다:
-
-```typescript
-import { toJson } from 'npm:@ohah/hwpjs';
-```
-
-또는 `deno.json`에 의존성을 추가할 수 있습니다:
-
-```json title="deno.json"
-{
-  "imports": {
-    "@ohah/hwpjs": "npm:@ohah/hwpjs@^1.0.0"
-  }
-}
-```
-
 ## CLI 설치
 
 명령줄 인터페이스를 사용하려면 전역 설치가 필요합니다:
@@ -94,16 +76,21 @@ npx @ohah/hwpjs <command>
     import { readFileSync } from 'fs';
     import { toJson } from '@ohah/hwpjs';
 
-    const fileBuffer = readFileSync('./document.hwp');
-    const data = new Uint8Array(fileBuffer);
-    const result = toJson(data);
-    console.log(result);
+    try {
+      const fileBuffer = readFileSync('./document.hwp');
+      const data = new Uint8Array(fileBuffer);
+      const result = toJson(data);
+      console.log('변환 성공:', result);
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
     ```
   </div>
 
   <div data-platform="web">
     ```typescript
     // buffer-polyfill을 먼저 import한 후
+    import './buffer-polyfill';
     import * as hwpjs from '@ohah/hwpjs';
 
     // 파일 입력에서 HWP 파일 읽기
@@ -112,21 +99,25 @@ npx @ohah/hwpjs <command>
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
-      const arrayBuffer = await file.arrayBuffer();
-      const data = new Uint8Array(arrayBuffer);
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
 
-      // JSON으로 변환
-      const jsonResult = hwpjs.toJson(data);
-      console.log(jsonResult);
+        // JSON으로 변환
+        const jsonResult = hwpjs.toJson(data);
+        console.log('JSON 변환 성공:', jsonResult);
 
-      // 마크다운으로 변환
-      const markdownResult = hwpjs.toMarkdown(data, {
-        image: 'base64', // 또는 'blob'
-        useHtml: true,
-        includeVersion: true,
-        includePageInfo: false,
-      });
-      console.log(markdownResult.markdown);
+        // 마크다운으로 변환
+        const markdownResult = hwpjs.toMarkdown(data, {
+          image: 'base64', // 또는 'blob'
+          useHtml: true,
+          includeVersion: true,
+          includePageInfo: false,
+        });
+        console.log('마크다운 변환 성공:', markdownResult.markdown);
+      } catch (error) {
+        console.error('변환 실패:', error);
+      }
     });
     ```
   </div>
@@ -135,15 +126,26 @@ npx @ohah/hwpjs <command>
     ```typescript
     import { Hwpjs } from '@ohah/hwpjs';
     import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
 
-    // 파일을 읽어서 number[]로 변환
-    const filePath = `${RNFS.DocumentDirectoryPath}/document.hwp`;
-    const fileData = await RNFS.readFile(filePath, 'base64');
-    const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+    try {
+      // 파일 경로 설정
+      const filePath = Platform.OS === 'ios' 
+        ? `${RNFS.MainBundlePath}/document.hwp`
+        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
 
-    // HWP 파일 파싱
-    const result = Hwpjs.toJson(numberArray);
-    console.log(result);
+      // 파일을 base64로 읽기
+      const fileData = await RNFS.readFile(filePath, 'base64');
+
+      // base64를 number[]로 변환
+      const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+      // HWP 파일 파싱
+      const result = Hwpjs.toJson(numberArray);
+      console.log('변환 성공:', result);
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
     ```
   </div>
 </PlatformTabs>

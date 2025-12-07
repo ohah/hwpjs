@@ -1,6 +1,80 @@
+import { PlatformTabs } from '../../components/PlatformTabs';
+
 # toJson
 
 HWP 파일을 JSON 형식으로 변환하는 함수입니다.
+
+## 예제
+
+<PlatformTabs defaultPlatform="web">
+  <div data-platform="web">
+    ```typescript
+    // buffer-polyfill을 먼저 import한 후
+    import * as hwpjs from '@ohah/hwpjs';
+
+    // 파일 입력에서 HWP 파일 읽기
+    const fileInput = document.querySelector('input[type="file"]');
+    fileInput.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+
+        // JSON으로 변환
+        const jsonResult = hwpjs.toJson(data);
+        console.log(jsonResult);
+      } catch (error) {
+        console.error('변환 실패:', error);
+      }
+    });
+    ```
+  </div>
+
+  <div data-platform="react-native">
+    ```typescript
+    import { Hwpjs } from '@ohah/hwpjs';
+    import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
+
+    try {
+      // 파일 경로 설정
+      const filePath = Platform.OS === 'ios' 
+        ? `${RNFS.MainBundlePath}/document.hwp`
+        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+
+      // 파일을 base64로 읽기
+      const fileData = await RNFS.readFile(filePath, 'base64');
+
+      // base64를 number[]로 변환
+      const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+      // HWP 파일 파싱
+      const result = Hwpjs.toJson(numberArray);
+      console.log(result);
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+
+  <div data-platform="node">
+    ```typescript
+    import { readFileSync } from 'fs';
+    import { toJson } from '@ohah/hwpjs';
+
+    try {
+      const fileBuffer = readFileSync('./document.hwp');
+      const data = new Uint8Array(fileBuffer);
+      const result = toJson(data);
+      console.log(result);
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+</PlatformTabs>
 
 ## 시그니처
 
@@ -27,36 +101,6 @@ const data = new Uint8Array(fileBuffer);
 
 변환된 HWP 문서의 JSON 문자열입니다.
 
-## 예제
-
-### 기본 사용법
-
-```typescript
-import { readFileSync } from 'fs';
-import { toJson } from '@ohah/hwpjs';
-
-const fileBuffer = readFileSync('./document.hwp');
-const data = new Uint8Array(fileBuffer);
-const result = toJson(data);
-console.log(result);
-```
-
-### 에러 처리
-
-```typescript
-import { readFileSync } from 'fs';
-import { toJson } from '@ohah/hwpjs';
-
-try {
-  const fileBuffer = readFileSync('./document.hwp');
-  const data = new Uint8Array(fileBuffer);
-  const result = toJson(data);
-  console.log(result);
-} catch (error) {
-  console.error('변환 실패:', error);
-}
-```
-
 ## 에러
 
 HWP 파일 형식이 올바르지 않거나 변환에 실패한 경우 에러가 발생합니다.
@@ -68,4 +112,3 @@ HWP 파일 형식이 올바르지 않거나 변환에 실패한 경우 에러가
 ## 참고
 
 이 함수는 Rust로 구현된 `hwp-core` 라이브러리를 사용하여 HWP 파일을 파싱하고 JSON으로 변환합니다.
-

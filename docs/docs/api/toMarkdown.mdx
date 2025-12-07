@@ -4,6 +4,97 @@ import { PlatformTabs } from '../../components/PlatformTabs';
 
 HWP 문서를 마크다운 형식으로 변환하는 함수입니다.
 
+## 예제
+
+<PlatformTabs defaultPlatform="web">
+  <div data-platform="web">
+    ```typescript
+    import { toMarkdown } from '@ohah/hwpjs';
+
+    // 파일 입력에서 HWP 파일 읽기
+    const fileInput = document.querySelector('input[type="file"]');
+    fileInput.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+
+        // 마크다운으로 변환
+        const result = toMarkdown(data, {
+          image: 'base64',
+          useHtml: true,
+          includeVersion: true,
+          includePageInfo: false,
+        });
+        console.log(result.markdown);
+      } catch (error) {
+        console.error('변환 실패:', error);
+      }
+    });
+    ```
+  </div>
+
+  <div data-platform="react-native">
+    ```typescript
+    import { Hwpjs } from '@ohah/hwpjs';
+    import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
+
+    try {
+      // 파일 경로 설정
+      const filePath = Platform.OS === 'ios'
+        ? `${RNFS.MainBundlePath}/document.hwp`
+        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+
+      // 파일을 base64로 읽기
+      const fileData = await RNFS.readFile(filePath, 'base64');
+
+      // base64를 number[]로 변환
+      const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+      // 마크다운으로 변환
+      const result = Hwpjs.toMarkdown(numberArray, {
+        image: 'base64',
+        useHtml: false,
+        includeVersion: false,
+        includePageInfo: false,
+      });
+      console.log(result.markdown);
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+
+  <div data-platform="node">
+    ```typescript
+    import { readFileSync } from 'fs';
+    import { toMarkdown } from '@ohah/hwpjs';
+
+    try {
+      // HWP 파일 읽기
+      const fileBuffer = readFileSync('./document.hwp');
+
+      // 마크다운으로 변환
+      const result = toMarkdown(fileBuffer, {
+        image: 'base64', // 또는 'blob'으로 별도 이미지 배열 받기
+        useHtml: false,
+        includeVersion: false,
+        includePageInfo: false,
+      });
+
+      console.log(result.markdown);
+      // base64 옵션 사용 시: result.images는 빈 배열
+      // blob 옵션 사용 시: result.images에 ImageData 배열 포함
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+</PlatformTabs>
+
 ## 시그니처
 
 ```typescript
@@ -92,89 +183,6 @@ interface ToMarkdownResult {
 - 컨트롤 객체 (글상자 등)
 - 페이지 구분선 (페이지 나누기 시, 옵션에 따라)
 
-## 예제
-
-### 기본 사용법
-
-<PlatformTabs defaultPlatform="web">
-  <div data-platform="web">
-    ```typescript
-    import { toMarkdown } from '@ohah/hwpjs';
-
-    // 파일 입력에서 HWP 파일 읽기
-    const fileInput = document.querySelector('input[type="file"]');
-    fileInput.addEventListener('change', async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      const arrayBuffer = await file.arrayBuffer();
-      const data = new Uint8Array(arrayBuffer);
-
-      // 마크다운으로 변환
-      const result = toMarkdown(data, {
-        image: 'base64',
-        useHtml: true,
-        includeVersion: true,
-        includePageInfo: false,
-      });
-      console.log(result.markdown);
-    });
-    ```
-  </div>
-
-  <div data-platform="react-native">
-    ```typescript
-    import { Hwpjs } from '@ohah/hwpjs';
-    import RNFS from 'react-native-fs';
-    import { Platform } from 'react-native';
-
-    // 파일 경로 설정
-    const filePath = Platform.OS === 'ios'
-      ? `${RNFS.MainBundlePath}/document.hwp`
-      : `${RNFS.DocumentDirectoryPath}/document.hwp`;
-
-    // 파일을 base64로 읽기
-    const fileData = await RNFS.readFile(filePath, 'base64');
-
-    // base64를 number[]로 변환
-    const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
-
-    // 마크다운으로 변환
-    const result = Hwpjs.toMarkdown(numberArray, {
-      image: 'base64',
-      useHtml: false,
-      includeVersion: false,
-      includePageInfo: false,
-    });
-    console.log(result.markdown);
-    ```
-  </div>
-
-  <div data-platform="node">
-    ```typescript
-    import { readFileSync } from 'fs';
-    import { toMarkdown } from '@ohah/hwpjs';
-
-    // HWP 파일 읽기
-    const fileBuffer = readFileSync('./document.hwp');
-
-    // 마크다운으로 변환
-    const result = toMarkdown(fileBuffer, {
-      image: 'base64', // 또는 'blob'으로 별도 이미지 배열 받기
-      useHtml: false,
-      includeVersion: false,
-      includePageInfo: false,
-    });
-
-    console.log(result.markdown);
-    // base64 옵션 사용 시: result.images는 빈 배열
-    // blob 옵션 사용 시: result.images에 ImageData 배열 포함
-    ```
-  </div>
-</PlatformTabs>
-
-### 에러 처리
-
 ## 지원 기능
 
 ### 텍스트 추출
@@ -223,6 +231,14 @@ interface ToMarkdownResult {
 - `useHtml: true`: 테이블 등 개행 불가 영역에 `<br>` 태그가 사용됩니다.
 - `image: 'base64'`: 이미지가 마크다운에 base64 데이터 URI로 직접 포함됩니다.
 - `image: 'blob'`: 이미지가 별도 배열로 반환되고, 마크다운에는 참조만 포함됩니다.
+
+## 에러
+
+HWP 파일 형식이 올바르지 않거나 변환에 실패한 경우 에러가 발생합니다.
+
+- HWP 파일 형식이 올바르지 않은 경우
+- 파일이 손상된 경우
+- 마크다운 변환에 실패한 경우
 
 ## 제한사항
 

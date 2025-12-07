@@ -1,3 +1,5 @@
+import { PlatformTabs } from '../../components/PlatformTabs';
+
 # CLI 사용 가이드
 
 `@ohah/hwpjs`는 명령줄 인터페이스(CLI)를 제공하여 HWP 파일을 변환하고 처리할 수 있습니다.
@@ -202,27 +204,37 @@ hwpjs info document.hwp --json | jq
 
 CLI를 스크립트에서 사용할 수도 있습니다:
 
-```bash
-#!/bin/bash
+<PlatformTabs defaultPlatform="node">
+  <div data-platform="node">
+    ```bash
+    #!/bin/bash
+    
+    # 모든 HWP 파일을 JSON으로 변환
+    for file in *.hwp; do
+      hwpjs to-json "$file" -o "${file%.hwp}.json" --pretty
+    done
+    ```
+  </div>
 
-# 모든 HWP 파일을 JSON으로 변환
-for file in *.hwp; do
-  hwpjs to-json "$file" -o "${file%.hwp}.json" --pretty
-done
-```
-
-```javascript
-// Node.js 스크립트
-const { execSync } = require('child_process');
-
-// HWP 파일 정보 가져오기
-const info = JSON.parse(
-  execSync('hwpjs info document.hwp --json', { encoding: 'utf-8' })
-);
-
-console.log(`Version: ${info.version}`);
-console.log(`Images: ${info.imageCount}`);
-```
+  <div data-platform="node">
+    ```javascript
+    // Node.js 스크립트
+    const { execSync } = require('child_process');
+    
+    try {
+      // HWP 파일 정보 가져오기
+      const info = JSON.parse(
+        execSync('hwpjs info document.hwp --json', { encoding: 'utf-8' })
+      );
+      
+      console.log(`Version: ${info.version}`);
+      console.log(`Images: ${info.imageCount}`);
+    } catch (error) {
+      console.error('오류:', error);
+    }
+    ```
+  </div>
+</PlatformTabs>
 
 ## 문제 해결
 
@@ -244,4 +256,3 @@ npx @ohah/hwpjs <command>
 - 모든 명령어는 `--help` 옵션으로 상세한 도움말을 볼 수 있습니다.
 - 출력 파일이 이미 존재하는 경우 덮어씌워집니다.
 - 배치 변환 시 오류가 발생한 파일은 스킵되고 계속 진행됩니다.
-

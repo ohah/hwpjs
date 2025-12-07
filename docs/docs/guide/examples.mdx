@@ -1,0 +1,191 @@
+import { PlatformTabs } from '../../components/PlatformTabs';
+
+# 예제
+
+HWPJS를 사용하는 다양한 예제를 확인하세요.
+
+## 기본 예제
+
+<PlatformTabs defaultPlatform="web">
+  <div data-platform="web">
+    ```typescript
+    // buffer-polyfill을 먼저 import한 후
+    import './buffer-polyfill';
+    import * as hwpjs from '@ohah/hwpjs';
+
+    // 파일 입력에서 HWP 파일 읽기
+    const fileInput = document.querySelector('input[type="file"]');
+    fileInput.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+
+        // JSON으로 변환
+        const result = hwpjs.toJson(data);
+        console.log('변환 성공:', result);
+      } catch (error) {
+        console.error('변환 실패:', error);
+      }
+    });
+    ```
+  </div>
+
+  <div data-platform="react-native">
+    ```typescript
+    import { Hwpjs } from '@ohah/hwpjs';
+    import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
+
+    try {
+      // 파일 경로 설정
+      const filePath = Platform.OS === 'ios' 
+        ? `${RNFS.MainBundlePath}/document.hwp`
+        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+
+      // 파일을 base64로 읽기
+      const fileData = await RNFS.readFile(filePath, 'base64');
+
+      // base64를 number[]로 변환
+      const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+      // HWP 파일 파싱
+      const result = Hwpjs.toJson(numberArray);
+      console.log('변환 성공:', result);
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+
+  <div data-platform="node">
+    ```typescript
+    import { readFileSync } from 'fs';
+    import { toJson } from '@ohah/hwpjs';
+
+    try {
+      const fileBuffer = readFileSync('./document.hwp');
+      const data = new Uint8Array(fileBuffer);
+      const result = toJson(data);
+      console.log('변환 성공:', result);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('변환 실패:', error.message);
+      } else {
+        console.error('변환 실패:', error);
+      }
+    }
+    ```
+  </div>
+</PlatformTabs>
+
+## 마크다운 변환
+
+<PlatformTabs defaultPlatform="web">
+  <div data-platform="web">
+    ```typescript
+    import './buffer-polyfill';
+    import * as hwpjs from '@ohah/hwpjs';
+
+    const fileInput = document.querySelector('input[type="file"]');
+    fileInput.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+
+        // 마크다운으로 변환
+        const markdownResult = hwpjs.toMarkdown(data, {
+          image: 'base64',
+          useHtml: true,
+          includeVersion: true,
+          includePageInfo: false,
+        });
+        console.log('마크다운 변환 성공:', markdownResult.markdown);
+      } catch (error) {
+        console.error('변환 실패:', error);
+      }
+    });
+    ```
+  </div>
+
+  <div data-platform="react-native">
+    ```typescript
+    import { Hwpjs } from '@ohah/hwpjs';
+    import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
+
+    try {
+      const filePath = Platform.OS === 'ios' 
+        ? `${RNFS.MainBundlePath}/document.hwp`
+        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+      const fileData = await RNFS.readFile(filePath, 'base64');
+      const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+
+      const result = Hwpjs.toMarkdown(numberArray, {
+        image: 'base64',
+        useHtml: false,
+        includeVersion: false,
+        includePageInfo: false,
+      });
+      console.log('마크다운 변환 성공:', result.markdown);
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+
+  <div data-platform="node">
+    ```typescript
+    import { readFileSync } from 'fs';
+    import { toMarkdown } from '@ohah/hwpjs';
+
+    try {
+      const fileBuffer = readFileSync('./document.hwp');
+      const result = toMarkdown(fileBuffer, {
+        image: 'base64',
+        useHtml: false,
+        includeVersion: false,
+        includePageInfo: false,
+      });
+      console.log('마크다운 변환 성공:', result.markdown);
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+</PlatformTabs>
+
+## buffer-polyfill.ts 파일 생성
+
+Web 환경에서는 WASM을 사용하기 위해 `buffer-polyfill.ts`를 먼저 import해야 합니다.
+
+프로젝트에 `buffer-polyfill.ts` 파일을 생성하고 다음 내용을 추가하세요:
+
+```typescript
+// Buffer polyfill for napi-rs WASM compatibility
+// This must be imported before any WASM modules
+if (typeof globalThis.Buffer === 'undefined') {
+  globalThis.Buffer = class Buffer extends Uint8Array {
+    static from(data: any) {
+      if (data instanceof Uint8Array) return data;
+      if (data instanceof ArrayBuffer) return new Uint8Array(data);
+      if (Array.isArray(data)) return new Uint8Array(data);
+      return new Uint8Array(data);
+    }
+    static isBuffer(obj: any) {
+      return obj instanceof Uint8Array;
+    }
+  } as any;
+}
+
+// Ensure Buffer is set on window as well for compatibility
+if (typeof window !== 'undefined' && typeof window.Buffer === 'undefined') {
+  (window as any).Buffer = globalThis.Buffer;
+}
+```
+
