@@ -11,3 +11,9 @@ expression: markdown
 
 
 ~~strikethrough~~
+
+~~취소선~~
+
+밑줄
+
+밑줄~~취소선~~**굵게**

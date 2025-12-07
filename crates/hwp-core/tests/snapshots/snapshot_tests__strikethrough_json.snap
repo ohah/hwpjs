@@ -24,8 +24,8 @@ expression: json
       "table_start_number": 1,
       "formula_start_number": 1,
       "list_id": 0,
-      "paragraph_id": 0,
-      "character_position": 29
+      "paragraph_id": 4,
+      "character_position": 7
     },
     "id_mappings": {
       "binary_data": 0,
@@ -37,7 +37,7 @@ expression: json
       "font_symbol": 2,
       "font_user": 2,
       "border_fill": 2,
-      "char_shape": 8,
+      "char_shape": 12,
       "tab_def": 3,
       "paragraph_numbering": 1,
       "bullet": 0,
@@ -967,6 +967,298 @@ expression: json
           "emphasis_mark": 0,
           "use_font_spacing": false,
           "strikethrough_style": 0,
+          "kerning": false
+        },
+        "shadow_spacing_x": 10,
+        "shadow_spacing_y": 10,
+        "text_color": 0,
+        "underline_color": 0,
+        "shading_color": 4294967295,
+        "shadow_color": 12632256,
+        "border_fill_id": 2,
+        "strikethrough_color": 0
+      },
+      {
+        "font_ids": {
+          "korean": 1,
+          "english": 1,
+          "chinese": 1,
+          "japanese": 1,
+          "other": 1,
+          "symbol": 1,
+          "user": 1
+        },
+        "font_stretch": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "letter_spacing": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "relative_size": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "text_position": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "base_size": 1000,
+        "attributes": {
+          "italic": false,
+          "bold": false,
+          "underline_type": 2,
+          "underline_style": 1,
+          "outline_type": 0,
+          "shadow_type": 0,
+          "emboss": false,
+          "engrave": false,
+          "superscript": false,
+          "subscript": false,
+          "strikethrough": 1,
+          "emphasis_mark": 0,
+          "use_font_spacing": false,
+          "strikethrough_style": 1,
+          "kerning": false
+        },
+        "shadow_spacing_x": 10,
+        "shadow_spacing_y": 10,
+        "text_color": 0,
+        "underline_color": 0,
+        "shading_color": 4294967295,
+        "shadow_color": 12632256,
+        "border_fill_id": 2,
+        "strikethrough_color": 0
+      },
+      {
+        "font_ids": {
+          "korean": 1,
+          "english": 1,
+          "chinese": 1,
+          "japanese": 1,
+          "other": 1,
+          "symbol": 1,
+          "user": 1
+        },
+        "font_stretch": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "letter_spacing": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "relative_size": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "text_position": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "base_size": 1000,
+        "attributes": {
+          "italic": false,
+          "bold": false,
+          "underline_type": 1,
+          "underline_style": 0,
+          "outline_type": 0,
+          "shadow_type": 0,
+          "emboss": false,
+          "engrave": false,
+          "superscript": false,
+          "subscript": false,
+          "strikethrough": 1,
+          "emphasis_mark": 0,
+          "use_font_spacing": false,
+          "strikethrough_style": 1,
+          "kerning": false
+        },
+        "shadow_spacing_x": 10,
+        "shadow_spacing_y": 10,
+        "text_color": 0,
+        "underline_color": 0,
+        "shading_color": 4294967295,
+        "shadow_color": 12632256,
+        "border_fill_id": 2,
+        "strikethrough_color": 0
+      },
+      {
+        "font_ids": {
+          "korean": 1,
+          "english": 1,
+          "chinese": 1,
+          "japanese": 1,
+          "other": 1,
+          "symbol": 1,
+          "user": 1
+        },
+        "font_stretch": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "letter_spacing": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "relative_size": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "text_position": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "base_size": 1000,
+        "attributes": {
+          "italic": false,
+          "bold": false,
+          "underline_type": 1,
+          "underline_style": 0,
+          "outline_type": 0,
+          "shadow_type": 0,
+          "emboss": false,
+          "engrave": false,
+          "superscript": false,
+          "subscript": false,
+          "strikethrough": 0,
+          "emphasis_mark": 0,
+          "use_font_spacing": false,
+          "strikethrough_style": 1,
+          "kerning": false
+        },
+        "shadow_spacing_x": 10,
+        "shadow_spacing_y": 10,
+        "text_color": 0,
+        "underline_color": 0,
+        "shading_color": 4294967295,
+        "shadow_color": 12632256,
+        "border_fill_id": 2,
+        "strikethrough_color": 0
+      },
+      {
+        "font_ids": {
+          "korean": 1,
+          "english": 1,
+          "chinese": 1,
+          "japanese": 1,
+          "other": 1,
+          "symbol": 1,
+          "user": 1
+        },
+        "font_stretch": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "letter_spacing": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "relative_size": {
+          "korean": 100,
+          "english": 100,
+          "chinese": 100,
+          "japanese": 100,
+          "other": 100,
+          "symbol": 100,
+          "user": 100
+        },
+        "text_position": {
+          "korean": 0,
+          "english": 0,
+          "chinese": 0,
+          "japanese": 0,
+          "other": 0,
+          "symbol": 0,
+          "user": 0
+        },
+        "base_size": 1000,
+        "attributes": {
+          "italic": false,
+          "bold": true,
+          "underline_type": 1,
+          "underline_style": 0,
+          "outline_type": 0,
+          "shadow_type": 0,
+          "emboss": false,
+          "engrave": false,
+          "superscript": false,
+          "subscript": false,
+          "strikethrough": 0,
+          "emphasis_mark": 0,
+          "use_font_spacing": false,
+          "strikethrough_style": 1,
           "kerning": false
         },
         "shadow_spacing_x": 10,
@@ -2391,6 +2683,259 @@ expression: json
                 "divider_line_color": 0
               }
             ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 4,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": 0
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "취소선",
+                "control_char_positions": [
+                  {
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 8
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 1600,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 3,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": 0
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "밑줄",
+                "control_char_positions": [
+                  {
+                    "position": 2,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 10
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 3200,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 1,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": 0
+            },
+            "records": [
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 10
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 4800,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 8,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
+              "para_shape_id": 0,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 3,
+              "range_tag_count": 0,
+              "line_align_count": 1,
+              "instance_id": 0,
+              "section_merge": 0
+            },
+            "records": [
+              {
+                "type": "para_text",
+                "text": "밑줄취소선굵게",
+                "control_char_positions": [
+                  {
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK"
+                  }
+                ]
+              },
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 10
+                  },
+                  {
+                    "position": 2,
+                    "shape_id": 9
+                  },
+                  {
+                    "position": 5,
+                    "shape_id": 11
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 6400,
+                    "line_height": 1000,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 600,
+                    "column_start_position": 0,
+                    "segment_width": 42520,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              }
+            ]
           }
         ]
       }
@@ -2400,10 +2945,10 @@ expression: json
     "items": []
   },
   "preview_text": {
-    "text": "strikethrough\r\n"
+    "text": "strikethrough\r\n취소선\r\n밑줄\r\n\r\n밑줄취소선굵게\r\n"
   },
   "preview_image": {
-    "data": "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qAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAAgENQAABIIaAAACQQ0AAIGgBgCAQFADAEAgqAEAIBDUAAAQCGoAAPi2afoHi/iDA4PjXgQAAAAASUVORK5CYII=",
+    "data": "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AAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAA+LH9/v8AfjrQtHRoMXEAAAAASUVORK5CYII=",
     "format": "UNKNOWN"
   },
   "scripts": {
@@ -2424,7 +2969,7 @@ expression: json
     "revision_number": "10, 0, 0, 5060 WIN32LEWindows_8",
     "last_printed": "1970-01-01T00:00:00+09:00",
     "create_time": "2025-12-07T04:23:06+09:00",
-    "last_saved_time": "2025-12-07T04:25:00+09:00",
+    "last_saved_time": "2025-12-07T04:28:35+09:00",
     "page_count": 0,
     "date_string": "2025년 12월 7일 일요일 오전 4:23:06",
     "para_count": 0
