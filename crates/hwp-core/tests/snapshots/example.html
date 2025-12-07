@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HWP 문서</title>
+  <style>
+
+    /* CSS Reset - 브라우저 기본 스타일 초기화 / CSS Reset - Reset browser default styles */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+    }
+
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+
+    th, td {
+        padding: 0;
+        text-align: left;
+    }
+
+    ul, ol {
+        list-style: none;
+    }
+
+    img {
+        border: 0;
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* HWP Document Styles */
+    .ohah-hwpjs-document {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: "궁서체", "맑은 고딕", "함초롬돋움", "함초롬바탕", "궁서체", "맑은 고딕", "함초롬돋움", "함초롬바탕", "궁서체", "맑은 고딕", "함초롬돋움", "함초롬바탕", "궁서체", "맑은 고딕", "함초롬돋움", "함초롬바탕", "궁서체", "맑은 고딕", "함초롬돋움", "함초롬바탕", "궁서체", "맑은 고딕", "함초롬돋움", "함초롬바탕", "궁서체", "맑은 고딕", "함초롬돋움", "함초롬바탕", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+    }
+    .ohah-hwpjs-font-0 {
+        font-family: "궁서체", sans-serif;
+    }
+
+    .ohah-hwpjs-font-1 {
+        font-family: "맑은 고딕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-2 {
+        font-family: "함초롬돋움", sans-serif;
+    }
+
+    .ohah-hwpjs-font-3 {
+        font-family: "함초롬바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-4 {
+        font-family: "궁서체", sans-serif;
+    }
+
+    .ohah-hwpjs-font-5 {
+        font-family: "맑은 고딕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-6 {
+        font-family: "함초롬돋움", sans-serif;
+    }
+
+    .ohah-hwpjs-font-7 {
+        font-family: "함초롬바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-8 {
+        font-family: "궁서체", sans-serif;
+    }
+
+    .ohah-hwpjs-font-9 {
+        font-family: "맑은 고딕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-10 {
+        font-family: "함초롬돋움", sans-serif;
+    }
+
+    .ohah-hwpjs-font-11 {
+        font-family: "함초롬바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-12 {
+        font-family: "궁서체", sans-serif;
+    }
+
+    .ohah-hwpjs-font-13 {
+        font-family: "맑은 고딕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-14 {
+        font-family: "함초롬돋움", sans-serif;
+    }
+
+    .ohah-hwpjs-font-15 {
+        font-family: "함초롬바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-16 {
+        font-family: "궁서체", sans-serif;
+    }
+
+    .ohah-hwpjs-font-17 {
+        font-family: "맑은 고딕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-18 {
+        font-family: "함초롬돋움", sans-serif;
+    }
+
+    .ohah-hwpjs-font-19 {
+        font-family: "함초롬바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-20 {
+        font-family: "궁서체", sans-serif;
+    }
+
+    .ohah-hwpjs-font-21 {
+        font-family: "맑은 고딕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-22 {
+        font-family: "함초롬돋움", sans-serif;
+    }
+
+    .ohah-hwpjs-font-23 {
+        font-family: "함초롬바탕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-24 {
+        font-family: "궁서체", sans-serif;
+    }
+
+    .ohah-hwpjs-font-25 {
+        font-family: "맑은 고딕", sans-serif;
+    }
+
+    .ohah-hwpjs-font-26 {
+        font-family: "함초롬돋움", sans-serif;
+    }
+
+    .ohah-hwpjs-font-27 {
+        font-family: "함초롬바탕", sans-serif;
+    }
+
+
+
+    .ohah-hwpjs-header {
+        margin-bottom: 20px;
+    }
+
+    .ohah-hwpjs-footer {
+        margin-top: 20px;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+    }
+
+    .ohah-hwpjs-main {
+        margin: 20px 0;
+    }
+
+    .ohah-hwpjs-paragraph {
+        margin: 10px 0;
+    }
+
+    .ohah-hwpjs-outline {
+        display: block;
+        margin: 10px 0;
+    }
+
+    .ohah-hwpjs-table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .ohah-hwpjs-table th,
+    .ohah-hwpjs-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    .ohah-hwpjs-table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+
+    .ohah-hwpjs-image {
+        max-width: 100%;
+        height: auto;
+        margin: 10px 0;
+    }
+
+    .ohah-hwpjs-footnote-ref,
+    .ohah-hwpjs-endnote-ref {
+        text-decoration: none;
+        color: #0066cc;
+        font-weight: bold;
+    }
+
+    .ohah-hwpjs-footnote-ref:hover,
+    .ohah-hwpjs-endnote-ref:hover {
+        text-decoration: underline;
+    }
+
+    .ohah-hwpjs-footnote,
+    .ohah-hwpjs-endnote {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-left: 3px solid #0066cc;
+    }
+
+    .ohah-hwpjs-footnotes,
+    .ohah-hwpjs-endnotes {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px solid #ddd;
+    }
+
+    .ohah-hwpjs-page-number {
+        font-weight: normal;
+    }
+
+    .ohah-hwpjs-overline {
+        text-decoration: overline;
+    }
+
+    .ohah-hwpjs-emboss {
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+    }
+
+    .ohah-hwpjs-engrave {
+        text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.3);
+    }
+
+    .ohah-hwpjs-underline-solid {
+        text-decoration: underline;
+        text-decoration-style: solid;
+    }
+
+    .ohah-hwpjs-underline-dotted {
+        text-decoration: underline;
+        text-decoration-style: dotted;
+    }
+
+    .ohah-hwpjs-underline-dashed {
+        text-decoration: underline;
+        text-decoration-style: dashed;
+    }
+
+    .ohah-hwpjs-underline-double {
+        text-decoration: underline;
+        text-decoration-style: double;
+    }
+
+    .ohah-hwpjs-strikethrough-solid {
+        text-decoration: line-through;
+        text-decoration-style: solid;
+    }
+
+    .ohah-hwpjs-strikethrough-dotted {
+        text-decoration: line-through;
+        text-decoration-style: dotted;
+    }
+
+    .ohah-hwpjs-strikethrough-dashed {
+        text-decoration: line-through;
+        text-decoration-style: dashed;
+    }
+
+    .ohah-hwpjs-footnote-back,
+    .ohah-hwpjs-endnote-back {
+        text-decoration: none;
+        color: #0066cc;
+        margin-left: 5px;
+    }
+
+    .ohah-hwpjs-footnote-back:hover,
+    .ohah-hwpjs-endnote-back:hover {
+        text-decoration: underline;
+    }
+
+    .ohah-hwpjs-page-break {
+        border: none;
+        border-top: 2px solid #ddd;
+        margin: 20px 0;
+    }
+
+    .ohah-hwpjs-emphasis-1::before {
+        content: "●";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-2::before {
+        content: "○";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-3::before {
+        content: "◆";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-4::before {
+        content: "◇";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-5::before {
+        content: "■";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-6::before {
+        content: "□";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-7::before {
+        content: "★";
+        margin-right: 3px;
+    }
+
+    .ohah-hwpjs-emphasis-8::before {
+        content: "☆";
+        margin-right: 3px;
+    }
+    .ohah-hwpjs-border-fill-1 {
+        background-color: rgb(255, 255, 255);
+    }
+
+    .ohah-hwpjs-border-fill-2 {
+        background-color: rgb(255, 255, 255);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="ohah-hwpjs-document">
+    <h1>HWP 문서</h1>
+    <p><strong>버전</strong>: 5.00.03.00</p>
+    <main class="ohah-hwpjs-main">
+<p class="ohah-hwpjs-paragraph"><span style="font-family: "궁서체", sans-serif; font-size: 13.00pt">삼강오륜</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">삼강오륜 은 현재까지도 이어져 일상생활에 깊이 뿌리내린 윤리 도덕이랍니다.</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">삼강</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">군위신강: 임금과 신하 사이에 마땅히 지켜야 할 도리</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">부위자강 : 어버이와 자식 사이에 마땅히 지켜야 할 도리</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">부위부강 : 남편과 아내 사이에 지켜야 할 도리</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">오륜</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">군신유의: 임금과 신하 사이에는 의로움이 있어야 함.</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">부자유친: 어버이와 자식 사이에는 친함이 있어야 함.</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">부부유별: 부부 사이에는 구별이 있어야 함.</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">장유유서: 어른과 아이 사이에는 차례와 질서가 있어야 함.</span></p>
+<p class="ohah-hwpjs-paragraph"><span style="font-size: 13.00pt">붕우유신: 친구 사이에는 믿음이 있어야 함</span></p>
+    </main>
+  </div>
+</body>
+</html>
