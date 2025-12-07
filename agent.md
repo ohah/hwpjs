@@ -33,10 +33,22 @@ hwpjs/
 │           └── viewer/     # 문서 변환/뷰어 모듈 (마크다운, PDF(지원 예정) 등)
 ├── packages/
 │   └── hwpjs/             # 멀티 플랫폼 패키지 (Node.js, Web, React Native)
+│       ├── src/           # NAPI-RS 바인딩 코드 (Node.js/Web용)
+│       │   └── lib.rs     # NAPI-RS 바인딩 진입점
 │       ├── src-cli/       # CLI 도구 소스 코드
 │       │   ├── index.ts   # CLI 진입점
 │       │   └── commands/  # CLI 명령어 (to-json, to-markdown, info, extract-images, batch)
-│       └── bin/           # CLI 실행 파일 (hwpjs.js)
+│       ├── src-reactnative/ # React Native 바인딩 코드
+│       │   ├── index.ts   # React Native 모듈 진입점
+│       │   └── NativeReactNative.ts # 네이티브 모듈 타입 정의
+│       ├── crates/lib/    # React Native용 Rust FFI 코드
+│       │   └── src/       # FFI 구현 (ffi.rs, generated.rs, hwpjs_impl.rs, lib.rs)
+│       ├── cpp/           # C++ 바인딩 코드 (Craby용)
+│       ├── android/       # Android 네이티브 코드
+│       ├── ios/           # iOS 네이티브 코드
+│       ├── bin/           # CLI 실행 파일 (hwpjs.js)
+│       ├── dist/          # 빌드 결과물
+│       └── npm/           # 플랫폼별 바이너리 패키지
 ├── examples/              # 사용 예제 코드
 │   ├── node/              # Node.js 예제
 │   ├── web/               # Web 예제
