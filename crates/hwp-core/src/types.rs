@@ -90,7 +90,7 @@ impl From<SHWPUNIT> for i32 {
 /// 스펙 문서: RGB값(0x00bbggrr) - 실제로는 BGR 순서로 저장됨
 /// Spec: RGB value (0x00bbggrr) - actually stored in BGR order
 /// rr: red 1 byte (하위 바이트), gg: green 1 byte (중간 바이트), bb: blue 1 byte (상위 바이트)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct COLORREF(pub u32);
 
 impl COLORREF {
@@ -129,6 +129,87 @@ impl From<u32> for COLORREF {
 impl From<COLORREF> for u32 {
     fn from(value: COLORREF) -> Self {
         value.0
+    }
+}
+
+// COLORREF를 RGB 형태로 JSON 직렬화 / Serialize COLORREF as RGB object in JSON
+impl Serialize for COLORREF {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut state = serializer.serialize_struct("COLORREF", 3)?;
+        state.serialize_field("r", &self.r())?;
+        state.serialize_field("g", &self.g())?;
+        state.serialize_field("b", &self.b())?;
+        state.end()
+    }
+}
+
+// JSON에서 RGB 형태로 역직렬화 / Deserialize COLORREF from RGB object in JSON
+impl<'de> Deserialize<'de> for COLORREF {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::{self, MapAccess, Visitor};
+        use std::fmt;
+
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "lowercase")]
+        enum Field {
+            R,
+            G,
+            B,
+        }
+
+        struct COLORREFVisitor;
+
+        impl<'de> Visitor<'de> for COLORREFVisitor {
+            type Value = COLORREF;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct COLORREF with r, g, b fields")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<COLORREF, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut r = None;
+                let mut g = None;
+                let mut b = None;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::R => {
+                            if r.is_some() {
+                                return Err(de::Error::duplicate_field("r"));
+                            }
+                            r = Some(map.next_value()?);
+                        }
+                        Field::G => {
+                            if g.is_some() {
+                                return Err(de::Error::duplicate_field("g"));
+                            }
+                            g = Some(map.next_value()?);
+                        }
+                        Field::B => {
+                            if b.is_some() {
+                                return Err(de::Error::duplicate_field("b"));
+                            }
+                            b = Some(map.next_value()?);
+                        }
+                    }
+                }
+                let r = r.ok_or_else(|| de::Error::missing_field("r"))?;
+                let g = g.ok_or_else(|| de::Error::missing_field("g"))?;
+                let b = b.ok_or_else(|| de::Error::missing_field("b"))?;
+                Ok(COLORREF::rgb(r, g, b))
+            }
+        }
+
+        deserializer.deserialize_map(COLORREFVisitor)
     }
 }
 
