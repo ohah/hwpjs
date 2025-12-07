@@ -109,8 +109,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         used_sizes,
         used_border_colors,
         used_background_colors,
-        _used_border_widths, // 더 이상 사용하지 않음 (border_width_info에서 직접 수집) / No longer used (collected directly from border_width_info)
+        used_border_widths,
     ) = collect_used_styles(document);
+    let _ = used_border_widths; // 사용하지 않지만 변수는 유지
 
     // CSS 스타일 추가 / Add CSS styles
     html.push_str("  <style>\n");
@@ -256,20 +257,13 @@ fn collect_used_styles(
     use crate::document::ParagraphRecord;
     let mut text_colors = std::collections::HashSet::new();
     let mut sizes = std::collections::HashSet::new();
-    let mut border_colors = std::collections::HashSet::new();
+    let border_colors = std::collections::HashSet::new();
     let mut background_colors = std::collections::HashSet::new();
-    let mut border_widths = std::collections::HashSet::new();
+    let border_widths = std::collections::HashSet::new();
 
-    // BorderFill에서 색상과 두께 수집 / Collect colors and widths from BorderFill
-    // 조건 제거: 모든 border에 대해 수집 (line_type=0도 실선, width=0도 0.1mm이므로 모두 유효)
-    // Remove condition: Collect all borders (line_type=0 is solid, width=0 is 0.1mm, so all are valid)
+    // BorderFill에서 배경색 수집 / Collect background colors from BorderFill
+    // border 관련 수집은 비활성화 / Border collection is disabled
     for border_fill in &document.doc_info.border_fill {
-        // 테두리 색상 수집 / Collect border colors
-        for border in &border_fill.borders {
-            border_colors.insert(border.color.0);
-            border_widths.insert(border.width);
-        }
-
         // 배경색 수집 / Collect background colors
         use crate::document::FillInfo;
         match &border_fill.fill {
@@ -443,22 +437,11 @@ fn generate_css_styles(
         ));
     }
 
-    // 테두리 색상 클래스 생성 (방향별) / Generate border color classes (by direction)
-    let mut border_color_css = String::new();
+    // 테두리 색상 클래스 생성 (방향별) - 비활성화 / Generate border color classes (by direction) - disabled
+    let border_color_css = String::new();
     let border_directions = ["left", "right", "top", "bottom"];
-    for &color_value in used_border_colors {
-        let color = crate::types::COLORREF(color_value);
-        let r = color.r();
-        let g = color.g();
-        let b = color.b();
-        // 각 방향별로 클래스 생성 / Generate class for each direction
-        for direction in &border_directions {
-            border_color_css.push_str(&format!(
-                "    .{0}border-{1}-color-{2:02x}{3:02x}{4:02x} {{\n        border-{1}-color: rgb({5}, {6}, {7}) !important;\n    }}\n\n",
-                css_prefix, direction, r, g, b, r, g, b
-            ));
-        }
-    }
+    let _ = used_border_colors; // 사용하지 않지만 변수는 유지
+    let _ = border_directions; // 사용하지 않지만 변수는 유지
 
     // 배경색 클래스 생성 / Generate background color classes
     let mut background_color_css = String::new();
@@ -474,99 +457,10 @@ fn generate_css_styles(
         ));
     }
 
-    // 테두리 스타일 및 두께 클래스 생성 (방향별) / Generate border style and width classes (by direction)
-    // width 값과 line_type을 함께 수집하여 double border 처리 / Collect width values with line_type for double border handling
-    // 클래스 이름에 line_type을 포함하여 중복 방지 / Include line_type in class name to prevent duplicates
-    // 레거시 코드: line_type != 0일 때만 border가 있는 것으로 처리 / Legacy code: treat as border only when line_type != 0
-    let mut border_info: std::collections::HashMap<(u8, u8), (bool, String)> =
-        std::collections::HashMap::new(); // (width, line_type) -> (is_double, line_style)
-    for border_fill in &document.doc_info.border_fill {
-        for border in &border_fill.borders {
-            // 레거시 코드: if(border && border.line.top) - line_type이 0이면 falsy이므로 CSS에 추가되지 않음
-            // Legacy code: if(border && border.line.top) - if line_type is 0, it's falsy so CSS is not added
-            if border.line_type == 0 {
-                continue; // border 없음 / No border
-            }
-
-            let is_double = matches!(border.line_type, 7 | 8 | 9 | 10 | 12);
-            // line_type에 따른 스타일 매핑 (레거시 코드 참고) / Map line_type to style (reference legacy code)
-            let line_style = match border.line_type {
-                1 => "solid",
-                2 => "dashed",
-                3 => "dotted",
-                4 => "solid",
-                5 => "dashed",
-                6 => "dotted",
-                7 => "double",
-                8 => "double",
-                9 => "double",
-                10 => "double",
-                11 => "solid",
-                12 => "double",
-                13 => "solid",
-                14 => "solid",
-                15 => "solid",
-                16 => "solid",
-                _ => "solid",
-            };
-            border_info.insert(
-                (border.width, border.line_type),
-                (is_double, line_style.to_string()),
-            );
-        }
-    }
-
-    let mut border_style_css = String::new();
-    let mut border_width_css = String::new();
-    for ((width, line_type), (is_double, line_style)) in &border_info {
-        // 각 방향별로 스타일 클래스 생성 / Generate style class for each direction
-        // TypeScript 버전 참고: 모든 border를 설정하되, line_type=0이면 'none'으로 설정 / Reference TypeScript version: set all borders, but 'none' if line_type=0
-        for direction in &border_directions {
-            border_style_css.push_str(&format!(
-                "    .{0}border-{1}-style-{2}-{3} {{\n        border-{1}-style: {4} !important;\n    }}\n\n",
-                css_prefix, direction, width, line_type, line_style
-            ));
-        }
-
-        // width 변환: 표 26에 따르면 0 = 0.1mm, 1 = 0.12mm, ... / Convert width: Table 26 says 0 = 0.1mm, 1 = 0.12mm, ...
-        let base_width_mm = match width {
-            0 => 0.1,
-            1 => 0.12,
-            2 => 0.15,
-            3 => 0.2,
-            4 => 0.25,
-            5 => 0.3,
-            6 => 0.4,
-            7 => 0.5,
-            8 => 0.6,
-            9 => 0.7,
-            10 => 1.0,
-            11 => 1.5,
-            12 => 2.0,
-            13 => 3.0,
-            14 => 4.0,
-            15 => 5.0,
-            _ => *width as f32 * 0.1, // 기본값 (대략적) / Default (approximate)
-        };
-
-        // double border일 때 width를 2배로 처리 (레거시 코드 참고) / Multiply width by 2 for double border (reference legacy code)
-        let width_mm = if *is_double {
-            base_width_mm * 2.0
-        } else {
-            base_width_mm
-        };
-
-        // mm를 px로 변환 (1mm = 3.779527559px, 72 DPI 기준) / Convert mm to px (1mm = 3.779527559px at 72 DPI)
-        let width_px = width_mm * 3.779527559;
-
-        // 각 방향별로 두께 클래스 생성 / Generate width class for each direction
-        for direction in &border_directions {
-            border_width_css.push_str(&format!(
-                "    .{0}border-{1}-width-{2}-{3} {{\n        border-{1}-width: {4:.2}px !important;\n    }}\n\n",
-                css_prefix, direction, width, line_type, width_px
-            ));
-        }
-    }
+    // 테두리 스타일 및 두께 클래스 생성 (방향별) - 비활성화 / Generate border style and width classes (by direction) - disabled
+    let border_style_css = String::new();
+    let border_width_css = String::new();
+    let _ = document; // 사용하지 않지만 변수는 유지
 
     // 크기 클래스 생성 / Generate size classes
     let mut size_css = String::new();

@@ -286,60 +286,11 @@ fn fill_cell_content(
 
 /// Generate border fill CSS classes
 /// BorderFill을 CSS 클래스로 생성
-/// 정의된 모든 border_fill에 대해 CSS 생성 (사용 여부와 관계없이) / Generate CSS for all defined border_fills (regardless of usage)
-/// 이제 border-fill-{id} 클래스는 테두리 스타일만 설정하고, 색상과 두께는 개별 클래스로 처리
-/// Now border-fill-{id} class only sets border style, colors and widths are handled by individual classes
+/// 비활성화됨 - 빈 문자열 반환 / Disabled - returns empty string
 pub fn generate_border_fill_css(document: &HwpDocument, css_prefix: &str) -> String {
-    let mut css = String::new();
-
-    for (idx, border_fill) in document.doc_info.border_fill.iter().enumerate() {
-        let border_fill_id = idx + 1; // border_fill_id는 1-based
-        let class_name = format!("{}border-fill-{}", css_prefix, border_fill_id);
-
-        css.push_str(&format!("    .{} {{\n", class_name));
-
-        // 테두리 스타일 및 두께 설정 (색상은 개별 클래스로 처리) / Set border style and width (colors handled by individual classes)
-        // 조건 제거: 모든 border에 대해 CSS 생성 (line_type=0도 실선, width=0도 0.1mm이므로 모두 유효)
-        // Remove condition: Generate CSS for all borders (line_type=0 is solid, width=0 is 0.1mm, so all are valid)
-        // [Left, Right, Top, Bottom]
-        let border_names = ["left", "right", "top", "bottom"];
-        for (idx, border) in border_fill.borders.iter().enumerate() {
-            // line_type에 따른 스타일 매핑 (레거시 코드 참고) / Map line_type to style (reference legacy code)
-            // 레거시 코드의 BorderStyle() 함수를 참고하여 매핑 / Reference legacy BorderStyle() function for mapping
-            // case 0: 빈 문자열 반환 (하지만 모든 border에 대해 CSS 생성하므로 solid로 처리) / Returns empty string (but treat as solid since we generate CSS for all borders)
-            // case 1: "solid" (스펙상 "긴 점선"이지만 레거시에서는 solid로 처리) / "solid" (spec says "long dash" but legacy treats as solid)
-            let line_style = match border.line_type {
-                0 => "solid", // 실선 (레거시는 빈 문자열이지만 모든 border에 대해 CSS 생성하므로 solid) / Solid (legacy returns empty but we treat as solid)
-                1 => "solid", // solid (레거시 코드 참고) / solid (reference legacy code)
-                2 => "dashed", // dashed
-                3 => "dotted", // dotted
-                4 => "solid", // solid
-                5 => "dashed", // dashed
-                6 => "dotted", // dotted
-                7 => "double", // double
-                8 => "double", // double
-                9 => "double", // double
-                10 => "double", // double
-                11 => "solid", // solid
-                12 => "double", // double
-                13 => "solid", // solid
-                14 => "solid", // solid
-                15 => "solid", // solid
-                16 => "solid", // solid
-                _ => "solid", // 기본값 solid / Default solid
-            };
-
-            // 테두리 스타일만 설정 (색상과 두께는 개별 클래스로 처리) / Only set border style (colors and widths handled by individual classes)
-            css.push_str(&format!(
-                "        border-{}-style: {};\n",
-                border_names[idx], line_style
-            ));
-        }
-
-        css.push_str("    }\n\n");
-    }
-
-    css
+    let _ = document; // 사용하지 않지만 변수는 유지
+    let _ = css_prefix; // 사용하지 않지만 변수는 유지
+    String::new()
 }
 
 /// Format COLORREF as CSS color
