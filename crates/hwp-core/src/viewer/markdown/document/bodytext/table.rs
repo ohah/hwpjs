@@ -11,6 +11,7 @@ pub fn convert_table_to_markdown(
     table: &Table,
     document: &HwpDocument,
     options: &crate::viewer::markdown::MarkdownOptions,
+    tracker: &mut crate::viewer::markdown::utils::OutlineNumberTracker,
 ) -> String {
     let row_count = table.attributes.row_count as usize;
     let col_count = table.attributes.col_count as usize;
@@ -98,7 +99,7 @@ pub fn convert_table_to_markdown(
 
             if col < col_count {
                 fill_cell_content(
-                    &mut grid, cell, row, col, row_count, col_count, document, options,
+                    &mut grid, cell, row, col, row_count, col_count, document, options, tracker,
                 );
             }
         }
@@ -111,7 +112,7 @@ pub fn convert_table_to_markdown(
 
             if row < row_count && col < col_count {
                 fill_cell_content(
-                    &mut grid, cell, row, col, row_count, col_count, document, options,
+                    &mut grid, cell, row, col, row_count, col_count, document, options, tracker,
                 );
             }
         }
@@ -158,6 +159,7 @@ fn fill_cell_content(
     col_count: usize,
     document: &HwpDocument,
     options: &crate::viewer::markdown::MarkdownOptions,
+    tracker: &mut crate::viewer::markdown::utils::OutlineNumberTracker,
 ) {
     // 셀 내용을 텍스트와 이미지로 변환 / Convert cell content to text and images
     let mut cell_parts = Vec::new();
@@ -310,6 +312,7 @@ fn fill_cell_content(
                                 children,
                                 document,
                                 options.image_output_dir.as_deref(),
+                                tracker,
                             );
                         for shape_part in shape_parts {
                             if shape_part.contains("![이미지]") {

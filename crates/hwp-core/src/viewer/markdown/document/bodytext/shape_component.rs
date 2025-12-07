@@ -13,6 +13,7 @@ use crate::viewer::markdown::document::bodytext::shape_component_picture::conver
 /// * `children` - ShapeComponent의 자식 레코드들 / Child records of ShapeComponent
 /// * `document` - HWP 문서 / HWP document
 /// * `image_output_dir` - 이미지 출력 디렉토리 (선택) / Image output directory (optional)
+/// * `tracker` - 개요 번호 추적기 / Outline number tracker
 ///
 /// # Returns / 반환값
 /// 마크다운 문자열 리스트 / List of markdown strings
@@ -20,6 +21,7 @@ pub(crate) fn convert_shape_component_children_to_markdown(
     children: &[ParagraphRecord],
     document: &HwpDocument,
     image_output_dir: Option<&str>,
+    tracker: &mut crate::viewer::markdown::utils::OutlineNumberTracker,
 ) -> Vec<String> {
     use crate::viewer::markdown::document::bodytext::paragraph::convert_paragraph_to_markdown;
     use crate::viewer::markdown::MarkdownOptions;
@@ -56,7 +58,7 @@ pub(crate) fn convert_shape_component_children_to_markdown(
                 // SHAPE_COMPONENT 내부의 LIST_HEADER는 글상자 텍스트를 포함할 수 있음
                 // LIST_HEADER inside SHAPE_COMPONENT can contain textbox text
                 for para in paragraphs {
-                    let para_md = convert_paragraph_to_markdown(para, document, &options);
+                    let para_md = convert_paragraph_to_markdown(para, document, &options, tracker);
                     if !para_md.is_empty() {
                         parts.push(para_md);
                     }

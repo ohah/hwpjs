@@ -1076,7 +1076,7 @@ Tag ID: HWPTAG_NUMBERING
 | WORD | 2 | 확장 번호 형식 길이 (len). 3회 반복 |
 | WCHAR array[len] | 2×len | 확장 번호 형식. 불릿 문단의 경우 제어 코드 `^`와 수준 경로(예: `1,1,1,1,1,1,1`)를 포함. 수준(8~10). 각 레벨에 해당하는 숫자 또는 문자 또는 기호를 표시 |
 
-**실제 바이너리 구조 / Actual Binary Structure**
+**실제 바이너리 구조
 
 표 38과 표 39는 구조를 설명하기 위해 분리되어 있지만, 실제 HWP 파일에서는 각 수준(1~7)마다 다음 구조가 연속적으로 반복됩니다:
 
@@ -1095,6 +1095,13 @@ Tag ID: HWPTAG_NUMBERING
 확장 번호 형식 (수준 8~10, 3회 반복):
 - WORD 확장 번호 형식 길이 (len) (2바이트)
 - WCHAR array[len] 확장 번호 형식 문자열 (2×len 바이트, UTF-16LE)
+
+**주의사항 / Important Notes:**
+
+- **format_string 해석 / format_string Interpretation**:
+  - `format_string`이 **빈 문자열("")**인 경우: 기본 형식을 사용하여 번호를 표시합니다.
+  - `format_string`이 **null 문자("\u0000")**만 포함하는 경우: 번호를 표시하지 않고 텍스트만 표시합니다. 
+  - 이 동작은 스펙 문서에 명시되어 있지 않지만, 실제 HWP 파일의 동작을 기반으로 합니다.
 
 **표 40: 문단 머리 정보 속성**
 
