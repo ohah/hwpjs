@@ -170,10 +170,35 @@ fn is_format_string_empty_or_null(format_string: &str) -> bool {
     // Only null character (\u0000) or all characters are null means no number
     // UTF-16LE로 디코딩된 null 문자는 단일 바이트 0 또는 "\u{0000}" 문자열로 나타날 수 있음
     // Null character decoded from UTF-16LE may appear as single byte 0 or "\u{0000}" string
-    format_string == "\u{0000}"
-        || (format_string.len() == 1 && format_string.as_bytes()[0] == 0)
-        || format_string.chars().all(|c| c == '\u{0000}')
-        || format_string.as_bytes().iter().all(|&b| b == 0)
+
+    // 모든 문자가 null 문자인지 확인 (가장 안전한 방법)
+    // Check if all characters are null (safest method)
+    if format_string.chars().all(|c| c == '\u{0000}') {
+        return true;
+    }
+
+    // UTF-8 바이트가 모두 0인지 확인 (null 문자만 포함)
+    // Check if all UTF-8 bytes are 0 (only null characters)
+    if format_string.as_bytes().iter().all(|&b| b == 0) {
+        return true;
+    }
+
+    // 단일 null 문자인지 확인
+    // Check if it's a single null character
+    if format_string.len() == 1 {
+        // 문자로 확인
+        // Check as character
+        if format_string.chars().next() == Some('\u{0000}') {
+            return true;
+        }
+        // UTF-8 바이트로 확인
+        // Check as UTF-8 byte
+        if format_string.as_bytes()[0] == 0 {
+            return true;
+        }
+    }
+
+    false
 }
 
 /// 개요 레벨이면 텍스트 앞에 개요 번호를 추가
@@ -193,16 +218,48 @@ pub(crate) fn convert_to_outline_with_number(
             // paragraph_level + 1 = actual level (0=level1, 1=level2, 2=level3, ...)
             let base_level = para_shape.attributes1.paragraph_level + 1;
 
-            // paragraph_level이 6이고 line_spacing이 7 이상이면 실제 레벨은 line_spacing 값 사용
-            // If paragraph_level is 6 and line_spacing is 7 or higher, use line_spacing as actual level
+            // paragraph_level이 6이고 line_spacing이 7 이상이면 실제 레벨은 para_style_id를 사용하여 결정
+            // If paragraph_level is 6 and line_spacing is 7 or higher, determine actual level using para_style_id
             let level = if base_level == 7 {
                 // paragraph_level이 6이면 base_level은 7 / If paragraph_level is 6, base_level is 7
-                // line_spacing이 7 이상이면 확장 레벨 (7-10) / If line_spacing >= 7, extended level (7-10)
+                // line_spacing이 7 이상이면 확장 레벨 (8-10) / If line_spacing >= 7, extended level (8-10)
+                // para_style_id를 사용하여 스타일 이름에서 레벨 추출
+                // Use para_style_id to extract level from style name
                 if let Some(line_spacing) = para_shape.line_spacing {
-                    // line_spacing이 INT32 (i32)이므로 u8로 변환 시 범위 확인 필요
-                    // line_spacing is INT32 (i32), so need to check range when converting to u8
                     if line_spacing >= 7 && line_spacing <= 10 {
-                        line_spacing as u8
+                        // para_style_id로 스타일 찾기 / Find style by para_style_id
+                        if let Some(style) = document
+                            .doc_info
+                            .styles
+                            .get(para_header.para_style_id as usize)
+                        {
+                            // 스타일 이름에서 레벨 추출 (예: "개요 8" -> 8, "개요 9" -> 9, "개요 10" -> 10)
+                            // Extract level from style name (e.g., "개요 8" -> 8, "개요 9" -> 9, "개요 10" -> 10)
+                            if style.local_name.starts_with("개요 ") {
+                                if let Ok(style_level) = style.local_name[3..].trim().parse::<u8>()
+                                {
+                                    if style_level >= 8 && style_level <= 10 {
+                                        style_level
+                                    } else {
+                                        // 스타일 레벨이 범위를 벗어나면 line_spacing 기반 계산
+                                        // If style level is out of range, calculate based on line_spacing
+                                        (line_spacing + 1) as u8
+                                    }
+                                } else {
+                                    // 스타일 이름 파싱 실패 시 line_spacing 기반 계산
+                                    // If style name parsing fails, calculate based on line_spacing
+                                    (line_spacing + 1) as u8
+                                }
+                            } else {
+                                // 스타일 이름이 "개요 "로 시작하지 않으면 line_spacing 기반 계산
+                                // If style name doesn't start with "개요 ", calculate based on line_spacing
+                                (line_spacing + 1) as u8
+                            }
+                        } else {
+                            // 스타일을 찾을 수 없으면 line_spacing 기반 계산
+                            // If style cannot be found, calculate based on line_spacing
+                            (line_spacing + 1) as u8
+                        }
                     } else {
                         base_level
                     }
@@ -223,18 +280,29 @@ pub(crate) fn convert_to_outline_with_number(
                     // 레벨 8은 extended_levels[0], 레벨 9는 extended_levels[1], 레벨 10은 extended_levels[2]
                     // Level 8 is extended_levels[0], level 9 is extended_levels[1], level 10 is extended_levels[2]
                     let extended_index = (level - 8) as usize;
-                    if let Some(extended_level) = numbering.extended_levels.get(extended_index) {
-                        // format_string이 null 문자만 포함하면 번호 없이 텍스트만 반환
-                        // If format_string contains only null character, return text only without number
-                        if is_format_string_empty_or_null(&extended_level.format_string) {
-                            return text.to_string();
+                    // extended_levels 배열 범위 확인
+                    // Check extended_levels array bounds
+                    if extended_index < numbering.extended_levels.len() {
+                        if let Some(extended_level) = numbering.extended_levels.get(extended_index)
+                        {
+                            // format_string이 null 문자만 포함하면 번호 없이 텍스트만 반환
+                            // If format_string contains only null character, return text only without number
+                            if is_format_string_empty_or_null(&extended_level.format_string) {
+                                return text.to_string();
+                            }
                         }
+                    } else {
+                        // extended_levels 배열 범위를 벗어나면 넘버링 없이 텍스트만 반환
+                        // If extended_levels array index is out of bounds, return text only without number
+                        return text.to_string();
                     }
                     // extended_levels가 없으면 번호 생성 (기본 동작)
                     // If extended_levels don't exist, generate number (default behavior)
+                } else {
+                    // numbering이 없으면 넘버링 없이 텍스트만 반환 (레벨 8 이상은 numbering이 필요)
+                    // If numbering doesn't exist, return text only without number (levels 8+ require numbering)
+                    return text.to_string();
                 }
-                // numbering이 없으면 번호 생성 (기본 동작)
-                // If numbering doesn't exist, generate number (default behavior)
             }
 
             // 레벨 1-7인 경우 format_string 확인 (빈 문자열이면 기본 형식 사용)
