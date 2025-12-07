@@ -4,7 +4,7 @@ use crate::document::ParagraphRecord;
 
 /// 재귀적으로 paragraph에서 텍스트와 이미지 ID를 수집
 /// Recursively collect text and image IDs from paragraph
-pub(crate) fn collect_text_and_images_from_paragraph(
+pub fn collect_text_and_images_from_paragraph(
     para: &crate::document::bodytext::Paragraph,
     table_cell_texts: &mut std::collections::HashSet<String>,
     table_cell_image_ids: &mut std::collections::HashSet<u16>,

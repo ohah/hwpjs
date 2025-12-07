@@ -5,7 +5,7 @@
 /// Module for converting each part of HWP document (bodytext, docinfo, fileheader, etc.) to markdown
 pub mod bodytext;
 mod docinfo;
-mod fileheader;
+pub mod fileheader;
 
 pub use bodytext::convert_bodytext_to_markdown;
 pub use docinfo::extract_page_info;

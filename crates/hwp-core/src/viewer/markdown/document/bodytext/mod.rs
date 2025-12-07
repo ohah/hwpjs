@@ -5,10 +5,10 @@
 /// Module for converting BodyText-related records in HWP documents to markdown
 mod list_header;
 mod para_text;
-mod paragraph;
+pub mod paragraph;
 mod shape_component;
 pub mod shape_component_picture;
-mod table;
+pub mod table;
 
 use crate::document::{ColumnDivideType, HwpDocument, ParagraphRecord};
 use crate::viewer::markdown::MarkdownOptions;
