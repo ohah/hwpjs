@@ -465,6 +465,182 @@ fn test_all_fixtures_markdown_snapshots() {
 }
 
 #[test]
+fn test_document_html_snapshot() {
+    let file_path = match find_test_file() {
+        Some(path) => path,
+        None => return, // Skip test if file not available
+    };
+
+    // 파일명에서 스냅샷 이름 추출 / Extract snapshot name from filename
+    let file_name = std::path::Path::new(&file_path)
+        .file_stem()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown");
+    let snapshot_name = file_name.replace(['-', '.'], "_");
+    let snapshot_name_html = format!("{}_html", snapshot_name);
+
+    if let Ok(data) = std::fs::read(&file_path) {
+        let parser = HwpParser::new();
+        let result = parser.parse(&data);
+        if let Err(e) = &result {
+            eprintln!("Parse error: {:?}", e);
+        }
+        assert!(result.is_ok(), "Should parse HWP document");
+        let document = result.unwrap();
+
+        // Convert to HTML with image files (not base64)
+        // 이미지를 파일로 저장하고 파일 경로를 사용 / Save images as files and use file paths
+        let manifest_dir = env!("CARGO_MANIFEST_DIR");
+        let snapshots_dir = std::path::Path::new(manifest_dir)
+            .join("tests")
+            .join("snapshots");
+        let images_dir = snapshots_dir.join("images").join(file_name);
+        std::fs::create_dir_all(&images_dir).unwrap_or(());
+        let options = hwp_core::viewer::HtmlOptions {
+            image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+            include_version: Some(true),
+            include_page_info: Some(true),
+            css_class_prefix: "ohah-hwpjs-".to_string(),
+        };
+        let html = document.to_html(&options);
+        assert_snapshot_with_path!(snapshot_name_html.as_str(), html);
+
+        // 실제 HTML 파일로도 저장 / Also save as actual HTML file
+        let html_file = snapshots_dir.join(format!("{}.html", file_name));
+        std::fs::write(&html_file, &html).unwrap_or_else(|e| {
+            eprintln!("Failed to write HTML file: {}", e);
+        });
+    }
+}
+
+#[test]
+fn test_headerfooter_html() {
+    // headerfooter.hwp 파일에 대해 HTML 스냅샷 생성 / Generate HTML snapshot for headerfooter.hwp
+    let file_path = match find_headerfooter_file() {
+        Some(path) => path,
+        None => {
+            eprintln!("headerfooter.hwp not found, skipping test");
+            return;
+        }
+    };
+
+    let parser = HwpParser::new();
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let snapshots_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("snapshots");
+
+    let file_name = std::path::Path::new(&file_path)
+        .file_stem()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown");
+    let snapshot_name = file_name.replace(['-', '.'], "_");
+    let snapshot_name_html = format!("{}_html", snapshot_name);
+
+    match std::fs::read(&file_path) {
+        Ok(data) => {
+            match parser.parse(&data) {
+                Ok(document) => {
+                    // Convert to HTML with image files (not base64)
+                    // 이미지를 파일로 저장하고 파일 경로를 사용 / Save images as files and use file paths
+                    let images_dir = snapshots_dir.join("images").join(file_name);
+                    std::fs::create_dir_all(&images_dir).unwrap_or(());
+
+                    let options = hwp_core::viewer::html::HtmlOptions {
+                        image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+                        include_version: Some(true),
+                        include_page_info: Some(true),
+                        css_class_prefix: "ohah-hwpjs-".to_string(),
+                    };
+
+                    let html = document.to_html(&options);
+
+                    // 스냅샷 생성 / Create snapshot
+                    assert_snapshot_with_path!(snapshot_name_html.as_str(), html);
+
+                    // 실제 HTML 파일로도 저장 / Also save as actual HTML file
+                    let html_file = snapshots_dir.join(format!("{}.html", file_name));
+                    std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
+                    std::fs::write(&html_file, &html).unwrap_or_else(|e| {
+                        eprintln!("Failed to write HTML file {}: {}", html_file.display(), e);
+                    });
+                }
+                Err(e) => {
+                    eprintln!("Failed to parse {}: {:?}", file_path, e);
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("Failed to read {}: {}", file_path, e);
+        }
+    }
+}
+
+#[test]
+fn test_all_fixtures_html_snapshots() {
+    // 모든 fixtures 파일에 대해 HTML 스냅샷 생성 / Generate HTML snapshots for all fixtures files
+    let hwp_files = find_all_hwp_files();
+    if hwp_files.is_empty() {
+        println!("No HWP files found in fixtures directory");
+        return;
+    }
+
+    let parser = HwpParser::new();
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let snapshots_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("snapshots");
+
+    for file_path in &hwp_files {
+        let file_name = std::path::Path::new(file_path)
+            .file_stem()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown");
+
+        // 파일명을 스냅샷 이름으로 사용 (특수 문자 제거) / Use filename as snapshot name (remove special chars)
+        let snapshot_name = file_name.replace(['-', '.'], "_");
+        let snapshot_name_html = format!("{}_html", snapshot_name);
+
+        match std::fs::read(file_path) {
+            Ok(data) => {
+                match parser.parse(&data) {
+                    Ok(document) => {
+                        // Convert to HTML with image files (not base64)
+                        // 이미지를 파일로 저장하고 파일 경로를 사용 / Save images as files and use file paths
+                        let images_dir = snapshots_dir.join("images").join(file_name);
+                        std::fs::create_dir_all(&images_dir).unwrap_or(());
+
+                        let options = hwp_core::viewer::html::HtmlOptions {
+                            image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+                            include_version: Some(true),
+                            include_page_info: Some(true),
+                            css_class_prefix: "ohah-hwpjs-".to_string(),
+                        };
+                        let html = document.to_html(&options);
+
+                        // 스냅샷 생성 / Create snapshot
+                        assert_snapshot_with_path!(snapshot_name_html.as_str(), html);
+
+                        // 실제 HTML 파일로도 저장 / Also save as actual HTML file
+                        let html_file = snapshots_dir.join(format!("{}.html", file_name));
+                        std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
+                        std::fs::write(&html_file, &html).unwrap_or_else(|e| {
+                            eprintln!("Failed to write HTML file {}: {}", html_file.display(), e);
+                        });
+                    }
+                    Err(e) => {
+                        eprintln!("Skipping {} due to parse error: {}", file_name, e);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed to read {}: {}", file_name, e);
+            }
+        }
+    }
+}
+
+#[test]
 fn test_parse_all_fixtures() {
     // 모든 fixtures 파일을 파싱하여 에러가 없는지 확인 / Parse all fixtures files to check for errors
     let hwp_files = find_all_hwp_files();
