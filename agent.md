@@ -163,7 +163,6 @@ src/
 │                             # - read_stream(): 루트 레벨 스트림 접근
 │                             # - read_nested_stream(): 중첩 스토리지 접근 (폴백 지원)
 ├── decompress.rs             # zlib 압축 해제
-├── snapshots/                # 스냅샷 테스트 파일
 └── lib.rs                    # 라이브러리 진입점 및 HwpParser
 ```
 
@@ -292,7 +291,7 @@ src/
 
 **스냅샷 테스트 원칙**:
 - JSON 출력 결과는 반드시 스냅샷으로 저장하여 검증
-- 스냅샷 파일은 `crates/hwp-core/src/snapshots/` 디렉토리에 저장
+- 스냅샷 파일은 `crates/hwp-core/tests/snapshots/` 디렉토리에 저장
 - 스냅샷 변경 시 `cargo insta review`로 변경사항을 검토하고 승인
 - 스냅샷 파일은 git에 커밋하여 버전 관리
 
@@ -432,7 +431,7 @@ refactor(core): reorganize modules to match HWP file structure
 - **테스트**: 
   - **필수**: 모든 기능에 대한 단위 테스트 작성 (TDD 방식)
   - **필수**: JSON 출력 결과를 검증하는 스냅샷 테스트 작성
-  - 스냅샷 파일은 `src/snapshots/` 디렉토리에 저장
+  - 스냅샷 파일은 `tests/snapshots/` 디렉토리에 저장
   - 스냅샷 변경 시 `cargo insta review`로 검토 및 승인
 
 ### `packages/hwpjs`
