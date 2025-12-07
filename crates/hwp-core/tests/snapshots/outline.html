@@ -40,6 +40,7 @@
         line-height: 1;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        background-color: #f5f5f5;
     }
 
     /* Typography reset */
@@ -300,7 +301,7 @@
 
     /* HWP Document Styles */
     .ohah-hwpjs-document {
-        max-width: 800px;
+        max-width: none;
         margin: 0 auto;
         padding: 20px 20px 20px 20px;
         font-family: "함초롬돋움", "함초롬바탕", "함초롬돋움", "함초롬바탕", "함초롬돋움", "함초롬바탕", "함초롬돋움", "함초롬바탕", "함초롬돋움", "함초롬바탕", "함초롬돋움", "함초롬바탕", "함초롬돋움", "함초롬바탕", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -362,6 +363,84 @@
         font-family: "함초롬바탕", sans-serif;
     }
 
+
+
+    /* Section and Page Styles */
+    .ohah-hwpjs-Section {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        margin-bottom: 40px;
+    }
+
+    .ohah-hwpjs-Paper {
+        width: 100%;
+        margin: 0 auto;
+        background-color: #fff;
+        position: relative;
+    }
+
+    .ohah-hwpjs-Page {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+    }
+
+
+    /* Section 0 Styles */
+    .ohah-hwpjs-Section-0 {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Paper {
+        width: 210.00mm;
+        min-height: 296.99mm;
+        margin: 0 auto 40px auto;
+        background-color: #fff;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Page {
+        width: 100%;
+        min-height: 296.99mm;
+        padding: 20.00mm 30.00mm 15.00mm 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        padding: 0 30.00mm 0 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+        height: 15.00mm;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+        height: 15.00mm;
+    }
 
 
     .ohah-hwpjs-header {
@@ -567,23 +646,29 @@
     <p><strong>용지 크기</strong>: 8.27인치 x 11.69인치</p>
     <p><strong>용지 방향</strong>: Vertical</p>
     <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
-    <main class="ohah-hwpjs-main">
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-1">1. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 1</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-2">가. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요2</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-3">1) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요3</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-4">가) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요4</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-5">(1) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 5</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-5">(2) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 5-2</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-2">나. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요2-2</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-6">(가) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 6 </span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-6">(나) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 6-2</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-7">① <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요7</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-7">② <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요7-2</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-8"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요8</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-9"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요9</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-10"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요10</span></span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-1">2. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 1-2</span></span></p>
-    </main>
+    <section class="ohah-hwpjs-Section ohah-hwpjs-Section-0">
+      <div class="ohah-hwpjs-Paper">
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header"></div>
+        <div class="ohah-hwpjs-Page">
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-1">1. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 1</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-2">가. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요2</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-3">1) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요3</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-4">가) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요4</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-5">(1) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 5</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-5">(2) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 5-2</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-2">나. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요2-2</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-6">(가) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 6 </span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-6">(나) <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 6-2</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-7">① <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요7</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-7">② <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요7-2</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-8"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요8</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-9"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요9</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-10"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요10</span></span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-outline ohah-hwpjs-outline-level-1">2. <span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">개요 1-2</span></span></p>
+        </div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer"></div>
+      </div>
+    </section>
   </div>
 </body>
 </html>

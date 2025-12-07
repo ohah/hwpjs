@@ -44,6 +44,7 @@ expression: html
         line-height: 1;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        background-color: #f5f5f5;
     }
 
     /* Typography reset */
@@ -304,7 +305,7 @@ expression: html
 
     /* HWP Document Styles */
     .ohah-hwpjs-document {
-        max-width: 800px;
+        max-width: none;
         margin: 0 auto;
         padding: 20px 20px 20px 20px;
         font-family: "굴림", "바탕", "굴림", "바탕", "굴림", "바탕", "굴림", "바탕", "굴림", "바탕", "굴림", "바탕", "굴림", "바탕", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -366,6 +367,125 @@ expression: html
         font-family: "바탕", sans-serif;
     }
 
+
+
+    /* Section and Page Styles */
+    .ohah-hwpjs-Section {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        margin-bottom: 40px;
+    }
+
+    .ohah-hwpjs-Paper {
+        width: 100%;
+        margin: 0 auto;
+        background-color: #fff;
+        position: relative;
+    }
+
+    .ohah-hwpjs-Page {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+    }
+
+
+    /* Section 0 Styles */
+    .ohah-hwpjs-Section-0 {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Paper {
+        width: 210.00mm;
+        min-height: 297.00mm;
+        margin: 0 auto 40px auto;
+        background-color: #fff;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Page {
+        width: 100%;
+        min-height: 297.00mm;
+        padding: 20.00mm 30.00mm 15.00mm 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        padding: 0 30.00mm 0 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+        height: 15.00mm;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+        height: 15.00mm;
+    }
+
+    /* Section 1 Styles */
+    .ohah-hwpjs-Section-1 {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .ohah-hwpjs-Section-1 .ohah-hwpjs-Paper {
+        width: 297.00mm;
+        min-height: 210.00mm;
+        margin: 0 auto 40px auto;
+        background-color: #fff;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .ohah-hwpjs-Section-1 .ohah-hwpjs-Page {
+        width: 100%;
+        min-height: 210.00mm;
+        padding: 20.00mm 30.00mm 15.00mm 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-1 .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        padding: 0 30.00mm 0 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-1 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+        height: 15.00mm;
+    }
+
+    .ohah-hwpjs-Section-1 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+        height: 15.00mm;
+    }
 
 
     .ohah-hwpjs-header {
@@ -575,11 +695,24 @@ expression: html
     <p><strong>용지 크기</strong>: 8.27인치 x 11.69인치</p>
     <p><strong>용지 방향</strong>: Vertical</p>
     <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
-    <main class="ohah-hwpjs-main">
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">Section 1: A4 portrait</span></p>
-    <hr class="ohah-hwpjs-page-break" />
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">Section 2: A4 landscape</span></p>
-    </main>
+    <section class="ohah-hwpjs-Section ohah-hwpjs-Section-0">
+      <div class="ohah-hwpjs-Paper">
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header"></div>
+        <div class="ohah-hwpjs-Page">
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">Section 1: A4 portrait</span></p>
+        </div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer"></div>
+      </div>
+    </section>
+    <section class="ohah-hwpjs-Section ohah-hwpjs-Section-1">
+      <div class="ohah-hwpjs-Paper">
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header"></div>
+        <div class="ohah-hwpjs-Page">
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">Section 2: A4 landscape</span></p>
+        </div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer"></div>
+      </div>
+    </section>
   </div>
 </body>
 </html>

@@ -40,6 +40,7 @@
         line-height: 1;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        background-color: #f5f5f5;
     }
 
     /* Typography reset */
@@ -300,7 +301,7 @@
 
     /* HWP Document Styles */
     .ohah-hwpjs-document {
-        max-width: 800px;
+        max-width: none;
         margin: 0 auto;
         padding: 20px 20px 20px 20px;
         font-family: "굴림", "굴림체", "바탕", "바탕체", "휴먼명조", "함초롬돋움", "함초롬바탕", "HY울릉도M", "HY헤드라인M", "굴림", "굴림체", "바탕", "HCI Poppy", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "굴림", "굴림체", "바탕", "한양신명조", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "휴먼명조", "HY Sinmyeongjo", "굴림", "굴림체", "바탕", "한양신명조", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "휴먼명조", "HY Sinmyeongjo", "굴림", "굴림체", "바탕", "한양신명조", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "휴먼명조", "HY Sinmyeongjo", "굴림", "굴림체", "바탕", "한양신명조", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "휴먼명조", "HY Sinmyeongjo", "굴림", "굴림체", "바탕", "명조", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "휴먼명조", "Myeongjo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -600,6 +601,84 @@
 
 
 
+    /* Section and Page Styles */
+    .ohah-hwpjs-Section {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        margin-bottom: 40px;
+    }
+
+    .ohah-hwpjs-Paper {
+        width: 100%;
+        margin: 0 auto;
+        background-color: #fff;
+        position: relative;
+    }
+
+    .ohah-hwpjs-Page {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+    }
+
+
+    /* Section 0 Styles */
+    .ohah-hwpjs-Section-0 {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Paper {
+        width: 210.00mm;
+        min-height: 297.00mm;
+        margin: 0 auto 40px auto;
+        background-color: #fff;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Page {
+        width: 100%;
+        min-height: 297.00mm;
+        padding: 10.00mm 20.00mm 10.00mm 20.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        padding: 0 20.00mm 0 20.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+        height: 15.00mm;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+        height: 15.00mm;
+    }
+
+
     .ohah-hwpjs-header {
         margin-bottom: 20px;
     }
@@ -788,29 +867,17 @@
         color: rgb(255, 255, 255);
     }
 
-    .ohah-hwpjs-color-ff0000 {
-        color: rgb(255, 0, 0);
-    }
-
     .ohah-hwpjs-color-0000ff {
         color: rgb(0, 0, 255);
     }
 
-
-                   .ohah-hwpjs-size-1300 {
-        font-size: 13.00pt;
+    .ohah-hwpjs-color-ff0000 {
+        color: rgb(255, 0, 0);
     }
 
-    .ohah-hwpjs-size-900 {
-        font-size: 9.00pt;
-    }
 
-    .ohah-hwpjs-size-1724 {
-        font-size: 17.24pt;
-    }
-
-    .ohah-hwpjs-size-1000 {
-        font-size: 10.00pt;
+                   .ohah-hwpjs-size-1500 {
+        font-size: 15.00pt;
     }
 
     .ohah-hwpjs-size-1200 {
@@ -821,33 +888,37 @@
         font-size: 16.00pt;
     }
 
-    .ohah-hwpjs-size-1550 {
-        font-size: 15.50pt;
+    .ohah-hwpjs-size-1000 {
+        font-size: 10.00pt;
     }
 
     .ohah-hwpjs-size-1100 {
         font-size: 11.00pt;
     }
 
+    .ohah-hwpjs-size-1300 {
+        font-size: 13.00pt;
+    }
+
+    .ohah-hwpjs-size-1724 {
+        font-size: 17.24pt;
+    }
+
+    .ohah-hwpjs-size-1550 {
+        font-size: 15.50pt;
+    }
+
     .ohah-hwpjs-size-1400 {
         font-size: 14.00pt;
     }
 
-    .ohah-hwpjs-size-1500 {
-        font-size: 15.00pt;
+    .ohah-hwpjs-size-900 {
+        font-size: 9.00pt;
     }
 
 
                
-                   .ohah-hwpjs-bg-color-f2f2f2 {
-        background-color: rgb(242, 242, 242) !important;
-    }
-
-    .ohah-hwpjs-bg-color-ffffff {
-        background-color: rgb(255, 255, 255) !important;
-    }
-
-    .ohah-hwpjs-bg-color-d9d9d9 {
+                   .ohah-hwpjs-bg-color-d9d9d9 {
         background-color: rgb(217, 217, 217) !important;
     }
 
@@ -855,8 +926,16 @@
         background-color: rgb(52, 45, 190) !important;
     }
 
+    .ohah-hwpjs-bg-color-ffffff {
+        background-color: rgb(255, 255, 255) !important;
+    }
+
     .ohah-hwpjs-bg-color-e7e7a5 {
         background-color: rgb(231, 231, 165) !important;
+    }
+
+    .ohah-hwpjs-bg-color-f2f2f2 {
+        background-color: rgb(242, 242, 242) !important;
     }
 
 
@@ -871,26 +950,32 @@
     <p><strong>용지 크기</strong>: 8.27인치 x 11.69인치</p>
     <p><strong>용지 방향</strong>: Vertical</p>
     <p><strong>여백</strong>: 좌 0.79인치 / 우 0.79인치 / 상 0.39인치 / 하 0.39인치</p>
-    <main class="ohah-hwpjs-main">
-<img src="images/BIN0001.jpg" alt="이미지" class="ohah-hwpjs-image" />
-<table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>보도일시</strong></span></p></th><th colspan="3"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>2018. 9. 4.(화) 조간</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300"><strong>(온라인 9. 3. </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300"><strong>12:00</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300"><strong>)</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>부터 보도해 주시기 바랍니다.</strong></span></p></th></tr></thead><tbody><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>배포일시</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">2018. 9. 3.(월) 09:00</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담당부서</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">거대공공연구정책과</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담당과장</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">장인숙(02-2110-2430)</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담 당 자</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"> 용찬재 사무관(02-2110-2428)</span></p></td></tr></tbody></table>
-<table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1800">우리가 독자 개발하여 최초 발사하는 한국형발사체,</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1800">국민이 정한 그 이름은 ｢누리｣</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600">“세상”의 옛말로, 우주까지 확장된 새로운 세상을 연다는 의미 -</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600">명칭공모전에 1만건 이상 응모, 뜨거운 관심 보여 -</span></p></th></tr></thead><tbody></tbody></table>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">□ </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">과학기술정보통신부</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">(장관 유영민, 이하 ‘과기정통부’)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">는 우리나라 최초로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">순수 우리기술로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 개발 중인 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>한국형발사체</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>(KSLV-2)</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>의 새로운 이름</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">으로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>“누리”가 선정</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">되었다고 밝혔다.</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 한국형발사체는 1.5톤급 실용위성을 지구 저궤도(600km~800km)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">까지 쏘아 올릴 수 있는 3단형 우주발사체로, 연간 130여개 기관</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">이</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 참여하여 2021년 발사를 목표로 개발하고 있다</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">.</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 올해 10월에는 한국형발사체의 핵심부품인 75톤 액체엔진의 비행성능을 확인하기 위해 시험발사체를 발사할 예정이다.</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">□ 과기정통부는 한국항공우주연구원</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">(원장 임철호, 이하 ‘항우연’)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">과 함께 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">그간 별도의 명칭 없이 ‘한국형발사체’라 불려온 우리 발사체의 새로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">운 이름을 선정하기 위해 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>대국민 명칭 공모전을 실시</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">하였다.</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 4월 27일부터 5월 31일까지 실시한 동 명칭 공모에는</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong> 약 6,300여명의 </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>국민이 참여하여 총 10,000건 이상의 응모작을 제출</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">하여 뜨거운</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 관심을 보였다. </span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 명칭선정절차는 제출된 응모작에 대해 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>네이미스트, 카피라이터, 국어교사 등 외부 전문가가</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 주제와의 적합성, 상징성, 참신성, 발음 및 기억의 용의성 등을 기준으로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>후보작을 선별</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">한 후,</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>발사체 개발에 직접 참여</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">하고 있는 연구자, 산업체 관계자 약 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>400명의 선호도 조사를 통해 최종 선정</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">하는 절차로 진행되었다.</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">□ 이러한</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 절차를 거쳐 한국형발사체의 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>새로운 명칭은 ‘누리’로 결정</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">되</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">었으며, 동 명칭은 앞으로 우리나라 독자 발사체인</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong> ‘한국형발사체’의</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong> 공식 명칭으로 사용</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">될 예정이다.</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 동 명칭을 제출한 경상대학교 에너지기계공학과 백승엽 학생은 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">‘</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>누리’는 ‘세상’의 옛말</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>우주로까지 확장된 새로운 세상을 </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>연다는</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>의미</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">로, 우리 손으로 만든 발사체로 온 우주를 누비고 미래</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 발전을 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">누리길 희망하는 마음을 담았다고 밝혔다.</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">백승엽학생에게는 오는 9월 7일(금)에 과기정통부 장관상과 함께 소정의</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 상금이 수여될 예정이다. </span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">□ </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">과기정통부 거대공공연구정책관은 “명칭 공모전을 통해 우리국민의 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>우주에 대한 높은 관심을 확인</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">할 수 있었다”며 “새로운 이름에 걸맞게 무한한 가능성을 갖고 있는 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>우주공간을 우리 발사체로 직접 개척할 수 있도록 최선을 다할 것</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">” 이라고 밝혔다.</span></p>
-<table class="ohah-hwpjs-table"><thead><tr><th><img src="images/BIN0004.jpg" alt="이미지" class="ohah-hwpjs-image" /></th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-900">이 자료에 대하여 더욱 자세한 내용을 원하시면</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-900">과학기술정보통신부 용찬재 사무관(☎ 02-2110-2428)에게 연락주시기 바랍니다.</span></p></th></tr></thead><tbody></tbody></table>
-    <hr class="ohah-hwpjs-page-break" />
-<table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-color-ffffff ohah-hwpjs-size-1600">붙임</span></p></th><th>&nbsp;</th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600"> 한국형발사체(누리호)와 시험발사체 비교</span></p></th></tr></thead><tbody></tbody></table>
-<table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">구 분</span></p></th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">한국형발사체(누리호)</span></p></th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">시험발사체</span></p></th></tr></thead><tbody><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">형 상</span></p></td><td><img src="images/BIN0002.bmp" alt="이미지" class="ohah-hwpjs-image" /></td><td><img src="images/BIN0003.bmp" alt="이미지" class="ohah-hwpjs-image" /></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">목 적</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1.5톤급 실용위성을</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">지구저궤도</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1100">(600~800km)</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">에 투입</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">한국형발사체 75톤급 엔진의 비행성능 검증</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">총 길이</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">47.2 m</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">25.8 m</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">최대 직경</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">3.5 m</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">2.6 m</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">이륙 중량</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">200 톤</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">52.1 톤</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">탑재체 중량</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1.5 톤</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">-</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">단 수 </span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">3단</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1단</span></p></td></tr></tbody></table>
-    </main>
+    <section class="ohah-hwpjs-Section ohah-hwpjs-Section-0">
+      <div class="ohah-hwpjs-Paper">
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header"></div>
+        <div class="ohah-hwpjs-Page">
+          <img src="images/BIN0001.jpg" alt="이미지" class="ohah-hwpjs-image" />
+          <table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>보도일시</strong></span></p></th><th colspan="3"><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>2018. 9. 4.(화) 조간</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300"><strong>(온라인 9. 3. </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300"><strong>12:00</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300"><strong>)</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>부터 보도해 주시기 바랍니다.</strong></span></p></th></tr></thead><tbody><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>배포일시</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">2018. 9. 3.(월) 09:00</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담당부서</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">거대공공연구정책과</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담당과장</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">장인숙(02-2110-2430)</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>담 당 자</strong></span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"> 용찬재 사무관(02-2110-2428)</span></p></td></tr></tbody></table>
+          <table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1800">우리가 독자 개발하여 최초 발사하는 한국형발사체,</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1800">국민이 정한 그 이름은 ｢누리｣</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600">“세상”의 옛말로, 우주까지 확장된 새로운 세상을 연다는 의미 -</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600">명칭공모전에 1만건 이상 응모, 뜨거운 관심 보여 -</span></p></th></tr></thead><tbody></tbody></table>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">□ </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">과학기술정보통신부</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">(장관 유영민, 이하 ‘과기정통부’)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">는 우리나라 최초로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">순수 우리기술로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 개발 중인 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>한국형발사체</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300"><strong>(KSLV-2)</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>의 새로운 이름</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">으로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>“누리”가 선정</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">되었다고 밝혔다.</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 한국형발사체는 1.5톤급 실용위성을 지구 저궤도(600km~800km)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">까지 쏘아 올릴 수 있는 3단형 우주발사체로, 연간 130여개 기관</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">이</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 참여하여 2021년 발사를 목표로 개발하고 있다</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">.</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 올해 10월에는 한국형발사체의 핵심부품인 75톤 액체엔진의 비행성능을 확인하기 위해 시험발사체를 발사할 예정이다.</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">□ 과기정통부는 한국항공우주연구원</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300">(원장 임철호, 이하 ‘항우연’)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">과 함께 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">그간 별도의 명칭 없이 ‘한국형발사체’라 불려온 우리 발사체의 새로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">운 이름을 선정하기 위해 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>대국민 명칭 공모전을 실시</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">하였다.</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 4월 27일부터 5월 31일까지 실시한 동 명칭 공모에는</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong> 약 6,300여명의 </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>국민이 참여하여 총 10,000건 이상의 응모작을 제출</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">하여 뜨거운</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 관심을 보였다. </span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 명칭선정절차는 제출된 응모작에 대해 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>네이미스트, 카피라이터, 국어교사 등 외부 전문가가</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 주제와의 적합성, 상징성, 참신성, 발음 및 기억의 용의성 등을 기준으로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>후보작을 선별</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">한 후,</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>발사체 개발에 직접 참여</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">하고 있는 연구자, 산업체 관계자 약 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>400명의 선호도 조사를 통해 최종 선정</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">하는 절차로 진행되었다.</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">□ 이러한</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 절차를 거쳐 한국형발사체의 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>새로운 명칭은 ‘누리’로 결정</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">되</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">었으며, 동 명칭은 앞으로 우리나라 독자 발사체인</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong> ‘한국형발사체’의</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong> 공식 명칭으로 사용</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">될 예정이다.</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o 동 명칭을 제출한 경상대학교 에너지기계공학과 백승엽 학생은 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">‘</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>누리’는 ‘세상’의 옛말</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>우주로까지 확장된 새로운 세상을 </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>연다는</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>의미</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">로, 우리 손으로 만든 발사체로 온 우주를 누비고 미래</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 발전을 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">누리길 희망하는 마음을 담았다고 밝혔다.</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">  o </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">백승엽학생에게는 오는 9월 7일(금)에 과기정통부 장관상과 함께 소정의</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"> 상금이 수여될 예정이다. </span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">□ </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">과기정통부 거대공공연구정책관은 “명칭 공모전을 통해 우리국민의 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>우주에 대한 높은 관심을 확인</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">할 수 있었다”며 “새로운 이름에 걸맞게 무한한 가능성을 갖고 있는 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500"><strong>우주공간을 우리 발사체로 직접 개척할 수 있도록 최선을 다할 것</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500">” 이라고 밝혔다.</span></p>
+          <table class="ohah-hwpjs-table"><thead><tr><th><img src="images/BIN0004.jpg" alt="이미지" class="ohah-hwpjs-image" /></th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-900">이 자료에 대하여 더욱 자세한 내용을 원하시면</span></p> <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-900">과학기술정보통신부 용찬재 사무관(☎ 02-2110-2428)에게 연락주시기 바랍니다.</span></p></th></tr></thead><tbody></tbody></table>
+          <hr class="ohah-hwpjs-page-break" />
+          <table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-color-ffffff ohah-hwpjs-size-1600">붙임</span></p></th><th>&nbsp;</th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600"> 한국형발사체(누리호)와 시험발사체 비교</span></p></th></tr></thead><tbody></tbody></table>
+          <table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">구 분</span></p></th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">한국형발사체(누리호)</span></p></th><th><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">시험발사체</span></p></th></tr></thead><tbody><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">형 상</span></p></td><td><img src="images/BIN0002.bmp" alt="이미지" class="ohah-hwpjs-image" /></td><td><img src="images/BIN0003.bmp" alt="이미지" class="ohah-hwpjs-image" /></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">목 적</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1.5톤급 실용위성을</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">지구저궤도</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1100">(600~800km)</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">에 투입</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">한국형발사체 75톤급 엔진의 비행성능 검증</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">총 길이</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">47.2 m</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">25.8 m</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">최대 직경</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">3.5 m</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">2.6 m</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">이륙 중량</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">200 톤</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">52.1 톤</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">탑재체 중량</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1.5 톤</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">-</span></p></td></tr><tr><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500">단 수 </span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">3단</span></p></td><td><p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300">1단</span></p></td></tr></tbody></table>
+        </div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer"></div>
+      </div>
+    </section>
   </div>
 </body>
 </html>

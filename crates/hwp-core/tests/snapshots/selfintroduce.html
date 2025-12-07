@@ -40,6 +40,7 @@
         line-height: 1;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        background-color: #f5f5f5;
     }
 
     /* Typography reset */
@@ -300,7 +301,7 @@
 
     /* HWP Document Styles */
     .ohah-hwpjs-document {
-        max-width: 800px;
+        max-width: none;
         margin: 0 auto;
         padding: 20px 20px 20px 20px;
         font-family: "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", "맑은 고딕", "함초롬돋움", "함초롬바탕", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -390,6 +391,84 @@
         font-family: "함초롬바탕", sans-serif;
     }
 
+
+
+    /* Section and Page Styles */
+    .ohah-hwpjs-Section {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        margin-bottom: 40px;
+    }
+
+    .ohah-hwpjs-Paper {
+        width: 100%;
+        margin: 0 auto;
+        background-color: #fff;
+        position: relative;
+    }
+
+    .ohah-hwpjs-Page {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+    }
+
+    .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+    }
+
+
+    /* Section 0 Styles */
+    .ohah-hwpjs-Section-0 {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Paper {
+        width: 297.00mm;
+        min-height: 210.00mm;
+        margin: 0 auto 40px auto;
+        background-color: #fff;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Page {
+        width: 100%;
+        min-height: 210.00mm;
+        padding: 20.00mm 30.00mm 15.00mm 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        padding: 0 30.00mm 0 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+        height: 15.00mm;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+        height: 15.00mm;
+    }
 
 
     .ohah-hwpjs-header {
@@ -577,12 +656,12 @@
     }
 
                
-                   .ohah-hwpjs-size-1600 {
-        font-size: 16.00pt;
+                   .ohah-hwpjs-size-900 {
+        font-size: 9.00pt;
     }
 
-    .ohah-hwpjs-size-900 {
-        font-size: 9.00pt;
+    .ohah-hwpjs-size-1600 {
+        font-size: 16.00pt;
     }
 
 
@@ -603,16 +682,22 @@
     <p><strong>용지 크기</strong>: 8.27인치 x 11.69인치</p>
     <p><strong>용지 방향</strong>: Horizontal</p>
     <p><strong>여백</strong>: 좌 1.18인치 / 우 1.18인치 / 상 0.79인치 / 하 0.59인치</p>
-    <main class="ohah-hwpjs-main">
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">나를 소개 합니다</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">① </span><span class="ohah-hwpjs-size-1600">이름</span><span class="ohah-hwpjs-size-1600"> : </span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">혈액형</span><span class="ohah-hwpjs-size-1600"> : O형</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">성격</span><span class="ohah-hwpjs-size-1600"> : 자유로운 영혼</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">좌우명</span><span class="ohah-hwpjs-size-1600"> : A sound mind in a sound body.</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">소개하는 글</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">어린 시절은 변두리 작은 동네에서 꿈 많은 소녀로 자라났습니다. 할머니, 할아버지, 삼촌들까지 대가족 속에서 막내로 귀여움을 받으면서 살았습니다. 가족들은 저에게 </span><span class="ohah-hwpjs-size-1600"><span class="ohah-hwpjs-emphasis-1">微笑天使</span></span><span class="ohah-hwpjs-size-1600">라고 부르곤 했습니다. 가족들의 사랑 덕분에 잘 자라날 수 있었습니다.</span></p>
-<p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">현재 저는 사랑하는 아이들과 남편과 함께 </span><span class="ohah-hwpjs-size-1600"><span class="ohah-hwpjs-emphasis-1">행복</span></span><span class="ohah-hwpjs-size-1600">(幸福)한 삶을 살아가고 있습니다. 앞으로의 꿈은 아이들이 결혼하고 나면 남편과 시골에서 조그마한 텃밭을 가꾸면서 살아가는 것입니다. 그 꿈을 실현할 수 있기를 바랍니다. </span></p>
-    </main>
+    <section class="ohah-hwpjs-Section ohah-hwpjs-Section-0">
+      <div class="ohah-hwpjs-Paper">
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header"></div>
+        <div class="ohah-hwpjs-Page">
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">나를 소개 합니다</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">① </span><span class="ohah-hwpjs-size-1600">이름</span><span class="ohah-hwpjs-size-1600"> : </span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">혈액형</span><span class="ohah-hwpjs-size-1600"> : O형</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">성격</span><span class="ohah-hwpjs-size-1600"> : 자유로운 영혼</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">좌우명</span><span class="ohah-hwpjs-size-1600"> : A sound mind in a sound body.</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">소개하는 글</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">어린 시절은 변두리 작은 동네에서 꿈 많은 소녀로 자라났습니다. 할머니, 할아버지, 삼촌들까지 대가족 속에서 막내로 귀여움을 받으면서 살았습니다. 가족들은 저에게 </span><span class="ohah-hwpjs-size-1600"><span class="ohah-hwpjs-emphasis-1">微笑天使</span></span><span class="ohah-hwpjs-size-1600">라고 부르곤 했습니다. 가족들의 사랑 덕분에 잘 자라날 수 있었습니다.</span></p>
+          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1600">현재 저는 사랑하는 아이들과 남편과 함께 </span><span class="ohah-hwpjs-size-1600"><span class="ohah-hwpjs-emphasis-1">행복</span></span><span class="ohah-hwpjs-size-1600">(幸福)한 삶을 살아가고 있습니다. 앞으로의 꿈은 아이들이 결혼하고 나면 남편과 시골에서 조그마한 텃밭을 가꾸면서 살아가는 것입니다. 그 꿈을 실현할 수 있기를 바랍니다. </span></p>
+        </div>
+        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer"></div>
+      </div>
+    </section>
   </div>
 </body>
 </html>
