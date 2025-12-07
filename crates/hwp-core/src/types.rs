@@ -29,9 +29,19 @@ impl HWPUNIT {
         self.0 as f64 / 7200.0
     }
 
+    /// 밀리미터 단위로 변환
+    pub fn to_mm(self) -> f64 {
+        self.to_inches() * 25.4
+    }
+
     /// 인치 단위에서 생성
     pub fn from_inches(inches: f64) -> Self {
         Self((inches * 7200.0) as u32)
+    }
+
+    /// 밀리미터 단위에서 생성
+    pub fn from_mm(mm: f64) -> Self {
+        Self::from_inches(mm / 25.4)
     }
 
     /// 내부 값 반환
@@ -63,9 +73,19 @@ impl SHWPUNIT {
         self.0 as f64 / 7200.0
     }
 
+    /// 밀리미터 단위로 변환
+    pub fn to_mm(self) -> f64 {
+        self.to_inches() * 25.4
+    }
+
     /// 인치 단위에서 생성
     pub fn from_inches(inches: f64) -> Self {
         Self((inches * 7200.0) as i32)
+    }
+
+    /// 밀리미터 단위에서 생성
+    pub fn from_mm(mm: f64) -> Self {
+        Self::from_inches(mm / 25.4)
     }
 
     /// 내부 값 반환

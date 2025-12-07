@@ -129,10 +129,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
     html.push_str("</head>\n");
     html.push_str("<body>\n");
-    html.push_str(&format!(
-        "  <div class=\"{}\">\n",
-        format!("{}document", css_prefix)
-    ));
+    html.push_str(&format!("  <div class=\"{0}document\">\n", css_prefix));
 
     // 문서 제목 / Document title
     html.push_str("    <h1>HWP 문서</h1>\n");
@@ -175,43 +172,99 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         }
     }
 
-    // Convert body text to HTML using common logic / 공통 로직을 사용하여 본문 텍스트를 HTML로 변환
+    // 개요 번호 추적기 생성 (문서 전체에 걸쳐 유지) / Create outline number tracker (maintained across entire document)
+    use crate::viewer::html::utils::OutlineNumberTracker;
+    let mut outline_tracker = OutlineNumberTracker::new();
+
+    // 섹션별로 구조 생성 및 문단 렌더링 / Generate structure and render paragraphs for each section
+    for (section_idx, section) in document.body_text.sections.iter().enumerate() {
+        let _section_page_def = find_page_def_for_section(section);
+
+        // Section 시작 / Start Section
+        html.push_str(&format!(
+            "    <section class=\"{0}Section {0}Section-{1}\">\n",
+            css_prefix, section_idx
+        ));
+
+        // Paper 시작 / Start Paper
+        html.push_str(&format!("      <div class=\"{0}Paper\">\n", css_prefix));
+
+        // HeaderPageFooter (Header) / HeaderPageFooter (Header)
+        // TODO: 실제 헤더 내용을 섹션별로 찾아서 추가해야 함 / TODO: Need to find actual header content for each section
+        html.push_str(&format!(
+            "        <div class=\"{0}HeaderPageFooter {0}Header\"></div>\n",
+            css_prefix
+        ));
+
+        // Page 시작 / Start Page
+        html.push_str(&format!("        <div class=\"{0}Page\">\n", css_prefix));
+
+        // 각 섹션의 문단들을 렌더링 / Render paragraphs in each section
+        use crate::document::bodytext::ColumnDivideType;
+        use crate::viewer::html::document::bodytext::paragraph::convert_paragraph_to_html;
+
+        let mut is_first_paragraph_in_page = true;
+
+        for paragraph in &section.paragraphs {
+            // 페이지 나누기 확인 / Check for page break
+            let has_page_break = paragraph
+                .para_header
+                .column_divide_type
+                .iter()
+                .any(|t| matches!(t, ColumnDivideType::Page | ColumnDivideType::Section));
+
+            // 페이지 나누기가 있고 첫 문단이 아니면 페이지 구분선 추가 / Add page break line if page break exists and not first paragraph
+            if has_page_break && !is_first_paragraph_in_page {
+                html.push_str(&format!(
+                    "          <hr class=\"{0}page-break\" />\n",
+                    css_prefix
+                ));
+            }
+
+            // 문단 렌더링 (일반 본문 문단만) / Render paragraph (only regular body paragraphs)
+            // 머리말/꼬리말/각주/미주는 나중에 처리 / Headers/footers/footnotes/endnotes will be handled later
+            let control_mask = &paragraph.para_header.control_mask;
+            let has_header_footer = control_mask.has_header_footer();
+            let has_footnote_endnote = control_mask.has_footnote_endnote();
+
+            if !has_header_footer && !has_footnote_endnote {
+                // 일반 본문 문단 렌더링 / Render regular body paragraph
+                let para_html =
+                    convert_paragraph_to_html(paragraph, document, options, &mut outline_tracker);
+
+                if !para_html.is_empty() {
+                    html.push_str("          ");
+                    html.push_str(&para_html);
+                    html.push('\n');
+                    is_first_paragraph_in_page = false;
+                }
+            }
+        }
+
+        // Page 끝 / End Page
+        html.push_str("        </div>\n");
+
+        // HeaderPageFooter (Footer) / HeaderPageFooter (Footer)
+        // TODO: 실제 푸터 내용을 섹션별로 찾아서 추가해야 함 / TODO: Need to find actual footer content for each section
+        html.push_str(&format!(
+            "        <div class=\"{0}HeaderPageFooter {0}Footer\"></div>\n",
+            css_prefix
+        ));
+
+        // Paper 끝 / End Paper
+        html.push_str("      </div>\n");
+
+        // Section 끝 / End Section
+        html.push_str("    </section>\n");
+    }
+
+    // 각주와 미주는 섹션 외부에 추가 / Add footnotes and endnotes outside sections
+    // TODO: 각주/미주를 섹션별로 찾아서 추가해야 함 / TODO: Need to find footnotes/endnotes per section
+    // 현재는 process_bodytext에서 수집한 전체 각주/미주를 사용 / Currently uses all footnotes/endnotes collected by process_bodytext
     use crate::viewer::core::bodytext::process_bodytext;
     use crate::viewer::html::renderer::HtmlRenderer;
     let renderer = HtmlRenderer;
     let parts = process_bodytext(document, &renderer, options);
-
-    // 머리말, 본문, 꼬리말, 각주, 미주 순서로 결합 / Combine in order: headers, body, footers, footnotes, endnotes
-    if !parts.headers.is_empty() {
-        html.push_str("    <header class=\"");
-        html.push_str(css_prefix);
-        html.push_str("header\">\n");
-        for header in &parts.headers {
-            html.push_str(header);
-            html.push('\n');
-        }
-        html.push_str("    </header>\n");
-    }
-
-    html.push_str("    <main class=\"");
-    html.push_str(css_prefix);
-    html.push_str("main\">\n");
-    for body_line in &parts.body_lines {
-        html.push_str(body_line);
-        html.push('\n');
-    }
-    html.push_str("    </main>\n");
-
-    if !parts.footers.is_empty() {
-        html.push_str("    <footer class=\"");
-        html.push_str(css_prefix);
-        html.push_str("footer\">\n");
-        for footer in &parts.footers {
-            html.push_str(footer);
-            html.push('\n');
-        }
-        html.push_str("    </footer>\n");
-    }
 
     if !parts.footnotes.is_empty() {
         html.push_str("    <section class=\"");
@@ -386,6 +439,53 @@ fn find_page_def_recursive(document: &HwpDocument) -> Option<&crate::document::b
     None
 }
 
+/// 섹션별로 페이지 정의 찾기 / Find page definition for each section
+fn find_page_def_for_section(
+    section: &crate::document::bodytext::Section,
+) -> Option<&crate::document::bodytext::PageDef> {
+    use crate::document::ParagraphRecord;
+
+    // 재귀적으로 레코드를 검색하는 내부 함수 / Internal function to recursively search records
+    fn search_in_records(
+        records: &[ParagraphRecord],
+    ) -> Option<&crate::document::bodytext::PageDef> {
+        for record in records {
+            match record {
+                ParagraphRecord::PageDef { page_def } => {
+                    return Some(page_def);
+                }
+                ParagraphRecord::CtrlHeader {
+                    children,
+                    paragraphs,
+                    ..
+                } => {
+                    // CtrlHeader의 children도 검색 / Search CtrlHeader's children
+                    if let Some(page_def) = search_in_records(children) {
+                        return Some(page_def);
+                    }
+                    // CtrlHeader의 paragraphs도 검색 / Search CtrlHeader's paragraphs
+                    for paragraph in paragraphs {
+                        if let Some(page_def) = search_in_records(&paragraph.records) {
+                            return Some(page_def);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    // 섹션의 문단들을 검색 / Search paragraphs in section
+    for paragraph in &section.paragraphs {
+        if let Some(page_def) = search_in_records(&paragraph.records) {
+            return Some(page_def);
+        }
+    }
+
+    None
+}
+
 /// Generate CSS styles
 /// CSS 스타일 생성
 fn generate_css_styles(
@@ -404,7 +504,7 @@ fn generate_css_styles(
     for (idx, face_name) in document.doc_info.face_names.iter().enumerate() {
         // 폰트 이름을 CSS-safe하게 변환 / Convert font name to CSS-safe
         let font_name = face_name.name.replace('"', "'");
-        let css_font_name = format!("hwp-font-{}", idx);
+        let _css_font_name = format!("hwp-font-{}", idx);
 
         // @font-face는 실제 폰트 파일이 필요하므로, font-family만 생성
         // @font-face requires actual font files, so only generate font-family
@@ -473,34 +573,90 @@ fn generate_css_styles(
         ));
     }
 
-    // 페이지 크기 및 여백 계산 / Calculate page size and margins
-    // TODO: 레이아웃 깨짐 문제로 인해 일단 주석 처리 / Temporarily commented out due to layout issues
-    // let (max_width_px, padding_left_px, padding_right_px, padding_top_px, padding_bottom_px) =
-    //     if let Some(page_def) = page_def_opt {
-    //         // HWP는 72 DPI를 기준으로 함 / HWP uses 72 DPI as standard
-    //         // 1 inch = 72px (HWP 표준) / 1 inch = 72px (HWP standard)
-    //         let paper_width_px = page_def.paper_width.to_inches() * 72.0;
-    //         let left_margin_px = page_def.left_margin.to_inches() * 72.0;
-    //         let right_margin_px = page_def.right_margin.to_inches() * 72.0;
-    //         let top_margin_px = page_def.top_margin.to_inches() * 72.0;
-    //         let bottom_margin_px = page_def.bottom_margin.to_inches() * 72.0;
-    //
-    //         // max-width는 용지 전체 너비로 설정하고, 여백은 padding으로 처리
-    //         // max-width is set to full paper width, margins are handled as padding
-    //         (
-    //             paper_width_px,
-    //             left_margin_px,
-    //             right_margin_px,
-    //             top_margin_px,
-    //             bottom_margin_px,
-    //         )
-    //     } else {
-    //         // 기본값 / Default values
-    //         (800.0, 20.0, 20.0, 20.0, 20.0)
-    //     };
+    // 섹션별 CSS 생성 / Generate CSS for each section
+    let mut section_css = String::new();
+    for (section_idx, section) in document.body_text.sections.iter().enumerate() {
+        if let Some(page_def) = find_page_def_for_section(section) {
+            // mm 단위로 변환 / Convert to mm
+            // 용지 방향에 따라 width와 height 결정 / Determine width and height based on paper direction
+            use crate::document::bodytext::PaperDirection;
+            let (paper_width_mm, paper_height_mm) = match page_def.attributes.paper_direction {
+                PaperDirection::Vertical => {
+                    // 세로 방향: width < height / Vertical: width < height
+                    (page_def.paper_width.to_mm(), page_def.paper_height.to_mm())
+                }
+                PaperDirection::Horizontal => {
+                    // 가로 방향: width와 height를 바꿈 / Horizontal: swap width and height
+                    (page_def.paper_height.to_mm(), page_def.paper_width.to_mm())
+                }
+            };
+            let left_margin_mm = page_def.left_margin.to_mm();
+            let right_margin_mm = page_def.right_margin.to_mm();
+            let top_margin_mm = page_def.top_margin.to_mm();
+            let bottom_margin_mm = page_def.bottom_margin.to_mm();
+            let header_margin_mm = page_def.header_margin.to_mm();
+            let footer_margin_mm = page_def.footer_margin.to_mm();
+
+            section_css.push_str(&format!(
+                r#"
+    /* Section {0} Styles */
+    .{1}Section-{0} {{
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }}
+
+    .{1}Section-{0} .{1}Paper {{
+        width: {2:.2}mm;
+        min-height: {3:.2}mm;
+        margin: 0 auto 40px auto;
+        background-color: #fff;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }}
+
+    .{1}Section-{0} .{1}Page {{
+        width: 100%;
+        min-height: {3:.2}mm;
+        padding: {6:.2}mm {4:.2}mm {7:.2}mm {5:.2}mm;
+        box-sizing: border-box;
+    }}
+
+    .{1}Section-{0} .{1}HeaderPageFooter {{
+        width: 100%;
+        position: absolute;
+        left: 0;
+        padding: 0 {4:.2}mm 0 {5:.2}mm;
+        box-sizing: border-box;
+    }}
+
+    .{1}Section-{0} .{1}HeaderPageFooter.{1}Header {{
+        top: 0;
+        height: {8:.2}mm;
+    }}
+
+    .{1}Section-{0} .{1}HeaderPageFooter.{1}Footer {{
+        bottom: 0;
+        height: {9:.2}mm;
+    }}
+"#,
+                section_idx,
+                css_prefix,
+                paper_width_mm,
+                paper_height_mm,
+                right_margin_mm,
+                left_margin_mm,
+                top_margin_mm,
+                bottom_margin_mm,
+                header_margin_mm,
+                footer_margin_mm,
+            ));
+        }
+    }
 
     // 기본값 사용 / Use default values
-    let max_width_px = 800.0;
+    // max-width는 제거하여 섹션의 Paper 크기에 맞게 자동 조정 / Remove max-width to auto-adjust to section Paper size
+    let max_width_px = "none";
     let padding_left_px = 20.0;
     let padding_right_px = 20.0;
     let padding_top_px = 20.0;
@@ -542,6 +698,7 @@ fn generate_css_styles(
         line-height: 1;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        background-color: #f5f5f5;
     }}
 
     /* Typography reset */
@@ -802,13 +959,50 @@ fn generate_css_styles(
 
     /* HWP Document Styles */
     .{0}document {{
-        max-width: {3}px;
+        max-width: {3};
         margin: 0 auto;
         padding: {4}px {5}px {6}px {7}px;
         font-family: {1}-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         line-height: 1.6;
     }}
 {2}
+
+    /* Section and Page Styles */
+    .{0}Section {{
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        margin-bottom: 40px;
+    }}
+
+    .{0}Paper {{
+        width: 100%;
+        margin: 0 auto;
+        background-color: #fff;
+        position: relative;
+    }}
+
+    .{0}Page {{
+        width: 100%;
+        box-sizing: border-box;
+    }}
+
+    .{0}HeaderPageFooter {{
+        width: 100%;
+        position: absolute;
+        left: 0;
+        box-sizing: border-box;
+    }}
+
+    .{0}HeaderPageFooter.{0}Header {{
+        top: 0;
+    }}
+
+    .{0}HeaderPageFooter.{0}Footer {{
+        bottom: 0;
+    }}
+
+{14}
 
     .{0}header {{
         margin-bottom: 20px;
@@ -1014,6 +1208,7 @@ fn generate_css_styles(
         border_color_css,
         background_color_css,
         border_style_css,
-        border_width_css
+        border_width_css,
+        section_css
     )
 }
