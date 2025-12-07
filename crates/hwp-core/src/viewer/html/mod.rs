@@ -190,11 +190,23 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         html.push_str(&format!("      <div class=\"{0}Paper\">\n", css_prefix));
 
         // HeaderPageFooter (Header) / HeaderPageFooter (Header)
-        // TODO: 실제 헤더 내용을 섹션별로 찾아서 추가해야 함 / TODO: Need to find actual header content for each section
+        // 섹션별로 머리말 찾아서 렌더링 / Find and render header for each section
+        let header_html =
+            render_header_for_section(section, document, options, &mut outline_tracker);
         html.push_str(&format!(
-            "        <div class=\"{0}HeaderPageFooter {0}Header\"></div>\n",
+            "        <div class=\"{0}HeaderPageFooter {0}Header\">\n",
             css_prefix
         ));
+        if !header_html.is_empty() {
+            // 들여쓰기 추가 / Add indentation
+            let indented_header: String = header_html
+                .lines()
+                .filter(|line| !line.is_empty())
+                .map(|line| format!("          {}\n", line))
+                .collect();
+            html.push_str(&indented_header);
+        }
+        html.push_str("        </div>\n");
 
         // Page 시작 / Start Page
         html.push_str(&format!("        <div class=\"{0}Page\">\n", css_prefix));
@@ -245,11 +257,23 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         html.push_str("        </div>\n");
 
         // HeaderPageFooter (Footer) / HeaderPageFooter (Footer)
-        // TODO: 실제 푸터 내용을 섹션별로 찾아서 추가해야 함 / TODO: Need to find actual footer content for each section
+        // 섹션별로 꼬리말 찾아서 렌더링 / Find and render footer for each section
+        let footer_html =
+            render_footer_for_section(section, document, options, &mut outline_tracker);
         html.push_str(&format!(
-            "        <div class=\"{0}HeaderPageFooter {0}Footer\"></div>\n",
+            "        <div class=\"{0}HeaderPageFooter {0}Footer\">\n",
             css_prefix
         ));
+        if !footer_html.is_empty() {
+            // 들여쓰기 추가 / Add indentation
+            let indented_footer: String = footer_html
+                .lines()
+                .filter(|line| !line.is_empty())
+                .map(|line| format!("          {}\n", line))
+                .collect();
+            html.push_str(&indented_footer);
+        }
+        html.push_str("        </div>\n");
 
         // Paper 끝 / End Paper
         html.push_str("      </div>\n");
@@ -484,6 +508,128 @@ fn find_page_def_for_section(
     }
 
     None
+}
+
+/// 섹션에서 머리말 찾아서 HTML로 렌더링 / Find and render header from section as HTML
+fn render_header_for_section(
+    section: &crate::document::bodytext::Section,
+    document: &HwpDocument,
+    options: &HtmlOptions,
+    tracker: &mut crate::viewer::html::utils::OutlineNumberTracker,
+) -> String {
+    use crate::document::{CtrlId, ParagraphRecord};
+    use crate::viewer::html::document::bodytext::paragraph::convert_paragraph_to_html;
+
+    let mut header_html = String::new();
+
+    for paragraph in &section.paragraphs {
+        let control_mask = &paragraph.para_header.control_mask;
+        if control_mask.has_header_footer() {
+            for record in &paragraph.records {
+                if let ParagraphRecord::CtrlHeader {
+                    header,
+                    children,
+                    paragraphs: ctrl_paragraphs,
+                } = record
+                {
+                    if header.ctrl_id.as_str() == CtrlId::HEADER {
+                        // 머리말 문단 처리 / Process header paragraph
+                        // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
+                        // If LIST_HEADER exists, process from children, otherwise from paragraphs
+                        let mut found_list_header = false;
+                        for child_record in children {
+                            if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record {
+                                found_list_header = true;
+                                // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
+                                for para in paragraphs {
+                                    let para_html =
+                                        convert_paragraph_to_html(para, document, options, tracker);
+                                    if !para_html.is_empty() {
+                                        header_html.push_str(&para_html);
+                                        header_html.push('\n');
+                                    }
+                                }
+                            }
+                        }
+                        // LIST_HEADER가 없으면 paragraphs 처리 / If no LIST_HEADER, process paragraphs
+                        if !found_list_header {
+                            for para in ctrl_paragraphs {
+                                let para_html =
+                                    convert_paragraph_to_html(para, document, options, tracker);
+                                if !para_html.is_empty() {
+                                    header_html.push_str(&para_html);
+                                    header_html.push('\n');
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    header_html
+}
+
+/// 섹션에서 꼬리말 찾아서 HTML로 렌더링 / Find and render footer from section as HTML
+fn render_footer_for_section(
+    section: &crate::document::bodytext::Section,
+    document: &HwpDocument,
+    options: &HtmlOptions,
+    tracker: &mut crate::viewer::html::utils::OutlineNumberTracker,
+) -> String {
+    use crate::document::{CtrlId, ParagraphRecord};
+    use crate::viewer::html::document::bodytext::paragraph::convert_paragraph_to_html;
+
+    let mut footer_html = String::new();
+
+    for paragraph in &section.paragraphs {
+        let control_mask = &paragraph.para_header.control_mask;
+        if control_mask.has_header_footer() {
+            for record in &paragraph.records {
+                if let ParagraphRecord::CtrlHeader {
+                    header,
+                    children,
+                    paragraphs: ctrl_paragraphs,
+                } = record
+                {
+                    if header.ctrl_id.as_str() == CtrlId::FOOTER {
+                        // 꼬리말 문단 처리 / Process footer paragraph
+                        // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
+                        // If LIST_HEADER exists, process from children, otherwise from paragraphs
+                        let mut found_list_header = false;
+                        for child_record in children {
+                            if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record {
+                                found_list_header = true;
+                                // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
+                                for para in paragraphs {
+                                    let para_html =
+                                        convert_paragraph_to_html(para, document, options, tracker);
+                                    if !para_html.is_empty() {
+                                        footer_html.push_str(&para_html);
+                                        footer_html.push('\n');
+                                    }
+                                }
+                            }
+                        }
+                        // LIST_HEADER가 없으면 paragraphs 처리 / If no LIST_HEADER, process paragraphs
+                        if !found_list_header {
+                            for para in ctrl_paragraphs {
+                                let para_html =
+                                    convert_paragraph_to_html(para, document, options, tracker);
+                                if !para_html.is_empty() {
+                                    footer_html.push_str(&para_html);
+                                    footer_html.push('\n');
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    footer_html
 }
 
 /// Generate CSS styles
