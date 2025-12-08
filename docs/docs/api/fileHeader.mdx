@@ -51,11 +51,16 @@ HWP 파일의 FileHeader만 추출하여 JSON 형식으로 반환하는 함수�
       // 파일을 base64로 읽기
       const fileData = await RNFS.readFile(filePath, 'base64');
 
-      // base64를 number[]로 변환
-      const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+      // base64를 ArrayBuffer로 변환
+      const binaryString = atob(fileData);
+      const length = binaryString.length;
+      const bytes = new Uint8Array(length);
+      for (let i = 0; i < length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
 
-      // FileHeader 추출
-      const result = Hwpjs.fileHeader(numberArray);
+      // FileHeader 추출 (ArrayBuffer 직접 사용)
+      const result = Hwpjs.fileHeader(bytes.buffer);
       const header = JSON.parse(result);
 
       console.log('버전:', header.version);

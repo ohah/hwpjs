@@ -47,11 +47,16 @@ HWP 파일을 JSON 형식으로 변환하는 함수입니다.
       // 파일을 base64로 읽기
       const fileData = await RNFS.readFile(filePath, 'base64');
 
-      // base64를 number[]로 변환
-      const numberArray = [...Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))];
+      // base64를 ArrayBuffer로 변환
+      const binaryString = atob(fileData);
+      const length = binaryString.length;
+      const bytes = new Uint8Array(length);
+      for (let i = 0; i < length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
 
-      // HWP 파일 파싱
-      const result = Hwpjs.toJson(numberArray);
+      // HWP 파일 파싱 (ArrayBuffer 직접 사용)
+      const result = Hwpjs.toJson(bytes.buffer);
       console.log(result);
     } catch (error) {
       console.error('변환 실패:', error);
