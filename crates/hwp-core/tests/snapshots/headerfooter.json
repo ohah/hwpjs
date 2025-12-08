@@ -1552,7 +1552,6 @@
                     "column_start_position": 0,
                     "segment_width": 42520,
                     "tag": {
-                      "raw_value": 393216,
                       "is_first_line_of_page": false,
                       "is_first_line_of_column": false,
                       "is_empty_segment": false,
@@ -1560,9 +1559,7 @@
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
                       "has_indentation": false,
-                      "has_paragraph_header_shape": false,
-                      "has_implementation_property": false,
-                      "reserved_bits": 0
+                      "has_paragraph_header_shape": false
                     }
                   }
                 ]
@@ -1788,7 +1785,6 @@
                     "column_start_position": 0,
                     "segment_width": 42520,
                     "tag": {
-                      "raw_value": 393216,
                       "is_first_line_of_page": false,
                       "is_first_line_of_column": false,
                       "is_empty_segment": false,
@@ -1796,9 +1792,7 @@
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
                       "has_indentation": false,
-                      "has_paragraph_header_shape": false,
-                      "has_implementation_property": false,
-                      "reserved_bits": 0
+                      "has_paragraph_header_shape": false
                     }
                   }
                 ]
@@ -1884,7 +1878,6 @@
                                 "column_start_position": 0,
                                 "segment_width": 42520,
                                 "tag": {
-                                  "raw_value": 393216,
                                   "is_first_line_of_page": false,
                                   "is_first_line_of_column": false,
                                   "is_empty_segment": false,
@@ -1892,9 +1885,7 @@
                                   "is_last_segment_of_line": true,
                                   "has_auto_hyphenation": false,
                                   "has_indentation": false,
-                                  "has_paragraph_header_shape": false,
-                                  "has_implementation_property": false,
-                                  "reserved_bits": 0
+                                  "has_paragraph_header_shape": false
                                 }
                               }
                             ]
@@ -1985,7 +1976,6 @@
                                 "column_start_position": 0,
                                 "segment_width": 42520,
                                 "tag": {
-                                  "raw_value": 393216,
                                   "is_first_line_of_page": false,
                                   "is_first_line_of_column": false,
                                   "is_empty_segment": false,
@@ -1993,9 +1983,7 @@
                                   "is_last_segment_of_line": true,
                                   "has_auto_hyphenation": false,
                                   "has_indentation": false,
-                                  "has_paragraph_header_shape": false,
-                                  "has_implementation_property": false,
-                                  "reserved_bits": 0
+                                  "has_paragraph_header_shape": false
                                 }
                               }
                             ]
