@@ -239,27 +239,18 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     // 페이지별로 렌더링 / Render by page
     let mut page_number = 1;
     let mut page_content = String::new();
-    
+
     // 페이지 높이 계산 (mm 단위) / Calculate page height (in mm)
-    let page_height_mm = page_def
-        .map(|pd| pd.paper_height.to_mm())
-        .unwrap_or(297.0);
-    let top_margin_mm = page_def
-        .map(|pd| pd.top_margin.to_mm())
-        .unwrap_or(24.99);
-    let bottom_margin_mm = page_def
-        .map(|pd| pd.bottom_margin.to_mm())
-        .unwrap_or(10.0);
-    let header_margin_mm = page_def
-        .map(|pd| pd.header_margin.to_mm())
-        .unwrap_or(0.0);
-    let footer_margin_mm = page_def
-        .map(|pd| pd.footer_margin.to_mm())
-        .unwrap_or(0.0);
-    
+    let page_height_mm = page_def.map(|pd| pd.paper_height.to_mm()).unwrap_or(297.0);
+    let top_margin_mm = page_def.map(|pd| pd.top_margin.to_mm()).unwrap_or(24.99);
+    let bottom_margin_mm = page_def.map(|pd| pd.bottom_margin.to_mm()).unwrap_or(10.0);
+    let header_margin_mm = page_def.map(|pd| pd.header_margin.to_mm()).unwrap_or(0.0);
+    let footer_margin_mm = page_def.map(|pd| pd.footer_margin.to_mm()).unwrap_or(0.0);
+
     // 실제 콘텐츠 영역 높이 / Actual content area height
-    let content_height_mm = page_height_mm - top_margin_mm - bottom_margin_mm - header_margin_mm - footer_margin_mm;
-    
+    let content_height_mm =
+        page_height_mm - top_margin_mm - bottom_margin_mm - header_margin_mm - footer_margin_mm;
+
     // 현재 페이지의 최대 vertical_position (mm 단위) / Maximum vertical_position of current page (in mm)
     let mut current_max_vertical_mm = 0.0;
     // 이전 문단의 마지막 vertical_position (mm 단위) / Last vertical_position of previous paragraph (in mm)
@@ -289,7 +280,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         // vertical_position을 mm로 변환 / Convert vertical_position to mm
                         // HWPUNIT은 1/7200 inch, INT32는 1/7200 inch 단위
                         // 1 inch = 25.4 mm, 따라서 1 HWPUNIT = 25.4 / 7200 mm
-                        first_vertical_mm = Some(first_segment.vertical_position as f64 * 25.4 / 7200.0);
+                        first_vertical_mm =
+                            Some(first_segment.vertical_position as f64 * 25.4 / 7200.0);
                     }
                     break;
                 }
@@ -299,16 +291,17 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             // hwpjs.js: if(data.paragraph.start_line === 0 || preline > parseInt(data.paragraph.start_line))
             // 레거시 라이브러리들은 is_first_line_of_page 플래그를 사용하지 않고 vertical_position으로만 판단합니다
             // Legacy libraries don't use is_first_line_of_page flag, they only use vertical_position
-            let vertical_reset = if let (Some(prev), Some(current)) = (prev_vertical_mm, first_vertical_mm) {
-                // vertical_position이 0이거나 이전보다 작아지면 새 페이지 / New page if vertical_position is 0 or smaller than previous
-                // hwpjs.js와 동일한 로직: start_line === 0 || preline > start_line
-                current < 0.1 || (prev > 0.1 && current < prev - 0.1) // 0.1mm 미만이거나 이전보다 0.1mm 이상 작아지면 새 페이지 / New page if less than 0.1mm or 0.1mm smaller than previous
-            } else if let Some(current) = first_vertical_mm {
-                // 첫 번째 문단이 아니고 vertical_position이 0이면 새 페이지 / New page if not first paragraph and vertical_position is 0
-                current < 0.1 && prev_vertical_mm.is_some()
-            } else {
-                false
-            };
+            let vertical_reset =
+                if let (Some(prev), Some(current)) = (prev_vertical_mm, first_vertical_mm) {
+                    // vertical_position이 0이거나 이전보다 작아지면 새 페이지 / New page if vertical_position is 0 or smaller than previous
+                    // hwpjs.js와 동일한 로직: start_line === 0 || preline > start_line
+                    current < 0.1 || (prev > 0.1 && current < prev - 0.1) // 0.1mm 미만이거나 이전보다 0.1mm 이상 작아지면 새 페이지 / New page if less than 0.1mm or 0.1mm smaller than previous
+                } else if let Some(current) = first_vertical_mm {
+                    // 첫 번째 문단이 아니고 vertical_position이 0이면 새 페이지 / New page if not first paragraph and vertical_position is 0
+                    current < 0.1 && prev_vertical_mm.is_some()
+                } else {
+                    false
+                };
 
             // 4. vertical_position이 페이지 높이를 초과하면 새 페이지 (ruby-hwp 방식) / New page if vertical_position exceeds page height (ruby-hwp method)
             let vertical_overflow = if let Some(current_vertical) = first_vertical_mm {
@@ -326,9 +319,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             // Priority: column_divide_type > vertical_reset > vertical_overflow
             // is_first_line_of_page는 실제로 true가 되는 경우가 거의 없으므로 제외
             // is_first_line_of_page is excluded because it's rarely true in practice
-            let has_page_break = has_page_break_from_para 
-                || vertical_reset
-                || vertical_overflow;
+            let has_page_break = has_page_break_from_para || vertical_reset || vertical_overflow;
 
             // 페이지 나누기가 있고 페이지 내용이 있으면 페이지 출력 (문단 렌더링 전) / Output page if page break and page content exists (before rendering paragraph)
             if has_page_break && !page_content.is_empty() {
@@ -347,7 +338,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 let para_html = render_paragraph(paragraph, document, options);
                 if !para_html.is_empty() {
                     page_content.push_str(&para_html);
-                    
+
                     // vertical_position 업데이트 (문단의 모든 LineSegment 확인) / Update vertical_position (check all LineSegments in paragraph)
                     for record in &paragraph.records {
                         if let ParagraphRecord::ParaLineSeg { segments } = record {

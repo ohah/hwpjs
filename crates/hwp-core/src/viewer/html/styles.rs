@@ -22,7 +22,9 @@ impl StyleInfo {
             for paragraph in &section.paragraphs {
                 // ParaShape 수집 / Collect ParaShape
                 let para_shape_id = paragraph.para_header.para_shape_id;
-                if para_shape_id > 0 && para_shape_id as usize <= document.doc_info.para_shapes.len() {
+                if para_shape_id > 0
+                    && para_shape_id as usize <= document.doc_info.para_shapes.len()
+                {
                     para_shapes.insert((para_shape_id - 1) as usize);
                 }
 
@@ -63,7 +65,9 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
     let mut css = String::new();
 
     // 기본 스타일 (noori_style.css 기반) / Base styles (based on noori_style.css)
-    css.push_str("body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}\n");
+    css.push_str(
+        "body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}\n",
+    );
     css.push_str(".hce {margin:0;padding:0;position:absolute;overflow:hidden;}\n");
     css.push_str(".hme {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hhe {margin:0;padding:0;position:relative;}\n");
@@ -77,7 +81,9 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
     css.push_str(".hmB {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hmO {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hmT {margin:0;padding:0;position:absolute;}\n");
-    css.push_str(".hpN {display:inline-block;margin:0;padding:0;position:relative;white-space:nowrap;}\n");
+    css.push_str(
+        ".hpN {display:inline-block;margin:0;padding:0;position:relative;white-space:nowrap;}\n",
+    );
     css.push_str(".htC {display:inline-block;margin:0;padding:0;position:relative;vertical-align:top;overflow:hidden;}\n");
     css.push_str(".haN {display:inline-block;margin:0;padding:0;position:relative;}\n");
     css.push_str(".hdu {margin:0;padding:0;position:relative;}\n");
@@ -116,7 +122,9 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
     css.push_str(".hpa {position:relative;padding:0;overflow:hidden;margin-left:2mm;margin-right:0mm;margin-bottom:2mm;margin-top:0mm;border:1px black solid;box-shadow:1mm 1mm 0 #AAAAAA;}\n");
     css.push_str(".hpa::after {content:'';position:absolute;margin:0;padding:0;left:0;right:0;top:0;bottom:0;background-color:white;z-index:-2;}\n");
     css.push_str(".hrt {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;vertical-align:middle;line-height:1.1;}\n");
-    css.push_str(".hco {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;}\n");
+    css.push_str(
+        ".hco {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;}\n",
+    );
     css.push_str(".hcc {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hls {clear:both;}\n");
     css.push_str("[onclick] {cursor:pointer;}\n");
@@ -128,11 +136,11 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
         if let Some(char_shape) = document.doc_info.char_shapes.get(idx) {
             let class_name = format!("cs{}", idx);
             css.push_str(&format!(".{} {{\n", class_name));
-            
+
             // 폰트 크기 / Font size
             let size_pt = char_shape.base_size as f64 / 100.0;
             css.push_str(&format!("  font-size:{}pt;", size_pt));
-            
+
             // 텍스트 색상 / Text color
             let color = &char_shape.text_color;
             css.push_str(&format!(
@@ -141,11 +149,11 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
                 color.g(),
                 color.b()
             ));
-            
+
             // 폰트 패밀리 (간단히 처리) / Font family (simplified)
             // TODO: 실제 폰트 ID를 폰트 이름으로 매핑
             css.push_str("font-family:\"함초롬바탕\";");
-            
+
             // 속성 / Attributes
             if char_shape.attributes.bold {
                 css.push_str("font-weight:bold;");
@@ -153,7 +161,7 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
             if char_shape.attributes.italic {
                 css.push_str("font-style:italic;");
             }
-            
+
             css.push_str("\n}\n");
         }
     }
@@ -165,7 +173,7 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
         if let Some(para_shape) = document.doc_info.para_shapes.get(idx) {
             let class_name = format!("ps{}", idx);
             css.push_str(&format!(".{} {{\n", class_name));
-            
+
             // 정렬 / Alignment
             match para_shape.attributes1.align {
                 crate::document::docinfo::para_shape::ParagraphAlignment::Left => {
@@ -184,7 +192,7 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
                     css.push_str("  text-align:justify;");
                 }
             }
-            
+
             css.push_str("\n}\n");
         }
     }
@@ -208,4 +216,3 @@ pub fn int32_to_mm(value: INT32) -> f64 {
 pub fn colorref_to_rgb(color: COLORREF) -> String {
     format!("rgb({},{},{})", color.r(), color.g(), color.b())
 }
-

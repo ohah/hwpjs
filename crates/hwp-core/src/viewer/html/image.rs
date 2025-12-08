@@ -43,4 +43,3 @@ pub fn render_image_with_style(
         top_mm, left_mm, margin_bottom_mm, margin_right_mm, width_mm, height_mm, image_url
     )
 }
-
