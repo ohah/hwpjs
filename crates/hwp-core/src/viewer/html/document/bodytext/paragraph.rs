@@ -39,6 +39,7 @@ pub fn convert_paragraph_to_html_with_indices(
 
     let mut parts = Vec::new();
     let mut text_parts = Vec::new(); // 같은 문단 내의 텍스트 레코드들을 모음 / Collect text records in the same paragraph
+    let mut has_para_text = false; // ParaText 레코드가 있는지 추적 / Track if ParaText record exists
     let mut char_shapes: Vec<CharShapeInfo> = Vec::new(); // 문단의 글자 모양 정보 수집 / Collect character shape information for paragraph
     let mut line_segments: Option<&[crate::document::bodytext::LineSegmentInfo]> = None; // ParaLineSeg 세그먼트 정보 / ParaLineSeg segment information
 
@@ -65,6 +66,8 @@ pub fn convert_paragraph_to_html_with_indices(
                 control_char_positions,
                 inline_control_params: _,
             } => {
+                // ParaText 레코드가 있음을 표시 / Mark that ParaText record exists
+                has_para_text = true;
                 // ParaText 변환 / Convert ParaText
                 if let Some(text_html) =
                     crate::viewer::html::document::bodytext::para_text::convert_para_text_to_html(
@@ -257,8 +260,16 @@ pub fn convert_paragraph_to_html_with_indices(
     }
 
     // 같은 문단 내의 텍스트를 합침 / Combine text in the same paragraph
-    if !text_parts.is_empty() {
-        let combined_text = text_parts.join("");
+    // ParaText 레코드가 있거나 (ParaCharShape/ParaLineSeg가 있고 다른 컨텐츠가 없는 경우) 텍스트가 비어있어도 문단을 생성
+    // Create paragraph even if text is empty when ParaText record exists or (ParaCharShape/ParaLineSeg exists and no other content)
+    let has_text_content =
+        has_para_text || (parts.is_empty() && (!char_shapes.is_empty() || line_segments.is_some()));
+    if has_text_content {
+        let combined_text = if !text_parts.is_empty() {
+            text_parts.join("")
+        } else {
+            String::new() // 빈 텍스트 / Empty text
+        };
         // 개요 레벨 확인 및 개요 번호 추가 / Check outline level and add outline number
         let outline_html = convert_to_outline_with_number(
             &combined_text,
@@ -271,6 +282,35 @@ pub fn convert_paragraph_to_html_with_indices(
         // 문단을 <p> 태그로 감싸기 / Wrap paragraph in <p> tag
         let css_prefix = &options.css_class_prefix;
 
+        // ParaStyle 클래스 추가 (가장 먼저) / Add ParaStyle class (first)
+        let para_style_id = paragraph.para_header.para_style_id as usize;
+        let para_style_class = if para_style_id < document.doc_info.styles.len() {
+            // para_style_id는 0-based 인덱스 / para_style_id is 0-based index
+            if let Some(style) = document.doc_info.styles.get(para_style_id) {
+                // 문단 스타일만 처리 / Only process paragraph styles
+                use crate::document::docinfo::style::StyleType;
+                if style.style_type == StyleType::Paragraph {
+                    // 영문 이름을 CSS-safe하게 변환 (소문자, 공백을 하이픈으로) / Convert English name to CSS-safe (lowercase, space to hyphen)
+                    let style_name = style
+                        .english_name
+                        .to_lowercase()
+                        .replace(' ', "-")
+                        .replace(|c: char| !c.is_alphanumeric() && c != '-', "");
+                    if !style_name.is_empty() {
+                        format!("{}style-{}", css_prefix, style_name)
+                    } else {
+                        String::new()
+                    }
+                } else {
+                    String::new()
+                }
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        };
+
         // ParaShape 클래스 추가 / Add ParaShape class
         let para_shape_id = paragraph.para_header.para_shape_id as usize;
         let para_shape_class = if para_shape_id < document.doc_info.para_shapes.len() {
@@ -279,13 +319,19 @@ pub fn convert_paragraph_to_html_with_indices(
             String::new()
         };
 
-        if outline_html.contains(&format!("class=\"{}\"", format!("{}outline", css_prefix))) {
+        let outline_class = format!("{}outline", css_prefix);
+        if outline_html.contains(&format!("class=\"{}\"", outline_class)) {
             // 개요 번호가 있는 경우 / If outline number exists
             // 개요는 이미 span으로 감싸져 있으므로 p 태그로 감싸지 않음 / Outline is already wrapped in span, so don't wrap in p tag
             parts.push(outline_html);
         } else {
             // 일반 문단 / Regular paragraph
-            let mut paragraph_classes = vec![format!("{}paragraph", css_prefix)];
+            let mut paragraph_classes = Vec::new();
+            // 클래스 순서: style → paragraph → parashape / Class order: style → paragraph → parashape
+            if !para_style_class.is_empty() {
+                paragraph_classes.push(para_style_class);
+            }
+            paragraph_classes.push(format!("{}paragraph", css_prefix));
             if !para_shape_class.is_empty() {
                 paragraph_classes.push(para_shape_class.trim().to_string());
             }

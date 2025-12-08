@@ -594,12 +594,14 @@ expression: html
     }
 
     /* Text style classes */
-    .ohah-hwpjs-bold {
-        font-weight: bold;
+    .ohah-hwpjs-bold,
+    strong.ohah-hwpjs-bold {
+        font-weight: bold !important;
     }
 
-    .ohah-hwpjs-italic {
-        font-style: italic;
+    .ohah-hwpjs-italic,
+    em.ohah-hwpjs-italic {
+        font-style: italic !important;
     }
 
     .ohah-hwpjs-superscript {
@@ -710,6 +712,127 @@ expression: html
         content: "☆";
         margin-right: 3px;
     }
+
+                   .ohah-hwpjs-style-normal {
+        /* Style: 바탕글 (Normal) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-body {
+        /* Style: 본문 (Body) */
+        margin-bottom: 0.80pt;
+        padding-left: -10.99px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-1 {
+        /* Style: 개요 1 (Outline 1) */
+        margin-bottom: 0.80pt;
+        padding-left: -7.33px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-2 {
+        /* Style: 개요 2 (Outline 2) */
+        margin-bottom: 0.80pt;
+        padding-left: -14.66px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-3 {
+        /* Style: 개요 3 (Outline 3) */
+        margin-bottom: 0.80pt;
+        padding-left: -21.98px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-4 {
+        /* Style: 개요 4 (Outline 4) */
+        margin-bottom: 0.80pt;
+        padding-left: -29.31px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-5 {
+        /* Style: 개요 5 (Outline 5) */
+        margin-bottom: 0.80pt;
+        padding-left: -36.64px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-6 {
+        /* Style: 개요 6 (Outline 6) */
+        margin-bottom: 0.80pt;
+        padding-left: -43.97px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-7 {
+        /* Style: 개요 7 (Outline 7) */
+        margin-bottom: 0.80pt;
+        padding-left: -51.30px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-header {
+        /* Style: 머리말 (Header) */
+        margin-bottom: 0.75pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-footnote {
+        /* Style: 각주 (Footnote) */
+        margin-bottom: 0.65pt;
+        text-indent: -9.60px;
+        padding-left: 9.60px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-endnote {
+        /* Style: 미주 (Endnote) */
+        margin-bottom: 0.65pt;
+        text-indent: -9.60px;
+        padding-left: 9.60px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-memo {
+        /* Style: 메모 (Memo) */
+        margin-bottom: 0.65pt;
+        text-align: left;
+    }
+
+    .ohah-hwpjs-style-toc-heading {
+        /* Style: 차례 제목 (TOC Heading) */
+        margin-top: 3.00pt;
+        margin-bottom: 0.80pt;
+        text-align: left;
+    }
+
+    .ohah-hwpjs-style-toc-1 {
+        /* Style: 차례 1 (TOC 1) */
+        margin-top: 7.00pt;
+        margin-bottom: 0.80pt;
+        text-align: left;
+    }
+
+    .ohah-hwpjs-style-toc-2 {
+        /* Style: 차례 2 (TOC 2) */
+        margin-top: 7.00pt;
+        margin-bottom: 0.80pt;
+        padding-left: -8.06px;
+        text-align: left;
+    }
+
+    .ohah-hwpjs-style-toc-3 {
+        /* Style: 차례 3 (TOC 3) */
+        margin-top: 7.00pt;
+        margin-bottom: 0.80pt;
+        padding-left: -16.12px;
+        text-align: left;
+    }
+
 
                
                    .ohah-hwpjs-size-1300 {
@@ -882,18 +1005,21 @@ expression: html
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
         </div>
         <div class="ohah-hwpjs-Page">
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1300" data-start="0" data-end="4" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">삼강오륜</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="41" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">삼강오륜 은 현재까지도 이어져 일상생활에 깊이 뿌리내린 윤리 도덕이랍니다.</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="2" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">삼강</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="29" style="line-height: 0.60; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 237.00mm">군위신강: 임금과 신하 사이에 마땅히 지켜야 할 도리</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="31" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부위자강 : 어버이와 자식 사이에 마땅히 지켜야 할 도리</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="26" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부위부강 : 남편과 아내 사이에 지켜야 할 도리</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="2" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">오륜</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="29" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">군신유의: 임금과 신하 사이에는 의로움이 있어야 함.</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="29" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부자유친: 어버이와 자식 사이에는 친함이 있어야 함.</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="24" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부부유별: 부부 사이에는 구별이 있어야 함.</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="32" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">장유유서: 어른과 아이 사이에는 차례와 질서가 있어야 함.</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="23" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">붕우유신: 친구 사이에는 믿음이 있어야 함</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1300" data-start="0" data-end="4" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">삼강오륜</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="41" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">삼강오륜 은 현재까지도 이어져 일상생활에 깊이 뿌리내린 윤리 도덕이랍니다.</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="2" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">삼강</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="29" style="line-height: 0.60; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 237.00mm">군위신강: 임금과 신하 사이에 마땅히 지켜야 할 도리</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="31" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부위자강 : 어버이와 자식 사이에 마땅히 지켜야 할 도리</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="26" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부위부강 : 남편과 아내 사이에 지켜야 할 도리</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="2" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">오륜</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="29" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">군신유의: 임금과 신하 사이에는 의로움이 있어야 함.</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="29" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부자유친: 어버이와 자식 사이에는 친함이 있어야 함.</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="24" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부부유별: 부부 사이에는 구별이 있어야 함.</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="32" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">장유유서: 어른과 아이 사이에는 차례와 질서가 있어야 함.</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="23" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">붕우유신: 친구 사이에는 믿음이 있어야 함</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"></p>
         </div>
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
         </div>

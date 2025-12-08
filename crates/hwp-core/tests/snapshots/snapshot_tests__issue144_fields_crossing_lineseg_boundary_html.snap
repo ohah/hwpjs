@@ -538,12 +538,14 @@ expression: html
     }
 
     /* Text style classes */
-    .ohah-hwpjs-bold {
-        font-weight: bold;
+    .ohah-hwpjs-bold,
+    strong.ohah-hwpjs-bold {
+        font-weight: bold !important;
     }
 
-    .ohah-hwpjs-italic {
-        font-style: italic;
+    .ohah-hwpjs-italic,
+    em.ohah-hwpjs-italic {
+        font-style: italic !important;
     }
 
     .ohah-hwpjs-superscript {
@@ -654,6 +656,95 @@ expression: html
         content: "☆";
         margin-right: 3px;
     }
+
+                   .ohah-hwpjs-style-normal {
+        /* Style: 바탕글 (Normal) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-body {
+        /* Style: 본문 (Body) */
+        margin-bottom: 0.80pt;
+        padding-left: -10.99px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-1 {
+        /* Style: 개요 1 (Outline 1) */
+        margin-bottom: 0.80pt;
+        padding-left: -7.33px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-2 {
+        /* Style: 개요 2 (Outline 2) */
+        margin-bottom: 0.80pt;
+        padding-left: -14.66px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-3 {
+        /* Style: 개요 3 (Outline 3) */
+        margin-bottom: 0.80pt;
+        padding-left: -21.98px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-4 {
+        /* Style: 개요 4 (Outline 4) */
+        margin-bottom: 0.80pt;
+        padding-left: -29.31px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-5 {
+        /* Style: 개요 5 (Outline 5) */
+        margin-bottom: 0.80pt;
+        padding-left: -36.64px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-6 {
+        /* Style: 개요 6 (Outline 6) */
+        margin-bottom: 0.80pt;
+        padding-left: -43.97px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-outline-7 {
+        /* Style: 개요 7 (Outline 7) */
+        margin-bottom: 0.80pt;
+        padding-left: -51.30px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-page-number {
+        /* Style: 쪽 번호 (Page Number) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-header {
+        /* Style: 머리말 (Header) */
+        margin-bottom: 0.75pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-footnote {
+        /* Style: 각주 (Footnote) */
+        margin-bottom: 0.65pt;
+        text-indent: -9.60px;
+        padding-left: 9.60px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-memo {
+        /* Style: 메모 (Memo) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
 
                
                    .ohah-hwpjs-size-900 {
@@ -800,9 +891,9 @@ expression: html
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
         </div>
         <div class="ohah-hwpjs-Page">
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-11"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-3200" data-start="0" data-end="24" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm">google google google goo</span><span class="ohah-hwpjs-font-0 ohah-hwpjs-color-0000ff ohah-hwpjs-size-3200" data-start="24" data-end="41" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid">gle google google</u></span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-11"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-3200" data-start="0" data-end="15" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm">gmail gmail gma</span><span class="ohah-hwpjs-font-0 ohah-hwpjs-color-0000ff ohah-hwpjs-size-3200" data-start="15" data-end="35" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid">il gmail gmail gmail</u></span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-11"><span class="ohah-hwpjs-font-0 ohah-hwpjs-color-0000ff ohah-hwpjs-size-3200" data-start="0" data-end="4" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid">gmai</u></span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-3200" data-start="4" data-end="6" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm">le</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-11"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-3200" data-start="0" data-end="24" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm">google google google goo</span><span class="ohah-hwpjs-font-0 ohah-hwpjs-color-0000ff ohah-hwpjs-size-3200" data-start="24" data-end="41" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid">gle google google</u></span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-11"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-3200" data-start="0" data-end="15" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm">gmail gmail gma</span><span class="ohah-hwpjs-font-0 ohah-hwpjs-color-0000ff ohah-hwpjs-size-3200" data-start="15" data-end="35" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid">il gmail gmail gmail</u></span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-11"><span class="ohah-hwpjs-font-0 ohah-hwpjs-color-0000ff ohah-hwpjs-size-3200" data-start="0" data-end="4" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid">gmai</u></span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-3200" data-start="4" data-end="6" style="line-height: 0.60; height: 11.29mm; font-size: 32.00pt; vertical-align: -15.00%; width: 150.00mm">le</span></p>
         </div>
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
         </div>

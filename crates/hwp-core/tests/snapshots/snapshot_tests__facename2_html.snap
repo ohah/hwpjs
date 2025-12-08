@@ -538,12 +538,14 @@ expression: html
     }
 
     /* Text style classes */
-    .ohah-hwpjs-bold {
-        font-weight: bold;
+    .ohah-hwpjs-bold,
+    strong.ohah-hwpjs-bold {
+        font-weight: bold !important;
     }
 
-    .ohah-hwpjs-italic {
-        font-style: italic;
+    .ohah-hwpjs-italic,
+    em.ohah-hwpjs-italic {
+        font-style: italic !important;
     }
 
     .ohah-hwpjs-superscript {
@@ -655,6 +657,55 @@ expression: html
         margin-right: 3px;
     }
 
+                   .ohah-hwpjs-style-normal {
+        /* Style: 바탕글 (Normal) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-kohkdu {
+        /* Style: 한글-한컴돋움 (kohkdu) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-entnr {
+        /* Style: 영문-TimesNewRoman (entnr) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-enarial {
+        /* Style: 영문-Arial (enarial) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-cnyak {
+        /* Style: 중문-약자 (cnyak) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-cngan {
+        /* Style: 중문-간자 (cngan) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-jpmincho {
+        /* Style: 일문-명조 (jpmincho) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-style-jpgothic {
+        /* Style: 일문-고딕 (jpgothic) */
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+
                
                    .ohah-hwpjs-size-1000 {
         font-size: 10.00pt;
@@ -736,14 +787,14 @@ expression: html
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
         </div>
         <div class="ohah-hwpjs-Page">
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="43" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="45" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko한컴돋움 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="54" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 enTimesNewRoman cn바탕 jp바탕 other바탕 symbol바탕 user바탕</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="46" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 enArial cn바탕 jp바탕 other바탕 symbol바탕 user바탕</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="45" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 en바탕 cn약자漢字 jp바탕 other바탕 symbol바탕 user바탕</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="45" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 en바탕 cn간자漢字 jp바탕 other바탕 symbol바탕 user바탕</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="44" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 en바탕 cn바탕 jp명조あ other바탕 symbol바탕 user바탕</span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="44" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 en바탕 cn바탕 jp고딕あ other바탕 symbol바탕 user바탕</span></p>
+          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="43" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕</span></p>
+          <p class="ohah-hwpjs-style-kohkdu ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="45" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko한컴돋움 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕</span></p>
+          <p class="ohah-hwpjs-style-entnr ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="54" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 enTimesNewRoman cn바탕 jp바탕 other바탕 symbol바탕 user바탕</span></p>
+          <p class="ohah-hwpjs-style-enarial ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="46" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 enArial cn바탕 jp바탕 other바탕 symbol바탕 user바탕</span></p>
+          <p class="ohah-hwpjs-style-cnyak ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="45" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 en바탕 cn약자漢字 jp바탕 other바탕 symbol바탕 user바탕</span></p>
+          <p class="ohah-hwpjs-style-cngan ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="45" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 en바탕 cn간자漢字 jp바탕 other바탕 symbol바탕 user바탕</span></p>
+          <p class="ohah-hwpjs-style-jpmincho ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="44" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 en바탕 cn바탕 jp명조あ other바탕 symbol바탕 user바탕</span></p>
+          <p class="ohah-hwpjs-style-jpgothic ohah-hwpjs-paragraph ohah-hwpjs-parashape-1"><span class="ohah-hwpjs-size-1000" data-start="0" data-end="44" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">ko바탕 en바탕 cn바탕 jp고딕あ other바탕 symbol바탕 user바탕</span></p>
         </div>
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
         </div>

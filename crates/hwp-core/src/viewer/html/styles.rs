@@ -177,7 +177,109 @@ pub fn generate_css_styles(
     // 테두리 스타일 및 두께 클래스 생성 (방향별) - 비활성화 / Generate border style and width classes (by direction) - disabled
     let border_style_css = String::new();
     let border_width_css = String::new();
-    let _ = document; // 사용하지 않지만 변수는 유지
+
+    // 문단 스타일 클래스 생성 / Generate paragraph style classes
+    let mut style_css = String::new();
+    use crate::document::docinfo::style::StyleType;
+    for style in document.doc_info.styles.iter() {
+        // 문단 스타일만 처리 / Only process paragraph styles
+        if style.style_type == StyleType::Paragraph {
+            // 영문 이름을 CSS-safe하게 변환 (소문자, 공백을 하이픈으로) / Convert English name to CSS-safe (lowercase, space to hyphen)
+            let style_name = style
+                .english_name
+                .to_lowercase()
+                .replace(' ', "-")
+                .replace(|c: char| !c.is_alphanumeric() && c != '-', "");
+            if !style_name.is_empty() {
+                // 스타일 클래스 생성 / Generate style class
+                // Style의 para_shape_id를 사용하여 ParaShape 속성 적용 / Apply ParaShape properties using Style's para_shape_id
+                let mut style_properties = Vec::new();
+
+                // Style의 para_shape_id가 있으면 ParaShape 속성 적용 / Apply ParaShape properties if Style has para_shape_id
+                if let Some(para_shape_id) = style.para_shape_id {
+                    let para_shape_idx = para_shape_id as usize;
+                    if para_shape_idx < document.doc_info.para_shapes.len() {
+                        if let Some(para_shape) = document.doc_info.para_shapes.get(para_shape_idx)
+                        {
+                            // ParaShape CSS 생성 로직과 동일하게 적용 / Apply same logic as ParaShape CSS generation
+                            use crate::document::docinfo::para_shape::ParagraphAlignment;
+
+                            // 여백 처리 / Process margins
+                            if para_shape.top_spacing != 0 {
+                                let top_spacing_pt = para_shape.top_spacing as f64 / 200.0;
+                                style_properties
+                                    .push(format!("margin-top: {:.2}pt;", top_spacing_pt));
+                            }
+                            if para_shape.bottom_spacing != 0 {
+                                let bottom_spacing_pt = para_shape.bottom_spacing as f64 / 200.0;
+                                style_properties
+                                    .push(format!("margin-bottom: {:.2}pt;", bottom_spacing_pt));
+                            }
+
+                            // indent, left, right는 px 단위로 변환 / Convert indent, left, right to px
+                            const HWPUNIT_TO_PX: f64 = -0.003664154103852596;
+
+                            if para_shape.indent != 0 {
+                                let indent_px_value = para_shape.indent as f64 * HWPUNIT_TO_PX;
+                                let text_indent_px = -indent_px_value;
+                                style_properties
+                                    .push(format!("text-indent: {:.2}px;", text_indent_px));
+
+                                if para_shape.left_margin == 0 {
+                                    style_properties
+                                        .push(format!("padding-left: {:.2}px;", indent_px_value));
+                                }
+                            }
+
+                            if para_shape.left_margin != 0 {
+                                let left_px = para_shape.left_margin as f64 * HWPUNIT_TO_PX;
+                                style_properties.push(format!("padding-left: {:.2}px;", left_px));
+                            }
+
+                            if para_shape.right_margin != 0 {
+                                let right_px = para_shape.right_margin as f64 * HWPUNIT_TO_PX;
+                                style_properties.push(format!("padding-right: {:.2}px;", right_px));
+                            }
+
+                            // 정렬 / Alignment
+                            let align = match para_shape.attributes1.align {
+                                ParagraphAlignment::Left => "left",
+                                ParagraphAlignment::Right => "right",
+                                ParagraphAlignment::Center => "center",
+                                ParagraphAlignment::Justify => "justify",
+                                ParagraphAlignment::Distribute => "justify",
+                                ParagraphAlignment::Divide => "justify",
+                            };
+                            style_properties.push(format!("text-align: {};", align));
+                        }
+                    }
+                }
+
+                // 스타일 클래스 CSS 생성 / Generate style class CSS
+                let style_body = if style_properties.is_empty() {
+                    format!(
+                        "        /* Style: {local_name} ({english_name}) */",
+                        local_name = style.local_name,
+                        english_name = style.english_name
+                    )
+                } else {
+                    format!(
+                        "        /* Style: {local_name} ({english_name}) */\n        {properties}",
+                        local_name = style.local_name,
+                        english_name = style.english_name,
+                        properties = style_properties.join("\n        ")
+                    )
+                };
+
+                style_css.push_str(&format!(
+                    "    .{css_prefix}style-{style_name} {{\n{style_body}\n    }}\n\n",
+                    css_prefix = css_prefix,
+                    style_name = style_name,
+                    style_body = style_body
+                ));
+            }
+        }
+    }
 
     // 크기 클래스 생성 / Generate size classes
     // 순서 보장을 위해 정렬 / Sort to ensure consistent order
@@ -907,6 +1009,7 @@ pub fn generate_css_styles(
         margin-right: 3px;
     }}
 
+               {style_css}
                {color_css}
                {size_css}
                {border_color_css}
@@ -924,6 +1027,7 @@ pub fn generate_css_styles(
         padding_right_px = padding_right_px,
         padding_bottom_px = padding_bottom_px,
         padding_left_px = padding_left_px,
+        style_css = style_css,
         color_css = color_css,
         size_css = size_css,
         border_color_css = border_color_css,
