@@ -134,8 +134,11 @@ pub fn generate_css_styles(
     };
 
     // 텍스트 색상 클래스 생성 / Generate text color classes
+    // 순서 보장을 위해 정렬 / Sort to ensure consistent order
     let mut color_css = String::new();
-    for &color_value in used_text_colors {
+    let mut sorted_colors: Vec<u32> = used_text_colors.iter().copied().collect();
+    sorted_colors.sort();
+    for &color_value in &sorted_colors {
         let color = crate::types::COLORREF(color_value);
         let r = color.r();
         let g = color.g();
@@ -153,8 +156,11 @@ pub fn generate_css_styles(
     let _ = border_directions; // 사용하지 않지만 변수는 유지
 
     // 배경색 클래스 생성 / Generate background color classes
+    // 순서 보장을 위해 정렬 / Sort to ensure consistent order
     let mut background_color_css = String::new();
-    for &color_value in used_background_colors {
+    let mut sorted_bg_colors: Vec<u32> = used_background_colors.iter().copied().collect();
+    sorted_bg_colors.sort();
+    for &color_value in &sorted_bg_colors {
         let color = crate::types::COLORREF(color_value);
         let r = color.r();
         let g = color.g();
@@ -172,8 +178,11 @@ pub fn generate_css_styles(
     let _ = document; // 사용하지 않지만 변수는 유지
 
     // 크기 클래스 생성 / Generate size classes
+    // 순서 보장을 위해 정렬 / Sort to ensure consistent order
     let mut size_css = String::new();
-    for &size_value in used_sizes {
+    let mut sorted_sizes: Vec<u32> = used_sizes.iter().copied().collect();
+    sorted_sizes.sort();
+    for &size_value in &sorted_sizes {
         let size_pt = size_value as f32 / 100.0;
         let size_int = (size_pt * 100.0) as u32; // 13.00pt -> 1300
         size_css.push_str(&format!(
