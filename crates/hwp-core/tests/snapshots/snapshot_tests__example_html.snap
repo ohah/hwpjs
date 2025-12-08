@@ -688,12 +688,12 @@ expression: html
     }
 
                
-                   .ohah-hwpjs-size-1500 {
-        font-size: 15.00pt;
+                   .ohah-hwpjs-size-1300 {
+        font-size: 13.00pt;
     }
 
-    .ohah-hwpjs-size-1300 {
-        font-size: 13.00pt;
+    .ohah-hwpjs-size-1500 {
+        font-size: 15.00pt;
     }
 
 

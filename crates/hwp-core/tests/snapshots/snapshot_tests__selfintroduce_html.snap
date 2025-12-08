@@ -660,12 +660,12 @@ expression: html
     }
 
                
-                   .ohah-hwpjs-size-1600 {
-        font-size: 16.00pt;
+                   .ohah-hwpjs-size-900 {
+        font-size: 9.00pt;
     }
 
-    .ohah-hwpjs-size-900 {
-        font-size: 9.00pt;
+    .ohah-hwpjs-size-1600 {
+        font-size: 16.00pt;
     }
 
 
