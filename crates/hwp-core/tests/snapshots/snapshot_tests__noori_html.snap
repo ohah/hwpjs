@@ -867,11 +867,7 @@ expression: html
         margin-right: 3px;
     }
 
-                   .ohah-hwpjs-color-ff0000 {
-        color: rgb(255, 0, 0);
-    }
-
-    .ohah-hwpjs-color-0000ff {
+                   .ohah-hwpjs-color-0000ff {
         color: rgb(0, 0, 255);
     }
 
@@ -879,40 +875,12 @@ expression: html
         color: rgb(255, 255, 255);
     }
 
-
-                   .ohah-hwpjs-size-1500 {
-        font-size: 15.00pt;
+    .ohah-hwpjs-color-ff0000 {
+        color: rgb(255, 0, 0);
     }
 
-    .ohah-hwpjs-size-1000 {
-        font-size: 10.00pt;
-    }
 
-    .ohah-hwpjs-size-1600 {
-        font-size: 16.00pt;
-    }
-
-    .ohah-hwpjs-size-1100 {
-        font-size: 11.00pt;
-    }
-
-    .ohah-hwpjs-size-1724 {
-        font-size: 17.24pt;
-    }
-
-    .ohah-hwpjs-size-900 {
-        font-size: 9.00pt;
-    }
-
-    .ohah-hwpjs-size-1300 {
-        font-size: 13.00pt;
-    }
-
-    .ohah-hwpjs-size-1400 {
-        font-size: 14.00pt;
-    }
-
-    .ohah-hwpjs-size-1200 {
+                   .ohah-hwpjs-size-1200 {
         font-size: 12.00pt;
     }
 
@@ -920,9 +888,49 @@ expression: html
         font-size: 15.50pt;
     }
 
+    .ohah-hwpjs-size-1600 {
+        font-size: 16.00pt;
+    }
+
+    .ohah-hwpjs-size-1300 {
+        font-size: 13.00pt;
+    }
+
+    .ohah-hwpjs-size-1000 {
+        font-size: 10.00pt;
+    }
+
+    .ohah-hwpjs-size-1724 {
+        font-size: 17.24pt;
+    }
+
+    .ohah-hwpjs-size-1100 {
+        font-size: 11.00pt;
+    }
+
+    .ohah-hwpjs-size-900 {
+        font-size: 9.00pt;
+    }
+
+    .ohah-hwpjs-size-1400 {
+        font-size: 14.00pt;
+    }
+
+    .ohah-hwpjs-size-1500 {
+        font-size: 15.00pt;
+    }
+
 
                
-                   .ohah-hwpjs-bg-color-342dbe {
+                   .ohah-hwpjs-bg-color-d9d9d9 {
+        background-color: rgb(217, 217, 217) !important;
+    }
+
+    .ohah-hwpjs-bg-color-ffffff {
+        background-color: rgb(255, 255, 255) !important;
+    }
+
+    .ohah-hwpjs-bg-color-342dbe {
         background-color: rgb(52, 45, 190) !important;
     }
 
@@ -934,14 +942,6 @@ expression: html
         background-color: rgb(242, 242, 242) !important;
     }
 
-    .ohah-hwpjs-bg-color-d9d9d9 {
-        background-color: rgb(217, 217, 217) !important;
-    }
-
-    .ohah-hwpjs-bg-color-ffffff {
-        background-color: rgb(255, 255, 255) !important;
-    }
-
 
                
                
@@ -951,9 +951,9 @@ expression: html
   <div class="ohah-hwpjs-document">
     <h1>HWP 문서</h1>
     <p><strong>버전</strong>: 5.00.03.00</p>
-    <p><strong>용지 크기</strong>: 8.27인치 x 11.69인치</p>
+    <p><strong>용지 크기</strong>: 210.00mm x 297.00mm</p>
     <p><strong>용지 방향</strong>: Vertical</p>
-    <p><strong>여백</strong>: 좌 0.79인치 / 우 0.79인치 / 상 0.39인치 / 하 0.39인치</p>
+    <p><strong>여백</strong>: 좌 20.00mm / 우 20.00mm / 상 10.00mm / 하 10.00mm</p>
     <section class="ohah-hwpjs-Section ohah-hwpjs-Section-0">
       <div class="ohah-hwpjs-Paper">
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
