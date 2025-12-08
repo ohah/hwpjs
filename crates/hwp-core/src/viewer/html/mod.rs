@@ -153,24 +153,24 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     // 페이지 정보 추가 / Add page information
     if options.include_page_info == Some(true) {
         if let Some(page_def) = page_def_opt {
-            let paper_width_inch = page_def.paper_width.to_inches();
-            let paper_height_inch = page_def.paper_height.to_inches();
-            let left_margin_inch = page_def.left_margin.to_inches();
-            let right_margin_inch = page_def.right_margin.to_inches();
-            let top_margin_inch = page_def.top_margin.to_inches();
-            let bottom_margin_inch = page_def.bottom_margin.to_inches();
+            let paper_width_mm = page_def.paper_width.to_mm();
+            let paper_height_mm = page_def.paper_height.to_mm();
+            let left_margin_mm = page_def.left_margin.to_mm();
+            let right_margin_mm = page_def.right_margin.to_mm();
+            let top_margin_mm = page_def.top_margin.to_mm();
+            let bottom_margin_mm = page_def.bottom_margin.to_mm();
 
             html.push_str(&format!(
-                "    <p><strong>용지 크기</strong>: {:.2}인치 x {:.2}인치</p>\n",
-                paper_width_inch, paper_height_inch
+                "    <p><strong>용지 크기</strong>: {:.2}mm x {:.2}mm</p>\n",
+                paper_width_mm, paper_height_mm
             ));
             html.push_str(&format!(
                 "    <p><strong>용지 방향</strong>: {:?}</p>\n",
                 page_def.attributes.paper_direction
             ));
             html.push_str(&format!(
-                "    <p><strong>여백</strong>: 좌 {:.2}인치 / 우 {:.2}인치 / 상 {:.2}인치 / 하 {:.2}인치</p>\n",
-                left_margin_inch, right_margin_inch, top_margin_inch, bottom_margin_inch
+                "    <p><strong>여백</strong>: 좌 {:.2}mm / 우 {:.2}mm / 상 {:.2}mm / 하 {:.2}mm</p>\n",
+                left_margin_mm, right_margin_mm, top_margin_mm, bottom_margin_mm
             ));
         }
     }
