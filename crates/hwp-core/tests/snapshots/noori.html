@@ -1,1533 +1,190 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HWP 문서</title>
+  <meta http_quiv="content-type" content="text/html; charset=utf-8">
   <style>
-
-    /* CSS Reset - 브라우저 기본 스타일 초기화 / CSS Reset - Reset browser default styles */
-    *, *::before, *::after {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        /* 논리적 속성 초기화 / Reset logical properties */
-        margin-block-start: 0;
-        margin-block-end: 0;
-        margin-inline-start: 0;
-        margin-inline-end: 0;
-        padding-block-start: 0;
-        padding-block-end: 0;
-        padding-inline-start: 0;
-        padding-inline-end: 0;
-    }
-
-    html, body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-    }
-
-    html {
-        font-size: 100%;
-        -webkit-text-size-adjust: 100%;
-        -ms-text-size-adjust: 100%;
-    }
-
-    body {
-        font-size: 1rem;
-        line-height: 1;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        background-color: #f5f5f5;
-    }
-
-    /* Typography reset */
-    h1, h2, h3, h4, h5, h6 {
-        margin: 0;
-        padding: 0;
-        margin-block-start: 0;
-        margin-block-end: 0;
-        margin-inline-start: 0;
-        margin-inline-end: 0;
-        padding-block-start: 0;
-        padding-block-end: 0;
-        padding-inline-start: 0;
-        padding-inline-end: 0;
-        font-size: 1em;
-        font-weight: normal;
-        line-height: 1;
-        display: block;
-        unicode-bidi: normal;
-    }
-
-    p, blockquote, pre {
-        margin: 0;
-        padding: 0;
-        margin-block-start: 0;
-        margin-block-end: 0;
-        margin-inline-start: 0;
-        margin-inline-end: 0;
-        padding-block-start: 0;
-        padding-block-end: 0;
-        padding-inline-start: 0;
-        padding-inline-end: 0;
-        display: block;
-        unicode-bidi: normal;
-    }
-
-    /* Links */
-    a {
-        margin: 0;
-        padding: 0;
-        text-decoration: none;
-        color: inherit;
-        background-color: transparent;
-    }
-
-    a:active, a:hover {
-        outline: 0;
-    }
-
-    /* Lists */
-    ul, ol, li {
-        margin: 0;
-        padding: 0;
-        margin-block-start: 0;
-        margin-block-end: 0;
-        margin-inline-start: 0;
-        margin-inline-end: 0;
-        padding-block-start: 0;
-        padding-block-end: 0;
-        padding-inline-start: 0;
-        padding-inline-end: 0;
-        list-style: none;
-    }
-    
-    ul, ol {
-        display: block;
-    }
-    
-    li {
-        display: list-item;
-    }
-
-    /* Tables */
-    table {
-        display: table;
-        border-collapse: collapse;
-        border-spacing: 0;
-        border-color: transparent;
-        width: 100%;
-        table-layout: auto;
-        empty-cells: show;
-    }
-
-    thead, tbody, tfoot {
-        margin: 0;
-        padding: 0;
-        border: 0;
-    }
-
-    tr {
-        margin: 0;
-        padding: 0;
-        border: 0;
-        display: table-row;
-        vertical-align: inherit;
-    }
-
-    th, td {
-        margin: 0;
-        padding: 0;
-        /* border: 0 제거 - border 클래스가 적용되도록 / Remove border: 0 to allow border classes to apply */
-        text-align: left;
-        font-weight: normal;
-        font-style: normal;
-        vertical-align: top;
-        display: table-cell;
-    }
-
-    th {
-        font-weight: normal;
-    }
-
-    caption {
-        margin: 0;
-        padding: 0;
-        text-align: center;
-    }
-
-    /* Forms */
-    button, input, select, textarea {
-        margin: 0;
-        padding: 0;
-        border: 0;
-        outline: 0;
-        font: inherit;
-        color: inherit;
-        background: transparent;
-        vertical-align: baseline;
-    }
-
-    button, input {
-        overflow: visible;
-    }
-
-    button, select {
-        text-transform: none;
-    }
-
-    button, [type="button"], [type="reset"], [type="submit"] {
-        -webkit-appearance: button;
-        cursor: pointer;
-    }
-
-    button::-moz-focus-inner, [type="button"]::-moz-focus-inner, [type="reset"]::-moz-focus-inner, [type="submit"]::-moz-focus-inner {
-        border-style: none;
-        padding: 0;
-    }
-
-    input[type="checkbox"], input[type="radio"] {
-        box-sizing: border-box;
-        padding: 0;
-    }
-
-    textarea {
-        overflow: auto;
-        resize: vertical;
-    }
-
-    /* Images and media */
-    img, svg, video, canvas, audio, iframe, embed, object {
-        display: block;
-        max-width: 100%;
-        height: auto;
-        border: 0;
-        vertical-align: middle;
-    }
-
-    img {
-        border-style: none;
-    }
-
-    svg:not(:root) {
-        overflow: hidden;
-    }
-
-    /* Other elements */
-    hr {
-        margin: 0;
-        padding: 0;
-        border: 0;
-        height: 0;
-    }
-
-    code, kbd, samp, pre {
-        font-family: monospace, monospace;
-        font-size: 1em;
-    }
-
-    abbr[title] {
-        border-bottom: none;
-        text-decoration: underline;
-        text-decoration: underline dotted;
-    }
-
-    b, strong {
-        font-weight: normal;
-    }
-
-    i, em {
-        font-style: normal;
-    }
-
-    small {
-        font-size: 80%;
-    }
-
-    sub, sup {
-        font-size: 75%;
-        line-height: 0;
-        position: relative;
-        vertical-align: baseline;
-    }
-
-    sub {
-        bottom: -0.25em;
-    }
-
-    sup {
-        top: -0.5em;
-    }
-
-    /* Additional resets */
-    article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section {
-        display: block;
-        margin: 0;
-        padding: 0;
-        margin-block-start: 0;
-        margin-block-end: 0;
-        margin-inline-start: 0;
-        margin-inline-end: 0;
-        padding-block-start: 0;
-        padding-block-end: 0;
-        padding-inline-start: 0;
-        padding-inline-end: 0;
-    }
-    
-    /* Block-level elements reset */
-    div, address, dl, dt, dd, fieldset, form, legend {
-        margin: 0;
-        padding: 0;
-        margin-block-start: 0;
-        margin-block-end: 0;
-        margin-inline-start: 0;
-        margin-inline-end: 0;
-        padding-block-start: 0;
-        padding-block-end: 0;
-        padding-inline-start: 0;
-        padding-inline-end: 0;
-    }
-    
-    div {
-        display: block;
-    }
-
-    summary {
-        display: list-item;
-    }
-
-    /* HWP Document Styles */
-    .ohah-hwpjs-document {
-        max-width: none;
-        margin: 0 auto;
-        padding: 20px 20px 20px 20px;
-        font-family: "굴림", "굴림체", "바탕", "바탕체", "휴먼명조", "함초롬돋움", "함초롬바탕", "HY울릉도M", "HY헤드라인M", "굴림", "굴림체", "바탕", "HCI Poppy", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "굴림", "굴림체", "바탕", "한양신명조", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "휴먼명조", "HY Sinmyeongjo", "굴림", "굴림체", "바탕", "한양신명조", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "휴먼명조", "HY Sinmyeongjo", "굴림", "굴림체", "바탕", "한양신명조", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "휴먼명조", "HY Sinmyeongjo", "굴림", "굴림체", "바탕", "한양신명조", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "휴먼명조", "HY Sinmyeongjo", "굴림", "굴림체", "바탕", "명조", "함초롬돋움", "함초롬바탕", "한컴바탕", "HY울릉도M", "HY헤드라인M", "휴먼명조", "Myeongjo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        line-height: 1.6;
-    }
-    .ohah-hwpjs-font-0 {
-        font-family: "굴림", sans-serif;
-    }
-
-    .ohah-hwpjs-font-1 {
-        font-family: "굴림체", sans-serif;
-    }
-
-    .ohah-hwpjs-font-2 {
-        font-family: "바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-3 {
-        font-family: "바탕체", sans-serif;
-    }
-
-    .ohah-hwpjs-font-4 {
-        font-family: "휴먼명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-5 {
-        font-family: "함초롬돋움", sans-serif;
-    }
-
-    .ohah-hwpjs-font-6 {
-        font-family: "함초롬바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-7 {
-        font-family: "HY울릉도M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-8 {
-        font-family: "HY헤드라인M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-9 {
-        font-family: "굴림", sans-serif;
-    }
-
-    .ohah-hwpjs-font-10 {
-        font-family: "굴림체", sans-serif;
-    }
-
-    .ohah-hwpjs-font-11 {
-        font-family: "바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-12 {
-        font-family: "HCI Poppy", sans-serif;
-    }
-
-    .ohah-hwpjs-font-13 {
-        font-family: "함초롬돋움", sans-serif;
-    }
-
-    .ohah-hwpjs-font-14 {
-        font-family: "함초롬바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-15 {
-        font-family: "한컴바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-16 {
-        font-family: "HY울릉도M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-17 {
-        font-family: "HY헤드라인M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-18 {
-        font-family: "굴림", sans-serif;
-    }
-
-    .ohah-hwpjs-font-19 {
-        font-family: "굴림체", sans-serif;
-    }
-
-    .ohah-hwpjs-font-20 {
-        font-family: "바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-21 {
-        font-family: "한양신명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-22 {
-        font-family: "함초롬돋움", sans-serif;
-    }
-
-    .ohah-hwpjs-font-23 {
-        font-family: "함초롬바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-24 {
-        font-family: "한컴바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-25 {
-        font-family: "HY울릉도M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-26 {
-        font-family: "HY헤드라인M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-27 {
-        font-family: "휴먼명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-28 {
-        font-family: "HY Sinmyeongjo", sans-serif;
-    }
-
-    .ohah-hwpjs-font-29 {
-        font-family: "굴림", sans-serif;
-    }
-
-    .ohah-hwpjs-font-30 {
-        font-family: "굴림체", sans-serif;
-    }
-
-    .ohah-hwpjs-font-31 {
-        font-family: "바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-32 {
-        font-family: "한양신명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-33 {
-        font-family: "함초롬돋움", sans-serif;
-    }
-
-    .ohah-hwpjs-font-34 {
-        font-family: "함초롬바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-35 {
-        font-family: "한컴바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-36 {
-        font-family: "HY울릉도M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-37 {
-        font-family: "HY헤드라인M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-38 {
-        font-family: "휴먼명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-39 {
-        font-family: "HY Sinmyeongjo", sans-serif;
-    }
-
-    .ohah-hwpjs-font-40 {
-        font-family: "굴림", sans-serif;
-    }
-
-    .ohah-hwpjs-font-41 {
-        font-family: "굴림체", sans-serif;
-    }
-
-    .ohah-hwpjs-font-42 {
-        font-family: "바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-43 {
-        font-family: "한양신명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-44 {
-        font-family: "함초롬돋움", sans-serif;
-    }
-
-    .ohah-hwpjs-font-45 {
-        font-family: "함초롬바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-46 {
-        font-family: "한컴바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-47 {
-        font-family: "HY울릉도M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-48 {
-        font-family: "HY헤드라인M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-49 {
-        font-family: "휴먼명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-50 {
-        font-family: "HY Sinmyeongjo", sans-serif;
-    }
-
-    .ohah-hwpjs-font-51 {
-        font-family: "굴림", sans-serif;
-    }
-
-    .ohah-hwpjs-font-52 {
-        font-family: "굴림체", sans-serif;
-    }
-
-    .ohah-hwpjs-font-53 {
-        font-family: "바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-54 {
-        font-family: "한양신명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-55 {
-        font-family: "함초롬돋움", sans-serif;
-    }
-
-    .ohah-hwpjs-font-56 {
-        font-family: "함초롬바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-57 {
-        font-family: "한컴바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-58 {
-        font-family: "HY울릉도M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-59 {
-        font-family: "HY헤드라인M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-60 {
-        font-family: "휴먼명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-61 {
-        font-family: "HY Sinmyeongjo", sans-serif;
-    }
-
-    .ohah-hwpjs-font-62 {
-        font-family: "굴림", sans-serif;
-    }
-
-    .ohah-hwpjs-font-63 {
-        font-family: "굴림체", sans-serif;
-    }
-
-    .ohah-hwpjs-font-64 {
-        font-family: "바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-65 {
-        font-family: "명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-66 {
-        font-family: "함초롬돋움", sans-serif;
-    }
-
-    .ohah-hwpjs-font-67 {
-        font-family: "함초롬바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-68 {
-        font-family: "한컴바탕", sans-serif;
-    }
-
-    .ohah-hwpjs-font-69 {
-        font-family: "HY울릉도M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-70 {
-        font-family: "HY헤드라인M", sans-serif;
-    }
-
-    .ohah-hwpjs-font-71 {
-        font-family: "휴먼명조", sans-serif;
-    }
-
-    .ohah-hwpjs-font-72 {
-        font-family: "Myeongjo", sans-serif;
-    }
-
-
-
-    /* Section and Page Styles */
-    .ohah-hwpjs-Section {
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        margin-bottom: 40px;
-    }
-
-    .ohah-hwpjs-Paper {
-        width: 100%;
-        margin: 0 auto;
-        background-color: #fff;
-        position: relative;
-    }
-
-    .ohah-hwpjs-Page {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .ohah-hwpjs-HeaderPageFooter {
-        width: 100%;
-        position: absolute;
-        left: 0;
-        box-sizing: border-box;
-    }
-
-    .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
-        top: 0;
-    }
-
-    .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
-        bottom: 0;
-    }
-
-
-    /* Section 0 Styles */
-    .ohah-hwpjs-Section-0 {
-        width: 100%;
-        margin: 0;
-        padding: 0;
-    }
-
-    .ohah-hwpjs-Section-0 .ohah-hwpjs-Paper {
-        width: 210.00mm;
-        min-height: 297.00mm;
-        margin: 0 auto 40px auto;
-        background-color: #fff;
-        position: relative;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .ohah-hwpjs-Section-0 .ohah-hwpjs-Page {
-        width: 100%;
-        min-height: 297.00mm;
-        padding: 10.00mm 20.00mm 10.00mm 20.00mm;
-        box-sizing: border-box;
-    }
-
-    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter {
-        width: 100%;
-        position: absolute;
-        left: 0;
-        padding: 0 20.00mm 0 20.00mm;
-        box-sizing: border-box;
-    }
-
-    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
-        top: 0;
-        height: 15.00mm;
-    }
-
-    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
-        bottom: 0;
-        height: 15.00mm;
-    }
-
-
-    .ohah-hwpjs-header {
-        margin-bottom: 20px;
-    }
-
-    .ohah-hwpjs-footer {
-        margin-top: 20px;
-        border-top: 1px solid #ddd;
-        padding-top: 10px;
-    }
-
-    .ohah-hwpjs-main {
-        margin: 20px 0;
-    }
-
-    .ohah-hwpjs-paragraph {
-    }
-
-    .ohah-hwpjs-outline {
-        display: block;
-        margin: 10px 0;
-    }
-
-    .ohah-hwpjs-table {
-        border-collapse: collapse;
-        width: 100%;
-        margin: 10px 0;
-    }
-
-    .ohah-hwpjs-table th,
-    .ohah-hwpjs-table td {
-        padding: 8px;
-        text-align: left;
-        border: 1px solid black;
-    }
-
-    .ohah-hwpjs-table th {
-        font-weight: bold;
-    }
-    
-    /* 테이블 셀 배경색은 bg-color 클래스로 처리 / Table cell background colors are handled by bg-color classes */
-
-    .ohah-hwpjs-image {
-        max-width: 100%;
-        height: auto;
-        margin: 10px 0;
-    }
-
-    .ohah-hwpjs-footnote-ref,
-    .ohah-hwpjs-endnote-ref {
-        text-decoration: none;
-        color: #0066cc;
-        font-weight: bold;
-    }
-
-    .ohah-hwpjs-footnote-ref:hover,
-    .ohah-hwpjs-endnote-ref:hover {
-        text-decoration: underline;
-    }
-
-    .ohah-hwpjs-footnote,
-    .ohah-hwpjs-endnote {
-        margin: 10px 0;
-        padding: 10px;
-        background-color: #f9f9f9;
-        border-left: 3px solid #0066cc;
-    }
-
-    .ohah-hwpjs-footnotes,
-    .ohah-hwpjs-endnotes {
-        margin-top: 40px;
-        padding-top: 20px;
-        border-top: 2px solid #ddd;
-    }
-
-    .ohah-hwpjs-page-number {
-        font-weight: normal;
-    }
-
-    .ohah-hwpjs-overline {
-        text-decoration: overline;
-    }
-
-    .ohah-hwpjs-emboss {
-        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
-    }
-
-    .ohah-hwpjs-engrave {
-        text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Text style classes */
-    .ohah-hwpjs-bold,
-    strong.ohah-hwpjs-bold {
-        font-weight: bold !important;
-    }
-
-    .ohah-hwpjs-italic,
-    em.ohah-hwpjs-italic {
-        font-style: italic !important;
-    }
-
-    .ohah-hwpjs-superscript {
-        font-size: 75%;
-        line-height: 0;
-        position: relative;
-        vertical-align: baseline;
-        top: -0.5em;
-    }
-
-    .ohah-hwpjs-subscript {
-        font-size: 75%;
-        line-height: 0;
-        position: relative;
-        vertical-align: baseline;
-        bottom: -0.25em;
-    }
-
-    .ohah-hwpjs-underline-solid {
-        text-decoration: underline;
-        text-decoration-style: solid;
-    }
-
-    .ohah-hwpjs-underline-dotted {
-        text-decoration: underline;
-        text-decoration-style: dotted;
-    }
-
-    .ohah-hwpjs-underline-dashed {
-        text-decoration: underline;
-        text-decoration-style: dashed;
-    }
-
-    .ohah-hwpjs-underline-double {
-        text-decoration: underline;
-        text-decoration-style: double;
-    }
-
-    .ohah-hwpjs-strikethrough-solid {
-        text-decoration: line-through;
-        text-decoration-style: solid;
-    }
-
-    .ohah-hwpjs-strikethrough-dotted {
-        text-decoration: line-through;
-        text-decoration-style: dotted;
-    }
-
-    .ohah-hwpjs-strikethrough-dashed {
-        text-decoration: line-through;
-        text-decoration-style: dashed;
-    }
-
-    .ohah-hwpjs-footnote-back,
-    .ohah-hwpjs-endnote-back {
-        text-decoration: none;
-        color: #0066cc;
-        margin-left: 5px;
-    }
-
-    .ohah-hwpjs-footnote-back:hover,
-    .ohah-hwpjs-endnote-back:hover {
-        text-decoration: underline;
-    }
-
-    .ohah-hwpjs-page-break {
-        border: none;
-        border-top: 2px solid #ddd;
-        margin: 20px 0;
-    }
-
-    .ohah-hwpjs-emphasis-1::before {
-        content: "●";
-        margin-right: 3px;
-    }
-
-    .ohah-hwpjs-emphasis-2::before {
-        content: "○";
-        margin-right: 3px;
-    }
-
-    .ohah-hwpjs-emphasis-3::before {
-        content: "◆";
-        margin-right: 3px;
-    }
-
-    .ohah-hwpjs-emphasis-4::before {
-        content: "◇";
-        margin-right: 3px;
-    }
-
-    .ohah-hwpjs-emphasis-5::before {
-        content: "■";
-        margin-right: 3px;
-    }
-
-    .ohah-hwpjs-emphasis-6::before {
-        content: "□";
-        margin-right: 3px;
-    }
-
-    .ohah-hwpjs-emphasis-7::before {
-        content: "★";
-        margin-right: 3px;
-    }
-
-    .ohah-hwpjs-emphasis-8::before {
-        content: "☆";
-        margin-right: 3px;
-    }
-
-                   .ohah-hwpjs-style-normal {
-        /* Style: 바탕글 (Normal) */
-        margin-bottom: 0.80pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-body {
-        /* Style: 본문 (Body) */
-        margin-bottom: 0.80pt;
-        padding-left: -10.99px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-outline-1 {
-        /* Style: 개요 1 (Outline 1) */
-        margin-bottom: 0.80pt;
-        padding-left: -7.33px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-outline-2 {
-        /* Style: 개요 2 (Outline 2) */
-        margin-bottom: 0.80pt;
-        padding-left: -14.66px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-outline-3 {
-        /* Style: 개요 3 (Outline 3) */
-        margin-bottom: 0.80pt;
-        padding-left: -21.98px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-outline-4 {
-        /* Style: 개요 4 (Outline 4) */
-        margin-bottom: 0.80pt;
-        padding-left: -29.31px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-outline-5 {
-        /* Style: 개요 5 (Outline 5) */
-        margin-bottom: 0.80pt;
-        padding-left: -36.64px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-outline-6 {
-        /* Style: 개요 6 (Outline 6) */
-        margin-bottom: 0.80pt;
-        padding-left: -43.97px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-outline-7 {
-        /* Style: 개요 7 (Outline 7) */
-        margin-bottom: 0.80pt;
-        padding-left: -51.30px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-page-number {
-        /* Style: 쪽 번호 (Page Number) */
-        margin-bottom: 0.80pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-header {
-        /* Style: 머리말 (Header) */
-        margin-bottom: 0.75pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-footnote {
-        /* Style: 각주 (Footnote) */
-        margin-bottom: 0.65pt;
-        text-indent: -9.60px;
-        padding-left: 9.60px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-endnote {
-        /* Style: 미주 (Endnote) */
-        margin-bottom: 0.65pt;
-        text-indent: -9.60px;
-        padding-left: 9.60px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-memo {
-        /* Style: 메모 (Memo) */
-        margin-bottom: 0.65pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-msonormal {
-        /* Style: MS바탕글 (MsoNormal) */
-        margin-bottom: 18.00pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-normal-copy2 {
-        /* Style: 바탕글 사본2 (Normal Copy2) */
-        margin-bottom: 0.80pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-style-xl79 {
-        /* Style: xl79 (xl79) */
-        margin-bottom: 0.50pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-style-xl80 {
-        /* Style: xl80 (xl80) */
-        margin-bottom: 0.50pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-style-xl78 {
-        /* Style: xl78 (xl78) */
-        margin-bottom: 0.50pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-style-xl81 {
-        /* Style: xl81 (xl81) */
-        margin-bottom: 0.50pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-style-xl65 {
-        /* Style: xl65 (xl65) */
-        margin-bottom: 0.50pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-style-xl66 {
-        /* Style: xl66 (xl66) */
-        margin-bottom: 0.50pt;
-        text-align: left;
-    }
-
-    .ohah-hwpjs-style-xl67 {
-        /* Style: xl67 (xl67) */
-        margin-bottom: 0.50pt;
-        text-align: left;
-    }
-
-    .ohah-hwpjs-style-xl69 {
-        /* Style: xl69 (xl69) */
-        margin-bottom: 0.50pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-style-xl70 {
-        /* Style: xl70 (xl70) */
-        margin-bottom: 0.50pt;
-        text-align: left;
-    }
-
-    .ohah-hwpjs-style-xl71 {
-        /* Style: xl71 (xl71) */
-        margin-bottom: 0.50pt;
-        text-align: left;
-    }
-
-    .ohah-hwpjs-style-xl83 {
-        /* Style: xl83 (xl83) */
-        margin-bottom: 0.50pt;
-        text-align: left;
-    }
-
-    .ohah-hwpjs-style-xl74 {
-        /* Style: xl74 (xl74) */
-        margin-bottom: 0.50pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-style-xl75 {
-        /* Style: xl75 (xl75) */
-        margin-bottom: 0.50pt;
-        text-align: left;
-    }
-
-    .ohah-hwpjs-style-xl76 {
-        /* Style: xl76 (xl76) */
-        margin-bottom: 0.50pt;
-        text-align: left;
-    }
-
-
-                   .ohah-hwpjs-color-ff0000 {
-        color: rgb(255, 0, 0);
-    }
-
-    .ohah-hwpjs-color-0000ff {
-        color: rgb(0, 0, 255);
-    }
-
-    .ohah-hwpjs-color-ffffff {
-        color: rgb(255, 255, 255);
-    }
-
-
-                   .ohah-hwpjs-size-900 {
-        font-size: 9.00pt;
-    }
-
-    .ohah-hwpjs-size-1000 {
-        font-size: 10.00pt;
-    }
-
-    .ohah-hwpjs-size-1100 {
-        font-size: 11.00pt;
-    }
-
-    .ohah-hwpjs-size-1200 {
-        font-size: 12.00pt;
-    }
-
-    .ohah-hwpjs-size-1300 {
-        font-size: 13.00pt;
-    }
-
-    .ohah-hwpjs-size-1400 {
-        font-size: 14.00pt;
-    }
-
-    .ohah-hwpjs-size-1500 {
-        font-size: 15.00pt;
-    }
-
-    .ohah-hwpjs-size-1550 {
-        font-size: 15.50pt;
-    }
-
-    .ohah-hwpjs-size-1600 {
-        font-size: 16.00pt;
-    }
-
-    .ohah-hwpjs-size-1724 {
-        font-size: 17.24pt;
-    }
-
-
-               
-                   .ohah-hwpjs-bg-color-e7e7a5 {
-        background-color: rgb(231, 231, 165) !important;
-    }
-
-    .ohah-hwpjs-bg-color-342dbe {
-        background-color: rgb(52, 45, 190) !important;
-    }
-
-    .ohah-hwpjs-bg-color-d9d9d9 {
-        background-color: rgb(217, 217, 217) !important;
-    }
-
-    .ohah-hwpjs-bg-color-f2f2f2 {
-        background-color: rgb(242, 242, 242) !important;
-    }
-
-    .ohah-hwpjs-bg-color-ffffff {
-        background-color: rgb(255, 255, 255) !important;
-    }
-
-
-               
-               
-                   .ohah-hwpjs-parashape-0 {
-        margin-bottom: 0.80pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-1 {
-        margin-bottom: 0.64pt;
-        text-align: left;
-    }
-
-    .ohah-hwpjs-parashape-2 {
-        margin-bottom: 0.65pt;
-        text-indent: -9.60px;
-        padding-left: 9.60px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-3 {
-        margin-bottom: 0.80pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-4 {
-        margin-bottom: 0.80pt;
-        text-indent: -19.08px;
-        padding-left: -4.13px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-5 {
-        margin-bottom: 18.00pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-6 {
-        margin-bottom: 0.50pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-7 {
-        margin-bottom: 0.50pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-8 {
-        margin-bottom: 0.60pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-9 {
-        margin-bottom: 0.70pt;
-        text-indent: -31.88px;
-        padding-left: 31.88px;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-10 {
-        margin-bottom: 0.60pt;
-        text-indent: -31.88px;
-        padding-left: 31.88px;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-11 {
-        margin-bottom: 0.80pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-12 {
-        margin-bottom: 0.80pt;
-        padding-left: -7.33px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-13 {
-        margin-bottom: 0.80pt;
-        padding-left: -14.66px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-14 {
-        margin-bottom: 0.80pt;
-        padding-left: -21.98px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-15 {
-        margin-bottom: 0.80pt;
-        padding-left: -29.31px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-16 {
-        margin-bottom: 0.80pt;
-        padding-left: -36.64px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-17 {
-        margin-bottom: 0.80pt;
-        padding-left: -43.97px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-18 {
-        margin-bottom: 0.50pt;
-        text-align: left;
-    }
-
-    .ohah-hwpjs-parashape-19 {
-        margin-bottom: 0.80pt;
-        padding-left: -51.30px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-20 {
-        margin-bottom: 0.80pt;
-        padding-left: -10.99px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-21 {
-        margin-bottom: 0.75pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-22 {
-        margin-bottom: 0.65pt;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-23 {
-        margin-bottom: 0.80pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-24 {
-        margin-bottom: 0.70pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-25 {
-        margin-bottom: 0.75pt;
-        text-indent: -27.99px;
-        padding-left: -2.42px;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-26 {
-        margin-bottom: 0.85pt;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-27 {
-        margin-bottom: 0.85pt;
-        text-indent: -22.51px;
-        padding-left: 22.51px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-28 {
-        margin-bottom: 0.90pt;
-        text-indent: -20.37px;
-        padding-left: 20.37px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-29 {
-        margin-bottom: 0.85pt;
-        text-indent: -24.00px;
-        padding-left: 24.00px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-30 {
-        margin-bottom: 0.85pt;
-        text-indent: -22.60px;
-        padding-left: 22.60px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-31 {
-        margin-bottom: 0.75pt;
-        text-indent: -27.99px;
-        padding-left: -2.42px;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-32 {
-        margin-bottom: 0.85pt;
-        text-indent: -24.70px;
-        padding-left: 24.70px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-33 {
-        margin-bottom: 0.85pt;
-        text-indent: -17.18px;
-        padding-left: 17.18px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-34 {
-        margin-bottom: 0.85pt;
-        text-indent: -24.45px;
-        padding-left: 24.45px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-35 {
-        margin-bottom: 0.85pt;
-        text-indent: -17.50px;
-        padding-left: 17.50px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-36 {
-        margin-bottom: 0.85pt;
-        text-indent: -22.56px;
-        padding-left: 22.56px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-37 {
-        margin-bottom: 0.85pt;
-        text-indent: -17.19px;
-        padding-left: 17.19px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-38 {
-        margin-bottom: 0.85pt;
-        text-indent: -22.45px;
-        padding-left: 22.45px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-39 {
-        margin-bottom: 0.85pt;
-        text-indent: -17.41px;
-        padding-left: 17.41px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-40 {
-        margin-bottom: 0.85pt;
-        text-indent: -24.16px;
-        padding-left: 24.16px;
-        text-align: justify;
-    }
-
-    .ohah-hwpjs-parashape-41 {
-        margin-bottom: 0.80pt;
-        text-indent: -17.06px;
-        padding-left: 17.06px;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-42 {
-        margin-bottom: 0.80pt;
-        padding-left: 2.93px;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-43 {
-        margin-bottom: 0.60pt;
-        padding-left: 2.93px;
-        text-align: center;
-    }
-
-    .ohah-hwpjs-parashape-44 {
-        margin-bottom: 0.65pt;
-        text-align: center;
-    }
-
-
-               
-    /* Section 0 Styles */
-    .ohah-hwpjs-Section-0 {
-        width: 100%;
-        margin: 0;
-        padding: 0;
-    }
-
-    .ohah-hwpjs-Section-0 .ohah-hwpjs-Paper {
-        width: 210.00mm;
-        min-height: 297.00mm;
-        margin: 0 auto 40px auto;
-        background-color: #fff;
-        position: relative;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .ohah-hwpjs-Section-0 .ohah-hwpjs-Page {
-        width: 100%;
-        min-height: 297.00mm;
-        padding: 10.00mm 20.00mm 10.00mm 20.00mm;
-        box-sizing: border-box;
-    }
-
-    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter {
-        width: 100%;
-        position: absolute;
-        left: 0;
-        padding: 0 20.00mm 0 20.00mm;
-        box-sizing: border-box;
-    }
-
-    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
-        top: 0;
-        height: 15.00mm;
-    }
-
-    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
-        bottom: 0;
-        height: 15.00mm;
-    }
-
-                 </style>
+body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
+.hce {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hme {margin:0;padding:0;position:absolute;}
+.hhe {margin:0;padding:0;position:relative;}
+.hhi {display:inline-block;margin:0;padding:0;position:relative;background-size:contain;}
+.hls {margin:0;padding:0;position:absolute;}
+.hfS {margin:0;padding:0;position:absolute;}
+.hcD {margin:0;padding:0;position:absolute;}
+.hcI {margin:0;padding:0;position:absolute;}
+.hcS {margin:0;padding:0;position:absolute;}
+.hfN {margin:0;padding:0;position:relative;}
+.hmB {margin:0;padding:0;position:absolute;}
+.hmO {margin:0;padding:0;position:absolute;}
+.hmT {margin:0;padding:0;position:absolute;}
+.hpN {display:inline-block;margin:0;padding:0;position:relative;white-space:nowrap;}
+.htC {display:inline-block;margin:0;padding:0;position:relative;vertical-align:top;overflow:hidden;}
+.haN {display:inline-block;margin:0;padding:0;position:relative;}
+.hdu {margin:0;padding:0;position:relative;}
+.hdS {margin:0;padding:0;position:absolute;}
+.hsC {margin:0;padding:0;position:absolute;}
+.hsR {margin:0;padding:0;position:absolute;}
+.hsG {margin:0;padding:0;position:absolute;}
+.hsL {margin:0;padding:0;position:absolute;}
+.hsT {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hsE {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hsA {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hsP {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hsV {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hsO {margin:0;padding:0;position:absolute;}
+.hsU {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hpi {margin:0;padding:0;position:absolute;}
+.hch {margin:0;padding:0;position:absolute;}
+.hcG {margin:0;padding:0;position:absolute;}
+.heq {margin:0;padding:0;position:absolute;}
+.heG {margin:0;padding:0;position:absolute;}
+.htA {margin:0;padding:0;position:absolute;}
+.hvi {margin:0;padding:0;position:absolute;}
+.htb {margin:0;padding:0;position:absolute;}
+.htG {margin:0;padding:0;position:absolute;}
+.hfJ {margin:0;padding:0;position:absolute;}
+.hfG {margin:0;padding:0;position:absolute;}
+.hfB {margin:0;padding:0;position:absolute;}
+.hfR {margin:0;padding:0;position:absolute;}
+.hfC {margin:0;padding:0;position:absolute;}
+.hfO {margin:0;padding:0;position:absolute;}
+.hfL {margin:0;padding:0;position:absolute;}
+.hfM {margin:0;padding:0;position:absolute;}
+.hfE {margin:0;padding:0;position:absolute;}
+.hpl {margin:0;padding:0;position:absolute;}
+.hs {margin:0;padding:0;position:absolute;overflow:visible;}
+.hpa {position:relative;padding:0;overflow:hidden;margin-left:2mm;margin-right:0mm;margin-bottom:2mm;margin-top:0mm;border:1px black solid;box-shadow:1mm 1mm 0 #AAAAAA;}
+.hpa::after {content:'';position:absolute;margin:0;padding:0;left:0;right:0;top:0;bottom:0;background-color:white;z-index:-2;}
+.hrt {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;vertical-align:middle;line-height:1.1;}
+.hco {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;}
+.hcc {margin:0;padding:0;position:absolute;}
+.hls {clear:both;}
+[onclick] {cursor:pointer;}
+.cs5 {
+  font-size:15.5pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs8 {
+  font-size:16pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs11 {
+  font-size:17.24pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs18 {
+  font-size:13pt;color:rgb(255,0,0);font-family:"함초롬바탕";font-weight:bold;
+}
+.cs20 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"함초롬바탕";font-weight:bold;
+}
+.cs21 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs25 {
+  font-size:12pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs27 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs29 {
+  font-size:14pt;color:rgb(0,0,0);font-family:"함초롬바탕";font-weight:bold;
+}
+.cs35 {
+  font-size:14pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs36 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs37 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs38 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";font-weight:bold;
+}
+.cs39 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";font-weight:bold;
+}
+.cs40 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs41 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";font-weight:bold;
+}
+.cs42 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs43 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs44 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs45 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs46 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";font-weight:bold;
+}
+.cs47 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs48 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs49 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs55 {
+  font-size:11pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.ps25 {
+  text-align:center;
+}
+.ps26 {
+  text-align:center;
+}
+.ps28 {
+  text-align:justify;
+}
+.ps29 {
+  text-align:justify;
+}
+.ps31 {
+  text-align:center;
+}
+.ps32 {
+  text-align:justify;
+}
+.ps33 {
+  text-align:justify;
+}
+.ps34 {
+  text-align:justify;
+}
+.ps35 {
+  text-align:justify;
+}
+.ps36 {
+  text-align:justify;
+}
+.ps37 {
+  text-align:justify;
+}
+.ps38 {
+  text-align:justify;
+}
+.ps39 {
+  text-align:justify;
+}
+@media print {
+.hpa {margin:0;border:0 black none;box-shadow:none;}
+body {padding:0;}
+}
+  </style>
 </head>
+
 <body>
-  <div class="ohah-hwpjs-document">
-    <h1>HWP 문서</h1>
-    <p><strong>버전</strong>: 5.00.03.00</p>
-    <p><strong>용지 크기</strong>: 210.00mm x 297.00mm</p>
-    <p><strong>용지 방향</strong>: Vertical</p>
-    <p><strong>여백</strong>: 좌 20.00mm / 우 20.00mm / 상 10.00mm / 하 10.00mm</p>
-    <section class="ohah-hwpjs-Section ohah-hwpjs-Section-0">
-      <div class="ohah-hwpjs-Paper">
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
-        </div>
-        <div class="ohah-hwpjs-Page">
-          <img src="images/BIN0001.jpg" alt="이미지" class="ohah-hwpjs-image" />
-<p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-26"></p>
-          <table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="0" data-end="4" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 20.18mm"><strong class="ohah-hwpjs-bold">보도일시</strong></span></p></th><th colspan="3"><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="0" data-end="17" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 149.96mm"><strong class="ohah-hwpjs-bold">2018. 9. 4.(화) 조간</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300" data-start="17" data-end="28" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 149.96mm"><strong class="ohah-hwpjs-bold">(온라인 9. 3. </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300" data-start="28" data-end="33" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 149.96mm"><strong class="ohah-hwpjs-bold">12:00</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-color-ff0000 ohah-hwpjs-size-1300" data-start="33" data-end="34" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 149.96mm"><strong class="ohah-hwpjs-bold">)</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="34" data-end="50" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 149.96mm"><strong class="ohah-hwpjs-bold">부터 보도해 주시기 바랍니다.</strong></span></p></th></tr></thead><tbody><tr><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-9"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="0" data-end="4" style="line-height: 0.40; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 20.18mm"><strong class="ohah-hwpjs-bold">배포일시</strong></span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-10"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="0" data-end="20" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 64.94mm">2018. 9. 3.(월) 09:00</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-9"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="0" data-end="4" style="line-height: 0.40; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 20.24mm"><strong class="ohah-hwpjs-bold">담당부서</strong></span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-10"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="0" data-end="9" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 64.77mm">거대공공연구정책과</span></p></td></tr><tr><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-9"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="0" data-end="4" style="line-height: 0.40; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 20.18mm"><strong class="ohah-hwpjs-bold">담당과장</strong></span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-44"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="0" data-end="17" style="line-height: 0.30; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 64.94mm">장인숙(02-2110-2430)</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-9"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="0" data-end="5" style="line-height: 0.40; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 20.24mm"><strong class="ohah-hwpjs-bold">담 당 자</strong></span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-22"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="0" data-end="22" style="line-height: 0.30; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 64.77mm"> 용찬재 사무관(02-2110-2428)</span></p></td></tr></tbody></table>
-<p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-26"></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-26"></p>
-          <table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-style-outline-3 ohah-hwpjs-paragraph ohah-hwpjs-parashape-25"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1800" data-start="0" data-end="27" style="line-height: 0.50; height: 6.35mm; font-size: 18.00pt; vertical-align: -15.00%; width: 166.84mm">우리가 독자 개발하여 최초 발사하는 한국형발사체,</span></p> <p class="ohah-hwpjs-style-outline-3 ohah-hwpjs-paragraph ohah-hwpjs-parashape-25"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1800" data-start="0" data-end="17" style="line-height: 0.50; height: 6.35mm; font-size: 18.00pt; vertical-align: -15.00%; width: 166.84mm">국민이 정한 그 이름은 ｢누리｣</span></p> <p class="ohah-hwpjs-style-outline-3 ohah-hwpjs-paragraph ohah-hwpjs-parashape-31"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600" data-start="0" data-end="36" style="line-height: 0.50; height: 5.64mm; font-size: 16.00pt; vertical-align: -15.00%; width: 166.84mm">“세상”의 옛말로, 우주까지 확장된 새로운 세상을 연다는 의미 -</span></p> <p class="ohah-hwpjs-style-outline-3 ohah-hwpjs-paragraph ohah-hwpjs-parashape-31"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600" data-start="0" data-end="29" style="line-height: 0.50; height: 5.64mm; font-size: 16.00pt; vertical-align: -15.00%; width: 166.84mm">명칭공모전에 1만건 이상 응모, 뜨거운 관심 보여 -</span></p></th></tr></thead><tbody></tbody></table>
-<p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-26"></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-35"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="2" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">□ </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="2" data-end="11" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">과학기술정보통신부</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="11" data-end="31" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">(장관 유영민, 이하 ‘과기정통부’)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="31" data-end="42" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">는 우리나라 최초로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="42" data-end="50" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">순수 우리기술로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="50" data-end="57" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"> 개발 중인 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="57" data-end="63" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">한국형발사체</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="63" data-end="71" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">(KSLV-2)</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="71" data-end="79" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">의 새로운 이름</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="79" data-end="81" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">으로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="82" data-end="90" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">“누리”가 선정</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="90" data-end="99" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">되었다고 밝혔다.</span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-29"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="43" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">  o 한국형발사체는 1.5톤급 실용위성을 지구 저궤도(600km~800km)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="43" data-end="80" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">까지 쏘아 올릴 수 있는 3단형 우주발사체로, 연간 130여개 기관</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="80" data-end="81" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">이</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="81" data-end="108" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"> 참여하여 2021년 발사를 목표로 개발하고 있다</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="108" data-end="109" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">.</span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-30"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="67" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">  o 올해 10월에는 한국형발사체의 핵심부품인 75톤 액체엔진의 비행성능을 확인하기 위해 시험발사체를 발사할 예정이다.</span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-37"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="18" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">□ 과기정통부는 한국항공우주연구원</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1300" data-start="18" data-end="36" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">(원장 임철호, 이하 ‘항우연’)</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="36" data-end="41" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">과 함께 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="41" data-end="78" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">그간 별도의 명칭 없이 ‘한국형발사체’라 불려온 우리 발사체의 새로</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="78" data-end="92" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">운 이름을 선정하기 위해 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="92" data-end="106" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">대국민 명칭 공모전을 실시</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="106" data-end="110" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">하였다.</span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-38"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="3" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">  o</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="3" data-end="35" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"> 4월 27일부터 5월 31일까지 실시한 동 명칭 공모에는</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="35" data-end="47" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold"> 약 6,300여명의 </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="47" data-end="77" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">국민이 참여하여 총 10,000건 이상의 응모작을 제출</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="77" data-end="83" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">하여 뜨거운</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="83" data-end="93" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"> 관심을 보였다. </span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-34"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="24" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">  o 명칭선정절차는 제출된 응모작에 대해 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="24" data-end="52" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">네이미스트, 카피라이터, 국어교사 등 외부 전문가가</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="52" data-end="94" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"> 주제와의 적합성, 상징성, 참신성, 발음 및 기억의 용의성 등을 기준으로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="94" data-end="101" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">후보작을 선별</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="101" data-end="105" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">한 후,</span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-32"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="4" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">  o </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="4" data-end="17" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">발사체 개발에 직접 참여</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="17" data-end="38" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">하고 있는 연구자, 산업체 관계자 약 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="38" data-end="60" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">400명의 선호도 조사를 통해 최종 선정</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="60" data-end="73" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">하는 절차로 진행되었다.</span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-39"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="5" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">□ 이러한</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="5" data-end="21" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"> 절차를 거쳐 한국형발사체의 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="21" data-end="37" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">새로운 명칭은 ‘누리’로 결정</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="37" data-end="38" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">되</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="38" data-end="65" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">었으며, 동 명칭은 앞으로 우리나라 독자 발사체인</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="65" data-end="75" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold"> ‘한국형발사체’의</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="75" data-end="86" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold"> 공식 명칭으로 사용</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="86" data-end="93" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">될 예정이다.</span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-40"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="37" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">  o 동 명칭을 제출한 경상대학교 에너지기계공학과 백승엽 학생은 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="37" data-end="38" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">‘</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="38" data-end="51" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">누리’는 ‘세상’의 옛말</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="51" data-end="53" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">로 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="53" data-end="71" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">우주로까지 확장된 새로운 세상을 </strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="71" data-end="74" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">연다는</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="75" data-end="77" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">의미</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="77" data-end="107" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">로, 우리 손으로 만든 발사체로 온 우주를 누비고 미래</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="107" data-end="112" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"> 발전을 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="112" data-end="134" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">누리길 희망하는 마음을 담았다고 밝혔다.</span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-36"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="4" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">  o </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="4" data-end="43" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">백승엽학생에게는 오는 9월 7일(금)에 과기정통부 장관상과 함께 소정의</span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="43" data-end="58" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"> 상금이 수여될 예정이다. </span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-33"><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="0" data-end="2" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">□ </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="2" data-end="37" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">과기정통부 거대공공연구정책관은 “명칭 공모전을 통해 우리국민의 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="37" data-end="53" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">우주에 대한 높은 관심을 확인</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="53" data-end="91" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">할 수 있었다”며 “새로운 이름에 걸맞게 무한한 가능성을 갖고 있는 </span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="91" data-end="126" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm"><strong class="ohah-hwpjs-bold">우주공간을 우리 발사체로 직접 개척할 수 있도록 최선을 다할 것</strong></span><span class="ohah-hwpjs-font-3 ohah-hwpjs-size-1500" data-start="126" data-end="136" style="line-height: 0.70; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 170.00mm">” 이라고 밝혔다.</span></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-33"></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-33"></p>
-          <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-27"></p>
-          <table class="ohah-hwpjs-table"><thead><tr><th><img src="images/BIN0004.jpg" alt="이미지" class="ohah-hwpjs-image" />
-<p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-23"></p></th><th><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-24"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-900" data-start="0" data-end="25" style="line-height: 0.40; height: 3.17mm; font-size: 9.00pt; vertical-align: -15.00%; width: 130.41mm">이 자료에 대하여 더욱 자세한 내용을 원하시면</span></p> <p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-24"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-900" data-start="0" data-end="47" style="line-height: 0.40; height: 3.17mm; font-size: 9.00pt; vertical-align: -15.00%; width: 130.41mm">과학기술정보통신부 용찬재 사무관(☎ 02-2110-2428)에게 연락주시기 바랍니다.</span></p></th></tr></thead><tbody></tbody></table>
-<p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-27"></p>
-          <hr class="ohah-hwpjs-page-break" />
-          <table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-41"><span class="ohah-hwpjs-font-7 ohah-hwpjs-color-ffffff ohah-hwpjs-size-1600" data-start="0" data-end="2" style="line-height: 0.60; height: 5.64mm; font-size: 16.00pt; vertical-align: -15.00%; width: 20.05mm">붙임</span></p></th><th><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-3"></p></th><th><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-22"><span class="ohah-hwpjs-font-7 ohah-hwpjs-size-1600" data-start="0" data-end="22" style="line-height: 0.30; height: 5.64mm; font-size: 16.00pt; vertical-align: -15.00%; width: 145.85mm"> 한국형발사체(누리호)와 시험발사체 비교</span></p></th></tr></thead><tbody></tbody></table>
-<p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-27"></p>
-          <table class="ohah-hwpjs-table"><thead><tr><th><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-23"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500" data-start="0" data-end="3" style="line-height: 0.60; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 28.49mm">구 분</span></p></th><th><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-23"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500" data-start="0" data-end="11" style="line-height: 0.60; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 62.43mm">한국형발사체(누리호)</span></p></th><th><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-23"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500" data-start="0" data-end="5" style="line-height: 0.60; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 68.42mm">시험발사체</span></p></th></tr></thead><tbody><tr><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-42"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500" data-start="0" data-end="3" style="line-height: 0.60; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 29.90mm">형 상</span></p></td><td><img src="images/BIN0002.bmp" alt="이미지" class="ohah-hwpjs-image" />
-<p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-23"></p></td><td><img src="images/BIN0003.bmp" alt="이미지" class="ohah-hwpjs-image" />
-<p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-23"></p></td></tr><tr><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-43"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500" data-start="0" data-end="3" style="line-height: 0.20; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 29.90mm">목 적</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="11" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 62.43mm">1.5톤급 실용위성을</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="12" data-end="17" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 62.43mm">지구저궤도</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1100" data-start="17" data-end="28" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 62.43mm">(600~800km)</span><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="28" data-end="32" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 62.43mm">에 투입</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="23" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 68.42mm">한국형발사체 75톤급 엔진의 비행성능 검증</span></p></td></tr><tr><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-43"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500" data-start="0" data-end="4" style="line-height: 0.20; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 29.90mm">총 길이</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="6" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 62.43mm">47.2 m</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="6" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 68.42mm">25.8 m</span></p></td></tr><tr><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-43"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500" data-start="0" data-end="5" style="line-height: 0.20; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 29.90mm">최대 직경</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="5" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 62.43mm">3.5 m</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="5" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 68.42mm">2.6 m</span></p></td></tr><tr><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-43"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500" data-start="0" data-end="5" style="line-height: 0.20; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 29.90mm">이륙 중량</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="5" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 62.43mm">200 톤</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="6" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 68.42mm">52.1 톤</span></p></td></tr><tr><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-43"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500" data-start="0" data-end="6" style="line-height: 0.20; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 29.90mm">탑재체 중량</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="5" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 62.43mm">1.5 톤</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="1" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 68.42mm">-</span></p></td></tr><tr><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-43"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1500" data-start="0" data-end="4" style="line-height: 0.20; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 29.90mm">단 수 </span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="2" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 62.43mm">3단</span></p></td><td><p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-8"><span class="ohah-hwpjs-font-6 ohah-hwpjs-size-1300" data-start="0" data-end="2" style="line-height: 0.20; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 68.42mm">1단</span></p></td></tr></tbody></table>
-<p class="ohah-hwpjs-style-normal ohah-hwpjs-paragraph ohah-hwpjs-parashape-27"></p>
-        </div>
-        <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
-        </div>
-      </div>
-    </section>
-  </div>
-</body>
+<div class="hpa" style="width:210mm;height:297mm;"><div class="hpN" style="left:104.025mm;top:287mm;width:1.95mm;height:3.53mm;"><span class="hrt cs1">1</span></div><div class="hcD" style="left:20mm;top:24.99mm;"><div class="hcI"><div class="hls ps25" style="line-height:21.639388888888888mm;white-space:nowrap;left:0mm;top:0mm;height:21.639388888888888mm;width:169.99655555555555mm;"></div><div class="hls ps25" style="line-height:24.232305555555556mm;white-space:nowrap;left:0mm;top:24.60272222222222mm;height:24.232305555555556mm;width:169.99655555555555mm;"><div class="htb" style="left:0mm;width:170.1447222222222mm;top:0mm;height:0.035277777777777776mm;display:inline-block;position:relative;vertical-align:middle;"><svg class="hs" viewBox="-2.5 -2.5 175.1447222222222 5.035277777777778" style="left:-2.5mm;top:-2.5mm;width:175.1447222222222mm;height:5.035277777777778mm;"><defs><pattern id="w_00" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="rgb(231,231,165)" /></pattern><pattern id="w_01" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="rgb(231,231,165)" /></pattern></defs><path fill="url(#w_00)" d="M0,0L20.178888888888885,0L20.178888888888885,0.007055555555555555L0,0.007055555555555555L0,0Z "></path><path d="M0,0 L0,0.007055555555555555" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M20.178888888888885,0 L20.178888888888885,0.007055555555555555" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0 L20.178888888888885,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.007055555555555555 L20.178888888888885,0.007055555555555555" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path fill="url(#w_01)" d="M20.178888888888885,0L170.1447222222222,0L170.1447222222222,0.007055555555555555L20.178888888888885,0.007055555555555555L20.178888888888885,0Z "></path><path d="M170.1447222222222,0 L170.1447222222222,0.007055555555555555" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M20.178888888888885,0 L170.1447222222222,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M20.178888888888885,0.007055555555555555 L170.1447222222222,0.007055555555555555" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.007055555555555555 L0,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M20.178888888888885,0.007055555555555555 L20.178888888888885,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.021166666666666667 L20.178888888888885,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M85.12527777777777,0.007055555555555555 L85.12527777777777,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M20.178888888888885,0.021166666666666667 L85.12527777777777,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M190.39063888888887,0.007055555555555555 L190.39063888888887,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.021166666666666667 L190.39063888888887,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M234.91825,0.007055555555555555 L234.91825,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.021166666666666667 L234.91825,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.021166666666666667 L0,0.035277777777777776" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M20.178888888888885,0.021166666666666667 L20.178888888888885,0.035277777777777776" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.035277777777777776 L20.178888888888885,0.035277777777777776" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M85.12527777777777,0.021166666666666667 L85.12527777777777,0.035277777777777776" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M20.178888888888885,0.035277777777777776 L85.12527777777777,0.035277777777777776" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M190.39063888888887,0.021166666666666667 L190.39063888888887,0.035277777777777776" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.035277777777777776 L190.39063888888887,0.035277777777777776" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M234.91825,0.021166666666666667 L234.91825,0.035277777777777776" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.035277777777777776 L234.91825,0.035277777777777776" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg><div class="hce" style="left:0mm;top:0mm;width:20.178888888888885mm;height:0.007055555555555555mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div><div class="hce" style="left:20.178888888888885mm;top:0mm;width:149.96583333333334mm;height:0.007055555555555555mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div><div class="hce" style="left:0mm;top:0.007055555555555555mm;width:20.178888888888885mm;height:0.01411111111111111mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div><div class="hce" style="left:20.178888888888885mm;top:0.007055555555555555mm;width:64.94638888888889mm;height:0.01411111111111111mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div><div class="hce" style="left:170.1447222222222mm;top:0.007055555555555555mm;width:20.245916666666666mm;height:0.01411111111111111mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div><div class="hce" style="left:170.1447222222222mm;top:0.007055555555555555mm;width:64.77352777777777mm;height:0.01411111111111111mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div><div class="hce" style="left:0mm;top:0.021166666666666667mm;width:20.178888888888885mm;height:0.01411111111111111mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div><div class="hce" style="left:20.178888888888885mm;top:0.021166666666666667mm;width:64.94638888888889mm;height:0.01411111111111111mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div><div class="hce" style="left:170.1447222222222mm;top:0.021166666666666667mm;width:20.245916666666666mm;height:0.01411111111111111mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div><div class="hce" style="left:170.1447222222222mm;top:0.021166666666666667mm;width:64.77352777777777mm;height:0.01411111111111111mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div></div></div><div class="hls ps25" style="line-height:1.0583333333333331mm;white-space:nowrap;left:0mm;top:52.78613888888888mm;height:1.0583333333333331mm;width:169.99655555555555mm;"></div><div class="hls ps25" style="line-height:45.360166666666665mm;white-space:nowrap;left:0mm;top:54.5923611111111mm;height:45.360166666666665mm;width:169.99655555555555mm;"><div class="htb" style="left:0mm;width:169.00525mm;top:0mm;height:0.0035277777777777777mm;display:inline-block;position:relative;vertical-align:middle;"><svg class="hs" viewBox="-2.5 -2.5 174.00525 5.003527777777777" style="left:-2.5mm;top:-2.5mm;width:174.00525mm;height:5.003527777777777mm;"><defs><pattern id="w_00" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="rgb(242,242,242)" /></pattern></defs><path fill="url(#w_00)" d="M0,0L169.00525,0L169.00525,0.0035277777777777777L0,0.0035277777777777777L0,0Z "></path><path d="M0,0 L0,0.0035277777777777777" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M169.00525,0 L169.00525,0.0035277777777777777" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0 L169.00525,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.0035277777777777777 L169.00525,0.0035277777777777777" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg><div class="hce" style="left:0mm;top:0mm;width:169.00525mm;height:0.0035277777777777777mm;"><div class="hcD" style="left:0mm;top:0mm;"><div class="hcI"></div></div></div></div></div><div class="hls ps34" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:108.2498611111111mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">□ </span><span class="hrt cs46" style="font-size:15pt;color:rgb(0,0,0);"><strong>과학기술정보통신부</strong></span><span class="hrt cs48" style="font-size:15pt;color:rgb(0,0,0);">(장관 유영민, 이하 ‘과기정통부’)</span><span class="hrt cs46" style="font-size:15pt;color:rgb(0,0,0);"><strong>는 우리나라 최초로 </strong></span></div><div class="hls ps34" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:117.25274999999999mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">순수 우리기술로 개발 중인 한국형발사체(KSLV-2)의 새로운 이름으로 </span></div><div class="hls ps34" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:126.2556388888889mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">“누리”가 선정되었다고 밝혔다.</span></div><div class="hls ps28" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:138.78630555555554mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">  o 한국형발사체는 1.5톤급 실용위성을 지구 저궤도(600km~800km)</span></div><div class="hls ps28" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:147.78919444444443mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">까지 쏘아 올릴 수 있는 3단형 우주발사체로, 연간 130여개 기관이 </span></div><div class="hls ps28" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:156.79208333333332mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">참여하여 2021년 발사를 목표로 개발하고 있다.</span></div><div class="hls ps29" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:169.32274999999998mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">  o 올해 10월에는 한국형발사체의 핵심부품인 75톤 액체엔진의 비행</span></div><div class="hls ps29" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:178.32563888888888mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">성능을 확인하기 위해 시험발사체를 발사할 예정이다.</span></div><div class="hls ps36" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:191.91463888888887mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">□ 과기정통부는 한국항공우주연구원</span><span class="hrt cs43" style="font-size:15pt;color:rgb(0,0,0);">(원장 임철호, 이하 ‘항우연’)</span><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">과 함께 </span></div><div class="hls ps36" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:200.91752777777776mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">그간 별도의 명칭 없이 ‘한국형발사체’라 불려온 우리 발사체의 새로운 </span></div><div class="hls ps36" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:209.92041666666663mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">이름을 선정하기 위해 대국민 명칭 공모전을 실시하였다.</span></div><div class="hls ps37" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:222.45108333333332mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">  o</span><span class="hrt cs44" style="font-size:13pt;color:rgb(0,0,0);"> 4월 27일부터 5월 31일까지 실시한 동 명칭 공모에는</span><span class="hrt cs49" style="font-size:13pt;color:rgb(0,0,0);"> 약 6,300여명의 </span></div><div class="hls ps37" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:231.4539722222222mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">국민이 참여하여 총 10,000건 이상의 응모작을 제출하여 뜨거운 </span></div><div class="hls ps37" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:240.45686111111112mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">관심을 보였다. </span></div></div></div></div><div class="hpa" style="width:210mm;height:297mm;"><div class="hpN" style="left:104.025mm;top:287mm;width:1.95mm;height:3.53mm;"><span class="hrt cs1">2</span></div><div class="hcD" style="left:20mm;top:24.99mm;"><div class="hcI"><div class="hls ps33" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:3.5277777777777777mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">  o 명칭선정절차는 제출된 응모작에 대해 </span><span class="hrt cs38" style="font-size:15pt;color:rgb(0,0,0);"><strong>네이미스트, 카피라이터, </strong></span></div><div class="hls ps33" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:12.530666666666667mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">국어교사 등 외부 전문가가 주제와의 적합성, 상징성, 참신성, </span></div><div class="hls ps33" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:21.533555555555555mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">발음 및 기억의 용의성 등을 기준으로 후보작을 선별한 후,</span></div><div class="hls ps31" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:34.06422222222222mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">  o </span><span class="hrt cs38" style="font-size:15pt;color:rgb(0,0,0);"><strong>발사체 개발에 직접 참여</strong></span><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">하고 있는 연구자, 산업체 관계자 약 </span></div><div class="hls ps31" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:43.06711111111111mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">400명의 선호도 조사를 통해 최종 선정하는 절차로 진행되었다.</span></div><div class="hls ps38" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:56.65611111111111mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">□ 이러한</span><span class="hrt cs46" style="font-size:15pt;color:rgb(0,0,0);"><strong> 절차를 거쳐 한국형발사체의 </strong></span><span class="hrt cs45" style="font-size:15pt;color:rgb(0,0,0);">새로운 명칭은 ‘누리’로 결정</span></div><div class="hls ps38" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:65.65899999999999mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">되었으며, 동 명칭은 앞으로 우리나라 독자 발사체인 ‘한국형발사체’</span><span class="hrt cs46" style="font-size:15pt;color:rgb(0,0,0);"><strong>의</strong></span><span class="hrt cs44" style="font-size:13pt;color:rgb(0,0,0);"> </span></div><div class="hls ps38" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:74.66188888888888mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">공식 명칭으로 사용될 예정이다.</span></div><div class="hls ps39" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:87.19255555555556mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">  o 동 명칭을 제출한 경상대학교 에너지기계공학과 백승엽 학생은 </span></div><div class="hls ps39" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:96.19544444444443mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">‘누리’는 ‘세상’의 옛말로 우주로까지 확장된 새로운 세상을 연다는</span><span class="hrt cs44" style="font-size:13pt;color:rgb(0,0,0);"> </span></div><div class="hls ps39" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:105.19833333333332mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">의미로, 우리 손으로 만든 발사체로 온 우주를 누비고 미래 발전을 </span></div><div class="hls ps39" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:114.20122222222223mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">누리길 희망하는 마음을 담았다고 밝혔다.</span></div><div class="hls ps35" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:126.73188888888889mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">  o </span><span class="hrt cs46" style="font-size:15pt;color:rgb(0,0,0);"><strong>백승엽학생에게는 오는 9월 7일(금)에 과기정통부 장관상과 함께 </strong></span></div><div class="hls ps35" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:135.73477777777777mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">소정의 상금이 수여될 예정이다. </span></div><div class="hls ps32" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:149.32377777777776mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt cs35" style="font-size:14pt;color:rgb(0,0,0);">□ </span><span class="hrt cs47" style="font-size:15pt;color:rgb(0,0,0);">과기정통부 거대공공연구정책관은 “명칭 공모전을 통해 우리국민의 </span></div><div class="hls ps32" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:158.32666666666665mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">우주에 대한 높은 관심을 확인할 수 있었다”며 “새로운 이름에 </span></div><div class="hls ps32" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:167.32955555555554mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">걸맞게 무한한 가능성을 갖고 있는 우주공간을 우리 발사체로 </span></div><div class="hls ps32" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:176.33244444444443mm;height:5.291666666666667mm;width:169.99655555555555mm;"><span class="hrt">직접 개척할 수 있도록 최선을 다할 것” 이라고 밝혔다.</span></div><div class="hls ps32" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:189.92144444444443mm;height:5.291666666666667mm;width:169.99655555555555mm;"></div><div class="hls ps32" style="line-height:5.291666666666667mm;white-space:nowrap;left:0mm;top:203.51044444444443mm;height:5.291666666666667mm;width:169.99655555555555mm;"></div><div class="hls ps26" style="line-height:4.938888888888889mm;white-space:nowrap;left:0mm;top:216.04111111111112mm;height:4.938888888888889mm;width:169.99655555555555mm;"></div><div class="hls ps26" style="line-height:17.042694444444443mm;white-space:nowrap;left:0mm;top:227.96499999999997mm;height:17.042694444444443mm;width:169.99655555555555mm;"><div class="htb" style="left:0mm;width:168.9699722222222mm;top:0mm;height:0.007055555555555555mm;display:inline-block;position:relative;vertical-align:middle;"><svg class="hs" viewBox="-2.5 -2.5 173.9699722222222 5.007055555555556" style="left:-2.5mm;top:-2.5mm;width:173.9699722222222mm;height:5.007055555555556mm;"><defs></defs><path d="M0,0 L0,0.007055555555555555" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M37.560249999999996,0 L37.560249999999996,0.007055555555555555" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0 L37.560249999999996,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.007055555555555555 L37.560249999999996,0.007055555555555555" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M168.9699722222222,0 L168.9699722222222,0.007055555555555555" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M37.560249999999996,0 L168.9699722222222,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M37.560249999999996,0.007055555555555555 L168.9699722222222,0.007055555555555555" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg><div class="hce" style="left:0mm;top:0mm;width:37.560249999999996mm;height:0.007055555555555555mm;"><div class="hcD" style="left:0.4974166666666667mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:37.560249999999996mm;top:0mm;width:131.4097222222222mm;height:0.007055555555555555mm;"><div class="hcD" style="left:0.4974166666666667mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div></div></div></div></div></div><div class="hpa" style="width:210mm;height:297mm;"><div class="hpN" style="left:104.025mm;top:287mm;width:1.95mm;height:3.53mm;"><span class="hrt cs1">3</span></div><div class="hcD" style="left:20mm;top:24.99mm;"><div class="hcI"><div class="hls ps26" style="line-height:9.98713888888889mm;white-space:nowrap;left:0mm;top:3.5277777777777777mm;height:9.98713888888889mm;width:169.99655555555555mm;"><div class="htb" style="left:0mm;width:169.89424999999997mm;top:0mm;height:0.010583333333333333mm;display:inline-block;position:relative;vertical-align:middle;"><svg class="hs" viewBox="-2.5 -2.5 174.89424999999997 5.010583333333333" style="left:-2.5mm;top:-2.5mm;width:174.89424999999997mm;height:5.010583333333333mm;"><defs><pattern id="w_00" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="rgb(52,45,190)" /></pattern></defs><path fill="url(#w_00)" d="M0,0L21.05377777777778,0L21.05377777777778,0.010583333333333333L0,0.010583333333333333L0,0Z "></path><path d="M0,0 L0,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M21.05377777777778,0 L21.05377777777778,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0 L21.05377777777778,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.010583333333333333 L21.05377777777778,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M23.046972222222223,0 L23.046972222222223,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M21.05377777777778,0 L23.046972222222223,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M21.05377777777778,0.010583333333333333 L23.046972222222223,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M169.89424999999997,0 L169.89424999999997,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M23.046972222222223,0 L169.89424999999997,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M23.046972222222223,0.010583333333333333 L169.89424999999997,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg><div class="hce" style="left:0mm;top:0mm;width:21.05377777777778mm;height:0.010583333333333333mm;"><div class="hcD" style="left:0.4974166666666667mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:21.05377777777778mm;top:0mm;width:1.9931944444444443mm;height:0.010583333333333333mm;"><div class="hcD" style="left:0.4974166666666667mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:23.046972222222223mm;top:0mm;width:146.84727777777775mm;height:0.010583333333333333mm;"><div class="hcD" style="left:0.4974166666666667mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div></div></div><div class="hls ps26" style="line-height:221.1951944444444mm;white-space:nowrap;left:0mm;top:20.753916666666665mm;height:221.1951944444444mm;width:169.99655555555555mm;"><div class="htb" style="left:0mm;width:170.1447222222222mm;top:0mm;height:0.08466666666666667mm;display:inline-block;position:relative;vertical-align:middle;"><svg class="hs" viewBox="-2.5 -2.5 175.1447222222222 5.084666666666667" style="left:-2.5mm;top:-2.5mm;width:175.1447222222222mm;height:5.084666666666667mm;"><defs></defs><path d="M0,0 L0,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0 L32.08866666666667,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0 L32.08866666666667,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.010583333333333333 L32.08866666666667,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0 L98.12161111111111,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0 L98.12161111111111,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.010583333333333333 L98.12161111111111,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0 L170.1447222222222,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0 L170.1447222222222,0" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.010583333333333333 L170.1447222222222,0.010583333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.010583333333333333 L0,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.010583333333333333 L32.08866666666667,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.021166666666666667 L32.08866666666667,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.010583333333333333 L98.12161111111111,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.021166666666666667 L98.12161111111111,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.010583333333333333 L170.1447222222222,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.021166666666666667 L170.1447222222222,0.021166666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.021166666666666667 L0,0.03175" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.021166666666666667 L32.08866666666667,0.03175" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.03175 L32.08866666666667,0.03175" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.021166666666666667 L98.12161111111111,0.03175" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.03175 L98.12161111111111,0.03175" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.021166666666666667 L170.1447222222222,0.03175" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.03175 L170.1447222222222,0.03175" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.03175 L0,0.042333333333333334" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.03175 L32.08866666666667,0.042333333333333334" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.042333333333333334 L32.08866666666667,0.042333333333333334" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.03175 L98.12161111111111,0.042333333333333334" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.042333333333333334 L98.12161111111111,0.042333333333333334" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.03175 L170.1447222222222,0.042333333333333334" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.042333333333333334 L170.1447222222222,0.042333333333333334" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.042333333333333334 L0,0.05291666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.042333333333333334 L32.08866666666667,0.05291666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.05291666666666667 L32.08866666666667,0.05291666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.042333333333333334 L98.12161111111111,0.05291666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.05291666666666667 L98.12161111111111,0.05291666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.042333333333333334 L170.1447222222222,0.05291666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.05291666666666667 L170.1447222222222,0.05291666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.05291666666666667 L0,0.0635" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.05291666666666667 L32.08866666666667,0.0635" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.0635 L32.08866666666667,0.0635" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.05291666666666667 L98.12161111111111,0.0635" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.0635 L98.12161111111111,0.0635" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.05291666666666667 L170.1447222222222,0.0635" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.0635 L170.1447222222222,0.0635" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.0635 L0,0.07408333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.0635 L32.08866666666667,0.07408333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.07408333333333333 L32.08866666666667,0.07408333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.0635 L98.12161111111111,0.07408333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.07408333333333333 L98.12161111111111,0.07408333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.0635 L170.1447222222222,0.07408333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.07408333333333333 L170.1447222222222,0.07408333333333333" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.07408333333333333 L0,0.08466666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.07408333333333333 L32.08866666666667,0.08466666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M0,0.08466666666666667 L32.08866666666667,0.08466666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.07408333333333333 L98.12161111111111,0.08466666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M32.08866666666667,0.08466666666666667 L98.12161111111111,0.08466666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M170.1447222222222,0.07408333333333333 L170.1447222222222,0.08466666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path><path d="M98.12161111111111,0.08466666666666667 L170.1447222222222,0.08466666666666667" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg><div class="hce" style="left:0mm;top:0mm;width:32.08866666666667mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:32.08866666666667mm;top:0mm;width:66.03294444444444mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:98.12161111111111mm;top:0mm;width:72.0231111111111mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:0mm;top:0.010583333333333333mm;width:32.08866666666667mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:32.08866666666667mm;top:0.010583333333333333mm;width:66.03294444444444mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:98.12161111111111mm;top:0.010583333333333333mm;width:72.0231111111111mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:0mm;top:0.021166666666666667mm;width:32.08866666666667mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:32.08866666666667mm;top:0.021166666666666667mm;width:66.03294444444444mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:98.12161111111111mm;top:0.021166666666666667mm;width:72.0231111111111mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:0mm;top:0.03175mm;width:32.08866666666667mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:32.08866666666667mm;top:0.03175mm;width:66.03294444444444mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:98.12161111111111mm;top:0.03175mm;width:72.0231111111111mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:0mm;top:0.042333333333333334mm;width:32.08866666666667mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:32.08866666666667mm;top:0.042333333333333334mm;width:66.03294444444444mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:98.12161111111111mm;top:0.042333333333333334mm;width:72.0231111111111mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:0mm;top:0.05291666666666667mm;width:32.08866666666667mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:32.08866666666667mm;top:0.05291666666666667mm;width:66.03294444444444mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:98.12161111111111mm;top:0.05291666666666667mm;width:72.0231111111111mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:0mm;top:0.0635mm;width:32.08866666666667mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:32.08866666666667mm;top:0.0635mm;width:66.03294444444444mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:98.12161111111111mm;top:0.0635mm;width:72.0231111111111mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:0mm;top:0.07408333333333333mm;width:32.08866666666667mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:32.08866666666667mm;top:0.07408333333333333mm;width:66.03294444444444mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div><div class="hce" style="left:98.12161111111111mm;top:0.07408333333333333mm;width:72.0231111111111mm;height:0.010583333333333333mm;"><div class="hcD" style="left:1.7991666666666666mm;top:0.4974166666666667mm;"><div class="hcI"></div></div></div></div></div></div></div></div></body>
+
 </html>

@@ -1654,6 +1654,7 @@ expression: json
                     "column_start_position": 0,
                     "segment_width": 0,
                     "tag": {
+                      "raw_value": 393216,
                       "is_first_line_of_page": false,
                       "is_first_line_of_column": false,
                       "is_empty_segment": false,
@@ -1661,7 +1662,9 @@ expression: json
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
                       "has_indentation": false,
-                      "has_paragraph_header_shape": false
+                      "has_paragraph_header_shape": false,
+                      "has_implementation_property": false,
+                      "reserved_bits": 0
                     }
                   }
                 ]
@@ -1945,6 +1948,7 @@ expression: json
                                       "column_start_position": 0,
                                       "segment_width": 20692,
                                       "tag": {
+                                        "raw_value": 393216,
                                         "is_first_line_of_page": false,
                                         "is_first_line_of_column": false,
                                         "is_empty_segment": false,
@@ -1952,7 +1956,9 @@ expression: json
                                         "is_last_segment_of_line": true,
                                         "has_auto_hyphenation": false,
                                         "has_indentation": false,
-                                        "has_paragraph_header_shape": false
+                                        "has_paragraph_header_shape": false,
+                                        "has_implementation_property": false,
+                                        "reserved_bits": 0
                                       }
                                     }
                                   ]
@@ -2023,6 +2029,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20976,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -2030,7 +2037,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -2082,6 +2091,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20692,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -2089,7 +2099,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -2157,6 +2169,7 @@ expression: json
                     "column_start_position": 0,
                     "segment_width": 0,
                     "tag": {
+                      "raw_value": 393216,
                       "is_first_line_of_page": false,
                       "is_first_line_of_column": false,
                       "is_empty_segment": false,
@@ -2164,7 +2177,9 @@ expression: json
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
                       "has_indentation": false,
-                      "has_paragraph_header_shape": false
+                      "has_paragraph_header_shape": false,
+                      "has_implementation_property": false,
+                      "reserved_bits": 0
                     }
                   }
                 ]
@@ -2291,6 +2306,7 @@ expression: json
                                       "column_start_position": 0,
                                       "segment_width": 20692,
                                       "tag": {
+                                        "raw_value": 393216,
                                         "is_first_line_of_page": false,
                                         "is_first_line_of_column": false,
                                         "is_empty_segment": false,
@@ -2298,7 +2314,9 @@ expression: json
                                         "is_last_segment_of_line": true,
                                         "has_auto_hyphenation": false,
                                         "has_indentation": false,
-                                        "has_paragraph_header_shape": false
+                                        "has_paragraph_header_shape": false,
+                                        "has_implementation_property": false,
+                                        "reserved_bits": 0
                                       }
                                     }
                                   ]
@@ -2369,6 +2387,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20976,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -2376,7 +2395,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -2428,6 +2449,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20692,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -2435,7 +2457,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -2503,6 +2527,7 @@ expression: json
                     "column_start_position": 0,
                     "segment_width": 0,
                     "tag": {
+                      "raw_value": 393216,
                       "is_first_line_of_page": false,
                       "is_first_line_of_column": false,
                       "is_empty_segment": false,
@@ -2510,7 +2535,9 @@ expression: json
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
                       "has_indentation": false,
-                      "has_paragraph_header_shape": false
+                      "has_paragraph_header_shape": false,
+                      "has_implementation_property": false,
+                      "reserved_bits": 0
                     }
                   }
                 ]
@@ -2637,6 +2664,7 @@ expression: json
                                       "column_start_position": 0,
                                       "segment_width": 20692,
                                       "tag": {
+                                        "raw_value": 393216,
                                         "is_first_line_of_page": false,
                                         "is_first_line_of_column": false,
                                         "is_empty_segment": false,
@@ -2644,7 +2672,9 @@ expression: json
                                         "is_last_segment_of_line": true,
                                         "has_auto_hyphenation": false,
                                         "has_indentation": false,
-                                        "has_paragraph_header_shape": false
+                                        "has_paragraph_header_shape": false,
+                                        "has_implementation_property": false,
+                                        "reserved_bits": 0
                                       }
                                     }
                                   ]
@@ -2715,6 +2745,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 8504,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -2722,7 +2753,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -2774,6 +2807,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20692,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -2781,7 +2815,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -2849,6 +2885,7 @@ expression: json
                     "column_start_position": 0,
                     "segment_width": 0,
                     "tag": {
+                      "raw_value": 393216,
                       "is_first_line_of_page": false,
                       "is_first_line_of_column": false,
                       "is_empty_segment": false,
@@ -2856,7 +2893,9 @@ expression: json
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
                       "has_indentation": false,
-                      "has_paragraph_header_shape": false
+                      "has_paragraph_header_shape": false,
+                      "has_implementation_property": false,
+                      "reserved_bits": 0
                     }
                   }
                 ]
@@ -2983,6 +3022,7 @@ expression: json
                                       "column_start_position": 0,
                                       "segment_width": 20692,
                                       "tag": {
+                                        "raw_value": 393216,
                                         "is_first_line_of_page": false,
                                         "is_first_line_of_column": false,
                                         "is_empty_segment": false,
@@ -2990,7 +3030,9 @@ expression: json
                                         "is_last_segment_of_line": true,
                                         "has_auto_hyphenation": false,
                                         "has_indentation": false,
-                                        "has_paragraph_header_shape": false
+                                        "has_paragraph_header_shape": false,
+                                        "has_implementation_property": false,
+                                        "reserved_bits": 0
                                       }
                                     }
                                   ]
@@ -3061,6 +3103,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 8504,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -3068,7 +3111,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -3120,6 +3165,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20692,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -3127,7 +3173,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -3195,6 +3243,7 @@ expression: json
                     "column_start_position": 0,
                     "segment_width": 0,
                     "tag": {
+                      "raw_value": 393216,
                       "is_first_line_of_page": false,
                       "is_first_line_of_column": false,
                       "is_empty_segment": false,
@@ -3202,7 +3251,9 @@ expression: json
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
                       "has_indentation": false,
-                      "has_paragraph_header_shape": false
+                      "has_paragraph_header_shape": false,
+                      "has_implementation_property": false,
+                      "reserved_bits": 0
                     }
                   }
                 ]
@@ -3329,6 +3380,7 @@ expression: json
                                       "column_start_position": 0,
                                       "segment_width": 20692,
                                       "tag": {
+                                        "raw_value": 393216,
                                         "is_first_line_of_page": false,
                                         "is_first_line_of_column": false,
                                         "is_empty_segment": false,
@@ -3336,7 +3388,9 @@ expression: json
                                         "is_last_segment_of_line": true,
                                         "has_auto_hyphenation": false,
                                         "has_indentation": false,
-                                        "has_paragraph_header_shape": false
+                                        "has_paragraph_header_shape": false,
+                                        "has_implementation_property": false,
+                                        "reserved_bits": 0
                                       }
                                     }
                                   ]
@@ -3407,6 +3461,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 8504,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -3414,7 +3469,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -3466,6 +3523,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20692,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -3473,7 +3531,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -3541,6 +3601,7 @@ expression: json
                     "column_start_position": 0,
                     "segment_width": 0,
                     "tag": {
+                      "raw_value": 393216,
                       "is_first_line_of_page": false,
                       "is_first_line_of_column": false,
                       "is_empty_segment": false,
@@ -3548,7 +3609,9 @@ expression: json
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
                       "has_indentation": false,
-                      "has_paragraph_header_shape": false
+                      "has_paragraph_header_shape": false,
+                      "has_implementation_property": false,
+                      "reserved_bits": 0
                     }
                   }
                 ]
@@ -3675,6 +3738,7 @@ expression: json
                                       "column_start_position": 0,
                                       "segment_width": 20692,
                                       "tag": {
+                                        "raw_value": 393216,
                                         "is_first_line_of_page": false,
                                         "is_first_line_of_column": false,
                                         "is_empty_segment": false,
@@ -3682,7 +3746,9 @@ expression: json
                                         "is_last_segment_of_line": true,
                                         "has_auto_hyphenation": false,
                                         "has_indentation": false,
-                                        "has_paragraph_header_shape": false
+                                        "has_paragraph_header_shape": false,
+                                        "has_implementation_property": false,
+                                        "reserved_bits": 0
                                       }
                                     }
                                   ]
@@ -3753,6 +3819,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 8504,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -3760,7 +3827,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -3812,6 +3881,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20692,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -3819,7 +3889,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -3892,6 +3964,7 @@ expression: json
                     "column_start_position": 0,
                     "segment_width": 42520,
                     "tag": {
+                      "raw_value": 393216,
                       "is_first_line_of_page": false,
                       "is_first_line_of_column": false,
                       "is_empty_segment": false,
@@ -3899,7 +3972,9 @@ expression: json
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
                       "has_indentation": false,
-                      "has_paragraph_header_shape": false
+                      "has_paragraph_header_shape": false,
+                      "has_implementation_property": false,
+                      "reserved_bits": 0
                     }
                   }
                 ]
@@ -4026,6 +4101,7 @@ expression: json
                                       "column_start_position": 0,
                                       "segment_width": 20692,
                                       "tag": {
+                                        "raw_value": 393216,
                                         "is_first_line_of_page": false,
                                         "is_first_line_of_column": false,
                                         "is_empty_segment": false,
@@ -4033,7 +4109,9 @@ expression: json
                                         "is_last_segment_of_line": true,
                                         "has_auto_hyphenation": false,
                                         "has_indentation": false,
-                                        "has_paragraph_header_shape": false
+                                        "has_paragraph_header_shape": false,
+                                        "has_implementation_property": false,
+                                        "reserved_bits": 0
                                       }
                                     }
                                   ]
@@ -4104,6 +4182,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 26644,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -4111,7 +4190,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -4174,6 +4255,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 26644,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -4181,7 +4263,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -4227,6 +4311,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20692,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -4234,7 +4319,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -4365,6 +4452,7 @@ expression: json
                                       "column_start_position": 0,
                                       "segment_width": 20692,
                                       "tag": {
+                                        "raw_value": 393216,
                                         "is_first_line_of_page": false,
                                         "is_first_line_of_column": false,
                                         "is_empty_segment": false,
@@ -4372,7 +4460,9 @@ expression: json
                                         "is_last_segment_of_line": true,
                                         "has_auto_hyphenation": false,
                                         "has_indentation": false,
-                                        "has_paragraph_header_shape": false
+                                        "has_paragraph_header_shape": false,
+                                        "has_implementation_property": false,
+                                        "reserved_bits": 0
                                       }
                                     }
                                   ]
@@ -4443,6 +4533,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20976,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -4450,7 +4541,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -4517,6 +4610,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20976,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -4524,7 +4618,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]
@@ -4570,6 +4666,7 @@ expression: json
                             "column_start_position": 0,
                             "segment_width": 20692,
                             "tag": {
+                              "raw_value": 393216,
                               "is_first_line_of_page": false,
                               "is_first_line_of_column": false,
                               "is_empty_segment": false,
@@ -4577,7 +4674,9 @@ expression: json
                               "is_last_segment_of_line": true,
                               "has_auto_hyphenation": false,
                               "has_indentation": false,
-                              "has_paragraph_header_shape": false
+                              "has_paragraph_header_shape": false,
+                              "has_implementation_property": false,
+                              "reserved_bits": 0
                             }
                           }
                         ]

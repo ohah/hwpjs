@@ -31,26 +31,15 @@ where
     R::Options: 'static,
 {
     // 타입 체크를 통해 기존 뷰어 함수 호출 / Call existing viewer functions through type checking
-    // HTML 렌더러인 경우 / If HTML renderer
-    if std::any::TypeId::of::<R::Options>()
-        == std::any::TypeId::of::<crate::viewer::html::HtmlOptions>()
-    {
-        use crate::viewer::html::document::bodytext::paragraph::convert_paragraph_to_html;
-        // 안전하게 타입 캐스팅 / Safely cast type
-        unsafe {
-            let html_options =
-                &*(options as *const R::Options as *const crate::viewer::html::HtmlOptions);
-            let html_tracker = tracker.as_html_tracker_mut();
-            return convert_paragraph_to_html(paragraph, document, html_options, html_tracker);
-        }
-    }
+    // HTML 렌더러인 경우 - 새로운 HTML 뷰어는 process_paragraph를 사용 / If HTML renderer - new HTML viewer uses process_paragraph
+    // HTML 뷰어는 to_html() 함수에서 직접 처리하므로 여기서는 기본 처리 사용
+    // HTML viewer is handled directly in to_html() function, so use default processing here
 
     // Markdown 렌더러인 경우 / If Markdown renderer
     if std::any::TypeId::of::<R::Options>()
         == std::any::TypeId::of::<crate::viewer::markdown::MarkdownOptions>()
     {
         use crate::viewer::markdown::document::bodytext::paragraph::convert_paragraph_to_markdown;
-        use crate::viewer::markdown::utils::OutlineNumberTracker;
         // 안전하게 타입 캐스팅 / Safely cast type
         unsafe {
             let md_options =
@@ -70,9 +59,9 @@ where
 trait TrackerRef {
     /// Get mutable reference to HTML tracker
     /// HTML 추적기의 가변 참조 가져오기
-    unsafe fn as_html_tracker_mut(
-        &mut self,
-    ) -> &mut crate::viewer::html::utils::OutlineNumberTracker;
+    /// Note: 새로운 HTML 뷰어는 OutlineNumberTracker를 사용하지 않음
+    /// Note: New HTML viewer does not use OutlineNumberTracker
+    unsafe fn as_html_tracker_mut(&mut self) -> &mut ();
 
     /// Get mutable reference to Markdown tracker
     /// Markdown 추적기의 가변 참조 가져오기
@@ -84,16 +73,20 @@ trait TrackerRef {
 /// Enum to hold tracker by renderer type
 /// 렌더러 타입별 추적기를 보관하는 열거형
 enum Tracker {
-    Html(crate::viewer::html::utils::OutlineNumberTracker),
+    /// HTML 뷰어는 더 이상 OutlineNumberTracker를 사용하지 않음
+    /// HTML viewer no longer uses OutlineNumberTracker
+    Html(()),
     Markdown(crate::viewer::markdown::utils::OutlineNumberTracker),
 }
 
 impl TrackerRef for Tracker {
-    unsafe fn as_html_tracker_mut(
-        &mut self,
-    ) -> &mut crate::viewer::html::utils::OutlineNumberTracker {
+    unsafe fn as_html_tracker_mut(&mut self) -> &mut () {
         match self {
-            Tracker::Html(tracker) => tracker,
+            Tracker::Html(_) => {
+                // 새로운 HTML 뷰어는 tracker를 사용하지 않음
+                // New HTML viewer does not use tracker
+                std::hint::unreachable_unchecked()
+            }
             _ => std::hint::unreachable_unchecked(),
         }
     }
@@ -126,11 +119,11 @@ where
 
     // 개요 번호 추적기 생성 (렌더러별로 다름) / Create outline number tracker (varies by renderer)
     // 문서 전체에 걸쳐 상태를 유지해야 하므로 한 번만 생성 / Created only once to maintain state across entire document
+    // 새로운 HTML 뷰어는 tracker를 사용하지 않음 / New HTML viewer does not use tracker
     let mut tracker: Tracker = if std::any::TypeId::of::<R::Options>()
         == std::any::TypeId::of::<crate::viewer::html::HtmlOptions>()
     {
-        use crate::viewer::html::utils::OutlineNumberTracker;
-        Tracker::Html(OutlineNumberTracker::new())
+        Tracker::Html(())
     } else if std::any::TypeId::of::<R::Options>()
         == std::any::TypeId::of::<crate::viewer::markdown::MarkdownOptions>()
     {
