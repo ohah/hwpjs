@@ -1429,23 +1429,39 @@ Tag ID: HWPTAG_PARA_HEADER
 | 0x04 | 쪽 나누기 |
 | 0x08 | 단 나누기 |
 
+> **주의 / Warning**: `column_divide_type` 속성은 페이지 구분을 위한 신뢰할 수 있는 지표가 아닙니다.
+>
+> 실제 HWP 파일에서 페이지 나누기는 다음과 같은 경우에 발생할 수 있습니다:
+>
+> - 명시적 페이지 나누기: `column_divide_type`에 `Page` (0x04)가 포함된 경우
+> - 암시적 페이지 나누기: 여러 줄바꿈으로 페이지가 채워져 자동으로 새 페이지가 생성되는 경우
+> - 암시적 페이지 나누기의 경우 `column_divide_type`이 빈 배열(`[]`)일 수 있으며, 이 경우 페이지 구분을 위해 다른 방법이 필요합니다.
+>
+> 따라서 레거시 라이브러리들(ruby-hwp, hwpjs.js)은 `column_divide_type` 대신 `LineSegmentInfo`의 `vertical_position` 값을 기반으로 페이지를 구분합니다:
+>
+> 1. `vertical_position`이 0으로 리셋되거나 이전 문단의 `vertical_position`보다 작아지면 새 페이지로 간주합니다.
+>    1. If `vertical_position` resets to 0 or becomes smaller than the previous paragraph's `vertical_position`, it is considered a new page.
+> 2. `vertical_position`이 페이지 콘텐츠 영역 높이를 초과하면 새 페이지로 간주합니다.
+>    2. If `vertical_position` exceeds the page content area height, it is considered a new page.
+>
+> 이 구현도 동일한 방식을 사용합니다.
+> This implementation uses the same approach.
+
 **레벨별 사용 / Usage by Level**
 
 > **참고 / Note**: 아래 내용은 공식 스펙 문서에 명시되지 않았지만, 실제 HWP 파일과 레거시 구현(libhwp, hwp-rs, pyhwp, hwpjs.js, ruby-hwp)에서 확인된 동작입니다.
-> The following information is not explicitly stated in the official spec document, but has been confirmed through actual HWP files and legacy implementations (libhwp, hwp-rs, pyhwp, hwpjs.js, ruby-hwp).
 
 - **Level 0**: 본문의 문단 헤더 (일반적인 사용)
   - Section의 최상위 레벨에서 나타나며, 문단의 시작을 나타냅니다.
 
-- **Level 1 이상**: 컨트롤 헤더 내부의 문단 헤더 / Paragraph header inside control header
+- **Level 1 이상**: 컨트롤 헤더 내부의 문단 헤더
   - 각주/미주(`fn  `, `en  `), 머리말/꼬리말(`head`, `foot`) 등의 컨트롤 헤더 내부에 직접 나타날 수 있습니다.
   - 이러한 경우 PARA_HEADER는 해당 컨트롤 헤더의 자식 레코드로 처리되며, 컨트롤 헤더 내부의 문단 내용을 나타냅니다.
 
-- **SHAPE_COMPONENT 내부**: LIST_HEADER 다음의 PARA_HEADER / PARA_HEADER after LIST_HEADER inside SHAPE_COMPONENT
+- **SHAPE_COMPONENT 내부**: LIST_HEADER 다음의 PARA_HEADER
   - SHAPE_COMPONENT(개체 요소) 내부에서 LIST_HEADER 다음에 PARA_HEADER가 나타날 수 있습니다 (글상자 텍스트).
-  - PARA_HEADER can appear after LIST_HEADER inside SHAPE_COMPONENT (shape component) (textbox text).
   - 이러한 경우 PARA_HEADER는 LIST_HEADER의 형제 레코드로 나타나며, LIST_HEADER의 `paragraphs` 필드에 포함되어야 합니다.
-  - In such cases, PARA_HEADER appears as a sibling record of LIST_HEADER and should be included in LIST_HEADER's `paragraphs` field.
+
 
 ##### 4.3.2. 문단의 텍스트
 
@@ -1508,6 +1524,12 @@ Tag ID: HWPTAG_PARA_LINE_SEG
 | INT32 | 4 | 세그먼트의 폭 |
 | UINT32 | 4 | 태그<br>- bit 0: 페이지의 첫 줄인지 여부<br>- bit 1: 컬럼의 첫 줄인지 여부<br>- bit 16: 텍스트가 배열되지 않은 빈 세그먼트인지 여부<br>- bit 17: 줄의 첫 세그먼트인지 여부<br>- bit 18: 줄의 마지막 세그먼트인지 여부<br>- bit 19: 줄의 마지막에 auto-hyphenation이 수행되었는지 여부<br>- bit 20: indentation 적용<br>- bit 21: 문단 머리 모양 적용<br>- bit 31: 구현상의 편의를 위한 property |
 | 전체 길이 | 36 | |
+
+> **주의 / Warning**: 태그 필드의 bit 0 (`is_first_line_of_page`)은 실제 HWP 파일에서 신뢰할 수 없는 값입니다.
+>
+> 실제 HWP 파일을 분석한 결과, 대부분의 경우 `is_first_line_of_page`가 `false`로 설정되어 있어 페이지 구분에 사용할 수 없습니다. 레거시 라이브러리들(ruby-hwp, hwpjs.js)도 이 플래그를 사용하지 않고 `vertical_position` 값만을 기반으로 페이지를 구분합니다.
+>
+> 따라서 페이지 구분을 위해서는 `vertical_position` 값을 사용해야 합니다 (자세한 내용은 [표 59: 단 나누기 종류](#표-59-단-나누기-종류) 참조).
 
 ##### 4.3.5. 문단의 영역 태그
 

@@ -4,28 +4,17 @@
 /// This module provides functionality to convert HWP documents to HTML format.
 /// 이 모듈은 HWP 문서를 HTML 형식으로 변환하는 기능을 제공합니다.
 ///
-/// 구조는 HWPTAG 기준으로 나뉘어 있습니다:
-/// Structure is organized by HWPTAG:
-/// - document: 문서 레벨 변환 (bodytext, docinfo, fileheader 등) / Document-level conversion (bodytext, docinfo, fileheader, etc.)
-///   - bodytext: 본문 텍스트 관련 (para_text, paragraph, list_header, table, shape_component, shape_component_picture)
-///   - docinfo: 문서 정보
-///   - fileheader: 파일 헤더
-/// - ctrl_header: CTRL_HEADER (HWPTAG_BEGIN + 55) - CtrlId별로 세분화
-/// - utils: 유틸리티 함수들 / Utility functions
-/// - common: 공통 함수들 (이미지 처리 등) / Common functions (image processing, etc.)
+/// noori.html 스타일의 정확한 레이아웃 HTML 뷰어
 mod common;
-mod ctrl_header;
-pub mod document;
-mod header_footer;
-mod page_def;
-mod renderer;
+mod image;
+mod line_segment;
+mod page;
 mod styles;
-pub mod utils;
+mod table;
+mod text;
 
+use crate::document::bodytext::{ColumnDivideType, ParagraphRecord};
 use crate::document::HwpDocument;
-
-pub use document::bodytext::convert_paragraph_to_html;
-pub use document::bodytext::convert_table_to_html;
 
 /// HTML 변환 옵션 / HTML conversion options
 #[derive(Debug, Clone)]
@@ -40,8 +29,8 @@ pub struct HtmlOptions {
     /// 페이지 정보 포함 여부 / Whether to include page information
     pub include_page_info: Option<bool>,
 
-    /// CSS 클래스 접두사 (기본값: "ohah-hwpjs-")
-    /// CSS class prefix (default: "ohah-hwpjs-")
+    /// CSS 클래스 접두사 (기본값: "" - noori.html 스타일)
+    /// CSS class prefix (default: "" - noori.html style)
     pub css_class_prefix: String,
 }
 
@@ -51,7 +40,7 @@ impl Default for HtmlOptions {
             image_output_dir: None,
             include_version: Some(true),
             include_page_info: Some(false),
-            css_class_prefix: "ohah-hwpjs-".to_string(),
+            css_class_prefix: String::new(), // noori.html 스타일은 접두사 없음
         }
     }
 }
@@ -82,6 +71,138 @@ impl HtmlOptions {
     }
 }
 
+/// 문서에서 첫 번째 PageDef 찾기 / Find first PageDef in document
+fn find_page_def(document: &HwpDocument) -> Option<&crate::document::bodytext::PageDef> {
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            for record in &paragraph.records {
+                if let ParagraphRecord::PageDef { page_def } = record {
+                    return Some(page_def);
+                }
+            }
+        }
+    }
+    None
+}
+
+/// 문단을 HTML로 렌더링 / Render paragraph to HTML
+fn render_paragraph(
+    paragraph: &crate::document::bodytext::Paragraph,
+    document: &HwpDocument,
+    options: &HtmlOptions,
+) -> String {
+    let mut result = String::new();
+
+    // ParaShape 클래스 가져오기 / Get ParaShape class
+    let para_shape_id = paragraph.para_header.para_shape_id;
+    let para_shape_class =
+        if para_shape_id > 0 && para_shape_id as usize <= document.doc_info.para_shapes.len() {
+            format!("ps{}", para_shape_id - 1)
+        } else {
+            String::new()
+        };
+
+    // 텍스트와 CharShape 추출 / Extract text and CharShape
+    let (text, char_shapes) = text::extract_text_and_shapes(paragraph);
+
+    // LineSegment 찾기 / Find LineSegment
+    let mut line_segments = Vec::new();
+    for record in &paragraph.records {
+        if let ParagraphRecord::ParaLineSeg { segments } = record {
+            line_segments = segments.clone();
+            break;
+        }
+    }
+
+    // 이미지와 테이블 수집 / Collect images and tables
+    let mut images = Vec::new();
+    let mut tables = Vec::new();
+
+    for record in &paragraph.records {
+        match record {
+            ParagraphRecord::ShapeComponent {
+                shape_component,
+                children,
+            } => {
+                // ShapeComponent의 children에서 이미지 찾기 / Find images in ShapeComponent's children
+                for child in children {
+                    if let ParagraphRecord::ShapeComponentPicture {
+                        shape_component_picture,
+                    } = child
+                    {
+                        let bindata_id = shape_component_picture.picture_info.bindata_id;
+                        let image_url = common::get_image_url(
+                            document,
+                            bindata_id,
+                            options.image_output_dir.as_deref(),
+                        );
+                        if !image_url.is_empty() {
+                            // ShapeComponent에서 width와 height 가져오기 / Get width and height from ShapeComponent
+                            images.push((shape_component.width, shape_component.height, image_url));
+                        }
+                    }
+                }
+            }
+            ParagraphRecord::ShapeComponentPicture {
+                shape_component_picture,
+            } => {
+                let bindata_id = shape_component_picture.picture_info.bindata_id;
+                let image_url = common::get_image_url(
+                    document,
+                    bindata_id,
+                    options.image_output_dir.as_deref(),
+                );
+                if !image_url.is_empty() {
+                    // border_rectangle에서 크기 계산 / Calculate size from border_rectangle
+                    let width = (shape_component_picture.border_rectangle_x.right
+                        - shape_component_picture.border_rectangle_x.left)
+                        as u32;
+                    let height = (shape_component_picture.border_rectangle_y.bottom
+                        - shape_component_picture.border_rectangle_y.top)
+                        as u32;
+                    images.push((width, height, image_url));
+                }
+            }
+            ParagraphRecord::Table { table } => {
+                tables.push(table);
+            }
+            ParagraphRecord::CtrlHeader { children, .. } => {
+                // CtrlHeader의 children에서 테이블 찾기 / Find tables in CtrlHeader's children
+                for child in children {
+                    if let ParagraphRecord::Table { table } = child {
+                        tables.push(table);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // LineSegment가 있으면 사용 / Use LineSegment if available
+    if !line_segments.is_empty() {
+        result.push_str(&line_segment::render_line_segments_with_content(
+            &line_segments,
+            &text,
+            &char_shapes,
+            document,
+            &para_shape_class,
+            &images,
+            &tables,
+            options,
+        ));
+    } else if !text.is_empty() {
+        // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment
+        let rendered_text =
+            text::render_text(&text, &char_shapes, document, &options.css_class_prefix);
+        result.push_str(&format!(
+            r#"<div class="hls {}">{}</div>"#,
+            para_shape_class, rendered_text
+        ));
+    }
+
+    result
+}
+
 /// Convert HWP document to HTML format
 /// HWP 문서를 HTML 형식으로 변환
 ///
@@ -92,249 +213,176 @@ impl HtmlOptions {
 /// # Returns / 반환값
 /// HTML string representation of the document / 문서의 HTML 문자열 표현
 pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
-    let css_prefix = &options.css_class_prefix;
     let mut html = String::new();
 
     // HTML 문서 시작 / Start HTML document
     html.push_str("<!DOCTYPE html>\n");
-    html.push_str("<html lang=\"ko\">\n");
+    html.push_str("<html>\n");
+    html.push_str("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">\n");
+    html.push_str("\n");
     html.push_str("<head>\n");
-    html.push_str("  <meta charset=\"UTF-8\">\n");
-    html.push_str("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
     html.push_str("  <title>HWP 문서</title>\n");
+    html.push_str("  <meta http_quiv=\"content-type\" content=\"text/html; charset=utf-8\">\n");
 
-    // 페이지 정의 찾기 (재귀적으로) / Find page definition (recursively)
-    let page_def_opt = page_def::find_page_def_recursive(document);
-
-    // 문서에서 사용되는 색상, 크기, 테두리 색상, 배경색, 테두리 두께 수집 / Collect colors, sizes, border colors, background colors, and border widths used in document
-    let (
-        used_text_colors,
-        used_sizes,
-        used_border_colors,
-        used_background_colors,
-        used_border_widths,
-    ) = styles::collect_used_styles(document);
-    let _ = used_border_widths; // 사용하지 않지만 변수는 유지
-
-    // CSS 스타일 추가 / Add CSS styles
+    // CSS 스타일 생성 / Generate CSS styles
+    let style_info = styles::StyleInfo::collect(document);
     html.push_str("  <style>\n");
-    html.push_str(&styles::generate_css_styles(
-        css_prefix,
-        document,
-        page_def_opt,
-        &used_text_colors,
-        &used_sizes,
-        &used_border_colors,
-        &used_background_colors,
-    ));
-    // border_fill CSS 클래스는 더 이상 사용하지 않음 (개별 클래스로 처리) / border_fill CSS classes no longer used (handled by individual classes)
+    html.push_str(&styles::generate_css_styles(document, &style_info));
     html.push_str("  </style>\n");
-
     html.push_str("</head>\n");
+    html.push_str("\n");
     html.push_str("<body>\n");
-    html.push_str(&format!("  <div class=\"{0}document\">\n", css_prefix));
 
-    // 문서 제목 / Document title
-    html.push_str("    <h1>HWP 문서</h1>\n");
+    // PageDef 찾기 / Find PageDef
+    let page_def = find_page_def(document);
 
-    // 버전 정보 추가 / Add version information
-    if options.include_version != Some(false) {
-        let version = document.file_header.version;
-        let major = (version >> 24) & 0xFF;
-        let minor = (version >> 16) & 0xFF;
-        let patch = (version >> 8) & 0xFF;
-        let build = version & 0xFF;
-        html.push_str(&format!(
-            "    <p><strong>버전</strong>: {}.{:02}.{:02}.{:02}</p>\n",
-            major, minor, patch, build
-        ));
-    }
+    // 페이지별로 렌더링 / Render by page
+    let mut page_number = 1;
+    let mut page_content = String::new();
+    
+    // 페이지 높이 계산 (mm 단위) / Calculate page height (in mm)
+    let page_height_mm = page_def
+        .map(|pd| pd.paper_height.to_mm())
+        .unwrap_or(297.0);
+    let top_margin_mm = page_def
+        .map(|pd| pd.top_margin.to_mm())
+        .unwrap_or(24.99);
+    let bottom_margin_mm = page_def
+        .map(|pd| pd.bottom_margin.to_mm())
+        .unwrap_or(10.0);
+    let header_margin_mm = page_def
+        .map(|pd| pd.header_margin.to_mm())
+        .unwrap_or(0.0);
+    let footer_margin_mm = page_def
+        .map(|pd| pd.footer_margin.to_mm())
+        .unwrap_or(0.0);
+    
+    // 실제 콘텐츠 영역 높이 / Actual content area height
+    let content_height_mm = page_height_mm - top_margin_mm - bottom_margin_mm - header_margin_mm - footer_margin_mm;
+    
+    // 현재 페이지의 최대 vertical_position (mm 단위) / Maximum vertical_position of current page (in mm)
+    let mut current_max_vertical_mm = 0.0;
+    // 이전 문단의 마지막 vertical_position (mm 단위) / Last vertical_position of previous paragraph (in mm)
+    let mut prev_vertical_mm: Option<f64> = None;
 
-    // 페이지 정보 추가 / Add page information
-    if options.include_page_info == Some(true) {
-        if let Some(page_def) = page_def_opt {
-            let paper_width_mm = page_def.paper_width.to_mm();
-            let paper_height_mm = page_def.paper_height.to_mm();
-            let left_margin_mm = page_def.left_margin.to_mm();
-            let right_margin_mm = page_def.right_margin.to_mm();
-            let top_margin_mm = page_def.top_margin.to_mm();
-            let bottom_margin_mm = page_def.bottom_margin.to_mm();
-
-            html.push_str(&format!(
-                "    <p><strong>용지 크기</strong>: {:.2}mm x {:.2}mm</p>\n",
-                paper_width_mm, paper_height_mm
-            ));
-            html.push_str(&format!(
-                "    <p><strong>용지 방향</strong>: {:?}</p>\n",
-                page_def.attributes.paper_direction
-            ));
-            html.push_str(&format!(
-                "    <p><strong>여백</strong>: 좌 {:.2}mm / 우 {:.2}mm / 상 {:.2}mm / 하 {:.2}mm</p>\n",
-                left_margin_mm, right_margin_mm, top_margin_mm, bottom_margin_mm
-            ));
-        }
-    }
-
-    // 개요 번호 추적기 생성 (문서 전체에 걸쳐 유지) / Create outline number tracker (maintained across entire document)
-    use crate::viewer::html::utils::OutlineNumberTracker;
-    let mut outline_tracker = OutlineNumberTracker::new();
-
-    // 섹션별로 구조 생성 및 문단 렌더링 / Generate structure and render paragraphs for each section
-    for (section_idx, section) in document.body_text.sections.iter().enumerate() {
-        let _section_page_def = page_def::find_page_def_for_section(section);
-
-        // Section 시작 / Start Section
-        html.push_str(&format!(
-            "    <section class=\"{0}Section {0}Section-{1}\">\n",
-            css_prefix, section_idx
-        ));
-
-        // Paper 시작 / Start Paper
-        html.push_str(&format!("      <div class=\"{0}Paper\">\n", css_prefix));
-
-        // HeaderPageFooter (Header) / HeaderPageFooter (Header)
-        // 섹션별로 머리말 찾아서 렌더링 / Find and render header for each section
-        let header_html = header_footer::render_header_for_section(
-            section,
-            document,
-            options,
-            &mut outline_tracker,
-        );
-        html.push_str(&format!(
-            "        <div class=\"{0}HeaderPageFooter {0}Header\">\n",
-            css_prefix
-        ));
-        if !header_html.is_empty() {
-            // 들여쓰기 추가 / Add indentation
-            let indented_header: String = header_html
-                .lines()
-                .filter(|line| !line.is_empty())
-                .map(|line| format!("          {}\n", line))
-                .collect();
-            html.push_str(&indented_header);
-        }
-        html.push_str("        </div>\n");
-
-        // Page 시작 / Start Page
-        html.push_str(&format!("        <div class=\"{0}Page\">\n", css_prefix));
-
-        // 각 섹션의 문단들을 렌더링 / Render paragraphs in each section
-        use crate::document::bodytext::ColumnDivideType;
-        use crate::viewer::html::document::bodytext::paragraph::convert_paragraph_to_html;
-
-        let mut is_first_paragraph_in_page = true;
-
-        for (para_idx, paragraph) in section.paragraphs.iter().enumerate() {
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
             // 페이지 나누기 확인 / Check for page break
-            let has_page_break = paragraph
+            // 1. column_divide_type에서 페이지 나누기 확인 / Check page break from column_divide_type
+            let has_page_break_from_para = paragraph
                 .para_header
                 .column_divide_type
                 .iter()
                 .any(|t| matches!(t, ColumnDivideType::Page | ColumnDivideType::Section));
 
-            // 페이지 나누기가 있고 첫 문단이 아니면 페이지 구분선 추가 / Add page break line if page break exists and not first paragraph
-            if has_page_break && !is_first_paragraph_in_page {
-                html.push_str(&format!(
-                    "          <hr class=\"{0}page-break\" />\n",
-                    css_prefix
-                ));
+            // 2. LineSegment의 vertical_position 확인 / Check vertical_position from LineSegment
+            // 레거시 라이브러리들(ruby-hwp, hwpjs.js)은 is_first_line_of_page를 사용하지 않고
+            // vertical_position이 0이거나 이전보다 작아지면 새 페이지로 간주합니다
+            // Legacy libraries (ruby-hwp, hwpjs.js) don't use is_first_line_of_page,
+            // instead they consider new page when vertical_position is 0 or smaller than previous
+            let mut first_vertical_mm: Option<f64> = None;
+            let mut has_first_line_of_page = false;
+            for record in &paragraph.records {
+                if let ParagraphRecord::ParaLineSeg { segments } = record {
+                    if let Some(first_segment) = segments.first() {
+                        has_first_line_of_page = first_segment.tag.is_first_line_of_page;
+                        // vertical_position을 mm로 변환 / Convert vertical_position to mm
+                        // HWPUNIT은 1/7200 inch, INT32는 1/7200 inch 단위
+                        // 1 inch = 25.4 mm, 따라서 1 HWPUNIT = 25.4 / 7200 mm
+                        first_vertical_mm = Some(first_segment.vertical_position as f64 * 25.4 / 7200.0);
+                    }
+                    break;
+                }
+            }
+
+            // 3. vertical_position이 0으로 리셋되거나 이전보다 작아지면 새 페이지 (hwpjs.js 방식) / New page if vertical_position resets to 0 or becomes smaller (hwpjs.js method)
+            // hwpjs.js: if(data.paragraph.start_line === 0 || preline > parseInt(data.paragraph.start_line))
+            // 레거시 라이브러리들은 is_first_line_of_page 플래그를 사용하지 않고 vertical_position으로만 판단합니다
+            // Legacy libraries don't use is_first_line_of_page flag, they only use vertical_position
+            let vertical_reset = if let (Some(prev), Some(current)) = (prev_vertical_mm, first_vertical_mm) {
+                // vertical_position이 0이거나 이전보다 작아지면 새 페이지 / New page if vertical_position is 0 or smaller than previous
+                // hwpjs.js와 동일한 로직: start_line === 0 || preline > start_line
+                current < 0.1 || (prev > 0.1 && current < prev - 0.1) // 0.1mm 미만이거나 이전보다 0.1mm 이상 작아지면 새 페이지 / New page if less than 0.1mm or 0.1mm smaller than previous
+            } else if let Some(current) = first_vertical_mm {
+                // 첫 번째 문단이 아니고 vertical_position이 0이면 새 페이지 / New page if not first paragraph and vertical_position is 0
+                current < 0.1 && prev_vertical_mm.is_some()
+            } else {
+                false
+            };
+
+            // 4. vertical_position이 페이지 높이를 초과하면 새 페이지 (ruby-hwp 방식) / New page if vertical_position exceeds page height (ruby-hwp method)
+            let vertical_overflow = if let Some(current_vertical) = first_vertical_mm {
+                current_vertical > content_height_mm && current_max_vertical_mm > 0.0
+            } else {
+                false
+            };
+
+            // 페이지 나누기 확인 / Check page break
+            // 레거시 라이브러리들(ruby-hwp, hwpjs.js)은 is_first_line_of_page를 사용하지 않고
+            // vertical_position만으로 페이지를 나눕니다. 따라서 우선순위는:
+            // Legacy libraries (ruby-hwp, hwpjs.js) don't use is_first_line_of_page,
+            // they only use vertical_position. So priority is:
+            // 우선순위: column_divide_type > vertical_reset > vertical_overflow
+            // Priority: column_divide_type > vertical_reset > vertical_overflow
+            // is_first_line_of_page는 실제로 true가 되는 경우가 거의 없으므로 제외
+            // is_first_line_of_page is excluded because it's rarely true in practice
+            let has_page_break = has_page_break_from_para 
+                || vertical_reset
+                || vertical_overflow;
+
+            // 페이지 나누기가 있고 페이지 내용이 있으면 페이지 출력 (문단 렌더링 전) / Output page if page break and page content exists (before rendering paragraph)
+            if has_page_break && !page_content.is_empty() {
+                html.push_str(&page::render_page(page_number, &page_content, page_def));
+                page_number += 1;
+                page_content.clear();
+                current_max_vertical_mm = 0.0;
             }
 
             // 문단 렌더링 (일반 본문 문단만) / Render paragraph (only regular body paragraphs)
-            // 머리말/꼬리말/각주/미주는 나중에 처리 / Headers/footers/footnotes/endnotes will be handled later
             let control_mask = &paragraph.para_header.control_mask;
             let has_header_footer = control_mask.has_header_footer();
             let has_footnote_endnote = control_mask.has_footnote_endnote();
 
             if !has_header_footer && !has_footnote_endnote {
-                // 일반 본문 문단 렌더링 / Render regular body paragraph
-                use crate::viewer::html::document::bodytext::paragraph::convert_paragraph_to_html_with_indices;
-                let para_html = convert_paragraph_to_html_with_indices(
-                    paragraph,
-                    document,
-                    options,
-                    &mut outline_tracker,
-                    Some(section_idx),
-                    Some(para_idx),
-                );
-
+                let para_html = render_paragraph(paragraph, document, options);
                 if !para_html.is_empty() {
-                    html.push_str("          ");
-                    html.push_str(&para_html);
-                    html.push('\n');
-                    is_first_paragraph_in_page = false;
+                    page_content.push_str(&para_html);
+                    
+                    // vertical_position 업데이트 (문단의 모든 LineSegment 확인) / Update vertical_position (check all LineSegments in paragraph)
+                    for record in &paragraph.records {
+                        if let ParagraphRecord::ParaLineSeg { segments } = record {
+                            for segment in segments {
+                                let vertical_mm = segment.vertical_position as f64 * 25.4 / 7200.0;
+                                if vertical_mm > current_max_vertical_mm {
+                                    current_max_vertical_mm = vertical_mm;
+                                }
+                                // 첫 번째 세그먼트의 vertical_position을 prev_vertical_mm으로 저장 / Store first segment's vertical_position as prev_vertical_mm
+                                if prev_vertical_mm.is_none() || first_vertical_mm.is_none() {
+                                    prev_vertical_mm = Some(vertical_mm);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    // 첫 번째 세그먼트의 vertical_position을 prev_vertical_mm으로 저장 / Store first segment's vertical_position as prev_vertical_mm
+                    if let Some(vertical) = first_vertical_mm {
+                        prev_vertical_mm = Some(vertical);
+                    }
                 }
             }
         }
-
-        // Page 끝 / End Page
-        html.push_str("        </div>\n");
-
-        // HeaderPageFooter (Footer) / HeaderPageFooter (Footer)
-        // 섹션별로 꼬리말 찾아서 렌더링 / Find and render footer for each section
-        let footer_html = header_footer::render_footer_for_section(
-            section,
-            document,
-            options,
-            &mut outline_tracker,
-        );
-        html.push_str(&format!(
-            "        <div class=\"{0}HeaderPageFooter {0}Footer\">\n",
-            css_prefix
-        ));
-        if !footer_html.is_empty() {
-            // 들여쓰기 추가 / Add indentation
-            let indented_footer: String = footer_html
-                .lines()
-                .filter(|line| !line.is_empty())
-                .map(|line| format!("          {}\n", line))
-                .collect();
-            html.push_str(&indented_footer);
-        }
-        html.push_str("        </div>\n");
-
-        // Paper 끝 / End Paper
-        html.push_str("      </div>\n");
-
-        // Section 끝 / End Section
-        html.push_str("    </section>\n");
     }
 
-    // 각주와 미주는 섹션 외부에 추가 / Add footnotes and endnotes outside sections
-    // TODO: 각주/미주를 섹션별로 찾아서 추가해야 함 / TODO: Need to find footnotes/endnotes per section
-    // 현재는 process_bodytext에서 수집한 전체 각주/미주를 사용 / Currently uses all footnotes/endnotes collected by process_bodytext
-    use crate::viewer::core::bodytext::process_bodytext;
-    use crate::viewer::html::renderer::HtmlRenderer;
-    let renderer = HtmlRenderer;
-    let parts = process_bodytext(document, &renderer, options);
-
-    if !parts.footnotes.is_empty() {
-        html.push_str("    <section class=\"");
-        html.push_str(css_prefix);
-        html.push_str("footnotes\">\n");
-        html.push_str("      <h2>각주</h2>\n");
-        for footnote in &parts.footnotes {
-            html.push_str(footnote);
-            html.push('\n');
-        }
-        html.push_str("    </section>\n");
+    // 마지막 페이지 출력 / Output last page
+    if !page_content.is_empty() {
+        html.push_str(&page::render_page(page_number, &page_content, page_def));
     }
 
-    if !parts.endnotes.is_empty() {
-        html.push_str("    <section class=\"");
-        html.push_str(css_prefix);
-        html.push_str("endnotes\">\n");
-        html.push_str("      <h2>미주</h2>\n");
-        for endnote in &parts.endnotes {
-            html.push_str(endnote);
-            html.push('\n');
-        }
-        html.push_str("    </section>\n");
-    }
-
-    html.push_str("  </div>\n");
-    html.push_str("</body>\n");
-    html.push_str("</html>\n");
+    html.push_str("</body>");
+    html.push('\n');
+    html.push('\n');
+    html.push_str("</html>");
+    html.push('\n');
 
     html
 }
