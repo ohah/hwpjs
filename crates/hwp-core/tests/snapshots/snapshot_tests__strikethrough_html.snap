@@ -537,6 +537,31 @@ expression: html
         text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.3);
     }
 
+    /* Text style classes */
+    .ohah-hwpjs-bold {
+        font-weight: bold;
+    }
+
+    .ohah-hwpjs-italic {
+        font-style: italic;
+    }
+
+    .ohah-hwpjs-superscript {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+        top: -0.5em;
+    }
+
+    .ohah-hwpjs-subscript {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+        bottom: -0.25em;
+    }
+
     .ohah-hwpjs-underline-solid {
         text-decoration: underline;
         text-decoration-style: solid;
@@ -822,7 +847,7 @@ expression: html
           <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="13" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm"><s class="ohah-hwpjs-strikethrough-solid"><span class="ohah-hwpjs-overline">strikethrough</span></s></span></p>
           <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="3" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm"><s class="ohah-hwpjs-strikethrough-solid"><span class="ohah-hwpjs-overline">취소선</span></s></span></p>
           <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="2" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid">밑줄</u></span></p>
-          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="2" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid">밑줄</u></span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="2" data-end="5" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm"><s class="ohah-hwpjs-strikethrough-solid"><u class="ohah-hwpjs-underline-solid">취소선</u></s></span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="5" data-end="7" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid"><strong>굵게</strong></u></span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="2" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid">밑줄</u></span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="2" data-end="5" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm"><s class="ohah-hwpjs-strikethrough-solid"><u class="ohah-hwpjs-underline-solid">취소선</u></s></span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="5" data-end="7" style="line-height: 0.60; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm"><u class="ohah-hwpjs-underline-solid"><strong class="ohah-hwpjs-bold">굵게</strong></u></span></p>
         </div>
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
         </div>

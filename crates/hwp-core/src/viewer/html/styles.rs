@@ -787,6 +787,33 @@ pub fn generate_css_styles(
         text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.3);
     }}
 
+    /* Text style classes */
+    .{css_prefix}bold,
+    strong.{css_prefix}bold {{
+        font-weight: bold !important;
+    }}
+
+    .{css_prefix}italic,
+    em.{css_prefix}italic {{
+        font-style: italic !important;
+    }}
+
+    .{css_prefix}superscript {{
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+        top: -0.5em;
+    }}
+
+    .{css_prefix}subscript {{
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+        bottom: -0.25em;
+    }}
+
     .{css_prefix}underline-solid {{
         text-decoration: underline;
         text-decoration-style: solid;

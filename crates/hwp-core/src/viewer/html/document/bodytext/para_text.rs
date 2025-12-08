@@ -292,12 +292,12 @@ fn apply_html_styles<'a>(
     // 스타일 적용 순서: 안쪽부터 바깥쪽으로 / Apply styles from innermost to outermost
     // 1. 기울임 (가장 안쪽) / Italic (innermost)
     if shape.attributes.italic {
-        result = format!("<em>{}</em>", result);
+        result = format!(r#"<em class="{}italic">{}</em>"#, css_prefix, result);
     }
 
     // 2. 진하게 / Bold
     if shape.attributes.bold {
-        result = format!("<strong>{}</strong>", result);
+        result = format!(r#"<strong class="{}bold">{}</strong>"#, css_prefix, result);
     }
 
     // 3. 밑줄 / Underline
@@ -331,12 +331,12 @@ fn apply_html_styles<'a>(
 
     // 5. 위 첨자 / Superscript
     if shape.attributes.superscript {
-        result = format!("<sup>{}</sup>", result);
+        result = format!(r#"<sup class="{}superscript">{}</sup>"#, css_prefix, result);
     }
 
     // 6. 아래 첨자 / Subscript
     if shape.attributes.subscript {
-        result = format!("<sub>{}</sub>", result);
+        result = format!(r#"<sub class="{}subscript">{}</sub>"#, css_prefix, result);
     }
 
     // 7. 양각 / Emboss

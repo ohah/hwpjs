@@ -509,6 +509,31 @@ expression: html
         text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.3);
     }
 
+    /* Text style classes */
+    .ohah-hwpjs-bold {
+        font-weight: bold;
+    }
+
+    .ohah-hwpjs-italic {
+        font-style: italic;
+    }
+
+    .ohah-hwpjs-superscript {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+        top: -0.5em;
+    }
+
+    .ohah-hwpjs-subscript {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+        bottom: -0.25em;
+    }
+
     .ohah-hwpjs-underline-solid {
         text-decoration: underline;
         text-decoration-style: solid;

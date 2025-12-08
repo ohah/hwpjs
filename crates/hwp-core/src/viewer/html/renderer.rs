@@ -11,28 +11,49 @@ impl Renderer for HtmlRenderer {
 
     // ===== Text Styling =====
     fn render_text(&self, text: &str, styles: &TextStyles) -> String {
+        // CSS 클래스 접두사 (기본값 사용) / CSS class prefix (use default)
+        const CSS_PREFIX: &str = "ohah-hwpjs-";
+
         let mut result = text.to_string();
-        
+
         // 스타일 적용 순서: 안쪽부터 바깥쪽으로 / Apply styles from innermost to outermost
+        // 1. 기울임 (가장 안쪽) / Italic (innermost)
         if styles.italic {
-            result = format!("<em>{}</em>", result);
+            result = format!(r#"<em class="{}italic">{}</em>"#, CSS_PREFIX, result);
         }
+
+        // 2. 진하게 / Bold
         if styles.bold {
-            result = format!("<strong>{}</strong>", result);
+            result = format!(r#"<strong class="{}bold">{}</strong>"#, CSS_PREFIX, result);
         }
+
+        // 3. 밑줄 / Underline
         if styles.underline {
-            result = format!("<u>{}</u>", result);
+            // 기본적으로 solid 스타일 사용 (스타일 타입 정보가 없을 경우)
+            // Use solid style by default (when style type information is not available)
+            result = format!(r#"<u class="{}underline-solid">{}</u>"#, CSS_PREFIX, result);
         }
+
+        // 4. 취소선 / Strikethrough
         if styles.strikethrough {
-            result = format!("<s>{}</s>", result);
+            // 기본적으로 solid 스타일 사용 (스타일 타입 정보가 없을 경우)
+            // Use solid style by default (when style type information is not available)
+            result = format!(
+                r#"<s class="{}strikethrough-solid">{}</s>"#,
+                CSS_PREFIX, result
+            );
         }
+
+        // 5. 위 첨자 / Superscript
         if styles.superscript {
-            result = format!("<sup>{}</sup>", result);
+            result = format!(r#"<sup class="{}superscript">{}</sup>"#, CSS_PREFIX, result);
         }
+
+        // 6. 아래 첨자 / Subscript
         if styles.subscript {
-            result = format!("<sub>{}</sub>", result);
+            result = format!(r#"<sub class="{}subscript">{}</sub>"#, CSS_PREFIX, result);
         }
-        
+
         // 색상 및 폰트 스타일 적용 / Apply color and font styles
         let mut style_attrs = Vec::new();
         if let Some(ref color) = styles.color {
@@ -47,11 +68,15 @@ impl Renderer for HtmlRenderer {
         if let Some(font_size) = styles.font_size {
             style_attrs.push(format!("font-size: {:.2}pt", font_size));
         }
-        
+
         if !style_attrs.is_empty() {
-            result = format!(r#"<span style="{}">{}</span>"#, style_attrs.join("; "), result);
+            result = format!(
+                r#"<span style="{}">{}</span>"#,
+                style_attrs.join("; "),
+                result
+            );
         }
-        
+
         result
     }
 
@@ -105,7 +130,7 @@ impl Renderer for HtmlRenderer {
     ) -> Option<String> {
         // bindata_id로 직접 이미지 렌더링 / Render image directly by bindata_id
         use crate::viewer::html::common::format_image_html;
-        
+
         // BinData에서 이미지 데이터 가져오기 / Get image data from BinData
         if let Some(bin_item) = document
             .bin_data
@@ -121,7 +146,7 @@ impl Renderer for HtmlRenderer {
                 &options.css_class_prefix,
             ));
         }
-        
+
         None
     }
 
@@ -141,11 +166,7 @@ impl Renderer for HtmlRenderer {
         to_html(document, options)
     }
 
-    fn render_document_header(
-        &self,
-        document: &HwpDocument,
-        options: &Self::Options,
-    ) -> String {
+    fn render_document_header(&self, document: &HwpDocument, options: &Self::Options) -> String {
         let mut html = String::new();
         html.push_str("    <h1>HWP 문서</h1>\n");
 
@@ -164,11 +185,7 @@ impl Renderer for HtmlRenderer {
         html
     }
 
-    fn render_document_footer(
-        &self,
-        parts: &DocumentParts,
-        options: &Self::Options,
-    ) -> String {
+    fn render_document_footer(&self, parts: &DocumentParts, options: &Self::Options) -> String {
         let mut html = String::new();
 
         if !parts.footnotes.is_empty() {
@@ -242,4 +259,3 @@ impl Renderer for HtmlRenderer {
         format!("{} {}", outline_number, content)
     }
 }
-
