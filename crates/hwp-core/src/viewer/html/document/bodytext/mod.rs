@@ -43,8 +43,8 @@ pub fn convert_bodytext_to_html(
     let mut outline_tracker = crate::viewer::html::utils::OutlineNumberTracker::new();
 
     // Convert body text to HTML / 본문 텍스트를 HTML로 변환
-    for section in &document.body_text.sections {
-        for paragraph in &section.paragraphs {
+    for (section_idx, section) in document.body_text.sections.iter().enumerate() {
+        for (para_idx, paragraph) in section.paragraphs.iter().enumerate() {
             // control_mask를 사용하여 빠른 필터링 (최적화) / Use control_mask for quick filtering (optimization)
             let control_mask = &paragraph.para_header.control_mask;
 
@@ -346,11 +346,13 @@ pub fn convert_bodytext_to_html(
                 }
 
                 // Convert paragraph to HTML (includes text and controls) / 문단을 HTML로 변환 (텍스트와 컨트롤 포함)
-                let html = paragraph::convert_paragraph_to_html(
+                let html = paragraph::convert_paragraph_to_html_with_indices(
                     paragraph,
                     document,
                     options,
                     &mut outline_tracker,
+                    Some(section_idx),
+                    Some(para_idx),
                 );
                 if !html.is_empty() {
                     body_lines.push(html);

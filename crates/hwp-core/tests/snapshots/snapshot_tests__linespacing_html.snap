@@ -462,7 +462,6 @@ expression: html
     }
 
     .ohah-hwpjs-paragraph {
-        margin: 10px 0;
     }
 
     .ohah-hwpjs-outline {
@@ -653,6 +652,163 @@ expression: html
 
                
                
+                   .ohah-hwpjs-parashape-0 {
+        margin-bottom: 0.65pt;
+        text-indent: -9.60px;
+        padding-left: 9.60px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-1 {
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-2 {
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-3 {
+        margin-bottom: 0.80pt;
+        padding-left: -10.99px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-4 {
+        margin-bottom: 0.80pt;
+        padding-left: -7.33px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-5 {
+        margin-bottom: 0.80pt;
+        padding-left: -14.66px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-6 {
+        margin-bottom: 0.80pt;
+        padding-left: -21.98px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-7 {
+        margin-bottom: 0.80pt;
+        padding-left: -29.31px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-8 {
+        margin-bottom: 0.80pt;
+        padding-left: -36.64px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-9 {
+        margin-bottom: 0.80pt;
+        padding-left: -43.97px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-10 {
+        margin-bottom: 0.80pt;
+        padding-left: -51.30px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-11 {
+        margin-bottom: 0.75pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-12 {
+        margin-bottom: 0.50pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-13 {
+        margin-bottom: 10.00pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-14 {
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-15 {
+        margin-bottom: 20.00pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-16 {
+        margin-bottom: 1.00pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-17 {
+        margin-bottom: 10.00pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-18 {
+        margin-bottom: 0.75pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-19 {
+        margin-bottom: 15.00pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-20 {
+        margin-bottom: 5.00pt;
+        text-align: justify;
+    }
+
+
+               
+    /* Section 0 Styles */
+    .ohah-hwpjs-Section-0 {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Paper {
+        width: 210.00mm;
+        min-height: 297.00mm;
+        margin: 0 auto 40px auto;
+        background-color: #fff;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Page {
+        width: 100%;
+        min-height: 297.00mm;
+        padding: 20.00mm 30.00mm 15.00mm 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        padding: 0 30.00mm 0 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+        height: 15.00mm;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+        height: 15.00mm;
+    }
+
                  </style>
 </head>
 <body>
@@ -667,32 +823,32 @@ expression: html
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
         </div>
         <div class="ohah-hwpjs-Page">
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 글자에 따라 150%</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 고정 값 15pt</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 여백만 지정 5pt</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 글자에 따라 100%</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 고정 값 10pt</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 여백만 지정 0pt</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 글자에 따라 200%</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 고정 값 20pt</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 여백만 지정 10pt</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 글자에 따라 </span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-2000">100%</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 고정 값 </span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1500">0pt</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|H 여백만 지정 </span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-2000">0pt</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-18"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="14" style="line-height: 0.50; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|H 글자에 따라 150%</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-19"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="12" style="line-height: 0.50; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|H 고정 값 15pt</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-20"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="13" style="line-height: 0.50; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|H 여백만 지정 5pt</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-12"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="14" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|H 글자에 따라 100%</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="12" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|H 고정 값 10pt</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-14"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="13" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|H 여백만 지정 0pt</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-16"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="14" style="line-height: 1.00; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|H 글자에 따라 200%</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-15"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="12" style="line-height: 1.00; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|H 고정 값 20pt</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-17"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="14" style="line-height: 1.00; height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|H 여백만 지정 10pt</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-12"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="10" style="height: 7.06mm; font-size: 20.00pt; vertical-align: -15.00%; width: 150.00mm">|H 글자에 따라 </span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-2000" data-start="10" data-end="14" style="height: 7.06mm; font-size: 20.00pt; vertical-align: -15.00%; width: 150.00mm">100%</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="8" style="line-height: -0.33; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 150.00mm">|H 고정 값 </span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1500" data-start="8" data-end="11" style="line-height: -0.33; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 150.00mm">0pt</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-14"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="10" style="height: 7.06mm; font-size: 20.00pt; vertical-align: -15.00%; width: 150.00mm">|H 여백만 지정 </span><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-2000" data-start="10" data-end="13" style="height: 7.06mm; font-size: 20.00pt; vertical-align: -15.00%; width: 150.00mm">0pt</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-13"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1000" data-start="0" data-end="15" style="height: 3.53mm; font-size: 10.00pt; vertical-align: -15.00%; width: 150.00mm">|HHHHHHHHHHHHHH</span></p>
         </div>
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
         </div>

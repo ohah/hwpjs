@@ -31,6 +31,7 @@ pub fn convert_para_text_to_html<'a>(
     get_char_shape: Option<&'a dyn Fn(u32) -> Option<&'a CharShape>>,
     css_prefix: &str,
     document: Option<&'a crate::document::HwpDocument>,
+    line_segments: Option<&[crate::document::bodytext::LineSegmentInfo]>,
 ) -> Option<String> {
     // CharShape 정보가 있으면 텍스트를 구간별로 나누어 스타일 적용 / If CharShape info exists, divide text into segments and apply styles
     if !char_shapes.is_empty() && get_char_shape.is_some() {
@@ -41,6 +42,7 @@ pub fn convert_para_text_to_html<'a>(
             get_char_shape.unwrap(),
             css_prefix,
             document,
+            line_segments,
         );
     }
 
@@ -125,6 +127,7 @@ fn convert_text_with_char_shapes<'a>(
     get_char_shape: &'a dyn Fn(u32) -> Option<&'a CharShape>,
     css_prefix: &str,
     document: Option<&'a crate::document::HwpDocument>,
+    line_segments: Option<&[crate::document::bodytext::LineSegmentInfo]>,
 ) -> Option<String> {
     let text_chars: Vec<char> = text.chars().collect();
     let text_len = text_chars.len();
@@ -201,10 +204,22 @@ fn convert_text_with_char_shapes<'a>(
                 let segment_text: String = text_chars[*start..*end].iter().collect();
                 if !segment_text.trim().is_empty() {
                     if let Some(shape) = char_shape {
-                        let styled = apply_html_styles(&segment_text, shape, css_prefix, document);
+                        let styled = apply_html_styles(
+                            &segment_text,
+                            shape,
+                            css_prefix,
+                            document,
+                            Some(*start),
+                            Some(*end),
+                            line_segments,
+                        );
                         result.push_str(&styled);
                     } else {
-                        result.push_str(&segment_text);
+                        // 클래스가 없어도 position 정보가 있으면 span으로 감싸기 / Wrap in span even without classes if position info exists
+                        result.push_str(&format!(
+                            r#"<span data-start="{}" data-end="{}">{}</span>"#,
+                            *start, *end, segment_text
+                        ));
                     }
                 }
             } else {
@@ -220,11 +235,22 @@ fn convert_text_with_char_shapes<'a>(
                         let segment_text: String = text_chars[seg_start..seg_end].iter().collect();
                         if !segment_text.trim().is_empty() {
                             if let Some(shape) = char_shape {
-                                let styled =
-                                    apply_html_styles(&segment_text, shape, css_prefix, document);
+                                let styled = apply_html_styles(
+                                    &segment_text,
+                                    shape,
+                                    css_prefix,
+                                    document,
+                                    Some(seg_start),
+                                    Some(seg_end),
+                                    line_segments,
+                                );
                                 result.push_str(&styled);
                             } else {
-                                result.push_str(&segment_text);
+                                // 클래스가 없어도 position 정보가 있으면 span으로 감싸기 / Wrap in span even without classes if position info exists
+                                result.push_str(&format!(
+                                    r#"<span data-start="{}" data-end="{}">{}</span>"#,
+                                    seg_start, seg_end, segment_text
+                                ));
                             }
                         }
                     }
@@ -253,6 +279,9 @@ fn apply_html_styles<'a>(
     shape: &CharShape,
     css_prefix: &str,
     document: Option<&'a crate::document::HwpDocument>,
+    start_pos: Option<usize>,
+    end_pos: Option<usize>,
+    line_segments: Option<&[crate::document::bodytext::LineSegmentInfo]>,
 ) -> String {
     if text.is_empty() {
         return String::new();
@@ -390,8 +419,93 @@ fn apply_html_styles<'a>(
         classes.push(format!("{}size-{}", css_prefix, size_int));
     }
 
+    // ParaLineSeg에서 해당 위치의 세그먼트 정보 찾기 / Find segment information for this position from ParaLineSeg
+    let mut segment_styles = String::new();
+    if let (Some(start), Some(segments)) = (start_pos, line_segments) {
+        // start 위치에 해당하는 세그먼트 찾기 / Find segment corresponding to start position
+        // text_start_position이 start보다 작거나 같은 세그먼트 중 가장 큰 것을 찾음
+        // Find the largest segment where text_start_position <= start
+        if let Some(segment) = segments
+            .iter()
+            .filter(|seg| seg.text_start_position as usize <= start)
+            .max_by_key(|seg| seg.text_start_position)
+        {
+            let mut styles = Vec::new();
+
+            // line-height: line_spacing을 line_height로 나누어 배수로 계산 / Calculate ratio by dividing line_spacing by line_height
+            if segment.line_spacing != 0 && segment.line_height != 0 {
+                let line_height_value = segment.line_spacing as f64 / segment.line_height as f64;
+                styles.push(format!("line-height: {:.2}", line_height_value));
+            }
+
+            // height: line_height를 HWPUNIT에서 mm로 변환 / Convert line_height from HWPUNIT to mm
+            // HWPUNIT: 1/7200 inch, 1 inch = 25.4 mm
+            if segment.line_height != 0 {
+                let height_mm = (segment.line_height as f64 / 7200.0) * 25.4;
+                styles.push(format!("height: {:.2}mm", height_mm));
+            }
+
+            // font-size: text_height를 HWPUNIT에서 pt로 변환 / Convert text_height from HWPUNIT to pt
+            // HWPUNIT: 1/7200 inch, 1 inch = 72 pt
+            if segment.text_height != 0 {
+                let font_size_pt = (segment.text_height as f64 / 7200.0) * 72.0;
+                styles.push(format!("font-size: {:.2}pt", font_size_pt));
+            }
+
+            // vertical-align: baseline_distance를 사용하여 조정 / Adjust using baseline_distance
+            // baseline_distance는 줄의 세로 위치에서 베이스라인까지 거리
+            // baseline_distance is the distance from vertical position to baseline
+            if segment.baseline_distance != 0 && segment.line_height != 0 {
+                // baseline_distance를 line_height로 나누어 비율 계산 / Calculate ratio by dividing baseline_distance by line_height
+                let baseline_ratio = segment.baseline_distance as f64 / segment.line_height as f64;
+                // vertical-align을 percentage로 설정 (baseline 기준) / Set vertical-align as percentage (baseline reference)
+                let vertical_align_value = (baseline_ratio * 100.0) - 100.0; // baseline을 0으로 맞추기 위해 조정 / Adjust to make baseline 0
+                styles.push(format!("vertical-align: {:.2}%", vertical_align_value));
+            }
+
+            // width: segment_width를 HWPUNIT에서 mm로 변환 / Convert segment_width from HWPUNIT to mm
+            if segment.segment_width != 0 {
+                let width_mm = (segment.segment_width as f64 / 7200.0) * 25.4;
+                styles.push(format!("width: {:.2}mm", width_mm));
+            }
+
+            if !styles.is_empty() {
+                segment_styles = format!(r#" style="{}""#, styles.join("; "));
+            }
+        }
+    }
+
     if !classes.is_empty() {
-        result = format!(r#"<span class="{}">{}</span>"#, classes.join(" "), result);
+        // data-start, data-end 속성 추가 / Add data-start, data-end attributes
+        let mut data_attrs = String::new();
+        if let Some(start) = start_pos {
+            data_attrs.push_str(&format!(r#" data-start="{}""#, start));
+        }
+        if let Some(end) = end_pos {
+            data_attrs.push_str(&format!(r#" data-end="{}""#, end));
+        }
+        result = format!(
+            r#"<span class="{classes}"{data_attrs}{segment_styles}>{result}</span>"#,
+            classes = classes.join(" "),
+            data_attrs = data_attrs,
+            segment_styles = segment_styles,
+            result = result
+        );
+    } else if start_pos.is_some() || end_pos.is_some() || !segment_styles.is_empty() {
+        // 클래스가 없어도 position 정보나 세그먼트 스타일이 있으면 span으로 감싸기 / Wrap in span even without classes if position info or segment styles exist
+        let mut data_attrs = String::new();
+        if let Some(start) = start_pos {
+            data_attrs.push_str(&format!(r#" data-start="{}""#, start));
+        }
+        if let Some(end) = end_pos {
+            data_attrs.push_str(&format!(r#" data-end="{}""#, end));
+        }
+        result = format!(
+            r#"<span{data_attrs}{segment_styles}>{result}</span>"#,
+            data_attrs = data_attrs,
+            segment_styles = segment_styles,
+            result = result
+        );
     }
 
     result

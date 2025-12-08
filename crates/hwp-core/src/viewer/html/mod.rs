@@ -224,7 +224,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
         let mut is_first_paragraph_in_page = true;
 
-        for paragraph in &section.paragraphs {
+        for (para_idx, paragraph) in section.paragraphs.iter().enumerate() {
             // 페이지 나누기 확인 / Check for page break
             let has_page_break = paragraph
                 .para_header
@@ -248,8 +248,15 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
             if !has_header_footer && !has_footnote_endnote {
                 // 일반 본문 문단 렌더링 / Render regular body paragraph
-                let para_html =
-                    convert_paragraph_to_html(paragraph, document, options, &mut outline_tracker);
+                use crate::viewer::html::document::bodytext::paragraph::convert_paragraph_to_html_with_indices;
+                let para_html = convert_paragraph_to_html_with_indices(
+                    paragraph,
+                    document,
+                    options,
+                    &mut outline_tracker,
+                    Some(section_idx),
+                    Some(para_idx),
+                );
 
                 if !para_html.is_empty() {
                     html.push_str("          ");

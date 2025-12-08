@@ -121,8 +121,10 @@ pub fn generate_css_styles(
 
         // 폰트 클래스 생성 (선택적) / Generate font class (optional)
         font_css.push_str(&format!(
-            "    .{0}font-{1} {{\n        font-family: \"{2}\", sans-serif;\n    }}\n\n",
-            css_prefix, idx, font_name
+            "    .{css_prefix}font-{idx} {{\n        font-family: \"{font_name}\", sans-serif;\n    }}\n\n",
+            css_prefix = css_prefix,
+            idx = idx,
+            font_name = font_name
         ));
     }
 
@@ -186,9 +188,82 @@ pub fn generate_css_styles(
         let size_pt = size_value as f32 / 100.0;
         let size_int = (size_pt * 100.0) as u32; // 13.00pt -> 1300
         size_css.push_str(&format!(
-            "    .{0}size-{1} {{\n        font-size: {2:.2}pt;\n    }}\n\n",
-            css_prefix, size_int, size_pt
+            "    .{css_prefix}size-{size_int} {{\n        font-size: {size_pt:.2}pt;\n    }}\n\n",
+            css_prefix = css_prefix,
+            size_int = size_int,
+            size_pt = size_pt
         ));
+    }
+
+    // ParaShape CSS 클래스 생성 / Generate ParaShape CSS classes
+    let mut para_shape_css = String::new();
+    use crate::document::docinfo::para_shape::ParagraphAlignment;
+
+    for (idx, para_shape) in document.doc_info.para_shapes.iter().enumerate() {
+        let mut para_style = Vec::new();
+
+        // 여백 처리 / Process margins
+        // 레거시 코드와 동일하게 변환 / Convert same as legacy code
+        // paragraph_spacing.top.hwpPt(true) / 2 → (top_spacing / 100) / 2 = top_spacing / 200 pt
+        // HWPUNIT를 pt로 변환: HWPUNIT / 100 = pt
+        if para_shape.top_spacing != 0 {
+            let top_spacing_pt = para_shape.top_spacing as f64 / 200.0; // 레거시: hwpPt(true) / 2
+            para_style.push(format!("margin-top: {:.2}pt;", top_spacing_pt));
+        }
+        if para_shape.bottom_spacing != 0 {
+            let bottom_spacing_pt = para_shape.bottom_spacing as f64 / 200.0; // 레거시: hwpPt(true) / 2
+            para_style.push(format!("margin-bottom: {:.2}pt;", bottom_spacing_pt));
+        }
+
+        // indent, left, right는 px 단위로 변환 (레거시 코드와 동일) / Convert indent, left, right to px (same as legacy)
+        // 레거시: indent * (-0.003664154103852596) px
+        const HWPUNIT_TO_PX: f64 = -0.003664154103852596;
+
+        if para_shape.indent != 0 {
+            // 레거시: text-indent:-${indent * (-0.003664154103852596)}px
+            let indent_px_value = para_shape.indent as f64 * HWPUNIT_TO_PX;
+            let text_indent_px = -indent_px_value;
+            para_style.push(format!("text-indent: {:.2}px;", text_indent_px));
+
+            // 레거시: padding-left:${indent * (-0.003664154103852596)}px
+            // left_margin이 없을 때만 indent의 padding-left 설정
+            if para_shape.left_margin == 0 {
+                para_style.push(format!("padding-left: {:.2}px;", indent_px_value));
+            }
+        }
+
+        if para_shape.left_margin != 0 {
+            // 레거시: padding-left:${left * (-0.003664154103852596)}px
+            // left_margin이 있으면 indent의 padding-left를 덮어씀
+            let left_px = para_shape.left_margin as f64 * HWPUNIT_TO_PX;
+            para_style.push(format!("padding-left: {:.2}px;", left_px));
+        }
+
+        if para_shape.right_margin != 0 {
+            // 레거시: padding-right:${right * (-0.003664154103852596)}px
+            let right_px = para_shape.right_margin as f64 * HWPUNIT_TO_PX;
+            para_style.push(format!("padding-right: {:.2}px;", right_px));
+        }
+
+        // 정렬 / Alignment
+        let align = match para_shape.attributes1.align {
+            ParagraphAlignment::Left => "left",
+            ParagraphAlignment::Right => "right",
+            ParagraphAlignment::Center => "center",
+            ParagraphAlignment::Justify => "justify",
+            ParagraphAlignment::Distribute => "justify",
+            ParagraphAlignment::Divide => "justify",
+        };
+        para_style.push(format!("text-align: {};", align));
+
+        if !para_style.is_empty() {
+            para_shape_css.push_str(&format!(
+                "    .{css_prefix}parashape-{idx} {{\n        {styles}\n    }}\n\n",
+                css_prefix = css_prefix,
+                idx = idx,
+                styles = para_style.join("\n        ")
+            ));
+        }
     }
 
     // 섹션별 CSS 생성 / Generate CSS for each section
@@ -576,257 +651,259 @@ pub fn generate_css_styles(
     }}
 
     /* HWP Document Styles */
-    .{0}document {{
-        max-width: {3};
+    .{css_prefix}document {{
+        max-width: {max_width_px};
         margin: 0 auto;
-        padding: {4}px {5}px {6}px {7}px;
-        font-family: {1}-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        padding: {padding_top_px}px {padding_right_px}px {padding_bottom_px}px {padding_left_px}px;
+        font-family: {default_font_family}-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         line-height: 1.6;
     }}
-{2}
+{font_css}
 
     /* Section and Page Styles */
-    .{0}Section {{
+    .{css_prefix}Section {{
         width: 100%;
         margin: 0;
         padding: 0;
         margin-bottom: 40px;
     }}
 
-    .{0}Paper {{
+    .{css_prefix}Paper {{
         width: 100%;
         margin: 0 auto;
         background-color: #fff;
         position: relative;
     }}
 
-    .{0}Page {{
+    .{css_prefix}Page {{
         width: 100%;
         box-sizing: border-box;
     }}
 
-    .{0}HeaderPageFooter {{
+    .{css_prefix}HeaderPageFooter {{
         width: 100%;
         position: absolute;
         left: 0;
         box-sizing: border-box;
     }}
 
-    .{0}HeaderPageFooter.{0}Header {{
+    .{css_prefix}HeaderPageFooter.{css_prefix}Header {{
         top: 0;
     }}
 
-    .{0}HeaderPageFooter.{0}Footer {{
+    .{css_prefix}HeaderPageFooter.{css_prefix}Footer {{
         bottom: 0;
     }}
 
-{14}
+{section_css}
 
-    .{0}header {{
+    .{css_prefix}header {{
         margin-bottom: 20px;
     }}
 
-    .{0}footer {{
+    .{css_prefix}footer {{
         margin-top: 20px;
         border-top: 1px solid #ddd;
         padding-top: 10px;
     }}
 
-    .{0}main {{
+    .{css_prefix}main {{
         margin: 20px 0;
     }}
 
-    .{0}paragraph {{
-        margin: 10px 0;
+    .{css_prefix}paragraph {{
     }}
 
-    .{0}outline {{
+    .{css_prefix}outline {{
         display: block;
         margin: 10px 0;
     }}
 
-    .{0}table {{
+    .{css_prefix}table {{
         border-collapse: collapse;
         width: 100%;
         margin: 10px 0;
     }}
 
-    .{0}table th,
-    .{0}table td {{
+    .{css_prefix}table th,
+    .{css_prefix}table td {{
         padding: 8px;
         text-align: left;
         border: 1px solid black;
     }}
 
-    .{0}table th {{
+    .{css_prefix}table th {{
         font-weight: bold;
     }}
     
     /* 테이블 셀 배경색은 bg-color 클래스로 처리 / Table cell background colors are handled by bg-color classes */
 
-    .{0}image {{
+    .{css_prefix}image {{
         max-width: 100%;
         height: auto;
         margin: 10px 0;
     }}
 
-    .{0}footnote-ref,
-    .{0}endnote-ref {{
+    .{css_prefix}footnote-ref,
+    .{css_prefix}endnote-ref {{
         text-decoration: none;
         color: #0066cc;
         font-weight: bold;
     }}
 
-    .{0}footnote-ref:hover,
-    .{0}endnote-ref:hover {{
+    .{css_prefix}footnote-ref:hover,
+    .{css_prefix}endnote-ref:hover {{
         text-decoration: underline;
     }}
 
-    .{0}footnote,
-    .{0}endnote {{
+    .{css_prefix}footnote,
+    .{css_prefix}endnote {{
         margin: 10px 0;
         padding: 10px;
         background-color: #f9f9f9;
         border-left: 3px solid #0066cc;
     }}
 
-    .{0}footnotes,
-    .{0}endnotes {{
+    .{css_prefix}footnotes,
+    .{css_prefix}endnotes {{
         margin-top: 40px;
         padding-top: 20px;
         border-top: 2px solid #ddd;
     }}
 
-    .{0}page-number {{
+    .{css_prefix}page-number {{
         font-weight: normal;
     }}
 
-    .{0}overline {{
+    .{css_prefix}overline {{
         text-decoration: overline;
     }}
 
-    .{0}emboss {{
+    .{css_prefix}emboss {{
         text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
     }}
 
-    .{0}engrave {{
+    .{css_prefix}engrave {{
         text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.3);
     }}
 
-    .{0}underline-solid {{
+    .{css_prefix}underline-solid {{
         text-decoration: underline;
         text-decoration-style: solid;
     }}
 
-    .{0}underline-dotted {{
+    .{css_prefix}underline-dotted {{
         text-decoration: underline;
         text-decoration-style: dotted;
     }}
 
-    .{0}underline-dashed {{
+    .{css_prefix}underline-dashed {{
         text-decoration: underline;
         text-decoration-style: dashed;
     }}
 
-    .{0}underline-double {{
+    .{css_prefix}underline-double {{
         text-decoration: underline;
         text-decoration-style: double;
     }}
 
-    .{0}strikethrough-solid {{
+    .{css_prefix}strikethrough-solid {{
         text-decoration: line-through;
         text-decoration-style: solid;
     }}
 
-    .{0}strikethrough-dotted {{
+    .{css_prefix}strikethrough-dotted {{
         text-decoration: line-through;
         text-decoration-style: dotted;
     }}
 
-    .{0}strikethrough-dashed {{
+    .{css_prefix}strikethrough-dashed {{
         text-decoration: line-through;
         text-decoration-style: dashed;
     }}
 
-    .{0}footnote-back,
-    .{0}endnote-back {{
+    .{css_prefix}footnote-back,
+    .{css_prefix}endnote-back {{
         text-decoration: none;
         color: #0066cc;
         margin-left: 5px;
     }}
 
-    .{0}footnote-back:hover,
-    .{0}endnote-back:hover {{
+    .{css_prefix}footnote-back:hover,
+    .{css_prefix}endnote-back:hover {{
         text-decoration: underline;
     }}
 
-    .{0}page-break {{
+    .{css_prefix}page-break {{
         border: none;
         border-top: 2px solid #ddd;
         margin: 20px 0;
     }}
 
-    .{0}emphasis-1::before {{
+    .{css_prefix}emphasis-1::before {{
         content: "●";
         margin-right: 3px;
     }}
 
-    .{0}emphasis-2::before {{
+    .{css_prefix}emphasis-2::before {{
         content: "○";
         margin-right: 3px;
     }}
 
-    .{0}emphasis-3::before {{
+    .{css_prefix}emphasis-3::before {{
         content: "◆";
         margin-right: 3px;
     }}
 
-    .{0}emphasis-4::before {{
+    .{css_prefix}emphasis-4::before {{
         content: "◇";
         margin-right: 3px;
     }}
 
-    .{0}emphasis-5::before {{
+    .{css_prefix}emphasis-5::before {{
         content: "■";
         margin-right: 3px;
     }}
 
-    .{0}emphasis-6::before {{
+    .{css_prefix}emphasis-6::before {{
         content: "□";
         margin-right: 3px;
     }}
 
-    .{0}emphasis-7::before {{
+    .{css_prefix}emphasis-7::before {{
         content: "★";
         margin-right: 3px;
     }}
 
-    .{0}emphasis-8::before {{
+    .{css_prefix}emphasis-8::before {{
         content: "☆";
         margin-right: 3px;
     }}
 
-               {8}
-               {9}
-               {10}
-               {11}
-               {12}
-               {13}
+               {color_css}
+               {size_css}
+               {border_color_css}
+               {background_color_css}
+               {border_style_css}
+               {border_width_css}
+               {para_shape_css}
+               {section_css}
                "#,
-        css_prefix,
-        default_font_family,
-        font_css,
-        max_width_px,
-        padding_top_px,
-        padding_right_px,
-        padding_bottom_px,
-        padding_left_px,
-        color_css,
-        size_css,
-        border_color_css,
-        background_color_css,
-        border_style_css,
-        border_width_css,
-        section_css
+        css_prefix = css_prefix,
+        default_font_family = default_font_family,
+        font_css = font_css,
+        max_width_px = max_width_px,
+        padding_top_px = padding_top_px,
+        padding_right_px = padding_right_px,
+        padding_bottom_px = padding_bottom_px,
+        padding_left_px = padding_left_px,
+        color_css = color_css,
+        size_css = size_css,
+        border_color_css = border_color_css,
+        background_color_css = background_color_css,
+        border_style_css = border_style_css,
+        border_width_css = border_width_css,
+        para_shape_css = para_shape_css,
+        section_css = section_css
     )
 }

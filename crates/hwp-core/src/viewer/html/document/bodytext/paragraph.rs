@@ -20,6 +20,19 @@ pub fn convert_paragraph_to_html(
     options: &HtmlOptions,
     tracker: &mut OutlineNumberTracker,
 ) -> String {
+    convert_paragraph_to_html_with_indices(paragraph, document, options, tracker, None, None)
+}
+
+/// Convert a paragraph to HTML with section and paragraph indices
+/// 섹션 및 문단 인덱스를 포함하여 문단을 HTML로 변환
+pub fn convert_paragraph_to_html_with_indices(
+    paragraph: &Paragraph,
+    document: &HwpDocument,
+    options: &HtmlOptions,
+    tracker: &mut OutlineNumberTracker,
+    section_idx: Option<usize>,
+    para_idx: Option<usize>,
+) -> String {
     if paragraph.records.is_empty() {
         return String::new();
     }
@@ -27,11 +40,15 @@ pub fn convert_paragraph_to_html(
     let mut parts = Vec::new();
     let mut text_parts = Vec::new(); // 같은 문단 내의 텍스트 레코드들을 모음 / Collect text records in the same paragraph
     let mut char_shapes: Vec<CharShapeInfo> = Vec::new(); // 문단의 글자 모양 정보 수집 / Collect character shape information for paragraph
+    let mut line_segments: Option<&[crate::document::bodytext::LineSegmentInfo]> = None; // ParaLineSeg 세그먼트 정보 / ParaLineSeg segment information
 
-    // 먼저 ParaCharShape 레코드를 수집 / First collect ParaCharShape records
+    // 먼저 ParaCharShape와 ParaLineSeg 레코드를 수집 / First collect ParaCharShape and ParaLineSeg records
     for record in &paragraph.records {
         if let ParagraphRecord::ParaCharShape { shapes } = record {
             char_shapes.extend(shapes.clone());
+        }
+        if let ParagraphRecord::ParaLineSeg { segments } = record {
+            line_segments = Some(segments);
         }
     }
 
@@ -57,6 +74,7 @@ pub fn convert_paragraph_to_html(
                         Some(&get_char_shape),
                         &options.css_class_prefix,
                         Some(document),
+                        line_segments,
                     )
                 {
                     text_parts.push(text_html);
@@ -252,14 +270,29 @@ pub fn convert_paragraph_to_html(
 
         // 문단을 <p> 태그로 감싸기 / Wrap paragraph in <p> tag
         let css_prefix = &options.css_class_prefix;
+
+        // ParaShape 클래스 추가 / Add ParaShape class
+        let para_shape_id = paragraph.para_header.para_shape_id as usize;
+        let para_shape_class = if para_shape_id < document.doc_info.para_shapes.len() {
+            format!(" {}parashape-{}", css_prefix, para_shape_id)
+        } else {
+            String::new()
+        };
+
         if outline_html.contains(&format!("class=\"{}\"", format!("{}outline", css_prefix))) {
             // 개요 번호가 있는 경우 / If outline number exists
+            // 개요는 이미 span으로 감싸져 있으므로 p 태그로 감싸지 않음 / Outline is already wrapped in span, so don't wrap in p tag
             parts.push(outline_html);
         } else {
             // 일반 문단 / Regular paragraph
+            let mut paragraph_classes = vec![format!("{}paragraph", css_prefix)];
+            if !para_shape_class.is_empty() {
+                paragraph_classes.push(para_shape_class.trim().to_string());
+            }
+            let paragraph_class = paragraph_classes.join(" ");
             parts.push(format!(
-                r#"<p class="{}paragraph">{}</p>"#,
-                css_prefix, outline_html
+                r#"<p class="{}">{}</p>"#,
+                paragraph_class, outline_html
             ));
         }
     }

@@ -518,7 +518,6 @@ expression: html
     }
 
     .ohah-hwpjs-paragraph {
-        margin: 10px 0;
     }
 
     .ohah-hwpjs-outline {
@@ -705,6 +704,145 @@ expression: html
 
                
                
+                   .ohah-hwpjs-parashape-0 {
+        margin-bottom: 0.80pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-1 {
+        margin-bottom: 0.80pt;
+        padding-left: -10.99px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-2 {
+        margin-bottom: 0.80pt;
+        padding-left: -7.33px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-3 {
+        margin-bottom: 0.80pt;
+        padding-left: -14.66px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-4 {
+        margin-bottom: 0.80pt;
+        padding-left: -21.98px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-5 {
+        margin-bottom: 0.80pt;
+        padding-left: -29.31px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-6 {
+        margin-bottom: 0.80pt;
+        padding-left: -36.64px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-7 {
+        margin-bottom: 0.80pt;
+        padding-left: -43.97px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-8 {
+        margin-bottom: 0.80pt;
+        padding-left: -51.30px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-9 {
+        margin-bottom: 0.75pt;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-10 {
+        margin-bottom: 0.65pt;
+        text-indent: -9.60px;
+        padding-left: 9.60px;
+        text-align: justify;
+    }
+
+    .ohah-hwpjs-parashape-11 {
+        margin-bottom: 0.65pt;
+        text-align: left;
+    }
+
+    .ohah-hwpjs-parashape-12 {
+        margin-top: 3.00pt;
+        margin-bottom: 0.80pt;
+        text-align: left;
+    }
+
+    .ohah-hwpjs-parashape-13 {
+        margin-top: 7.00pt;
+        margin-bottom: 0.80pt;
+        text-align: left;
+    }
+
+    .ohah-hwpjs-parashape-14 {
+        margin-top: 7.00pt;
+        margin-bottom: 0.80pt;
+        padding-left: -8.06px;
+        text-align: left;
+    }
+
+    .ohah-hwpjs-parashape-15 {
+        margin-top: 7.00pt;
+        margin-bottom: 0.80pt;
+        padding-left: -16.12px;
+        text-align: left;
+    }
+
+
+               
+    /* Section 0 Styles */
+    .ohah-hwpjs-Section-0 {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Paper {
+        width: 297.00mm;
+        min-height: 210.00mm;
+        margin: 0 auto 40px auto;
+        background-color: #fff;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-Page {
+        width: 100%;
+        min-height: 210.00mm;
+        padding: 20.00mm 30.00mm 15.00mm 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        padding: 0 30.00mm 0 30.00mm;
+        box-sizing: border-box;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Header {
+        top: 0;
+        height: 15.00mm;
+    }
+
+    .ohah-hwpjs-Section-0 .ohah-hwpjs-HeaderPageFooter.ohah-hwpjs-Footer {
+        bottom: 0;
+        height: 15.00mm;
+    }
+
                  </style>
 </head>
 <body>
@@ -719,18 +857,18 @@ expression: html
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Header">
         </div>
         <div class="ohah-hwpjs-Page">
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1300">삼강오륜</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">삼강오륜 은 현재까지도 이어져 일상생활에 깊이 뿌리내린 윤리 도덕이랍니다.</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">삼강</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">군위신강: 임금과 신하 사이에 마땅히 지켜야 할 도리</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">부위자강 : 어버이와 자식 사이에 마땅히 지켜야 할 도리</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">부위부강 : 남편과 아내 사이에 지켜야 할 도리</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">오륜</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">군신유의: 임금과 신하 사이에는 의로움이 있어야 함.</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">부자유친: 어버이와 자식 사이에는 친함이 있어야 함.</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">부부유별: 부부 사이에는 구별이 있어야 함.</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">장유유서: 어른과 아이 사이에는 차례와 질서가 있어야 함.</span></p>
-          <p class="ohah-hwpjs-paragraph"><span class="ohah-hwpjs-size-1300">붕우유신: 친구 사이에는 믿음이 있어야 함</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-font-0 ohah-hwpjs-size-1300" data-start="0" data-end="4" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">삼강오륜</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="41" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">삼강오륜 은 현재까지도 이어져 일상생활에 깊이 뿌리내린 윤리 도덕이랍니다.</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="2" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">삼강</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="29" style="line-height: 0.60; height: 5.29mm; font-size: 15.00pt; vertical-align: -15.00%; width: 237.00mm">군위신강: 임금과 신하 사이에 마땅히 지켜야 할 도리</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="31" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부위자강 : 어버이와 자식 사이에 마땅히 지켜야 할 도리</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="26" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부위부강 : 남편과 아내 사이에 지켜야 할 도리</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="2" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">오륜</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="29" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">군신유의: 임금과 신하 사이에는 의로움이 있어야 함.</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="29" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부자유친: 어버이와 자식 사이에는 친함이 있어야 함.</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="24" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">부부유별: 부부 사이에는 구별이 있어야 함.</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="32" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">장유유서: 어른과 아이 사이에는 차례와 질서가 있어야 함.</span></p>
+          <p class="ohah-hwpjs-paragraph ohah-hwpjs-parashape-0"><span class="ohah-hwpjs-size-1300" data-start="0" data-end="23" style="line-height: 0.60; height: 4.59mm; font-size: 13.00pt; vertical-align: -15.00%; width: 237.00mm">붕우유신: 친구 사이에는 믿음이 있어야 함</span></p>
         </div>
         <div class="ohah-hwpjs-HeaderPageFooter ohah-hwpjs-Footer">
         </div>

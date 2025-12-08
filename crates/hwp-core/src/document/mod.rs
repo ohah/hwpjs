@@ -1,18 +1,18 @@
-mod bindata;
+pub mod bindata;
 pub mod bodytext;
-mod constants;
-mod docinfo;
+pub mod constants;
+pub mod docinfo;
 /// HWP Document structure
 ///
 /// This module defines the main document structure for HWP files.
 ///
 /// 스펙 문서 매핑: 표 2 - 전체 구조
-mod fileheader;
-mod preview_image;
-mod preview_text;
-mod scripts;
-mod summary_information;
-mod xml_template;
+pub mod fileheader;
+pub mod preview_image;
+pub mod preview_text;
+pub mod scripts;
+pub mod summary_information;
+pub mod xml_template;
 
 pub use bindata::{BinData, BinaryDataFormat};
 pub use bodytext::{
@@ -20,8 +20,8 @@ pub use bodytext::{
     ParagraphRecord, Section,
 };
 pub use docinfo::{
-    BinDataRecord, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName,
-    FillInfo, HeaderShapeType, IdMappings, Numbering, ParaShape, Style, TabDef,
+    BinDataRecord, BorderFill, Bullet, CharShape, DocInfo, DocumentProperties, FaceName, FillInfo,
+    HeaderShapeType, IdMappings, Numbering, ParaShape, Style, TabDef,
 };
 pub use fileheader::FileHeader;
 pub use preview_image::PreviewImage;

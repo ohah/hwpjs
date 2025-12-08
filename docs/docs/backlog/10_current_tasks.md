@@ -257,6 +257,25 @@ interface ExtractImagesResult {
 
 ## 알려진 버그
 
+### ParaLineSeg 스타일 적용 제한사항
+
+- **문제**: ParaLineSeg의 `width`, `height`, `padding` 값들이 span 태그에 적용되지 않음
+- **원인**: 
+  - HTML의 `span` 태그는 inline 요소이므로 `width`, `height`, `padding-top`, `padding-bottom` 속성이 적용되지 않음
+  - CSS에서 inline 요소는 width/height를 무시하고, padding은 좌우만 적용됨
+- **현재 구현**:
+  - ParaLineSeg의 `line_spacing`은 `line-height`로 적용됨 (정상 작동)
+  - ParaLineSeg의 `line_height`, `text_height`, `baseline_distance`, `segment_width`는 인라인 스타일로 추가되지만 span 태그 특성상 일부는 적용되지 않음
+- **영향 범위**:
+  - `crates/hwp-core/src/viewer/html/document/bodytext/para_text.rs`의 `apply_html_styles` 함수
+  - 각 span에 ParaLineSeg 값들을 인라인 스타일로 적용하는 로직
+- **해결 방안 고려사항**:
+  - `display: inline-block` 또는 `display: block`으로 변경 시 레이아웃이 깨질 수 있음
+  - 절대 위치(`position: absolute`) 사용 시 복잡도 증가
+  - 레거시 코드에서도 절대 위치 방식은 보류했었음 (참고: `legacy/work/working.md`)
+- **우선순위**: 중간
+- **상태**: 알려진 제한사항
+
 ### 취소선 속성 파싱 문제
 
 - **문제**: 취소선 속성을 제대로 가져오지 못함
