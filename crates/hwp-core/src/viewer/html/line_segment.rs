@@ -142,7 +142,20 @@ pub fn render_line_segments_with_content(
             let table_index = empty_count - images.len();
             if table_index < tables.len() {
                 use crate::viewer::html::table::render_table;
-                let table_html = render_table(tables[table_index], document, 0, 0, options);
+                // 테이블 위치는 LineSegment의 위치를 기준으로 계산 / Calculate table position based on LineSegment position
+                // table.html 샘플을 보면 htb가 hcD 내부에 있고, hcD의 위치는 페이지의 절대 위치입니다
+                // In table.html sample, htb is inside hcD, and hcD position is absolute page position
+                // 하지만 테이블은 LineSegment 내부에 있으므로, LineSegment의 위치를 기준으로 상대 위치를 계산해야 합니다
+                // However, table is inside LineSegment, so we need to calculate relative position based on LineSegment position
+                // table.html에서는 htb가 hcD 내부에 있고 left:31mm, top:35.99mm인데, hcD는 left:30mm, top:35mm입니다
+                // In table.html, htb is inside hcD with left:31mm, top:35.99mm, while hcD is left:30mm, top:35mm
+                // 따라서 테이블의 상대 위치는 left:1mm, top:0.99mm입니다
+                // So table's relative position is left:1mm, top:0.99mm
+                // LineSegment의 column_start_position과 vertical_position을 사용하여 테이블 위치 계산
+                // Calculate table position using LineSegment's column_start_position and vertical_position
+                let table_left = segment.column_start_position;
+                let table_top = segment.vertical_position;
+                let table_html = render_table(tables[table_index], document, table_left, table_top, options);
                 content.push_str(&table_html);
             }
         } else if !is_text_empty {
