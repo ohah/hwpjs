@@ -150,9 +150,16 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
                 color.b()
             ));
 
-            // 폰트 패밀리 (간단히 처리) / Font family (simplified)
-            // TODO: 실제 폰트 ID를 폰트 이름으로 매핑
-            css.push_str("font-family:\"함초롬바탕\";");
+            // 폰트 패밀리 / Font family
+            // CharShape의 font_ids에서 한글 폰트 ID를 가져와서 face_names에서 폰트 이름 찾기
+            // Get Korean font ID from CharShape's font_ids and find font name from face_names
+            let font_id = char_shape.font_ids.korean as usize;
+            let font_name = if font_id > 0 && font_id <= document.doc_info.face_names.len() {
+                &document.doc_info.face_names[font_id - 1].name
+            } else {
+                "함초롬바탕" // 기본값 / Default
+            };
+            css.push_str(&format!("font-family:\"{}\";", font_name));
 
             // 속성 / Attributes
             if char_shape.attributes.bold {

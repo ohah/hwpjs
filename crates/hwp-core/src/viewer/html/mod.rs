@@ -134,6 +134,12 @@ fn render_paragraph(
     let mut tables: Vec<(
         &crate::document::bodytext::Table,
         Option<(HWPUNIT, HWPUNIT, Margin)>,
+        Option<(
+            &crate::document::bodytext::ctrl_header::ObjectAttribute,
+            crate::types::SHWPUNIT,
+            crate::types::SHWPUNIT,
+        )>,
+        Option<String>, // 캡션 텍스트 / Caption text
     )> = Vec::new();
 
     for record in &paragraph.records {
@@ -182,25 +188,49 @@ fn render_paragraph(
                 }
             }
             ParagraphRecord::Table { table } => {
-                tables.push((table, None));
+                tables.push((table, None, None, None));
             }
             ParagraphRecord::CtrlHeader {
                 header, children, ..
             } => {
                 // CtrlHeader의 children에서 테이블 찾기 / Find tables in CtrlHeader's children
-                // CtrlHeader의 width/height/margin 정보를 테이블에 전달
-                let ctrl_info = match &header.data {
+                // CtrlHeader의 width/height/margin, ObjectAttribute, offset_x, offset_y 정보를 테이블에 전달
+                let (ctrl_info, attr_info) = match &header.data {
                     CtrlHeaderData::ObjectCommon {
                         width,
                         height,
                         margin,
+                        attribute,
+                        offset_x,
+                        offset_y,
                         ..
-                    } => Some((width.clone(), height.clone(), margin.clone())),
-                    _ => None,
+                    } => (
+                        Some((width.clone(), height.clone(), margin.clone())),
+                        Some((attribute, *offset_x, *offset_y)),
+                    ),
+                    _ => (None, None),
                 };
+                // 캡션 텍스트 추출: 테이블 다음에 오는 문단에서 텍스트 추출 / Extract caption text: extract text from paragraph after table
+                let mut caption_text: Option<String> = None;
+                let mut found_table = false;
                 for child in children {
                     if let ParagraphRecord::Table { table } = child {
-                        tables.push((table, ctrl_info.clone()));
+                        found_table = true;
+                        // 이전에 찾은 캡션 텍스트를 사용 / Use previously found caption text
+                        let current_caption = caption_text.clone();
+                        tables.push((table, ctrl_info.clone(), attr_info, current_caption));
+                        caption_text = None; // 다음 테이블을 위해 초기화 / Reset for next table
+                    } else if found_table {
+                        // 테이블 다음에 오는 문단에서 텍스트 추출 / Extract text from paragraph after table
+                        if let ParagraphRecord::ParaText { text, .. } = child {
+                            caption_text = Some(text.clone());
+                            break;
+                        }
+                    } else {
+                        // 테이블 이전에 오는 문단에서 텍스트 추출 (첫 번째 테이블의 캡션) / Extract text from paragraph before table (caption for first table)
+                        if let ParagraphRecord::ParaText { text, .. } = child {
+                            caption_text = Some(text.clone());
+                        }
                     }
                 }
             }
@@ -210,10 +240,50 @@ fn render_paragraph(
 
     // 테이블 HTML 리스트 생성 / Create table HTML list
     let mut table_htmls = Vec::new();
+    let mut inline_tables = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
 
     // LineSegment가 있으면 사용 / Use LineSegment if available
     if !line_segments.is_empty() {
-        // 테이블을 제외하고 LineSegment 렌더링 / Render LineSegment without tables
+        // like_letters=true인 테이블과 false인 테이블 분리 / Separate tables with like_letters=true and false
+        let mut absolute_tables = Vec::new();
+        for (table, ctrl_info, attr_info, caption_text) in tables.iter() {
+            let like_letters = attr_info
+                .map(|(attr, _, _)| attr.like_letters)
+                .unwrap_or(false);
+            if like_letters {
+                inline_tables.push((table, ctrl_info.clone(), *attr_info, caption_text.clone()));
+            } else {
+                absolute_tables.push((table, ctrl_info.clone(), *attr_info, caption_text.clone()));
+            }
+        }
+
+        // ParaShape indent 값 가져오기 / Get ParaShape indent value
+        let para_shape_indent =
+            if para_shape_id > 0 && para_shape_id as usize <= document.doc_info.para_shapes.len() {
+                Some(document.doc_info.para_shapes[para_shape_id as usize - 1].indent)
+            } else {
+                None
+            };
+
+        // like_letters=true인 테이블을 line_segment에 포함 / Include tables with like_letters=true in line_segment
+        // inline_tables는 이미 TableInfo와 동일한 타입이므로 그대로 사용 / inline_tables is already the same type as TableInfo, so use as is
+        // inline_tables의 각 항목을 참조로 변환 / Convert each item in inline_tables to reference
+        // TableInfo는 tuple이므로 참조 레벨을 맞춰야 함 / TableInfo is a tuple, so need to match reference level
+        use crate::viewer::html::line_segment::TableInfo;
+        let inline_table_infos: Vec<&TableInfo> = inline_tables
+            .iter()
+            .map(|tuple| {
+                // tuple을 참조로 변환 / Convert tuple to reference
+                unsafe { std::mem::transmute::<&_, &TableInfo>(tuple) }
+            })
+            .collect();
+        // 테이블 번호 시작값 계산 / Calculate table number start value
+        let table_counter_start = document
+            .doc_info
+            .document_properties
+            .as_ref()
+            .map(|p| p.table_start_number as u32)
+            .unwrap_or(1);
         result.push_str(&line_segment::render_line_segments_with_content(
             &line_segments,
             &text,
@@ -221,51 +291,41 @@ fn render_paragraph(
             document,
             &para_shape_class,
             &images,
-            &[], // 테이블은 제외 / Exclude tables
+            &inline_table_infos, // like_letters=true인 테이블 포함 / Include tables with like_letters=true
             options,
+            para_shape_indent,
+            hcd_position,        // hcD 위치 전달 / Pass hcD position
+            page_def,            // 페이지 정의 전달 / Pass page definition
+            table_counter_start, // 테이블 번호 시작값 전달 / Pass table number start value
         ));
-        // 테이블을 별도로 렌더링 (hpa 레벨에 배치) / Render tables separately (placed at hpa level)
-        for (table, ctrl_info) in tables.iter() {
-            // 테이블 위치는 hcD 위치를 기준으로 오프셋 적용 / Table position is calculated based on hcD position with offset
-            // 목표 파일 기준: hcD는 left:30mm;top:35mm;, htb는 left:31mm;top:35.99mm; (오프셋: left:1mm;top:0.99mm)
-            // Based on target file: hcD is left:30mm;top:35mm;, htb is left:31mm;top:35.99mm; (offset: left:1mm;top:0.99mm)
-            use crate::viewer::html::styles::{int32_to_mm, mm_to_int32};
+
+        // like_letters=true인 테이블은 이미 line_segment에 포함되었으므로 여기서는 처리하지 않음
+        // Tables with like_letters=true are already included in line_segment, so don't process them here
+
+        // like_letters=false인 테이블을 별도로 렌더링 (hpa 레벨에 배치) / Render tables with like_letters=false separately (placed at hpa level)
+        let mut table_counter = document
+            .doc_info
+            .document_properties
+            .as_ref()
+            .map(|p| p.table_start_number as u32)
+            .unwrap_or(1);
+        // inline_tables의 개수만큼 table_counter 증가 (이미 line_segment에 포함되었으므로) / Increment table_counter by inline_tables count (already included in line_segment)
+        table_counter += inline_tables.len() as u32;
+        for (table, ctrl_info, attr_info, caption_text) in absolute_tables.iter() {
             use crate::viewer::html::table::render_table;
 
-            // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
-            use crate::types::RoundTo2dp;
-            let (hcd_left_mm, hcd_top_mm) = if let Some((left, top)) = hcd_position {
-                (left.round_to_2dp(), top.round_to_2dp())
-            } else {
-                // hcD 위치가 없으면 PageDef 여백 사용 / Use PageDef margins if hcD position not available
-                let left_margin = page_def
-                    .map(|pd| (pd.left_margin.to_mm() + pd.binding_margin.to_mm()).round_to_2dp())
-                    .unwrap_or(20.0);
-                let top_margin = page_def
-                    .map(|pd| (pd.top_margin.to_mm() + pd.header_margin.to_mm()).round_to_2dp())
-                    .unwrap_or(24.99);
-                (left_margin, top_margin)
-            };
-
-            // 테이블 위치는 hcD 위치를 기준으로 오프셋 적용 / Table position is calculated based on hcD position with offset
-            let table_left_mm = hcd_left_mm + 1.0; // 오프셋: 1mm / Offset: 1mm
-            let table_top_mm = hcd_top_mm + 0.99; // 오프셋: 0.99mm / Offset: 0.99mm
-            let (table_left, table_top) = (mm_to_int32(table_left_mm), mm_to_int32(table_top_mm));
-
-            let table_left_mm = int32_to_mm(table_left);
-            let table_top_mm = int32_to_mm(table_top);
-            eprintln!(
-                "DEBUG: Table position - left: {} ({}mm), top: {} ({}mm)",
-                table_left, table_left_mm, table_top, table_top_mm
-            );
             table_htmls.push(render_table(
                 table,
                 document,
-                table_left,
-                table_top,
                 ctrl_info.clone(),
+                *attr_info,
+                hcd_position,
+                page_def,
                 options,
+                Some(table_counter),
+                caption_text.as_deref(),
             ));
+            table_counter += 1;
         }
     } else if !text.is_empty() {
         // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment

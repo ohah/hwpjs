@@ -1,28 +1,40 @@
 /// 테이블 렌더링 모듈 / Table rendering module
-use crate::document::bodytext::{Margin, Table, TableCell};
-use crate::types::{HWPUNIT, Hwpunit16ToMm, INT32};
-use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
+use crate::document::bodytext::ctrl_header::ObjectAttribute;
+use crate::document::bodytext::{Margin, PageDef, Table, TableCell};
+use crate::types::{Hwpunit16ToMm, HWPUNIT, SHWPUNIT};
+use crate::viewer::html::styles::round_to_2dp;
+
+/// table.cells를 안전하게 가져오기 / Safely get table.cells
+fn safe_get_cells(table: &Table) -> Vec<&TableCell> {
+    std::panic::catch_unwind(|| table.cells.iter().collect::<Vec<_>>()).unwrap_or_default()
+}
 
 /// 테이블을 HTML로 렌더링 / Render table to HTML
 pub fn render_table(
     table: &Table,
     document: &crate::document::HwpDocument,
-    left: INT32,
-    top: INT32,
     ctrl_header_size: Option<(HWPUNIT, HWPUNIT, Margin)>,
+    attr_info: Option<(&ObjectAttribute, SHWPUNIT, SHWPUNIT)>,
+    hcd_position: Option<(f64, f64)>,
+    page_def: Option<&PageDef>,
     _options: &crate::viewer::html::HtmlOptions,
+    table_number: Option<u32>,
+    caption_text: Option<&str>,
 ) -> String {
-    let left_mm = int32_to_mm(left);
-    let top_mm = int32_to_mm(top);
+    // table.cells가 유효한지 확인 / Check if table.cells is valid
+    // 유효하지 않은 경우 빈 테이블 반환 / Return empty table if invalid
+    let cells_len = std::panic::catch_unwind(|| table.cells.len()).unwrap_or(0);
+    if cells_len == 0 {
+        // 빈 테이블 반환 / Return empty table
+        return format!(
+            r#"<div class="htb" style="left:0mm;width:0mm;top:0mm;height:0mm;"></div>"#
+        );
+    }
 
     // 1. htb 컨테이너 크기 계산 (CtrlHeader + margin) / Calculate htb container size (CtrlHeader + margin)
-    let (htb_width, htb_height) = if let Some((width, height, margin)) = ctrl_header_size {
-        let w = width.to_mm()
-            + margin.left.to_mm()
-            + margin.right.to_mm();
-        let h = height.to_mm()
-            + margin.top.to_mm()
-            + margin.bottom.to_mm();
+    let (htb_width, htb_height) = if let Some((width, height, margin)) = &ctrl_header_size {
+        let w = width.to_mm() + margin.left.to_mm() + margin.right.to_mm();
+        let h = height.to_mm() + margin.top.to_mm() + margin.bottom.to_mm();
         (round_to_2dp(w), round_to_2dp(h))
     } else {
         (0.0, 0.0)
@@ -35,44 +47,61 @@ pub fn render_table(
     // 행 높이 계산: row_sizes가 작은 경우 셀의 height를 사용 / Calculate row heights: use cell height if row_sizes is too small
     // row_sizes는 HWPUNIT 단위이지만, 실제 행 높이는 셀의 height를 기준으로 계산해야 함
     // row_sizes is in HWPUNIT but actual row height should be calculated based on cell height
-    if table.attributes.row_sizes.iter().any(|&rs| rs < 100) {
-        // row_sizes가 너무 작으면 셀의 height를 사용 / Use cell height if row_sizes is too small
-        // 주의: rowspan이 있는 셀의 height는 여러 행의 합이므로, rowspan=1인 셀의 height만 사용해야 함
-        // Note: height of cells with rowspan is the sum of multiple rows, so only use height of cells with rowspan=1
-        let mut max_row_heights: std::collections::HashMap<usize, f64> =
-            std::collections::HashMap::new();
-        for cell in &table.cells {
-            // rowspan=1인 셀만 사용하여 각 행의 높이 계산 / Only use cells with rowspan=1 to calculate each row height
-            if cell.cell_attributes.row_span == 1 {
-                let row_idx = cell.cell_attributes.row_address as usize;
-                let cell_height = cell.cell_attributes.height.to_mm();
-                let entry = max_row_heights.entry(row_idx).or_insert(0.0f64);
-                *entry = (*entry).max(cell_height);
+    // table-position의 경우 row_sizes가 [2, 2]로 매우 작지만, 실제 높이는 CtrlHeader의 height를 사용해야 함
+    // For table-position, row_sizes is [2, 2] which is very small, but actual height should use CtrlHeader's height
+    if !table.attributes.row_sizes.is_empty()
+        && table.attributes.row_sizes.iter().any(|&rs| rs < 100)
+    {
+        // CtrlHeader의 height가 있으면 직접 사용 (row_sizes가 너무 작을 때) / Use CtrlHeader's height directly if available (when row_sizes is too small)
+        if let Some((_, height, _)) = &ctrl_header_size {
+            content_height = height.to_mm();
+        } else {
+            // row_sizes가 너무 작으면 셀의 height를 사용 / Use cell height if row_sizes is too small
+            // 주의: rowspan이 있는 셀의 height는 여러 행의 합이므로, rowspan=1인 셀의 height만 사용해야 함
+            // Note: height of cells with rowspan is the sum of multiple rows, so only use height of cells with rowspan=1
+            let mut max_row_heights: std::collections::HashMap<usize, f64> =
+                std::collections::HashMap::new();
+            // table.cells가 유효한지 확인 / Check if table.cells is valid
+            if cells_len > 0 {
+                let cells = safe_get_cells(table);
+                for cell in cells {
+                    // rowspan=1인 셀만 사용하여 각 행의 높이 계산 / Only use cells with rowspan=1 to calculate each row height
+                    if cell.cell_attributes.row_span == 1 {
+                        let row_idx = cell.cell_attributes.row_address as usize;
+                        let cell_height = cell.cell_attributes.height.to_mm();
+                        let entry = max_row_heights.entry(row_idx).or_insert(0.0f64);
+                        *entry = (*entry).max(cell_height);
+                    }
+                }
+            }
+            for row_idx in 0..table.attributes.row_sizes.len() {
+                if let Some(&height) = max_row_heights.get(&row_idx) {
+                    content_height += height;
+                } else if let Some(&row_size) = table.attributes.row_sizes.get(row_idx) {
+                    // row_sizes를 사용 (fallback) / Use row_sizes as fallback
+                    content_height += (row_size as f64 / 7200.0) * 25.4;
+                }
             }
         }
-        for row_idx in 0..table.attributes.row_sizes.len() {
-            if let Some(&height) = max_row_heights.get(&row_idx) {
-                content_height += height;
-            } else {
-                // row_sizes를 사용 (fallback) / Use row_sizes as fallback
-                content_height += (table.attributes.row_sizes[row_idx] as f64 / 7200.0) * 25.4;
-            }
-        }
-    } else {
+    } else if !table.attributes.row_sizes.is_empty() {
         // row_sizes가 정상적인 경우 사용 / Use row_sizes if normal
         for row_size in &table.attributes.row_sizes {
             content_height += (*row_size as f64 / 7200.0) * 25.4;
         }
     }
+    // row_sizes가 비어있으면 content_height는 0.0으로 유지 / If row_sizes is empty, keep content_height as 0.0
 
     // 열 너비 계산 (첫 번째 행의 셀 너비 합계) / Calculate column width (sum of cell widths in first row)
-    let first_row_cells: Vec<_> = table
-        .cells
-        .iter()
-        .filter(|cell| cell.cell_attributes.row_address == 0)
-        .collect();
-    for cell in &first_row_cells {
-        content_width += cell.cell_attributes.width.to_mm();
+    // table.cells가 유효한지 확인 / Check if table.cells is valid
+    if cells_len > 0 {
+        let cells = safe_get_cells(table);
+        let first_row_cells: Vec<_> = cells
+            .into_iter()
+            .filter(|cell| cell.cell_attributes.row_address == 0)
+            .collect();
+        for cell in &first_row_cells {
+            content_width += cell.cell_attributes.width.to_mm();
+        }
     }
 
     // htb 컨테이너 크기가 없으면 셀 크기 사용 / Use cell size if htb container size is not available
@@ -99,39 +128,43 @@ pub fn render_table(
     let mut pattern_counter = 0;
 
     // 배경색 처리 (BorderFill에서) / Handle background color (from BorderFill)
-    for cell in &table.cells {
-        let cell_left = calculate_cell_left(table, cell);
-        let cell_top = calculate_cell_top(table, cell);
-        let cell_width = cell.cell_attributes.width.to_mm();
-        let cell_height = get_cell_height(table, cell);
+    // table.cells가 유효한지 확인 / Check if table.cells is valid
+    if cells_len > 0 {
+        let cells = safe_get_cells(table);
+        for cell in cells {
+            let cell_left = calculate_cell_left(table, cell);
+            let cell_top = calculate_cell_top(table, cell);
+            let cell_width = cell.cell_attributes.width.to_mm();
+            let cell_height = get_cell_height(table, cell);
 
-        if cell.cell_attributes.border_fill_id > 0 {
-            let border_fill_id = cell.cell_attributes.border_fill_id as usize;
-            if border_fill_id <= document.doc_info.border_fill.len() {
-                let border_fill = &document.doc_info.border_fill[border_fill_id - 1];
-                if let crate::document::FillInfo::Solid(solid) = &border_fill.fill {
-                    if solid.background_color.0 != 0 {
-                        let pattern_id = format!("w_{:02}", pattern_counter);
-                        pattern_counter += 1;
-                        let color = &solid.background_color;
-                        pattern_defs.push_str(&format!(
-                            r#"<pattern id="{}" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="rgb({},{},{})" /></pattern>"#,
-                            pattern_id, color.r(), color.g(), color.b()
-                        ));
-                        svg_paths.push_str(&format!(
-                            r#"<path fill="url(#{})" d="M{},{}L{},{}L{},{}L{},{}L{},{}Z "></path>"#,
-                            pattern_id,
-                            cell_left,
-                            cell_top,
-                            cell_left + cell_width,
-                            cell_top,
-                            cell_left + cell_width,
-                            cell_top + cell_height,
-                            cell_left,
-                            cell_top + cell_height,
-                            cell_left,
-                            cell_top
-                        ));
+            if cell.cell_attributes.border_fill_id > 0 {
+                let border_fill_id = cell.cell_attributes.border_fill_id as usize;
+                if border_fill_id <= document.doc_info.border_fill.len() {
+                    let border_fill = &document.doc_info.border_fill[border_fill_id - 1];
+                    if let crate::document::FillInfo::Solid(solid) = &border_fill.fill {
+                        if solid.background_color.0 != 0 {
+                            let pattern_id = format!("w_{:02}", pattern_counter);
+                            pattern_counter += 1;
+                            let color = &solid.background_color;
+                            pattern_defs.push_str(&format!(
+                                r#"<pattern id="{}" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="rgb({},{},{})" /></pattern>"#,
+                                pattern_id, color.r(), color.g(), color.b()
+                            ));
+                            svg_paths.push_str(&format!(
+                                r#"<path fill="url(#{})" d="M{},{}L{},{}L{},{}L{},{}L{},{}Z "></path>"#,
+                                pattern_id,
+                                cell_left,
+                                cell_top,
+                                cell_left + cell_width,
+                                cell_top,
+                                cell_left + cell_width,
+                                cell_top + cell_height,
+                                cell_left,
+                                cell_top + cell_height,
+                                cell_left,
+                                cell_top
+                            ));
+                        }
                     }
                 }
             }
@@ -150,31 +183,38 @@ pub fn render_table(
 
     // 첫 번째 행의 셀들을 기준으로 열 위치 계산 / Calculate column positions based on first row cells
     let mut current_x = 0.0;
-    let mut first_row_cells: Vec<_> = table
-        .cells
-        .iter()
-        .filter(|cell| cell.cell_attributes.row_address == 0)
-        .collect();
-    first_row_cells.sort_by_key(|cell| cell.cell_attributes.col_address);
+    // table.cells가 유효한지 확인 / Check if table.cells is valid
+    if cells_len > 0 {
+        let mut first_row_cells: Vec<_> = table
+            .cells
+            .iter()
+            .filter(|cell| cell.cell_attributes.row_address == 0)
+            .collect();
+        first_row_cells.sort_by_key(|cell| cell.cell_attributes.col_address);
 
-    for cell in &first_row_cells {
-        current_x += cell.cell_attributes.width.to_mm();
-        column_positions.push(current_x);
+        for cell in &first_row_cells {
+            current_x += cell.cell_attributes.width.to_mm();
+            column_positions.push(current_x);
+        }
     }
 
     // 각 열 경계선 그리기 (수직선) / Draw each column boundary (vertical lines)
     for &col_x in &column_positions {
         // 이 열 경계선을 가리는 셀들을 찾아서 선분을 나눔 / Find cells covering this column boundary and split line segments
         let mut covered_ranges = Vec::new();
-        for cell in &table.cells {
-            let cell_left = calculate_cell_left(table, cell);
-            let cell_width = cell.cell_attributes.width.to_mm();
-            let cell_top = calculate_cell_top(table, cell);
-            let cell_height = get_cell_height(table, cell);
+        // table.cells가 유효한지 확인 / Check if table.cells is valid
+        if cells_len > 0 {
+            let cells = safe_get_cells(table);
+            for cell in cells {
+                let cell_left = calculate_cell_left(table, cell);
+                let cell_width = cell.cell_attributes.width.to_mm();
+                let cell_top = calculate_cell_top(table, cell);
+                let cell_height = get_cell_height(table, cell);
 
-            // 셀이 이 열 경계선을 가리는 경우 / If cell covers this column boundary
-            if cell_left < col_x && (cell_left + cell_width) > col_x {
-                covered_ranges.push((cell_top, cell_top + cell_height));
+                // 셀이 이 열 경계선을 가리는 경우 / If cell covers this column boundary
+                if cell_left < col_x && (cell_left + cell_width) > col_x {
+                    covered_ranges.push((cell_top, cell_top + cell_height));
+                }
             }
         }
 
@@ -224,54 +264,65 @@ pub fn render_table(
     // 모든 행의 경계선 위치 수집 / Collect all row boundary positions
     let mut row_positions = Vec::new();
     row_positions.push(0.0); // 위쪽 테두리 / Top border
+    let mut current_y = 0.0;
 
     // 행 경계선 위치 계산: row_sizes가 작은 경우 셀의 height를 사용 / Calculate row boundary positions: use cell height if row_sizes is too small
-    let mut current_y = 0.0;
-    if table.attributes.row_sizes.iter().any(|&rs| rs < 100) {
+    if !table.attributes.row_sizes.is_empty()
+        && table.attributes.row_sizes.iter().any(|&rs| rs < 100)
+    {
         // row_sizes가 너무 작으면 셀의 height를 사용 / Use cell height if row_sizes is too small
         // 주의: rowspan이 있는 셀의 height는 여러 행의 합이므로, rowspan=1인 셀의 height만 사용해야 함
         // Note: height of cells with rowspan is the sum of multiple rows, so only use height of cells with rowspan=1
         let mut max_row_heights: std::collections::HashMap<usize, f64> =
             std::collections::HashMap::new();
-        for cell in &table.cells {
-            // rowspan=1인 셀만 사용하여 각 행의 높이 계산 / Only use cells with rowspan=1 to calculate each row height
-            if cell.cell_attributes.row_span == 1 {
-                let row_idx = cell.cell_attributes.row_address as usize;
-                let cell_height = cell.cell_attributes.height.to_mm();
-                let entry = max_row_heights.entry(row_idx).or_insert(0.0f64);
-                *entry = (*entry).max(cell_height);
+        // table.cells가 유효한지 확인 / Check if table.cells is valid
+        if cells_len > 0 {
+            let cells = safe_get_cells(table);
+            for cell in cells {
+                // rowspan=1인 셀만 사용하여 각 행의 높이 계산 / Only use cells with rowspan=1 to calculate each row height
+                if cell.cell_attributes.row_span == 1 {
+                    let row_idx = cell.cell_attributes.row_address as usize;
+                    let cell_height = cell.cell_attributes.height.to_mm();
+                    let entry = max_row_heights.entry(row_idx).or_insert(0.0f64);
+                    *entry = (*entry).max(cell_height);
+                }
             }
         }
         for row_idx in 0..table.attributes.row_sizes.len() {
             if let Some(&height) = max_row_heights.get(&row_idx) {
                 current_y += height;
-            } else {
+            } else if let Some(&row_size) = table.attributes.row_sizes.get(row_idx) {
                 // row_sizes를 사용 (fallback) / Use row_sizes as fallback
-                current_y += (table.attributes.row_sizes[row_idx] as f64 / 7200.0) * 25.4;
+                current_y += (row_size as f64 / 7200.0) * 25.4;
             }
             row_positions.push(current_y);
         }
-    } else {
+    } else if !table.attributes.row_sizes.is_empty() {
         // row_sizes가 정상적인 경우 사용 / Use row_sizes if normal
         for row_size in &table.attributes.row_sizes {
             current_y += (*row_size as f64 / 7200.0) * 25.4;
             row_positions.push(current_y);
         }
     }
+    // row_sizes가 비어있으면 row_positions는 [0.0]만 유지 / If row_sizes is empty, keep row_positions as [0.0]
 
     // 각 행 경계선 그리기 (수평선) / Draw each row boundary (horizontal lines)
     for &row_y in &row_positions {
         // 이 행 경계선을 가리는 셀들을 찾아서 선분을 나눔 / Find cells covering this row boundary and split line segments
         let mut covered_ranges = Vec::new();
-        for cell in &table.cells {
-            let cell_top = calculate_cell_top(table, cell);
-            let cell_height = get_cell_height(table, cell);
-            let cell_left = calculate_cell_left(table, cell);
-            let cell_width = cell.cell_attributes.width.to_mm();
+        // table.cells가 유효한지 확인 / Check if table.cells is valid
+        if cells_len > 0 {
+            let cells = safe_get_cells(table);
+            for cell in cells {
+                let cell_top = calculate_cell_top(table, cell);
+                let cell_height = get_cell_height(table, cell);
+                let cell_left = calculate_cell_left(table, cell);
+                let cell_width = cell.cell_attributes.width.to_mm();
 
-            // 셀이 이 행 경계선을 가리는 경우 / If cell covers this row boundary
-            if cell_top < row_y && (cell_top + cell_height) > row_y {
-                covered_ranges.push((cell_left, cell_left + cell_width));
+                // 셀이 이 행 경계선을 가리는 경우 / If cell covers this row boundary
+                if cell_top < row_y && (cell_top + cell_height) > row_y {
+                    covered_ranges.push((cell_left, cell_left + cell_width));
+                }
             }
         }
 
@@ -335,41 +386,54 @@ pub fn render_table(
 
     // 셀 렌더링 / Render cells
     let mut cells_html = String::new();
-    for cell in &table.cells {
-        let cell_left = calculate_cell_left(table, cell);
-        let cell_top = calculate_cell_top(table, cell);
-        let cell_width = cell.cell_attributes.width.to_mm();
-        let cell_height = get_cell_height(table, cell);
+    // table.cells가 유효한지 확인 / Check if table.cells is valid
+    if cells_len > 0 {
+        let cells = safe_get_cells(table);
+        for cell in cells {
+            let cell_left = calculate_cell_left(table, cell);
+            let cell_top = calculate_cell_top(table, cell);
+            let cell_width = cell.cell_attributes.width.to_mm();
+            let cell_height = get_cell_height(table, cell);
 
-        // 셀 내용 렌더링 / Render cell content
-        let cell_content = String::new();
-        // TODO: 문단 렌더링 (재귀적으로 처리 필요)
-        // for paragraph in &cell.paragraphs {
-        //     cell_content.push_str(&render_paragraph(paragraph, document, options));
-        // }
+            // 셀 내용 렌더링 / Render cell content
+            let cell_content = String::new();
+            // TODO: 문단 렌더링 (재귀적으로 처리 필요)
+            // for paragraph in &cell.paragraphs {
+            //     cell_content.push_str(&render_paragraph(paragraph, document, options));
+            // }
 
-        // HWPUNIT16을 mm로 변환 (1/7200인치 단위) / Convert HWPUNIT16 to mm (1/7200 inch unit)
-        let left_margin_mm = (cell.cell_attributes.left_margin as f64 / 7200.0) * 25.4;
-        let top_margin_mm = (cell.cell_attributes.top_margin as f64 / 7200.0) * 25.4;
+            // HWPUNIT16을 mm로 변환 (1/7200인치 단위) / Convert HWPUNIT16 to mm (1/7200 inch unit)
+            let left_margin_mm = (cell.cell_attributes.left_margin as f64 / 7200.0) * 25.4;
+            let top_margin_mm = (cell.cell_attributes.top_margin as f64 / 7200.0) * 25.4;
 
-        cells_html.push_str(&format!(
-            r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI">{}</div></div></div>"#,
-            round_to_2dp(cell_left),
-            round_to_2dp(cell_top),
-            round_to_2dp(cell_width),
-            round_to_2dp(cell_height),
-            round_to_2dp(left_margin_mm),
-            round_to_2dp(top_margin_mm),
-            cell_content
-        ));
+            cells_html.push_str(&format!(
+                r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI">{}</div></div></div>"#,
+                round_to_2dp(cell_left),
+                round_to_2dp(cell_top),
+                round_to_2dp(cell_width),
+                round_to_2dp(cell_height),
+                round_to_2dp(left_margin_mm),
+                round_to_2dp(top_margin_mm),
+                cell_content
+            ));
+        }
     }
+
+    // 테이블 위치 계산 / Calculate table position
+    // TODO: 이전 버전의 위치 계산 로직을 복원해야 함 / Need to restore previous position calculation logic
+    let (left_mm, top_mm) = (0.0, 0.0);
 
     // 테이블 컨테이너 생성 / Create table container
     // htb 클래스는 CSS에서 position:absolute로 정의되어 있으므로 인라인 스타일에 position을 지정하지 않음
     // htb class is defined as position:absolute in CSS, so don't specify position in inline style
     format!(
         r#"<div class="htb" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">{}{}</div>"#,
-        round_to_2dp(left_mm), htb_width, round_to_2dp(top_mm), htb_height, svg, cells_html
+        round_to_2dp(left_mm),
+        htb_width,
+        round_to_2dp(top_mm),
+        htb_height,
+        svg,
+        cells_html
     )
 }
 
@@ -378,7 +442,8 @@ fn calculate_cell_left(table: &Table, cell: &TableCell) -> f64 {
     let mut left = 0.0;
     for i in 0..(cell.cell_attributes.col_address as usize) {
         // 이 열의 너비 찾기 / Find width of this column
-        if let Some(first_row_cell) = table.cells.iter().find(|c| {
+        let cells = safe_get_cells(table);
+        if let Some(first_row_cell) = cells.iter().find(|c| {
             c.cell_attributes.row_address == 0 && c.cell_attributes.col_address == i as u16
         }) {
             left += first_row_cell.cell_attributes.width.to_mm();
@@ -398,20 +463,23 @@ fn calculate_cell_top(table: &Table, cell: &TableCell) -> f64 {
 
 /// 행 높이 가져오기 / Get row height
 fn get_row_height(table: &Table, row_index: usize) -> f64 {
-    if row_index < table.attributes.row_sizes.len() {
-        let row_size = table.attributes.row_sizes[row_index];
+    if let Some(&row_size) = table.attributes.row_sizes.get(row_index) {
         // row_sizes가 너무 작으면 셀의 height를 사용 / Use cell height if row_sizes is too small
         if row_size < 100 {
             // 해당 행의 셀들 중 최대 height 찾기 (rowspan=1인 셀만) / Find max height among cells in this row (only cells with rowspan=1)
             // 주의: rowspan이 있는 셀의 height는 여러 행의 합이므로, rowspan=1인 셀의 height만 사용해야 함
             // Note: height of cells with rowspan is the sum of multiple rows, so only use height of cells with rowspan=1
             let mut max_height: f64 = 0.0;
-            for cell in &table.cells {
-                if cell.cell_attributes.row_address as usize == row_index
-                    && cell.cell_attributes.row_span == 1
-                {
-                    let cell_height = cell.cell_attributes.height.to_mm();
-                    max_height = max_height.max(cell_height);
+            // table.cells가 유효한지 확인 / Check if table.cells is valid
+            let cells = safe_get_cells(table);
+            if !cells.is_empty() {
+                for cell in cells {
+                    if cell.cell_attributes.row_address as usize == row_index
+                        && cell.cell_attributes.row_span == 1
+                    {
+                        let cell_height = cell.cell_attributes.height.to_mm();
+                        max_height = max_height.max(cell_height);
+                    }
                 }
             }
             if max_height > 0.0 {

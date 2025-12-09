@@ -2,31 +2,61 @@
 use crate::document::bodytext::LineSegmentInfo;
 use crate::viewer::html::styles::int32_to_mm;
 
+/// 테이블 정보 타입 / Table info type
+pub type TableInfo<'a> = (
+    &'a crate::document::bodytext::Table,
+    Option<(
+        crate::types::HWPUNIT,
+        crate::types::HWPUNIT,
+        crate::document::bodytext::Margin,
+    )>,
+    Option<(
+        &'a crate::document::bodytext::ctrl_header::ObjectAttribute,
+        crate::types::SHWPUNIT,
+        crate::types::SHWPUNIT,
+    )>,
+    Option<String>, // 캡션 텍스트 / Caption text
+);
+
 /// 라인 세그먼트를 HTML로 렌더링 / Render line segment to HTML
 pub fn render_line_segment(
     segment: &LineSegmentInfo,
     content: &str,
     para_shape_class: &str,
+    para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
 ) -> String {
     let left_mm = int32_to_mm(segment.column_start_position);
     let top_mm = int32_to_mm(segment.vertical_position);
     let width_mm = int32_to_mm(segment.segment_width);
     let height_mm = int32_to_mm(segment.line_height);
 
-    let style = format!(
+    let mut style = format!(
         "line-height:{}mm;white-space:nowrap;left:{}mm;top:{}mm;height:{}mm;width:{}mm;",
         height_mm, left_mm, top_mm, height_mm, width_mm
     );
 
     // padding-left 처리 (들여쓰기) / Handle padding-left (indentation)
     if segment.tag.has_indentation {
-        // TODO: 실제 들여쓰기 값 계산
+        if let Some(indent) = para_shape_indent {
+            let indent_mm = int32_to_mm(indent);
+            style.push_str(&format!("padding-left:{}mm;", indent_mm));
+        }
     }
 
     format!(
         r#"<div class="hls {}" style="{}">{}</div>"#,
         para_shape_class, style, content
     )
+}
+
+/// 라인 세그먼트를 HTML로 렌더링 (ParaShape indent 포함) / Render line segment to HTML (with ParaShape indent)
+pub fn render_line_segment_with_indent(
+    segment: &LineSegmentInfo,
+    content: &str,
+    para_shape_class: &str,
+    para_shape_indent: Option<i32>,
+) -> String {
+    render_line_segment(segment, content, para_shape_class, para_shape_indent)
 }
 
 /// 라인 세그먼트 그룹을 HTML로 렌더링 / Render line segment group to HTML
@@ -46,6 +76,10 @@ pub fn render_line_segments(
         &[],
         &[],
         &crate::viewer::html::HtmlOptions::default(),
+        None, // ParaShape indent는 기본값으로 None 사용 / Use None as default for ParaShape indent
+        None, // hcd_position은 기본값으로 None 사용 / Use None as default for hcd_position
+        None, // page_def는 기본값으로 None 사용 / Use None as default for page_def
+        1,    // table_counter_start는 기본값으로 1 사용 / Use 1 as default for table_counter_start
     )
 }
 
@@ -57,8 +91,12 @@ pub fn render_line_segments_with_content(
     document: &crate::document::HwpDocument,
     para_shape_class: &str,
     images: &[(crate::types::UINT32, crate::types::UINT32, String)],
-    tables: &[&crate::document::bodytext::Table],
+    tables: &[&TableInfo],
     options: &crate::viewer::html::HtmlOptions,
+    para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
+    hcd_position: Option<(f64, f64)>, // hcD 위치 (mm) / hcD position (mm)
+    page_def: Option<&crate::document::bodytext::PageDef>, // 페이지 정의 / Page definition
+    table_counter_start: u32,       // 테이블 번호 시작값 / Table number start value
 ) -> String {
     let mut result = String::new();
 
@@ -153,15 +191,20 @@ pub fn render_line_segments_with_content(
                 // So table's relative position is left:1mm, top:0.99mm
                 // LineSegment의 column_start_position과 vertical_position을 사용하여 테이블 위치 계산
                 // Calculate table position using LineSegment's column_start_position and vertical_position
-                let table_left = segment.column_start_position;
-                let table_top = segment.vertical_position;
+                // like_letters=true인 테이블은 hcd_position과 page_def를 전달하여 올바른 htG 생성
+                // For tables with like_letters=true, pass hcd_position and page_def to generate correct htG
+                let (table, ctrl_info, attr_info, caption_text) = &tables[table_index];
+                let current_table_number = table_counter_start + table_index as u32;
                 let table_html = render_table(
-                    tables[table_index],
+                    table,
                     document,
-                    table_left,
-                    table_top,
-                    None,
+                    ctrl_info.clone(),
+                    *attr_info,
+                    hcd_position,
+                    page_def,
                     options,
+                    Some(current_table_number), // 테이블 번호 전달 / Pass table number
+                    caption_text.as_deref(),
                 );
                 content.push_str(&table_html);
             }
@@ -173,7 +216,12 @@ pub fn render_line_segments_with_content(
         }
 
         // 라인 세그먼트 렌더링 / Render line segment
-        result.push_str(&render_line_segment(segment, &content, para_shape_class));
+        result.push_str(&render_line_segment(
+            segment,
+            &content,
+            para_shape_class,
+            para_shape_indent,
+        ));
     }
 
     result
