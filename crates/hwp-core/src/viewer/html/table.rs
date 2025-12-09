@@ -1,7 +1,7 @@
 /// 테이블 렌더링 모듈 / Table rendering module
 use crate::document::bodytext::{Table, TableCell};
 use crate::types::INT32;
-use crate::viewer::html::styles::int32_to_mm;
+use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
 /// 테이블을 HTML로 렌더링 / Render table to HTML
 pub fn render_table(
@@ -63,10 +63,10 @@ pub fn render_table(
 
     // SVG viewBox 계산 / Calculate SVG viewBox
     let svg_padding = 2.5; // mm
-    let view_box_left = -svg_padding;
-    let view_box_top = -svg_padding;
-    let view_box_width = total_width + (svg_padding * 2.0);
-    let view_box_height = total_height + (svg_padding * 2.0);
+    let view_box_left = round_to_2dp(-svg_padding);
+    let view_box_top = round_to_2dp(-svg_padding);
+    let view_box_width = round_to_2dp(total_width + (svg_padding * 2.0));
+    let view_box_height = round_to_2dp(total_height + (svg_padding * 2.0));
 
     // SVG 테두리 경로 생성 / Generate SVG border paths
     let mut svg_paths = String::new();
@@ -181,7 +181,7 @@ pub fn render_table(
             // 전체 높이로 그리기 / Draw full height
             svg_paths.push_str(&format!(
                 r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,
-                col_x, 0.0, col_x, total_height,
+                round_to_2dp(col_x), 0, round_to_2dp(col_x), round_to_2dp(total_height),
                 border_color, border_width
             ));
         } else {
@@ -189,7 +189,7 @@ pub fn render_table(
             for (y_start, y_end) in segments {
                 svg_paths.push_str(&format!(
                     r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,
-                    col_x, y_start, col_x, y_end,
+                    round_to_2dp(col_x), round_to_2dp(y_start), round_to_2dp(col_x), round_to_2dp(y_end),
                     border_color, border_width
                 ));
             }
@@ -278,7 +278,7 @@ pub fn render_table(
             // 전체 너비로 그리기 / Draw full width
             svg_paths.push_str(&format!(
                 r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,
-                -border_offset, row_y, total_width + border_offset, row_y,
+                round_to_2dp(-border_offset), round_to_2dp(row_y), round_to_2dp(total_width + border_offset), round_to_2dp(row_y),
                 border_color, border_width
             ));
         } else {
@@ -286,7 +286,7 @@ pub fn render_table(
             for (x_start, x_end) in segments {
                 svg_paths.push_str(&format!(
                     r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,
-                    x_start - border_offset, row_y, x_end + border_offset, row_y,
+                    round_to_2dp(x_start - border_offset), round_to_2dp(row_y), round_to_2dp(x_end + border_offset), round_to_2dp(row_y),
                     border_color, border_width
                 ));
             }
@@ -300,8 +300,8 @@ pub fn render_table(
         view_box_top,
         view_box_width,
         view_box_height,
-        -svg_padding,
-        -svg_padding,
+        view_box_left,
+        view_box_top,
         view_box_width,
         view_box_height,
         pattern_defs,
@@ -329,12 +329,12 @@ pub fn render_table(
 
         cells_html.push_str(&format!(
             r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI">{}</div></div></div>"#,
-            cell_left,
-            cell_top,
-            cell_width,
-            cell_height,
-            left_margin_mm,
-            top_margin_mm,
+            round_to_2dp(cell_left),
+            round_to_2dp(cell_top),
+            round_to_2dp(cell_width),
+            round_to_2dp(cell_height),
+            round_to_2dp(left_margin_mm),
+            round_to_2dp(top_margin_mm),
             cell_content
         ));
     }
@@ -344,7 +344,7 @@ pub fn render_table(
     // htb class is defined as position:absolute in CSS, so don't specify position in inline style
     format!(
         r#"<div class="htb" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">{}{}</div>"#,
-        left_mm, total_width, top_mm, total_height, svg, cells_html
+        round_to_2dp(left_mm), round_to_2dp(total_width), round_to_2dp(top_mm), round_to_2dp(total_height), svg, cells_html
     )
 }
 

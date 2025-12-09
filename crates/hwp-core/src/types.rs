@@ -5,6 +5,18 @@
 use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
+/// 소수점 2자리로 반올림하는 trait
+pub trait RoundTo2dp {
+    /// 소수점 2자리로 반올림
+    fn round_to_2dp(self) -> f64;
+}
+
+impl RoundTo2dp for f64 {
+    fn round_to_2dp(self) -> f64 {
+        (self * 100.0).round() / 100.0
+    }
+}
+
 /// BYTE: 부호 없는 한 바이트(0~255)
 pub type BYTE = u8;
 

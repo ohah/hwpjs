@@ -614,8 +614,11 @@ fn test_all_fixtures_html_snapshots() {
                             image_output_dir: images_dir.to_str().map(|s| s.to_string()),
                             include_version: Some(true),
                             include_page_info: Some(true),
-                            css_class_prefix: "ohah-hwpjs-".to_string(),
+                            css_class_prefix: String::new(), // table.html과 일치하도록 빈 문자열 사용
                         };
+                        if file_name == "table" {
+                            eprintln!("DEBUG: Processing table.hwp file");
+                        }
                         let html = document.to_html(&options);
 
                         // 스냅샷 생성 / Create snapshot

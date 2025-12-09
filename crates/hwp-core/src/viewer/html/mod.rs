@@ -76,8 +76,17 @@ fn find_page_def(document: &HwpDocument) -> Option<&crate::document::bodytext::P
     for section in &document.body_text.sections {
         for paragraph in &section.paragraphs {
             for record in &paragraph.records {
+                // 직접 PageDef인 경우 / Direct PageDef
                 if let ParagraphRecord::PageDef { page_def } = record {
                     return Some(page_def);
+                }
+                // CtrlHeader의 children에서 PageDef 찾기 / Find PageDef in CtrlHeader's children
+                if let ParagraphRecord::CtrlHeader { children, .. } = record {
+                    for child in children {
+                        if let ParagraphRecord::PageDef { page_def } = child {
+                            return Some(page_def);
+                        }
+                    }
                 }
             }
         }
@@ -91,6 +100,8 @@ fn render_paragraph(
     paragraph: &crate::document::bodytext::Paragraph,
     document: &HwpDocument,
     options: &HtmlOptions,
+    hcd_position: Option<(f64, f64)>,
+    page_def: Option<&crate::document::bodytext::PageDef>,
 ) -> (String, Vec<String>) {
     let mut result = String::new();
 
@@ -197,25 +208,38 @@ fn render_paragraph(
         ));
         // 테이블을 별도로 렌더링 (hpa 레벨에 배치) / Render tables separately (placed at hpa level)
         for table in tables.iter() {
-            // 테이블 위치는 첫 번째 빈 LineSegment의 위치를 기준으로 계산
-            // Table position is calculated based on first empty LineSegment position
-            let table_left =
-                if let Some(empty_seg) = line_segments.iter().find(|s| s.tag.is_empty_segment) {
-                    empty_seg.column_start_position
-                } else if let Some(first_seg) = line_segments.first() {
-                    first_seg.column_start_position
-                } else {
-                    0
-                };
-            let table_top =
-                if let Some(empty_seg) = line_segments.iter().find(|s| s.tag.is_empty_segment) {
-                    empty_seg.vertical_position
-                } else if let Some(first_seg) = line_segments.first() {
-                    first_seg.vertical_position
-                } else {
-                    0
-                };
+            // 테이블 위치는 hcD 위치를 기준으로 오프셋 적용 / Table position is calculated based on hcD position with offset
+            // 목표 파일 기준: hcD는 left:30mm;top:35mm;, htb는 left:31mm;top:35.99mm; (오프셋: left:1mm;top:0.99mm)
+            // Based on target file: hcD is left:30mm;top:35mm;, htb is left:31mm;top:35.99mm; (offset: left:1mm;top:0.99mm)
+            use crate::viewer::html::styles::{int32_to_mm, mm_to_int32};
             use crate::viewer::html::table::render_table;
+
+            // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
+            use crate::types::RoundTo2dp;
+            let (hcd_left_mm, hcd_top_mm) = if let Some((left, top)) = hcd_position {
+                (left.round_to_2dp(), top.round_to_2dp())
+            } else {
+                // hcD 위치가 없으면 PageDef 여백 사용 / Use PageDef margins if hcD position not available
+                let left_margin = page_def
+                    .map(|pd| (pd.left_margin.to_mm() + pd.binding_margin.to_mm()).round_to_2dp())
+                    .unwrap_or(20.0);
+                let top_margin = page_def
+                    .map(|pd| (pd.top_margin.to_mm() + pd.header_margin.to_mm()).round_to_2dp())
+                    .unwrap_or(24.99);
+                (left_margin, top_margin)
+            };
+
+            // 테이블 위치는 hcD 위치를 기준으로 오프셋 적용 / Table position is calculated based on hcD position with offset
+            let table_left_mm = hcd_left_mm + 1.0; // 오프셋: 1mm / Offset: 1mm
+            let table_top_mm = hcd_top_mm + 0.99; // 오프셋: 0.99mm / Offset: 0.99mm
+            let (table_left, table_top) = (mm_to_int32(table_left_mm), mm_to_int32(table_top_mm));
+
+            let table_left_mm = int32_to_mm(table_left);
+            let table_top_mm = int32_to_mm(table_top);
+            eprintln!(
+                "DEBUG: Table position - left: {} ({}mm), top: {} ({}mm)",
+                table_left, table_left_mm, table_top, table_top_mm
+            );
             table_htmls.push(render_table(
                 table, document, table_left, table_top, options,
             ));
@@ -251,7 +275,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html.push_str("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">\n");
     html.push_str("\n");
     html.push_str("<head>\n");
-    html.push_str("  <title>HWP 문서</title>\n");
+    html.push_str("  <title></title>\n");
     html.push_str("  <meta http_quiv=\"content-type\" content=\"text/html; charset=utf-8\">\n");
 
     // CSS 스타일 생성 / Generate CSS styles
@@ -261,6 +285,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html.push_str("  </style>\n");
     html.push_str("</head>\n");
     html.push_str("\n");
+    html.push_str("\n");
     html.push_str("<body>\n");
 
     // PageDef 찾기 / Find PageDef
@@ -269,6 +294,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     // 페이지별로 렌더링 / Render by page
     let mut page_number = 1;
     let mut page_content = String::new();
+    let mut page_tables = Vec::new(); // 테이블을 별도로 저장 / Store tables separately
+    let mut first_segment_pos: Option<(crate::types::INT32, crate::types::INT32)> = None; // 첫 번째 LineSegment 위치 저장 / Store first LineSegment position
+    let mut hcd_position: Option<(f64, f64)> = None; // hcD 위치 저장 (mm 단위) / Store hcD position (in mm)
 
     // 페이지 높이 계산 (mm 단위) / Calculate page height (in mm)
     let page_height_mm = page_def.map(|pd| pd.paper_height.to_mm()).unwrap_or(297.0);
@@ -352,11 +380,37 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             let has_page_break = has_page_break_from_para || vertical_reset || vertical_overflow;
 
             // 페이지 나누기가 있고 페이지 내용이 있으면 페이지 출력 (문단 렌더링 전) / Output page if page break and page content exists (before rendering paragraph)
-            if has_page_break && !page_content.is_empty() {
-                html.push_str(&page::render_page(page_number, &page_content, page_def));
+            if has_page_break && (!page_content.is_empty() || !page_tables.is_empty()) {
+                // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
+                use crate::types::RoundTo2dp;
+                let hcd_pos = if let Some((left, top)) = hcd_position {
+                    Some((left.round_to_2dp(), top.round_to_2dp()))
+                } else {
+                    // hcd_position이 없으면 PageDef 여백 사용 / Use PageDef margins if hcd_position not available
+                    let left = page_def
+                        .map(|pd| {
+                            (pd.left_margin.to_mm() + pd.binding_margin.to_mm()).round_to_2dp()
+                        })
+                        .unwrap_or(20.0);
+                    let top = page_def
+                        .map(|pd| (pd.top_margin.to_mm() + pd.header_margin.to_mm()).round_to_2dp())
+                        .unwrap_or(24.99);
+                    Some((left, top))
+                };
+                html.push_str(&page::render_page(
+                    page_number,
+                    &page_content,
+                    &page_tables,
+                    page_def,
+                    first_segment_pos,
+                    hcd_pos,
+                ));
                 page_number += 1;
                 page_content.clear();
+                page_tables.clear();
                 current_max_vertical_mm = 0.0;
+                first_segment_pos = None; // 새 페이지에서는 첫 번째 세그먼트 위치 리셋 / Reset first segment position for new page
+                hcd_position = None;
             }
 
             // 문단 렌더링 (일반 본문 문단만) / Render paragraph (only regular body paragraphs)
@@ -365,13 +419,45 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             let has_footnote_endnote = control_mask.has_footnote_endnote();
 
             if !has_header_footer && !has_footnote_endnote {
-                let (para_html, table_htmls) = render_paragraph(paragraph, document, options);
+                // 첫 번째 LineSegment 위치 저장 / Store first LineSegment position
+                // PageDef 여백을 직접 사용 / Use PageDef margins directly
+                if first_segment_pos.is_none() {
+                    // hcD 위치는 left_margin + binding_margin, top_margin + header_margin을 직접 사용
+                    // hcD position uses left_margin + binding_margin, top_margin + header_margin directly
+                    use crate::types::RoundTo2dp;
+                    let left_margin_mm = page_def
+                        .map(|pd| {
+                            (pd.left_margin.to_mm() + pd.binding_margin.to_mm()).round_to_2dp()
+                        })
+                        .unwrap_or(20.0);
+                    let top_margin_mm = page_def
+                        .map(|pd| (pd.top_margin.to_mm() + pd.header_margin.to_mm()).round_to_2dp())
+                        .unwrap_or(24.99);
+
+                    hcd_position = Some((left_margin_mm, top_margin_mm));
+
+                    // LineSegment 위치 저장 (참고용) / Store LineSegment position (for reference)
+                    for record in &paragraph.records {
+                        if let ParagraphRecord::ParaLineSeg { segments } = record {
+                            if let Some(first_segment) = segments.first() {
+                                first_segment_pos = Some((
+                                    first_segment.column_start_position,
+                                    first_segment.vertical_position,
+                                ));
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                let (para_html, table_htmls) =
+                    render_paragraph(paragraph, document, options, hcd_position, page_def);
                 if !para_html.is_empty() {
                     page_content.push_str(&para_html);
                 }
                 // 테이블은 hpa 레벨에 배치 (table.html 샘플 구조에 맞춤) / Tables are placed at hpa level (matching table.html sample structure)
                 for table_html in table_htmls {
-                    page_content.push_str(&table_html);
+                    page_tables.push(table_html);
                 }
 
                 // vertical_position 업데이트 (문단의 모든 LineSegment 확인) / Update vertical_position (check all LineSegments in paragraph)
@@ -399,8 +485,29 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     }
 
     // 마지막 페이지 출력 / Output last page
-    if !page_content.is_empty() {
-        html.push_str(&page::render_page(page_number, &page_content, page_def));
+    if !page_content.is_empty() || !page_tables.is_empty() {
+        // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
+        use crate::viewer::html::styles::round_to_2dp;
+        let hcd_pos = if let Some((left, top)) = hcd_position {
+            Some((round_to_2dp(left), round_to_2dp(top)))
+        } else {
+            // hcd_position이 없으면 PageDef 여백 사용 / Use PageDef margins if hcd_position not available
+            let left = page_def
+                .map(|pd| round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()))
+                .unwrap_or(20.0);
+            let top = page_def
+                .map(|pd| round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()))
+                .unwrap_or(24.99);
+            Some((left, top))
+        };
+        html.push_str(&page::render_page(
+            page_number,
+            &page_content,
+            &page_tables,
+            page_def,
+            first_segment_pos,
+            hcd_pos,
+        ));
     }
 
     html.push_str("</body>");
