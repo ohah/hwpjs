@@ -86,11 +86,12 @@ fn find_page_def(document: &HwpDocument) -> Option<&crate::document::bodytext::P
 }
 
 /// 문단을 HTML로 렌더링 / Render paragraph to HTML
+/// 반환값: (문단 HTML, 테이블 HTML 리스트) / Returns: (paragraph HTML, table HTML list)
 fn render_paragraph(
     paragraph: &crate::document::bodytext::Paragraph,
     document: &HwpDocument,
     options: &HtmlOptions,
-) -> String {
+) -> (String, Vec<String>) {
     let mut result = String::new();
 
     // ParaShape 클래스 가져오기 / Get ParaShape class
@@ -178,8 +179,12 @@ fn render_paragraph(
         }
     }
 
+    // 테이블 HTML 리스트 생성 / Create table HTML list
+    let mut table_htmls = Vec::new();
+
     // LineSegment가 있으면 사용 / Use LineSegment if available
     if !line_segments.is_empty() {
+        // 테이블을 제외하고 LineSegment 렌더링 / Render LineSegment without tables
         result.push_str(&line_segment::render_line_segments_with_content(
             &line_segments,
             &text,
@@ -187,9 +192,34 @@ fn render_paragraph(
             document,
             &para_shape_class,
             &images,
-            &tables,
+            &[], // 테이블은 제외 / Exclude tables
             options,
         ));
+        // 테이블을 별도로 렌더링 (hpa 레벨에 배치) / Render tables separately (placed at hpa level)
+        for table in tables.iter() {
+            // 테이블 위치는 첫 번째 빈 LineSegment의 위치를 기준으로 계산
+            // Table position is calculated based on first empty LineSegment position
+            let table_left =
+                if let Some(empty_seg) = line_segments.iter().find(|s| s.tag.is_empty_segment) {
+                    empty_seg.column_start_position
+                } else if let Some(first_seg) = line_segments.first() {
+                    first_seg.column_start_position
+                } else {
+                    0
+                };
+            let table_top =
+                if let Some(empty_seg) = line_segments.iter().find(|s| s.tag.is_empty_segment) {
+                    empty_seg.vertical_position
+                } else if let Some(first_seg) = line_segments.first() {
+                    first_seg.vertical_position
+                } else {
+                    0
+                };
+            use crate::viewer::html::table::render_table;
+            table_htmls.push(render_table(
+                table, document, table_left, table_top, options,
+            ));
+        }
     } else if !text.is_empty() {
         // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment
         let rendered_text =
@@ -200,7 +230,7 @@ fn render_paragraph(
         ));
     }
 
-    result
+    (result, table_htmls)
 }
 
 /// Convert HWP document to HTML format
@@ -335,30 +365,34 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             let has_footnote_endnote = control_mask.has_footnote_endnote();
 
             if !has_header_footer && !has_footnote_endnote {
-                let para_html = render_paragraph(paragraph, document, options);
+                let (para_html, table_htmls) = render_paragraph(paragraph, document, options);
                 if !para_html.is_empty() {
                     page_content.push_str(&para_html);
+                }
+                // 테이블은 hpa 레벨에 배치 (table.html 샘플 구조에 맞춤) / Tables are placed at hpa level (matching table.html sample structure)
+                for table_html in table_htmls {
+                    page_content.push_str(&table_html);
+                }
 
-                    // vertical_position 업데이트 (문단의 모든 LineSegment 확인) / Update vertical_position (check all LineSegments in paragraph)
-                    for record in &paragraph.records {
-                        if let ParagraphRecord::ParaLineSeg { segments } = record {
-                            for segment in segments {
-                                let vertical_mm = segment.vertical_position as f64 * 25.4 / 7200.0;
-                                if vertical_mm > current_max_vertical_mm {
-                                    current_max_vertical_mm = vertical_mm;
-                                }
-                                // 첫 번째 세그먼트의 vertical_position을 prev_vertical_mm으로 저장 / Store first segment's vertical_position as prev_vertical_mm
-                                if prev_vertical_mm.is_none() || first_vertical_mm.is_none() {
-                                    prev_vertical_mm = Some(vertical_mm);
-                                }
+                // vertical_position 업데이트 (문단의 모든 LineSegment 확인) / Update vertical_position (check all LineSegments in paragraph)
+                for record in &paragraph.records {
+                    if let ParagraphRecord::ParaLineSeg { segments } = record {
+                        for segment in segments {
+                            let vertical_mm = segment.vertical_position as f64 * 25.4 / 7200.0;
+                            if vertical_mm > current_max_vertical_mm {
+                                current_max_vertical_mm = vertical_mm;
                             }
-                            break;
+                            // 첫 번째 세그먼트의 vertical_position을 prev_vertical_mm으로 저장 / Store first segment's vertical_position as prev_vertical_mm
+                            if prev_vertical_mm.is_none() || first_vertical_mm.is_none() {
+                                prev_vertical_mm = Some(vertical_mm);
+                            }
                         }
+                        break;
                     }
-                    // 첫 번째 세그먼트의 vertical_position을 prev_vertical_mm으로 저장 / Store first segment's vertical_position as prev_vertical_mm
-                    if let Some(vertical) = first_vertical_mm {
-                        prev_vertical_mm = Some(vertical);
-                    }
+                }
+                // 첫 번째 세그먼트의 vertical_position을 prev_vertical_mm으로 저장 / Store first segment's vertical_position as prev_vertical_mm
+                if let Some(vertical) = first_vertical_mm {
+                    prev_vertical_mm = Some(vertical);
                 }
             }
         }

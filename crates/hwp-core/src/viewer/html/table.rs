@@ -340,8 +340,10 @@ pub fn render_table(
     }
 
     // 테이블 컨테이너 생성 / Create table container
+    // htb 클래스는 CSS에서 position:absolute로 정의되어 있으므로 인라인 스타일에 position을 지정하지 않음
+    // htb class is defined as position:absolute in CSS, so don't specify position in inline style
     format!(
-        r#"<div class="htb" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;display:inline-block;position:relative;vertical-align:middle;">{}{}</div>"#,
+        r#"<div class="htb" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">{}{}</div>"#,
         left_mm, total_width, top_mm, total_height, svg, cells_html
     )
 }
