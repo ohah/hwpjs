@@ -155,7 +155,13 @@ pub fn render_line_segments_with_content(
                 // Calculate table position using LineSegment's column_start_position and vertical_position
                 let table_left = segment.column_start_position;
                 let table_top = segment.vertical_position;
-                let table_html = render_table(tables[table_index], document, table_left, table_top, options);
+                let table_html = render_table(
+                    tables[table_index],
+                    document,
+                    table_left,
+                    table_top,
+                    options,
+                );
                 content.push_str(&table_html);
             }
         } else if !is_text_empty {
