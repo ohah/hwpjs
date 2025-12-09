@@ -1,6 +1,6 @@
 /// 테이블 렌더링 모듈 / Table rendering module
-use crate::document::bodytext::{Table, TableCell};
-use crate::types::INT32;
+use crate::document::bodytext::{Margin, Table, TableCell};
+use crate::types::{HWPUNIT, Hwpunit16ToMm, INT32};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
 /// 테이블을 HTML로 렌더링 / Render table to HTML
@@ -9,14 +9,28 @@ pub fn render_table(
     document: &crate::document::HwpDocument,
     left: INT32,
     top: INT32,
+    ctrl_header_size: Option<(HWPUNIT, HWPUNIT, Margin)>,
     _options: &crate::viewer::html::HtmlOptions,
 ) -> String {
     let left_mm = int32_to_mm(left);
     let top_mm = int32_to_mm(top);
 
-    // 테이블 크기 계산 / Calculate table size
-    let mut total_width = 0.0;
-    let mut total_height = 0.0;
+    // 1. htb 컨테이너 크기 계산 (CtrlHeader + margin) / Calculate htb container size (CtrlHeader + margin)
+    let (htb_width, htb_height) = if let Some((width, height, margin)) = ctrl_header_size {
+        let w = width.to_mm()
+            + margin.left.to_mm()
+            + margin.right.to_mm();
+        let h = height.to_mm()
+            + margin.top.to_mm()
+            + margin.bottom.to_mm();
+        (round_to_2dp(w), round_to_2dp(h))
+    } else {
+        (0.0, 0.0)
+    };
+
+    // 2. 실제 셀 크기 합계 계산 (SVG path 좌표용) / Calculate actual cell size sum (for SVG path coordinates)
+    let mut content_width = 0.0;
+    let mut content_height = 0.0;
 
     // 행 높이 계산: row_sizes가 작은 경우 셀의 height를 사용 / Calculate row heights: use cell height if row_sizes is too small
     // row_sizes는 HWPUNIT 단위이지만, 실제 행 높이는 셀의 height를 기준으로 계산해야 함
@@ -38,16 +52,16 @@ pub fn render_table(
         }
         for row_idx in 0..table.attributes.row_sizes.len() {
             if let Some(&height) = max_row_heights.get(&row_idx) {
-                total_height += height;
+                content_height += height;
             } else {
                 // row_sizes를 사용 (fallback) / Use row_sizes as fallback
-                total_height += (table.attributes.row_sizes[row_idx] as f64 / 7200.0) * 25.4;
+                content_height += (table.attributes.row_sizes[row_idx] as f64 / 7200.0) * 25.4;
             }
         }
     } else {
         // row_sizes가 정상적인 경우 사용 / Use row_sizes if normal
         for row_size in &table.attributes.row_sizes {
-            total_height += (*row_size as f64 / 7200.0) * 25.4;
+            content_height += (*row_size as f64 / 7200.0) * 25.4;
         }
     }
 
@@ -58,15 +72,26 @@ pub fn render_table(
         .filter(|cell| cell.cell_attributes.row_address == 0)
         .collect();
     for cell in &first_row_cells {
-        total_width += cell.cell_attributes.width.to_mm();
+        content_width += cell.cell_attributes.width.to_mm();
     }
 
-    // SVG viewBox 계산 / Calculate SVG viewBox
+    // htb 컨테이너 크기가 없으면 셀 크기 사용 / Use cell size if htb container size is not available
+    let (htb_width, htb_height) = if htb_width == 0.0 || htb_height == 0.0 {
+        (round_to_2dp(content_width), round_to_2dp(content_height))
+    } else {
+        (htb_width, htb_height)
+    };
+
+    // content_width/content_height를 2자리로 반올림 / Round content_width/content_height to 2 decimal places
+    let content_width = round_to_2dp(content_width);
+    let content_height = round_to_2dp(content_height);
+
+    // 3. SVG viewBox 계산 (htb 컨테이너 크기 + padding) / Calculate SVG viewBox (htb container size + padding)
     let svg_padding = 2.5; // mm
     let view_box_left = round_to_2dp(-svg_padding);
     let view_box_top = round_to_2dp(-svg_padding);
-    let view_box_width = round_to_2dp(total_width + (svg_padding * 2.0));
-    let view_box_height = round_to_2dp(total_height + (svg_padding * 2.0));
+    let view_box_width = round_to_2dp(htb_width + (svg_padding * 2.0));
+    let view_box_height = round_to_2dp(htb_height + (svg_padding * 2.0));
 
     // SVG 테두리 경로 생성 / Generate SVG border paths
     let mut svg_paths = String::new();
@@ -169,19 +194,19 @@ pub fn render_table(
         }
 
         // 마지막 가려지지 않은 부분 / Last uncovered part
-        if current_y < total_height {
-            segments.push((current_y, total_height));
+        if current_y < content_height {
+            segments.push((current_y, content_height));
         }
 
         // 선분 그리기 (가려지지 않은 부분만) / Draw segments (only uncovered parts)
         if segments.is_empty() {
             // 모든 부분이 가려진 경우 선을 그리지 않음 / Don't draw line if all parts are covered
             continue;
-        } else if segments.len() == 1 && segments[0].0 == 0.0 && segments[0].1 == total_height {
+        } else if segments.len() == 1 && segments[0].0 == 0.0 && segments[0].1 == content_height {
             // 전체 높이로 그리기 / Draw full height
             svg_paths.push_str(&format!(
                 r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,
-                round_to_2dp(col_x), 0, round_to_2dp(col_x), round_to_2dp(total_height),
+                round_to_2dp(col_x), 0, round_to_2dp(col_x), round_to_2dp(content_height),
                 border_color, border_width
             ));
         } else {
@@ -266,19 +291,19 @@ pub fn render_table(
         }
 
         // 마지막 가려지지 않은 부분 / Last uncovered part
-        if current_x < total_width {
-            segments.push((current_x, total_width));
+        if current_x < content_width {
+            segments.push((current_x, content_width));
         }
 
         // 선분 그리기 (가려지지 않은 부분만) / Draw segments (only uncovered parts)
         if segments.is_empty() {
             // 모든 부분이 가려진 경우 선을 그리지 않음 / Don't draw line if all parts are covered
             continue;
-        } else if segments.len() == 1 && segments[0].0 == 0.0 && segments[0].1 == total_width {
+        } else if segments.len() == 1 && segments[0].0 == 0.0 && segments[0].1 == content_width {
             // 전체 너비로 그리기 / Draw full width
             svg_paths.push_str(&format!(
                 r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,
-                round_to_2dp(-border_offset), round_to_2dp(row_y), round_to_2dp(total_width + border_offset), round_to_2dp(row_y),
+                round_to_2dp(-border_offset), round_to_2dp(row_y), round_to_2dp(content_width + border_offset), round_to_2dp(row_y),
                 border_color, border_width
             ));
         } else {
@@ -344,7 +369,7 @@ pub fn render_table(
     // htb class is defined as position:absolute in CSS, so don't specify position in inline style
     format!(
         r#"<div class="htb" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">{}{}</div>"#,
-        round_to_2dp(left_mm), round_to_2dp(total_width), round_to_2dp(top_mm), round_to_2dp(total_height), svg, cells_html
+        round_to_2dp(left_mm), htb_width, round_to_2dp(top_mm), htb_height, svg, cells_html
     )
 }
 

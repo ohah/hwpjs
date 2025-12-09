@@ -160,6 +160,7 @@ pub fn render_line_segments_with_content(
                     document,
                     table_left,
                     table_top,
+                    None,
                     options,
                 );
                 content.push_str(&table_html);

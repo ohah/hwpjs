@@ -118,6 +118,18 @@ impl From<SHWPUNIT> for i32 {
     }
 }
 
+/// HWPUNIT16 (i16)에 대한 변환 메서드 제공 / Conversion methods for HWPUNIT16 (i16)
+pub trait Hwpunit16ToMm {
+    /// 밀리미터 단위로 변환 / Convert to millimeters
+    fn to_mm(self) -> f64;
+}
+
+impl Hwpunit16ToMm for i16 {
+    fn to_mm(self) -> f64 {
+        (self as f64 / 7200.0) * 25.4
+    }
+}
+
 /// COLORREF: BGR 형식 (0x00bbggrr)
 /// 스펙 문서: RGB값(0x00bbggrr) - 실제로는 BGR 순서로 저장됨
 /// Spec: RGB value (0x00bbggrr) - actually stored in BGR order

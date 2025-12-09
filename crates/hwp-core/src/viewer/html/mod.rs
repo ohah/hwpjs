@@ -13,8 +13,11 @@ mod styles;
 mod table;
 mod text;
 
+use crate::document::bodytext::ctrl_header::CtrlHeaderData;
+use crate::document::bodytext::Margin;
 use crate::document::bodytext::{ColumnDivideType, ParagraphRecord};
 use crate::document::HwpDocument;
+use crate::types::HWPUNIT;
 
 /// HTML 변환 옵션 / HTML conversion options
 #[derive(Debug, Clone)]
@@ -128,7 +131,10 @@ fn render_paragraph(
 
     // 이미지와 테이블 수집 / Collect images and tables
     let mut images = Vec::new();
-    let mut tables = Vec::new();
+    let mut tables: Vec<(
+        &crate::document::bodytext::Table,
+        Option<(HWPUNIT, HWPUNIT, Margin)>,
+    )> = Vec::new();
 
     for record in &paragraph.records {
         match record {
@@ -176,13 +182,25 @@ fn render_paragraph(
                 }
             }
             ParagraphRecord::Table { table } => {
-                tables.push(table);
+                tables.push((table, None));
             }
-            ParagraphRecord::CtrlHeader { children, .. } => {
+            ParagraphRecord::CtrlHeader {
+                header, children, ..
+            } => {
                 // CtrlHeader의 children에서 테이블 찾기 / Find tables in CtrlHeader's children
+                // CtrlHeader의 width/height/margin 정보를 테이블에 전달
+                let ctrl_info = match &header.data {
+                    CtrlHeaderData::ObjectCommon {
+                        width,
+                        height,
+                        margin,
+                        ..
+                    } => Some((width.clone(), height.clone(), margin.clone())),
+                    _ => None,
+                };
                 for child in children {
                     if let ParagraphRecord::Table { table } = child {
-                        tables.push(table);
+                        tables.push((table, ctrl_info.clone()));
                     }
                 }
             }
@@ -207,7 +225,7 @@ fn render_paragraph(
             options,
         ));
         // 테이블을 별도로 렌더링 (hpa 레벨에 배치) / Render tables separately (placed at hpa level)
-        for table in tables.iter() {
+        for (table, ctrl_info) in tables.iter() {
             // 테이블 위치는 hcD 위치를 기준으로 오프셋 적용 / Table position is calculated based on hcD position with offset
             // 목표 파일 기준: hcD는 left:30mm;top:35mm;, htb는 left:31mm;top:35.99mm; (오프셋: left:1mm;top:0.99mm)
             // Based on target file: hcD is left:30mm;top:35mm;, htb is left:31mm;top:35.99mm; (offset: left:1mm;top:0.99mm)
@@ -241,7 +259,12 @@ fn render_paragraph(
                 table_left, table_left_mm, table_top, table_top_mm
             );
             table_htmls.push(render_table(
-                table, document, table_left, table_top, options,
+                table,
+                document,
+                table_left,
+                table_top,
+                ctrl_info.clone(),
+                options,
             ));
         }
     } else if !text.is_empty() {
