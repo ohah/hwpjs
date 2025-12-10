@@ -1,7 +1,7 @@
 /// 테이블 렌더링 모듈 / Table rendering module
 use crate::document::bodytext::ctrl_header::ObjectAttribute;
 use crate::document::bodytext::{Margin, PageDef, Table, TableCell};
-use crate::types::{Hwpunit16ToMm, RoundTo2dp, HWPUNIT, HWPUNIT16, SHWPUNIT};
+use crate::types::{Hwpunit16ToMm, RoundTo2dp, HWPUNIT, SHWPUNIT};
 use crate::viewer::html::styles::round_to_2dp;
 
 /// 테이블을 HTML로 렌더링 / Render table to HTML
@@ -56,54 +56,34 @@ pub fn render_table(
     // For table-position, row_sizes is [2, 2] which is very small, but actual height should use CtrlHeader's height
     // 마크다운 렌더러처럼 직접 접근 / Direct access like markdown renderer
     // row_sizes가 비어있거나 유효하지 않으면 0으로 처리 / Treat row_sizes as 0 if empty or invalid
-    if table.attributes.row_count > 0 {
-        // row_sizes가 비어있지 않고 유효한지 확인 / Check if row_sizes is not empty and valid
-        if !table.attributes.row_sizes.is_empty() {
-            // CtrlHeader의 height가 있으면 직접 사용 (row_sizes가 너무 작을 때) / Use CtrlHeader's height directly if available (when row_sizes is too small)
-            if let Some((_, height, _)) = &ctrl_header_size {
-                content_height = height.to_mm();
-            } else {
-                // row_sizes가 너무 작으면 셀의 height를 사용 / Use cell height if row_sizes is too small
-                // 주의: rowspan이 있는 셀의 height는 여러 행의 합이므로, rowspan=1인 셀의 height만 사용해야 함
-                // Note: height of cells with rowspan is the sum of multiple rows, so only use height of cells with rowspan=1
-                let mut max_row_heights: std::collections::HashMap<usize, f64> =
-                    std::collections::HashMap::new();
-                // 마크다운 렌더러처럼 직접 접근 / Direct access like markdown renderer
-                for cell in &table.cells {
-                    // rowspan=1인 셀만 사용하여 각 행의 높이 계산 / Only use cells with rowspan=1 to calculate each row height
-                    if cell.cell_attributes.row_span == 1 {
-                        let row_idx = cell.cell_attributes.row_address as usize;
-                        let cell_height = cell.cell_attributes.height.to_mm();
-                        let entry = max_row_heights.entry(row_idx).or_insert(0.0f64);
-                        *entry = (*entry).max(cell_height);
-                    }
-                }
-                for row_idx in 0..table.attributes.row_count as usize {
-                    if let Some(&height) = max_row_heights.get(&row_idx) {
-                        content_height += height;
-                    } else {
-                        let row_size_result =
-                            std::panic::catch_unwind(|| table.attributes.row_sizes.get(row_idx));
-                        if let Ok(Some(&row_size)) = row_size_result {
-                            // row_sizes를 사용 (fallback) / Use row_sizes as fallback
-                            content_height += (row_size as f64 / 7200.0) * 25.4;
-                        }
-                    }
+    if table.attributes.row_count > 0 && !table.attributes.row_sizes.is_empty() {
+        // parse_table_attributes에서 row_sizes는 항상 row_count와 일치하거나 빈 Vec로 초기화됨
+        // parse_table_attributes ensures row_sizes always matches row_count or is empty Vec
+        // CtrlHeader의 height가 있으면 직접 사용 (row_sizes가 너무 작을 때) / Use CtrlHeader's height directly if available (when row_sizes is too small)
+        if let Some((_, height, _)) = &ctrl_header_size {
+            content_height = height.to_mm();
+        } else {
+            // row_sizes가 너무 작으면 셀의 height를 사용 / Use cell height if row_sizes is too small
+            // 주의: rowspan이 있는 셀의 height는 여러 행의 합이므로, rowspan=1인 셀의 height만 사용해야 함
+            // Note: height of cells with rowspan is the sum of multiple rows, so only use height of cells with rowspan=1
+            let mut max_row_heights: std::collections::HashMap<usize, f64> =
+                std::collections::HashMap::new();
+            // 마크다운 렌더러처럼 직접 접근 / Direct access like markdown renderer
+            for cell in &table.cells {
+                // rowspan=1인 셀만 사용하여 각 행의 높이 계산 / Only use cells with rowspan=1 to calculate each row height
+                if cell.cell_attributes.row_span == 1 {
+                    let row_idx = cell.cell_attributes.row_address as usize;
+                    let cell_height = cell.cell_attributes.height.to_mm();
+                    let entry = max_row_heights.entry(row_idx).or_insert(0.0f64);
+                    *entry = (*entry).max(cell_height);
                 }
             }
-        } else {
-            // row_sizes가 정상적인 경우 사용 / Use row_sizes if normal
-            // row_sizes가 유효한 경우에만 사용 / Only use if row_sizes is valid
-            if !table.attributes.row_sizes.is_empty() {
-                let row_sizes_iter_result = std::panic::catch_unwind(|| {
-                    let mut sum = 0.0;
-                    for row_size in &table.attributes.row_sizes {
-                        sum += (*row_size as f64 / 7200.0) * 25.4;
-                    }
-                    sum
-                });
-                if let Ok(sum) = row_sizes_iter_result {
-                    content_height += sum;
+            for row_idx in 0..table.attributes.row_count as usize {
+                if let Some(&height) = max_row_heights.get(&row_idx) {
+                    content_height += height;
+                } else if let Some(&row_size) = table.attributes.row_sizes.get(row_idx) {
+                    // row_sizes를 사용 (fallback) / Use row_sizes as fallback
+                    content_height += (row_size as f64 / 7200.0) * 25.4;
                 }
             }
         }
@@ -295,13 +275,9 @@ pub fn render_table(
             for row_idx in 0..table.attributes.row_count as usize {
                 if let Some(&height) = max_row_heights.get(&row_idx) {
                     current_y += height;
-                } else {
-                    let row_size_result =
-                        std::panic::catch_unwind(|| table.attributes.row_sizes.get(row_idx));
-                    if let Ok(Some(&row_size)) = row_size_result {
-                        // row_sizes를 사용 (fallback) / Use row_sizes as fallback
-                        current_y += (row_size as f64 / 7200.0) * 25.4;
-                    }
+                } else if let Some(&row_size) = table.attributes.row_sizes.get(row_idx) {
+                    // row_sizes를 사용 (fallback) / Use row_sizes as fallback
+                    current_y += (row_size as f64 / 7200.0) * 25.4;
                 }
                 row_positions.push(current_y);
             }
@@ -494,9 +470,7 @@ fn get_row_height(table: &Table, row_index: usize) -> f64 {
     // row_sizes가 비어있거나 비정상적으로 크면 0으로 처리 / Treat row_sizes as 0 if empty or abnormally large
 
     if !table.attributes.row_sizes.is_empty() && row_index < table.attributes.row_sizes.len() {
-        let row_size_result =
-            std::panic::catch_unwind(|| table.attributes.row_sizes.get(row_index));
-        if let Ok(Some(&row_size)) = row_size_result {
+        if let Some(&row_size) = table.attributes.row_sizes.get(row_index) {
             // row_sizes가 너무 작으면 셀의 height를 사용 / Use cell height if row_sizes is too small
             if row_size < 100 {
                 // 해당 행의 셀들 중 최대 height 찾기 (rowspan=1인 셀만) / Find max height among cells in this row (only cells with rowspan=1)
