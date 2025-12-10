@@ -15,7 +15,7 @@ pub type TableInfo<'a> = (
         crate::types::SHWPUNIT,
         crate::types::SHWPUNIT,
     )>,
-    Option<String>, // 캡션 텍스트 / Caption text
+    Option<&'a str>, // 캡션 텍스트 / Caption text
 );
 
 /// 라인 세그먼트를 HTML로 렌더링 / Render line segment to HTML
@@ -91,7 +91,7 @@ pub fn render_line_segments_with_content(
     document: &crate::document::HwpDocument,
     para_shape_class: &str,
     images: &[(crate::types::UINT32, crate::types::UINT32, String)],
-    tables: &[&TableInfo],
+    tables: &[TableInfo],
     options: &crate::viewer::html::HtmlOptions,
     para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
     hcd_position: Option<(f64, f64)>, // hcD 위치 (mm) / hcD position (mm)
@@ -195,6 +195,8 @@ pub fn render_line_segments_with_content(
                 // For tables with like_letters=true, pass hcd_position and page_def to generate correct htG
                 let (table, ctrl_info, attr_info, caption_text) = &tables[table_index];
                 let current_table_number = table_counter_start + table_index as u32;
+                // LineSegment 위치 전달 / Pass LineSegment position
+                let segment_position = Some((segment.column_start_position, segment.vertical_position));
                 let table_html = render_table(
                     table,
                     document,
@@ -205,6 +207,7 @@ pub fn render_line_segments_with_content(
                     options,
                     Some(current_table_number), // 테이블 번호 전달 / Pass table number
                     caption_text.as_deref(),
+                    segment_position, // LineSegment 위치 전달 / Pass LineSegment position
                 );
                 content.push_str(&table_html);
             }

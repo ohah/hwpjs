@@ -71,16 +71,16 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
   font-size:11pt;color:rgb(0,0,0);font-family:"함초롬바탕";
 }
 .cs7 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬돋움";
 }
 .cs8 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬돋움";
 }
 .cs9 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬돋움";
 }
 .cs10 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬돋움";
 }
 @media print {
 .hpa {margin:0;border:0 black none;box-shadow:none;}

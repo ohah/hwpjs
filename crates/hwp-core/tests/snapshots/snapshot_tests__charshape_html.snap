@@ -74,43 +74,43 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
   font-size:9pt;color:rgb(0,0,0);font-family:"함초롬바탕";
 }
 .cs5 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";font-weight:bold;
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";font-weight:bold;
 }
 .cs6 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";font-style:italic;
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";font-style:italic;
 }
 .cs7 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";
 }
 .cs8 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";
 }
 .cs9 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";
 }
 .cs10 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";
 }
 .cs11 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";
 }
 .cs12 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";
 }
 .cs13 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";
 }
 .cs14 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";
 }
 .cs15 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"굴림";
 }
 .cs16 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";
 }
 .cs17 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+  font-size:10pt;color:rgb(0,0,0);font-family:"돋움";
 }
 .ps1 {
   text-align:justify;

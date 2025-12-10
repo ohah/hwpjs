@@ -240,7 +240,17 @@ fn render_paragraph(
 
     // 테이블 HTML 리스트 생성 / Create table HTML list
     let mut table_htmls = Vec::new();
-    let mut inline_tables = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
+    // inline_tables는 owned tuple을 저장하므로 타입 명시 / inline_tables stores owned tuples, so specify type
+    let mut inline_tables: Vec<(
+        &crate::document::bodytext::Table,
+        Option<(HWPUNIT, HWPUNIT, Margin)>,
+        Option<(
+            &crate::document::bodytext::ctrl_header::ObjectAttribute,
+            crate::types::SHWPUNIT,
+            crate::types::SHWPUNIT,
+        )>,
+        Option<String>,
+    )> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
 
     // LineSegment가 있으면 사용 / Use LineSegment if available
     if !line_segments.is_empty() {
@@ -266,15 +276,22 @@ fn render_paragraph(
             };
 
         // like_letters=true인 테이블을 line_segment에 포함 / Include tables with like_letters=true in line_segment
-        // inline_tables는 이미 TableInfo와 동일한 타입이므로 그대로 사용 / inline_tables is already the same type as TableInfo, so use as is
-        // inline_tables의 각 항목을 참조로 변환 / Convert each item in inline_tables to reference
-        // TableInfo는 tuple이므로 참조 레벨을 맞춰야 함 / TableInfo is a tuple, so need to match reference level
+        // inline_tables는 Vec<(&Table, ...)>이고, TableInfo는 (&Table, ..., Option<&str>)이므로 변환 필요
+        // inline_tables is Vec<(&Table, ...)> and TableInfo is (&Table, ..., Option<&str>), so need conversion
         use crate::viewer::html::line_segment::TableInfo;
-        let inline_table_infos: Vec<&TableInfo> = inline_tables
+        let inline_table_infos: Vec<TableInfo> = inline_tables
             .iter()
-            .map(|tuple| {
-                // tuple을 참조로 변환 / Convert tuple to reference
-                unsafe { std::mem::transmute::<&_, &TableInfo>(tuple) }
+            .map(|(table, ctrl_info, attr_info, caption_text)| {
+                // iter()로 인해 table은 &&Table이 되므로 한 번 역참조 / table becomes &&Table due to iter(), so dereference once
+                // ctrl_info는 Option<(HWPUNIT, HWPUNIT, Margin)>이므로 복사 / ctrl_info is Option<(HWPUNIT, HWPUNIT, Margin)>, copy
+                // attr_info는 Option<(&ObjectAttribute, SHWPUNIT, SHWPUNIT)>이므로 복사 / attr_info is Option<(&ObjectAttribute, SHWPUNIT, SHWPUNIT)>, copy
+                // caption_text는 Option<String>이므로 as_deref()로 Option<&str>로 변환 / caption_text is Option<String>, convert to Option<&str> with as_deref()
+                (
+                    *table,
+                    ctrl_info.clone(),
+                    attr_info.clone(),
+                    caption_text.as_deref(),
+                )
             })
             .collect();
         // 테이블 번호 시작값 계산 / Calculate table number start value
@@ -291,7 +308,7 @@ fn render_paragraph(
             document,
             &para_shape_class,
             &images,
-            &inline_table_infos, // like_letters=true인 테이블 포함 / Include tables with like_letters=true
+            inline_table_infos.as_slice(), // like_letters=true인 테이블 포함 / Include tables with like_letters=true
             options,
             para_shape_indent,
             hcd_position,        // hcD 위치 전달 / Pass hcD position
@@ -324,6 +341,7 @@ fn render_paragraph(
                 options,
                 Some(table_counter),
                 caption_text.as_deref(),
+                None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
             ));
             table_counter += 1;
         }

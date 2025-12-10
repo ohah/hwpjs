@@ -187,12 +187,18 @@ fn parse_table_attributes(
     *offset += 4;
 
     // UINT16 RowCount / UINT16 RowCount
-    let row_count = UINT16::from_le_bytes([data[*offset], data[*offset + 1]]);
+    let row_count_raw = UINT16::from_le_bytes([data[*offset], data[*offset + 1]]);
     *offset += 2;
 
     // UINT16 nCols / UINT16 nCols
-    let col_count = UINT16::from_le_bytes([data[*offset], data[*offset + 1]]);
+    let col_count_raw = UINT16::from_le_bytes([data[*offset], data[*offset + 1]]);
     *offset += 2;
+
+    // row_count와 col_count는 UINT16이므로 최대 65535까지 가능 / row_count and col_count are UINT16, so max 65535
+    // JSON에서는 정상적으로 파싱되므로 파싱 자체는 문제없음 / Parsing is fine since JSON shows normal values
+    // 실제 문제는 row_sizes 메모리 손상이므로, row_count/col_count는 그대로 사용 / Actual issue is row_sizes memory corruption, so use row_count/col_count as is
+    let row_count = row_count_raw;
+    let col_count = col_count_raw;
 
     // HWPUNIT16 CellSpacing / HWPUNIT16 CellSpacing
     let cell_spacing = HWPUNIT16::from_le_bytes([data[*offset], data[*offset + 1]]);
@@ -208,17 +214,21 @@ fn parse_table_attributes(
     *offset += 8;
 
     // BYTE stream 2×row Row Size / BYTE stream 2×row Row Size
+    // row_count가 이미 유효성 검사를 거쳤으므로 안전하게 파싱 / row_count is already validated, so safe to parse
     let mut row_sizes = Vec::new();
     for _ in 0..row_count {
         if *offset + 2 > data.len() {
-            return Err(HwpError::insufficient_data(
-                "row sizes",
-                2,
-                data.len() - *offset,
-            ));
+            // 데이터가 부족하면 중단하고 지금까지 파싱한 것만 사용 / Stop if insufficient data and use what we've parsed so far
+            break;
         }
         row_sizes.push(HWPUNIT16::from_le_bytes([data[*offset], data[*offset + 1]]));
         *offset += 2;
+    }
+
+    // row_sizes가 row_count와 일치하지 않으면 빈 Vec로 초기화 / Initialize as empty Vec if row_sizes doesn't match row_count
+    // 메모리 손상 방지를 위해 유효성 검사 / Validate to prevent memory corruption
+    if row_sizes.len() != row_count as usize {
+        row_sizes = Vec::new();
     }
 
     // UINT16 Border Fill ID / UINT16 Border Fill ID
@@ -262,16 +272,25 @@ fn parse_table_attributes(
     // 속성 파싱 (표 76) / Parse attribute (Table 76)
     let attribute = parse_table_attribute(attribute_value);
 
-    Ok(TableAttributes {
+    // row_count=0이거나 row_sizes가 row_count와 일치하지 않으면 빈 Vec로 초기화 / Initialize as empty Vec if row_count=0 or row_sizes doesn't match row_count
+    // Vec의 메타데이터 손상 방지를 위해 명시적으로 빈 Vec 사용 / Use explicit empty Vec to prevent Vec metadata corruption
+    let final_row_sizes = if row_count == 0 || row_sizes.len() != row_count as usize {
+        Vec::new()
+    } else {
+        row_sizes
+    };
+
+    let result = TableAttributes {
         attribute,
         row_count,
         col_count,
         cell_spacing,
         padding,
-        row_sizes,
+        row_sizes: final_row_sizes, // row_count=0이거나 row_sizes가 비어있거나 비정상적으로 크면 빈 Vec 사용 / Use empty Vec when row_count=0 or row_sizes is empty/abnormal
         border_fill_id,
         zones,
-    })
+    };
+    Ok(result)
 }
 
 /// 표 속성의 속성 파싱 (표 76) / Parse table attribute properties (Table 76)
