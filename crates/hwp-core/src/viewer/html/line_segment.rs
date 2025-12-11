@@ -24,15 +24,25 @@ pub fn render_line_segment(
     content: &str,
     para_shape_class: &str,
     para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
+    para_shape: Option<&crate::document::docinfo::para_shape::ParaShape>, // ParaShape 정보 (옵션) / ParaShape info (optional)
 ) -> String {
     let left_mm = round_to_2dp(int32_to_mm(segment.column_start_position));
     let top_mm = round_to_2dp(int32_to_mm(segment.vertical_position));
     let width_mm = round_to_2dp(int32_to_mm(segment.segment_width));
     let height_mm = round_to_2dp(int32_to_mm(segment.line_height));
+    let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
+    let line_spacing_mm = round_to_2dp(int32_to_mm(segment.line_spacing));
+    let baseline_distance_mm = round_to_2dp(int32_to_mm(segment.baseline_distance));
+
+    // line-height 계산: baseline_distance를 직접 사용
+    // 원본 HTML 분석 결과, CSS line-height는 baseline_distance 값을 사용함
+    // Calculate line-height: use baseline_distance directly
+    // Analysis of original HTML shows CSS line-height uses baseline_distance value
+    let line_height_value = round_to_2dp(baseline_distance_mm);
 
     let mut style = format!(
         "line-height:{:.2}mm;white-space:nowrap;left:{:.2}mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;",
-        height_mm, left_mm, top_mm, height_mm, width_mm
+        line_height_value, left_mm, top_mm, height_mm, width_mm
     );
 
     // padding-left 처리 (들여쓰기) / Handle padding-left (indentation)
@@ -56,7 +66,7 @@ pub fn render_line_segment_with_indent(
     para_shape_class: &str,
     para_shape_indent: Option<i32>,
 ) -> String {
-    render_line_segment(segment, content, para_shape_class, para_shape_indent)
+    render_line_segment(segment, content, para_shape_class, para_shape_indent, None)
 }
 
 /// 라인 세그먼트 그룹을 HTML로 렌더링 / Render line segment group to HTML
@@ -220,11 +230,26 @@ pub fn render_line_segments_with_content(
         }
 
         // 라인 세그먼트 렌더링 / Render line segment
+        // ParaShape 정보 가져오기 (para_shape_class에서 ID 추출) / Get ParaShape info (extract ID from para_shape_class)
+        let para_shape = if para_shape_class.starts_with("ps") {
+            if let Ok(para_shape_id) = para_shape_class[2..].parse::<usize>() {
+                if para_shape_id < document.doc_info.para_shapes.len() {
+                    Some(&document.doc_info.para_shapes[para_shape_id])
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
         result.push_str(&render_line_segment(
             segment,
             &content,
             para_shape_class,
             para_shape_indent,
+            para_shape,
         ));
     }
 

@@ -466,7 +466,7 @@ fn test_all_fixtures_markdown_snapshots() {
 
 #[test]
 fn test_document_html_snapshot() {
-    let file_path = match find_test_file() {
+    let file_path = match find_fixture_file("linespacing.hwp") {
         Some(path) => path,
         None => return, // Skip test if file not available
     };
