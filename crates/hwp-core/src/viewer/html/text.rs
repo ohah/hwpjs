@@ -75,7 +75,13 @@ pub fn render_text(
         });
 
         // 텍스트 스타일 적용 / Apply text styles
-        let mut styled_text = segment_text;
+        // 마지막 공백을 &nbsp;로 변환 (HTML 태그 적용 전에 처리) / Convert trailing space to &nbsp; (process before applying HTML tags)
+        let mut text_for_styling = segment_text.to_string();
+        if text_for_styling.ends_with(' ') {
+            // 마지막 공백을 &nbsp;로 변환 / Convert trailing space to &nbsp;
+            text_for_styling.pop();
+            text_for_styling.push_str("&nbsp;");
+        }
 
         if let Some(char_shape) = char_shape_opt {
             // CharShape 클래스 적용 / Apply CharShape class (0-based indexing to match XSL/XML format)
@@ -98,6 +104,7 @@ pub fn render_text(
             ));
 
             // 속성 / Attributes
+            let mut styled_text = text_for_styling;
             if char_shape.attributes.bold {
                 styled_text = format!("<strong>{}</strong>", styled_text);
             }
@@ -131,7 +138,7 @@ pub fn render_text(
             }
         } else {
             // CharShape가 없는 경우 기본 스타일 / Default style when no CharShape
-            result.push_str(&format!(r#"<span class="hrt">{}</span>"#, styled_text));
+            result.push_str(&format!(r#"<span class="hrt">{}</span>"#, text_for_styling));
         }
     }
 
