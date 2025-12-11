@@ -1,6 +1,6 @@
 /// 라인 세그먼트 렌더링 모듈 / Line segment rendering module
 use crate::document::bodytext::LineSegmentInfo;
-use crate::viewer::html::styles::int32_to_mm;
+use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
 /// 테이블 정보 타입 / Table info type
 pub type TableInfo<'a> = (
@@ -25,21 +25,21 @@ pub fn render_line_segment(
     para_shape_class: &str,
     para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
 ) -> String {
-    let left_mm = int32_to_mm(segment.column_start_position);
-    let top_mm = int32_to_mm(segment.vertical_position);
-    let width_mm = int32_to_mm(segment.segment_width);
-    let height_mm = int32_to_mm(segment.line_height);
+    let left_mm = round_to_2dp(int32_to_mm(segment.column_start_position));
+    let top_mm = round_to_2dp(int32_to_mm(segment.vertical_position));
+    let width_mm = round_to_2dp(int32_to_mm(segment.segment_width));
+    let height_mm = round_to_2dp(int32_to_mm(segment.line_height));
 
     let mut style = format!(
-        "line-height:{}mm;white-space:nowrap;left:{}mm;top:{}mm;height:{}mm;width:{}mm;",
+        "line-height:{:.2}mm;white-space:nowrap;left:{:.2}mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;",
         height_mm, left_mm, top_mm, height_mm, width_mm
     );
 
     // padding-left 처리 (들여쓰기) / Handle padding-left (indentation)
     if segment.tag.has_indentation {
         if let Some(indent) = para_shape_indent {
-            let indent_mm = int32_to_mm(indent);
-            style.push_str(&format!("padding-left:{}mm;", indent_mm));
+            let indent_mm = round_to_2dp(int32_to_mm(indent));
+            style.push_str(&format!("padding-left:{:.2}mm;", indent_mm));
         }
     }
 
@@ -196,7 +196,8 @@ pub fn render_line_segments_with_content(
                 let (table, ctrl_info, attr_info, caption_text) = &tables[table_index];
                 let current_table_number = table_counter_start + table_index as u32;
                 // LineSegment 위치 전달 / Pass LineSegment position
-                let segment_position = Some((segment.column_start_position, segment.vertical_position));
+                let segment_position =
+                    Some((segment.column_start_position, segment.vertical_position));
                 let table_html = render_table(
                     table,
                     document,

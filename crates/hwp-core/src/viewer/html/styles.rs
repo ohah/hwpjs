@@ -22,10 +22,9 @@ impl StyleInfo {
             for paragraph in &section.paragraphs {
                 // ParaShape 수집 / Collect ParaShape
                 let para_shape_id = paragraph.para_header.para_shape_id;
-                if para_shape_id > 0
-                    && para_shape_id as usize <= document.doc_info.para_shapes.len()
-                {
-                    para_shapes.insert((para_shape_id - 1) as usize);
+                // HWP 파일의 para_shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for para_shape_id
+                if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+                    para_shapes.insert(para_shape_id as usize);
                 }
 
                 // CharShape와 텍스트 색상 수집 / Collect CharShape and text colors

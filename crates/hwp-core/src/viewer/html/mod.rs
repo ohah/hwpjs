@@ -110,9 +110,10 @@ fn render_paragraph(
 
     // ParaShape 클래스 가져오기 / Get ParaShape class
     let para_shape_id = paragraph.para_header.para_shape_id;
+    // HWP 파일의 para_shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for para_shape_id
     let para_shape_class =
-        if para_shape_id > 0 && para_shape_id as usize <= document.doc_info.para_shapes.len() {
-            format!("ps{}", para_shape_id - 1)
+        if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+            format!("ps{}", para_shape_id)
         } else {
             String::new()
         };
@@ -268,9 +269,10 @@ fn render_paragraph(
         }
 
         // ParaShape indent 값 가져오기 / Get ParaShape indent value
+        // HWP 파일의 para_shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for para_shape_id
         let para_shape_indent =
-            if para_shape_id > 0 && para_shape_id as usize <= document.doc_info.para_shapes.len() {
-                Some(document.doc_info.para_shapes[para_shape_id as usize - 1].indent)
+            if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+                Some(document.doc_info.para_shapes[para_shape_id as usize].indent)
             } else {
                 None
             };

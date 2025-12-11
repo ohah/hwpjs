@@ -1,6 +1,6 @@
 /// 이미지 렌더링 모듈 / Image rendering module
 use crate::types::INT32;
-use crate::viewer::html::styles::int32_to_mm;
+use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
 /// 이미지를 HTML로 렌더링 / Render image to HTML
 pub fn render_image(
@@ -10,10 +10,10 @@ pub fn render_image(
     width: INT32,
     height: INT32,
 ) -> String {
-    let left_mm = int32_to_mm(left);
-    let top_mm = int32_to_mm(top);
-    let width_mm = int32_to_mm(width);
-    let height_mm = int32_to_mm(height);
+    let left_mm = round_to_2dp(int32_to_mm(left));
+    let top_mm = round_to_2dp(int32_to_mm(top));
+    let width_mm = round_to_2dp(int32_to_mm(width));
+    let height_mm = round_to_2dp(int32_to_mm(height));
 
     format!(
         r#"<div class="hsR" style="top:{}mm;left:{}mm;width:{}mm;height:{}mm;background-repeat:no-repeat;background-image:url('{}');"></div>"#,
@@ -31,12 +31,12 @@ pub fn render_image_with_style(
     margin_bottom: INT32,
     margin_right: INT32,
 ) -> String {
-    let left_mm = int32_to_mm(left);
-    let top_mm = int32_to_mm(top);
-    let width_mm = int32_to_mm(width);
-    let height_mm = int32_to_mm(height);
-    let margin_bottom_mm = int32_to_mm(margin_bottom);
-    let margin_right_mm = int32_to_mm(margin_right);
+    let left_mm = round_to_2dp(int32_to_mm(left));
+    let top_mm = round_to_2dp(int32_to_mm(top));
+    let width_mm = round_to_2dp(int32_to_mm(width));
+    let height_mm = round_to_2dp(int32_to_mm(height));
+    let margin_bottom_mm = round_to_2dp(int32_to_mm(margin_bottom));
+    let margin_right_mm = round_to_2dp(int32_to_mm(margin_right));
 
     format!(
         r#"<div class="hsR" style="top:{}mm;left:{}mm;margin-bottom:{}mm;margin-right:{}mm;width:{}mm;height:{}mm;display:inline-block;position:relative;vertical-align:middle;background-repeat:no-repeat;background-image:url('{}');"></div>"#,
