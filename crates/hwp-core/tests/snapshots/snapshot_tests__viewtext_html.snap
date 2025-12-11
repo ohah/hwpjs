@@ -70,7 +70,7 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .cs1 {
   font-size:10pt;color:rgb(0,0,0);font-family:"바탕";
 }
-.ps1 {
+.ps2 {
   text-align:justify;
 }
 @media print {
@@ -82,6 +82,6 @@ body {padding:0;}
 
 
 <body>
-<div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps1"><span class="hrt cs1" style="font-size:10pt;color:rgb(0,0,0);">이 문서는 상위 버전의 배포용 문서입니다. 문서를 읽으려면 최신 버전의 한글 또는 한글 전용 뷰어가 필요합니다. (주의! 현재 상태에서 문서를 저장하는 경우 원래 문서의 내용이 사라집니다.)</span></div></div></div></div></body>
+<div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps2"><span class="hrt cs1" style="font-size:10pt;color:rgb(0,0,0);">이 문서는 상위 버전의 배포용 문서입니다. 문서를 읽으려면 최신 버전의 한글 또는 한글 전용 뷰어가 필요합니다. (주의! 현재 상태에서 문서를 저장하는 경우 원래 문서의 내용이 사라집니다.)</span></div></div></div></div></body>
 
 </html>

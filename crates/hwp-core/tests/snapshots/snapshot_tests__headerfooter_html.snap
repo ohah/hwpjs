@@ -70,7 +70,7 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .cs1 {
   font-size:10pt;color:rgb(0,0,0);font-family:"바탕";
 }
-.ps8 {
+.ps9 {
   text-align:justify;
 }
 @media print {
@@ -82,6 +82,6 @@ body {padding:0;}
 
 
 <body>
-<div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps8" style="line-height:3.5277777777777777mm;white-space:nowrap;left:0mm;top:0mm;height:3.5277777777777777mm;width:150.0011111111111mm;"><span class="hrt cs1" style="font-size:10pt;color:rgb(0,0,0);">첫 페이지</span></div></div></div></div></body>
+<div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps9" style="line-height:3.53mm;white-space:nowrap;left:0.00mm;top:0.00mm;height:3.53mm;width:150.00mm;"><span class="hrt cs1" style="font-size:10pt;color:rgb(0,0,0);">첫 페이지</span></div></div></div></div></body>
 
 </html>
