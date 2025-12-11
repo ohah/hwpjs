@@ -35,11 +35,14 @@ impl StyleInfo {
                     {
                         for shape_info in shapes {
                             let shape_id = shape_info.shape_id as usize;
-                            if shape_id > 0 && shape_id <= document.doc_info.char_shapes.len() {
-                                char_shapes.insert(shape_id - 1);
-                                let shape_idx = shape_id - 1;
+                            // HWP 파일의 shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for shape_id
+                            if shape_id < document.doc_info.char_shapes.len() {
+                                // Store shape_id directly (0-based indexing to match XSL/XML)
+                                char_shapes.insert(shape_id);
+
+                                // shape_id is 0-based (matches XSL/XML format)
                                 if let Some(char_shape) =
-                                    document.doc_info.char_shapes.get(shape_idx)
+                                    document.doc_info.char_shapes.get(shape_id)
                                 {
                                     if char_shape.text_color.0 != 0 {
                                         text_colors.insert(char_shape.text_color.0);
@@ -129,16 +132,21 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
     css.push_str(".hls {clear:both;}\n");
     css.push_str("[onclick] {cursor:pointer;}\n");
 
-    // CharShape 스타일 생성 (cs0, cs1, ...) / Generate CharShape styles (cs0, cs1, ...)
-    let mut char_shape_indices: Vec<usize> = style_info.char_shapes.iter().copied().collect();
-    char_shape_indices.sort();
-    for &idx in &char_shape_indices {
-        if let Some(char_shape) = document.doc_info.char_shapes.get(idx) {
-            let class_name = format!("cs{}", idx);
+    // CharShape 스타일 생성 (cs1, cs2, ...) / Generate CharShape styles (cs1, cs2, ...) - 1-based indexing to match original HTML
+    let mut char_shape_ids: Vec<usize> = style_info.char_shapes.iter().copied().collect();
+    char_shape_ids.sort();
+
+    for &shape_id in &char_shape_ids {
+        // shape_id is 0-based (matches XSL/XML format)
+        if let Some(char_shape) = document.doc_info.char_shapes.get(shape_id) {
+            // Use 0-based shape_id for class name to match XSL/XML format (cs0, cs1, cs2, ...)
+            let class_name = format!("cs{}", shape_id);
+
             css.push_str(&format!(".{} {{\n", class_name));
 
             // 폰트 크기 / Font size
             let size_pt = char_shape.base_size as f64 / 100.0;
+
             css.push_str(&format!("  font-size:{}pt;", size_pt));
 
             // 텍스트 색상 / Text color
@@ -153,12 +161,14 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
             // 폰트 패밀리 / Font family
             // CharShape의 font_ids에서 한글 폰트 ID를 가져와서 face_names에서 폰트 이름 찾기
             // Get Korean font ID from CharShape's font_ids and find font name from face_names
+            // HWP 파일의 font_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for font_id
             let font_id = char_shape.font_ids.korean as usize;
-            let font_name = if font_id > 0 && font_id <= document.doc_info.face_names.len() {
-                &document.doc_info.face_names[font_id - 1].name
+            let font_name = if font_id < document.doc_info.face_names.len() {
+                &document.doc_info.face_names[font_id].name
             } else {
                 "함초롬바탕" // 기본값 / Default
             };
+
             css.push_str(&format!("font-family:\"{}\";", font_name));
 
             // 속성 / Attributes

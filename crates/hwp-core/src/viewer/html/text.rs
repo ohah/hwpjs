@@ -65,9 +65,10 @@ pub fn render_text(
         }
 
         // CharShape 가져오기 / Get CharShape
+        // HWP 파일의 shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for shape_id
         let char_shape_opt = char_shape_id_opt.and_then(|id| {
-            if id > 0 && id <= document.doc_info.char_shapes.len() {
-                document.doc_info.char_shapes.get(id - 1)
+            if id < document.doc_info.char_shapes.len() {
+                document.doc_info.char_shapes.get(id)
             } else {
                 None
             }
@@ -75,18 +76,18 @@ pub fn render_text(
 
         // 텍스트 스타일 적용 / Apply text styles
         let mut styled_text = segment_text;
-        
+
         if let Some(char_shape) = char_shape_opt {
-            // CharShape 클래스 적용 / Apply CharShape class
-            let class_name = format!("cs{}", char_shape_id_opt.unwrap() - 1);
-            
+            // CharShape 클래스 적용 / Apply CharShape class (0-based indexing to match XSL/XML format)
+            let class_name = format!("cs{}", char_shape_id_opt.unwrap());
+
             // 인라인 스타일 추가 / Add inline styles
             let mut inline_style = String::new();
-            
+
             // 폰트 크기 / Font size
             let size_pt = char_shape.base_size as f64 / 100.0;
             inline_style.push_str(&format!("font-size:{}pt;", size_pt));
-            
+
             // 텍스트 색상 / Text color
             let color = &char_shape.text_color;
             inline_style.push_str(&format!(
@@ -95,7 +96,7 @@ pub fn render_text(
                 color.g(),
                 color.b()
             ));
-            
+
             // 속성 / Attributes
             if char_shape.attributes.bold {
                 styled_text = format!("<strong>{}</strong>", styled_text);
@@ -115,7 +116,7 @@ pub fn render_text(
             if char_shape.attributes.subscript {
                 styled_text = format!("<sub>{}</sub>", styled_text);
             }
-            
+
             // .hrt span으로 래핑 / Wrap with .hrt span
             if !inline_style.is_empty() {
                 result.push_str(&format!(
@@ -146,7 +147,9 @@ pub fn extract_text_and_shapes(
 
     for record in &paragraph.records {
         match record {
-            ParagraphRecord::ParaText { text: para_text, .. } => {
+            ParagraphRecord::ParaText {
+                text: para_text, ..
+            } => {
                 text.push_str(para_text);
             }
             ParagraphRecord::ParaCharShape { shapes } => {
@@ -158,4 +161,3 @@ pub fn extract_text_and_shapes(
 
     (text, char_shapes)
 }
-
