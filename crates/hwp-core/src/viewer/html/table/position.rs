@@ -1,6 +1,6 @@
-use crate::document::bodytext::PageDef;
 use crate::document::bodytext::ctrl_header::VertRelTo;
-use crate::types::{INT32, RoundTo2dp};
+use crate::document::bodytext::PageDef;
+use crate::types::{RoundTo2dp, INT32};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
 /// viewBox 데이터 / ViewBox data
@@ -58,21 +58,6 @@ pub(crate) fn table_position(
             // 가설 MinDiff: offset_y는 두 번째 문단의 vertical_position을 기준으로 한 절대 위치일 수 있습니다
             // Hypothesis MinDiff: offset_y may be absolute position relative to second paragraph's vertical_position
             let offset_mm = offset.to_mm();
-            // #region agent log
-            use std::fs::OpenOptions;
-            use std::io::Write;
-            if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(r"d:\ohah\hwpjs\.cursor\debug.log") {
-                let _ = writeln!(file, r#"{{"id":"log_table_position_hypothesis_mindiff","timestamp":{},"location":"table/position.rs:table_position","message":"testing hypothesis MinDiff","data":{{"offset_y_mm":{},"para_start_vertical_mm":{:?},"first_para_vertical_mm":{:?},"margin_top_mm":{:?},"hcd_position":{:?},"base_pos":{:?}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"MinDiff"}}"#,
-                    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis(),
-                    offset_mm,
-                    para_start_vertical_mm,
-                    first_para_vertical_mm,
-                    margin_top_mm,
-                    hcd_position,
-                    base_pos
-                );
-            }
-            // #endregion
             // offset_y가 0이면 hcd_position.top을 사용 (문단 시작 위치와 무관) / If offset_y is 0, use hcd_position.top (independent of paragraph start)
             if offset_mm == 0.0 {
                 0.0
@@ -107,20 +92,6 @@ pub(crate) fn table_position(
                     let para_start_relative_mm = para_start - base_pos.1;
                     para_start_relative_mm + offset_mm
                 };
-                // #region agent log
-                if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(r"d:\ohah\hwpjs\.cursor\debug.log") {
-                    let _ = writeln!(file, r#"{{"id":"log_table_position_hypothesis_new","timestamp":{},"location":"table/position.rs:table_position","message":"hypothesis New calculation","data":{{"para_start":{},"second_para_vertical_mm":{},"second_para_relative_mm":{},"offset_mm":{},"margin_top_mm":{:?},"calculated_offset":{},"base_pos_top":{}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"New"}}"#,
-                        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis(),
-                        para_start,
-                        second_para_vertical_mm,
-                        second_para_relative_mm,
-                        offset_mm,
-                        margin_top_mm,
-                        calculated_offset,
-                        base_pos.1
-                    );
-                }
-                // #endregion
                 calculated_offset
             } else if let Some(first_para) = first_para_vertical_mm {
                 // 가설 O: offset_y는 첫 번째 문단의 vertical_position을 기준으로 한 상대 위치
@@ -139,4 +110,3 @@ pub(crate) fn table_position(
         )
     }
 }
-

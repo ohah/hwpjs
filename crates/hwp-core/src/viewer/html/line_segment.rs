@@ -208,21 +208,6 @@ pub fn render_line_segments_with_content(
                 // LineSegment 위치 전달 / Pass LineSegment position
                 let segment_position =
                     Some((segment.column_start_position, segment.vertical_position));
-                // #region agent log
-                use std::fs::OpenOptions;
-                use std::io::Write;
-                if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(r"d:\ohah\hwpjs\.cursor\debug.log") {
-                    let like_letters = attr_info.map(|(attr, _, _)| attr.like_letters).unwrap_or(false);
-                    let _ = writeln!(file, r#"{{"id":"log_line_segment_table","timestamp":{},"location":"html/line_segment.rs:render_line_segments_with_content","message":"rendering table in line_segment","data":{{"table_index":{},"like_letters":{},"has_caption":{},"segment_position":{{"column":{},"vertical":{}}}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"I"}}"#,
-                        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis(),
-                        table_index,
-                        like_letters,
-                        caption_text.is_some(),
-                        segment.column_start_position,
-                        segment.vertical_position
-                    );
-                }
-                // #endregion
                 let table_html = render_table(
                     table,
                     document,
@@ -237,16 +222,6 @@ pub fn render_line_segments_with_content(
                     None, // line_segment에서는 para_start_vertical_mm 사용 안 함 / para_start_vertical_mm not used in line_segment
                     None, // line_segment에서는 first_para_vertical_mm 사용 안 함 / first_para_vertical_mm not used in line_segment
                 );
-                // #region agent log
-                if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(r"d:\ohah\hwpjs\.cursor\debug.log") {
-                    let _ = writeln!(file, r#"{{"id":"log_line_segment_table_html","timestamp":{},"location":"html/line_segment.rs:render_line_segments_with_content","message":"table html added to content","data":{{"table_index":{},"html_length":{},"contains_htg":{}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"I"}}"#,
-                        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis(),
-                        table_index,
-                        table_html.len(),
-                        table_html.contains("htG")
-                    );
-                }
-                // #endregion
                 content.push_str(&table_html);
             }
         } else if !is_text_empty {

@@ -82,4 +82,3 @@ pub(crate) fn resolve_container_size(container: Size, content: Size) -> Size {
         container
     }
 }
-

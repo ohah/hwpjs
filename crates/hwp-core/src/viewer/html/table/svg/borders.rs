@@ -11,6 +11,7 @@ pub(crate) fn render_vertical_borders(
     content: Size,
     border_color: &str,
     border_width: f64,
+    ctrl_header_height_mm: Option<f64>,
 ) -> String {
     let mut svg_paths = String::new();
 
@@ -19,8 +20,8 @@ pub(crate) fn render_vertical_borders(
         for cell in &table.cells {
             let cell_left = calculate_cell_left(table, cell);
             let cell_width = cell.cell_attributes.width.to_mm();
-            let cell_top = calculate_cell_top(table, cell);
-            let cell_height = get_cell_height(table, cell);
+            let cell_top = calculate_cell_top(table, cell, ctrl_header_height_mm);
+            let cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
 
             if cell_left < col_x && (cell_left + cell_width) > col_x {
                 covered_ranges.push((cell_top, cell_top + cell_height));
@@ -81,14 +82,15 @@ pub(crate) fn render_horizontal_borders(
     border_color: &str,
     border_width: f64,
     border_offset: f64,
+    ctrl_header_height_mm: Option<f64>,
 ) -> String {
     let mut svg_paths = String::new();
 
     for &row_y in row_positions {
         let mut covered_ranges = Vec::new();
         for cell in &table.cells {
-            let cell_top = calculate_cell_top(table, cell);
-            let cell_height = get_cell_height(table, cell);
+            let cell_top = calculate_cell_top(table, cell, ctrl_header_height_mm);
+            let cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
             let cell_left = calculate_cell_left(table, cell);
             let cell_width = cell.cell_attributes.width.to_mm();
 

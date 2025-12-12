@@ -14,13 +14,20 @@ pub(crate) fn render_svg(
     document: &crate::document::HwpDocument,
     view_box: &ViewBox,
     content: Size,
+    ctrl_header_height_mm: Option<f64>,
 ) -> String {
-    let (pattern_defs, fills) = fills::render_fills(table, document);
+    let (pattern_defs, fills) = fills::render_fills(table, document, ctrl_header_height_mm);
     let cols = column_positions(table);
     let rows = row_positions(table, content.height);
 
-    let vertical =
-        borders::render_vertical_borders(table, &cols, content, BORDER_COLOR, BORDER_WIDTH_MM);
+    let vertical = borders::render_vertical_borders(
+        table,
+        &cols,
+        content,
+        BORDER_COLOR,
+        BORDER_WIDTH_MM,
+        ctrl_header_height_mm,
+    );
     let horizontal = borders::render_horizontal_borders(
         table,
         &rows,
@@ -28,6 +35,7 @@ pub(crate) fn render_svg(
         BORDER_COLOR,
         BORDER_WIDTH_MM,
         BORDER_OFFSET_MM,
+        ctrl_header_height_mm,
     );
 
     format!(

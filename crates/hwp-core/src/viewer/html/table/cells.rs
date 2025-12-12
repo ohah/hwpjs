@@ -3,13 +3,13 @@ use crate::viewer::html::styles::round_to_2dp;
 
 use super::geometry::{calculate_cell_left, calculate_cell_top, get_cell_height};
 
-pub(crate) fn render_cells(table: &Table) -> String {
+pub(crate) fn render_cells(table: &Table, ctrl_header_height_mm: Option<f64>) -> String {
     let mut cells_html = String::new();
     for cell in &table.cells {
         let cell_left = calculate_cell_left(table, cell);
-        let cell_top = calculate_cell_top(table, cell);
+        let cell_top = calculate_cell_top(table, cell, ctrl_header_height_mm);
         let cell_width = cell.cell_attributes.width.to_mm();
-        let cell_height = get_cell_height(table, cell);
+        let cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
 
         let cell_content = String::new();
 
