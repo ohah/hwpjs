@@ -4,10 +4,20 @@ use std::path::PathBuf;
 
 /// Helper function to find test HWP files directory
 pub fn find_fixtures_dir() -> Option<PathBuf> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
+    let fixtures_path = manifest_dir.join("tests").join("fixtures");
+    
+    if fixtures_path.exists() && fixtures_path.is_dir() {
+        return Some(fixtures_path);
+    }
+    
+    // Fallback for backward compatibility
     let possible_paths = [
-        "../../examples/fixtures",
-        "../examples/fixtures",
-        "examples/fixtures",
+        "tests/fixtures",
+        "./tests/fixtures",
     ];
 
     for path_str in &possible_paths {

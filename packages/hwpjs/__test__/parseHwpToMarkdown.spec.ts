@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parseHwpToMarkdown } from '../index';
 
-const fixturesPath = join(__dirname, '../../examples/fixtures');
+const fixturesPath = join(__dirname, '../../crates/hwp-core/tests/fixtures');
 const nooriHwpPath = join(fixturesPath, 'noori.hwp');
 
 test('parseHwpToMarkdown with base64 option should include base64 data URI in markdown', () => {

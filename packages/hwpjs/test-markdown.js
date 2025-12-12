@@ -2,7 +2,7 @@ const { readFileSync } = require('fs');
 const { join } = require('path');
 const { parseHwpToMarkdown } = require('./dist/index.js');
 
-const fixturesPath = join(__dirname, '../../examples/fixtures');
+const fixturesPath = join(__dirname, '../../crates/hwp-core/tests/fixtures');
 const nooriHwpPath = join(fixturesPath, 'noori.hwp');
 
 console.log('Testing parseHwpToMarkdown with base64 option...\n');

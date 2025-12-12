@@ -28,9 +28,12 @@ HWPJS는 한글과컴퓨터의 한/글 문서 파일(.hwp)을 읽고 파싱하�
 hwpjs/
 ├── crates/
 │   └── hwp-core/          # 공유 Rust 라이브러리 (핵심 HWP 파싱 로직 + 뷰어 기능)
-│       └── src/
-│           ├── document/  # 문서 파싱 모듈
-│           └── viewer/     # 문서 변환/뷰어 모듈 (마크다운, PDF(지원 예정) 등)
+│       ├── src/
+│       │   ├── document/  # 문서 파싱 모듈
+│       │   └── viewer/     # 문서 변환/뷰어 모듈 (마크다운, PDF(지원 예정) 등)
+│       └── tests/
+│           ├── fixtures/  # 테스트용 HWP 파일들
+│           └── snapshots/ # 스냅샷 테스트 결과 파일들
 ├── packages/
 │   └── hwpjs/             # 멀티 플랫폼 패키지 (Node.js, Web, React Native)
 │       ├── src/           # NAPI-RS 바인딩 코드 (Node.js/Web용)
@@ -408,6 +411,11 @@ src/
 - 스냅샷 변경 시 `cargo insta review`로 변경사항을 검토하고 승인
 - 스냅샷 파일은 git에 커밋하여 버전 관리
 
+**테스트 파일 위치**:
+- 테스트용 HWP 파일: `crates/hwp-core/tests/fixtures/` 디렉토리에 저장
+- 테스트 코드에서 `common::find_fixture_file()` 함수를 사용하여 fixtures 파일 접근
+- `common::find_fixtures_dir()` 함수로 fixtures 디렉토리 경로 확인 가능
+
 **테스트 명령어**:
 - Rust 테스트: `bun run test:rust`
 - Rust 코어 테스트: `bun run test:rust-core`
@@ -552,8 +560,10 @@ refactor(core): reorganize modules to match HWP file structure
 - **테스트**: 
   - **필수**: 모든 기능에 대한 단위 테스트 작성 (TDD 방식)
   - **필수**: JSON 출력 결과를 검증하는 스냅샷 테스트 작성
+  - 테스트용 HWP 파일: `tests/fixtures/` 디렉토리에 저장
   - 스냅샷 파일은 `tests/snapshots/` 디렉토리에 저장
   - 스냅샷 변경 시 `cargo insta review`로 검토 및 승인
+  - 테스트 코드에서 `common::find_fixture_file()` 함수를 사용하여 fixtures 파일 접근
 
 ### `packages/hwpjs`
 - **역할**: 멀티 플랫폼 패키지 (Node.js, Web, React Native 모두 지원)

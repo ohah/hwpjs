@@ -1,5 +1,6 @@
 /// HwpParser 테스트
 /// HwpParser tests
+mod common;
 use hwp_core::*;
 
 #[test]
@@ -10,21 +11,9 @@ fn test_hwp_parser_new() {
 #[test]
 fn test_hwp_parser_parse_with_actual_file() {
     // Test with actual HWP file if available
-    let possible_paths = [
-        "../../examples/fixtures/noori.hwp",
-        "../examples/fixtures/noori.hwp",
-        "examples/fixtures/noori.hwp",
-    ];
-
-    let mut file_path = None;
-    for path in &possible_paths {
-        if std::path::Path::new(path).exists() {
-            file_path = Some(*path);
-            break;
-        }
-    }
-
-    if let Some(path) = file_path {
+    use crate::common::find_fixture_file;
+    
+    if let Some(path) = find_fixture_file("noori.hwp") {
         if let Ok(data) = std::fs::read(path) {
             let parser = HwpParser::new();
             let result = parser.parse(&data);
@@ -47,21 +36,9 @@ fn test_hwp_parser_parse_with_actual_file() {
 #[test]
 fn test_hwp_parser_parse_fileheader_json() {
     // Test FileHeader JSON output
-    let possible_paths = [
-        "../../examples/fixtures/noori.hwp",
-        "../examples/fixtures/noori.hwp",
-        "examples/fixtures/noori.hwp",
-    ];
-
-    let mut file_path = None;
-    for path in &possible_paths {
-        if std::path::Path::new(path).exists() {
-            file_path = Some(*path);
-            break;
-        }
-    }
-
-    if let Some(path) = file_path {
+    use crate::common::find_fixture_file;
+    
+    if let Some(path) = find_fixture_file("noori.hwp") {
         if let Ok(data) = std::fs::read(path) {
             let parser = HwpParser::new();
             let result = parser.parse_fileheader_json(&data);

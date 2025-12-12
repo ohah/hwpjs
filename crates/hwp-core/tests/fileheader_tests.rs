@@ -1,5 +1,6 @@
 /// FileHeader 파싱 테스트
 /// FileHeader parsing tests
+mod common;
 use hwp_core::*;
 
 #[test]
@@ -36,25 +37,12 @@ fn test_fileheader_parse_too_short() {
 #[test]
 fn test_fileheader_parse_from_actual_file() {
     // Test with actual HWP file if available
-    // Try multiple possible paths (from workspace root and from crate directory)
-    let possible_paths = [
-        "../../examples/fixtures/noori.hwp", // from crate directory
-        "../examples/fixtures/noori.hwp",    // from workspace root
-        "examples/fixtures/noori.hwp",       // absolute-like
-    ];
+    use crate::common::find_fixture_file;
 
-    let mut file_path = None;
-    for path in &possible_paths {
-        if std::path::Path::new(path).exists() {
-            file_path = Some(*path);
-            break;
-        }
-    }
-
-    let file_path = match file_path {
+    let file_path = match find_fixture_file("noori.hwp") {
         Some(p) => p,
         None => {
-            println!("HWP test file not found in any expected location");
+            println!("HWP test file not found in fixtures directory");
             return;
         }
     };
