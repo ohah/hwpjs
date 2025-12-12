@@ -644,6 +644,69 @@ fn test_all_fixtures_html_snapshots() {
 }
 
 #[test]
+fn test_table2_html_snapshot() {
+    // table2.hwp 파일만 테스트 / Test only table2.hwp file
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let fixtures_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("fixtures");
+    let file_path = fixtures_dir.join("table2.hwp");
+    
+    if !file_path.exists() {
+        eprintln!("table2.hwp not found, skipping test");
+        return;
+    }
+
+    let parser = HwpParser::new();
+    let snapshots_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("snapshots");
+
+    let file_name = "table2";
+    let snapshot_name_html = "table2_html";
+
+    match std::fs::read(&file_path) {
+        Ok(data) => {
+            match parser.parse(&data) {
+                Ok(document) => {
+                    // Convert to HTML with image files (not base64)
+                    // 이미지를 파일로 저장하고 파일 경로를 사용 / Save images as files and use file paths
+                    let images_dir = snapshots_dir.join("images").join(file_name);
+                    std::fs::create_dir_all(&images_dir).unwrap_or(());
+
+                    let options = hwp_core::viewer::html::HtmlOptions {
+                        image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+                        include_version: Some(true),
+                        include_page_info: Some(true),
+                        css_class_prefix: String::new(), // table.html과 일치하도록 빈 문자열 사용
+                    };
+                    eprintln!("DEBUG: Processing table2.hwp file");
+                    let html = document.to_html(&options);
+
+                    // 스냅샷 생성 / Create snapshot
+                    assert_snapshot_with_path!(snapshot_name_html, html);
+
+                    // 실제 HTML 파일로도 저장 / Also save as actual HTML file
+                    let html_file = snapshots_dir.join(format!("{}.html", file_name));
+                    std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
+                    std::fs::write(&html_file, &html).unwrap_or_else(|e| {
+                        eprintln!("Failed to write HTML file {}: {}", html_file.display(), e);
+                    });
+                }
+                Err(e) => {
+                    eprintln!("Parse error for table2.hwp: {}", e);
+                    panic!("Failed to parse table2.hwp: {}", e);
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("Failed to read table2.hwp: {}", e);
+            panic!("Failed to read table2.hwp: {}", e);
+        }
+    }
+}
+
+#[test]
 fn test_parse_all_fixtures() {
     // 모든 fixtures 파일을 파싱하여 에러가 없는지 확인 / Parse all fixtures files to check for errors
     let hwp_files = find_all_hwp_files();
