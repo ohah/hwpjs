@@ -105,18 +105,18 @@ fn render_paragraph(
     options: &HtmlOptions,
     hcd_position: Option<(f64, f64)>,
     page_def: Option<&crate::document::bodytext::PageDef>,
+    first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
 ) -> (String, Vec<String>) {
     let mut result = String::new();
 
     // ParaShape 클래스 가져오기 / Get ParaShape class
     let para_shape_id = paragraph.para_header.para_shape_id;
     // HWP 파일의 para_shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for para_shape_id
-    let para_shape_class =
-        if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
-            format!("ps{}", para_shape_id)
-        } else {
-            String::new()
-        };
+    let para_shape_class = if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+        format!("ps{}", para_shape_id)
+    } else {
+        String::new()
+    };
 
     // 텍스트와 CharShape 추출 / Extract text and CharShape
     let (text, char_shapes) = text::extract_text_and_shapes(paragraph);
@@ -192,7 +192,10 @@ fn render_paragraph(
                 tables.push((table, None, None, None));
             }
             ParagraphRecord::CtrlHeader {
-                header, children, ..
+                header,
+                children,
+                paragraphs,
+                ..
             } => {
                 // CtrlHeader의 children에서 테이블 찾기 / Find tables in CtrlHeader's children
                 // CtrlHeader의 width/height/margin, ObjectAttribute, offset_x, offset_y 정보를 테이블에 전달
@@ -211,26 +214,224 @@ fn render_paragraph(
                     ),
                     _ => (None, None),
                 };
-                // 캡션 텍스트 추출: 테이블 다음에 오는 문단에서 텍스트 추출 / Extract caption text: extract text from paragraph after table
-                let mut caption_text: Option<String> = None;
+                // 캡션 텍스트 추출: paragraphs 필드에서 모든 캡션 수집 / Extract caption text: collect all captions from paragraphs field
+                let mut caption_texts: Vec<String> = Vec::new();
                 let mut found_table = false;
-                for child in children {
+                // #region agent log
+                use std::fs::OpenOptions;
+                use std::io::Write;
+                if let Ok(mut file) = OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+                {
+                    let _ = writeln!(
+                        file,
+                        r#"{{"id":"log_table_caption_start","timestamp":{},"location":"html/mod.rs:render_paragraph","message":"caption extraction start","data":{{"children_count":{},"paragraphs_count":{}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}}"#,
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_millis(),
+                        children.len(),
+                        paragraphs.len()
+                    );
+                }
+                // #endregion
+                // paragraphs 필드에서 모든 캡션 수집 / Collect all captions from paragraphs field
+                for para in paragraphs {
+                    for record in &para.records {
+                        if let ParagraphRecord::ParaText { text, .. } = record {
+                            if !text.trim().is_empty() {
+                                caption_texts.push(text.clone());
+                                // #region agent log
+                                if let Ok(mut file) = OpenOptions::new()
+                                    .create(true)
+                                    .append(true)
+                                    .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+                                {
+                                    let _ = writeln!(
+                                        file,
+                                        r#"{{"id":"log_table_caption_paragraphs","timestamp":{},"location":"html/mod.rs:render_paragraph","message":"caption found in paragraphs field","data":{{"caption_text":{:?},"caption_index":{}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}}"#,
+                                        std::time::SystemTime::now()
+                                            .duration_since(std::time::UNIX_EPOCH)
+                                            .unwrap()
+                                            .as_millis(),
+                                        text,
+                                        caption_texts.len() - 1
+                                    );
+                                }
+                                // #endregion
+                            }
+                        }
+                    }
+                }
+                let mut caption_index = 0;
+                let mut caption_text: Option<String> = None;
+                for (idx, child) in children.iter().enumerate() {
+                    // #region agent log
+                    if let Ok(mut file) = OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+                    {
+                        let child_type = match child {
+                            ParagraphRecord::Table { .. } => "Table",
+                            ParagraphRecord::ParaText { .. } => "ParaText",
+                            ParagraphRecord::ListHeader { .. } => "ListHeader",
+                            _ => "Other",
+                        };
+                        let _ = writeln!(
+                            file,
+                            r#"{{"id":"log_table_caption_child","timestamp":{},"location":"html/mod.rs:render_paragraph","message":"processing child","data":{{"index":{},"type":"{}","found_table":{}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}}"#,
+                            std::time::SystemTime::now()
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .unwrap()
+                                .as_millis(),
+                            idx,
+                            child_type,
+                            found_table
+                        );
+                    }
+                    // #endregion
                     if let ParagraphRecord::Table { table } = child {
                         found_table = true;
-                        // 이전에 찾은 캡션 텍스트를 사용 / Use previously found caption text
-                        let current_caption = caption_text.clone();
+                        // paragraphs 필드에서 캡션 사용 (순서대로) / Use caption from paragraphs field (in order)
+                        let current_caption = if caption_index < caption_texts.len() {
+                            Some(caption_texts[caption_index].clone())
+                        } else {
+                            caption_text.clone()
+                        };
+                        caption_index += 1;
+                        // #region agent log
+                        if let Ok(mut file) = OpenOptions::new()
+                            .create(true)
+                            .append(true)
+                            .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+                        {
+                            let _ = writeln!(
+                                file,
+                                r#"{{"id":"log_table_caption_extract","timestamp":{},"location":"html/mod.rs:render_paragraph","message":"caption extracted","data":{{"has_caption":{},"caption_text":{:?},"caption_index":{},"has_ctrl_info":{},"has_attr_info":{}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}}"#,
+                                std::time::SystemTime::now()
+                                    .duration_since(std::time::UNIX_EPOCH)
+                                    .unwrap()
+                                    .as_millis(),
+                                current_caption.is_some(),
+                                current_caption.as_ref().map(|s| s.as_str()),
+                                caption_index - 1,
+                                ctrl_info.is_some(),
+                                attr_info.is_some()
+                            );
+                        }
+                        // #endregion
                         tables.push((table, ctrl_info.clone(), attr_info, current_caption));
                         caption_text = None; // 다음 테이블을 위해 초기화 / Reset for next table
                     } else if found_table {
                         // 테이블 다음에 오는 문단에서 텍스트 추출 / Extract text from paragraph after table
                         if let ParagraphRecord::ParaText { text, .. } = child {
                             caption_text = Some(text.clone());
+                            // #region agent log
+                            if let Ok(mut file) = OpenOptions::new()
+                                .create(true)
+                                .append(true)
+                                .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+                            {
+                                let _ = writeln!(
+                                    file,
+                                    r#"{{"id":"log_table_caption_after","timestamp":{},"location":"html/mod.rs:render_paragraph","message":"caption found after table","data":{{"caption_text":{:?}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}}"#,
+                                    std::time::SystemTime::now()
+                                        .duration_since(std::time::UNIX_EPOCH)
+                                        .unwrap()
+                                        .as_millis(),
+                                    text
+                                );
+                            }
+                            // #endregion
                             break;
+                        } else if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
+                            // ListHeader의 paragraphs에서 텍스트 추출 / Extract text from ListHeader's paragraphs
+                            for para in paragraphs {
+                                for record in &para.records {
+                                    if let ParagraphRecord::ParaText { text, .. } = record {
+                                        caption_text = Some(text.clone());
+                                        // #region agent log
+                                        if let Ok(mut file) = OpenOptions::new()
+                                            .create(true)
+                                            .append(true)
+                                            .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+                                        {
+                                            let _ = writeln!(
+                                                file,
+                                                r#"{{"id":"log_table_caption_listheader_after","timestamp":{},"location":"html/mod.rs:render_paragraph","message":"caption found in ListHeader after table","data":{{"caption_text":{:?}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}}"#,
+                                                std::time::SystemTime::now()
+                                                    .duration_since(std::time::UNIX_EPOCH)
+                                                    .unwrap()
+                                                    .as_millis(),
+                                                text
+                                            );
+                                        }
+                                        // #endregion
+                                        break;
+                                    }
+                                }
+                                if caption_text.is_some() {
+                                    break;
+                                }
+                            }
+                            if caption_text.is_some() {
+                                break;
+                            }
                         }
                     } else {
                         // 테이블 이전에 오는 문단에서 텍스트 추출 (첫 번째 테이블의 캡션) / Extract text from paragraph before table (caption for first table)
                         if let ParagraphRecord::ParaText { text, .. } = child {
                             caption_text = Some(text.clone());
+                            // #region agent log
+                            if let Ok(mut file) = OpenOptions::new()
+                                .create(true)
+                                .append(true)
+                                .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+                            {
+                                let _ = writeln!(
+                                    file,
+                                    r#"{{"id":"log_table_caption_before","timestamp":{},"location":"html/mod.rs:render_paragraph","message":"caption found before table","data":{{"caption_text":{:?}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}}"#,
+                                    std::time::SystemTime::now()
+                                        .duration_since(std::time::UNIX_EPOCH)
+                                        .unwrap()
+                                        .as_millis(),
+                                    text
+                                );
+                            }
+                            // #endregion
+                        } else if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
+                            // ListHeader의 paragraphs에서 텍스트 추출 / Extract text from ListHeader's paragraphs
+                            for para in paragraphs {
+                                for record in &para.records {
+                                    if let ParagraphRecord::ParaText { text, .. } = record {
+                                        caption_text = Some(text.clone());
+                                        // #region agent log
+                                        if let Ok(mut file) = OpenOptions::new()
+                                            .create(true)
+                                            .append(true)
+                                            .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+                                        {
+                                            let _ = writeln!(
+                                                file,
+                                                r#"{{"id":"log_table_caption_listheader_before","timestamp":{},"location":"html/mod.rs:render_paragraph","message":"caption found in ListHeader before table","data":{{"caption_text":{:?}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"D"}}"#,
+                                                std::time::SystemTime::now()
+                                                    .duration_since(std::time::UNIX_EPOCH)
+                                                    .unwrap()
+                                                    .as_millis(),
+                                                text
+                                            );
+                                        }
+                                        // #endregion
+                                        break;
+                                    }
+                                }
+                                if caption_text.is_some() {
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -253,6 +454,11 @@ fn render_paragraph(
         Option<String>,
     )> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
 
+    // 문단의 첫 번째 LineSegment의 vertical_position 계산 (vert_rel_to: "para"일 때 사용) / Calculate first LineSegment's vertical_position (used when vert_rel_to: "para")
+    let para_start_vertical_mm = line_segments
+        .first()
+        .map(|seg| seg.vertical_position as f64 * 25.4 / 7200.0);
+
     // LineSegment가 있으면 사용 / Use LineSegment if available
     if !line_segments.is_empty() {
         // like_letters=true인 테이블과 false인 테이블 분리 / Separate tables with like_letters=true and false
@@ -261,21 +467,50 @@ fn render_paragraph(
             let like_letters = attr_info
                 .map(|(attr, _, _)| attr.like_letters)
                 .unwrap_or(false);
+            // #region agent log
+            use std::fs::OpenOptions;
+            use std::io::Write;
+            if let Ok(mut file) = OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+            {
+                let _ = writeln!(
+                    file,
+                    r#"{{"id":"log_table_like_letters","timestamp":{},"location":"html/mod.rs:render_paragraph","message":"table like_letters classification","data":{{"like_letters":{},"has_caption":{}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"H"}}"#,
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis(),
+                    like_letters,
+                    caption_text.is_some()
+                );
+            }
+            // #endregion
             if like_letters {
-                inline_tables.push((table, ctrl_info.clone(), *attr_info, caption_text.clone()));
+                inline_tables.push((
+                    table,
+                    ctrl_info.clone(),
+                    attr_info.clone(),
+                    caption_text.clone(),
+                ));
             } else {
-                absolute_tables.push((table, ctrl_info.clone(), *attr_info, caption_text.clone()));
+                absolute_tables.push((
+                    table,
+                    ctrl_info.clone(),
+                    attr_info.clone(),
+                    caption_text.clone(),
+                ));
             }
         }
 
         // ParaShape indent 값 가져오기 / Get ParaShape indent value
         // HWP 파일의 para_shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for para_shape_id
-        let para_shape_indent =
-            if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
-                Some(document.doc_info.para_shapes[para_shape_id as usize].indent)
-            } else {
-                None
-            };
+        let para_shape_indent = if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+            Some(document.doc_info.para_shapes[para_shape_id as usize].indent)
+        } else {
+            None
+        };
 
         // like_letters=true인 테이블을 line_segment에 포함 / Include tables with like_letters=true in line_segment
         // inline_tables는 Vec<(&Table, ...)>이고, TableInfo는 (&Table, ..., Option<&str>)이므로 변환 필요
@@ -333,18 +568,41 @@ fn render_paragraph(
         for (table, ctrl_info, attr_info, caption_text) in absolute_tables.iter() {
             use crate::viewer::html::table::render_table;
 
-            table_htmls.push(render_table(
+            let table_html = render_table(
                 table,
                 document,
                 ctrl_info.clone(),
-                *attr_info,
+                attr_info.clone(),
                 hcd_position,
                 page_def,
                 options,
                 Some(table_counter),
                 caption_text.as_deref(),
                 None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
-            ));
+                para_start_vertical_mm, // 문단 시작 위치 전달 / Pass paragraph start position
+                first_para_vertical_mm, // 첫 번째 문단의 vertical_position 전달 (가설 O) / Pass first paragraph's vertical_position (Hypothesis O)
+            );
+            // #region agent log
+            use std::fs::OpenOptions;
+            use std::io::Write;
+            if let Ok(mut file) = OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+            {
+                let _ = writeln!(
+                    file,
+                    r#"{{"id":"log_table_htmls_push","timestamp":{},"location":"html/mod.rs:render_paragraph","message":"pushing table html to table_htmls","data":{{"html_length":{},"contains_htg":{}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"F"}}"#,
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis(),
+                    table_html.len(),
+                    table_html.contains("htG")
+                );
+            }
+            // #endregion
+            table_htmls.push(table_html);
             table_counter += 1;
         }
     } else if !text.is_empty() {
@@ -416,6 +674,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut current_max_vertical_mm = 0.0;
     // 이전 문단의 마지막 vertical_position (mm 단위) / Last vertical_position of previous paragraph (in mm)
     let mut prev_vertical_mm: Option<f64> = None;
+    let mut first_para_vertical_mm: Option<f64> = None; // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
 
     for section in &document.body_text.sections {
         for paragraph in &section.paragraphs {
@@ -553,8 +812,27 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     }
                 }
 
-                let (para_html, table_htmls) =
-                    render_paragraph(paragraph, document, options, hcd_position, page_def);
+                // 첫 번째 문단의 vertical_position 추적 (가설 O) / Track first paragraph's vertical_position (Hypothesis O)
+                if first_para_vertical_mm.is_none() {
+                    for record in &paragraph.records {
+                        if let ParagraphRecord::ParaLineSeg { segments } = record {
+                            if let Some(first_segment) = segments.first() {
+                                first_para_vertical_mm =
+                                    Some(first_segment.vertical_position as f64 * 25.4 / 7200.0);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                let (para_html, table_htmls) = render_paragraph(
+                    paragraph,
+                    document,
+                    options,
+                    hcd_position,
+                    page_def,
+                    first_para_vertical_mm,
+                );
                 if !para_html.is_empty() {
                     page_content.push_str(&para_html);
                 }

@@ -45,10 +45,75 @@ pub fn render_page(
     }
 
     // 테이블은 hpa 레벨에 직접 배치 / Place tables directly at hpa level
-    for table_html in tables {
+    // #region agent log
+    use std::fs::OpenOptions;
+    use std::io::Write;
+    if let Ok(mut file) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+    {
+        let _ = writeln!(
+            file,
+            r#"{{"id":"log_page_render_tables","timestamp":{},"location":"html/page.rs:render_page","message":"rendering tables","data":{{"tables_count":{},"first_table_contains_htg":{}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"G"}}"#,
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis(),
+            tables.len(),
+            tables.first().map(|t| t.contains("htG")).unwrap_or(false)
+        );
+    }
+    // #endregion
+    for (idx, table_html) in tables.iter().enumerate() {
+        // #region agent log
+        if let Ok(mut file) = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+        {
+            let _ = writeln!(
+                file,
+                r#"{{"id":"log_page_render_table_add","timestamp":{},"location":"html/page.rs:render_page","message":"adding table to html","data":{{"table_index":{},"html_length":{},"contains_htg":{},"html_preview":{:?}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"J"}}"#,
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis(),
+                idx,
+                table_html.len(),
+                table_html.contains("htG"),
+                // HTML 미리보기 제거 (디버그 로그가 너무 길어짐) / Remove HTML preview (debug log too long)
+                ""
+            );
+        }
+        // #endregion
         html.push_str(table_html);
     }
 
     html.push_str("</div>");
+    // #region agent log
+    if let Ok(mut file) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(r"d:\ohah\hwpjs\.cursor\debug.log")
+    {
+        let htg_count = html.matches("htG").count();
+        let htb_count = html.matches("htb").count();
+        let _ = writeln!(
+            file,
+            r#"{{"id":"log_page_render_result","timestamp":{},"location":"html/page.rs:render_page","message":"render_page result","data":{{"html_length":{},"contains_htg":{},"htg_count":{},"htb_count":{},"html_preview":{:?}}},"sessionId":"debug-session","runId":"run1","hypothesisId":"K"}}"#,
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis(),
+            html.len(),
+            html.contains("htG"),
+            htg_count,
+            htb_count,
+            // HTML 미리보기 제거 (디버그 로그가 너무 길어짐) / Remove HTML preview (debug log too long)
+            ""
+        );
+    }
+    // #endregion
     html
 }
