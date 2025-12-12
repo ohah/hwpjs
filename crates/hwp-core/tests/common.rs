@@ -9,16 +9,13 @@ pub fn find_fixtures_dir() -> Option<PathBuf> {
         .map(PathBuf::from)
         .unwrap_or_else(|| std::path::PathBuf::from("."));
     let fixtures_path = manifest_dir.join("tests").join("fixtures");
-    
+
     if fixtures_path.exists() && fixtures_path.is_dir() {
         return Some(fixtures_path);
     }
-    
+
     // Fallback for backward compatibility
-    let possible_paths = [
-        "tests/fixtures",
-        "./tests/fixtures",
-    ];
+    let possible_paths = ["tests/fixtures", "./tests/fixtures"];
 
     for path_str in &possible_paths {
         let path = std::path::Path::new(path_str);
