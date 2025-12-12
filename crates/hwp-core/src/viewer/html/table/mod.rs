@@ -38,12 +38,7 @@ pub fn render_table(
     let resolved_size = resolve_container_size(container_size, content_size);
     let view_box = view_box(resolved_size.width, resolved_size.height, SVG_PADDING_MM);
 
-    let svg = svg::render_svg(
-        table,
-        document,
-        &view_box,
-        content_size,
-    );
+    let svg = svg::render_svg(table, document, &view_box, content_size);
     let cells_html = cells::render_cells(table);
 
     let (left_mm, top_mm) = table_position(hcd_position, page_def, segment_position);
