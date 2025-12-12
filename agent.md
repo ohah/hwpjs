@@ -416,6 +416,40 @@ src/
 - 테스트 코드에서 `common::find_fixture_file()` 함수를 사용하여 fixtures 파일 접근
 - `common::find_fixtures_dir()` 함수로 fixtures 디렉토리 경로 확인 가능
 
+**HTML 뷰어 테스트 규칙**:
+
+HTML 뷰어 구현 및 디버깅 시 다음 규칙을 준수해야 합니다:
+
+1. **원본 스냅샷 기준**: `crates/hwp-core/tests/fixtures/` 디렉토리의 `.html` 파일이 원본 스냅샷이며, 이것이 작업 결과물의 기준입니다.
+   - 원본 HTML 파일은 `<link rel="stylesheet" type="text/css" href="*.css">` 태그로 외부 CSS 파일을 참조합니다.
+   - 원본 HTML의 각 요소에는 이미 `style` 속성으로 인라인 스타일이 적용되어 있습니다.
+   - 구현 시에는 원본의 `<link>` 태그를 `<style>` 태그로 대체하고, 각 요소의 `style` 속성은 원본과 동일하게 유지합니다.
+
+2. **JSON 데이터 참조 필수**: HTML 출력을 검증할 때는 반드시 JSON 데이터를 참고해야 합니다.
+   - JSON 스냅샷 파일: `crates/hwp-core/tests/snapshots/*.json`
+   - HTML 구현은 JSON 데이터 구조와 일치해야 함
+   - JSON의 모든 필드와 값이 HTML에 올바르게 반영되어야 함
+
+3. **스펙 문서 및 JSON 기반 추론**: 모든 값은 스펙 문서와 JSON 데이터를 참조하여 추론해야 합니다.
+   - **절대 임의의 상수나 값을 집어넣지 않음**: 하드코딩된 값, 추측한 값, 임의의 상수 사용 금지
+   - 모든 값은 다음 중 하나에서 유도되어야 함:
+     - HWP 스펙 문서 (`docs/docs/spec/hwp-5.0.md` 등)
+     - JSON 스냅샷 데이터 (`crates/hwp-core/tests/snapshots/*.json`)
+     - 원본 HTML 스냅샷 (`crates/hwp-core/tests/fixtures/*.html`)
+   - 불확실한 값이 있으면 스펙 문서를 먼저 확인하고, JSON 데이터를 검증하여 사용
+
+4. **구현 목표**: `<link>` 태그를 `<style>` 태그로 변경하는 것을 제외하고, 나머지는 완전히 동일하게 구현해야 합니다.
+   - HTML 구조, 태그, 클래스명, 속성 등은 원본 HTML과 완전 일치
+   - 원본의 `<link>` 태그는 `<style>` 태그로 대체되므로 이 부분만 구조적으로 다름
+   - 각 요소의 `style` 속성은 원본과 완전히 동일해야 함
+   - 텍스트 내용, 이미지, 테이블 구조, 요소 배치 등은 원본과 동일해야 함
+
+5. **스냅샷 비교**:
+   - HTML 스냅샷 파일: `crates/hwp-core/tests/snapshots/*.html.snap`
+   - HTML 변경 시 `cargo insta review`로 변경사항 검토
+   - JSON 스냅샷과 대조하여 누락된 요소나 잘못된 변환 확인
+   - 원본 HTML(fixtures)과 비교하여 구조적 일치 여부 확인 (`<link>` → `<style>` 변경 제외)
+
 **테스트 명령어**:
 - Rust 테스트: `bun run test:rust`
 - Rust 코어 테스트: `bun run test:rust-core`
