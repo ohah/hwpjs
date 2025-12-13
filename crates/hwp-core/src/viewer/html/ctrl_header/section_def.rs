@@ -1,6 +1,6 @@
+use super::CtrlHeaderResult;
 use crate::document::bodytext::ParagraphRecord;
 use crate::document::{CtrlHeader, Paragraph};
-use super::CtrlHeaderResult;
 
 /// 구역 정의 처리 / Process section definition
 pub fn process_section_def<'a>(
@@ -11,4 +11,3 @@ pub fn process_section_def<'a>(
     // TODO: 구역 정의 처리 로직 추가 / Add section definition processing logic
     CtrlHeaderResult::new()
 }
-

@@ -1,9 +1,9 @@
+use super::page;
+use super::paragraph::render_paragraph;
+use super::styles;
+use super::HtmlOptions;
 use crate::document::bodytext::{ColumnDivideType, ParagraphRecord};
 use crate::document::HwpDocument;
-use super::HtmlOptions;
-use super::paragraph::render_paragraph;
-use super::page;
-use super::styles;
 
 /// 문서에서 첫 번째 PageDef 찾기 / Find first PageDef in document
 fn find_page_def(document: &HwpDocument) -> Option<&crate::document::bodytext::PageDef> {
@@ -85,6 +85,33 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     // 이전 문단의 마지막 vertical_position (mm 단위) / Last vertical_position of previous paragraph (in mm)
     let mut prev_vertical_mm: Option<f64> = None;
     let mut first_para_vertical_mm: Option<f64> = None; // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
+                                                        // 각 문단의 vertical_position을 저장 (vert_rel_to: "para"일 때 참조 문단 찾기 위해) / Store each paragraph's vertical_position (to find reference paragraph when vert_rel_to: "para")
+                                                        // 먼저 모든 문단의 vertical_position을 수집 / First collect all paragraphs' vertical_positions
+    let mut para_vertical_positions: Vec<f64> = Vec::new();
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            let control_mask = &paragraph.para_header.control_mask;
+            let has_header_footer = control_mask.has_header_footer();
+            let has_footnote_endnote = control_mask.has_footnote_endnote();
+            if !has_header_footer && !has_footnote_endnote {
+                let vertical_mm = paragraph.records.iter().find_map(|record| {
+                    if let ParagraphRecord::ParaLineSeg { segments } = record {
+                        segments
+                            .first()
+                            .map(|seg| seg.vertical_position as f64 * 25.4 / 7200.0)
+                    } else {
+                        None
+                    }
+                });
+                if let Some(vertical_mm) = vertical_mm {
+                    para_vertical_positions.push(vertical_mm);
+                }
+            }
+        }
+    }
+
+    // 문단 인덱스 추적 (vertical_position이 있는 문단만 카운트) / Track paragraph index (only count paragraphs with vertical_position)
+    let mut para_index = 0;
 
     for section in &document.body_text.sections {
         for paragraph in &section.paragraphs {
@@ -235,6 +262,24 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     }
                 }
 
+                // 현재 문단의 vertical_position 계산 / Calculate current paragraph's vertical_position
+                let current_para_vertical_mm = paragraph.records.iter().find_map(|record| {
+                    if let ParagraphRecord::ParaLineSeg { segments } = record {
+                        segments
+                            .first()
+                            .map(|seg| seg.vertical_position as f64 * 25.4 / 7200.0)
+                    } else {
+                        None
+                    }
+                });
+
+                // 현재 문단 인덱스 (vertical_position이 있는 문단만 카운트) / Current paragraph index (only count paragraphs with vertical_position)
+                let current_para_index = if current_para_vertical_mm.is_some() {
+                    Some(para_index)
+                } else {
+                    None
+                };
+
                 let (para_html, table_htmls) = render_paragraph(
                     paragraph,
                     document,
@@ -242,7 +287,15 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     hcd_position,
                     page_def,
                     first_para_vertical_mm,
+                    current_para_vertical_mm,
+                    &para_vertical_positions, // 모든 문단의 vertical_position 전달 / Pass all paragraphs' vertical_positions
+                    current_para_index, // 현재 문단 인덱스 전달 / Pass current paragraph index
                 );
+
+                // 인덱스 증가 (vertical_position이 있는 문단만) / Increment index (only for paragraphs with vertical_position)
+                if current_para_vertical_mm.is_some() {
+                    para_index += 1;
+                }
                 if !para_html.is_empty() {
                     page_content.push_str(&para_html);
                 }
@@ -309,4 +362,3 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
     html
 }
-

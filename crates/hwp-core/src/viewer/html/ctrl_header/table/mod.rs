@@ -13,9 +13,9 @@ use crate::types::Hwpunit16ToMm;
 use crate::viewer::HtmlOptions;
 use crate::{HwpDocument, INT32};
 
+use self::constants::SVG_PADDING_MM;
 use self::position::{table_position, view_box};
 use self::size::{content_size, htb_size, resolve_container_size};
-use self::constants::SVG_PADDING_MM;
 use crate::viewer::html::ctrl_header::CtrlHeaderResult;
 
 /// 테이블을 HTML로 렌더링

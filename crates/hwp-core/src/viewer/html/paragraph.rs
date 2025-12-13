@@ -17,6 +17,9 @@ pub fn render_paragraph(
     hcd_position: Option<(f64, f64)>,
     page_def: Option<&crate::document::bodytext::PageDef>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
+    current_para_vertical_mm: Option<f64>, // 현재 문단의 vertical_position / Current paragraph's vertical_position
+    para_vertical_positions: &[f64], // 모든 문단의 vertical_position (vert_rel_to: "para"일 때 참조 문단 찾기 위해) / All paragraphs' vertical_positions (to find reference paragraph when vert_rel_to: "para")
+    current_para_index: Option<usize>, // 현재 문단 인덱스 (vertical_position이 있는 문단 기준) / Current paragraph index (based on paragraphs with vertical_position)
 ) -> (String, Vec<String>) {
     let mut result = String::new();
 
@@ -118,9 +121,13 @@ pub fn render_paragraph(
     let mut inline_tables: Vec<(&Table, Option<&CtrlHeaderData>, Option<String>)> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
 
     // 문단의 첫 번째 LineSegment의 vertical_position 계산 (vert_rel_to: "para"일 때 사용) / Calculate first LineSegment's vertical_position (used when vert_rel_to: "para")
-    let para_start_vertical_mm = line_segments
-        .first()
-        .map(|seg| seg.vertical_position as f64 * 25.4 / 7200.0);
+    // current_para_vertical_mm이 전달되면 사용하고, 없으면 현재 문단의 첫 번째 LineSegment 사용
+    // If current_para_vertical_mm is provided, use it; otherwise use first LineSegment of current paragraph
+    let para_start_vertical_mm = current_para_vertical_mm.or_else(|| {
+        line_segments
+            .first()
+            .map(|seg| seg.vertical_position as f64 * 25.4 / 7200.0)
+    });
 
     // LineSegment가 있으면 사용 / Use LineSegment if available
     if !line_segments.is_empty() {
@@ -196,7 +203,20 @@ pub fn render_paragraph(
         // inline_tables의 개수만큼 table_counter 증가 (이미 line_segment에 포함되었으므로) / Increment table_counter by inline_tables count (already included in line_segment)
         table_counter += inline_tables.len() as u32;
         for (table, ctrl_header, caption_text) in absolute_tables.iter() {
+            use crate::document::bodytext::ctrl_header::{CtrlHeaderData, VertRelTo};
             use crate::viewer::html::ctrl_header::table::render_table;
+
+            // vert_rel_to: "para"일 때 다음 문단을 참조 / When vert_rel_to: "para", reference next paragraph
+            let ref_para_vertical_mm = match ctrl_header {
+                Some(CtrlHeaderData::ObjectCommon { attribute, .. })
+                    if matches!(attribute.vert_rel_to, VertRelTo::Para) =>
+                {
+                    current_para_index
+                        .and_then(|idx| para_vertical_positions.get(idx + 1).copied())
+                        .or(para_start_vertical_mm)
+                }
+                _ => para_start_vertical_mm,
+            };
 
             let table_html = render_table(
                 table,
@@ -208,7 +228,7 @@ pub fn render_paragraph(
                 Some(table_counter),
                 caption_text.as_deref(),
                 None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
-                para_start_vertical_mm, // 문단 시작 위치 전달 / Pass paragraph start position
+                ref_para_vertical_mm, // 참조 문단의 vertical_position 전달 / Pass reference paragraph's vertical_position
                 first_para_vertical_mm, // 첫 번째 문단의 vertical_position 전달 (가설 O) / Pass first paragraph's vertical_position (Hypothesis O)
             );
             table_htmls.push(table_html);

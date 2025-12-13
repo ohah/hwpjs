@@ -1,6 +1,6 @@
+use super::CtrlHeaderResult;
 use crate::document::bodytext::ParagraphRecord;
 use crate::document::{CtrlHeader, Paragraph};
-use super::CtrlHeaderResult;
 
 /// 단 정의 처리 / Process column definition
 pub fn process_column_def<'a>(
@@ -11,4 +11,3 @@ pub fn process_column_def<'a>(
     // TODO: 단 정의 처리 로직 추가 / Add column definition processing logic
     CtrlHeaderResult::new()
 }
-
