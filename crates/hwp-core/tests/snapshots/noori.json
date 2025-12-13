@@ -10896,6 +10896,7 @@
                 "instance_id": 1879040631,
                 "page_divide": 0,
                 "description": "그림입니다.\r\n원본 그림의 이름: 보도_생태계.jpg\r\n원본 그림의 크기: 가로 1200pixel, 세로 153pixel\r\n사진 찍은 날짜: 2018년 03월 15일 오후 11:22",
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -11121,6 +11122,7 @@
                 "instance_id": 1938967211,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "table",
@@ -12943,6 +12945,7 @@
                 "instance_id": 1682767015,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "table",
@@ -15137,6 +15140,7 @@
                 "instance_id": 1629878411,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "table",
@@ -15288,7 +15292,8 @@
                                   },
                                   "instance_id": 1629878412,
                                   "page_divide": 0,
-                                  "description": null
+                                  "description": null,
+                                  "caption": null
                                 },
                                 {
                                   "type": "shape_component",
@@ -15666,6 +15671,7 @@
                         "instance_id": 1629878412,
                         "page_divide": 0,
                         "description": null,
+                        "caption": null,
                         "children": [
                           {
                             "type": "shape_component",
@@ -16021,6 +16027,7 @@
                 "instance_id": 1878870789,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "table",
@@ -16596,6 +16603,7 @@
                 "instance_id": 1878870803,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "table",
@@ -17110,7 +17118,8 @@
                                   },
                                   "instance_id": 1878870827,
                                   "page_divide": 0,
-                                  "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel"
+                                  "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel",
+                                  "caption": null
                                 },
                                 {
                                   "type": "shape_component",
@@ -17352,7 +17361,8 @@
                                   },
                                   "instance_id": 1878870839,
                                   "page_divide": 0,
-                                  "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel"
+                                  "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel",
+                                  "caption": null
                                 },
                                 {
                                   "type": "shape_component",
@@ -19495,6 +19505,7 @@
                         "instance_id": 1878870827,
                         "page_divide": 0,
                         "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel",
+                        "caption": null,
                         "children": [
                           {
                             "type": "shape_component",
@@ -19716,6 +19727,7 @@
                         "instance_id": 1878870839,
                         "page_divide": 0,
                         "description": "그림입니다.\r\n원본 그림의 이름: CLP00000ac016bf.bmp\r\n원본 그림의 크기: 가로 201pixel, 세로 720pixel",
+                        "caption": null,
                         "children": [
                           {
                             "type": "shape_component",

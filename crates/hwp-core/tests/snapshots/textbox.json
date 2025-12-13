@@ -1761,6 +1761,7 @@
                 "instance_id": 1732707051,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "list_header",

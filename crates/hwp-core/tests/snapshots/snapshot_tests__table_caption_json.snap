@@ -1858,6 +1858,13 @@ expression: json
                 "instance_id": 1748212109,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "top",
+                  "full_size": false,
+                  "width": 8504,
+                  "gap": 850,
+                  "last_width": 20976
+                },
                 "children": [
                   {
                     "type": "table",
@@ -2204,6 +2211,13 @@ expression: json
                 "instance_id": 1748212110,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "bottom",
+                  "full_size": false,
+                  "width": 8504,
+                  "gap": 850,
+                  "last_width": 20976
+                },
                 "children": [
                   {
                     "type": "table",
@@ -2550,6 +2564,13 @@ expression: json
                 "instance_id": 1748212111,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "left",
+                  "full_size": false,
+                  "width": 8504,
+                  "gap": 850,
+                  "last_width": 8504
+                },
                 "children": [
                   {
                     "type": "table",
@@ -2896,6 +2917,13 @@ expression: json
                 "instance_id": 1748212112,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "right",
+                  "full_size": false,
+                  "width": 8504,
+                  "gap": 850,
+                  "last_width": 8504
+                },
                 "children": [
                   {
                     "type": "table",
@@ -3242,6 +3270,13 @@ expression: json
                 "instance_id": 1748212113,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "left",
+                  "full_size": false,
+                  "width": 8504,
+                  "gap": 850,
+                  "last_width": 8504
+                },
                 "children": [
                   {
                     "type": "table",
@@ -3588,6 +3623,13 @@ expression: json
                 "instance_id": 1748212114,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "right",
+                  "full_size": false,
+                  "width": 8504,
+                  "gap": 850,
+                  "last_width": 8504
+                },
                 "children": [
                   {
                     "type": "table",
@@ -3939,6 +3981,13 @@ expression: json
                 "instance_id": 1748212115,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "bottom",
+                  "full_size": true,
+                  "width": 8504,
+                  "gap": 850,
+                  "last_width": 26646
+                },
                 "children": [
                   {
                     "type": "table",
@@ -4278,6 +4327,13 @@ expression: json
                 "instance_id": 1748212116,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "bottom",
+                  "full_size": false,
+                  "width": 8504,
+                  "gap": 850,
+                  "last_width": 20976
+                },
                 "children": [
                   {
                     "type": "table",

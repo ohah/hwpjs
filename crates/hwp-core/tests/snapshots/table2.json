@@ -2618,6 +2618,13 @@
                 "instance_id": 2029899225,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "bottom",
+                  "full_size": false,
+                  "width": 8504,
+                  "gap": 850,
+                  "last_width": 41954
+                },
                 "children": [
                   {
                     "type": "table",
@@ -2893,6 +2900,13 @@
                 "instance_id": 2029899224,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "top",
+                  "full_size": false,
+                  "width": 8504,
+                  "gap": 2834,
+                  "last_width": 41954
+                },
                 "children": [
                   {
                     "type": "table",

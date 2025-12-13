@@ -25,6 +25,7 @@ pub struct CtrlHeaderResult<'a> {
         &'a Table,
         Option<&'a CtrlHeaderData>,
         Option<String>, // 캡션 텍스트 / Caption text
+        Option<crate::viewer::html::ctrl_header::table::CaptionInfo>, // 캡션 정보 / Caption info
     )>,
     /// 추출된 이미지들 / Extracted images
     pub images: Vec<(u32, u32, String)>, // (width, height, url)

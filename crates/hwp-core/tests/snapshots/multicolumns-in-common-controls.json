@@ -1854,6 +1854,13 @@
                 "instance_id": 1536083113,
                 "page_divide": 0,
                 "description": null,
+                "caption": {
+                  "align": "bottom",
+                  "full_size": false,
+                  "width": 8504,
+                  "gap": 850,
+                  "last_width": 41954
+                },
                 "children": [
                   {
                     "type": "table",
@@ -2316,6 +2323,7 @@
                 "instance_id": 1536083114,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "list_header",

@@ -595,6 +595,28 @@ impl Section {
                 // libhwp approach: Find TABLE position first, then don't add LIST_HEADERs after TABLE to children
                 let children_slice: Vec<_> = node.children().iter().collect();
 
+                // TABLE 이전의 LIST_HEADER를 찾아서 캡션으로 파싱 / Find LIST_HEADER before TABLE and parse as caption
+                // hwplib과 hwp-rs 방식: 별도 레코드로 캡션 처리 / hwplib and hwp-rs approach: process caption as separate record
+                let mut caption_opt: Option<crate::document::bodytext::ctrl_header::Caption> = None;
+                if is_table {
+                    // TABLE 위치 찾기 / Find TABLE position
+                    let table_index = children_slice
+                        .iter()
+                        .position(|child| child.tag_id() == HwpTag::TABLE);
+
+                    if let Some(table_idx) = table_index {
+                        // TABLE 이전의 LIST_HEADER 찾기 / Find LIST_HEADER before TABLE
+                        for child in children_slice.iter().take(table_idx) {
+                            if child.tag_id() == HwpTag::LIST_HEADER {
+                                // 캡션으로 파싱 / Parse as caption
+                                use crate::document::bodytext::ctrl_header::parse_caption_from_list_header;
+                                caption_opt = parse_caption_from_list_header(child.data())?;
+                                break; // 첫 번째 LIST_HEADER만 캡션으로 처리 / Only process first LIST_HEADER as caption
+                            }
+                        }
+                    }
+                }
+
                 // CTRL_HEADER가 LIST_HEADER를 가지고 있는지 먼저 확인 (머리말/꼬리말/각주/미주의 경우)
                 // Check if CTRL_HEADER has LIST_HEADER first (for headers/footers/footnotes/endnotes)
                 // PARA_HEADER 처리 전에 확인하여 중복 방지
@@ -950,16 +972,55 @@ impl Section {
                     });
                 }
 
+                // 캡션을 CtrlHeader에 반영 / Apply caption to CtrlHeader
+                let mut final_ctrl_header = ctrl_header;
+                if let Some(caption) = caption_opt {
+                    // CtrlHeaderData::ObjectCommon의 caption 필드 업데이트 / Update caption field in CtrlHeaderData::ObjectCommon
+                    if let CtrlHeaderData::ObjectCommon {
+                        attribute,
+                        offset_y,
+                        offset_x,
+                        width,
+                        height,
+                        z_order,
+                        margin,
+                        instance_id,
+                        page_divide,
+                        description,
+                        ..
+                    } = &final_ctrl_header.data
+                    {
+                        final_ctrl_header.data = CtrlHeaderData::ObjectCommon {
+                            attribute: attribute.clone(),
+                            offset_y: *offset_y,
+                            offset_x: *offset_x,
+                            width: *width,
+                            height: *height,
+                            z_order: *z_order,
+                            margin: margin.clone(),
+                            instance_id: *instance_id,
+                            page_divide: *page_divide,
+                            description: description.clone(),
+                            caption: Some(caption),
+                        };
+                    }
+                }
+
                 #[cfg(debug_assertions)]
                 eprintln!(
-                    "[DEBUG] CTRL_HEADER {:?}: Final - children_count={}, paragraphs_count={}",
-                    ctrl_header.ctrl_id,
+                    "[DEBUG] CTRL_HEADER {:?}: Final - children_count={}, paragraphs_count={}, caption={:?}",
+                    final_ctrl_header.ctrl_id,
                     children.len(),
-                    paragraphs.len()
+                    paragraphs.len(),
+                    if let CtrlHeaderData::ObjectCommon { caption, .. } = &final_ctrl_header.data {
+                        caption.is_some()
+                    } else {
+                        false
+                    }
                 );
 
                 Ok(ParagraphRecord::CtrlHeader {
-                    header: ctrl_header,
+                    header: final_ctrl_header,
                     children,
                     paragraphs,
                 })

@@ -1830,6 +1830,7 @@ expression: json
                 "instance_id": 2052024613,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -2162,6 +2163,7 @@ expression: json
                 "instance_id": 2052024644,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -2494,6 +2496,7 @@ expression: json
                 "instance_id": 2052024645,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -2826,6 +2829,7 @@ expression: json
                 "instance_id": 2052024646,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -3158,6 +3162,7 @@ expression: json
                 "instance_id": 2052024647,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -3490,6 +3495,7 @@ expression: json
                 "instance_id": 2052024648,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -3822,6 +3828,7 @@ expression: json
                 "instance_id": 2052024649,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -4154,6 +4161,7 @@ expression: json
                 "instance_id": 2052024650,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -4486,6 +4494,7 @@ expression: json
                 "instance_id": 2052024651,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -4818,6 +4827,7 @@ expression: json
                 "instance_id": 2052024652,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -5150,6 +5160,7 @@ expression: json
                 "instance_id": 2052024653,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -5482,6 +5493,7 @@ expression: json
                 "instance_id": 2052024654,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -5814,6 +5826,7 @@ expression: json
                 "instance_id": 2052024655,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -6146,6 +6159,7 @@ expression: json
                 "instance_id": 2052024656,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -6478,6 +6492,7 @@ expression: json
                 "instance_id": 2052024657,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -6810,6 +6825,7 @@ expression: json
                 "instance_id": 2052024658,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",

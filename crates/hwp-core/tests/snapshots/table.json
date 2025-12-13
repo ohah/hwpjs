@@ -1824,6 +1824,7 @@
                 "instance_id": 1812098202,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "table",

@@ -3,7 +3,7 @@
 /// 스펙 문서 매핑: 표 64 - 컨트롤 헤더 / Spec mapping: Table 64 - Control header
 use crate::error::HwpError;
 use crate::types::{
-    decode_utf16le, HWPUNIT, HWPUNIT16, INT32, INT8, SHWPUNIT, UINT16, UINT32, UINT8,
+    decode_utf16le, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT16, UINT32, UINT8,
 };
 use serde::{Deserialize, Serialize};
 
@@ -192,6 +192,35 @@ pub struct CtrlHeader {
     pub data: CtrlHeaderData,
 }
 
+/// 캡션 정렬 (표 73) / Caption alignment (Table 73)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CaptionAlign {
+    /// 왼쪽 / Left
+    Left = 0,
+    /// 오른쪽 / Right
+    Right = 1,
+    /// 위 / Top
+    Top = 2,
+    /// 아래 / Bottom
+    Bottom = 3,
+}
+
+/// 캡션 정보 (표 72) / Caption information (Table 72)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Caption {
+    /// 속성 (표 73 참조) / Attribute (see Table 73)
+    pub align: CaptionAlign,
+    /// 캡션 폭에 마진을 포함할 지 여부 (가로 방향일 때만 사용) / Whether to include margin in caption width (only for horizontal direction)
+    pub full_size: bool,
+    /// 캡션 폭(세로 방향일 때만 사용) / Caption width (only for vertical direction)
+    pub width: HWPUNIT,
+    /// 캡션과 개체 사이 간격 / Spacing between caption and object
+    pub gap: HWPUNIT16,
+    /// 텍스트의 최대 길이(=개체의 폭) / Maximum text length (= object width)
+    pub last_width: HWPUNIT,
+}
+
 /// 컨트롤 헤더 데이터 (컨트롤 ID별 구조) / Control header data (structure varies by CtrlID)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "data_type", rename_all = "snake_case")]
@@ -226,6 +255,8 @@ pub enum CtrlHeaderData {
         page_divide: INT32,
         /// 개체 설명문 / Object description text
         description: Option<String>,
+        /// 캡션 정보 (표 71, 72 참조) / Caption information (see Table 71, 72)
+        caption: Option<Caption>,
     },
     /// 단 정의 / Column definition
     ColumnDefinition {
@@ -899,6 +930,7 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
         // WCHAR array[len] 개체 설명문 글자 / WCHAR array[len] object description text
         if description_len > 0 && offset + (description_len * 2) <= data.len() {
             let description_bytes = &data[offset..offset + (description_len * 2)];
+            offset += description_len * 2; // description 텍스트 크기만큼 offset 증가
             match decode_utf16le(description_bytes) {
                 Ok(text) if !text.is_empty() => Some(text),
                 _ => None,
@@ -912,6 +944,11 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
 
     // 속성 파싱 (표 70) / Parse attribute (Table 70)
     let attribute = parse_object_attribute(attribute_value);
+
+    // 캡션은 별도 레코드(LIST_HEADER)로 처리되므로 여기서는 None으로 설정
+    // Caption is processed as a separate record (LIST_HEADER), so set to None here
+    // 실제 캡션 파싱은 mod.rs에서 CTRL_HEADER의 children을 처리할 때 수행됨
+    // Actual caption parsing is performed in mod.rs when processing CTRL_HEADER's children
 
     Ok(CtrlHeaderData::ObjectCommon {
         attribute,
@@ -929,6 +966,198 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
         instance_id,
         page_divide,
         description,
+        caption: None, // 별도 레코드에서 파싱 / Parsed from separate record
+    })
+}
+
+/// LIST_HEADER 레코드에서 캡션 파싱 (hwplib 방식) / Parse caption from LIST_HEADER record (hwplib approach)
+///
+/// hwplib의 ListHeaderForCaption 구조:
+/// - paraCount (SInt4) - 4바이트
+/// - property (UInt4) - 4바이트 (ListHeaderProperty)
+/// - captionProperty (UInt4) - 4바이트 (ListHeaderCaptionProperty)
+/// - captionWidth (UInt4) - 4바이트
+/// - spaceBetweenCaptionAndFrame (UInt2) - 2바이트
+/// - textWidth (UInt4) - 4바이트
+pub fn parse_caption_from_list_header(data: &[u8]) -> Result<Option<Caption>, HwpError> {
+    // 최소 22바이트 필요 (hwplib 구조) / Need at least 22 bytes (hwplib structure)
+    if data.len() < 22 {
+        return Ok(None);
+    }
+
+    let mut offset = 0;
+
+    // paraCount (SInt4) - 4바이트 (읽지만 사용하지 않음) / paraCount (SInt4) - 4 bytes (read but not used)
+    offset += 4;
+
+    // property (UInt4) - 4바이트 (ListHeaderProperty, 읽지만 사용하지 않음) / property (UInt4) - 4 bytes (read but not used)
+    offset += 4;
+
+    // captionProperty (UInt4) - 4바이트 (ListHeaderCaptionProperty) / captionProperty (UInt4) - 4 bytes
+    let caption_property_value = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
+    offset += 4;
+
+    // bit 0-1: 방향 (표 73) / bit 0-1: direction (Table 73)
+    let align = match caption_property_value & 0x03 {
+        0 => CaptionAlign::Left,
+        1 => CaptionAlign::Right,
+        2 => CaptionAlign::Top,
+        3 => CaptionAlign::Bottom,
+        _ => CaptionAlign::Bottom,
+    };
+
+    // bit 2: 캡션 폭에 마진을 포함할 지 여부 / bit 2: whether to include margin in caption width
+    let full_size = (caption_property_value & 0x04) != 0;
+
+    // captionWidth (UInt4) - 4바이트 / captionWidth (UInt4) - 4 bytes
+    let width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
+    offset += 4;
+
+    // spaceBetweenCaptionAndFrame (UInt2) - 2바이트 / spaceBetweenCaptionAndFrame (UInt2) - 2 bytes
+    let gap = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
+    offset += 2;
+
+    // textWidth (UInt4) - 4바이트 / textWidth (UInt4) - 4 bytes
+    let last_width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
+
+    Ok(Some(Caption {
+        align,
+        full_size,
+        width,
+        gap,
+        last_width,
+    }))
+}
+
+/// 캡션 파싱 (표 72 - 14바이트) / Parse caption (Table 72 - 14 bytes)
+fn parse_caption(data: &[u8]) -> Result<Caption, HwpError> {
+    if data.len() < 14 {
+        return Err(HwpError::insufficient_data("Caption", 14, data.len()));
+    }
+
+    let mut offset = 0;
+
+    // UINT 속성 (표 73 참조) / UINT attribute (see Table 73)
+    let attribute_value = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
+    offset += 4;
+
+    // bit 0-1: 방향 (표 73) / bit 0-1: direction (Table 73)
+    let align = match attribute_value & 0x03 {
+        0 => CaptionAlign::Left,
+        1 => CaptionAlign::Right,
+        2 => CaptionAlign::Top,
+        3 => CaptionAlign::Bottom,
+        _ => CaptionAlign::Bottom,
+    };
+
+    // bit 2: 캡션 폭에 마진을 포함할 지 여부 / bit 2: whether to include margin in caption width
+    let full_size = (attribute_value & 0x04) != 0;
+
+    // HWPUNIT 캡션 폭(세로 방향일 때만 사용) / HWPUNIT caption width (only for vertical direction)
+    let width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
+    offset += 4;
+
+    // HWPUNIT16 캡션과 개체 사이 간격 / HWPUNIT16 spacing between caption and object
+    let gap = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
+    offset += 2;
+
+    // HWPUNIT 텍스트의 최대 길이(=개체의 폭) / HWPUNIT maximum text length (= object width)
+    let last_width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
+
+    Ok(Caption {
+        align,
+        full_size,
+        width,
+        gap,
+        last_width,
+    })
+}
+
+/// 캡션 파싱 (표 72 - 12바이트 버전) / Parse caption (Table 72 - 12 bytes version)
+fn parse_caption_12bytes(data: &[u8]) -> Result<Caption, HwpError> {
+    if data.len() < 12 {
+        return Err(HwpError::insufficient_data(
+            "Caption (12 bytes)",
+            12,
+            data.len(),
+        ));
+    }
+
+    let mut offset = 0;
+
+    // UINT 속성 (표 73 참조) / UINT attribute (see Table 73)
+    let attribute_value = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
+    offset += 4;
+
+    // bit 0-1: 방향 (표 73) / bit 0-1: direction (Table 73)
+    let align = match attribute_value & 0x03 {
+        0 => CaptionAlign::Left,
+        1 => CaptionAlign::Right,
+        2 => CaptionAlign::Top,
+        3 => CaptionAlign::Bottom,
+        _ => CaptionAlign::Bottom,
+    };
+
+    // bit 2: 캡션 폭에 마진을 포함할 지 여부 / bit 2: whether to include margin in caption width
+    let full_size = (attribute_value & 0x04) != 0;
+
+    // HWPUNIT 캡션 폭(세로 방향일 때만 사용) / HWPUNIT caption width (only for vertical direction)
+    let width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
+    offset += 4;
+
+    // HWPUNIT16 캡션과 개체 사이 간격 / HWPUNIT16 spacing between caption and object
+    let gap = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
+    // offset += 2; // 12바이트 버전에서는 last_width가 없음 / last_width not present in 12-byte version
+
+    // 12바이트 버전에서는 last_width가 없으므로 0으로 설정 / Set last_width to 0 for 12-byte version
+    let last_width = HWPUNIT::from(0);
+
+    Ok(Caption {
+        align,
+        full_size,
+        width,
+        gap,
+        last_width,
     })
 }
 

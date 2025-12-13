@@ -7,6 +7,7 @@ use crate::document::bodytext::ctrl_header::CtrlHeaderData;
 use crate::document::bodytext::ParagraphRecord;
 use crate::document::bodytext::Table;
 use crate::document::HwpDocument;
+use crate::viewer::html::ctrl_header::table::CaptionInfo;
 
 /// 문단을 HTML로 렌더링 / Render paragraph to HTML
 /// 반환값: (문단 HTML, 테이블 HTML 리스트) / Returns: (paragraph HTML, table HTML list)
@@ -49,7 +50,8 @@ pub fn render_paragraph(
     let mut tables: Vec<(
         &Table,
         Option<&CtrlHeaderData>,
-        Option<String>, // 캡션 텍스트 / Caption text
+        Option<String>,      // 캡션 텍스트 / Caption text
+        Option<CaptionInfo>, // 캡션 정보 / Caption info
     )> = Vec::new();
 
     for record in &paragraph.records {
@@ -98,7 +100,7 @@ pub fn render_paragraph(
                 }
             }
             ParagraphRecord::Table { table } => {
-                tables.push((table, None, None));
+                tables.push((table, None, None, None));
             }
             ParagraphRecord::CtrlHeader {
                 header,
@@ -118,7 +120,12 @@ pub fn render_paragraph(
     // 테이블 HTML 리스트 생성 / Create table HTML list
     let mut table_htmls = Vec::new();
     // inline_tables는 owned tuple을 저장하므로 타입 명시 / inline_tables stores owned tuples, so specify type
-    let mut inline_tables: Vec<(&Table, Option<&CtrlHeaderData>, Option<String>)> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
+    let mut inline_tables: Vec<(
+        &Table,
+        Option<&CtrlHeaderData>,
+        Option<String>,
+        Option<crate::viewer::html::ctrl_header::table::CaptionInfo>,
+    )> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
 
     // 문단의 첫 번째 LineSegment의 vertical_position 계산 (vert_rel_to: "para"일 때 사용) / Calculate first LineSegment's vertical_position (used when vert_rel_to: "para")
     // current_para_vertical_mm이 전달되면 사용하고, 없으면 현재 문단의 첫 번째 LineSegment 사용
@@ -133,7 +140,7 @@ pub fn render_paragraph(
     if !line_segments.is_empty() {
         // like_letters=true인 테이블과 false인 테이블 분리 / Separate tables with like_letters=true and false
         let mut absolute_tables = Vec::new();
-        for (table, ctrl_header, caption_text) in tables.iter() {
+        for (table, ctrl_header, caption_text, caption_info) in tables.iter() {
             let like_letters = ctrl_header
                 .and_then(|h| match h {
                     CtrlHeaderData::ObjectCommon { attribute, .. } => Some(attribute.like_letters),
@@ -141,9 +148,9 @@ pub fn render_paragraph(
                 })
                 .unwrap_or(false);
             if like_letters {
-                inline_tables.push((*table, *ctrl_header, caption_text.clone()));
+                inline_tables.push((*table, *ctrl_header, caption_text.clone(), *caption_info));
             } else {
-                absolute_tables.push((*table, *ctrl_header, caption_text.clone()));
+                absolute_tables.push((*table, *ctrl_header, caption_text.clone(), *caption_info));
             }
         }
 
@@ -161,11 +168,11 @@ pub fn render_paragraph(
         use crate::viewer::html::line_segment::TableInfo;
         let inline_table_infos: Vec<TableInfo> = inline_tables
             .iter()
-            .map(|(table, ctrl_header, caption_text)| {
+            .map(|(table, ctrl_header, caption_text, caption_info)| {
                 // iter()로 인해 table은 &&Table이 되므로 한 번 역참조 / table becomes &&Table due to iter(), so dereference once
                 // ctrl_header는 Option<&CtrlHeaderData>이므로 복사 / ctrl_header is Option<&CtrlHeaderData>, copy
                 // caption_text는 Option<String>이므로 as_deref()로 Option<&str>로 변환 / caption_text is Option<String>, convert to Option<&str> with as_deref()
-                (*table, *ctrl_header, caption_text.as_deref())
+                (*table, *ctrl_header, caption_text.as_deref(), *caption_info)
             })
             .collect();
         // 테이블 번호 시작값 계산 / Calculate table number start value
@@ -202,7 +209,7 @@ pub fn render_paragraph(
             .unwrap_or(1);
         // inline_tables의 개수만큼 table_counter 증가 (이미 line_segment에 포함되었으므로) / Increment table_counter by inline_tables count (already included in line_segment)
         table_counter += inline_tables.len() as u32;
-        for (table, ctrl_header, caption_text) in absolute_tables.iter() {
+        for (table, ctrl_header, caption_text, caption_info) in absolute_tables.iter() {
             use crate::document::bodytext::ctrl_header::{CtrlHeaderData, VertRelTo};
             use crate::viewer::html::ctrl_header::table::render_table;
 
@@ -227,6 +234,7 @@ pub fn render_paragraph(
                 options,
                 Some(table_counter),
                 caption_text.as_deref(),
+                *caption_info,          // 캡션 정보 전달 / Pass caption info
                 None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
                 ref_para_vertical_mm, // 참조 문단의 vertical_position 전달 / Pass reference paragraph's vertical_position
                 first_para_vertical_mm, // 첫 번째 문단의 vertical_position 전달 (가설 O) / Pass first paragraph's vertical_position (Hypothesis O)

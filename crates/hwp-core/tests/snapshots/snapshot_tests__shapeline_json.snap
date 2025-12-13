@@ -1770,6 +1770,7 @@ expression: json
                 "instance_id": 1807778960,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -1884,6 +1885,7 @@ expression: json
                 "instance_id": 1807778961,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",

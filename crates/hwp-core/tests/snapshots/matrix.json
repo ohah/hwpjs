@@ -1771,6 +1771,7 @@
                 "instance_id": 2050600116,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -2008,6 +2009,7 @@
                 "instance_id": 2050392189,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -2245,6 +2247,7 @@
                 "instance_id": 1812098207,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",

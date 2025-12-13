@@ -1814,6 +1814,7 @@
                 "instance_id": 1732707053,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -1932,6 +1933,7 @@
                 "instance_id": 1807778956,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -2191,6 +2193,7 @@
                 "instance_id": 1807778962,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
@@ -2309,6 +2312,7 @@
                 "instance_id": 1807778963,
                 "page_divide": 0,
                 "description": null,
+                "caption": null,
                 "children": [
                   {
                     "type": "shape_component",
