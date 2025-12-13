@@ -1,6 +1,6 @@
-use crate::document::bodytext::ctrl_header::VertRelTo;
+use crate::document::bodytext::ctrl_header::{CtrlHeaderData, VertRelTo};
 use crate::document::bodytext::PageDef;
-use crate::types::{RoundTo2dp, INT32, SHWPUNIT};
+use crate::types::{Hwpunit16ToMm, RoundTo2dp, INT32};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
 /// viewBox 데이터 / ViewBox data
@@ -27,13 +27,29 @@ pub(crate) fn table_position(
     hcd_position: Option<(f64, f64)>,
     page_def: Option<&PageDef>,
     segment_position: Option<(INT32, INT32)>,
-    offset_x: Option<SHWPUNIT>,
-    offset_y: Option<SHWPUNIT>,
-    vert_rel_to: Option<VertRelTo>,
+    ctrl_header: Option<&CtrlHeaderData>,
     para_start_vertical_mm: Option<f64>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
-    margin_top_mm: Option<f64>, // 바깥여백 상단 (가설 Margin) / Margin top (Hypothesis Margin)
 ) -> (f64, f64) {
+    // CtrlHeader에서 필요한 정보 추출 / Extract necessary information from CtrlHeader
+    let (offset_x, offset_y, vert_rel_to, margin_top_mm) =
+        if let Some(CtrlHeaderData::ObjectCommon {
+            attribute,
+            offset_x,
+            offset_y,
+            margin,
+            ..
+        }) = ctrl_header
+        {
+            (
+                Some(*offset_x),
+                Some(*offset_y),
+                Some(attribute.vert_rel_to),
+                Some(margin.top.to_mm()),
+            )
+        } else {
+            (None, None, None, None)
+        };
     let base_pos = if let Some((left, top)) = hcd_position {
         (left.round_to_2dp(), top.round_to_2dp())
     } else if let Some(pd) = page_def {

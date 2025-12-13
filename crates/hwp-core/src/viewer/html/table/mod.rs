@@ -37,25 +37,12 @@ pub fn render_table(
     }
 
     // CtrlHeader에서 필요한 정보 추출 / Extract necessary information from CtrlHeader
-    let (offset_x, offset_y, vert_rel_to, margin_top_mm, ctrl_header_height_mm) =
-        if let Some(CtrlHeaderData::ObjectCommon {
-            attribute,
-            offset_x,
-            offset_y,
-            height,
-            margin,
-            ..
-        }) = ctrl_header
-        {
-            (
-                Some(*offset_x),
-                Some(*offset_y),
-                Some(attribute.vert_rel_to),
-                Some(margin.top.to_mm()),
-                Some(height.to_mm()),
-            )
+    // CtrlHeader height를 mm로 변환 / Convert CtrlHeader height to mm
+    let ctrl_header_height_mm =
+        if let Some(CtrlHeaderData::ObjectCommon { height, .. }) = ctrl_header {
+            Some(height.to_mm())
         } else {
-            (None, None, None, None, None)
+            None
         };
 
     let container_size = htb_size(ctrl_header);
@@ -75,12 +62,9 @@ pub fn render_table(
         hcd_position,
         page_def,
         segment_position,
-        offset_x,
-        offset_y,
-        vert_rel_to,
+        ctrl_header,
         para_start_vertical_mm,
         first_para_vertical_mm,
-        margin_top_mm,
     );
 
     // htG 래퍼 생성 (캡션이 있거나 ctrl_header가 있는 경우) / Create htG wrapper (if caption exists or ctrl_header exists)

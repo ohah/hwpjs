@@ -9,10 +9,7 @@
 pub mod bodytext;
 mod paragraph;
 pub mod renderer;
-mod table;
 
 pub use bodytext::process_bodytext;
 pub use paragraph::process_paragraph;
 pub use renderer::{DocumentParts, Renderer, TextStyles};
-pub use table::process_table;
-
