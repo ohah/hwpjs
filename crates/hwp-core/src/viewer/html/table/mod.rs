@@ -6,9 +6,11 @@ mod position;
 mod size;
 mod svg;
 
-use crate::document::bodytext::ctrl_header::ObjectAttribute;
-use crate::document::bodytext::{Margin, PageDef, Table};
-use crate::types::{Hwpunit16ToMm, HWPUNIT, SHWPUNIT};
+use crate::document::bodytext::ctrl_header::CtrlHeaderData;
+use crate::document::bodytext::{PageDef, Table};
+use crate::types::Hwpunit16ToMm;
+use crate::viewer::HtmlOptions;
+use crate::{HwpDocument, INT32};
 
 use self::position::{table_position, view_box};
 use self::size::{content_size, htb_size, resolve_container_size};
@@ -18,15 +20,14 @@ use crate::viewer::html::table::constants::SVG_PADDING_MM;
 #[allow(clippy::too_many_arguments)]
 pub fn render_table(
     table: &Table,
-    document: &crate::document::HwpDocument,
-    ctrl_header_size: Option<(HWPUNIT, HWPUNIT, Margin)>,
-    attr_info: Option<(&ObjectAttribute, SHWPUNIT, SHWPUNIT)>,
+    document: &HwpDocument,
+    ctrl_header: Option<&CtrlHeaderData>,
     hcd_position: Option<(f64, f64)>,
     page_def: Option<&PageDef>,
-    _options: &crate::viewer::html::HtmlOptions,
+    _options: &HtmlOptions,
     table_number: Option<u32>,
     caption_text: Option<&str>,
-    segment_position: Option<(crate::types::INT32, crate::types::INT32)>,
+    segment_position: Option<(INT32, INT32)>,
     para_start_vertical_mm: Option<f64>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
 ) -> String {
@@ -35,15 +36,32 @@ pub fn render_table(
             .to_string();
     }
 
-    let container_size = htb_size(ctrl_header_size.clone());
-    let content_size = content_size(table, ctrl_header_size.clone());
+    // CtrlHeader에서 필요한 정보 추출 / Extract necessary information from CtrlHeader
+    let (offset_x, offset_y, vert_rel_to, margin_top_mm, ctrl_header_height_mm) =
+        if let Some(CtrlHeaderData::ObjectCommon {
+            attribute,
+            offset_x,
+            offset_y,
+            height,
+            margin,
+            ..
+        }) = ctrl_header
+        {
+            (
+                Some(*offset_x),
+                Some(*offset_y),
+                Some(attribute.vert_rel_to),
+                Some(margin.top.to_mm()),
+                Some(height.to_mm()),
+            )
+        } else {
+            (None, None, None, None, None)
+        };
+
+    let container_size = htb_size(ctrl_header);
+    let content_size = content_size(table, ctrl_header);
     let resolved_size = resolve_container_size(container_size, content_size);
     let view_box = view_box(resolved_size.width, resolved_size.height, SVG_PADDING_MM);
-
-    // CtrlHeader height를 mm로 변환 / Convert CtrlHeader height to mm
-    let ctrl_header_height_mm = ctrl_header_size
-        .as_ref()
-        .map(|(_, height, _)| height.to_mm());
 
     let svg = svg::render_svg(
         table,
@@ -53,16 +71,6 @@ pub fn render_table(
         ctrl_header_height_mm,
     );
     let cells_html = cells::render_cells(table, ctrl_header_height_mm);
-
-    let (offset_x, offset_y, vert_rel_to) = if let Some((attr, ox, oy)) = attr_info {
-        (Some(ox), Some(oy), Some(attr.vert_rel_to))
-    } else {
-        (None, None, None)
-    };
-    // 바깥여백 상단 계산 (가설 Margin) / Calculate margin top (Hypothesis Margin)
-    let margin_top_mm = ctrl_header_size
-        .as_ref()
-        .map(|(_, _, margin)| margin.top.to_mm());
     let (left_mm, top_mm) = table_position(
         hcd_position,
         page_def,
@@ -75,8 +83,8 @@ pub fn render_table(
         margin_top_mm,
     );
 
-    // htG 래퍼 생성 (캡션이 있거나 ctrl_header_size가 있는 경우) / Create htG wrapper (if caption exists or ctrl_header_size exists)
-    let needs_htg = caption_text.is_some() || ctrl_header_size.is_some();
+    // htG 래퍼 생성 (캡션이 있거나 ctrl_header가 있는 경우) / Create htG wrapper (if caption exists or ctrl_header exists)
+    let needs_htg = caption_text.is_some() || ctrl_header.is_some();
 
     // 캡션 렌더링 / Render caption
     let caption_html = if let Some(caption) = caption_text {
@@ -103,7 +111,8 @@ pub fn render_table(
         };
 
         // 캡션 HTML 생성 / Generate caption HTML
-        let caption_left_mm = if let Some((_, _, margin)) = &ctrl_header_size {
+        let caption_left_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header
+        {
             margin.left.to_mm()
         } else {
             0.0
@@ -136,7 +145,7 @@ pub fn render_table(
     };
 
     // htb 위치 조정 (캡션이 있으면) / Adjust htb position (if caption exists)
-    let htb_left_mm = if let Some((_, _, margin)) = &ctrl_header_size {
+    let htb_left_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
         margin.left.to_mm()
     } else {
         0.0
@@ -179,11 +188,12 @@ pub fn render_table(
             0.0
         };
         let htg_height = resolved_size.height + caption_height_mm + caption_margin_mm;
-        let htg_width = if let Some((width, _, margin)) = &ctrl_header_size {
-            width.to_mm() + margin.left.to_mm() + margin.right.to_mm()
-        } else {
-            resolved_size.width
-        };
+        let htg_width =
+            if let Some(CtrlHeaderData::ObjectCommon { width, margin, .. }) = ctrl_header {
+                width.to_mm() + margin.left.to_mm() + margin.right.to_mm()
+            } else {
+                resolved_size.width
+            };
 
         // htG 래퍼와 캡션 생성 / Create htG wrapper and caption
         let html = if caption_text.is_some()
@@ -193,14 +203,24 @@ pub fn render_table(
         {
             // 위 캡션: 캡션 먼저, 그 다음 테이블 / Caption above: caption first, then table
             format!(
-                r#"<div class="htG" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">{}{}</div>"#,
-                left_mm, htg_width, top_mm, htg_height, caption_html, htb_html
+                r#"<div class="htG" style="left:{left_mm}mm;width:{htg_width}mm;top:{top_mm}mm;height:{htg_height}mm;">{caption_html}{htb_html}</div>"#,
+                left_mm = left_mm,
+                htg_width = htg_width,
+                top_mm = top_mm,
+                htg_height = htg_height,
+                caption_html = caption_html,
+                htb_html = htb_html,
             )
         } else {
             // 아래 캡션 또는 캡션 없음: 테이블 먼저, 그 다음 캡션 / Caption below or no caption: table first, then caption
             format!(
-                r#"<div class="htG" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">{}{}</div>"#,
-                left_mm, htg_width, top_mm, htg_height, htb_html, caption_html
+                r#"<div class="htG" style="left:{left_mm}mm;width:{htg_width}mm;top:{top_mm}mm;height:{htg_height}mm;">{htb_html}{caption_html}</div>"#,
+                left_mm = left_mm,
+                htg_width = htg_width,
+                top_mm = top_mm,
+                htg_height = htg_height,
+                htb_html = htb_html,
+                caption_html = caption_html,
             )
         };
 

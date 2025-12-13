@@ -14,10 +14,9 @@ mod table;
 mod text;
 
 use crate::document::bodytext::ctrl_header::CtrlHeaderData;
-use crate::document::bodytext::Margin;
+use crate::document::bodytext::Table;
 use crate::document::bodytext::{ColumnDivideType, ParagraphRecord};
 use crate::document::HwpDocument;
-use crate::types::HWPUNIT;
 
 /// HTML 변환 옵션 / HTML conversion options
 #[derive(Debug, Clone)]
@@ -133,13 +132,8 @@ fn render_paragraph(
     // 이미지와 테이블 수집 / Collect images and tables
     let mut images = Vec::new();
     let mut tables: Vec<(
-        &crate::document::bodytext::Table,
-        Option<(HWPUNIT, HWPUNIT, Margin)>,
-        Option<(
-            &crate::document::bodytext::ctrl_header::ObjectAttribute,
-            crate::types::SHWPUNIT,
-            crate::types::SHWPUNIT,
-        )>,
+        &Table,
+        Option<&CtrlHeaderData>,
         Option<String>, // 캡션 텍스트 / Caption text
     )> = Vec::new();
 
@@ -189,7 +183,7 @@ fn render_paragraph(
                 }
             }
             ParagraphRecord::Table { table } => {
-                tables.push((table, None, None, None));
+                tables.push((table, None, None));
             }
             ParagraphRecord::CtrlHeader {
                 header,
@@ -198,21 +192,10 @@ fn render_paragraph(
                 ..
             } => {
                 // CtrlHeader의 children에서 테이블 찾기 / Find tables in CtrlHeader's children
-                // CtrlHeader의 width/height/margin, ObjectAttribute, offset_x, offset_y 정보를 테이블에 전달
-                let (ctrl_info, attr_info) = match &header.data {
-                    CtrlHeaderData::ObjectCommon {
-                        width,
-                        height,
-                        margin,
-                        attribute,
-                        offset_x,
-                        offset_y,
-                        ..
-                    } => (
-                        Some((width.clone(), height.clone(), margin.clone())),
-                        Some((attribute, *offset_x, *offset_y)),
-                    ),
-                    _ => (None, None),
+                // CtrlHeader 객체를 직접 전달 / Pass CtrlHeader object directly
+                let ctrl_header = match &header.data {
+                    CtrlHeaderData::ObjectCommon { .. } => Some(&header.data),
+                    _ => None,
                 };
                 // 캡션 텍스트 추출: paragraphs 필드에서 모든 캡션 수집 / Extract caption text: collect all captions from paragraphs field
                 let mut caption_texts: Vec<String> = Vec::new();
@@ -239,7 +222,7 @@ fn render_paragraph(
                             caption_text.clone()
                         };
                         caption_index += 1;
-                        tables.push((table, ctrl_info.clone(), attr_info, current_caption));
+                        tables.push((table, ctrl_header, current_caption));
                         caption_text = None; // 다음 테이블을 위해 초기화 / Reset for next table
                     } else if found_table {
                         // 테이블 다음에 오는 문단에서 텍스트 추출 / Extract text from paragraph after table
@@ -291,16 +274,7 @@ fn render_paragraph(
     // 테이블 HTML 리스트 생성 / Create table HTML list
     let mut table_htmls = Vec::new();
     // inline_tables는 owned tuple을 저장하므로 타입 명시 / inline_tables stores owned tuples, so specify type
-    let mut inline_tables: Vec<(
-        &crate::document::bodytext::Table,
-        Option<(HWPUNIT, HWPUNIT, Margin)>,
-        Option<(
-            &crate::document::bodytext::ctrl_header::ObjectAttribute,
-            crate::types::SHWPUNIT,
-            crate::types::SHWPUNIT,
-        )>,
-        Option<String>,
-    )> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
+    let mut inline_tables: Vec<(&Table, Option<&CtrlHeaderData>, Option<String>)> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
 
     // 문단의 첫 번째 LineSegment의 vertical_position 계산 (vert_rel_to: "para"일 때 사용) / Calculate first LineSegment's vertical_position (used when vert_rel_to: "para")
     let para_start_vertical_mm = line_segments
@@ -311,24 +285,17 @@ fn render_paragraph(
     if !line_segments.is_empty() {
         // like_letters=true인 테이블과 false인 테이블 분리 / Separate tables with like_letters=true and false
         let mut absolute_tables = Vec::new();
-        for (table, ctrl_info, attr_info, caption_text) in tables.iter() {
-            let like_letters = attr_info
-                .map(|(attr, _, _)| attr.like_letters)
+        for (table, ctrl_header, caption_text) in tables.iter() {
+            let like_letters = ctrl_header
+                .and_then(|h| match h {
+                    CtrlHeaderData::ObjectCommon { attribute, .. } => Some(attribute.like_letters),
+                    _ => None,
+                })
                 .unwrap_or(false);
             if like_letters {
-                inline_tables.push((
-                    table,
-                    ctrl_info.clone(),
-                    attr_info.clone(),
-                    caption_text.clone(),
-                ));
+                inline_tables.push((*table, *ctrl_header, caption_text.clone()));
             } else {
-                absolute_tables.push((
-                    table,
-                    ctrl_info.clone(),
-                    attr_info.clone(),
-                    caption_text.clone(),
-                ));
+                absolute_tables.push((*table, *ctrl_header, caption_text.clone()));
             }
         }
 
@@ -346,17 +313,11 @@ fn render_paragraph(
         use crate::viewer::html::line_segment::TableInfo;
         let inline_table_infos: Vec<TableInfo> = inline_tables
             .iter()
-            .map(|(table, ctrl_info, attr_info, caption_text)| {
+            .map(|(table, ctrl_header, caption_text)| {
                 // iter()로 인해 table은 &&Table이 되므로 한 번 역참조 / table becomes &&Table due to iter(), so dereference once
-                // ctrl_info는 Option<(HWPUNIT, HWPUNIT, Margin)>이므로 복사 / ctrl_info is Option<(HWPUNIT, HWPUNIT, Margin)>, copy
-                // attr_info는 Option<(&ObjectAttribute, SHWPUNIT, SHWPUNIT)>이므로 복사 / attr_info is Option<(&ObjectAttribute, SHWPUNIT, SHWPUNIT)>, copy
+                // ctrl_header는 Option<&CtrlHeaderData>이므로 복사 / ctrl_header is Option<&CtrlHeaderData>, copy
                 // caption_text는 Option<String>이므로 as_deref()로 Option<&str>로 변환 / caption_text is Option<String>, convert to Option<&str> with as_deref()
-                (
-                    *table,
-                    ctrl_info.clone(),
-                    attr_info.clone(),
-                    caption_text.as_deref(),
-                )
+                (*table, *ctrl_header, caption_text.as_deref())
             })
             .collect();
         // 테이블 번호 시작값 계산 / Calculate table number start value
@@ -393,14 +354,13 @@ fn render_paragraph(
             .unwrap_or(1);
         // inline_tables의 개수만큼 table_counter 증가 (이미 line_segment에 포함되었으므로) / Increment table_counter by inline_tables count (already included in line_segment)
         table_counter += inline_tables.len() as u32;
-        for (table, ctrl_info, attr_info, caption_text) in absolute_tables.iter() {
+        for (table, ctrl_header, caption_text) in absolute_tables.iter() {
             use crate::viewer::html::table::render_table;
 
             let table_html = render_table(
                 table,
                 document,
-                ctrl_info.clone(),
-                attr_info.clone(),
+                ctrl_header.clone(),
                 hcd_position,
                 page_def,
                 options,

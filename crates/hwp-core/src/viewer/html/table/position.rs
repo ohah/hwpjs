@@ -1,6 +1,6 @@
 use crate::document::bodytext::ctrl_header::VertRelTo;
 use crate::document::bodytext::PageDef;
-use crate::types::{RoundTo2dp, INT32};
+use crate::types::{RoundTo2dp, INT32, SHWPUNIT};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
 /// viewBox 데이터 / ViewBox data
@@ -27,8 +27,8 @@ pub(crate) fn table_position(
     hcd_position: Option<(f64, f64)>,
     page_def: Option<&PageDef>,
     segment_position: Option<(INT32, INT32)>,
-    offset_x: Option<crate::types::SHWPUNIT>,
-    offset_y: Option<crate::types::SHWPUNIT>,
+    offset_x: Option<SHWPUNIT>,
+    offset_y: Option<SHWPUNIT>,
     vert_rel_to: Option<VertRelTo>,
     para_start_vertical_mm: Option<f64>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)

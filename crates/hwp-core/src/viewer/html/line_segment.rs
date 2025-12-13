@@ -1,20 +1,13 @@
 /// 라인 세그먼트 렌더링 모듈 / Line segment rendering module
 use crate::document::bodytext::LineSegmentInfo;
+use crate::document::CtrlHeaderData;
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
+use crate::ParaShape;
 
 /// 테이블 정보 타입 / Table info type
 pub type TableInfo<'a> = (
     &'a crate::document::bodytext::Table,
-    Option<(
-        crate::types::HWPUNIT,
-        crate::types::HWPUNIT,
-        crate::document::bodytext::Margin,
-    )>,
-    Option<(
-        &'a crate::document::bodytext::ctrl_header::ObjectAttribute,
-        crate::types::SHWPUNIT,
-        crate::types::SHWPUNIT,
-    )>,
+    Option<&'a CtrlHeaderData>,
     Option<&'a str>, // 캡션 텍스트 / Caption text
 );
 
@@ -24,7 +17,7 @@ pub fn render_line_segment(
     content: &str,
     para_shape_class: &str,
     para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
-    para_shape: Option<&crate::document::docinfo::para_shape::ParaShape>, // ParaShape 정보 (옵션) / ParaShape info (optional)
+    para_shape: Option<&ParaShape>, // ParaShape 정보 (옵션) / ParaShape info (optional)
 ) -> String {
     let left_mm = round_to_2dp(int32_to_mm(segment.column_start_position));
     let top_mm = round_to_2dp(int32_to_mm(segment.vertical_position));
@@ -203,21 +196,20 @@ pub fn render_line_segments_with_content(
                 // Calculate table position using LineSegment's column_start_position and vertical_position
                 // like_letters=true인 테이블은 hcd_position과 page_def를 전달하여 올바른 htG 생성
                 // For tables with like_letters=true, pass hcd_position and page_def to generate correct htG
-                let (table, ctrl_info, attr_info, caption_text) = &tables[table_index];
+                let (table, ctrl_header, caption_text) = &tables[table_index];
                 let current_table_number = table_counter_start + table_index as u32;
                 // LineSegment 위치 전달 / Pass LineSegment position
                 let segment_position =
                     Some((segment.column_start_position, segment.vertical_position));
                 let table_html = render_table(
-                    table,
+                    *table,
                     document,
-                    ctrl_info.clone(),
-                    attr_info.clone(),
+                    *ctrl_header,
                     hcd_position,
                     page_def,
                     options,
                     Some(current_table_number), // 테이블 번호 전달 / Pass table number
-                    caption_text.as_deref(),
+                    *caption_text,
                     segment_position, // LineSegment 위치 전달 / Pass LineSegment position
                     None, // line_segment에서는 para_start_vertical_mm 사용 안 함 / para_start_vertical_mm not used in line_segment
                     None, // line_segment에서는 first_para_vertical_mm 사용 안 함 / first_para_vertical_mm not used in line_segment

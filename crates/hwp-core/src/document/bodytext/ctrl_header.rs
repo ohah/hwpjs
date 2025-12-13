@@ -791,7 +791,11 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // description_len(2) + description(2×len) = additional bytes
     // Therefore, 40 bytes is a valid size (up to page_divide, without description)
     if data.len() < 40 {
-        return Err(HwpError::insufficient_data("Object common properties", 40, data.len()));
+        return Err(HwpError::insufficient_data(
+            "Object common properties",
+            40,
+            data.len(),
+        ));
     }
 
     let mut offset = 0;
@@ -932,7 +936,11 @@ fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
 fn parse_page_number_position(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 12바이트 필요 / Need at least 12 bytes
     if data.len() < 12 {
-        return Err(HwpError::insufficient_data("PageNumberPosition", 12, data.len()));
+        return Err(HwpError::insufficient_data(
+            "PageNumberPosition",
+            12,
+            data.len(),
+        ));
     }
 
     let mut offset = 0;
@@ -1099,7 +1107,11 @@ fn parse_section_definition(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 24바이트 필요 (기본 필드만) / Need at least 24 bytes (basic fields only)
     // 실제 파일에서는 하위 레코드가 별도로 저장되므로 기본 필드만 파싱 / In actual files, sub-records are stored separately, so only parse basic fields
     if data.len() < 24 {
-        return Err(HwpError::insufficient_data("Section definition", 24, data.len()));
+        return Err(HwpError::insufficient_data(
+            "Section definition",
+            24,
+            data.len(),
+        ));
     }
 
     let mut offset = 0;
@@ -1213,7 +1225,11 @@ fn parse_section_definition(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
 fn parse_column_definition(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 12바이트 필요 (기본 필드만) / Need at least 12 bytes (basic fields only)
     if data.len() < 12 {
-        return Err(HwpError::insufficient_data("Column definition", 12, data.len()));
+        return Err(HwpError::insufficient_data(
+            "Column definition",
+            12,
+            data.len(),
+        ));
     }
 
     let mut offset = 0;
@@ -1409,7 +1425,11 @@ fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
 fn parse_footnote_endnote(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 8바이트 필요 / Need 8 bytes
     if data.len() < 8 {
-        return Err(HwpError::insufficient_data("Footnote/endnote", 8, data.len()));
+        return Err(HwpError::insufficient_data(
+            "Footnote/endnote",
+            8,
+            data.len(),
+        ));
     }
 
     // 바이트 0: 각주/미주 번호 (UINT8) / Byte 0: Footnote/endnote number (UINT8)
@@ -1531,7 +1551,11 @@ fn parse_page_adjust(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
 fn parse_bookmark_marker(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     // 최소 6바이트 필요 (키워드 길이 2개 + dummy) / Need at least 6 bytes (2 keyword lengths + dummy)
     if data.len() < 6 {
-        return Err(HwpError::insufficient_data("Bookmark marker", 6, data.len()));
+        return Err(HwpError::insufficient_data(
+            "Bookmark marker",
+            6,
+            data.len(),
+        ));
     }
 
     let mut offset = 0;
