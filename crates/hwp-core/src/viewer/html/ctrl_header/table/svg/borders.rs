@@ -1,7 +1,9 @@
 use crate::document::bodytext::Table;
 use crate::viewer::html::styles::round_to_2dp;
 
-use crate::viewer::html::ctrl_header::table::geometry::{calculate_cell_left, calculate_cell_top, get_cell_height};
+use crate::viewer::html::ctrl_header::table::geometry::{
+    calculate_cell_left, calculate_cell_top, get_cell_height,
+};
 use crate::viewer::html::ctrl_header::table::size::Size;
 
 /// 수직 경계선 렌더링 / Render vertical borders
@@ -142,6 +144,18 @@ pub(crate) fn render_horizontal_borders(
         }
     }
 
+    // 테이블 하단 테두리 추가 / Add table bottom border
+    // row_positions는 행의 시작 위치만 포함하므로, 항상 content.height 위치에 하단 테두리를 그려야 함
+    // row_positions only contains row start positions, so we must always draw bottom border at content.height
+    svg_paths.push_str(&format!(
+        r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,
+        round_to_2dp(-border_offset),
+        round_to_2dp(content.height),
+        round_to_2dp(content.width + border_offset),
+        round_to_2dp(content.height),
+        border_color,
+        border_width
+    ));
+
     svg_paths
 }
-

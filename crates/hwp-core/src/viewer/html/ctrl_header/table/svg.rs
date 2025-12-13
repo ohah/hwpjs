@@ -1,7 +1,9 @@
 /// SVG 렌더링 모듈 / SVG rendering module
 use crate::document::bodytext::Table;
 
-use crate::viewer::html::ctrl_header::table::constants::{BORDER_COLOR, BORDER_OFFSET_MM, BORDER_WIDTH_MM};
+use crate::viewer::html::ctrl_header::table::constants::{
+    BORDER_COLOR, BORDER_OFFSET_MM, BORDER_WIDTH_MM,
+};
 use crate::viewer::html::ctrl_header::table::geometry::{column_positions, row_positions};
 use crate::viewer::html::ctrl_header::table::position::ViewBox;
 use crate::viewer::html::ctrl_header::table::size::Size;
