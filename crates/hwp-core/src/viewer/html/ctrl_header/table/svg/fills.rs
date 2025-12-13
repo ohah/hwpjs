@@ -2,7 +2,7 @@ use crate::document::bodytext::Table;
 
 use crate::viewer::html::styles::round_to_2dp;
 
-use crate::viewer::html::table::geometry::{
+use crate::viewer::html::ctrl_header::table::geometry::{
     calculate_cell_left, calculate_cell_top, get_cell_height,
 };
 

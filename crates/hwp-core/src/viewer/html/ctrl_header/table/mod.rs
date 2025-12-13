@@ -1,4 +1,4 @@
-/// 테이블 렌더링 모듈 / Table rendering modules
+/// 테이블 컨트롤 처리 및 렌더링 모듈 / Table control processing and rendering module
 mod cells;
 mod constants;
 mod geometry;
@@ -7,14 +7,16 @@ mod size;
 mod svg;
 
 use crate::document::bodytext::ctrl_header::CtrlHeaderData;
-use crate::document::bodytext::{PageDef, Table};
+use crate::document::bodytext::{PageDef, ParagraphRecord, Table};
+use crate::document::{CtrlHeader, Paragraph};
 use crate::types::Hwpunit16ToMm;
 use crate::viewer::HtmlOptions;
 use crate::{HwpDocument, INT32};
 
 use self::position::{table_position, view_box};
 use self::size::{content_size, htb_size, resolve_container_size};
-use crate::viewer::html::table::constants::SVG_PADDING_MM;
+use self::constants::SVG_PADDING_MM;
+use crate::viewer::html::ctrl_header::CtrlHeaderResult;
 
 /// 테이블을 HTML로 렌더링
 #[allow(clippy::too_many_arguments)]
@@ -214,4 +216,97 @@ pub fn render_table(
     };
 
     result_html
+}
+
+/// 테이블 컨트롤 처리 / Process table control
+///
+/// CtrlHeader에서 테이블을 추출하고 캡션을 수집합니다.
+/// Extracts tables from CtrlHeader and collects captions.
+pub fn process_table<'a>(
+    header: &'a CtrlHeader,
+    children: &'a [ParagraphRecord],
+    paragraphs: &[Paragraph],
+) -> CtrlHeaderResult<'a> {
+    let mut result = CtrlHeaderResult::new();
+
+    // CtrlHeader 객체를 직접 전달 / Pass CtrlHeader object directly
+    let ctrl_header = match &header.data {
+        CtrlHeaderData::ObjectCommon { .. } => Some(&header.data),
+        _ => None,
+    };
+
+    // 캡션 텍스트 추출: paragraphs 필드에서 모든 캡션 수집 / Extract caption text: collect all captions from paragraphs field
+    let mut caption_texts: Vec<String> = Vec::new();
+
+    // paragraphs 필드에서 모든 캡션 수집 / Collect all captions from paragraphs field
+    for para in paragraphs {
+        for record in &para.records {
+            if let ParagraphRecord::ParaText { text, .. } = record {
+                if !text.trim().is_empty() {
+                    caption_texts.push(text.clone());
+                }
+            }
+        }
+    }
+
+    let mut caption_index = 0;
+    let mut caption_text: Option<String> = None;
+    let mut found_table = false;
+
+    for child in children.iter() {
+        if let ParagraphRecord::Table { table } = child {
+            found_table = true;
+            // paragraphs 필드에서 캡션 사용 (순서대로) / Use caption from paragraphs field (in order)
+            let current_caption = if caption_index < caption_texts.len() {
+                Some(caption_texts[caption_index].clone())
+            } else {
+                caption_text.clone()
+            };
+            caption_index += 1;
+            result.tables.push((table, ctrl_header, current_caption));
+            caption_text = None; // 다음 테이블을 위해 초기화 / Reset for next table
+        } else if found_table {
+            // 테이블 다음에 오는 문단에서 텍스트 추출 / Extract text from paragraph after table
+            if let ParagraphRecord::ParaText { text, .. } = child {
+                caption_text = Some(text.clone());
+                break;
+            } else if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
+                // ListHeader의 paragraphs에서 텍스트 추출 / Extract text from ListHeader's paragraphs
+                for para in paragraphs {
+                    for record in &para.records {
+                        if let ParagraphRecord::ParaText { text, .. } = record {
+                            caption_text = Some(text.clone());
+                            break;
+                        }
+                    }
+                    if caption_text.is_some() {
+                        break;
+                    }
+                }
+                if caption_text.is_some() {
+                    break;
+                }
+            }
+        } else {
+            // 테이블 이전에 오는 문단에서 텍스트 추출 (첫 번째 테이블의 캡션) / Extract text from paragraph before table (caption for first table)
+            if let ParagraphRecord::ParaText { text, .. } = child {
+                caption_text = Some(text.clone());
+            } else if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
+                // ListHeader의 paragraphs에서 텍스트 추출 / Extract text from ListHeader's paragraphs
+                for para in paragraphs {
+                    for record in &para.records {
+                        if let ParagraphRecord::ParaText { text, .. } = record {
+                            caption_text = Some(text.clone());
+                            break;
+                        }
+                    }
+                    if caption_text.is_some() {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    result
 }

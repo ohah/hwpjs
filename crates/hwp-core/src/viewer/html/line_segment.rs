@@ -182,7 +182,7 @@ pub fn render_line_segments_with_content(
             // 테이블 렌더링 (이미지 개수 이후의 빈 세그먼트에 테이블) / Render tables (tables in empty segments after images)
             let table_index = empty_count - images.len();
             if table_index < tables.len() {
-                use crate::viewer::html::table::render_table;
+                use crate::viewer::html::ctrl_header::table::render_table;
                 // 테이블 위치는 LineSegment의 위치를 기준으로 계산 / Calculate table position based on LineSegment position
                 // table.html 샘플을 보면 htb가 hcD 내부에 있고, hcD의 위치는 페이지의 절대 위치입니다
                 // In table.html sample, htb is inside hcD, and hcD position is absolute page position
