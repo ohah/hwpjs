@@ -1856,7 +1856,7 @@
                 "description": null,
                 "caption": {
                   "align": "bottom",
-                  "full_size": false,
+                  "include_margin": false,
                   "width": 8504,
                   "gap": 850,
                   "last_width": 41954

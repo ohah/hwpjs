@@ -1856,7 +1856,7 @@
                 "description": null,
                 "caption": {
                   "align": "top",
-                  "full_size": false,
+                  "include_margin": false,
                   "width": 8504,
                   "gap": 850,
                   "last_width": 20976
@@ -2209,7 +2209,7 @@
                 "description": null,
                 "caption": {
                   "align": "bottom",
-                  "full_size": false,
+                  "include_margin": false,
                   "width": 8504,
                   "gap": 850,
                   "last_width": 20976
@@ -2562,7 +2562,7 @@
                 "description": null,
                 "caption": {
                   "align": "left",
-                  "full_size": false,
+                  "include_margin": false,
                   "width": 8504,
                   "gap": 850,
                   "last_width": 8504
@@ -2915,7 +2915,7 @@
                 "description": null,
                 "caption": {
                   "align": "right",
-                  "full_size": false,
+                  "include_margin": false,
                   "width": 8504,
                   "gap": 850,
                   "last_width": 8504
@@ -3268,7 +3268,7 @@
                 "description": null,
                 "caption": {
                   "align": "left",
-                  "full_size": false,
+                  "include_margin": false,
                   "width": 8504,
                   "gap": 850,
                   "last_width": 8504
@@ -3621,7 +3621,7 @@
                 "description": null,
                 "caption": {
                   "align": "right",
-                  "full_size": false,
+                  "include_margin": false,
                   "width": 8504,
                   "gap": 850,
                   "last_width": 8504
@@ -3979,7 +3979,7 @@
                 "description": null,
                 "caption": {
                   "align": "bottom",
-                  "full_size": true,
+                  "include_margin": true,
                   "width": 8504,
                   "gap": 850,
                   "last_width": 26646
@@ -4325,7 +4325,7 @@
                 "description": null,
                 "caption": {
                   "align": "bottom",
-                  "full_size": false,
+                  "include_margin": false,
                   "width": 8504,
                   "gap": 850,
                   "last_width": 20976
