@@ -9,7 +9,7 @@ mod svg;
 use crate::document::bodytext::ctrl_header::CtrlHeaderData;
 use crate::document::bodytext::{PageDef, ParagraphRecord, Table};
 use crate::document::{CtrlHeader, Paragraph};
-use crate::types::Hwpunit16ToMm;
+use crate::types::{Hwpunit16ToMm, HWPUNIT};
 use crate::viewer::HtmlOptions;
 use crate::{HwpDocument, INT32};
 
@@ -27,6 +27,12 @@ pub struct CaptionInfo {
     pub gap: Option<i16>,
     /// 캡션 높이 (mm) / Caption height (mm)
     pub height_mm: Option<f64>,
+    /// 캡션 폭(세로 방향일 때만 사용) / Caption width (only for vertical direction)
+    pub width: Option<u32>,
+    /// 캡션 폭에 마진을 포함할 지 여부 (가로 방향일 때만 사용) / Whether to include margin in caption width (only for horizontal direction)
+    pub include_margin: Option<bool>,
+    /// 텍스트의 최대 길이(=개체의 폭) / Maximum text length (= object width)
+    pub last_width: Option<u32>,
 }
 
 /// 테이블을 HTML로 렌더링
@@ -82,7 +88,9 @@ pub fn render_table(
     );
 
     // htG 래퍼 생성 (캡션이 있거나 ctrl_header가 있는 경우) / Create htG wrapper (if caption exists or ctrl_header exists)
-    let needs_htg = caption_text.is_some() || ctrl_header.is_some();
+    // 캡션 유무는 caption_info 존재 여부로 판단 / Determine caption existence by caption_info presence
+    let has_caption = caption_info.is_some();
+    let needs_htg = has_caption || ctrl_header.is_some();
 
     // margin 값 미리 계산 / Pre-calculate margin values
     let margin_top_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
@@ -109,10 +117,25 @@ pub fn render_table(
     // 캡션 정보 미리 계산 / Pre-calculate caption information
     let is_caption_above = caption_info.map(|info| info.is_above).unwrap_or(false);
 
+    // 캡션 방향 확인 (가로/세로) / Check caption direction (horizontal/vertical)
+    // 일단 가로 방향으로 상정 (임시) / Assume horizontal direction for now (temporary)
+    // TODO: 나중에 vert_rel_to와 horz_rel_to를 참고하여 정확한 방향 판단 구현
+    // TODO: Later implement accurate direction determination using vert_rel_to and horz_rel_to
+    const ASSUME_HORIZONTAL_CAPTION: bool = true;
+    let is_horizontal = if let Some(CtrlHeaderData::ObjectCommon {
+        caption: Some(_cap),
+        ..
+    }) = ctrl_header
+    {
+        ASSUME_HORIZONTAL_CAPTION
+    } else {
+        false
+    };
+
     // 캡션 높이: 명시적으로 제공되면 사용, 없으면 기본값 / Caption height: use provided value or default
     let caption_height_mm = caption_info.and_then(|info| info.height_mm).unwrap_or(3.53); // 기본값: fixtures에서 확인한 캡션 높이 / Default: caption height from fixtures
 
-    // 캡션 간격: gap을 hwpunit에서 mm로 변환 / Caption spacing: convert gap from hwpunit to mm
+    // 캡션 간격: gap 속성을 사용하여 계산 / Caption spacing: calculate using gap property
     let caption_margin_mm = if let Some(info) = caption_info {
         if let Some(gap_hwpunit) = info.gap {
             // HWPUNIT16을 mm로 변환 / Convert HWPUNIT16 to mm
@@ -135,69 +158,118 @@ pub fn render_table(
     };
 
     // 캡션 렌더링 / Render caption
+    // 캡션 유무는 caption_info 존재 여부로 판단 / Determine caption existence by caption_info presence
     let caption_html = if let Some(caption) = caption_text {
-        // 캡션 텍스트에서 "표 X" 부분 추출 / Extract "표 X" from caption text
-        let caption_parts: Vec<&str> = caption.split("표").collect();
-        let table_num_text = if let Some(num_part) = caption_parts.get(1) {
-            let extracted = num_part
-                .trim()
-                .chars()
-                .take_while(|c| c.is_ascii_digit())
-                .collect::<String>();
-            if extracted.is_empty() {
-                table_number.map(|n| n.to_string()).unwrap_or_default()
+        if !has_caption {
+            String::new()
+        } else {
+            // 캡션 텍스트에서 "표 X" 부분 추출 / Extract "표 X" from caption text
+            let caption_parts: Vec<&str> = caption.split("표").collect();
+            let table_num_text = if let Some(num_part) = caption_parts.get(1) {
+                let extracted = num_part
+                    .trim()
+                    .chars()
+                    .take_while(|c| c.is_ascii_digit())
+                    .collect::<String>();
+                if extracted.is_empty() {
+                    table_number.map(|n| n.to_string()).unwrap_or_default()
+                } else {
+                    extracted
+                }
             } else {
-                extracted
-            }
-        } else {
-            table_number.map(|n| n.to_string()).unwrap_or_default()
-        };
+                table_number.map(|n| n.to_string()).unwrap_or_default()
+            };
 
-        // 캡션 HTML 생성 / Generate caption HTML
-        let caption_left_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header
-        {
-            margin.left.to_mm()
-        } else {
-            0.0
-        };
-        let caption_top_mm = if is_caption_above {
-            // 위 캡션: caption_margin만 사용 (fixture 기준) / Caption above: use only caption_margin (based on fixture)
-            // fixture에서 위 캡션 top=5mm, caption_margin=5mm이므로 margin.top은 포함하지 않음
-            // In fixture, caption above top=5mm, caption_margin=5mm, so margin.top is not included
-            caption_margin_mm
-        } else {
-            // 아래 캡션: htb top + htb height + 간격 / Caption below: htb top + htb height + spacing
-            // htb_top_mm은 이미 margin.top이 포함되어 있음 / htb_top_mm already includes margin.top
-            margin_top_mm + content_size.height + caption_margin_mm
-        };
-        let caption_width_mm = resolved_size.width - (caption_left_mm * 2.0);
+            // 캡션 HTML 생성 / Generate caption HTML
+            let caption_left_mm =
+                if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
+                    margin.left.to_mm()
+                } else {
+                    0.0
+                };
+            let caption_top_mm = if is_caption_above {
+                // 위 캡션: caption_margin만 사용 (fixture 기준) / Caption above: use only caption_margin (based on fixture)
+                // fixture에서 위 캡션 top=5mm, caption_margin=5mm이므로 margin.top은 포함하지 않음
+                // In fixture, caption above top=5mm, caption_margin=5mm, so margin.top is not included
+                caption_margin_mm
+            } else {
+                // 아래 캡션: htb top + htb height + 간격 / Caption below: htb top + htb height + spacing
+                // htb_top_mm은 이미 margin.top이 포함되어 있음 / htb_top_mm already includes margin.top
+                margin_top_mm + content_size.height + caption_margin_mm
+            };
 
-        let caption_body = caption
-            .trim_start_matches("표")
-            .trim_start_matches(&table_num_text)
-            .trim();
-        format!(
-            r#"<div class="hcD" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;overflow:hidden;"><div class="hcI"><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0mm;top:-0.18mm;height:{}mm;width:{}mm;"><span class="hrt cs0">표&nbsp;</span><div class="haN" style="left:0mm;top:0mm;width:1.95mm;height:{}mm;"><span class="hrt cs0">{}</span></div><span class="hrt cs0">&nbsp;{}</span></div></div></div>"#,
-            caption_left_mm,
-            caption_top_mm,
-            caption_width_mm,
-            caption_height_mm,
-            caption_height_mm,
-            caption_width_mm,
-            caption_height_mm,
-            table_num_text,
-            caption_body
-        )
+            // 캡션 폭 계산: caption 속성 활용 / Calculate caption width: use caption properties
+            // 스펙에 따르면:
+            // - width: 캡션 폭(세로 방향일 때만 사용, Top/Bottom) - 가로 방향일 때는 사용하지 않음
+            // - include_margin: 캡션 폭에 마진을 포함할 지 여부 (가로 방향일 때만 사용, Left/Right) - 세로 방향일 때는 사용하지 않음
+            // - last_width: 텍스트의 최대 길이(=개체의 폭) - 가로 방향일 때 사용
+            let caption_width_mm = if let Some(info) = caption_info {
+                if is_horizontal {
+                    // 가로 방향(Left/Right): last_width만 사용, include_margin으로 마진 포함 여부 결정
+                    // Horizontal direction: use last_width only, determine margin inclusion with include_margin
+                    // width는 가로 방향일 때 사용하지 않음 / width is not used for horizontal direction
+                    if let Some(last_width_hwpunit) = info.last_width {
+                        let width_mm = HWPUNIT::from(last_width_hwpunit).to_mm();
+                        // include_margin은 가로 방향일 때만 사용 / include_margin is only used for horizontal direction
+                        if let Some(include_margin) = info.include_margin {
+                            if include_margin {
+                                // 마진 포함 / Include margin
+                                width_mm
+                            } else {
+                                // 마진 제외 / Exclude margin
+                                width_mm - (caption_left_mm * 2.0)
+                            }
+                        } else {
+                            // include_margin 정보가 없으면 마진 제외 / Exclude margin if include_margin not available
+                            width_mm - (caption_left_mm * 2.0)
+                        }
+                    } else {
+                        // last_width 정보가 없으면 기본 동작 / Default behavior if last_width not available
+                        resolved_size.width - (caption_left_mm * 2.0)
+                    }
+                } else {
+                    // 세로 방향(Top/Bottom): width만 사용 (마진 고려 안 함, include_margin 사용 안 함)
+                    // Vertical direction: use width only (no margin consideration, include_margin not used)
+                    if let Some(width_hwpunit) = info.width {
+                        // width는 세로 방향일 때만 사용 / width is only used for vertical direction
+                        HWPUNIT::from(width_hwpunit).to_mm()
+                    } else {
+                        // width 정보가 없으면 기본 동작 / Default behavior if width not available
+                        resolved_size.width - (caption_left_mm * 2.0)
+                    }
+                }
+            } else {
+                // 캡션 정보가 없으면 기본 동작 / Default behavior if no caption info
+                resolved_size.width - (caption_left_mm * 2.0)
+            };
+
+            let caption_body = caption
+                .trim_start_matches("표")
+                .trim_start_matches(&table_num_text)
+                .trim();
+            format!(
+                r#"<div class="hcD" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;overflow:hidden;"><div class="hcI"><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0mm;top:-0.18mm;height:{}mm;width:{}mm;"><span class="hrt cs0">표&nbsp;</span><div class="haN" style="left:0mm;top:0mm;width:1.95mm;height:{}mm;"><span class="hrt cs0">{}</span></div><span class="hrt cs0">&nbsp;{}</span></div></div></div>"#,
+                caption_left_mm,
+                caption_top_mm,
+                caption_width_mm,
+                caption_height_mm,
+                caption_height_mm,
+                caption_width_mm,
+                caption_height_mm,
+                table_num_text,
+                caption_body
+            )
+        }
     } else {
         String::new()
     };
 
     // htb 위치 조정 (마진 및 캡션 고려) / Adjust htb position (considering margin and caption)
     let htb_left_mm = margin_left_mm;
-    let htb_top_mm = if is_caption_above {
+    let htb_top_mm = if has_caption && is_caption_above {
         // 위 캡션이 있으면 테이블을 아래로 이동 / Move table down if caption is above
         margin_top_mm + caption_height_mm + caption_margin_mm
-    } else if caption_text.is_some() {
+    } else if has_caption {
         // 아래 캡션이 있으면 margin.top만 적용 / If caption is below, only apply margin.top
         margin_top_mm
     } else {
@@ -220,17 +292,9 @@ pub fn render_table(
     let result_html = if needs_htg {
         // htG 크기 계산 (테이블 + 캡션) / Calculate htG size (table + caption)
         // 이미 계산한 caption_height_mm과 caption_margin_mm 재사용 / Reuse already calculated caption_height_mm and caption_margin_mm
-        let actual_caption_height_mm = if caption_text.is_some() {
-            caption_height_mm
-        } else {
-            0.0
-        };
+        let actual_caption_height_mm = if has_caption { caption_height_mm } else { 0.0 };
 
-        let htg_caption_spacing_mm = if caption_text.is_some() {
-            caption_margin_mm
-        } else {
-            0.0
-        };
+        let htg_caption_spacing_mm = if has_caption { caption_margin_mm } else { 0.0 };
 
         let htg_height = resolved_size.height + actual_caption_height_mm + htg_caption_spacing_mm;
 
@@ -239,7 +303,7 @@ pub fn render_table(
         let htg_width = resolved_size.width;
 
         // htG 래퍼와 캡션 생성 / Create htG wrapper and caption
-        let html = if caption_text.is_some() && is_caption_above {
+        let html = if has_caption && is_caption_above {
             // 위 캡션: 캡션 먼저, 그 다음 테이블 / Caption above: caption first, then table
             format!(
                 r#"<div class="htG" style="left:{left_mm}mm;width:{htg_width}mm;top:{top_mm}mm;height:{htg_height}mm;">{caption_html}{htb_html}</div>"#,
@@ -291,6 +355,9 @@ pub fn process_table<'a>(
                     is_above: matches!(cap.align, CaptionAlign::Top),
                     gap: Some(cap.gap), // HWPUNIT16은 i16이므로 직접 사용 / HWPUNIT16 is i16, so use directly
                     height_mm: None, // 캡션 높이는 별도로 계산 필요 / Caption height needs separate calculation
+                    width: Some(cap.width.into()), // 캡션 폭 / Caption width
+                    include_margin: Some(cap.include_margin), // 마진 포함 여부 / Whether to include margin
+                    last_width: Some(cap.last_width.into()), // 텍스트 최대 길이 / Maximum text length
                 }
             });
             (Some(&header.data), info)
@@ -326,7 +393,9 @@ pub fn process_table<'a>(
                 caption_text.clone()
             };
             caption_index += 1;
-            result.tables.push((table, ctrl_header, current_caption, caption_info));
+            result
+                .tables
+                .push((table, ctrl_header, current_caption, caption_info));
             caption_text = None; // 다음 테이블을 위해 초기화 / Reset for next table
         } else if found_table {
             // 테이블 다음에 오는 문단에서 텍스트 추출 / Extract text from paragraph after table

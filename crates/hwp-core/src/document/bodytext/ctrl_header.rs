@@ -212,7 +212,7 @@ pub struct Caption {
     /// 속성 (표 73 참조) / Attribute (see Table 73)
     pub align: CaptionAlign,
     /// 캡션 폭에 마진을 포함할 지 여부 (가로 방향일 때만 사용) / Whether to include margin in caption width (only for horizontal direction)
-    pub full_size: bool,
+    pub include_margin: bool,
     /// 캡션 폭(세로 방향일 때만 사용) / Caption width (only for vertical direction)
     pub width: HWPUNIT,
     /// 캡션과 개체 사이 간격 / Spacing between caption and object
@@ -1012,7 +1012,7 @@ pub fn parse_caption_from_list_header(data: &[u8]) -> Result<Option<Caption>, Hw
     };
 
     // bit 2: 캡션 폭에 마진을 포함할 지 여부 / bit 2: whether to include margin in caption width
-    let full_size = (caption_property_value & 0x04) != 0;
+    let include_margin = (caption_property_value & 0x04) != 0;
 
     // captionWidth (UInt4) - 4바이트 / captionWidth (UInt4) - 4 bytes
     let width = HWPUNIT::from(UINT32::from_le_bytes([
@@ -1037,7 +1037,7 @@ pub fn parse_caption_from_list_header(data: &[u8]) -> Result<Option<Caption>, Hw
 
     Ok(Some(Caption {
         align,
-        full_size,
+        include_margin,
         width,
         gap,
         last_width,
@@ -1071,7 +1071,7 @@ fn parse_caption(data: &[u8]) -> Result<Caption, HwpError> {
     };
 
     // bit 2: 캡션 폭에 마진을 포함할 지 여부 / bit 2: whether to include margin in caption width
-    let full_size = (attribute_value & 0x04) != 0;
+    let include_margin = (attribute_value & 0x04) != 0;
 
     // HWPUNIT 캡션 폭(세로 방향일 때만 사용) / HWPUNIT caption width (only for vertical direction)
     let width = HWPUNIT::from(UINT32::from_le_bytes([
@@ -1096,7 +1096,7 @@ fn parse_caption(data: &[u8]) -> Result<Caption, HwpError> {
 
     Ok(Caption {
         align,
-        full_size,
+        include_margin,
         width,
         gap,
         last_width,
@@ -1134,7 +1134,7 @@ fn parse_caption_12bytes(data: &[u8]) -> Result<Caption, HwpError> {
     };
 
     // bit 2: 캡션 폭에 마진을 포함할 지 여부 / bit 2: whether to include margin in caption width
-    let full_size = (attribute_value & 0x04) != 0;
+    let include_margin = (attribute_value & 0x04) != 0;
 
     // HWPUNIT 캡션 폭(세로 방향일 때만 사용) / HWPUNIT caption width (only for vertical direction)
     let width = HWPUNIT::from(UINT32::from_le_bytes([
@@ -1154,7 +1154,7 @@ fn parse_caption_12bytes(data: &[u8]) -> Result<Caption, HwpError> {
 
     Ok(Caption {
         align,
-        full_size,
+        include_margin,
         width,
         gap,
         last_width,
