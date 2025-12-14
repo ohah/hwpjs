@@ -50,9 +50,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html.push_str("  <meta http_quiv=\"content-type\" content=\"text/html; charset=utf-8\">\n");
 
     // CSS 스타일 생성 / Generate CSS styles
-    let style_info = styles::StyleInfo::collect(document);
     html.push_str("  <style>\n");
-    html.push_str(&styles::generate_css_styles(document, &style_info));
+    html.push_str(&styles::generate_css_styles(document));
     html.push_str("  </style>\n");
     html.push_str("</head>\n");
     html.push_str("\n");

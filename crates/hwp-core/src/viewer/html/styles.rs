@@ -2,89 +2,10 @@
 /// noori_style.css 기반으로 CSS 생성
 use crate::document::HwpDocument;
 use crate::types::{COLORREF, INT32};
-use std::collections::HashSet;
-
-/// 문서에서 사용되는 스타일 정보 수집 / Collect style information used in document
-pub struct StyleInfo {
-    pub char_shapes: HashSet<usize>,
-    pub para_shapes: HashSet<usize>,
-    pub text_colors: HashSet<u32>,
-}
-
-impl StyleInfo {
-    pub fn collect(document: &HwpDocument) -> Self {
-        let mut char_shapes = HashSet::new();
-        let mut para_shapes = HashSet::new();
-        let mut text_colors = HashSet::new();
-
-        // 문단에서 스타일 수집하는 헬퍼 함수 / Helper function to collect styles from paragraph
-        let collect_from_paragraph = |paragraph: &crate::document::Paragraph,
-                                      char_shapes: &mut HashSet<usize>,
-                                      para_shapes: &mut HashSet<usize>,
-                                      text_colors: &mut HashSet<u32>| {
-            // ParaShape 수집 / Collect ParaShape
-            let para_shape_id = paragraph.para_header.para_shape_id;
-            // HWP 파일의 para_shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for para_shape_id
-            if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
-                para_shapes.insert(para_shape_id as usize);
-            }
-
-            // CharShape와 텍스트 색상 수집 / Collect CharShape and text colors
-            for record in &paragraph.records {
-                if let crate::document::bodytext::ParagraphRecord::ParaCharShape { shapes } =
-                    record
-                {
-                    for shape_info in shapes {
-                        let shape_id = shape_info.shape_id as usize;
-                        // HWP 파일의 shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for shape_id
-                        if shape_id < document.doc_info.char_shapes.len() {
-                            // Store shape_id directly (0-based indexing to match XSL/XML)
-                            char_shapes.insert(shape_id);
-
-                            // shape_id is 0-based (matches XSL/XML format)
-                            if let Some(char_shape) =
-                                document.doc_info.char_shapes.get(shape_id)
-                            {
-                                if char_shape.text_color.0 != 0 {
-                                    text_colors.insert(char_shape.text_color.0);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        // 모든 섹션의 문단들을 검색 / Search all paragraphs in all sections
-        for section in &document.body_text.sections {
-            for paragraph in &section.paragraphs {
-                collect_from_paragraph(paragraph, &mut char_shapes, &mut para_shapes, &mut text_colors);
-
-                // CtrlHeader의 paragraphs도 수집 / Also collect paragraphs from CtrlHeader
-                for record in &paragraph.records {
-                    if let crate::document::bodytext::ParagraphRecord::CtrlHeader {
-                        paragraphs: ctrl_paragraphs,
-                        ..
-                    } = record
-                    {
-                        for ctrl_para in ctrl_paragraphs {
-                            collect_from_paragraph(ctrl_para, &mut char_shapes, &mut para_shapes, &mut text_colors);
-                        }
-                    }
-                }
-            }
-        }
-
-        StyleInfo {
-            char_shapes,
-            para_shapes,
-            text_colors,
-        }
-    }
-}
 
 /// CSS 스타일 생성 / Generate CSS styles
-pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> String {
+/// 문서에 정의된 모든 스타일을 미리 생성하여 누락 방지 / Pre-generate all styles defined in document to prevent missing styles
+pub fn generate_css_styles(document: &HwpDocument) -> String {
     let mut css = String::new();
 
     // 기본 스타일 (noori_style.css 기반) / Base styles (based on noori_style.css)
@@ -152,86 +73,78 @@ pub fn generate_css_styles(document: &HwpDocument, style_info: &StyleInfo) -> St
     css.push_str(".hls {clear:both;}\n");
     css.push_str("[onclick] {cursor:pointer;}\n");
 
-    // CharShape 스타일 생성 (cs1, cs2, ...) / Generate CharShape styles (cs1, cs2, ...) - 1-based indexing to match original HTML
-    let mut char_shape_ids: Vec<usize> = style_info.char_shapes.iter().copied().collect();
-    char_shape_ids.sort();
+    // 모든 CharShape 스타일 생성 (cs0, cs1, cs2, ...) / Generate all CharShape styles (cs0, cs1, cs2, ...)
+    // 문서에 정의된 모든 char_shape를 미리 정의하여 누락 방지 / Pre-define all char_shapes in document to prevent missing styles
+    for (shape_id, char_shape) in document.doc_info.char_shapes.iter().enumerate() {
+        // Use 0-based shape_id for class name to match XSL/XML format (cs0, cs1, cs2, ...)
+        let class_name = format!("cs{}", shape_id);
 
-    for &shape_id in &char_shape_ids {
-        // shape_id is 0-based (matches XSL/XML format)
-        if let Some(char_shape) = document.doc_info.char_shapes.get(shape_id) {
-            // Use 0-based shape_id for class name to match XSL/XML format (cs0, cs1, cs2, ...)
-            let class_name = format!("cs{}", shape_id);
+        css.push_str(&format!(".{} {{\n", class_name));
 
-            css.push_str(&format!(".{} {{\n", class_name));
+        // 폰트 크기 / Font size
+        let size_pt = char_shape.base_size as f64 / 100.0;
 
-            // 폰트 크기 / Font size
-            let size_pt = char_shape.base_size as f64 / 100.0;
+        css.push_str(&format!("  font-size:{}pt;", size_pt));
 
-            css.push_str(&format!("  font-size:{}pt;", size_pt));
+        // 텍스트 색상 / Text color
+        let color = &char_shape.text_color;
+        css.push_str(&format!(
+            "color:rgb({},{},{});",
+            color.r(),
+            color.g(),
+            color.b()
+        ));
 
-            // 텍스트 색상 / Text color
-            let color = &char_shape.text_color;
-            css.push_str(&format!(
-                "color:rgb({},{},{});",
-                color.r(),
-                color.g(),
-                color.b()
-            ));
+        // 폰트 패밀리 / Font family
+        // CharShape의 font_ids에서 한글 폰트 ID를 가져와서 face_names에서 폰트 이름 찾기
+        // Get Korean font ID from CharShape's font_ids and find font name from face_names
+        // HWP 파일의 font_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for font_id
+        let font_id = char_shape.font_ids.korean as usize;
+        let font_name = if font_id < document.doc_info.face_names.len() {
+            &document.doc_info.face_names[font_id].name
+        } else {
+            "함초롬바탕" // 기본값 / Default
+        };
 
-            // 폰트 패밀리 / Font family
-            // CharShape의 font_ids에서 한글 폰트 ID를 가져와서 face_names에서 폰트 이름 찾기
-            // Get Korean font ID from CharShape's font_ids and find font name from face_names
-            // HWP 파일의 font_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for font_id
-            let font_id = char_shape.font_ids.korean as usize;
-            let font_name = if font_id < document.doc_info.face_names.len() {
-                &document.doc_info.face_names[font_id].name
-            } else {
-                "함초롬바탕" // 기본값 / Default
-            };
+        css.push_str(&format!("font-family:\"{}\";", font_name));
 
-            css.push_str(&format!("font-family:\"{}\";", font_name));
-
-            // 속성 / Attributes
-            if char_shape.attributes.bold {
-                css.push_str("font-weight:bold;");
-            }
-            if char_shape.attributes.italic {
-                css.push_str("font-style:italic;");
-            }
-
-            css.push_str("\n}\n");
+        // 속성 / Attributes
+        if char_shape.attributes.bold {
+            css.push_str("font-weight:bold;");
         }
+        if char_shape.attributes.italic {
+            css.push_str("font-style:italic;");
+        }
+
+        css.push_str("\n}\n");
     }
 
-    // ParaShape 스타일 생성 (ps0, ps1, ...) / Generate ParaShape styles (ps0, ps1, ...)
-    let mut para_shape_indices: Vec<usize> = style_info.para_shapes.iter().copied().collect();
-    para_shape_indices.sort();
-    for &idx in &para_shape_indices {
-        if let Some(para_shape) = document.doc_info.para_shapes.get(idx) {
-            let class_name = format!("ps{}", idx);
-            css.push_str(&format!(".{} {{\n", class_name));
+    // 모든 ParaShape 스타일 생성 (ps0, ps1, ...) / Generate all ParaShape styles (ps0, ps1, ...)
+    // 문서에 정의된 모든 para_shape를 미리 정의하여 누락 방지 / Pre-define all para_shapes in document to prevent missing styles
+    for (idx, para_shape) in document.doc_info.para_shapes.iter().enumerate() {
+        let class_name = format!("ps{}", idx);
+        css.push_str(&format!(".{} {{\n", class_name));
 
-            // 정렬 / Alignment
-            match para_shape.attributes1.align {
-                crate::document::docinfo::para_shape::ParagraphAlignment::Left => {
-                    css.push_str("  text-align:left;");
-                }
-                crate::document::docinfo::para_shape::ParagraphAlignment::Right => {
-                    css.push_str("  text-align:right;");
-                }
-                crate::document::docinfo::para_shape::ParagraphAlignment::Center => {
-                    css.push_str("  text-align:center;");
-                }
-                crate::document::docinfo::para_shape::ParagraphAlignment::Justify => {
-                    css.push_str("  text-align:justify;");
-                }
-                _ => {
-                    css.push_str("  text-align:justify;");
-                }
+        // 정렬 / Alignment
+        match para_shape.attributes1.align {
+            crate::document::docinfo::para_shape::ParagraphAlignment::Left => {
+                css.push_str("  text-align:left;");
             }
-
-            css.push_str("\n}\n");
+            crate::document::docinfo::para_shape::ParagraphAlignment::Right => {
+                css.push_str("  text-align:right;");
+            }
+            crate::document::docinfo::para_shape::ParagraphAlignment::Center => {
+                css.push_str("  text-align:center;");
+            }
+            crate::document::docinfo::para_shape::ParagraphAlignment::Justify => {
+                css.push_str("  text-align:justify;");
+            }
+            _ => {
+                css.push_str("  text-align:justify;");
+            }
         }
+
+        css.push_str("\n}\n");
     }
 
     // Print media query / Print media query
