@@ -67,6 +67,21 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .hcc {margin:0;padding:0;position:absolute;}
 .hls {clear:both;}
 [onclick] {cursor:pointer;}
+.cs0 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs1 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬돋움";
+}
+.cs2 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"함초롬돋움";
+}
+.cs3 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs4 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"함초롬돋움";
+}
 .cs5 {
   font-size:15.5pt;color:rgb(0,0,0);font-family:"HY헤드라인M";
 }
@@ -84,6 +99,9 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 }
 .cs10 {
   font-size:10pt;color:rgb(0,0,0);font-family:"HY울릉도M";
+}
+.cs11 {
+  font-size:17.24pt;color:rgb(0,0,0);font-family:"바탕";
 }
 .cs12 {
   font-size:14pt;color:rgb(0,0,0);font-family:"휴먼명조";
@@ -124,11 +142,20 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .cs24 {
   font-size:13pt;color:rgb(0,0,0);font-family:"휴먼명조";
 }
+.cs25 {
+  font-size:12pt;color:rgb(0,0,0);font-family:"굴림";
+}
 .cs26 {
   font-size:3pt;color:rgb(0,0,0);font-family:"바탕";
 }
+.cs27 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"바탕체";
+}
 .cs28 {
   font-size:16pt;color:rgb(0,0,0);font-family:"바탕";
+}
+.cs29 {
+  font-size:14pt;color:rgb(0,0,0);font-family:"휴먼명조";font-weight:bold;
 }
 .cs30 {
   font-size:15pt;color:rgb(0,0,0);font-family:"휴먼명조";
@@ -144,6 +171,9 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 }
 .cs34 {
   font-size:18pt;color:rgb(0,0,0);font-family:"HY헤드라인M";
+}
+.cs35 {
+  font-size:14pt;color:rgb(0,0,0);font-family:"휴먼명조";
 }
 .cs36 {
   font-size:15pt;color:rgb(0,0,0);font-family:"휴먼명조";
@@ -208,8 +238,29 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .cs56 {
   font-size:15pt;color:rgb(0,0,0);font-family:"휴먼명조";font-weight:bold;
 }
+.ps0 {
+  text-align:justify;
+}
+.ps1 {
+  text-align:left;
+}
+.ps2 {
+  text-align:justify;
+}
 .ps3 {
   text-align:justify;
+}
+.ps4 {
+  text-align:justify;
+}
+.ps5 {
+  text-align:justify;
+}
+.ps6 {
+  text-align:center;
+}
+.ps7 {
+  text-align:center;
 }
 .ps8 {
   text-align:center;
@@ -219,6 +270,39 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 }
 .ps10 {
   text-align:center;
+}
+.ps11 {
+  text-align:justify;
+}
+.ps12 {
+  text-align:justify;
+}
+.ps13 {
+  text-align:justify;
+}
+.ps14 {
+  text-align:justify;
+}
+.ps15 {
+  text-align:justify;
+}
+.ps16 {
+  text-align:justify;
+}
+.ps17 {
+  text-align:justify;
+}
+.ps18 {
+  text-align:left;
+}
+.ps19 {
+  text-align:justify;
+}
+.ps20 {
+  text-align:justify;
+}
+.ps21 {
+  text-align:justify;
 }
 .ps22 {
   text-align:justify;
@@ -236,6 +320,9 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
   text-align:center;
 }
 .ps27 {
+  text-align:justify;
+}
+.ps28 {
   text-align:justify;
 }
 .ps29 {

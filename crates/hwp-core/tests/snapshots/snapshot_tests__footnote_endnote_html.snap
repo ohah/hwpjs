@@ -67,13 +67,49 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .hcc {margin:0;padding:0;position:absolute;}
 .hls {clear:both;}
 [onclick] {cursor:pointer;}
+.cs0 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"굴림";
+}
 .cs1 {
   font-size:10pt;color:rgb(0,0,0);font-family:"바탕";
+}
+.cs2 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"굴림";
+}
+.cs3 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"굴림";
 }
 .cs4 {
   font-size:9pt;color:rgb(0,0,0);font-family:"바탕";
 }
 .ps0 {
+  text-align:justify;
+}
+.ps1 {
+  text-align:justify;
+}
+.ps2 {
+  text-align:justify;
+}
+.ps3 {
+  text-align:justify;
+}
+.ps4 {
+  text-align:justify;
+}
+.ps5 {
+  text-align:justify;
+}
+.ps6 {
+  text-align:justify;
+}
+.ps7 {
+  text-align:justify;
+}
+.ps8 {
+  text-align:justify;
+}
+.ps9 {
   text-align:justify;
 }
 .ps10 {
