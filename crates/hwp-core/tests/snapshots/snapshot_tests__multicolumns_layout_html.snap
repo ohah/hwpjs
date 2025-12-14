@@ -82,6 +82,9 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .cs8 {
   font-size:120pt;color:rgb(255,0,0);font-family:"바탕";
 }
+.ps0 {
+  text-align:justify;
+}
 .ps1 {
   text-align:justify;
 }

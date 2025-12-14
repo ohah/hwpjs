@@ -47,6 +47,7 @@ pub fn render_table(
     table_number: Option<u32>,
     caption_text: Option<&str>,
     caption_info: Option<CaptionInfo>, // 캡션 정보 (위치, 간격, 높이) / Caption info (position, gap, height)
+    caption_char_shape_id: Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
     segment_position: Option<(INT32, INT32)>,
     para_start_vertical_mm: Option<f64>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
@@ -247,16 +248,24 @@ pub fn render_table(
                 .trim_start_matches("표")
                 .trim_start_matches(&table_num_text)
                 .trim();
+            
+            // 캡션 문단의 첫 번째 char_shape_id 사용 / Use first char_shape_id from caption paragraph
+            let caption_char_shape_id = caption_char_shape_id.unwrap_or(0); // 기본값: 0 / Default: 0
+            let cs_class = format!("cs{}", caption_char_shape_id);
+            
             format!(
-                r#"<div class="hcD" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;overflow:hidden;"><div class="hcI"><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0mm;top:-0.18mm;height:{}mm;width:{}mm;"><span class="hrt cs0">표&nbsp;</span><div class="haN" style="left:0mm;top:0mm;width:1.95mm;height:{}mm;"><span class="hrt cs0">{}</span></div><span class="hrt cs0">&nbsp;{}</span></div></div></div>"#,
+                r#"<div class="hcD" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;overflow:hidden;"><div class="hcI"><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0mm;top:-0.18mm;height:{}mm;width:{}mm;"><span class="hrt {}">표&nbsp;</span><div class="haN" style="left:0mm;top:0mm;width:1.95mm;height:{}mm;"><span class="hrt {}">{}</span></div><span class="hrt {}">&nbsp;{}</span></div></div></div>"#,
                 caption_left_mm,
                 caption_top_mm,
                 caption_width_mm,
                 caption_height_mm,
                 caption_height_mm,
                 caption_width_mm,
+                cs_class,
                 caption_height_mm,
+                cs_class,
                 table_num_text,
+                cs_class,
                 caption_body
             )
         }
@@ -367,15 +376,29 @@ pub fn process_table<'a>(
 
     // 캡션 텍스트 추출: paragraphs 필드에서 모든 캡션 수집 / Extract caption text: collect all captions from paragraphs field
     let mut caption_texts: Vec<String> = Vec::new();
+    let mut caption_char_shape_ids: Vec<Option<usize>> = Vec::new();
 
     // paragraphs 필드에서 모든 캡션 수집 / Collect all captions from paragraphs field
     for para in paragraphs {
+        let mut caption_text_opt: Option<String> = None;
+        let mut caption_char_shape_id_opt: Option<usize> = None;
+        
         for record in &para.records {
             if let ParagraphRecord::ParaText { text, .. } = record {
                 if !text.trim().is_empty() {
-                    caption_texts.push(text.clone());
+                    caption_text_opt = Some(text.clone());
+                }
+            } else if let ParagraphRecord::ParaCharShape { shapes } = record {
+                // 첫 번째 char_shape_id 찾기 / Find first char_shape_id
+                if let Some(shape_info) = shapes.first() {
+                    caption_char_shape_id_opt = Some(shape_info.shape_id as usize);
                 }
             }
+        }
+        
+        if let Some(text) = caption_text_opt {
+            caption_texts.push(text);
+            caption_char_shape_ids.push(caption_char_shape_id_opt);
         }
     }
 
@@ -392,10 +415,18 @@ pub fn process_table<'a>(
             } else {
                 caption_text.clone()
             };
+            
+            // 캡션 char_shape_id 찾기 / Find caption char_shape_id
+            let current_caption_char_shape_id = if caption_index < caption_char_shape_ids.len() {
+                caption_char_shape_ids[caption_index]
+            } else {
+                None
+            };
+            
             caption_index += 1;
             result
                 .tables
-                .push((table, ctrl_header, current_caption, caption_info));
+                .push((table, ctrl_header, current_caption, caption_info, current_caption_char_shape_id));
             caption_text = None; // 다음 테이블을 위해 초기화 / Reset for next table
         } else if found_table {
             // 테이블 다음에 오는 문단에서 텍스트 추출 / Extract text from paragraph after table

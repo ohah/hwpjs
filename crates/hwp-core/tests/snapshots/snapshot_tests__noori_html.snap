@@ -67,23 +67,62 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .hcc {margin:0;padding:0;position:absolute;}
 .hls {clear:both;}
 [onclick] {cursor:pointer;}
+.cs5 {
+  font-size:15.5pt;color:rgb(0,0,0);font-family:"HY헤드라인M";
+}
 .cs6 {
   font-size:13pt;color:rgb(0,0,0);font-family:"휴먼명조";font-weight:bold;
+}
+.cs7 {
+  font-size:16pt;color:rgb(255,255,255);font-family:"HY헤드라인M";
+}
+.cs8 {
+  font-size:16pt;color:rgb(0,0,0);font-family:"HY헤드라인M";
 }
 .cs9 {
   font-size:10pt;color:rgb(0,0,0);font-family:"바탕";
 }
+.cs10 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"HY울릉도M";
+}
 .cs12 {
   font-size:14pt;color:rgb(0,0,0);font-family:"휴먼명조";
 }
+.cs13 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"휴먼명조";font-weight:bold;
+}
+.cs14 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"굴림체";
+}
+.cs15 {
+  font-size:13pt;color:rgb(255,0,0);font-family:"휴먼명조";font-weight:bold;
+}
+.cs16 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"휴먼명조";
+}
+.cs17 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"휴먼명조";font-weight:bold;
+}
+.cs18 {
+  font-size:13pt;color:rgb(255,0,0);font-family:"휴먼명조";font-weight:bold;
+}
 .cs19 {
   font-size:12pt;color:rgb(0,0,0);font-family:"바탕";
+}
+.cs20 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"휴먼명조";font-weight:bold;
 }
 .cs21 {
   font-size:15pt;color:rgb(0,0,0);font-family:"함초롬바탕";
 }
 .cs22 {
   font-size:15pt;color:rgb(0,0,0);font-family:"바탕";
+}
+.cs23 {
+  font-size:16pt;color:rgb(0,0,0);font-family:"HY헤드라인M";
+}
+.cs24 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"휴먼명조";
 }
 .cs26 {
   font-size:3pt;color:rgb(0,0,0);font-family:"바탕";
@@ -93,6 +132,18 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 }
 .cs30 {
   font-size:15pt;color:rgb(0,0,0);font-family:"휴먼명조";
+}
+.cs31 {
+  font-size:12pt;color:rgb(0,0,255);font-family:"휴먼명조";
+}
+.cs32 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"휴먼명조";
+}
+.cs33 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"휴먼명조";
+}
+.cs34 {
+  font-size:18pt;color:rgb(0,0,0);font-family:"HY헤드라인M";
 }
 .cs36 {
   font-size:15pt;color:rgb(0,0,0);font-family:"휴먼명조";
@@ -139,8 +190,47 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .cs50 {
   font-size:15pt;color:rgb(0,0,0);font-family:"휴먼명조";font-weight:bold;
 }
+.cs51 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"HY울릉도M";
+}
+.cs52 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"HY울릉도M";
+}
+.cs53 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"HY울릉도M";
+}
+.cs54 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"HY울릉도M";
+}
+.cs55 {
+  font-size:11pt;color:rgb(0,0,0);font-family:"HY울릉도M";
+}
 .cs56 {
   font-size:15pt;color:rgb(0,0,0);font-family:"휴먼명조";font-weight:bold;
+}
+.ps3 {
+  text-align:justify;
+}
+.ps8 {
+  text-align:center;
+}
+.ps9 {
+  text-align:center;
+}
+.ps10 {
+  text-align:center;
+}
+.ps22 {
+  text-align:justify;
+}
+.ps23 {
+  text-align:center;
+}
+.ps24 {
+  text-align:center;
+}
+.ps25 {
+  text-align:center;
 }
 .ps26 {
   text-align:center;
@@ -153,6 +243,9 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 }
 .ps30 {
   text-align:justify;
+}
+.ps31 {
+  text-align:center;
 }
 .ps32 {
   text-align:justify;
@@ -180,6 +273,18 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 }
 .ps40 {
   text-align:justify;
+}
+.ps41 {
+  text-align:center;
+}
+.ps42 {
+  text-align:center;
+}
+.ps43 {
+  text-align:center;
+}
+.ps44 {
+  text-align:center;
 }
 @media print {
 .hpa {margin:0;border:0 black none;box-shadow:none;}

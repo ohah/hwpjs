@@ -17,37 +17,58 @@ impl StyleInfo {
         let mut para_shapes = HashSet::new();
         let mut text_colors = HashSet::new();
 
+        // 문단에서 스타일 수집하는 헬퍼 함수 / Helper function to collect styles from paragraph
+        let collect_from_paragraph = |paragraph: &crate::document::Paragraph,
+                                      char_shapes: &mut HashSet<usize>,
+                                      para_shapes: &mut HashSet<usize>,
+                                      text_colors: &mut HashSet<u32>| {
+            // ParaShape 수집 / Collect ParaShape
+            let para_shape_id = paragraph.para_header.para_shape_id;
+            // HWP 파일의 para_shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for para_shape_id
+            if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+                para_shapes.insert(para_shape_id as usize);
+            }
+
+            // CharShape와 텍스트 색상 수집 / Collect CharShape and text colors
+            for record in &paragraph.records {
+                if let crate::document::bodytext::ParagraphRecord::ParaCharShape { shapes } =
+                    record
+                {
+                    for shape_info in shapes {
+                        let shape_id = shape_info.shape_id as usize;
+                        // HWP 파일의 shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for shape_id
+                        if shape_id < document.doc_info.char_shapes.len() {
+                            // Store shape_id directly (0-based indexing to match XSL/XML)
+                            char_shapes.insert(shape_id);
+
+                            // shape_id is 0-based (matches XSL/XML format)
+                            if let Some(char_shape) =
+                                document.doc_info.char_shapes.get(shape_id)
+                            {
+                                if char_shape.text_color.0 != 0 {
+                                    text_colors.insert(char_shape.text_color.0);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
         // 모든 섹션의 문단들을 검색 / Search all paragraphs in all sections
         for section in &document.body_text.sections {
             for paragraph in &section.paragraphs {
-                // ParaShape 수집 / Collect ParaShape
-                let para_shape_id = paragraph.para_header.para_shape_id;
-                // HWP 파일의 para_shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for para_shape_id
-                if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
-                    para_shapes.insert(para_shape_id as usize);
-                }
+                collect_from_paragraph(paragraph, &mut char_shapes, &mut para_shapes, &mut text_colors);
 
-                // CharShape와 텍스트 색상 수집 / Collect CharShape and text colors
+                // CtrlHeader의 paragraphs도 수집 / Also collect paragraphs from CtrlHeader
                 for record in &paragraph.records {
-                    if let crate::document::bodytext::ParagraphRecord::ParaCharShape { shapes } =
-                        record
+                    if let crate::document::bodytext::ParagraphRecord::CtrlHeader {
+                        paragraphs: ctrl_paragraphs,
+                        ..
+                    } = record
                     {
-                        for shape_info in shapes {
-                            let shape_id = shape_info.shape_id as usize;
-                            // HWP 파일의 shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for shape_id
-                            if shape_id < document.doc_info.char_shapes.len() {
-                                // Store shape_id directly (0-based indexing to match XSL/XML)
-                                char_shapes.insert(shape_id);
-
-                                // shape_id is 0-based (matches XSL/XML format)
-                                if let Some(char_shape) =
-                                    document.doc_info.char_shapes.get(shape_id)
-                                {
-                                    if char_shape.text_color.0 != 0 {
-                                        text_colors.insert(char_shape.text_color.0);
-                                    }
-                                }
-                            }
+                        for ctrl_para in ctrl_paragraphs {
+                            collect_from_paragraph(ctrl_para, &mut char_shapes, &mut para_shapes, &mut text_colors);
                         }
                     }
                 }

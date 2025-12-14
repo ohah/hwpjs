@@ -16,6 +16,7 @@ pub mod table;
 use crate::document::bodytext::ctrl_header::CtrlHeaderData;
 use crate::document::bodytext::{ParagraphRecord, Table};
 use crate::document::{CtrlHeader, Paragraph};
+use crate::viewer::html::ctrl_header::table::CaptionInfo;
 
 /// CtrlHeader 처리 결과 / CtrlHeader processing result
 #[derive(Debug, Default)]
@@ -24,8 +25,9 @@ pub struct CtrlHeaderResult<'a> {
     pub tables: Vec<(
         &'a Table,
         Option<&'a CtrlHeaderData>,
-        Option<String>, // 캡션 텍스트 / Caption text
-        Option<crate::viewer::html::ctrl_header::table::CaptionInfo>, // 캡션 정보 / Caption info
+        Option<String>,      // 캡션 텍스트 / Caption text
+        Option<CaptionInfo>, // 캡션 정보 / Caption info
+        Option<usize>,       // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
     )>,
     /// 추출된 이미지들 / Extracted images
     pub images: Vec<(u32, u32, String)>, // (width, height, url)
