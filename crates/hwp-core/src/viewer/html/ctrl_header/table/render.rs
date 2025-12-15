@@ -484,41 +484,42 @@ pub fn render_table(
 
     // table-caption.html fixture 기준으로, 수직 캡션(Left/Right)이 있는 표의 htG top은
     // like_letters 기준 위치보다 한 줄(line) 만큼 아래에 배치됩니다.
-    // 단, 조합 캡션(수직 + 가로)이 있는 경우에는 오프셋을 적용하지 않습니다.
+    // 단, vertical_align이 "bottom"인 조합 캡션(오른쪽 아래)의 경우에는 오프셋을 적용하지 않습니다.
     //
-    // 조합 캡션 판단: 수직 캡션이면서 캡션 본문에 "위" 또는 "아래"가 포함된 경우
-    // 하지만 텍스트 검색 대신 JSON 속성으로 판단해야 하므로, 현재는 오프셋을 적용하지 않음
-    // Combination caption detection: vertical caption with "위" or "아래" in body
-    // But should use JSON properties instead of text search, so currently not applying offset
+    // fixture 분석:
+    // - 표3 (왼쪽, vertical_align: middle): 오프셋 필요
+    // - 표4 (오른쪽, vertical_align: middle): 오프셋 필요
+    // - 표5 (왼쪽 위, vertical_align: top): 오프셋 필요
+    // - 표6 (오른쪽 아래, vertical_align: bottom): 오프셋 불필요
     //
-    // htG 자체의 top은 table_position()에서 계산되므로,
-    // 단순 수직 캡션이 존재하는 경우 htG의 top에 한 줄 높이를 더해 fixture와 위치를 맞춥니다.
     // According to table-caption.html fixture, htG top for tables with vertical captions (Left/Right)
     // is placed one line below the like_letters reference position.
-    // However, for combination captions (vertical + horizontal), the offset is not applied.
+    // However, for combination captions with vertical_align "bottom" (right bottom), the offset is not applied.
+    //
+    // Fixture analysis:
+    // - Table 3 (left, vertical_align: middle): offset needed
+    // - Table 4 (right, vertical_align: middle): offset needed
+    // - Table 5 (left top, vertical_align: top): offset needed
+    // - Table 6 (right bottom, vertical_align: bottom): offset not needed
     //
     // htG's top is calculated in table_position(), so
-    // when a simple vertical caption exists (not combination), we add one line height to htG's top to match the fixture position.
-    // TODO: JSON 속성으로 조합 캡션을 판단하는 방법을 찾아야 함
-    // TODO: Need to find a way to detect combination captions from JSON properties
-    // 현재는 오프셋을 적용하지 않음 (표6 위치 계산 오류 해결을 위해)
-    // Currently not applying offset (to fix table 6 position calculation error)
-    // 표3, 표4는 오프셋이 필요하지만, 표5, 표6은 오프셋이 필요하지 않음
-    // Tables 3, 4 need offset, but tables 5, 6 don't need offset
+    // when a vertical caption exists and vertical_align is not "bottom", we add one line height to htG's top to match the fixture position.
 
-    // 조합 캡션 판단: vertical_align이 MIDDLE이 아니면 조합 캡션 / Combination caption detection: if vertical_align is not MIDDLE, it's a combination caption
-    let is_combination_caption = if let Some(info) = caption_info {
+    // vertical_align이 "bottom"이 아닌 모든 수직 캡션에 오프셋 적용
+    // Apply offset to all vertical captions where vertical_align is not "bottom"
+    let should_apply_offset = if let Some(info) = caption_info {
         if let Some(vertical_align) = info.vertical_align {
-            // MIDDLE이 아니면 조합 캡션 / If not MIDDLE, it's a combination caption
-            vertical_align != CaptionVAlign::Middle
+            // vertical_align이 "bottom"이 아니면 오프셋 적용 / Apply offset if vertical_align is not "bottom"
+            vertical_align != CaptionVAlign::Bottom
         } else {
-            false
+            // vertical_align이 없으면 오프셋 적용 (기본값) / Apply offset if vertical_align is not available (default)
+            true
         }
     } else {
         false
     };
 
-    if needs_htg && has_caption && is_vertical && !is_combination_caption {
+    if needs_htg && has_caption && is_vertical && should_apply_offset {
         // 한 줄 높이 계산: caption_line_segment의 line_height + line_spacing 사용
         // Calculate line height: use line_height + line_spacing from caption_line_segment
         // line_height는 줄의 높이를, line_spacing은 줄 간격을 나타냅니다.
