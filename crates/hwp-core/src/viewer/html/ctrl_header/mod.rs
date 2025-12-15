@@ -28,6 +28,7 @@ pub struct CtrlHeaderResult<'a> {
         Option<String>,      // 캡션 텍스트 / Caption text
         Option<CaptionInfo>, // 캡션 정보 / Caption info
         Option<usize>,       // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
+        Option<usize>,       // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
     )>,
     /// 추출된 이미지들 / Extracted images
     pub images: Vec<(u32, u32, String)>, // (width, height, url)

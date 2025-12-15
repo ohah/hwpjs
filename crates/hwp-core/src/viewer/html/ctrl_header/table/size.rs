@@ -14,7 +14,13 @@ pub(crate) struct Size {
 
 /// CtrlHeader 기반 htb 컨테이너 크기 계산 / Calculate container size from CtrlHeader
 pub(crate) fn htb_size(ctrl_header: Option<&CtrlHeaderData>) -> Size {
-    if let Some(CtrlHeaderData::ObjectCommon { width, height, margin, .. }) = ctrl_header {
+    if let Some(CtrlHeaderData::ObjectCommon {
+        width,
+        height,
+        margin,
+        ..
+    }) = ctrl_header
+    {
         let w = width.to_mm() + margin.left.to_mm() + margin.right.to_mm();
         let h = height.to_mm() + margin.top.to_mm() + margin.bottom.to_mm();
         Size {
@@ -30,10 +36,7 @@ pub(crate) fn htb_size(ctrl_header: Option<&CtrlHeaderData>) -> Size {
 }
 
 /// 셀 기반 콘텐츠 크기 계산 / Calculate content size from cells
-pub(crate) fn content_size(
-    table: &Table,
-    ctrl_header: Option<&CtrlHeaderData>,
-) -> Size {
+pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) -> Size {
     let mut content_width = 0.0;
     let mut content_height = 0.0;
 
