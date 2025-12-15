@@ -493,10 +493,14 @@ pub fn render_table(
     // htG's top is calculated in table_position(), so
     // when a vertical caption exists, we add one line height to htG's top to match the fixture position.
     if needs_htg && has_caption && is_vertical {
-        // 한 줄 높이 계산: caption_line_segment의 baseline_distance 사용
-        // Calculate line height: use baseline_distance from caption_line_segment
+        // 한 줄 높이 계산: caption_line_segment의 line_height + line_spacing 사용
+        // Calculate line height: use line_height + line_spacing from caption_line_segment
+        // line_height는 줄의 높이를, line_spacing은 줄 간격을 나타냅니다.
+        // line_height represents the line height, and line_spacing represents the line spacing.
         let line_height_offset_mm = if let Some(segment) = caption_line_segment {
-            round_to_2dp(int32_to_mm(segment.baseline_distance))
+            let line_height_mm = round_to_2dp(int32_to_mm(segment.line_height));
+            let line_spacing_mm = round_to_2dp(int32_to_mm(segment.line_spacing));
+            round_to_2dp(line_height_mm + line_spacing_mm)
         } else {
             // LineSegmentInfo가 없으면 기본값 사용 (일반적인 한 줄 높이)
             // Use default value if LineSegmentInfo is not available (typical line height)
