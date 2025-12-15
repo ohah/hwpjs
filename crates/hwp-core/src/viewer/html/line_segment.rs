@@ -1,15 +1,17 @@
 /// 라인 세그먼트 렌더링 모듈 / Line segment rendering module
-use crate::document::bodytext::LineSegmentInfo;
+use crate::document::bodytext::{CharShapeInfo, LineSegmentInfo, PageDef};
 use crate::document::CtrlHeaderData;
+use crate::viewer::html::ctrl_header::table::{CaptionInfo, CaptionText};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
-use crate::ParaShape;
+use crate::viewer::HtmlOptions;
+use crate::{HwpDocument, ParaShape, UINT32};
 
 /// 테이블 정보 타입 / Table info type
 pub type TableInfo<'a> = (
     &'a crate::document::bodytext::Table,
     Option<&'a CtrlHeaderData>,
-    Option<&'a str>, // 캡션 텍스트 / Caption text
-    Option<crate::viewer::html::ctrl_header::table::CaptionInfo>, // 캡션 정보 / Caption info
+    Option<&'a CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
+    Option<CaptionInfo>,     // 캡션 정보 / Caption info
     Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
     Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
 );
@@ -69,8 +71,8 @@ pub fn render_line_segment_with_indent(
 pub fn render_line_segments(
     segments: &[LineSegmentInfo],
     text: &str,
-    char_shapes: &[crate::document::bodytext::CharShapeInfo],
-    document: &crate::document::HwpDocument,
+    char_shapes: &[CharShapeInfo],
+    document: &HwpDocument,
     para_shape_class: &str,
 ) -> String {
     render_line_segments_with_content(
@@ -81,7 +83,7 @@ pub fn render_line_segments(
         para_shape_class,
         &[],
         &[],
-        &crate::viewer::html::HtmlOptions::default(),
+        &HtmlOptions::default(),
         None, // ParaShape indent는 기본값으로 None 사용 / Use None as default for ParaShape indent
         None, // hcd_position은 기본값으로 None 사용 / Use None as default for hcd_position
         None, // page_def는 기본값으로 None 사용 / Use None as default for page_def
@@ -93,15 +95,15 @@ pub fn render_line_segments(
 pub fn render_line_segments_with_content(
     segments: &[LineSegmentInfo],
     text: &str,
-    char_shapes: &[crate::document::bodytext::CharShapeInfo],
-    document: &crate::document::HwpDocument,
+    char_shapes: &[CharShapeInfo],
+    document: &HwpDocument,
     para_shape_class: &str,
-    images: &[(crate::types::UINT32, crate::types::UINT32, String)],
+    images: &[(UINT32, UINT32, String)],
     tables: &[TableInfo],
-    options: &crate::viewer::html::HtmlOptions,
+    options: &HtmlOptions,
     para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
     hcd_position: Option<(f64, f64)>, // hcD 위치 (mm) / hcD position (mm)
-    page_def: Option<&crate::document::bodytext::PageDef>, // 페이지 정의 / Page definition
+    page_def: Option<&PageDef>,     // 페이지 정의 / Page definition
     table_counter_start: u32,       // 테이블 번호 시작값 / Table number start value
 ) -> String {
     let mut result = String::new();

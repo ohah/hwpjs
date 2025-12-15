@@ -29,6 +29,17 @@ pub struct CaptionInfo {
     pub last_width: Option<u32>,
 }
 
+/// 캡션 텍스트 구조 / Caption text structure
+#[derive(Debug, Clone)]
+pub struct CaptionText {
+    /// 캡션 라벨 (예: "표") / Caption label (e.g., "표")
+    pub label: String,
+    /// 캡션 번호 (예: "1", "2") / Caption number (e.g., "1", "2")
+    pub number: String,
+    /// 캡션 본문 (예: "위 캡션", "왼쪽") / Caption body (e.g., "위 캡션", "왼쪽")
+    pub body: String,
+}
+
 /// 테이블을 HTML로 렌더링 / Render table to HTML
 #[allow(clippy::too_many_arguments)]
 pub fn render_table(
@@ -39,7 +50,7 @@ pub fn render_table(
     page_def: Option<&PageDef>,
     _options: &HtmlOptions,
     table_number: Option<u32>,
-    caption_text: Option<&str>,
+    caption_text: Option<&CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
     caption_info: Option<CaptionInfo>, // 캡션 정보 (위치, 간격, 높이) / Caption info (position, gap, height)
     caption_char_shape_id: Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
     caption_para_shape_id: Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
@@ -232,22 +243,18 @@ pub fn render_table(
         if !has_caption {
             String::new()
         } else {
-            // 캡션 텍스트에서 "표 X" 부분 추출 / Extract "표 X" from caption text
-            let caption_parts: Vec<&str> = caption.split("표").collect();
-            let table_num_text = if let Some(num_part) = caption_parts.get(1) {
-                let extracted = num_part
-                    .trim()
-                    .chars()
-                    .take_while(|c| c.is_ascii_digit())
-                    .collect::<String>();
-                if extracted.is_empty() {
-                    table_number.map(|n| n.to_string()).unwrap_or_default()
-                } else {
-                    extracted
-                }
+            // 분해된 캡션 텍스트 사용 / Use parsed caption text
+            let caption_label = if !caption.label.is_empty() {
+                caption.label.clone()
+            } else {
+                "표".to_string() // 기본값 / Default
+            };
+            let table_num_text = if !caption.number.is_empty() {
+                caption.number.clone()
             } else {
                 table_number.map(|n| n.to_string()).unwrap_or_default()
             };
+            let caption_body = caption.body.clone();
 
             // 캡션 HTML 생성 / Generate caption HTML
             let caption_base_left_mm =
@@ -306,14 +313,9 @@ pub fn render_table(
             caption_left_mm = round_to_2dp(caption_left_mm);
             caption_top_mm = round_to_2dp(caption_top_mm);
 
-            let caption_body = caption
-                .trim_start_matches("표")
-                .trim_start_matches(&table_num_text)
-                .trim();
-
             // 캡션 문단의 첫 번째 char_shape_id 사용 / Use first char_shape_id from caption paragraph
-            let caption_char_shape_id = caption_char_shape_id.unwrap_or(0); // 기본값: 0 / Default: 0
-            let cs_class = format!("cs{}", caption_char_shape_id);
+            let caption_char_shape_id_value = caption_char_shape_id.unwrap_or(0); // 기본값: 0 / Default: 0
+            let cs_class = format!("cs{}", caption_char_shape_id_value);
 
             // 캡션 문단의 para_shape_id 사용 / Use para_shape_id from caption paragraph
             // document.doc_info.para_shapes에서 실제 ParaShape를 확인하여 ID로 추출
@@ -329,6 +331,57 @@ pub fn render_table(
                 String::new()
             };
 
+            // 캡션 스타일 값 계산: 실제 데이터에서 추출 / Calculate caption style values from actual data
+            // ParaShape와 CharShape를 사용하여 line-height, top, width, height 계산
+            // Use ParaShape and CharShape to calculate line-height, top, width, height
+            let (line_height_mm, top_offset_mm, number_width_mm) =
+                if let Some(para_shape_id) = caption_para_shape_id {
+                    // ParaShape에서 기본 line-height 계산 / Calculate basic line-height from ParaShape
+                    let para_shape = if para_shape_id < document.doc_info.para_shapes.len() {
+                        Some(&document.doc_info.para_shapes[para_shape_id])
+                    } else {
+                        None
+                    };
+
+                    // CharShape에서 폰트 크기 가져오기 / Get font size from CharShape
+                    let font_size_pt =
+                        if caption_char_shape_id_value < document.doc_info.char_shapes.len() {
+                            let char_shape =
+                                &document.doc_info.char_shapes[caption_char_shape_id_value];
+                            // base_size는 INT32이고 0pt~4096pt 범위 / base_size is INT32 and ranges from 0pt~4096pt
+                            char_shape.base_size as f64 / 100.0 // 100분의 1pt 단위이므로 100으로 나눔 / Divide by 100 since it's in 1/100 pt units
+                        } else {
+                            10.0 // 기본값 / Default
+                        };
+
+                    // line-height 계산: 폰트 크기 기반 / Calculate line-height based on font size
+                    // fixture 분석 결과, line-height는 baseline_distance를 사용하지만
+                    // 캡션의 경우 fixture에서 2.79mm로 고정되어 있음
+                    // Analysis of fixture shows line-height uses baseline_distance, but
+                    // for captions, fixture shows fixed 2.79mm
+                    // 실제 데이터에서 계산하려면 LineSegmentInfo가 필요하지만, 현재는 전달되지 않음
+                    // To calculate from actual data, LineSegmentInfo is needed but not currently passed
+                    // 따라서 기본값 사용 (나중에 LineSegmentInfo 전달 시 확장 가능)
+                    // So use default value (can be extended when LineSegmentInfo is passed)
+                    let calculated_line_height = (font_size_pt * 1.2) * 0.352778; // pt to mm (1pt = 0.352778mm)
+                    let line_height = round_to_2dp(calculated_line_height.max(2.79)); // 최소 2.79mm / Minimum 2.79mm
+
+                    // top offset: fixture에서 -0.18mm / top offset: -0.18mm from fixture
+                    // 실제 데이터에서는 baseline 계산이 필요하지만, 현재는 기본값 사용
+                    // Actual data requires baseline calculation, but use default for now
+                    let top_offset = -0.18;
+
+                    // 번호 박스 width: fixture에서 1.95mm / Number box width: 1.95mm from fixture
+                    // 실제 데이터에서는 숫자 폭 계산이 필요하지만, 현재는 기본값 사용
+                    // Actual data requires number width calculation, but use default for now
+                    let number_width = 1.95;
+
+                    (line_height, top_offset, number_width)
+                } else {
+                    // 기본값 사용 / Use default values
+                    (2.79, -0.18, 1.95)
+                };
+
             // 세로 방향 캡션의 경우 hcI에 top 스타일 추가 / Add top style to hcI for vertical captions
             let hci_style = if is_vertical {
                 // fixture에서 확인: 왼쪽/오른쪽 캡션은 hcI에 top:0.50mm 또는 top:0.99mm 추가
@@ -343,14 +396,18 @@ pub fn render_table(
             };
 
             format!(
-                r#"<div class="hcD" style="left:{caption_left_mm}mm;top:{caption_top_mm}mm;width:{caption_width_mm}mm;height:{caption_height_mm}mm;overflow:hidden;"><div class="hcI" {hci_style}><div class="hls {ps_class}" style="line-height:2.79mm;white-space:nowrap;left:0mm;top:-0.18mm;height:{caption_height_mm}mm;width:{caption_width_mm}mm;"><span class="hrt {cs_class}">표&nbsp;</span><div class="haN" style="left:0mm;top:0mm;width:1.95mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div></div></div>"#,
+                r#"<div class="hcD" style="left:{caption_left_mm}mm;top:{caption_top_mm}mm;width:{caption_width_mm}mm;height:{caption_height_mm}mm;overflow:hidden;"><div class="hcI" {hci_style}><div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:0mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;width:{number_width_mm}mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div></div></div>"#,
                 caption_left_mm = caption_left_mm,
                 caption_top_mm = caption_top_mm,
                 caption_width_mm = caption_width_mm,
                 caption_height_mm = caption_height_mm,
                 hci_style = hci_style,
                 ps_class = ps_class,
+                line_height_mm = line_height_mm,
+                top_offset_mm = top_offset_mm,
+                number_width_mm = number_width_mm,
                 cs_class = cs_class,
+                caption_label = caption_label,
                 table_num_text = table_num_text,
                 caption_body = caption_body
             )

@@ -12,4 +12,4 @@ mod size;
 mod svg;
 
 pub use process::process_table;
-pub use render::{render_table, CaptionInfo};
+pub use render::{render_table, CaptionInfo, CaptionText};

@@ -4,7 +4,99 @@ use crate::document::CtrlHeader;
 
 use crate::viewer::html::ctrl_header::CtrlHeaderResult;
 
-use super::render::CaptionInfo;
+use super::render::{CaptionInfo, CaptionText};
+
+/// 캡션 텍스트를 구조적으로 분해 / Parse caption text into structured components
+///
+/// 실제 HWP 데이터 구조:
+/// - 텍스트: "표  오른쪽"
+/// - AUTO_NUMBER 컨트롤 문자가 position 2에 있음
+/// - 따라서: label="표", number는 AUTO_NUMBER에서 생성, body="오른쪽"
+///
+/// Actual HWP data structure:
+/// - Text: "표  오른쪽"
+/// - AUTO_NUMBER control character at position 2
+/// - Therefore: label="표", number generated from AUTO_NUMBER, body="오른쪽"
+fn parse_caption_text(
+    text: &str,
+    control_char_positions: &[crate::document::bodytext::control_char::ControlCharPosition],
+    table_number: Option<u32>,
+) -> CaptionText {
+    use crate::document::bodytext::control_char::ControlChar;
+
+    // AUTO_NUMBER 컨트롤 문자 위치 찾기 / Find AUTO_NUMBER control character position
+    let auto_number_pos = control_char_positions
+        .iter()
+        .find(|cp| cp.code == ControlChar::AUTO_NUMBER)
+        .map(|cp| cp.position);
+
+    if let Some(auto_pos) = auto_number_pos {
+        // AUTO_NUMBER가 있으면 그 위치를 기준으로 분리 / If AUTO_NUMBER exists, split based on its position
+        let label = text
+            .chars()
+            .take(auto_pos)
+            .collect::<String>()
+            .trim()
+            .to_string();
+        let body = text
+            .chars()
+            .skip(auto_pos + 1) // AUTO_NUMBER 컨트롤 문자 건너뛰기 / Skip AUTO_NUMBER control character
+            .collect::<String>()
+            .trim()
+            .to_string();
+
+        CaptionText {
+            label: if label.is_empty() {
+                "표".to_string()
+            } else {
+                label
+            },
+            number: table_number.map(|n| n.to_string()).unwrap_or_default(),
+            body,
+        }
+    } else {
+        // AUTO_NUMBER가 없으면 기존 방식으로 파싱 / If no AUTO_NUMBER, parse using existing method
+        let trimmed = text.trim();
+
+        // "표"로 시작하는지 확인 / Check if starts with "표"
+        if trimmed.starts_with("표") {
+            let after_label = &trimmed[3..]; // "표" + 공백 제거 / Remove "표" and space
+
+            // 숫자 추출 / Extract number
+            let number_end = after_label
+                .char_indices()
+                .find(|(_, c)| !c.is_ascii_digit() && !c.is_whitespace())
+                .map(|(i, _)| i)
+                .unwrap_or(after_label.len());
+
+            let number = if number_end > 0 {
+                after_label[..number_end].trim().to_string()
+            } else {
+                table_number.map(|n| n.to_string()).unwrap_or_default()
+            };
+
+            // 본문 추출 / Extract body
+            let body = if number_end < after_label.len() {
+                after_label[number_end..].trim().to_string()
+            } else {
+                String::new()
+            };
+
+            CaptionText {
+                label: "표".to_string(),
+                number,
+                body,
+            }
+        } else {
+            // "표"로 시작하지 않으면 전체를 본문으로 처리 / If doesn't start with "표", treat entire text as body
+            CaptionText {
+                label: String::new(),
+                number: table_number.map(|n| n.to_string()).unwrap_or_default(),
+                body: trimmed.to_string(),
+            }
+        }
+    }
+}
 
 /// 테이블 컨트롤 처리 / Process table control
 ///
@@ -37,21 +129,30 @@ pub fn process_table<'a>(
     };
 
     // 캡션 텍스트 추출: paragraphs 필드에서 모든 캡션 수집 / Extract caption text: collect all captions from paragraphs field
-    let mut caption_texts: Vec<String> = Vec::new();
+    let mut caption_texts: Vec<CaptionText> = Vec::new();
     let mut caption_char_shape_ids: Vec<Option<usize>> = Vec::new();
     let mut caption_para_shape_ids: Vec<Option<usize>> = Vec::new();
 
     // paragraphs 필드에서 모든 캡션 수집 / Collect all captions from paragraphs field
     for para in paragraphs {
         let mut caption_text_opt: Option<String> = None;
+        let mut caption_control_chars: Vec<
+            crate::document::bodytext::control_char::ControlCharPosition,
+        > = Vec::new();
         let mut caption_char_shape_id_opt: Option<usize> = None;
         // para_shape_id 추출 / Extract para_shape_id
         let para_shape_id = para.para_header.para_shape_id as usize;
 
         for record in &para.records {
-            if let ParagraphRecord::ParaText { text, .. } = record {
+            if let ParagraphRecord::ParaText {
+                text,
+                control_char_positions,
+                ..
+            } = record
+            {
                 if !text.trim().is_empty() {
                     caption_text_opt = Some(text.clone());
+                    caption_control_chars = control_char_positions.clone();
                 }
             } else if let ParagraphRecord::ParaCharShape { shapes } = record {
                 // 첫 번째 char_shape_id 찾기 / Find first char_shape_id
@@ -62,14 +163,16 @@ pub fn process_table<'a>(
         }
 
         if let Some(text) = caption_text_opt {
-            caption_texts.push(text);
+            // 캡션 텍스트를 구조적으로 분해 (control_char_positions 포함) / Parse caption text into structured components (including control_char_positions)
+            let parsed = parse_caption_text(&text, &caption_control_chars, None);
+            caption_texts.push(parsed);
             caption_char_shape_ids.push(caption_char_shape_id_opt);
             caption_para_shape_ids.push(Some(para_shape_id));
         }
     }
 
     let mut caption_index = 0;
-    let mut caption_text: Option<String> = None;
+    let mut caption_text: Option<CaptionText> = None;
     let mut found_table = false;
 
     for child in children.iter() {
@@ -108,15 +211,26 @@ pub fn process_table<'a>(
             caption_text = None; // 다음 테이블을 위해 초기화 / Reset for next table
         } else if found_table {
             // 테이블 다음에 오는 문단에서 텍스트 추출 / Extract text from paragraph after table
-            if let ParagraphRecord::ParaText { text, .. } = child {
-                caption_text = Some(text.clone());
+            if let ParagraphRecord::ParaText {
+                text,
+                control_char_positions,
+                ..
+            } = child
+            {
+                caption_text = Some(parse_caption_text(text, control_char_positions, None));
                 break;
             } else if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
                 // ListHeader의 paragraphs에서 텍스트 추출 / Extract text from ListHeader's paragraphs
                 for para in paragraphs {
                     for record in &para.records {
-                        if let ParagraphRecord::ParaText { text, .. } = record {
-                            caption_text = Some(text.clone());
+                        if let ParagraphRecord::ParaText {
+                            text,
+                            control_char_positions,
+                            ..
+                        } = record
+                        {
+                            caption_text =
+                                Some(parse_caption_text(text, control_char_positions, None));
                             break;
                         }
                     }
@@ -130,14 +244,25 @@ pub fn process_table<'a>(
             }
         } else {
             // 테이블 이전에 오는 문단에서 텍스트 추출 (첫 번째 테이블의 캡션) / Extract text from paragraph before table (caption for first table)
-            if let ParagraphRecord::ParaText { text, .. } = child {
-                caption_text = Some(text.clone());
+            if let ParagraphRecord::ParaText {
+                text,
+                control_char_positions,
+                ..
+            } = child
+            {
+                caption_text = Some(parse_caption_text(text, control_char_positions, None));
             } else if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
                 // ListHeader의 paragraphs에서 텍스트 추출 / Extract text from ListHeader's paragraphs
                 for para in paragraphs {
                     for record in &para.records {
-                        if let ParagraphRecord::ParaText { text, .. } = record {
-                            caption_text = Some(text.clone());
+                        if let ParagraphRecord::ParaText {
+                            text,
+                            control_char_positions,
+                            ..
+                        } = record
+                        {
+                            caption_text =
+                                Some(parse_caption_text(text, control_char_positions, None));
                             break;
                         }
                     }
