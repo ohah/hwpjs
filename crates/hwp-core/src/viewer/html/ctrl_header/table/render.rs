@@ -112,12 +112,11 @@ pub fn render_table(
     } else {
         0.0
     };
-    let margin_bottom_mm =
-        if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
-            margin.bottom.to_mm()
-        } else {
-            0.0
-        };
+    let margin_bottom_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
+        margin.bottom.to_mm()
+    } else {
+        0.0
+    };
 
     // resolved_size.height가 margin을 포함하지 않는 경우를 대비하여 명시적으로 계산
     // Calculate explicitly in case resolved_size.height doesn't include margin
@@ -463,5 +462,3 @@ pub fn render_table(
 
     result_html
 }
-
-
