@@ -67,6 +67,14 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut page_tables = Vec::new(); // 테이블을 별도로 저장 / Store tables separately
     let mut first_segment_pos: Option<(crate::types::INT32, crate::types::INT32)> = None; // 첫 번째 LineSegment 위치 저장 / Store first LineSegment position
     let mut hcd_position: Option<(f64, f64)> = None; // hcD 위치 저장 (mm 단위) / Store hcD position (in mm)
+    
+    // 문서 레벨에서 table_counter 관리 (문서 전체에서 테이블 번호 연속 유지) / Manage table_counter at document level (maintain sequential table numbers across document)
+    let mut table_counter = document
+        .doc_info
+        .document_properties
+        .as_ref()
+        .map(|p| p.table_start_number as u32)
+        .unwrap_or(1);
 
     // 페이지 높이 계산 (mm 단위) / Calculate page height (in mm)
     let page_height_mm = page_def.map(|pd| pd.paper_height.to_mm()).unwrap_or(297.0);
@@ -289,6 +297,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     current_para_vertical_mm,
                     &para_vertical_positions, // 모든 문단의 vertical_position 전달 / Pass all paragraphs' vertical_positions
                     current_para_index, // 현재 문단 인덱스 전달 / Pass current paragraph index
+                    &mut table_counter, // 문서 레벨 table_counter 전달 / Pass document-level table_counter
                 );
 
                 // 인덱스 증가 (vertical_position이 있는 문단만) / Increment index (only for paragraphs with vertical_position)

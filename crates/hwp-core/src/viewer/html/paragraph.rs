@@ -21,6 +21,7 @@ pub fn render_paragraph(
     current_para_vertical_mm: Option<f64>, // 현재 문단의 vertical_position / Current paragraph's vertical_position
     para_vertical_positions: &[f64], // 모든 문단의 vertical_position (vert_rel_to: "para"일 때 참조 문단 찾기 위해) / All paragraphs' vertical_positions (to find reference paragraph when vert_rel_to: "para")
     current_para_index: Option<usize>, // 현재 문단 인덱스 (vertical_position이 있는 문단 기준) / Current paragraph index (based on paragraphs with vertical_position)
+    table_counter: &mut u32, // 문서 레벨 table_counter (문서 전체에서 테이블 번호 연속 유지) / Document-level table_counter (maintain sequential table numbers across document)
 ) -> (String, Vec<String>) {
     let mut result = String::new();
 
@@ -185,13 +186,8 @@ pub fn render_paragraph(
                 },
             )
             .collect();
-        // 테이블 번호 시작값 계산 / Calculate table number start value
-        let table_counter_start = document
-            .doc_info
-            .document_properties
-            .as_ref()
-            .map(|p| p.table_start_number as u32)
-            .unwrap_or(1);
+        // 테이블 번호 시작값: 현재 table_counter 사용 (문서 레벨에서 관리) / Table number start value: use current table_counter (managed at document level)
+        let table_counter_start = *table_counter;
         result.push_str(&line_segment::render_line_segments_with_content(
             &line_segments,
             &text,
@@ -206,19 +202,14 @@ pub fn render_paragraph(
             page_def,            // 페이지 정의 전달 / Pass page definition
             table_counter_start, // 테이블 번호 시작값 전달 / Pass table number start value
         ));
+        
+        // inline_tables의 개수만큼 table_counter 증가 (이미 line_segment에 포함되었으므로) / Increment table_counter by inline_tables count (already included in line_segment)
+        *table_counter += inline_table_infos.len() as u32;
 
         // like_letters=true인 테이블은 이미 line_segment에 포함되었으므로 여기서는 처리하지 않음
         // Tables with like_letters=true are already included in line_segment, so don't process them here
 
         // like_letters=false인 테이블을 별도로 렌더링 (hpa 레벨에 배치) / Render tables with like_letters=false separately (placed at hpa level)
-        let mut table_counter = document
-            .doc_info
-            .document_properties
-            .as_ref()
-            .map(|p| p.table_start_number as u32)
-            .unwrap_or(1);
-        // inline_tables의 개수만큼 table_counter 증가 (이미 line_segment에 포함되었으므로) / Increment table_counter by inline_tables count (already included in line_segment)
-        table_counter += inline_tables.len() as u32;
         for (table, ctrl_header, caption_text, caption_info, caption_char_shape_id) in
             absolute_tables.iter()
         {
@@ -244,7 +235,7 @@ pub fn render_paragraph(
                 hcd_position,
                 page_def,
                 options,
-                Some(table_counter),
+                Some(*table_counter), // 현재 table_counter 사용 / Use current table_counter
                 caption_text.as_deref(),
                 *caption_info,          // 캡션 정보 전달 / Pass caption info
                 *caption_char_shape_id, // 캡션 char_shape_id 전달 / Pass caption char_shape_id
@@ -253,7 +244,7 @@ pub fn render_paragraph(
                 first_para_vertical_mm, // 첫 번째 문단의 vertical_position 전달 (가설 O) / Pass first paragraph's vertical_position (Hypothesis O)
             );
             table_htmls.push(table_html);
-            table_counter += 1;
+            *table_counter += 1; // table_counter 증가 / Increment table_counter
         }
     } else if !text.is_empty() {
         // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment
