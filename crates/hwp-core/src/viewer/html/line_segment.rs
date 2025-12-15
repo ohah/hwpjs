@@ -14,6 +14,7 @@ pub type TableInfo<'a> = (
     Option<CaptionInfo>,     // 캡션 정보 / Caption info
     Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
     Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
+    Option<&'a crate::document::bodytext::LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
 );
 
 /// 라인 세그먼트를 HTML로 렌더링 / Render line segment to HTML
@@ -208,6 +209,7 @@ pub fn render_line_segments_with_content(
                     caption_info,
                     caption_char_shape_id,
                     caption_para_shape_id,
+                    caption_line_segment,
                 ) = &tables[table_index];
                 let current_table_number = table_counter_start + table_index as u32;
                 // LineSegment 위치 전달 / Pass LineSegment position
@@ -225,7 +227,8 @@ pub fn render_line_segments_with_content(
                     *caption_info,          // 캡션 정보 전달 / Pass caption info
                     *caption_char_shape_id, // 캡션 char_shape_id 전달 / Pass caption char_shape_id
                     *caption_para_shape_id, // 캡션 para_shape_id 전달 / Pass caption para_shape_id
-                    segment_position,       // LineSegment 위치 전달 / Pass LineSegment position
+                    *caption_line_segment, // 캡션 LineSegmentInfo 전달 / Pass caption LineSegmentInfo
+                    segment_position,      // LineSegment 위치 전달 / Pass LineSegment position
                     None, // line_segment에서는 para_start_vertical_mm 사용 안 함 / para_start_vertical_mm not used in line_segment
                     None, // line_segment에서는 first_para_vertical_mm 사용 안 함 / first_para_vertical_mm not used in line_segment
                 );

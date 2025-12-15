@@ -14,7 +14,7 @@ mod shape_object;
 pub mod table;
 
 use crate::document::bodytext::ctrl_header::CtrlHeaderData;
-use crate::document::bodytext::{ParagraphRecord, Table};
+use crate::document::bodytext::{LineSegmentInfo, ParagraphRecord, Table};
 use crate::document::{CtrlHeader, Paragraph};
 use crate::viewer::html::ctrl_header::table::{CaptionInfo, CaptionText};
 
@@ -27,8 +27,9 @@ pub struct CtrlHeaderResult<'a> {
         Option<&'a CtrlHeaderData>,
         Option<CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
         Option<CaptionInfo>, // 캡션 정보 / Caption info
-        Option<usize>,       // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
-        Option<usize>,       // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
+        Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
+        Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
+        Option<&'a LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
     )>,
     /// 추출된 이미지들 / Extracted images
     pub images: Vec<(u32, u32, String)>, // (width, height, url)
@@ -50,7 +51,7 @@ impl<'a> CtrlHeaderResult<'a> {
 pub fn process_ctrl_header<'a>(
     header: &'a CtrlHeader,
     children: &'a [ParagraphRecord],
-    paragraphs: &[Paragraph],
+    paragraphs: &'a [Paragraph],
 ) -> CtrlHeaderResult<'a> {
     use crate::document::bodytext::ctrl_header::CtrlId;
 

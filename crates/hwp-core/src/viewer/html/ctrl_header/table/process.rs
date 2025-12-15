@@ -1,5 +1,7 @@
 use crate::document::bodytext::ctrl_header::{CaptionAlign, CtrlHeaderData};
-use crate::document::bodytext::{Paragraph, ParagraphRecord};
+use crate::document::bodytext::{
+    ControlChar, ControlCharPosition, LineSegmentInfo, Paragraph, ParagraphRecord,
+};
 use crate::document::CtrlHeader;
 
 use crate::viewer::html::ctrl_header::CtrlHeaderResult;
@@ -19,11 +21,9 @@ use super::render::{CaptionInfo, CaptionText};
 /// - Therefore: label="표", number generated from AUTO_NUMBER, body="오른쪽"
 fn parse_caption_text(
     text: &str,
-    control_char_positions: &[crate::document::bodytext::control_char::ControlCharPosition],
+    control_char_positions: &[ControlCharPosition],
     table_number: Option<u32>,
 ) -> CaptionText {
-    use crate::document::bodytext::control_char::ControlChar;
-
     // AUTO_NUMBER 컨트롤 문자 위치 찾기 / Find AUTO_NUMBER control character position
     let auto_number_pos = control_char_positions
         .iter()
@@ -105,7 +105,7 @@ fn parse_caption_text(
 pub fn process_table<'a>(
     header: &'a CtrlHeader,
     children: &'a [ParagraphRecord],
-    paragraphs: &[Paragraph],
+    paragraphs: &'a [Paragraph],
 ) -> CtrlHeaderResult<'a> {
     let mut result = CtrlHeaderResult::new();
 
@@ -132,14 +132,14 @@ pub fn process_table<'a>(
     let mut caption_texts: Vec<CaptionText> = Vec::new();
     let mut caption_char_shape_ids: Vec<Option<usize>> = Vec::new();
     let mut caption_para_shape_ids: Vec<Option<usize>> = Vec::new();
+    let mut caption_line_segments: Vec<Option<&LineSegmentInfo>> = Vec::new();
 
     // paragraphs 필드에서 모든 캡션 수집 / Collect all captions from paragraphs field
     for para in paragraphs {
         let mut caption_text_opt: Option<String> = None;
-        let mut caption_control_chars: Vec<
-            crate::document::bodytext::control_char::ControlCharPosition,
-        > = Vec::new();
+        let mut caption_control_chars: Vec<ControlCharPosition> = Vec::new();
         let mut caption_char_shape_id_opt: Option<usize> = None;
+        let mut caption_line_segment_opt: Option<&LineSegmentInfo> = None;
         // para_shape_id 추출 / Extract para_shape_id
         let para_shape_id = para.para_header.para_shape_id as usize;
 
@@ -159,6 +159,11 @@ pub fn process_table<'a>(
                 if let Some(shape_info) = shapes.first() {
                     caption_char_shape_id_opt = Some(shape_info.shape_id as usize);
                 }
+            } else if let ParagraphRecord::ParaLineSeg { segments } = record {
+                // 첫 번째 LineSegmentInfo 찾기 / Find first LineSegmentInfo
+                if let Some(segment) = segments.first() {
+                    caption_line_segment_opt = Some(segment);
+                }
             }
         }
 
@@ -168,6 +173,7 @@ pub fn process_table<'a>(
             caption_texts.push(parsed);
             caption_char_shape_ids.push(caption_char_shape_id_opt);
             caption_para_shape_ids.push(Some(para_shape_id));
+            caption_line_segments.push(caption_line_segment_opt);
         }
     }
 
@@ -199,6 +205,13 @@ pub fn process_table<'a>(
                 None
             };
 
+            // 캡션 LineSegmentInfo 찾기 / Find caption LineSegmentInfo
+            let current_caption_line_segment = if caption_index < caption_line_segments.len() {
+                caption_line_segments[caption_index]
+            } else {
+                None
+            };
+
             caption_index += 1;
             result.tables.push((
                 table,
@@ -207,6 +220,7 @@ pub fn process_table<'a>(
                 caption_info,
                 current_caption_char_shape_id,
                 current_caption_para_shape_id,
+                current_caption_line_segment,
             ));
             caption_text = None; // 다음 테이블을 위해 초기화 / Reset for next table
         } else if found_table {

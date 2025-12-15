@@ -55,6 +55,7 @@ pub fn render_paragraph(
         Option<CaptionInfo>,                                          // 캡션 정보 / Caption info
         Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
         Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
+        Option<&crate::document::bodytext::LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
     )> = Vec::new();
 
     for record in &paragraph.records {
@@ -103,7 +104,7 @@ pub fn render_paragraph(
                 }
             }
             ParagraphRecord::Table { table } => {
-                tables.push((table, None, None, None, None, None));
+                tables.push((table, None, None, None, None, None, None));
             }
             ParagraphRecord::CtrlHeader {
                 header,
@@ -130,6 +131,7 @@ pub fn render_paragraph(
         Option<CaptionInfo>,
         Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
         Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
+        Option<&crate::document::bodytext::LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
     )> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
 
     // 문단의 첫 번째 LineSegment의 vertical_position 계산 (vert_rel_to: "para"일 때 사용) / Calculate first LineSegment's vertical_position (used when vert_rel_to: "para")
@@ -152,6 +154,7 @@ pub fn render_paragraph(
             caption_info,
             caption_char_shape_id,
             caption_para_shape_id,
+            caption_line_segment,
         ) in tables.iter()
         {
             let like_letters = ctrl_header
@@ -170,6 +173,7 @@ pub fn render_paragraph(
                     *caption_info,
                     *caption_char_shape_id,
                     *caption_para_shape_id,
+                    *caption_line_segment,
                 ));
             } else {
                 absolute_tables.push((
@@ -179,6 +183,7 @@ pub fn render_paragraph(
                     *caption_info,
                     *caption_char_shape_id,
                     *caption_para_shape_id,
+                    *caption_line_segment,
                 ));
             }
         }
@@ -205,6 +210,7 @@ pub fn render_paragraph(
                     caption_info,
                     caption_char_shape_id,
                     caption_para_shape_id,
+                    caption_line_segment,
                 )| {
                     // iter()로 인해 table은 &&Table이 되므로 한 번 역참조 / table becomes &&Table due to iter(), so dereference once
                     // ctrl_header는 Option<&CtrlHeaderData>이므로 복사 / ctrl_header is Option<&CtrlHeaderData>, copy
@@ -216,6 +222,7 @@ pub fn render_paragraph(
                         *caption_info,
                         *caption_char_shape_id,
                         *caption_para_shape_id,
+                        *caption_line_segment,
                     )
                 },
             )
@@ -251,6 +258,7 @@ pub fn render_paragraph(
             caption_info,
             caption_char_shape_id,
             caption_para_shape_id,
+            caption_line_segment,
         ) in absolute_tables.iter()
         {
             use crate::document::bodytext::ctrl_header::{CtrlHeaderData, VertRelTo};
@@ -280,6 +288,7 @@ pub fn render_paragraph(
                 *caption_info,         // 캡션 정보 전달 / Pass caption info
                 *caption_char_shape_id, // 캡션 char_shape_id 전달 / Pass caption char_shape_id
                 *caption_para_shape_id, // 캡션 para_shape_id 전달 / Pass caption para_shape_id
+                *caption_line_segment, // 캡션 LineSegmentInfo 전달 / Pass caption LineSegmentInfo
                 None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
                 ref_para_vertical_mm, // 참조 문단의 vertical_position 전달 / Pass reference paragraph's vertical_position
                 first_para_vertical_mm, // 첫 번째 문단의 vertical_position 전달 (가설 O) / Pass first paragraph's vertical_position (Hypothesis O)

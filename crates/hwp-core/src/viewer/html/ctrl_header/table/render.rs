@@ -1,9 +1,9 @@
 use crate::document::bodytext::ctrl_header::{CaptionAlign, CtrlHeaderData};
-use crate::document::bodytext::{PageDef, Table};
+use crate::document::bodytext::{LineSegmentInfo, PageDef, Table};
 use crate::types::{Hwpunit16ToMm, HWPUNIT};
-use crate::viewer::html::styles::round_to_2dp;
+use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
-use crate::{HwpDocument, INT32};
+use crate::{HwpDocument, ParaShape, INT32};
 
 use super::constants::SVG_PADDING_MM;
 use super::position::{table_position, view_box};
@@ -54,6 +54,7 @@ pub fn render_table(
     caption_info: Option<CaptionInfo>, // 캡션 정보 (위치, 간격, 높이) / Caption info (position, gap, height)
     caption_char_shape_id: Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
     caption_para_shape_id: Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
+    caption_line_segment: Option<&LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
     segment_position: Option<(INT32, INT32)>,
     para_start_vertical_mm: Option<f64>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
@@ -334,53 +335,84 @@ pub fn render_table(
             // 캡션 스타일 값 계산: 실제 데이터에서 추출 / Calculate caption style values from actual data
             // ParaShape와 CharShape를 사용하여 line-height, top, width, height 계산
             // Use ParaShape and CharShape to calculate line-height, top, width, height
-            let (line_height_mm, top_offset_mm, number_width_mm) =
-                if let Some(para_shape_id) = caption_para_shape_id {
-                    // ParaShape에서 기본 line-height 계산 / Calculate basic line-height from ParaShape
-                    let para_shape = if para_shape_id < document.doc_info.para_shapes.len() {
+            let (line_height_mm, top_offset_mm, number_width_mm) = if let Some(para_shape_id) =
+                caption_para_shape_id
+            {
+                // ParaShape 가져오기 / Get ParaShape
+                let para_shape: Option<&ParaShape> =
+                    if para_shape_id < document.doc_info.para_shapes.len() {
                         Some(&document.doc_info.para_shapes[para_shape_id])
                     } else {
                         None
                     };
 
-                    // CharShape에서 폰트 크기 가져오기 / Get font size from CharShape
-                    let font_size_pt =
-                        if caption_char_shape_id_value < document.doc_info.char_shapes.len() {
-                            let char_shape =
-                                &document.doc_info.char_shapes[caption_char_shape_id_value];
-                            // base_size는 INT32이고 0pt~4096pt 범위 / base_size is INT32 and ranges from 0pt~4096pt
-                            char_shape.base_size as f64 / 100.0 // 100분의 1pt 단위이므로 100으로 나눔 / Divide by 100 since it's in 1/100 pt units
-                        } else {
-                            10.0 // 기본값 / Default
-                        };
-
-                    // line-height 계산: 폰트 크기 기반 / Calculate line-height based on font size
-                    // fixture 분석 결과, line-height는 baseline_distance를 사용하지만
-                    // 캡션의 경우 fixture에서 2.79mm로 고정되어 있음
-                    // Analysis of fixture shows line-height uses baseline_distance, but
-                    // for captions, fixture shows fixed 2.79mm
-                    // 실제 데이터에서 계산하려면 LineSegmentInfo가 필요하지만, 현재는 전달되지 않음
-                    // To calculate from actual data, LineSegmentInfo is needed but not currently passed
-                    // 따라서 기본값 사용 (나중에 LineSegmentInfo 전달 시 확장 가능)
-                    // So use default value (can be extended when LineSegmentInfo is passed)
-                    let calculated_line_height = (font_size_pt * 1.2) * 0.352778; // pt to mm (1pt = 0.352778mm)
-                    let line_height = round_to_2dp(calculated_line_height.max(2.79)); // 최소 2.79mm / Minimum 2.79mm
-
-                    // top offset: fixture에서 -0.18mm / top offset: -0.18mm from fixture
-                    // 실제 데이터에서는 baseline 계산이 필요하지만, 현재는 기본값 사용
-                    // Actual data requires baseline calculation, but use default for now
-                    let top_offset = -0.18;
-
-                    // 번호 박스 width: fixture에서 1.95mm / Number box width: 1.95mm from fixture
-                    // 실제 데이터에서는 숫자 폭 계산이 필요하지만, 현재는 기본값 사용
-                    // Actual data requires number width calculation, but use default for now
-                    let number_width = 1.95;
-
-                    (line_height, top_offset, number_width)
+                // CharShape에서 폰트 크기 가져오기 / Get font size from CharShape
+                let font_size_pt = if caption_char_shape_id_value
+                    < document.doc_info.char_shapes.len()
+                {
+                    let char_shape = &document.doc_info.char_shapes[caption_char_shape_id_value];
+                    // base_size는 INT32이고 0pt~4096pt 범위 / base_size is INT32 and ranges from 0pt~4096pt
+                    char_shape.base_size as f64 / 100.0 // 100분의 1pt 단위이므로 100으로 나눔 / Divide by 100 since it's in 1/100 pt units
                 } else {
-                    // 기본값 사용 / Use default values
-                    (2.79, -0.18, 1.95)
+                    10.0 // 기본값 / Default
                 };
+
+                // line-height 계산: ParaShape와 CharShape를 사용 / Calculate line-height using ParaShape and CharShape
+                let line_height = if let Some(ps) = para_shape {
+                    // ParaShape의 line_height_matches_font 확인 / Check ParaShape's line_height_matches_font
+                    if ps.attributes1.line_height_matches_font {
+                        // 글꼴에 맞는 줄 높이: 폰트 크기 * 1.2 (일반적인 line-height) / Line height matches font: font size * 1.2 (typical line-height)
+                        let calculated = (font_size_pt * 1.2) * 0.352778; // pt to mm (1pt = 0.352778mm)
+                        round_to_2dp(calculated.max(2.79)) // 최소 2.79mm / Minimum 2.79mm
+                    } else {
+                        // line_spacing_old 사용 (HWPUNIT 단위) / Use line_spacing_old (in HWPUNIT)
+                        let line_spacing_mm = round_to_2dp(int32_to_mm(ps.line_spacing_old));
+                        // line_spacing이 0이면 폰트 크기 기반으로 계산 / If line_spacing is 0, calculate based on font size
+                        if line_spacing_mm > 0.0 {
+                            line_spacing_mm
+                        } else {
+                            let calculated = (font_size_pt * 1.2) * 0.352778;
+                            round_to_2dp(calculated.max(2.79))
+                        }
+                    }
+                } else {
+                    // ParaShape가 없으면 폰트 크기 기반으로 계산 / If no ParaShape, calculate based on font size
+                    let calculated = (font_size_pt * 1.2) * 0.352778;
+                    round_to_2dp(calculated.max(2.79))
+                };
+
+                // top offset 계산: LineSegmentInfo에서 실제 값 사용 / Calculate top offset: use actual values from LineSegmentInfo
+                let (top_offset, number_width) = if let Some(segment) = caption_line_segment {
+                    // LineSegmentInfo에서 text_height와 baseline_distance 사용 / Use text_height and baseline_distance from LineSegmentInfo
+                    let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
+                    let baseline_distance_mm = round_to_2dp(int32_to_mm(segment.baseline_distance));
+
+                    // baseline offset 계산: (baseline_distance - text_height) / 2
+                    // Calculate baseline offset: (baseline_distance - text_height) / 2
+                    let baseline_offset = (baseline_distance_mm - text_height_mm) / 2.0;
+                    let top_offset = round_to_2dp(baseline_offset);
+
+                    // 번호 박스 width: segment_width를 기반으로 계산하거나, text_height를 기반으로 근사
+                    // Number box width: calculate based on segment_width or approximate based on text_height
+                    // 실제 숫자 텍스트 폭은 segment_width에서 추정하거나, text_height 기반으로 계산
+                    // Actual number text width can be estimated from segment_width or calculated based on text_height
+                    // 간단하게 text_height를 기준으로 숫자 폭 근사 (숫자는 일반적으로 text_height의 0.5~0.6배)
+                    // Simply approximate number width based on text_height (numbers are typically 0.5~0.6 times text_height)
+                    // 2자리 숫자까지 고려하여 text_height * 1.1 정도로 계산
+                    // Consider up to 2 digits, calculate as approximately text_height * 1.1
+                    let number_width = round_to_2dp(text_height_mm * 1.1);
+
+                    (top_offset, number_width)
+                } else {
+                    // LineSegmentInfo가 없으면 기본값 사용 / Use default values if LineSegmentInfo is not available
+                    (-0.18, 1.95)
+                };
+
+                (line_height, top_offset, number_width)
+            } else {
+                // 기본값 사용 / Use default values
+                (2.79, -0.18, 1.95)
+            };
 
             // 세로 방향 캡션의 경우 hcI에 top 스타일 추가 / Add top style to hcI for vertical captions
             let hci_style = if is_vertical {
