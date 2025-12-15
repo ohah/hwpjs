@@ -1,4 +1,4 @@
-use crate::document::bodytext::ctrl_header::{CaptionAlign, CtrlHeaderData};
+use crate::document::bodytext::ctrl_header::{CaptionAlign, CaptionVAlign, CtrlHeaderData};
 use crate::document::bodytext::{LineSegmentInfo, PageDef, Table};
 use crate::types::{Hwpunit16ToMm, HWPUNIT};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
@@ -27,6 +27,8 @@ pub struct CaptionInfo {
     pub include_margin: Option<bool>,
     /// 텍스트의 최대 길이(=개체의 폭) / Maximum text length (= object width)
     pub last_width: Option<u32>,
+    /// 캡션 수직 정렬 (조합 캡션 구분용) / Caption vertical alignment (for combination caption detection)
+    pub vertical_align: Option<CaptionVAlign>,
 }
 
 /// 캡션 텍스트 구조 / Caption text structure
@@ -482,17 +484,41 @@ pub fn render_table(
 
     // table-caption.html fixture 기준으로, 수직 캡션(Left/Right)이 있는 표의 htG top은
     // like_letters 기준 위치보다 한 줄(line) 만큼 아래에 배치됩니다.
-    // 이 한 줄 높이는 caption_line_segment의 baseline_distance에서 계산합니다.
+    // 단, 조합 캡션(수직 + 가로)이 있는 경우에는 오프셋을 적용하지 않습니다.
+    //
+    // 조합 캡션 판단: 수직 캡션이면서 캡션 본문에 "위" 또는 "아래"가 포함된 경우
+    // 하지만 텍스트 검색 대신 JSON 속성으로 판단해야 하므로, 현재는 오프셋을 적용하지 않음
+    // Combination caption detection: vertical caption with "위" or "아래" in body
+    // But should use JSON properties instead of text search, so currently not applying offset
     //
     // htG 자체의 top은 table_position()에서 계산되므로,
-    // 수직 캡션이 존재하는 경우 htG의 top에 한 줄 높이를 더해 fixture와 위치를 맞춥니다.
+    // 단순 수직 캡션이 존재하는 경우 htG의 top에 한 줄 높이를 더해 fixture와 위치를 맞춥니다.
     // According to table-caption.html fixture, htG top for tables with vertical captions (Left/Right)
     // is placed one line below the like_letters reference position.
-    // This line height is calculated from baseline_distance in caption_line_segment.
+    // However, for combination captions (vertical + horizontal), the offset is not applied.
     //
     // htG's top is calculated in table_position(), so
-    // when a vertical caption exists, we add one line height to htG's top to match the fixture position.
-    if needs_htg && has_caption && is_vertical {
+    // when a simple vertical caption exists (not combination), we add one line height to htG's top to match the fixture position.
+    // TODO: JSON 속성으로 조합 캡션을 판단하는 방법을 찾아야 함
+    // TODO: Need to find a way to detect combination captions from JSON properties
+    // 현재는 오프셋을 적용하지 않음 (표6 위치 계산 오류 해결을 위해)
+    // Currently not applying offset (to fix table 6 position calculation error)
+    // 표3, 표4는 오프셋이 필요하지만, 표5, 표6은 오프셋이 필요하지 않음
+    // Tables 3, 4 need offset, but tables 5, 6 don't need offset
+
+    // 조합 캡션 판단: vertical_align이 MIDDLE이 아니면 조합 캡션 / Combination caption detection: if vertical_align is not MIDDLE, it's a combination caption
+    let is_combination_caption = if let Some(info) = caption_info {
+        if let Some(vertical_align) = info.vertical_align {
+            // MIDDLE이 아니면 조합 캡션 / If not MIDDLE, it's a combination caption
+            vertical_align != CaptionVAlign::Middle
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+
+    if needs_htg && has_caption && is_vertical && !is_combination_caption {
         // 한 줄 높이 계산: caption_line_segment의 line_height + line_spacing 사용
         // Calculate line height: use line_height + line_spacing from caption_line_segment
         // line_height는 줄의 높이를, line_spacing은 줄 간격을 나타냅니다.

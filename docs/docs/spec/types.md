@@ -584,6 +584,91 @@ pub struct ColumnDefinitionAttribute {
 - `equal_width`가 `true`이면 `column_widths`는 빈 배열입니다.
 - `attribute_high`는 속성의 상위 16비트로, 스펙 문서에 명시되지 않은 추가 속성 정보를 포함할 수 있습니다.
 
+### Caption
+
+캡션 정보 구조입니다.
+
+**스펙 문서 매핑**: 표 72 - 캡션, 표 73 - 캡션 속성
+
+**구조**:
+```rust
+pub struct Caption {
+    pub align: CaptionAlign,           // 캡션 정렬 방향
+    pub include_margin: bool,          // 캡션 폭에 마진 포함 여부
+    pub width: HWPUNIT,                // 캡션 폭 (세로 방향일 때만 사용)
+    pub gap: HWPUNIT16,                // 캡션과 개체 사이 간격
+    pub last_width: HWPUNIT,           // 텍스트의 최대 길이 (=개체의 폭)
+    pub vertical_align: Option<CaptionVAlign>, // 캡션 수직 정렬 (조합 캡션 구분용)
+}
+
+pub enum CaptionAlign {
+    Left,    // 왼쪽
+    Right,   // 오른쪽
+    Top,     // 위
+    Bottom,  // 아래
+}
+
+pub enum CaptionVAlign {
+    Top,     // 위
+    Middle,  // 가운데
+    Bottom,  // 아래
+}
+```
+
+**JSON 예시**:
+```json
+{
+  "caption": {
+    "align": "left",
+    "include_margin": false,
+    "width": 8504,
+    "gap": 850,
+    "last_width": 8504,
+    "vertical_align": "middle"
+  }
+}
+```
+
+**필드 설명**:
+- `align`: 캡션 정렬 방향 (표 73 참조)
+  - `left`: 왼쪽
+  - `right`: 오른쪽
+  - `top`: 위
+  - `bottom`: 아래
+- `include_margin`: 캡션 폭에 마진을 포함할 지 여부 (가로 방향일 때만 사용)
+- `width`: 캡션 폭 (세로 방향일 때만 사용, HWPUNIT)
+- `gap`: 캡션과 개체 사이 간격 (HWPUNIT16)
+- `last_width`: 텍스트의 최대 길이 (=개체의 폭, HWPUNIT)
+- `vertical_align`: 캡션 수직 정렬 (조합 캡션 구분용)
+  - `top`: 위
+  - `middle`: 가운데
+  - `bottom`: 아래
+
+**주의사항** / **Important Notes**:
+
+#### `vertical_align` 필드
+
+**주의: 스펙 문서에는 명시되어 있지 않지만, ListHeaderProperty의 bit 5-6에서 수직 정렬 정보를 가져옵니다.**
+
+**Note: Not specified in the spec document, but vertical alignment information is extracted from ListHeaderProperty bit 5-6.**
+
+**참고**: pyhwp는 `ListHeader.VAlign = Enum(TOP=0, MIDDLE=1, BOTTOM=2)`로 파싱합니다.
+
+**Reference**: pyhwp parses this as `ListHeader.VAlign = Enum(TOP=0, MIDDLE=1, BOTTOM=2)`.
+
+이 필드는 조합 캡션(예: "왼쪽 위", "오른쪽 아래")을 구분하는 데 사용됩니다:
+- `vertical_align = "middle"`: 단순 수직 캡션 (왼쪽, 오른쪽)
+- `vertical_align = "top"` 또는 `"bottom"`: 조합 캡션 (왼쪽 위, 오른쪽 아래 등)
+
+This field is used to distinguish combination captions (e.g., "left top", "right bottom"):
+- `vertical_align = "middle"`: Simple vertical caption (left, right)
+- `vertical_align = "top"` or `"bottom"`: Combination caption (left top, right bottom, etc.)
+
+**참고**:
+- 캡션은 별도 레코드(LIST_HEADER)로 처리됩니다.
+- `vertical_align`은 `ListHeaderProperty`의 bit 5-6에서 파싱됩니다.
+- 스펙 문서에는 명시되지 않았지만, 실제 파일에서 사용되는 정보입니다.
+
 ## 참고
 
 - **스펙 문서**: [HWP 5.0 명세서 - 표 1: 자료형](./hwp-5.0.md#2-자료형-설명)

@@ -1863,7 +1863,8 @@ expression: json
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 20976
+                  "last_width": 20976,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {
@@ -2216,7 +2217,8 @@ expression: json
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 20976
+                  "last_width": 20976,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {
@@ -2569,7 +2571,8 @@ expression: json
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 8504
+                  "last_width": 8504,
+                  "vertical_align": "middle"
                 },
                 "children": [
                   {
@@ -2922,7 +2925,8 @@ expression: json
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 8504
+                  "last_width": 8504,
+                  "vertical_align": "middle"
                 },
                 "children": [
                   {
@@ -3275,7 +3279,8 @@ expression: json
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 8504
+                  "last_width": 8504,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {
@@ -3628,7 +3633,8 @@ expression: json
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 8504
+                  "last_width": 8504,
+                  "vertical_align": "bottom"
                 },
                 "children": [
                   {
@@ -3986,7 +3992,8 @@ expression: json
                   "include_margin": true,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 26646
+                  "last_width": 26646,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {
@@ -4332,7 +4339,8 @@ expression: json
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 20976
+                  "last_width": 20976,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {

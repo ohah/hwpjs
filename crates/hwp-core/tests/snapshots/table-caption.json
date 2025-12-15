@@ -1859,7 +1859,8 @@
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 20976
+                  "last_width": 20976,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {
@@ -2212,7 +2213,8 @@
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 20976
+                  "last_width": 20976,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {
@@ -2565,7 +2567,8 @@
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 8504
+                  "last_width": 8504,
+                  "vertical_align": "middle"
                 },
                 "children": [
                   {
@@ -2918,7 +2921,8 @@
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 8504
+                  "last_width": 8504,
+                  "vertical_align": "middle"
                 },
                 "children": [
                   {
@@ -3271,7 +3275,8 @@
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 8504
+                  "last_width": 8504,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {
@@ -3624,7 +3629,8 @@
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 8504
+                  "last_width": 8504,
+                  "vertical_align": "bottom"
                 },
                 "children": [
                   {
@@ -3982,7 +3988,8 @@
                   "include_margin": true,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 26646
+                  "last_width": 26646,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {
@@ -4328,7 +4335,8 @@
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 20976
+                  "last_width": 20976,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {

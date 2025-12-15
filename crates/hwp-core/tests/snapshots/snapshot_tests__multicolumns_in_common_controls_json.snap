@@ -1863,7 +1863,8 @@ expression: json
                   "include_margin": false,
                   "width": 8504,
                   "gap": 850,
-                  "last_width": 41954
+                  "last_width": 41954,
+                  "vertical_align": "top"
                 },
                 "children": [
                   {

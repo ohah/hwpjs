@@ -206,6 +206,20 @@ pub enum CaptionAlign {
     Bottom = 3,
 }
 
+/// 캡션 수직 정렬 (ListHeaderProperty bit 5-6) / Caption vertical alignment (ListHeaderProperty bit 5-6)
+/// pyhwp 참조: ListHeader.VAlign = Enum(TOP=0, MIDDLE=1, BOTTOM=2)
+/// Reference pyhwp: ListHeader.VAlign = Enum(TOP=0, MIDDLE=1, BOTTOM=2)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CaptionVAlign {
+    /// 위 / Top
+    Top = 0,
+    /// 가운데 / Middle
+    Middle = 1,
+    /// 아래 / Bottom
+    Bottom = 2,
+}
+
 /// 캡션 정보 (표 72) / Caption information (Table 72)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Caption {
@@ -219,6 +233,13 @@ pub struct Caption {
     pub gap: HWPUNIT16,
     /// 텍스트의 최대 길이(=개체의 폭) / Maximum text length (= object width)
     pub last_width: HWPUNIT,
+    /// 캡션 수직 정렬 (조합 캡션 구분용) / Caption vertical alignment (for combination caption detection)
+    /// 주의: 스펙 문서에는 명시되어 있지 않지만, ListHeaderProperty의 bit 5-6에서 수직 정렬 정보를 가져옵니다.
+    /// Note: Not specified in the spec document, but vertical alignment information is extracted from ListHeaderProperty bit 5-6.
+    /// 참고: pyhwp는 ListHeader.VAlign = Enum(TOP=0, MIDDLE=1, BOTTOM=2)로 파싱합니다.
+    /// Reference: pyhwp parses this as ListHeader.VAlign = Enum(TOP=0, MIDDLE=1, BOTTOM=2).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vertical_align: Option<CaptionVAlign>,
 }
 
 /// 컨트롤 헤더 데이터 (컨트롤 ID별 구조) / Control header data (structure varies by CtrlID)
@@ -990,8 +1011,27 @@ pub fn parse_caption_from_list_header(data: &[u8]) -> Result<Option<Caption>, Hw
     // paraCount (SInt4) - 4바이트 (읽지만 사용하지 않음) / paraCount (SInt4) - 4 bytes (read but not used)
     offset += 4;
 
-    // property (UInt4) - 4바이트 (ListHeaderProperty, 읽지만 사용하지 않음) / property (UInt4) - 4 bytes (read but not used)
+    // property (UInt4) - 4바이트 (ListHeaderProperty) / property (UInt4) - 4 bytes (ListHeaderProperty)
+    // bit 5-6이 valign을 나타냄 (조합 캡션 구분용) / bit 5-6 represents valign (for combination caption detection)
+    // pyhwp 참조: VAlign = Enum(TOP=0, MIDDLE=1, BOTTOM=2) / Reference pyhwp: VAlign = Enum(TOP=0, MIDDLE=1, BOTTOM=2)
+    let list_header_property = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
+
+    // bit 5-6: 수직 정렬 파싱 (스펙 문서에 명시되지 않았지만 실제 파일에서 사용됨)
+    // Parse bit 5-6: vertical alignment (not specified in spec document but used in actual files)
+    // pyhwp 참조: ListHeader.VAlign = Enum(TOP=0, MIDDLE=1, BOTTOM=2)
+    // Reference pyhwp: ListHeader.VAlign = Enum(TOP=0, MIDDLE=1, BOTTOM=2)
+    let vertical_align = match (list_header_property >> 5) & 0x03 {
+        0 => CaptionVAlign::Top,
+        1 => CaptionVAlign::Middle,
+        2 => CaptionVAlign::Bottom,
+        _ => CaptionVAlign::Middle, // 기본값 / Default value
+    };
 
     // captionProperty (UInt4) - 4바이트 (ListHeaderCaptionProperty) / captionProperty (UInt4) - 4 bytes
     let caption_property_value = UINT32::from_le_bytes([
@@ -1041,6 +1081,7 @@ pub fn parse_caption_from_list_header(data: &[u8]) -> Result<Option<Caption>, Hw
         width,
         gap,
         last_width,
+        vertical_align: Some(vertical_align),
     }))
 }
 
@@ -1100,6 +1141,7 @@ fn parse_caption(data: &[u8]) -> Result<Caption, HwpError> {
         width,
         gap,
         last_width,
+        vertical_align: None, // ListHeader 구조가 아니므로 None / None because not ListHeader structure
     })
 }
 
@@ -1158,6 +1200,7 @@ fn parse_caption_12bytes(data: &[u8]) -> Result<Caption, HwpError> {
         width,
         gap,
         last_width,
+        vertical_align: None, // ListHeader 구조가 아니므로 None / None because not ListHeader structure
     })
 }
 

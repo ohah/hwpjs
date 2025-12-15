@@ -121,6 +121,7 @@ pub fn process_table<'a>(
                     width: Some(cap.width.into()), // 캡션 폭 / Caption width
                     include_margin: Some(cap.include_margin), // 마진 포함 여부 / Whether to include margin
                     last_width: Some(cap.last_width.into()), // 텍스트 최대 길이 / Maximum text length
+                    vertical_align: cap.vertical_align, // 캡션 수직 정렬 전달 / Pass caption vertical alignment
                 }
             });
             (Some(&header.data), info)
