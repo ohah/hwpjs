@@ -1,6 +1,7 @@
 use crate::document::bodytext::ctrl_header::{CaptionAlign, CtrlHeaderData};
 use crate::document::bodytext::{PageDef, Table};
 use crate::types::{Hwpunit16ToMm, HWPUNIT};
+use crate::viewer::html::styles::round_to_2dp;
 use crate::viewer::HtmlOptions;
 use crate::{HwpDocument, INT32};
 
@@ -70,11 +71,13 @@ pub fn render_table(
     } else {
         0.0
     };
+    let margin_left_mm = round_to_2dp(margin_left_mm);
     let margin_right_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
         margin.right.to_mm()
     } else {
         0.0
     };
+    let margin_right_mm = round_to_2dp(margin_right_mm);
 
     // SVG viewBox는 실제 테이블 콘텐츠 크기를 기준으로 계산해야 함 (margin 제외)
     // SVG viewBox should be calculated based on actual table content size (excluding margin)
@@ -112,11 +115,13 @@ pub fn render_table(
     } else {
         0.0
     };
+    let margin_top_mm = round_to_2dp(margin_top_mm);
     let margin_bottom_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
         margin.bottom.to_mm()
     } else {
         0.0
     };
+    let margin_bottom_mm = round_to_2dp(margin_bottom_mm);
 
     // resolved_size.height가 margin을 포함하지 않는 경우를 대비하여 명시적으로 계산
     // Calculate explicitly in case resolved_size.height doesn't include margin
@@ -170,7 +175,7 @@ pub fn render_table(
     };
 
     // 캡션 크기 미리 계산 (htb 위치 및 htG 크기 계산에 필요) / Pre-calculate caption size (needed for htb position and htG size calculation)
-    let (caption_width_mm, caption_height_mm) = if has_caption {
+    let (mut caption_width_mm, mut caption_height_mm) = if has_caption {
         let width = if let Some(info) = caption_info {
             if is_horizontal {
                 // 가로 방향(Top/Bottom): last_width만 사용, include_margin으로 마진 포함 여부 결정
@@ -216,7 +221,7 @@ pub fn render_table(
             caption_info.and_then(|info| info.height_mm).unwrap_or(3.53)
         };
 
-        (width, height)
+        (round_to_2dp(width), round_to_2dp(height))
     } else {
         (0.0, 0.0)
     };
@@ -260,7 +265,7 @@ pub fn render_table(
             let htb_width_mm_for_caption = resolved_size.width - margin_left_mm - margin_right_mm;
 
             // 캡션 위치 계산 (left, top) / Calculate caption position (left, top)
-            let (caption_left_mm, caption_top_mm) = if is_vertical {
+            let (mut caption_left_mm, mut caption_top_mm) = if is_vertical {
                 // 세로 방향 (Left/Right): 캡션이 세로로 배치됨 / Vertical direction: caption placed vertically
                 if is_left {
                     // 왼쪽 캡션: 캡션이 왼쪽에, 테이블이 오른쪽에 / Left caption: caption on left, table on right
@@ -297,6 +302,10 @@ pub fn render_table(
                 (left, top)
             };
 
+            // 캡션 위치를 mm 2자리까지 반올림 / Round caption position to 2 decimal places
+            caption_left_mm = round_to_2dp(caption_left_mm);
+            caption_top_mm = round_to_2dp(caption_top_mm);
+
             let caption_body = caption
                 .trim_start_matches("표")
                 .trim_start_matches(&table_num_text)
@@ -332,21 +341,16 @@ pub fn render_table(
             };
 
             format!(
-                r#"<div class="hcD" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;overflow:hidden;"><div class="hcI" {}><div class="hls {}" style="line-height:2.79mm;white-space:nowrap;left:0mm;top:-0.18mm;height:{}mm;width:{}mm;"><span class="hrt {}">표&nbsp;</span><div class="haN" style="left:0mm;top:0mm;width:1.95mm;height:{}mm;"><span class="hrt {}">{}</span></div><span class="hrt {}">&nbsp;{}</span></div></div></div>"#,
-                caption_left_mm,
-                caption_top_mm,
-                caption_width_mm,
-                caption_height_mm,
-                hci_style,
-                ps_class,
-                caption_height_mm,
-                caption_width_mm,
-                cs_class,
-                caption_height_mm,
-                cs_class,
-                table_num_text,
-                cs_class,
-                caption_body
+                r#"<div class="hcD" style="left:{caption_left_mm}mm;top:{caption_top_mm}mm;width:{caption_width_mm}mm;height:{caption_height_mm}mm;overflow:hidden;"><div class="hcI" {hci_style}><div class="hls {ps_class}" style="line-height:2.79mm;white-space:nowrap;left:0mm;top:-0.18mm;height:{caption_height_mm}mm;width:{caption_width_mm}mm;"><span class="hrt {cs_class}">표&nbsp;</span><div class="haN" style="left:0mm;top:0mm;width:1.95mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div></div></div>"#,
+                caption_left_mm = caption_left_mm,
+                caption_top_mm = caption_top_mm,
+                caption_width_mm = caption_width_mm,
+                caption_height_mm = caption_height_mm,
+                hci_style = hci_style,
+                ps_class = ps_class,
+                cs_class = cs_class,
+                table_num_text = table_num_text,
+                caption_body = caption_body
             )
         }
     } else {
@@ -382,6 +386,9 @@ pub fn render_table(
     // 실제 테이블 width는 resolved_size.width - margin.left - margin.right
     // actual table width is resolved_size.width - margin.left - margin_right
     let htb_width_mm = resolved_size.width - margin_left_mm - margin_right_mm;
+    let htb_left_mm = round_to_2dp(htb_left_mm);
+    let htb_top_mm = round_to_2dp(htb_top_mm);
+    let htb_width_mm = round_to_2dp(htb_width_mm);
     let htb_html = format!(
         r#"<div class="htb" style="left:{htb_left_mm}mm;width:{htb_width_mm}mm;top:{htb_top_mm}mm;height:{content_size_height}mm;">{svg}{cells_html}</div>"#,
         htb_left_mm = htb_left_mm,
@@ -429,6 +436,10 @@ pub fn render_table(
             // Horizontal: resolved_size.width already includes margin.left + margin.right
             resolved_size.width
         };
+
+        // htG 크기를 mm 2자리까지 반올림 / Round htG size to 2 decimal places
+        let htg_height = round_to_2dp(htg_height);
+        let htg_width = round_to_2dp(htg_width);
 
         // htG 래퍼와 캡션 생성 / Create htG wrapper and caption
         let html = if has_caption && is_caption_above {
