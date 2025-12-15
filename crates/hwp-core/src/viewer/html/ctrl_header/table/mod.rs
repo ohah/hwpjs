@@ -290,10 +290,14 @@ pub fn render_table(
                 // 가로 방향 (Top/Bottom): 캡션이 가로로 배치됨 / Horizontal direction: caption placed horizontally
                 let left = caption_base_left_mm;
                 let top = if is_caption_above {
-                    // 위 캡션: caption_margin만 사용 (fixture 기준) / Caption above: use only caption_margin (based on fixture)
-                    // fixture에서 위 캡션 top=5mm, caption_margin=5mm이므로 margin.top은 포함하지 않음
-                    // In fixture, caption above top=5mm, caption_margin=5mm, so margin.top is not included
-                    caption_margin_mm
+                    // 위 캡션:
+                    //  - 캡션의 기준 위치는 객체 margin.top / For top captions, base position is object margin.top
+                    //  - 캡션과 표 사이 여백(gap)은 이미 htb_top_mm 계산에서 caption_margin_mm(= gap)으로 반영됨
+                    //    The gap between caption and table (caption.gap) is already applied via caption_margin_mm in htb_top_mm
+                    //
+                    // 따라서 hcD top은 gap과는 독립적으로 margin.top 값을 그대로 사용해야 함
+                    // So hcD top should simply use margin.top, without any magic constant like 3mm
+                    margin_top_mm
                 } else {
                     // 아래 캡션: htb top + htb height + 간격 / Caption below: htb top + htb height + spacing
                     // htb_top_mm은 이미 margin.top이 포함되어 있음 / htb_top_mm already includes margin.top
