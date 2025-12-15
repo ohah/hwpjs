@@ -333,10 +333,9 @@ pub fn render_table(
             };
 
             // 캡션 스타일 값 계산: 실제 데이터에서 추출 / Calculate caption style values from actual data
-            // ParaShape와 CharShape를 사용하여 line-height, top, width, height 계산
-            // Use ParaShape and CharShape to calculate line-height, top, width, height
-            let (line_height_mm, top_offset_mm, number_width_mm) = if let Some(para_shape_id) =
-                caption_para_shape_id
+            // ParaShape와 CharShape를 사용하여 line-height, top 계산
+            // Use ParaShape and CharShape to calculate line-height, top
+            let (line_height_mm, top_offset_mm) = if let Some(para_shape_id) = caption_para_shape_id
             {
                 // ParaShape 가져오기 / Get ParaShape
                 let para_shape: Option<&ParaShape> =
@@ -382,7 +381,7 @@ pub fn render_table(
                 };
 
                 // top offset 계산: LineSegmentInfo에서 실제 값 사용 / Calculate top offset: use actual values from LineSegmentInfo
-                let (top_offset, number_width) = if let Some(segment) = caption_line_segment {
+                let top_offset = if let Some(segment) = caption_line_segment {
                     // LineSegmentInfo에서 text_height와 baseline_distance 사용 / Use text_height and baseline_distance from LineSegmentInfo
                     let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
                     let baseline_distance_mm = round_to_2dp(int32_to_mm(segment.baseline_distance));
@@ -390,28 +389,16 @@ pub fn render_table(
                     // baseline offset 계산: (baseline_distance - text_height) / 2
                     // Calculate baseline offset: (baseline_distance - text_height) / 2
                     let baseline_offset = (baseline_distance_mm - text_height_mm) / 2.0;
-                    let top_offset = round_to_2dp(baseline_offset);
-
-                    // 번호 박스 width: segment_width를 기반으로 계산하거나, text_height를 기반으로 근사
-                    // Number box width: calculate based on segment_width or approximate based on text_height
-                    // 실제 숫자 텍스트 폭은 segment_width에서 추정하거나, text_height 기반으로 계산
-                    // Actual number text width can be estimated from segment_width or calculated based on text_height
-                    // 간단하게 text_height를 기준으로 숫자 폭 근사 (숫자는 일반적으로 text_height의 0.5~0.6배)
-                    // Simply approximate number width based on text_height (numbers are typically 0.5~0.6 times text_height)
-                    // 2자리 숫자까지 고려하여 text_height * 1.1 정도로 계산
-                    // Consider up to 2 digits, calculate as approximately text_height * 1.1
-                    let number_width = round_to_2dp(text_height_mm * 1.1);
-
-                    (top_offset, number_width)
+                    round_to_2dp(baseline_offset)
                 } else {
-                    // LineSegmentInfo가 없으면 기본값 사용 / Use default values if LineSegmentInfo is not available
-                    (-0.18, 1.95)
+                    // LineSegmentInfo가 없으면 기본값 사용 / Use default value if LineSegmentInfo is not available
+                    -0.18
                 };
 
-                (line_height, top_offset, number_width)
+                (line_height, top_offset)
             } else {
                 // 기본값 사용 / Use default values
-                (2.79, -0.18, 1.95)
+                (2.79, -0.18)
             };
 
             // 세로 방향 캡션의 경우 hcI에 top 스타일 추가 / Add top style to hcI for vertical captions
@@ -427,8 +414,12 @@ pub fn render_table(
                 ""
             };
 
+            // haN (번호 박스)의 width는 JSON 데이터에서 직접 참조할 수 있는 값이 없으므로
+            // 브라우저의 자연스러운 레이아웃(콘텐츠 기반 폭)을 사용합니다.
+            // The width of haN (number box) cannot be directly referenced from JSON data,
+            // so we use the browser's natural layout (content-based width).
             format!(
-                r#"<div class="hcD" style="left:{caption_left_mm}mm;top:{caption_top_mm}mm;width:{caption_width_mm}mm;height:{caption_height_mm}mm;overflow:hidden;"><div class="hcI" {hci_style}><div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:0mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;width:{number_width_mm}mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div></div></div>"#,
+                r#"<div class="hcD" style="left:{caption_left_mm}mm;top:{caption_top_mm}mm;width:{caption_width_mm}mm;height:{caption_height_mm}mm;overflow:hidden;"><div class="hcI" {hci_style}><div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:0mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div></div></div>"#,
                 caption_left_mm = caption_left_mm,
                 caption_top_mm = caption_top_mm,
                 caption_width_mm = caption_width_mm,
@@ -437,7 +428,6 @@ pub fn render_table(
                 ps_class = ps_class,
                 line_height_mm = line_height_mm,
                 top_offset_mm = top_offset_mm,
-                number_width_mm = number_width_mm,
                 cs_class = cs_class,
                 caption_label = caption_label,
                 table_num_text = table_num_text,
@@ -492,12 +482,27 @@ pub fn render_table(
 
     // table-caption.html fixture 기준으로, 수직 캡션(Left/Right)이 있는 표의 htG top은
     // like_letters 기준 위치보다 한 줄(line) 만큼 아래에 배치됩니다.
-    // 이 한 줄 간격은 여러 fixture에서 5.47mm(top:5.47mm)로 반복적으로 등장합니다.
+    // 이 한 줄 높이는 caption_line_segment의 baseline_distance에서 계산합니다.
     //
     // htG 자체의 top은 table_position()에서 계산되므로,
     // 수직 캡션이 존재하는 경우 htG의 top에 한 줄 높이를 더해 fixture와 위치를 맞춥니다.
+    // According to table-caption.html fixture, htG top for tables with vertical captions (Left/Right)
+    // is placed one line below the like_letters reference position.
+    // This line height is calculated from baseline_distance in caption_line_segment.
+    //
+    // htG's top is calculated in table_position(), so
+    // when a vertical caption exists, we add one line height to htG's top to match the fixture position.
     if needs_htg && has_caption && is_vertical {
-        top_mm += 5.47;
+        // 한 줄 높이 계산: caption_line_segment의 baseline_distance 사용
+        // Calculate line height: use baseline_distance from caption_line_segment
+        let line_height_offset_mm = if let Some(segment) = caption_line_segment {
+            round_to_2dp(int32_to_mm(segment.baseline_distance))
+        } else {
+            // LineSegmentInfo가 없으면 기본값 사용 (일반적인 한 줄 높이)
+            // Use default value if LineSegmentInfo is not available (typical line height)
+            5.47
+        };
+        top_mm += line_height_offset_mm;
     }
 
     let result_html = if needs_htg {
