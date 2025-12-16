@@ -7,7 +7,7 @@ pub(crate) fn calculate_cell_left(table: &Table, cell: &TableCell) -> f64 {
     // 이렇게 하면 각 행의 실제 열 구조를 반영할 수 있음 / This way we can reflect the actual column structure of each row
     let row_address = cell.cell_attributes.row_address;
     let target_col = cell.cell_attributes.col_address;
-    
+
     // 같은 행의 셀들을 찾아서 정렬 / Find and sort cells from the same row
     let mut row_cells: Vec<_> = table
         .cells
@@ -15,7 +15,7 @@ pub(crate) fn calculate_cell_left(table: &Table, cell: &TableCell) -> f64 {
         .filter(|c| c.cell_attributes.row_address == row_address)
         .collect();
     row_cells.sort_by_key(|c| c.cell_attributes.col_address);
-    
+
     let mut left = 0.0;
     // target_col 이전의 모든 열 너비를 누적 / Accumulate width of all columns before target_col
     for row_cell in &row_cells {
@@ -25,7 +25,7 @@ pub(crate) fn calculate_cell_left(table: &Table, cell: &TableCell) -> f64 {
             break;
         }
     }
-    
+
     left
 }
 
@@ -60,7 +60,7 @@ pub(crate) fn get_row_height(
             }
         }
     }
-    
+
     // row_sizes가 있으면 사용 (셀 height보다 우선순위 낮음) / Use row_sizes if available (lower priority than cell height)
     if !table.attributes.row_sizes.is_empty() && row_index < table.attributes.row_sizes.len() {
         if let Some(&row_size) = table.attributes.row_sizes.get(row_index) {
@@ -73,12 +73,12 @@ pub(crate) fn get_row_height(
             }
         }
     }
-    
+
     // 셀 height가 있으면 사용 / Use cell height if available
     if max_cell_height > 0.0 {
         return max_cell_height;
     }
-    
+
     // 셀 height도 없으면 CtrlHeader height를 행 개수로 나눈 값 사용 (fallback)
     // If no cell height, use CtrlHeader height divided by row count (fallback)
     if let Some(ctrl_height) = ctrl_header_height_mm {
@@ -86,7 +86,7 @@ pub(crate) fn get_row_height(
             return ctrl_height / table.attributes.row_count as f64;
         }
     }
-    
+
     0.0
 }
 
@@ -127,22 +127,41 @@ pub(crate) fn get_cell_height(
 
 /// 열 경계선 위치 계산 / Calculate column boundary positions
 pub(crate) fn column_positions(table: &Table) -> Vec<f64> {
-    let mut positions = vec![0.0];
-    let mut current_x = 0.0;
+    // 모든 행의 셀들을 고려하여 모든 열 경계선 위치 계산 / Calculate all column boundary positions considering cells from all rows
+    // 각 셀의 왼쪽과 오른쪽 경계를 수집하여 고유한 위치만 추출 / Collect left and right boundaries of each cell and extract unique positions
+    // f64는 Hash와 Ord를 구현하지 않으므로 Vec을 사용하고 수동으로 중복 제거 / Use Vec and manually remove duplicates since f64 doesn't implement Hash or Ord
+    let mut boundary_positions = Vec::new();
+    boundary_positions.push(0.0); // 항상 0부터 시작 / Always start from 0
 
-    let mut first_row_cells: Vec<_> = table
-        .cells
-        .iter()
-        .filter(|cell| cell.cell_attributes.row_address == 0)
-        .collect();
-    first_row_cells.sort_by_key(|cell| cell.cell_attributes.col_address);
+    // 모든 셀의 왼쪽과 오른쪽 경계를 수집 / Collect left and right boundaries of all cells
+    for cell in &table.cells {
+        let cell_left = calculate_cell_left(table, cell);
+        let cell_width = cell.cell_attributes.width.to_mm();
+        let cell_right = cell_left + cell_width;
 
-    for cell in &first_row_cells {
-        current_x += cell.cell_attributes.width.to_mm();
-        positions.push(current_x);
+        boundary_positions.push(cell_left);
+        boundary_positions.push(cell_right);
     }
 
-    positions
+    // 정렬 / Sort
+    boundary_positions.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+    // 중복 제거 (부동소수점 비교는 작은 오차를 허용) / Remove duplicates (floating point comparison allows small errors)
+    let mut unique_positions = Vec::new();
+    let epsilon = 0.01; // 0.01mm 이내는 같은 위치로 간주 / Positions within 0.01mm are considered the same
+
+    for &pos in &boundary_positions {
+        if unique_positions.is_empty() {
+            unique_positions.push(pos);
+        } else {
+            let last_pos = unique_positions.last().unwrap();
+            if (pos - *last_pos).abs() > epsilon {
+                unique_positions.push(pos);
+            }
+        }
+    }
+
+    unique_positions
 }
 
 /// 행 경계선 위치 계산 / Calculate row boundary positions
