@@ -1,4 +1,6 @@
 use crate::document::bodytext::Table;
+use crate::document::FillInfo;
+use crate::HwpDocument;
 
 use crate::viewer::html::styles::round_to_2dp;
 
@@ -9,7 +11,7 @@ use crate::viewer::html::ctrl_header::table::geometry::{
 /// 배경 패턴 및 면 채우기 생성 / Build background patterns and fills
 pub(crate) fn render_fills(
     table: &Table,
-    document: &crate::document::HwpDocument,
+    document: &HwpDocument,
     ctrl_header_height_mm: Option<f64>,
 ) -> (String, String) {
     let mut svg_paths = String::new();
@@ -26,7 +28,7 @@ pub(crate) fn render_fills(
             let border_fill_id = cell.cell_attributes.border_fill_id as usize;
             if border_fill_id <= document.doc_info.border_fill.len() {
                 let border_fill = &document.doc_info.border_fill[border_fill_id - 1];
-                if let crate::document::FillInfo::Solid(solid) = &border_fill.fill {
+                if let FillInfo::Solid(solid) = &border_fill.fill {
                     if solid.background_color.0 != 0 {
                         let pattern_id = format!("w_{:02}", pattern_counter);
                         pattern_counter += 1;

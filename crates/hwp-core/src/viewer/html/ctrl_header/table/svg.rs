@@ -1,5 +1,6 @@
 /// SVG 렌더링 모듈 / SVG rendering module
 use crate::document::bodytext::Table;
+use crate::HwpDocument;
 
 use crate::viewer::html::ctrl_header::table::constants::{
     BORDER_COLOR, BORDER_OFFSET_MM, BORDER_WIDTH_MM,
@@ -13,7 +14,7 @@ mod fills;
 
 pub(crate) fn render_svg(
     table: &Table,
-    document: &crate::document::HwpDocument,
+    document: &HwpDocument,
     view_box: &ViewBox,
     content: Size,
     ctrl_header_height_mm: Option<f64>,

@@ -4,19 +4,18 @@ use super::line_segment;
 use super::text;
 use super::HtmlOptions;
 use crate::document::bodytext::ctrl_header::CtrlHeaderData;
-use crate::document::bodytext::ParagraphRecord;
-use crate::document::bodytext::Table;
+use crate::document::bodytext::{LineSegmentInfo, ParagraphRecord, Table};
 use crate::document::HwpDocument;
-use crate::viewer::html::ctrl_header::table::CaptionInfo;
+use crate::viewer::html::ctrl_header::table::{CaptionInfo, CaptionText};
 
 /// 문단을 HTML로 렌더링 / Render paragraph to HTML
 /// 반환값: (문단 HTML, 테이블 HTML 리스트) / Returns: (paragraph HTML, table HTML list)
 pub fn render_paragraph(
-    paragraph: &crate::document::bodytext::Paragraph,
+    paragraph: &Paragraph,
     document: &HwpDocument,
     options: &HtmlOptions,
     hcd_position: Option<(f64, f64)>,
-    page_def: Option<&crate::document::bodytext::PageDef>,
+    page_def: Option<&PageDef>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
     current_para_vertical_mm: Option<f64>, // 현재 문단의 vertical_position / Current paragraph's vertical_position
     para_vertical_positions: &[f64], // 모든 문단의 vertical_position (vert_rel_to: "para"일 때 참조 문단 찾기 위해) / All paragraphs' vertical_positions (to find reference paragraph when vert_rel_to: "para")
@@ -51,11 +50,11 @@ pub fn render_paragraph(
     let mut tables: Vec<(
         &Table,
         Option<&CtrlHeaderData>,
-        Option<crate::viewer::html::ctrl_header::table::CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
-        Option<CaptionInfo>,                                          // 캡션 정보 / Caption info
+        Option<CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
+        Option<CaptionInfo>, // 캡션 정보 / Caption info
         Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
         Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
-        Option<&crate::document::bodytext::LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
+        Option<&LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
     )> = Vec::new();
 
     for record in &paragraph.records {
@@ -127,11 +126,11 @@ pub fn render_paragraph(
     let mut inline_tables: Vec<(
         &Table,
         Option<&CtrlHeaderData>,
-        Option<crate::viewer::html::ctrl_header::table::CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
+        Option<CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
         Option<CaptionInfo>,
         Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
         Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
-        Option<&crate::document::bodytext::LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
+        Option<&LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
     )> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
 
     // 문단의 첫 번째 LineSegment의 vertical_position 계산 (vert_rel_to: "para"일 때 사용) / Calculate first LineSegment's vertical_position (used when vert_rel_to: "para")

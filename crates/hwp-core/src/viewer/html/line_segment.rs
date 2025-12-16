@@ -1,5 +1,5 @@
 /// 라인 세그먼트 렌더링 모듈 / Line segment rendering module
-use crate::document::bodytext::{CharShapeInfo, LineSegmentInfo, PageDef};
+use crate::document::bodytext::{CharShapeInfo, LineSegmentInfo, PageDef, Table};
 use crate::document::CtrlHeaderData;
 use crate::viewer::html::ctrl_header::table::{CaptionInfo, CaptionText};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
@@ -8,13 +8,13 @@ use crate::{HwpDocument, ParaShape, UINT32};
 
 /// 테이블 정보 타입 / Table info type
 pub type TableInfo<'a> = (
-    &'a crate::document::bodytext::Table,
+    &'a Table,
     Option<&'a CtrlHeaderData>,
     Option<&'a CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
     Option<CaptionInfo>,     // 캡션 정보 / Caption info
     Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
     Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
-    Option<&'a crate::document::bodytext::LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
+    Option<&'a LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
 );
 
 /// 라인 세그먼트를 HTML로 렌더링 / Render line segment to HTML

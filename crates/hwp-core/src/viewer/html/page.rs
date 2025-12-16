@@ -1,3 +1,5 @@
+use crate::types::RoundTo2dp;
+use crate::{document::bodytext::PageDef, INT32};
 /// 페이지 렌더링 모듈 / Page rendering module
 
 /// 페이지를 HTML로 렌더링 / Render page to HTML
@@ -5,11 +7,10 @@ pub fn render_page(
     _page_number: usize,
     content: &str,
     tables: &[String],
-    page_def: Option<&crate::document::bodytext::PageDef>,
-    _first_segment_pos: Option<(crate::types::INT32, crate::types::INT32)>,
+    page_def: Option<&PageDef>,
+    _first_segment_pos: Option<(INT32, INT32)>,
     hcd_position: Option<(f64, f64)>,
 ) -> String {
-    use crate::types::RoundTo2dp;
     let width_mm = page_def
         .map(|pd| pd.paper_width.to_mm().round_to_2dp())
         .unwrap_or(210.0); // A4 기본값 / A4 default

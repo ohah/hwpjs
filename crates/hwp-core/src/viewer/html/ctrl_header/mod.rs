@@ -15,7 +15,7 @@ pub mod table;
 
 use crate::document::bodytext::ctrl_header::CtrlHeaderData;
 use crate::document::bodytext::{LineSegmentInfo, ParagraphRecord, Table};
-use crate::document::{CtrlHeader, Paragraph};
+use crate::document::{CtrlHeader, CtrlId, Paragraph};
 use crate::viewer::html::ctrl_header::table::{CaptionInfo, CaptionText};
 
 /// CtrlHeader 처리 결과 / CtrlHeader processing result
@@ -53,8 +53,6 @@ pub fn process_ctrl_header<'a>(
     children: &'a [ParagraphRecord],
     paragraphs: &'a [Paragraph],
 ) -> CtrlHeaderResult<'a> {
-    use crate::document::bodytext::ctrl_header::CtrlId;
-
     match header.ctrl_id.as_str() {
         CtrlId::TABLE => {
             // 테이블 컨트롤 처리 / Process table control

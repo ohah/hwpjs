@@ -1,12 +1,13 @@
 /// HTML 뷰어 공통 유틸리티 함수 / HTML viewer common utility functions
 use crate::document::{BinDataRecord, HwpDocument};
+use crate::WORD;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use std::fs;
 use std::path::Path;
 
 /// Get file extension from BinData ID
 /// BinData ID에서 파일 확장자 가져오기
-pub fn get_extension_from_bindata_id(document: &HwpDocument, bindata_id: crate::types::WORD) -> String {
+pub fn get_extension_from_bindata_id(document: &HwpDocument, bindata_id: WORD) -> String {
     for record in &document.doc_info.bin_data {
         if let BinDataRecord::Embedding { embedding, .. } = record {
             if embedding.binary_data_id == bindata_id {
@@ -19,7 +20,7 @@ pub fn get_extension_from_bindata_id(document: &HwpDocument, bindata_id: crate::
 
 /// Get MIME type from BinData ID
 /// BinData ID에서 MIME 타입 가져오기
-pub fn get_mime_type_from_bindata_id(document: &HwpDocument, bindata_id: crate::types::WORD) -> String {
+pub fn get_mime_type_from_bindata_id(document: &HwpDocument, bindata_id: WORD) -> String {
     for record in &document.doc_info.bin_data {
         if let BinDataRecord::Embedding { embedding, .. } = record {
             if embedding.binary_data_id == bindata_id {
@@ -44,11 +45,11 @@ pub fn save_image_to_file(
     bindata_id: crate::types::WORD,
     base64_data: &str,
     dir_path: &str,
-) -> Result<String, crate::error::HwpError> {
+) -> Result<String, HwpError> {
     // base64 디코딩 / Decode base64
     let image_data = STANDARD
         .decode(base64_data)
-        .map_err(|e| crate::error::HwpError::InternalError {
+        .map_err(|e| HwpError::InternalError {
             message: format!("Failed to decode base64: {}", e),
         })?;
 
@@ -59,11 +60,11 @@ pub fn save_image_to_file(
 
     // 디렉토리 생성 / Create directory
     fs::create_dir_all(dir_path)
-        .map_err(|e| crate::error::HwpError::Io(format!("Failed to create directory '{}': {}", dir_path, e)))?;
+        .map_err(|e| HwpError::Io(format!("Failed to create directory '{}': {}", dir_path, e)))?;
 
     // 파일 저장 / Save file
     fs::write(&file_path, &image_data).map_err(|e| {
-        crate::error::HwpError::Io(format!(
+        HwpError::Io(format!(
             "Failed to write file '{}': {}",
             file_path.display(),
             e
@@ -77,7 +78,7 @@ pub fn save_image_to_file(
 /// 이미지 URL 가져오기 (파일 경로 또는 base64 데이터 URI)
 pub fn get_image_url(
     document: &HwpDocument,
-    bindata_id: crate::types::WORD,
+    bindata_id: WORD,
     image_output_dir: Option<&str>,
 ) -> String {
     // BinData에서 이미지 데이터 찾기 / Find image data from BinData
@@ -120,4 +121,3 @@ pub fn get_image_url(
         }
     }
 }
-

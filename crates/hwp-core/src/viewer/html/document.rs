@@ -1,12 +1,14 @@
 use super::page;
 use super::paragraph::render_paragraph;
 use super::styles;
+use super::styles::round_to_2dp;
 use super::HtmlOptions;
 use crate::document::bodytext::{ColumnDivideType, ParagraphRecord};
 use crate::document::HwpDocument;
+use crate::types::RoundTo2dp;
 
 /// 문서에서 첫 번째 PageDef 찾기 / Find first PageDef in document
-fn find_page_def(document: &HwpDocument) -> Option<&crate::document::bodytext::PageDef> {
+fn find_page_def(document: &HwpDocument) -> Option<&PageDef> {
     for section in &document.body_text.sections {
         for paragraph in &section.paragraphs {
             for record in &paragraph.records {
@@ -65,9 +67,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut page_number = 1;
     let mut page_content = String::new();
     let mut page_tables = Vec::new(); // 테이블을 별도로 저장 / Store tables separately
-    let mut first_segment_pos: Option<(crate::types::INT32, crate::types::INT32)> = None; // 첫 번째 LineSegment 위치 저장 / Store first LineSegment position
+    let mut first_segment_pos: Option<(INT32, INT32)> = None; // 첫 번째 LineSegment 위치 저장 / Store first LineSegment position
     let mut hcd_position: Option<(f64, f64)> = None; // hcD 위치 저장 (mm 단위) / Store hcD position (in mm)
-    
+
     // 문서 레벨에서 table_counter 관리 (문서 전체에서 테이블 번호 연속 유지) / Manage table_counter at document level (maintain sequential table numbers across document)
     let mut table_counter = document
         .doc_info
@@ -230,7 +232,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 if first_segment_pos.is_none() {
                     // hcD 위치는 left_margin + binding_margin, top_margin + header_margin을 직접 사용
                     // hcD position uses left_margin + binding_margin, top_margin + header_margin directly
-                    use crate::types::RoundTo2dp;
                     let left_margin_mm = page_def
                         .map(|pd| {
                             (pd.left_margin.to_mm() + pd.binding_margin.to_mm()).round_to_2dp()
@@ -339,7 +340,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     // 마지막 페이지 출력 / Output last page
     if !page_content.is_empty() || !page_tables.is_empty() {
         // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
-        use super::styles::round_to_2dp;
         let hcd_pos = if let Some((left, top)) = hcd_position {
             Some((round_to_2dp(left), round_to_2dp(top)))
         } else {

@@ -1,3 +1,4 @@
+use crate::document::docinfo::para_shape::ParagraphAlignment;
 /// CSS 스타일 생성 모듈 / CSS style generation module
 /// noori_style.css 기반으로 CSS 생성
 use crate::document::HwpDocument;
@@ -127,16 +128,16 @@ pub fn generate_css_styles(document: &HwpDocument) -> String {
 
         // 정렬 / Alignment
         match para_shape.attributes1.align {
-            crate::document::docinfo::para_shape::ParagraphAlignment::Left => {
+            ParagraphAlignment::Left => {
                 css.push_str("  text-align:left;");
             }
-            crate::document::docinfo::para_shape::ParagraphAlignment::Right => {
+            ParagraphAlignment::Right => {
                 css.push_str("  text-align:right;");
             }
-            crate::document::docinfo::para_shape::ParagraphAlignment::Center => {
+            ParagraphAlignment::Center => {
                 css.push_str("  text-align:center;");
             }
-            crate::document::docinfo::para_shape::ParagraphAlignment::Justify => {
+            ParagraphAlignment::Justify => {
                 css.push_str("  text-align:justify;");
             }
             _ => {
