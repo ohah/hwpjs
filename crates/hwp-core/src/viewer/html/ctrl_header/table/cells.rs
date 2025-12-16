@@ -1,7 +1,8 @@
+use crate::document::bodytext::list_header::VerticalAlign;
 use crate::document::bodytext::{ParagraphRecord, Table};
 use crate::viewer::html::common;
 use crate::viewer::html::line_segment::render_line_segments_with_content;
-use crate::viewer::html::styles::round_to_2dp;
+use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::html::text;
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
@@ -23,6 +24,9 @@ pub(crate) fn render_cells(
 
         // 셀 내부 문단 렌더링 / Render paragraphs inside cell
         let mut cell_content = String::new();
+        // hcI의 top 위치 계산을 위한 첫 번째 LineSegment 정보 저장 / Store first LineSegment info for hcI top position calculation
+        let mut first_line_segment: Option<&crate::document::bodytext::LineSegmentInfo> = None;
+
         for para in &cell.paragraphs {
             // ParaShape 클래스 가져오기 / Get ParaShape class
             let para_shape_id = para.para_header.para_shape_id;
@@ -41,6 +45,10 @@ pub(crate) fn render_cells(
             for record in &para.records {
                 if let ParagraphRecord::ParaLineSeg { segments } = record {
                     line_segments = segments.clone();
+                    // 첫 번째 LineSegment 저장 (hcI top 계산용) / Store first LineSegment (for hcI top calculation)
+                    if first_line_segment.is_none() && !segments.is_empty() {
+                        first_line_segment = segments.first();
+                    }
                     break;
                 }
             }
@@ -114,14 +122,55 @@ pub(crate) fn render_cells(
         let left_margin_mm = (cell.cell_attributes.left_margin as f64 / 7200.0) * 25.4;
         let top_margin_mm = (cell.cell_attributes.top_margin as f64 / 7200.0) * 25.4;
 
+        // hcI의 top 위치 계산 / Calculate hcI top position
+        // 세로 정렬에 따라 셀 높이와 LineSegment 높이를 고려하여 계산
+        // Calculate considering cell height and LineSegment height according to vertical alignment
+        let hci_top_mm = if let Some(segment) = first_line_segment {
+            let segment_height_mm = round_to_2dp(int32_to_mm(segment.line_height));
+            let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
+            let baseline_distance_mm = round_to_2dp(int32_to_mm(segment.baseline_distance));
+
+            match cell.list_header.attribute.vertical_align {
+                VerticalAlign::Top => {
+                    // Top 정렬: baseline_offset 계산 (baseline_distance - text_height) / 2
+                    // Top alignment: calculate baseline_offset (baseline_distance - text_height) / 2
+                    let baseline_offset = (baseline_distance_mm - text_height_mm) / 2.0;
+                    round_to_2dp(baseline_offset)
+                }
+                VerticalAlign::Center => {
+                    // Center 정렬: 셀 높이와 LineSegment 높이를 고려하여 중앙 정렬
+                    // Center alignment: center align considering cell height and LineSegment height
+                    let center_offset = (cell_height - segment_height_mm) / 2.0;
+                    round_to_2dp(center_offset)
+                }
+                VerticalAlign::Bottom => {
+                    // Bottom 정렬: 셀 높이와 LineSegment 높이를 고려하여 하단 정렬
+                    // Bottom alignment: bottom align considering cell height and LineSegment height
+                    let bottom_offset = cell_height - segment_height_mm;
+                    round_to_2dp(bottom_offset)
+                }
+            }
+        } else {
+            // LineSegment가 없으면 기본값 사용 / Use default value if no LineSegment
+            0.0
+        };
+
+        // hcI에 top 스타일 추가 (값이 0이 아닌 경우만) / Add top style to hcI (only if value is not 0)
+        let hci_style = if hci_top_mm.abs() > 0.01 {
+            format!(r#" style="top:{}mm;""#, round_to_2dp(hci_top_mm))
+        } else {
+            String::new()
+        };
+
         cells_html.push_str(&format!(
-            r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI">{}</div></div></div>"#,
+            r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI"{}>{}</div></div></div>"#,
             round_to_2dp(cell_left),
             round_to_2dp(cell_top),
             round_to_2dp(cell_width),
             round_to_2dp(cell_height),
             round_to_2dp(left_margin_mm),
             round_to_2dp(top_margin_mm),
+            hci_style,
             cell_content
         ));
     }
