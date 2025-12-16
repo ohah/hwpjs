@@ -1,5 +1,5 @@
 use crate::document::bodytext::list_header::VerticalAlign;
-use crate::document::bodytext::{ParagraphRecord, Table};
+use crate::document::bodytext::{LineSegmentInfo, ParagraphRecord, Table};
 use crate::viewer::html::common;
 use crate::viewer::html::line_segment::render_line_segments_with_content;
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
@@ -7,7 +7,12 @@ use crate::viewer::html::text;
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
 
-use super::geometry::{calculate_cell_left, calculate_cell_top, get_cell_height};
+use super::geometry::{calculate_cell_left, get_cell_height, get_row_height};
+
+/// 셀 마진을 mm 단위로 변환 / Convert cell margin to mm
+fn cell_margin_to_mm(margin_hwpunit: i16) -> f64 {
+    round_to_2dp(int32_to_mm(margin_hwpunit as i32))
+}
 
 pub(crate) fn render_cells(
     table: &Table,
@@ -17,17 +22,164 @@ pub(crate) fn render_cells(
     pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
     color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
 ) -> String {
+    // 먼저 각 행의 최대 셀 높이 계산 (shape component 포함) / First calculate max cell height for each row (including shape components)
+    use std::collections::HashMap;
+    let mut max_row_heights: HashMap<usize, f64> = HashMap::new();
+
+    for cell in &table.cells {
+        let row_idx = cell.cell_attributes.row_address as usize;
+        let mut cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
+
+        // shape component가 있는 셀의 경우 shape 높이 + 마진을 고려 / For cells with shape components, consider shape height + margin
+        let mut max_shape_height_mm: Option<f64> = None;
+
+        // 재귀적으로 모든 ShapeComponent의 높이를 찾는 헬퍼 함수 / Helper function to recursively find height of all ShapeComponents
+        fn find_shape_component_height(
+            children: &[ParagraphRecord],
+            shape_component_height: u32,
+            row_idx: usize,
+            col_address: u16,
+        ) -> Option<f64> {
+            let mut max_height_mm: Option<f64> = None;
+
+            for child in children {
+                match child {
+                    // ShapeComponentPicture: shape_component.height 사용
+                    ParagraphRecord::ShapeComponentPicture { .. } => {
+                        let height_hwpunit = shape_component_height as i32;
+                        let height_mm = round_to_2dp(int32_to_mm(height_hwpunit));
+                        if max_height_mm.is_none() || height_mm > max_height_mm.unwrap() {
+                            max_height_mm = Some(height_mm);
+                        }
+                    }
+
+                    // 중첩된 ShapeComponent: 재귀적으로 탐색
+                    ParagraphRecord::ShapeComponent {
+                        shape_component,
+                        children: nested_children,
+                    } => {
+                        if let Some(height) = find_shape_component_height(
+                            nested_children,
+                            shape_component.height,
+                            row_idx,
+                            col_address,
+                        ) {
+                            if max_height_mm.is_none() || height > max_height_mm.unwrap() {
+                                max_height_mm = Some(height);
+                            }
+                        }
+                    }
+
+                    // 다른 shape component 타입들: shape_component.height 사용
+                    // (이 타입들은 children 필드가 없으므로 ShapeComponent의 children에서 ParaLineSeg를 찾아야 함)
+                    // Other shape component types: use shape_component.height
+                    // (These types don't have children field, so ParaLineSeg should be found in ShapeComponent's children)
+                    ParagraphRecord::ShapeComponentLine { .. }
+                    | ParagraphRecord::ShapeComponentRectangle { .. }
+                    | ParagraphRecord::ShapeComponentEllipse { .. }
+                    | ParagraphRecord::ShapeComponentArc { .. }
+                    | ParagraphRecord::ShapeComponentPolygon { .. }
+                    | ParagraphRecord::ShapeComponentCurve { .. }
+                    | ParagraphRecord::ShapeComponentOle { .. }
+                    | ParagraphRecord::ShapeComponentContainer { .. }
+                    | ParagraphRecord::ShapeComponentTextArt { .. }
+                    | ParagraphRecord::ShapeComponentUnknown { .. } => {
+                        // shape_component.height 사용 / Use shape_component.height
+                        let height_mm = round_to_2dp(int32_to_mm(shape_component_height as i32));
+                        if max_height_mm.is_none() || height_mm > max_height_mm.unwrap() {
+                            max_height_mm = Some(height_mm);
+                        }
+                    }
+
+                    // ParaLineSeg: line_height 합산하여 높이 계산
+                    // ParaLineSeg: calculate height by summing line_height
+                    ParagraphRecord::ParaLineSeg { segments } => {
+                        let total_height_hwpunit: i32 =
+                            segments.iter().map(|seg| seg.line_height).sum();
+                        let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
+                        if max_height_mm.is_none() || height_mm > max_height_mm.unwrap() {
+                            max_height_mm = Some(height_mm);
+                        }
+                    }
+
+                    _ => {}
+                }
+            }
+
+            max_height_mm
+        }
+
+        for para in &cell.paragraphs {
+            // ShapeComponent의 children에서 모든 shape 높이 찾기 (재귀적으로) / Find all shape heights in ShapeComponent's children (recursively)
+            for record in &para.records {
+                match record {
+                    ParagraphRecord::ShapeComponent {
+                        shape_component,
+                        children,
+                    } => {
+                        if let Some(shape_height_mm) = find_shape_component_height(
+                            children,
+                            shape_component.height,
+                            row_idx,
+                            cell.cell_attributes.col_address,
+                        ) {
+                            if max_shape_height_mm.is_none()
+                                || shape_height_mm > max_shape_height_mm.unwrap()
+                            {
+                                max_shape_height_mm = Some(shape_height_mm);
+                            }
+                        }
+                        break; // ShapeComponent는 하나만 있음 / Only one ShapeComponent per paragraph
+                    }
+                    // ParaLineSeg가 paragraph records에 직접 있는 경우도 처리 / Also handle ParaLineSeg directly in paragraph records
+                    ParagraphRecord::ParaLineSeg { segments } => {
+                        let total_height_hwpunit: i32 =
+                            segments.iter().map(|seg| seg.line_height).sum();
+                        let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
+                        if max_shape_height_mm.is_none() || height_mm > max_shape_height_mm.unwrap()
+                        {
+                            max_shape_height_mm = Some(height_mm);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        if let Some(shape_height_mm) = max_shape_height_mm {
+            let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
+            let bottom_margin_mm = cell_margin_to_mm(cell.cell_attributes.bottom_margin);
+            let shape_height_with_margin = shape_height_mm + top_margin_mm + bottom_margin_mm;
+            if shape_height_with_margin > cell_height {
+                cell_height = shape_height_with_margin;
+            }
+        }
+
+        let entry = max_row_heights.entry(row_idx).or_insert(0.0f64);
+        *entry = (*entry).max(cell_height);
+    }
+
     let mut cells_html = String::new();
     for cell in &table.cells {
         let cell_left = calculate_cell_left(table, cell);
-        let cell_top = calculate_cell_top(table, cell, ctrl_header_height_mm);
+        // max_row_heights를 사용하여 cell_top 계산 (shape 높이 반영) / Calculate cell_top using max_row_heights (reflecting shape height)
+        let row_address = cell.cell_attributes.row_address as usize;
+        let mut cell_top = 0.0;
+        for row_idx in 0..row_address {
+            if let Some(&row_height) = max_row_heights.get(&row_idx) {
+                cell_top += row_height;
+            } else {
+                // max_row_heights에 없으면 기존 방식 사용 / Use existing method if not in max_row_heights
+                cell_top += get_row_height(table, row_idx, ctrl_header_height_mm);
+            }
+        }
         let cell_width = cell.cell_attributes.width.to_mm();
-        let cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
+        let mut cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
 
         // 셀 내부 문단 렌더링 / Render paragraphs inside cell
         let mut cell_content = String::new();
         // hcI의 top 위치 계산을 위한 첫 번째 LineSegment 정보 저장 / Store first LineSegment info for hcI top position calculation
-        let mut first_line_segment: Option<&crate::document::bodytext::LineSegmentInfo> = None;
+        let mut first_line_segment: Option<&LineSegmentInfo> = None;
 
         for para in &cell.paragraphs {
             // ParaShape 클래스 가져오기 / Get ParaShape class
@@ -57,40 +209,91 @@ pub(crate) fn render_cells(
 
             // 이미지 수집 (셀 내부에서는 테이블은 렌더링하지 않음) / Collect images (tables are not rendered inside cells)
             let mut images = Vec::new();
+
+            // 재귀적으로 ShapeComponentPicture를 찾는 헬퍼 함수 / Helper function to recursively find ShapeComponentPicture
+            fn collect_images_from_shape_component(
+                children: &[ParagraphRecord],
+                shape_component_height: u32,
+                document: &HwpDocument,
+                options: &HtmlOptions,
+                images: &mut Vec<crate::viewer::html::line_segment::ImageInfo>,
+            ) {
+                for child in children {
+                    match child {
+                        ParagraphRecord::ShapeComponentPicture {
+                            shape_component_picture,
+                        } => {
+                            let bindata_id = shape_component_picture.picture_info.bindata_id;
+                            let image_url = common::get_image_url(
+                                document,
+                                bindata_id,
+                                options.image_output_dir.as_deref(),
+                                options.html_output_dir.as_deref(),
+                            );
+                            if !image_url.is_empty() {
+                                // HWPUNIT 단위로 계산 (INT32) / Calculate in HWPUNIT units (INT32)
+                                let width_hwpunit =
+                                    shape_component_picture.border_rectangle_x.right
+                                        - shape_component_picture.border_rectangle_x.left;
+                                // ShapeComponent.height 사용 (원본 HTML과 일치) / Use ShapeComponent.height (matches original HTML)
+                                let height_hwpunit = shape_component_height as i32;
+
+                                // HWPUNIT을 u32로 안전하게 변환 (음수 방지) / Safely convert HWPUNIT to u32 (prevent negative)
+                                // ImageInfo는 u32를 사용하지만, render_image_with_style에서 INT32로 변환됨
+                                // ImageInfo uses u32 but is converted to INT32 in render_image_with_style
+                                let width = width_hwpunit.max(0) as u32;
+                                let height = height_hwpunit.max(0) as u32;
+
+                                images.push(crate::viewer::html::line_segment::ImageInfo {
+                                    width,
+                                    height,
+                                    url: image_url,
+                                });
+                            }
+                        }
+                        ParagraphRecord::ShapeComponent {
+                            shape_component,
+                            children: nested_children,
+                        } => {
+                            // 중첩된 ShapeComponent 재귀적으로 탐색 / Recursively search nested ShapeComponent
+                            collect_images_from_shape_component(
+                                nested_children,
+                                shape_component.height,
+                                document,
+                                options,
+                                images,
+                            );
+                        }
+                        ParagraphRecord::ShapeComponentLine { .. }
+                        | ParagraphRecord::ShapeComponentRectangle { .. }
+                        | ParagraphRecord::ShapeComponentEllipse { .. }
+                        | ParagraphRecord::ShapeComponentArc { .. }
+                        | ParagraphRecord::ShapeComponentPolygon { .. }
+                        | ParagraphRecord::ShapeComponentCurve { .. }
+                        | ParagraphRecord::ShapeComponentOle { .. }
+                        | ParagraphRecord::ShapeComponentContainer { .. }
+                        | ParagraphRecord::ShapeComponentTextArt { .. } => {
+                            // 다른 shape component 타입들은 children이 없으므로 무시 / Other shape component types have no children, so ignore
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
             for record in &para.records {
                 match record {
-                    ParagraphRecord::ShapeComponentPicture {
-                        shape_component_picture,
+                    ParagraphRecord::ShapeComponent {
+                        shape_component,
+                        children,
                     } => {
-                        let bindata_id = shape_component_picture.picture_info.bindata_id;
-                        let image_url = common::get_image_url(
+                        // ShapeComponent의 children에서 이미지 찾기 (재귀적으로) / Find images in ShapeComponent's children (recursively)
+                        collect_images_from_shape_component(
+                            children,
+                            shape_component.height,
                             document,
-                            bindata_id,
-                            options.image_output_dir.as_deref(),
-                            options.html_output_dir.as_deref(),
+                            options,
+                            &mut images,
                         );
-                        if !image_url.is_empty() {
-                            let width = (shape_component_picture.border_rectangle_x.right
-                                - shape_component_picture.border_rectangle_x.left)
-                                as u32;
-                            let mut height = (shape_component_picture.border_rectangle_y.bottom
-                                - shape_component_picture.border_rectangle_y.top)
-                                as u32;
-
-                            // border_rectangle_y의 top과 bottom이 같으면 crop_rectangle 사용
-                            // If border_rectangle_y's top and bottom are the same, use crop_rectangle
-                            if height == 0 {
-                                height = (shape_component_picture.crop_rectangle.bottom
-                                    - shape_component_picture.crop_rectangle.top)
-                                    as u32;
-                            }
-
-                            images.push(crate::viewer::html::line_segment::ImageInfo {
-                                width,
-                                height,
-                                url: image_url,
-                            });
-                        }
                     }
                     _ => {}
                 }
@@ -133,8 +336,16 @@ pub(crate) fn render_cells(
             }
         }
 
-        let left_margin_mm = (cell.cell_attributes.left_margin as f64 / 7200.0) * 25.4;
-        let top_margin_mm = (cell.cell_attributes.top_margin as f64 / 7200.0) * 25.4;
+        let left_margin_mm = cell_margin_to_mm(cell.cell_attributes.left_margin);
+        let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
+        let bottom_margin_mm = cell_margin_to_mm(cell.cell_attributes.bottom_margin);
+
+        // 같은 행의 모든 셀은 같은 높이를 가져야 함 (행의 최대 높이 사용, shape component 높이 포함) / All cells in the same row should have the same height (use row's max height, including shape component height)
+        let row_idx = cell.cell_attributes.row_address as usize;
+        if let Some(&row_max_height) = max_row_heights.get(&row_idx) {
+            // max_row_heights는 이미 shape component 높이를 포함하여 계산됨 / max_row_heights already includes shape component height
+            cell_height = row_max_height;
+        }
 
         // hcI의 top 위치 계산 / Calculate hcI top position
         // 세로 정렬에 따라 셀 높이와 LineSegment 높이를 고려하여 계산
