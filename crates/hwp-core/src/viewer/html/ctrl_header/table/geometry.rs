@@ -48,61 +48,45 @@ pub(crate) fn get_row_height(
     row_index: usize,
     ctrl_header_height_mm: Option<f64>,
 ) -> f64 {
-    if !table.attributes.row_sizes.is_empty() && row_index < table.attributes.row_sizes.len() {
-        if let Some(&row_size) = table.attributes.row_sizes.get(row_index) {
-            // row_size가 0이거나 매우 작은 값(< 100)일 때는 fallback 로직 사용
-            // When row_size is 0 or very small (< 100), use fallback logic
-            if row_size < 100 {
-                // CtrlHeader height가 있으면 행 개수로 나눈 값을 사용
-                // If CtrlHeader height exists, use it divided by row count
-                if let Some(ctrl_height) = ctrl_header_height_mm {
-                    if table.attributes.row_count > 0 {
-                        let row_height = ctrl_height / table.attributes.row_count as f64;
-                        return row_height;
-                    }
-                }
-                // CtrlHeader height가 없으면 해당 행의 셀 height 속성 사용 (fallback)
-                // If CtrlHeader height doesn't exist, use cell's height attribute for this row (fallback)
-                let mut max_height: f64 = 0.0;
-                if !table.cells.is_empty() {
-                    for cell in &table.cells {
-                        if cell.cell_attributes.row_address as usize == row_index
-                            && cell.cell_attributes.row_span == 1
-                        {
-                            let cell_height = cell.cell_attributes.height.to_mm();
-                            max_height = max_height.max(cell_height);
-                        }
-                    }
-                }
-                if max_height > 0.0 {
-                    return max_height;
-                }
-                // 셀 height도 없으면 0 반환
-                // If no cell height, return 0
-                return 0.0;
-            }
-            // row_size가 유효한 값이면 직접 사용
-            // If row_size is valid, use it directly
-            let row_height = (row_size as f64 / 7200.0) * 25.4;
-            return row_height;
-        }
-    }
-    // row_sizes가 없거나 인덱스가 범위를 벗어나면 셀 height 속성 사용 (fallback)
-    // If row_sizes is empty or index out of range, use cell height attribute (fallback)
-    let mut max_height: f64 = 0.0;
+    // 먼저 해당 행의 셀 height 속성을 확인 (가장 정확한 방법) / First check cell height attributes for this row (most accurate method)
+    let mut max_cell_height: f64 = 0.0;
     if !table.cells.is_empty() {
         for cell in &table.cells {
             if cell.cell_attributes.row_address as usize == row_index
                 && cell.cell_attributes.row_span == 1
             {
                 let cell_height = cell.cell_attributes.height.to_mm();
-                max_height = max_height.max(cell_height);
+                max_cell_height = max_cell_height.max(cell_height);
             }
         }
     }
-    if max_height > 0.0 {
-        return max_height;
+    
+    // row_sizes가 있으면 사용 (셀 height보다 우선순위 낮음) / Use row_sizes if available (lower priority than cell height)
+    if !table.attributes.row_sizes.is_empty() && row_index < table.attributes.row_sizes.len() {
+        if let Some(&row_size) = table.attributes.row_sizes.get(row_index) {
+            // row_size가 0이거나 매우 작은 값(< 100)일 때는 셀 height 사용
+            // When row_size is 0 or very small (< 100), use cell height
+            if row_size >= 100 {
+                let row_height = (row_size as f64 / 7200.0) * 25.4;
+                // row_size와 셀 height 중 더 큰 값 사용 / Use larger of row_size and cell height
+                return max_cell_height.max(row_height);
+            }
+        }
     }
+    
+    // 셀 height가 있으면 사용 / Use cell height if available
+    if max_cell_height > 0.0 {
+        return max_cell_height;
+    }
+    
+    // 셀 height도 없으면 CtrlHeader height를 행 개수로 나눈 값 사용 (fallback)
+    // If no cell height, use CtrlHeader height divided by row count (fallback)
+    if let Some(ctrl_height) = ctrl_header_height_mm {
+        if table.attributes.row_count > 0 {
+            return ctrl_height / table.attributes.row_count as f64;
+        }
+    }
+    
     0.0
 }
 
