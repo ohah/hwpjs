@@ -108,7 +108,7 @@ pub fn render_table(
         content_size,
         ctrl_header_height_mm,
     );
-    let cells_html = cells::render_cells(table, ctrl_header_height_mm);
+    let cells_html = cells::render_cells(table, ctrl_header_height_mm, document, _options);
     let (left_mm, mut top_mm) = table_position(
         hcd_position,
         page_def,
