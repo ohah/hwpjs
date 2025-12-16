@@ -22,26 +22,30 @@ pub(crate) fn render_cells(
     pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
     color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
 ) -> String {
-    // 먼저 각 행의 최대 셀 높이 계산 (shape component 포함) / First calculate max cell height for each row (including shape components)
+    // 각 행의 최대 셀 높이 계산 (실제 셀 높이만 사용) / Calculate max cell height for each row (use only actual cell height)
     use std::collections::HashMap;
     let mut max_row_heights: HashMap<usize, f64> = HashMap::new();
 
     for cell in &table.cells {
         let row_idx = cell.cell_attributes.row_address as usize;
+        let col_idx = cell.cell_attributes.col_address as usize;
+
+        // 실제 셀 높이 가져오기 / Get actual cell height
         let mut cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
 
-        // shape component가 있는 셀의 경우 shape 높이 + 마진을 고려 / For cells with shape components, consider shape height + margin
+        // shape component 높이 찾기 (재귀적으로) / Find shape component height (recursively)
         let mut max_shape_height_mm: Option<f64> = None;
 
         // 재귀적으로 모든 ShapeComponent의 높이를 찾는 헬퍼 함수 / Helper function to recursively find height of all ShapeComponents
         fn find_shape_component_height(
             children: &[ParagraphRecord],
             shape_component_height: u32,
-            row_idx: usize,
-            col_address: u16,
         ) -> Option<f64> {
             let mut max_height_mm: Option<f64> = None;
+            let mut has_paraline_seg = false;
+            let mut paraline_seg_height_mm: Option<f64> = None;
 
+            // 먼저 children을 순회하여 ParaLineSeg와 다른 shape component들을 찾기 / First iterate through children to find ParaLineSeg and other shape components
             for child in children {
                 match child {
                     // ShapeComponentPicture: shape_component.height 사용
@@ -58,12 +62,9 @@ pub(crate) fn render_cells(
                         shape_component,
                         children: nested_children,
                     } => {
-                        if let Some(height) = find_shape_component_height(
-                            nested_children,
-                            shape_component.height,
-                            row_idx,
-                            col_address,
-                        ) {
+                        if let Some(height) =
+                            find_shape_component_height(nested_children, shape_component.height)
+                        {
                             if max_height_mm.is_none() || height > max_height_mm.unwrap() {
                                 max_height_mm = Some(height);
                             }
@@ -71,9 +72,6 @@ pub(crate) fn render_cells(
                     }
 
                     // 다른 shape component 타입들: shape_component.height 사용
-                    // (이 타입들은 children 필드가 없으므로 ShapeComponent의 children에서 ParaLineSeg를 찾아야 함)
-                    // Other shape component types: use shape_component.height
-                    // (These types don't have children field, so ParaLineSeg should be found in ShapeComponent's children)
                     ParagraphRecord::ShapeComponentLine { .. }
                     | ParagraphRecord::ShapeComponentRectangle { .. }
                     | ParagraphRecord::ShapeComponentEllipse { .. }
@@ -91,19 +89,40 @@ pub(crate) fn render_cells(
                         }
                     }
 
-                    // ParaLineSeg: line_height 합산하여 높이 계산
-                    // ParaLineSeg: calculate height by summing line_height
+                    // ParaLineSeg: line_height 합산하여 높이 계산 (나중에 shape_component.height와 비교)
+                    // ParaLineSeg: calculate height by summing line_height (compare with shape_component.height later)
                     ParagraphRecord::ParaLineSeg { segments } => {
+                        has_paraline_seg = true;
                         let total_height_hwpunit: i32 =
                             segments.iter().map(|seg| seg.line_height).sum();
                         let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
-                        if max_height_mm.is_none() || height_mm > max_height_mm.unwrap() {
-                            max_height_mm = Some(height_mm);
+                        if paraline_seg_height_mm.is_none()
+                            || height_mm > paraline_seg_height_mm.unwrap()
+                        {
+                            paraline_seg_height_mm = Some(height_mm);
                         }
                     }
 
                     _ => {}
                 }
+            }
+
+            // ParaLineSeg가 있으면 shape_component.height와 비교하여 더 큰 값 사용
+            // If ParaLineSeg exists, compare with shape_component.height and use the larger value
+            if has_paraline_seg {
+                let shape_component_height_mm =
+                    round_to_2dp(int32_to_mm(shape_component_height as i32));
+                let paraline_seg_height = paraline_seg_height_mm.unwrap_or(0.0);
+                // shape_component.height와 ParaLineSeg 높이 중 더 큰 값 사용 / Use the larger value between shape_component.height and ParaLineSeg height
+                let final_height = shape_component_height_mm.max(paraline_seg_height);
+                if max_height_mm.is_none() || final_height > max_height_mm.unwrap() {
+                    max_height_mm = Some(final_height);
+                }
+            } else if max_height_mm.is_none() {
+                // ParaLineSeg가 없고 다른 shape component도 없으면 shape_component.height 사용
+                // If no ParaLineSeg and no other shape components, use shape_component.height
+                let height_mm = round_to_2dp(int32_to_mm(shape_component_height as i32));
+                max_height_mm = Some(height_mm);
             }
 
             max_height_mm
@@ -117,12 +136,9 @@ pub(crate) fn render_cells(
                         shape_component,
                         children,
                     } => {
-                        if let Some(shape_height_mm) = find_shape_component_height(
-                            children,
-                            shape_component.height,
-                            row_idx,
-                            cell.cell_attributes.col_address,
-                        ) {
+                        if let Some(shape_height_mm) =
+                            find_shape_component_height(children, shape_component.height)
+                        {
                             if max_shape_height_mm.is_none()
                                 || shape_height_mm > max_shape_height_mm.unwrap()
                             {
@@ -146,6 +162,7 @@ pub(crate) fn render_cells(
             }
         }
 
+        // shape component 높이 + 마진이 셀 높이보다 크면 사용 / Use shape height + margin if larger than cell height
         if let Some(shape_height_mm) = max_shape_height_mm {
             let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
             let bottom_margin_mm = cell_margin_to_mm(cell.cell_attributes.bottom_margin);
@@ -174,7 +191,15 @@ pub(crate) fn render_cells(
             }
         }
         let cell_width = cell.cell_attributes.width.to_mm();
-        let mut cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
+        // 같은 행의 모든 셀은 같은 높이를 가져야 함 (행의 최대 높이 사용, shape component 높이 포함) / All cells in the same row should have the same height (use row's max height, including shape component height)
+        let row_idx = cell.cell_attributes.row_address as usize;
+        let cell_height = if let Some(&row_max_height) = max_row_heights.get(&row_idx) {
+            // max_row_heights는 이미 shape component 높이를 포함하여 계산됨 / max_row_heights already includes shape component height
+            row_max_height
+        } else {
+            // max_row_heights가 없으면 실제 셀 높이 사용 (object_common.height는 fallback) / If max_row_heights not available, use actual cell height (object_common.height is fallback)
+            get_cell_height(table, cell, ctrl_header_height_mm)
+        };
 
         // 셀 내부 문단 렌더링 / Render paragraphs inside cell
         let mut cell_content = String::new();
@@ -339,13 +364,6 @@ pub(crate) fn render_cells(
         let left_margin_mm = cell_margin_to_mm(cell.cell_attributes.left_margin);
         let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
         let bottom_margin_mm = cell_margin_to_mm(cell.cell_attributes.bottom_margin);
-
-        // 같은 행의 모든 셀은 같은 높이를 가져야 함 (행의 최대 높이 사용, shape component 높이 포함) / All cells in the same row should have the same height (use row's max height, including shape component height)
-        let row_idx = cell.cell_attributes.row_address as usize;
-        if let Some(&row_max_height) = max_row_heights.get(&row_idx) {
-            // max_row_heights는 이미 shape component 높이를 포함하여 계산됨 / max_row_heights already includes shape component height
-            cell_height = row_max_height;
-        }
 
         // hcI의 top 위치 계산 / Calculate hcI top position
         // 세로 정렬에 따라 셀 높이와 LineSegment 높이를 고려하여 계산

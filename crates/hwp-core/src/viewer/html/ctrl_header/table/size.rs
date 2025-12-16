@@ -49,12 +49,20 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
         if let Some(CtrlHeaderData::ObjectCommon { height, .. }) = ctrl_header {
             let ctrl_header_height_mm = height.to_mm();
 
+            // object_common.height를 행 개수로 나눈 기본 행 높이 계산 / Calculate base row height from object_common.height divided by row count
+            let base_row_height_mm = if table.attributes.row_count > 0 {
+                ctrl_header_height_mm / table.attributes.row_count as f64
+            } else {
+                0.0
+            };
+
             // ctrl_header.height가 있어도, shape component가 있는 셀의 실제 높이를 확인하여 더 큰 값을 사용
             // Even if ctrl_header.height exists, check actual cell heights with shape components and use the larger value
             let mut max_row_heights_with_shapes: HashMap<usize, f64> = HashMap::new();
             for cell in &table.cells {
                 if cell.cell_attributes.row_span == 1 {
                     let row_idx = cell.cell_attributes.row_address as usize;
+                    // 먼저 실제 셀 높이를 가져옴 (cell.cell_attributes.height 우선) / First get actual cell height (cell.cell_attributes.height has priority)
                     let mut cell_height = cell.cell_attributes.height.to_mm();
 
                     // shape component가 있는 셀의 경우 shape 높이 + 마진을 고려 / For cells with shape components, consider shape height + margin
@@ -183,6 +191,15 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
                         }
                     }
 
+                    // shape component가 없고 셀 높이가 매우 작으면 object_common.height를 베이스로 사용 (fallback)
+                    // If no shape component and cell height is very small, use object_common.height as base (fallback)
+                    if max_shape_height_mm.is_none()
+                        && cell_height < 0.1
+                        && base_row_height_mm > 0.0
+                    {
+                        cell_height = base_row_height_mm;
+                    }
+
                     let entry = max_row_heights_with_shapes.entry(row_idx).or_insert(0.0f64);
                     *entry = (*entry).max(cell_height);
                 }
@@ -193,6 +210,9 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
             for row_idx in 0..table.attributes.row_count as usize {
                 if let Some(&height) = max_row_heights_with_shapes.get(&row_idx) {
                     calculated_height += height;
+                } else if base_row_height_mm > 0.0 {
+                    // max_row_heights_with_shapes에 없으면 object_common.height를 행 개수로 나눈 값 사용 / If not in max_row_heights_with_shapes, use object_common.height divided by row count
+                    calculated_height += base_row_height_mm;
                 } else if let Some(&row_size) = table.attributes.row_sizes.get(row_idx) {
                     let row_height = (row_size as f64 / 7200.0) * 25.4;
                     calculated_height += row_height;
