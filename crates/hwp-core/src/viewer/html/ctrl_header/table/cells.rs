@@ -14,6 +14,8 @@ pub(crate) fn render_cells(
     ctrl_header_height_mm: Option<f64>,
     document: &HwpDocument,
     options: &HtmlOptions,
+    pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
+    color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
 ) -> String {
     let mut cells_html = String::new();
     for cell in &table.cells {
@@ -104,9 +106,11 @@ pub(crate) fn render_cells(
                     &[], // 셀 내부에서는 테이블 없음 / No tables inside cells
                     options,
                     para_shape_indent,
-                    None, // hcd_position 없음 / No hcd_position
-                    None, // page_def 없음 / No page_def
+                    None,             // hcd_position 없음 / No hcd_position
+                    None,             // page_def 없음 / No page_def
                     0, // table_counter_start (셀 내부에서는 테이블 번호 사용 안 함) / table_counter_start (table numbers not used inside cells)
+                    pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
+                    color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
                 ));
             } else if !text.is_empty() {
                 // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment

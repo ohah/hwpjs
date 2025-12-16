@@ -18,8 +18,16 @@ pub(crate) fn render_svg(
     view_box: &ViewBox,
     content: Size,
     ctrl_header_height_mm: Option<f64>,
+    pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
+    color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
 ) -> String {
-    let (pattern_defs, fills) = fills::render_fills(table, document, ctrl_header_height_mm);
+    let (pattern_defs, fills) = fills::render_fills(
+        table,
+        document,
+        ctrl_header_height_mm,
+        pattern_counter,
+        color_to_pattern,
+    );
     let mut cols = column_positions(table);
     // 테이블의 오른쪽 끝을 명시적으로 추가 (가장 오른쪽 셀의 오른쪽 경계가 content.width와 일치하지 않을 수 있음)
     // Explicitly add table's right edge (rightmost cell's right boundary may not match content.width)

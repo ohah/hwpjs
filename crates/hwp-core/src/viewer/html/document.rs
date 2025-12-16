@@ -79,6 +79,11 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         .map(|p| p.table_start_number as u32)
         .unwrap_or(1);
 
+    // 문서 레벨에서 pattern_counter와 color_to_pattern 관리 (문서 전체에서 패턴 ID 공유) / Manage pattern_counter and color_to_pattern at document level (share pattern IDs across document)
+    use std::collections::HashMap;
+    let mut pattern_counter = 0;
+    let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
+
     // 페이지 높이 계산 (mm 단위) / Calculate page height (in mm)
     let page_height_mm = page_def.map(|pd| pd.paper_height.to_mm()).unwrap_or(297.0);
     let top_margin_mm = page_def.map(|pd| pd.top_margin.to_mm()).unwrap_or(24.99);
@@ -300,6 +305,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     &para_vertical_positions, // 모든 문단의 vertical_position 전달 / Pass all paragraphs' vertical_positions
                     current_para_index, // 현재 문단 인덱스 전달 / Pass current paragraph index
                     &mut table_counter, // 문서 레벨 table_counter 전달 / Pass document-level table_counter
+                    &mut pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
+                    &mut color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
                 );
 
                 // 인덱스 증가 (vertical_position이 있는 문단만) / Increment index (only for paragraphs with vertical_position)

@@ -60,6 +60,8 @@ pub fn render_table(
     segment_position: Option<(INT32, INT32)>,
     para_start_vertical_mm: Option<f64>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
+    pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
+    color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
 ) -> String {
     if table.cells.is_empty() || table.attributes.row_count == 0 {
         return r#"<div class="htb" style="left:0mm;width:0mm;top:0mm;height:0mm;"></div>"#
@@ -107,8 +109,10 @@ pub fn render_table(
         &view_box,
         content_size,
         ctrl_header_height_mm,
+        pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
+        color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
     );
-    let cells_html = cells::render_cells(table, ctrl_header_height_mm, document, _options);
+    let cells_html = cells::render_cells(table, ctrl_header_height_mm, document, _options, pattern_counter, color_to_pattern);
     let (left_mm, mut top_mm) = table_position(
         hcd_position,
         page_def,

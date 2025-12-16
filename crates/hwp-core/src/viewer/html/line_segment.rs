@@ -85,6 +85,11 @@ pub fn render_line_segments(
     document: &HwpDocument,
     para_shape_class: &str,
 ) -> String {
+    // 이 함수는 레거시 호환성을 위해 유지되지만, 내부적으로는 독립적인 pattern_counter를 사용합니다.
+    // This function is kept for legacy compatibility but uses an independent pattern_counter internally.
+    use std::collections::HashMap;
+    let mut pattern_counter = 0;
+    let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
     render_line_segments_with_content(
         segments,
         text,
@@ -98,6 +103,8 @@ pub fn render_line_segments(
         None, // hcd_position은 기본값으로 None 사용 / Use None as default for hcd_position
         None, // page_def는 기본값으로 None 사용 / Use None as default for page_def
         1,    // table_counter_start는 기본값으로 1 사용 / Use 1 as default for table_counter_start
+        &mut pattern_counter,
+        &mut color_to_pattern,
     )
 }
 
@@ -115,6 +122,8 @@ pub fn render_line_segments_with_content(
     hcd_position: Option<(f64, f64)>, // hcD 위치 (mm) / hcD position (mm)
     page_def: Option<&PageDef>,     // 페이지 정의 / Page definition
     table_counter_start: u32,       // 테이블 번호 시작값 / Table number start value
+    pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
+    color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
 ) -> String {
     let mut result = String::new();
 
@@ -232,6 +241,8 @@ pub fn render_line_segments_with_content(
                     segment_position, // LineSegment 위치 전달 / Pass LineSegment position
                     None, // line_segment에서는 para_start_vertical_mm 사용 안 함 / para_start_vertical_mm not used in line_segment
                     None, // line_segment에서는 first_para_vertical_mm 사용 안 함 / first_para_vertical_mm not used in line_segment
+                    pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
+                    color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
                 );
                 content.push_str(&table_html);
             }

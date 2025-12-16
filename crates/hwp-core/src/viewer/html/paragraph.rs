@@ -19,6 +19,8 @@ pub fn render_paragraph(
     para_vertical_positions: &[f64], // 모든 문단의 vertical_position (vert_rel_to: "para"일 때 참조 문단 찾기 위해) / All paragraphs' vertical_positions (to find reference paragraph when vert_rel_to: "para")
     current_para_index: Option<usize>, // 현재 문단 인덱스 (vertical_position이 있는 문단 기준) / Current paragraph index (based on paragraphs with vertical_position)
     table_counter: &mut u32, // 문서 레벨 table_counter (문서 전체에서 테이블 번호 연속 유지) / Document-level table_counter (maintain sequential table numbers across document)
+    pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
+    color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
 ) -> (String, Vec<String>) {
     let mut result = String::new();
 
@@ -214,6 +216,8 @@ pub fn render_paragraph(
             hcd_position,        // hcD 위치 전달 / Pass hcD position
             page_def,            // 페이지 정의 전달 / Pass page definition
             table_counter_start, // 테이블 번호 시작값 전달 / Pass table number start value
+            pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
+            color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
         ));
 
         // inline_tables의 개수만큼 table_counter 증가 (이미 line_segment에 포함되었으므로) / Increment table_counter by inline_tables count (already included in line_segment)
@@ -255,6 +259,8 @@ pub fn render_paragraph(
                 None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
                 ref_para_vertical_mm, // 참조 문단의 vertical_position 전달 / Pass reference paragraph's vertical_position
                 first_para_vertical_mm, // 첫 번째 문단의 vertical_position 전달 (가설 O) / Pass first paragraph's vertical_position (Hypothesis O)
+                pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
+                color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
             );
             table_htmls.push(table_html);
             *table_counter += 1; // table_counter 증가 / Increment table_counter
