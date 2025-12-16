@@ -498,6 +498,7 @@ fn test_document_html_snapshot() {
         std::fs::create_dir_all(&images_dir).unwrap_or(());
         let options = hwp_core::viewer::HtmlOptions {
             image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+            html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
             include_version: Some(true),
             include_page_info: Some(true),
             css_class_prefix: "ohah-hwpjs-".to_string(),
@@ -548,6 +549,7 @@ fn test_headerfooter_html() {
 
                     let options = hwp_core::viewer::html::HtmlOptions {
                         image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+                        html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
                         include_version: Some(true),
                         include_page_info: Some(true),
                         css_class_prefix: "ohah-hwpjs-".to_string(),
@@ -612,6 +614,7 @@ fn test_all_fixtures_html_snapshots() {
 
                         let options = hwp_core::viewer::html::HtmlOptions {
                             image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+                            html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
                             include_version: Some(true),
                             include_page_info: Some(true),
                             css_class_prefix: String::new(), // table.html과 일치하도록 빈 문자열 사용
@@ -676,6 +679,7 @@ fn test_table2_html_snapshot() {
 
                     let options = hwp_core::viewer::html::HtmlOptions {
                         image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+                        html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
                         include_version: Some(true),
                         include_page_info: Some(true),
                         css_class_prefix: String::new(), // table.html과 일치하도록 빈 문자열 사용

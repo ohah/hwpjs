@@ -5,6 +5,10 @@ pub struct HtmlOptions {
     /// Optional directory path to save images as files. If None, images are embedded as base64 data URIs.
     pub image_output_dir: Option<String>,
 
+    /// HTML 파일이 저장되는 디렉토리 경로 (이미지 상대 경로 계산에 사용)
+    /// Directory path where HTML file is saved (used for calculating relative image paths)
+    pub html_output_dir: Option<String>,
+
     /// 버전 정보 포함 여부 / Whether to include version information
     pub include_version: Option<bool>,
 
@@ -20,6 +24,7 @@ impl Default for HtmlOptions {
     fn default() -> Self {
         Self {
             image_output_dir: None,
+            html_output_dir: None,
             include_version: Some(true),
             include_page_info: Some(false),
             css_class_prefix: String::new(), // noori.html 스타일은 접두사 없음

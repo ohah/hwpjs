@@ -80,6 +80,7 @@ pub fn get_image_url(
     document: &HwpDocument,
     bindata_id: WORD,
     image_output_dir: Option<&str>,
+    html_output_dir: Option<&str>,
 ) -> String {
     // BinData에서 이미지 데이터 찾기 / Find image data from BinData
     let base64_data = document
@@ -99,13 +100,35 @@ pub fn get_image_url(
             // 이미지를 파일로 저장 / Save image as file
             match save_image_to_file(document, bindata_id, base64_data, dir_path) {
                 Ok(file_path) => {
-                    // 상대 경로로 변환 / Convert to relative path
-                    let file_path_obj = Path::new(&file_path);
-                    let file_name = file_path_obj
-                        .file_name()
-                        .and_then(|n| n.to_str())
-                        .unwrap_or(&file_path);
-                    file_name.to_string()
+                    // HTML 출력 디렉토리가 있으면 상대 경로 계산 / Calculate relative path if HTML output directory is provided
+                    if let Some(html_dir) = html_output_dir {
+                        let image_path = Path::new(&file_path);
+                        let html_path = Path::new(html_dir);
+
+                        // 상대 경로 계산 / Calculate relative path
+                        match pathdiff::diff_paths(image_path, html_path) {
+                            Some(relative_path) => {
+                                // 경로 구분자를 슬래시로 통일 / Normalize path separators to forward slashes
+                                relative_path.to_string_lossy().replace('\\', "/")
+                            }
+                            None => {
+                                // 상대 경로 계산 실패 시 파일명만 반환 / Return filename only if relative path calculation fails
+                                image_path
+                                    .file_name()
+                                    .and_then(|n| n.to_str())
+                                    .map(|s| s.to_string())
+                                    .unwrap_or_else(|| file_path)
+                            }
+                        }
+                    } else {
+                        // HTML 출력 디렉토리가 없으면 파일명만 반환 / Return filename only if HTML output directory is not provided
+                        let file_path_obj = Path::new(&file_path);
+                        file_path_obj
+                            .file_name()
+                            .and_then(|n| n.to_str())
+                            .unwrap_or(&file_path)
+                            .to_string()
+                    }
                 }
                 Err(_) => {
                     // 실패 시 base64로 폴백 / Fallback to base64 on failure

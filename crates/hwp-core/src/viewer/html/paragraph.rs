@@ -66,12 +66,40 @@ pub fn render_paragraph(
                             document,
                             bindata_id,
                             options.image_output_dir.as_deref(),
+                            options.html_output_dir.as_deref(),
                         );
                         if !image_url.is_empty() {
-                            // ShapeComponent에서 width와 height 가져오기 / Get width and height from ShapeComponent
+                            // border_rectangle에서 크기 계산 (ShapeComponent의 width/height가 0일 수 있음)
+                            // Calculate size from border_rectangle (ShapeComponent's width/height may be 0)
+                            let width = (shape_component_picture.border_rectangle_x.right
+                                - shape_component_picture.border_rectangle_x.left)
+                                as u32;
+                            let mut height = (shape_component_picture.border_rectangle_y.bottom
+                                - shape_component_picture.border_rectangle_y.top)
+                                as u32;
+
+                            // border_rectangle_y의 top과 bottom이 같으면 crop_rectangle 사용
+                            // If border_rectangle_y's top and bottom are the same, use crop_rectangle
+                            if height == 0 {
+                                height = (shape_component_picture.crop_rectangle.bottom
+                                    - shape_component_picture.crop_rectangle.top)
+                                    as u32;
+                            }
+
+                            // border_rectangle이 0이면 ShapeComponent의 크기 사용 / Use ShapeComponent size if border_rectangle is 0
+                            let final_width = if width > 0 {
+                                width
+                            } else {
+                                shape_component.width
+                            };
+                            let final_height = if height > 0 {
+                                height
+                            } else {
+                                shape_component.height
+                            };
                             images.push(ImageInfo {
-                                width: shape_component.width,
-                                height: shape_component.height,
+                                width: final_width,
+                                height: final_height,
                                 url: image_url,
                             });
                         }
@@ -86,15 +114,25 @@ pub fn render_paragraph(
                     document,
                     bindata_id,
                     options.image_output_dir.as_deref(),
+                    options.html_output_dir.as_deref(),
                 );
                 if !image_url.is_empty() {
                     // border_rectangle에서 크기 계산 / Calculate size from border_rectangle
                     let width = (shape_component_picture.border_rectangle_x.right
                         - shape_component_picture.border_rectangle_x.left)
                         as u32;
-                    let height = (shape_component_picture.border_rectangle_y.bottom
+                    let mut height = (shape_component_picture.border_rectangle_y.bottom
                         - shape_component_picture.border_rectangle_y.top)
                         as u32;
+
+                    // border_rectangle_y의 top과 bottom이 같으면 crop_rectangle 사용
+                    // If border_rectangle_y's top and bottom are the same, use crop_rectangle
+                    if height == 0 {
+                        height = (shape_component_picture.crop_rectangle.bottom
+                            - shape_component_picture.crop_rectangle.top)
+                            as u32;
+                    }
+
                     images.push(ImageInfo {
                         width,
                         height,

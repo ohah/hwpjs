@@ -67,14 +67,24 @@ pub(crate) fn render_cells(
                             document,
                             bindata_id,
                             options.image_output_dir.as_deref(),
+                            options.html_output_dir.as_deref(),
                         );
                         if !image_url.is_empty() {
                             let width = (shape_component_picture.border_rectangle_x.right
                                 - shape_component_picture.border_rectangle_x.left)
                                 as u32;
-                            let height = (shape_component_picture.border_rectangle_y.bottom
+                            let mut height = (shape_component_picture.border_rectangle_y.bottom
                                 - shape_component_picture.border_rectangle_y.top)
                                 as u32;
+
+                            // border_rectangle_y의 top과 bottom이 같으면 crop_rectangle 사용
+                            // If border_rectangle_y's top and bottom are the same, use crop_rectangle
+                            if height == 0 {
+                                height = (shape_component_picture.crop_rectangle.bottom
+                                    - shape_component_picture.crop_rectangle.top)
+                                    as u32;
+                            }
+
                             images.push(crate::viewer::html::line_segment::ImageInfo {
                                 width,
                                 height,
