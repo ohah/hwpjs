@@ -39,7 +39,7 @@ pub(crate) fn render_svg(
     } else {
         cols.push(content.width);
     }
-    let rows = row_positions(table, content.height);
+    let rows = row_positions(table, content.height, document, ctrl_header_height_mm);
 
     let vertical = borders::render_vertical_borders(
         table,
