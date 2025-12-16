@@ -3,22 +3,24 @@ use crate::types::Hwpunit16ToMm;
 
 /// 셀의 왼쪽 위치 계산 / Calculate cell left position
 pub(crate) fn calculate_cell_left(table: &Table, cell: &TableCell) -> f64 {
-    // column_positions와 동일한 방식으로 계산 / Calculate using same method as column_positions
-    // 첫 번째 행의 셀들을 정렬하여 누적 / Sort first row cells and accumulate
-    let mut first_row_cells: Vec<_> = table
-        .cells
-        .iter()
-        .filter(|c| c.cell_attributes.row_address == 0)
-        .collect();
-    first_row_cells.sort_by_key(|c| c.cell_attributes.col_address);
-
-    let mut left = 0.0;
+    // 해당 행의 셀들을 사용하여 정확한 열 위치 계산 / Use cells from the same row to calculate accurate column positions
+    // 이렇게 하면 각 행의 실제 열 구조를 반영할 수 있음 / This way we can reflect the actual column structure of each row
+    let row_address = cell.cell_attributes.row_address;
     let target_col = cell.cell_attributes.col_address;
     
+    // 같은 행의 셀들을 찾아서 정렬 / Find and sort cells from the same row
+    let mut row_cells: Vec<_> = table
+        .cells
+        .iter()
+        .filter(|c| c.cell_attributes.row_address == row_address)
+        .collect();
+    row_cells.sort_by_key(|c| c.cell_attributes.col_address);
+    
+    let mut left = 0.0;
     // target_col 이전의 모든 열 너비를 누적 / Accumulate width of all columns before target_col
-    for first_row_cell in &first_row_cells {
-        if first_row_cell.cell_attributes.col_address < target_col {
-            left += first_row_cell.cell_attributes.width.to_mm();
+    for row_cell in &row_cells {
+        if row_cell.cell_attributes.col_address < target_col {
+            left += row_cell.cell_attributes.width.to_mm();
         } else {
             break;
         }
