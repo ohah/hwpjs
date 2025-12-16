@@ -1,11 +1,13 @@
+use std::collections::HashMap;
+
 use crate::document::bodytext::list_header::VerticalAlign;
 use crate::document::bodytext::{LineSegmentInfo, ParagraphRecord, Table};
-use crate::viewer::html::common;
-use crate::viewer::html::line_segment::render_line_segments_with_content;
+use crate::viewer::html::line_segment::{render_line_segments_with_content, ImageInfo};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
-use crate::viewer::html::text;
+use crate::viewer::html::{common, ctrl_header};
+use crate::viewer::html::{image, text};
 use crate::viewer::HtmlOptions;
-use crate::HwpDocument;
+use crate::{HwpDocument, INT32};
 
 use super::geometry::{calculate_cell_left, get_cell_height, get_row_height};
 
@@ -20,10 +22,9 @@ pub(crate) fn render_cells(
     document: &HwpDocument,
     options: &HtmlOptions,
     pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
-    color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
+    color_to_pattern: &mut HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
 ) -> String {
     // 각 행의 최대 셀 높이 계산 (실제 셀 높이만 사용) / Calculate max cell height for each row (use only actual cell height)
-    use std::collections::HashMap;
     let mut max_row_heights: HashMap<usize, f64> = HashMap::new();
 
     for cell in &table.cells {
@@ -235,13 +236,74 @@ pub(crate) fn render_cells(
             // 이미지 수집 (셀 내부에서는 테이블은 렌더링하지 않음) / Collect images (tables are not rendered inside cells)
             let mut images = Vec::new();
 
+            // para.records에서 직접 ShapeComponentPicture 찾기 (CtrlHeader 내부가 아닌 경우만) / Find ShapeComponentPicture directly in para.records (only if not inside CtrlHeader)
+            // CtrlHeader가 있는지 먼저 확인 / Check if CtrlHeader exists first
+            let has_ctrl_header = para
+                .records
+                .iter()
+                .any(|r| matches!(r, ParagraphRecord::CtrlHeader { .. }));
+
+            if !has_ctrl_header {
+                // CtrlHeader가 없을 때만 직접 처리 / Only process directly if no CtrlHeader
+                for record in &para.records {
+                    match record {
+                        ParagraphRecord::ShapeComponentPicture {
+                            shape_component_picture,
+                        } => {
+                            let bindata_id = shape_component_picture.picture_info.bindata_id;
+                            let image_url = common::get_image_url(
+                                document,
+                                bindata_id,
+                                options.image_output_dir.as_deref(),
+                                options.html_output_dir.as_deref(),
+                            );
+                            if !image_url.is_empty() {
+                                // ShapeComponentPicture가 직접 올 때는 border_rectangle 사용 (부모 ShapeComponent가 없음)
+                                // When ShapeComponentPicture comes directly, use border_rectangle (no parent ShapeComponent)
+                                let width_hwpunit =
+                                    shape_component_picture.border_rectangle_x.right
+                                        - shape_component_picture.border_rectangle_x.left;
+                                let mut height_hwpunit =
+                                    (shape_component_picture.border_rectangle_y.bottom
+                                        - shape_component_picture.border_rectangle_y.top)
+                                        as i32;
+
+                                // border_rectangle_y의 top과 bottom이 같으면 crop_rectangle 사용
+                                // If border_rectangle_y's top and bottom are the same, use crop_rectangle
+                                if height_hwpunit == 0 {
+                                    height_hwpunit = (shape_component_picture.crop_rectangle.bottom
+                                        - shape_component_picture.crop_rectangle.top)
+                                        as i32;
+                                }
+
+                                let width = width_hwpunit.max(0) as u32;
+                                let height = height_hwpunit.max(0) as u32;
+
+                                if width > 0 && height > 0 {
+                                    images.push(ImageInfo {
+                                        width,
+                                        height,
+                                        url: image_url,
+                                        like_letters: false, // 셀 내부 이미지는 ctrl_header 정보 없음 / Images inside cells have no ctrl_header info
+                                        affect_line_spacing: false,
+                                        vert_rel_to: None,
+                                    });
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
             // 재귀적으로 ShapeComponentPicture를 찾는 헬퍼 함수 / Helper function to recursively find ShapeComponentPicture
             fn collect_images_from_shape_component(
                 children: &[ParagraphRecord],
+                shape_component_width: u32,
                 shape_component_height: u32,
                 document: &HwpDocument,
                 options: &HtmlOptions,
-                images: &mut Vec<crate::viewer::html::line_segment::ImageInfo>,
+                images: &mut Vec<ImageInfo>,
             ) {
                 for child in children {
                     match child {
@@ -256,24 +318,17 @@ pub(crate) fn render_cells(
                                 options.html_output_dir.as_deref(),
                             );
                             if !image_url.is_empty() {
-                                // HWPUNIT 단위로 계산 (INT32) / Calculate in HWPUNIT units (INT32)
-                                let width_hwpunit =
-                                    shape_component_picture.border_rectangle_x.right
-                                        - shape_component_picture.border_rectangle_x.left;
-                                // ShapeComponent.height 사용 (원본 HTML과 일치) / Use ShapeComponent.height (matches original HTML)
-                                let height_hwpunit = shape_component_height as i32;
-
-                                // HWPUNIT을 u32로 안전하게 변환 (음수 방지) / Safely convert HWPUNIT to u32 (prevent negative)
-                                // ImageInfo는 u32를 사용하지만, render_image_with_style에서 INT32로 변환됨
-                                // ImageInfo uses u32 but is converted to INT32 in render_image_with_style
-                                let width = width_hwpunit.max(0) as u32;
-                                let height = height_hwpunit.max(0) as u32;
-
-                                images.push(crate::viewer::html::line_segment::ImageInfo {
-                                    width,
-                                    height,
-                                    url: image_url,
-                                });
+                                // shape_component.width/height를 직접 사용 / Use shape_component.width/height directly
+                                if shape_component_width > 0 && shape_component_height > 0 {
+                                    images.push(ImageInfo {
+                                        width: shape_component_width,
+                                        height: shape_component_height,
+                                        url: image_url,
+                                        like_letters: false, // 셀 내부 이미지는 ctrl_header 정보 없음 / Images inside cells have no ctrl_header info
+                                        affect_line_spacing: false,
+                                        vert_rel_to: None,
+                                    });
+                                }
                             }
                         }
                         ParagraphRecord::ShapeComponent {
@@ -283,6 +338,7 @@ pub(crate) fn render_cells(
                             // 중첩된 ShapeComponent 재귀적으로 탐색 / Recursively search nested ShapeComponent
                             collect_images_from_shape_component(
                                 nested_children,
+                                shape_component.width,
                                 shape_component.height,
                                 document,
                                 options,
@@ -314,11 +370,36 @@ pub(crate) fn render_cells(
                         // ShapeComponent의 children에서 이미지 찾기 (재귀적으로) / Find images in ShapeComponent's children (recursively)
                         collect_images_from_shape_component(
                             children,
+                            shape_component.width,
                             shape_component.height,
                             document,
                             options,
                             &mut images,
                         );
+                    }
+                    ParagraphRecord::CtrlHeader {
+                        header,
+                        children,
+                        paragraphs: ctrl_paragraphs,
+                        ..
+                    } => {
+                        // CtrlHeader 처리 (그림 개체 등) / Process CtrlHeader (shape objects, etc.)
+                        // process_ctrl_header를 호출하여 이미지 수집 (paragraph.rs와 동일한 방식) / Call process_ctrl_header to collect images (same way as paragraph.rs)
+                        // children이 비어있으면 cell.paragraphs도 확인 / If children is empty, also check cell.paragraphs
+                        let paragraphs_to_use =
+                            if children.is_empty() && !cell.paragraphs.is_empty() {
+                                &cell.paragraphs
+                            } else {
+                                ctrl_paragraphs
+                            };
+                        let ctrl_result = ctrl_header::process_ctrl_header(
+                            header,
+                            children,
+                            paragraphs_to_use,
+                            document,
+                            options,
+                        );
+                        images.extend(ctrl_result.images);
                     }
                     _ => {}
                 }
@@ -358,6 +439,22 @@ pub(crate) fn render_cells(
                     r#"<div class="hls {}">{}</div>"#,
                     para_shape_class, rendered_text
                 ));
+            } else if !images.is_empty() {
+                // LineSegment와 텍스트가 없지만 이미지가 있는 경우 / No LineSegment or text but images exist
+                // 이미지만 렌더링 / Render images only
+                image::render_image_with_style;
+                for image in &images {
+                    let image_html = render_image_with_style(
+                        &image.url,
+                        0,
+                        0,
+                        image.width as INT32,
+                        image.height as INT32,
+                        0,
+                        0,
+                    );
+                    cell_content.push_str(&image_html);
+                }
             }
         }
 

@@ -15,6 +15,8 @@ pub mod table;
 
 use crate::document::{CtrlHeader, CtrlId, Paragraph, ParagraphRecord};
 use crate::viewer::html::line_segment::{ImageInfo, TableInfo};
+use crate::viewer::HtmlOptions;
+use crate::HwpDocument;
 
 /// CtrlHeader 처리 결과 / CtrlHeader processing result
 #[derive(Debug, Default)]
@@ -42,6 +44,8 @@ pub fn process_ctrl_header<'a>(
     header: &'a CtrlHeader,
     children: &'a [ParagraphRecord],
     paragraphs: &'a [Paragraph],
+    document: &'a HwpDocument,
+    options: &'a HtmlOptions,
 ) -> CtrlHeaderResult<'a> {
     match header.ctrl_id.as_str() {
         CtrlId::TABLE => {
@@ -50,7 +54,7 @@ pub fn process_ctrl_header<'a>(
         }
         CtrlId::SHAPE_OBJECT => {
             // 그리기 개체 처리 / Process shape object
-            shape_object::process_shape_object(header, children, paragraphs)
+            shape_object::process_shape_object(header, children, paragraphs, document, options)
         }
         CtrlId::SECTION_DEF => {
             // 구역 정의 처리 / Process section definition

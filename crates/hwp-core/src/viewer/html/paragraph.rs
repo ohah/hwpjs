@@ -5,6 +5,8 @@ use super::text;
 use super::HtmlOptions;
 use crate::document::bodytext::{ctrl_header::CtrlHeaderData, PageDef, ParagraphRecord};
 use crate::document::{HwpDocument, Paragraph};
+use crate::viewer::html::ctrl_header::table::render_table;
+use crate::INT32;
 
 /// 문단을 HTML로 렌더링 / Render paragraph to HTML
 /// 반환값: (문단 HTML, 테이블 HTML 리스트) / Returns: (paragraph HTML, table HTML list)
@@ -69,38 +71,14 @@ pub fn render_paragraph(
                             options.html_output_dir.as_deref(),
                         );
                         if !image_url.is_empty() {
-                            // border_rectangle에서 크기 계산 (ShapeComponent의 width/height가 0일 수 있음)
-                            // Calculate size from border_rectangle (ShapeComponent's width/height may be 0)
-                            let width = (shape_component_picture.border_rectangle_x.right
-                                - shape_component_picture.border_rectangle_x.left)
-                                as u32;
-                            let mut height = (shape_component_picture.border_rectangle_y.bottom
-                                - shape_component_picture.border_rectangle_y.top)
-                                as u32;
-
-                            // border_rectangle_y의 top과 bottom이 같으면 crop_rectangle 사용
-                            // If border_rectangle_y's top and bottom are the same, use crop_rectangle
-                            if height == 0 {
-                                height = (shape_component_picture.crop_rectangle.bottom
-                                    - shape_component_picture.crop_rectangle.top)
-                                    as u32;
-                            }
-
-                            // border_rectangle이 0이면 ShapeComponent의 크기 사용 / Use ShapeComponent size if border_rectangle is 0
-                            let final_width = if width > 0 {
-                                width
-                            } else {
-                                shape_component.width
-                            };
-                            let final_height = if height > 0 {
-                                height
-                            } else {
-                                shape_component.height
-                            };
+                            // shape_component.width/height를 직접 사용 / Use shape_component.width/height directly
                             images.push(ImageInfo {
-                                width: final_width,
-                                height: final_height,
+                                width: shape_component.width,
+                                height: shape_component.height,
                                 url: image_url,
+                                like_letters: false, // ShapeComponent에서 직접 온 이미지는 ctrl_header 정보 없음 / Images from ShapeComponent directly have no ctrl_header info
+                                affect_line_spacing: false,
+                                vert_rel_to: None,
                             });
                         }
                     }
@@ -117,7 +95,8 @@ pub fn render_paragraph(
                     options.html_output_dir.as_deref(),
                 );
                 if !image_url.is_empty() {
-                    // border_rectangle에서 크기 계산 / Calculate size from border_rectangle
+                    // ShapeComponentPicture가 직접 올 때는 border_rectangle 사용 (부모 ShapeComponent가 없음)
+                    // When ShapeComponentPicture comes directly, use border_rectangle (no parent ShapeComponent)
                     let width = (shape_component_picture.border_rectangle_x.right
                         - shape_component_picture.border_rectangle_x.left)
                         as u32;
@@ -137,6 +116,9 @@ pub fn render_paragraph(
                         width,
                         height,
                         url: image_url,
+                        like_letters: false, // ShapeComponentPicture에서 직접 온 이미지는 ctrl_header 정보 없음 / Images from ShapeComponentPicture directly have no ctrl_header info
+                        affect_line_spacing: false,
+                        vert_rel_to: None,
                     });
                 }
             }
@@ -158,7 +140,13 @@ pub fn render_paragraph(
                 ..
             } => {
                 // CtrlHeader 처리 / Process CtrlHeader
-                let ctrl_result = ctrl_header::process_ctrl_header(&header, &children, &paragraphs);
+                let ctrl_result = ctrl_header::process_ctrl_header(
+                    &header,
+                    &children,
+                    &paragraphs,
+                    document,
+                    options,
+                );
                 tables.extend(ctrl_result.tables);
                 images.extend(ctrl_result.images);
             }
@@ -217,6 +205,17 @@ pub fn render_paragraph(
             }
         }
 
+        // like_letters=true인 이미지와 false인 이미지 분리 / Separate images with like_letters=true and false
+        let mut inline_images = Vec::new();
+        let mut absolute_images = Vec::new();
+        for image_info in images.iter() {
+            if image_info.like_letters {
+                inline_images.push(image_info.clone());
+            } else {
+                absolute_images.push(image_info.clone());
+            }
+        }
+
         // ParaShape indent 값 가져오기 / Get ParaShape indent value
         // HWP 파일의 para_shape_id는 0-based indexing을 사용합니다 / HWP file uses 0-based indexing for para_shape_id
         let para_shape_indent = if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
@@ -247,7 +246,7 @@ pub fn render_paragraph(
             &char_shapes,
             document,
             &para_shape_class,
-            &images,
+            &inline_images, // like_letters=true인 이미지만 line_segment에 포함 / Include only images with like_letters=true in line_segment
             inline_table_infos.as_slice(), // like_letters=true인 테이블 포함 / Include tables with like_letters=true
             options,
             para_shape_indent,
@@ -264,11 +263,43 @@ pub fn render_paragraph(
         // like_letters=true인 테이블은 이미 line_segment에 포함되었으므로 여기서는 처리하지 않음
         // Tables with like_letters=true are already included in line_segment, so don't process them here
 
+        // like_letters=false인 이미지를 별도로 렌더링 (hpa 레벨에 배치) / Render images with like_letters=false separately (placed at hpa level)
+        for image_info in absolute_images.iter() {
+            use crate::document::bodytext::ctrl_header::VertRelTo;
+            use crate::viewer::html::image::render_image;
+
+            // vert_rel_to에 따라 위치 계산 / Calculate position based on vert_rel_to
+            let (left_mm, top_mm) = match image_info.vert_rel_to {
+                Some(VertRelTo::Para) => {
+                    // para 기준: hcd_position 사용 / Use hcd_position for para reference
+                    if let Some((hcd_left, hcd_top)) = hcd_position {
+                        // offset_x, offset_y는 현재 image_info에 없으므로 0으로 설정
+                        // offset_x, offset_y are not in image_info currently, so set to 0
+                        (hcd_left, hcd_top)
+                    } else {
+                        // hcd_position이 없으면 para_start_vertical_mm 사용 / Use para_start_vertical_mm if hcd_position not available
+                        (0.0, para_start_vertical_mm.unwrap_or(0.0))
+                    }
+                }
+                Some(VertRelTo::Page) | Some(VertRelTo::Paper) | None => {
+                    // page/paper 기준: 절대 위치 (현재는 0,0으로 설정, 나중에 object_common의 offset_x, offset_y 사용)
+                    // page/paper reference: absolute position (currently set to 0,0, later use object_common's offset_x, offset_y)
+                    (0.0, 0.0)
+                }
+            };
+
+            let image_html = render_image(
+                &image_info.url,
+                (left_mm * 7200.0 / 25.4) as INT32,
+                (top_mm * 7200.0 / 25.4) as INT32,
+                image_info.width as INT32,
+                image_info.height as INT32,
+            );
+            result.push_str(&image_html);
+        }
+
         // like_letters=false인 테이블을 별도로 렌더링 (hpa 레벨에 배치) / Render tables with like_letters=false separately (placed at hpa level)
         for table_info in absolute_tables.iter() {
-            use crate::document::bodytext::ctrl_header::{CtrlHeaderData, VertRelTo};
-            use crate::viewer::html::ctrl_header::table::render_table;
-
             // vert_rel_to: "para"일 때 다음 문단을 참조 / When vert_rel_to: "para", reference next paragraph
             let ref_para_vertical_mm = match table_info.ctrl_header {
                 Some(CtrlHeaderData::ObjectCommon { attribute, .. })

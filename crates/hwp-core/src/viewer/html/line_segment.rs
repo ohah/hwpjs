@@ -1,3 +1,4 @@
+use crate::document::bodytext::ctrl_header::VertRelTo;
 /// 라인 세그먼트 렌더링 모듈 / Line segment rendering module
 use crate::document::bodytext::{CharShapeInfo, LineSegmentInfo, PageDef, Table};
 use crate::document::CtrlHeaderData;
@@ -24,6 +25,12 @@ pub struct ImageInfo {
     pub width: u32,
     pub height: u32,
     pub url: String,
+    /// object_common 속성: 글자처럼 취급 여부 / object_common attribute: treat as letters
+    pub like_letters: bool,
+    /// object_common 속성: 줄 간격에 영향 여부 / object_common attribute: affect line spacing
+    pub affect_line_spacing: bool,
+    /// object_common 속성: 세로 기준 위치 / object_common attribute: vertical reference position
+    pub vert_rel_to: Option<VertRelTo>,
 }
 
 /// 라인 세그먼트를 HTML로 렌더링 / Render line segment to HTML
