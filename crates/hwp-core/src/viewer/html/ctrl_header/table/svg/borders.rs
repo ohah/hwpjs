@@ -16,16 +16,35 @@ pub(crate) fn render_vertical_borders(
     ctrl_header_height_mm: Option<f64>,
 ) -> String {
     let mut svg_paths = String::new();
+    let epsilon = 0.01; // 부동소수점 비교를 위한 작은 오차 / Small epsilon for floating point comparison
 
     for &col_x in column_positions {
+        // 오른쪽 끝(content.width)인 경우 항상 전체 높이에 걸쳐 경계선을 그림
+        // For right edge (content.width), always draw border across full height
+        if (col_x - content.width).abs() < epsilon {
+            svg_paths.push_str(&format!(
+                r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,
+                round_to_2dp(col_x),
+                0,
+                round_to_2dp(col_x),
+                round_to_2dp(content.height),
+                border_color,
+                border_width
+            ));
+            continue;
+        }
+
         let mut covered_ranges = Vec::new();
         for cell in &table.cells {
             let cell_left = calculate_cell_left(table, cell);
             let cell_width = cell.cell_attributes.width.to_mm();
+            let cell_right = cell_left + cell_width;
             let cell_top = calculate_cell_top(table, cell, ctrl_header_height_mm);
             let cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
 
-            if cell_left < col_x && (cell_left + cell_width) > col_x {
+            // 셀이 해당 열 위치를 가로지르는 경우 (셀의 오른쪽 경계가 정확히 그 위치인 경우는 제외)
+            // Cell crosses the column position (excluding when cell's right boundary is exactly at that position)
+            if cell_left < col_x && cell_right > col_x {
                 covered_ranges.push((cell_top, cell_top + cell_height));
             }
         }
@@ -47,7 +66,17 @@ pub(crate) fn render_vertical_borders(
         }
 
         if segments.is_empty() {
-            continue;
+            // 덮인 범위가 없으면 전체 높이에 걸쳐 경계선을 그림
+            // If no covered ranges, draw border across full height
+            svg_paths.push_str(&format!(
+                r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,
+                round_to_2dp(col_x),
+                0,
+                round_to_2dp(col_x),
+                round_to_2dp(content.height),
+                border_color,
+                border_width
+            ));
         } else if segments.len() == 1 && segments[0].0 == 0.0 && segments[0].1 == content.height {
             svg_paths.push_str(&format!(
                 r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,

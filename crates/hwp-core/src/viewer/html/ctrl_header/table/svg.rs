@@ -20,7 +20,17 @@ pub(crate) fn render_svg(
     ctrl_header_height_mm: Option<f64>,
 ) -> String {
     let (pattern_defs, fills) = fills::render_fills(table, document, ctrl_header_height_mm);
-    let cols = column_positions(table);
+    let mut cols = column_positions(table);
+    // 테이블의 오른쪽 끝을 명시적으로 추가 (가장 오른쪽 셀의 오른쪽 경계가 content.width와 일치하지 않을 수 있음)
+    // Explicitly add table's right edge (rightmost cell's right boundary may not match content.width)
+    if let Some(&last_col) = cols.last() {
+        if (last_col - content.width).abs() > 0.01 {
+            cols.push(content.width);
+            cols.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        }
+    } else {
+        cols.push(content.width);
+    }
     let rows = row_positions(table, content.height);
 
     let vertical = borders::render_vertical_borders(
