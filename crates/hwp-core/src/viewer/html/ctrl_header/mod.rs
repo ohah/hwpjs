@@ -13,26 +13,16 @@ mod shape_object;
 // table 모듈은 폴더로 분리되어 있음 / table module is separated into a folder
 pub mod table;
 
-use crate::document::bodytext::ctrl_header::CtrlHeaderData;
-use crate::document::bodytext::{LineSegmentInfo, ParagraphRecord, Table};
-use crate::document::{CtrlHeader, CtrlId, Paragraph};
-use crate::viewer::html::ctrl_header::table::{CaptionInfo, CaptionText};
+use crate::document::{CtrlHeader, CtrlId, Paragraph, ParagraphRecord};
+use crate::viewer::html::line_segment::{ImageInfo, TableInfo};
 
 /// CtrlHeader 처리 결과 / CtrlHeader processing result
 #[derive(Debug, Default)]
 pub struct CtrlHeaderResult<'a> {
     /// 추출된 테이블들 / Extracted tables
-    pub tables: Vec<(
-        &'a Table,
-        Option<&'a CtrlHeaderData>,
-        Option<CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
-        Option<CaptionInfo>, // 캡션 정보 / Caption info
-        Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
-        Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
-        Option<&'a LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
-    )>,
+    pub tables: Vec<TableInfo<'a>>,
     /// 추출된 이미지들 / Extracted images
-    pub images: Vec<(u32, u32, String)>, // (width, height, url)
+    pub images: Vec<ImageInfo>,
 }
 
 impl<'a> CtrlHeaderResult<'a> {

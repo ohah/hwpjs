@@ -1,12 +1,10 @@
 use super::common;
 use super::ctrl_header;
-use super::line_segment;
+use super::line_segment::{ImageInfo, TableInfo};
 use super::text;
 use super::HtmlOptions;
-use crate::document::bodytext::ctrl_header::CtrlHeaderData;
-use crate::document::bodytext::{LineSegmentInfo, ParagraphRecord, Table};
-use crate::document::HwpDocument;
-use crate::viewer::html::ctrl_header::table::{CaptionInfo, CaptionText};
+use crate::document::bodytext::{ctrl_header::CtrlHeaderData, PageDef, ParagraphRecord};
+use crate::document::{HwpDocument, Paragraph};
 
 /// 문단을 HTML로 렌더링 / Render paragraph to HTML
 /// 반환값: (문단 HTML, 테이블 HTML 리스트) / Returns: (paragraph HTML, table HTML list)
@@ -47,15 +45,7 @@ pub fn render_paragraph(
 
     // 이미지와 테이블 수집 / Collect images and tables
     let mut images = Vec::new();
-    let mut tables: Vec<(
-        &Table,
-        Option<&CtrlHeaderData>,
-        Option<CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
-        Option<CaptionInfo>, // 캡션 정보 / Caption info
-        Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
-        Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
-        Option<&LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
-    )> = Vec::new();
+    let mut tables: Vec<TableInfo> = Vec::new();
 
     for record in &paragraph.records {
         match record {
@@ -77,7 +67,11 @@ pub fn render_paragraph(
                         );
                         if !image_url.is_empty() {
                             // ShapeComponent에서 width와 height 가져오기 / Get width and height from ShapeComponent
-                            images.push((shape_component.width, shape_component.height, image_url));
+                            images.push(ImageInfo {
+                                width: shape_component.width,
+                                height: shape_component.height,
+                                url: image_url,
+                            });
                         }
                     }
                 }
@@ -99,11 +93,23 @@ pub fn render_paragraph(
                     let height = (shape_component_picture.border_rectangle_y.bottom
                         - shape_component_picture.border_rectangle_y.top)
                         as u32;
-                    images.push((width, height, image_url));
+                    images.push(ImageInfo {
+                        width,
+                        height,
+                        url: image_url,
+                    });
                 }
             }
             ParagraphRecord::Table { table } => {
-                tables.push((table, None, None, None, None, None, None));
+                tables.push(TableInfo {
+                    table: &table,
+                    ctrl_header: None,
+                    caption_text: None,
+                    caption_info: None,
+                    caption_char_shape_id: None,
+                    caption_para_shape_id: None,
+                    caption_line_segment: None,
+                });
             }
             ParagraphRecord::CtrlHeader {
                 header,
@@ -112,7 +118,7 @@ pub fn render_paragraph(
                 ..
             } => {
                 // CtrlHeader 처리 / Process CtrlHeader
-                let ctrl_result = ctrl_header::process_ctrl_header(header, children, paragraphs);
+                let ctrl_result = ctrl_header::process_ctrl_header(&header, &children, &paragraphs);
                 tables.extend(ctrl_result.tables);
                 images.extend(ctrl_result.images);
             }
@@ -122,16 +128,8 @@ pub fn render_paragraph(
 
     // 테이블 HTML 리스트 생성 / Create table HTML list
     let mut table_htmls = Vec::new();
-    // inline_tables는 owned tuple을 저장하므로 타입 명시 / inline_tables stores owned tuples, so specify type
-    let mut inline_tables: Vec<(
-        &Table,
-        Option<&CtrlHeaderData>,
-        Option<CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
-        Option<CaptionInfo>,
-        Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
-        Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
-        Option<&LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
-    )> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
+    // inline_tables는 owned TableInfo를 저장 / inline_tables stores owned TableInfo
+    let mut inline_tables: Vec<TableInfo> = Vec::new(); // like_letters=true인 테이블들 / Tables with like_letters=true
 
     // 문단의 첫 번째 LineSegment의 vertical_position 계산 (vert_rel_to: "para"일 때 사용) / Calculate first LineSegment's vertical_position (used when vert_rel_to: "para")
     // current_para_vertical_mm이 전달되면 사용하고, 없으면 현재 문단의 첫 번째 LineSegment 사용
@@ -146,44 +144,36 @@ pub fn render_paragraph(
     if !line_segments.is_empty() {
         // like_letters=true인 테이블과 false인 테이블 분리 / Separate tables with like_letters=true and false
         let mut absolute_tables = Vec::new();
-        for (
-            table,
-            ctrl_header,
-            caption_text,
-            caption_info,
-            caption_char_shape_id,
-            caption_para_shape_id,
-            caption_line_segment,
-        ) in tables.iter()
-        {
-            let like_letters = ctrl_header
+        for table_info in tables.iter() {
+            let like_letters = table_info
+                .ctrl_header
                 .and_then(|h| match h {
                     CtrlHeaderData::ObjectCommon { attribute, .. } => Some(attribute.like_letters),
                     _ => None,
                 })
                 .unwrap_or(false);
             if like_letters {
-                // caption_text는 &Option<CaptionText>이므로 clone()하면 Option<CaptionText>가 됨
-                // caption_text is &Option<CaptionText>, so clone() gives Option<CaptionText>
-                inline_tables.push((
-                    *table,
-                    *ctrl_header,
-                    (*caption_text).clone(),
-                    *caption_info,
-                    *caption_char_shape_id,
-                    *caption_para_shape_id,
-                    *caption_line_segment,
-                ));
+                // caption_text는 Option<CaptionText>이므로 clone()하면 Option<CaptionText>가 됨
+                // caption_text is Option<CaptionText>, so clone() gives Option<CaptionText>
+                inline_tables.push(TableInfo {
+                    table: table_info.table,
+                    ctrl_header: table_info.ctrl_header,
+                    caption_text: table_info.caption_text.clone(),
+                    caption_info: table_info.caption_info,
+                    caption_char_shape_id: table_info.caption_char_shape_id,
+                    caption_para_shape_id: table_info.caption_para_shape_id,
+                    caption_line_segment: table_info.caption_line_segment,
+                });
             } else {
-                absolute_tables.push((
-                    *table,
-                    *ctrl_header,
-                    (*caption_text).clone(),
-                    *caption_info,
-                    *caption_char_shape_id,
-                    *caption_para_shape_id,
-                    *caption_line_segment,
-                ));
+                absolute_tables.push(TableInfo {
+                    table: table_info.table,
+                    ctrl_header: table_info.ctrl_header,
+                    caption_text: table_info.caption_text.clone(),
+                    caption_info: table_info.caption_info,
+                    caption_char_shape_id: table_info.caption_char_shape_id,
+                    caption_para_shape_id: table_info.caption_para_shape_id,
+                    caption_line_segment: table_info.caption_line_segment,
+                });
             }
         }
 
@@ -196,39 +186,22 @@ pub fn render_paragraph(
         };
 
         // like_letters=true인 테이블을 line_segment에 포함 / Include tables with like_letters=true in line_segment
-        // inline_tables는 Vec<(&Table, ...)>이고, TableInfo는 (&Table, ..., Option<&CaptionText>)이므로 변환 필요
-        // inline_tables is Vec<(&Table, ...)> and TableInfo is (&Table, ..., Option<&CaptionText>), so need conversion
-        use crate::viewer::html::line_segment::TableInfo;
+        // inline_tables는 이미 TableInfo이므로 그대로 사용 / inline_tables is already TableInfo, so use as is
         let inline_table_infos: Vec<TableInfo> = inline_tables
             .iter()
-            .map(
-                |(
-                    table,
-                    ctrl_header,
-                    caption_text,
-                    caption_info,
-                    caption_char_shape_id,
-                    caption_para_shape_id,
-                    caption_line_segment,
-                )| {
-                    // iter()로 인해 table은 &&Table이 되므로 한 번 역참조 / table becomes &&Table due to iter(), so dereference once
-                    // ctrl_header는 Option<&CtrlHeaderData>이므로 복사 / ctrl_header is Option<&CtrlHeaderData>, copy
-                    // caption_text는 Option<CaptionText>이므로 as_ref()로 Option<&CaptionText>로 변환 / caption_text is Option<CaptionText>, convert to Option<&CaptionText> with as_ref()
-                    (
-                        *table,
-                        *ctrl_header,
-                        caption_text.as_ref(),
-                        *caption_info,
-                        *caption_char_shape_id,
-                        *caption_para_shape_id,
-                        *caption_line_segment,
-                    )
-                },
-            )
+            .map(|table_info| TableInfo {
+                table: table_info.table,
+                ctrl_header: table_info.ctrl_header,
+                caption_text: table_info.caption_text.clone(),
+                caption_info: table_info.caption_info,
+                caption_char_shape_id: table_info.caption_char_shape_id,
+                caption_para_shape_id: table_info.caption_para_shape_id,
+                caption_line_segment: table_info.caption_line_segment,
+            })
             .collect();
         // 테이블 번호 시작값: 현재 table_counter 사용 (문서 레벨에서 관리) / Table number start value: use current table_counter (managed at document level)
         let table_counter_start = *table_counter;
-        result.push_str(&line_segment::render_line_segments_with_content(
+        result.push_str(&super::line_segment::render_line_segments_with_content(
             &line_segments,
             &text,
             &char_shapes,
@@ -250,21 +223,12 @@ pub fn render_paragraph(
         // Tables with like_letters=true are already included in line_segment, so don't process them here
 
         // like_letters=false인 테이블을 별도로 렌더링 (hpa 레벨에 배치) / Render tables with like_letters=false separately (placed at hpa level)
-        for (
-            table,
-            ctrl_header,
-            caption_text,
-            caption_info,
-            caption_char_shape_id,
-            caption_para_shape_id,
-            caption_line_segment,
-        ) in absolute_tables.iter()
-        {
+        for table_info in absolute_tables.iter() {
             use crate::document::bodytext::ctrl_header::{CtrlHeaderData, VertRelTo};
             use crate::viewer::html::ctrl_header::table::render_table;
 
             // vert_rel_to: "para"일 때 다음 문단을 참조 / When vert_rel_to: "para", reference next paragraph
-            let ref_para_vertical_mm = match ctrl_header {
+            let ref_para_vertical_mm = match table_info.ctrl_header {
                 Some(CtrlHeaderData::ObjectCommon { attribute, .. })
                     if matches!(attribute.vert_rel_to, VertRelTo::Para) =>
                 {
@@ -276,18 +240,18 @@ pub fn render_paragraph(
             };
 
             let table_html = render_table(
-                table,
+                table_info.table,
                 document,
-                *ctrl_header, // Option<&CtrlHeaderData>는 Copy이므로 clone 대신 역참조 / Option<&CtrlHeaderData> is Copy, so dereference instead of clone
+                table_info.ctrl_header, // Option<&CtrlHeaderData>는 Copy이므로 clone 대신 역참조 / Option<&CtrlHeaderData> is Copy, so dereference instead of clone
                 hcd_position,
                 page_def,
                 options,
                 Some(*table_counter), // 현재 table_counter 사용 / Use current table_counter
-                caption_text.as_ref(), // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
-                *caption_info,         // 캡션 정보 전달 / Pass caption info
-                *caption_char_shape_id, // 캡션 char_shape_id 전달 / Pass caption char_shape_id
-                *caption_para_shape_id, // 캡션 para_shape_id 전달 / Pass caption para_shape_id
-                *caption_line_segment, // 캡션 LineSegmentInfo 전달 / Pass caption LineSegmentInfo
+                table_info.caption_text.as_ref(), // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
+                table_info.caption_info,          // 캡션 정보 전달 / Pass caption info
+                table_info.caption_char_shape_id, // 캡션 char_shape_id 전달 / Pass caption char_shape_id
+                table_info.caption_para_shape_id, // 캡션 para_shape_id 전달 / Pass caption para_shape_id
+                table_info.caption_line_segment, // 캡션 LineSegmentInfo 전달 / Pass caption LineSegmentInfo
                 None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
                 ref_para_vertical_mm, // 참조 문단의 vertical_position 전달 / Pass reference paragraph's vertical_position
                 first_para_vertical_mm, // 첫 번째 문단의 vertical_position 전달 (가설 O) / Pass first paragraph's vertical_position (Hypothesis O)

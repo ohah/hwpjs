@@ -1,6 +1,6 @@
 /// HTML 뷰어 공통 유틸리티 함수 / HTML viewer common utility functions
 use crate::document::{BinDataRecord, HwpDocument};
-use crate::WORD;
+use crate::{HwpError, WORD};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use std::fs;
 use std::path::Path;

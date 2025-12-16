@@ -5,6 +5,7 @@ use crate::document::bodytext::{
 use crate::document::CtrlHeader;
 
 use crate::viewer::html::ctrl_header::CtrlHeaderResult;
+use crate::viewer::html::line_segment::TableInfo;
 
 use super::render::{CaptionInfo, CaptionText};
 
@@ -178,52 +179,18 @@ pub fn process_table<'a>(
         }
     }
 
-    let mut caption_index = 0;
+    // 먼저 children을 순회하여 필요한 모든 캡션을 caption_texts에 추가
+    // First, iterate through children to add all necessary captions to caption_texts
     let mut caption_text: Option<CaptionText> = None;
     let mut found_table = false;
 
     for child in children.iter() {
-        if let ParagraphRecord::Table { table } = child {
+        if let ParagraphRecord::Table { .. } = child {
             found_table = true;
-            // paragraphs 필드에서 캡션 사용 (순서대로) / Use caption from paragraphs field (in order)
-            let current_caption = if caption_index < caption_texts.len() {
-                Some(caption_texts[caption_index].clone())
-            } else {
-                caption_text.clone()
-            };
-
-            // 캡션 char_shape_id 찾기 / Find caption char_shape_id
-            let current_caption_char_shape_id = if caption_index < caption_char_shape_ids.len() {
-                caption_char_shape_ids[caption_index]
-            } else {
-                None
-            };
-
-            // 캡션 para_shape_id 찾기 / Find caption para_shape_id
-            let current_caption_para_shape_id = if caption_index < caption_para_shape_ids.len() {
-                caption_para_shape_ids[caption_index]
-            } else {
-                None
-            };
-
-            // 캡션 LineSegmentInfo 찾기 / Find caption LineSegmentInfo
-            let current_caption_line_segment = if caption_index < caption_line_segments.len() {
-                caption_line_segments[caption_index]
-            } else {
-                None
-            };
-
-            caption_index += 1;
-            result.tables.push((
-                table,
-                ctrl_header,
-                current_caption,
-                caption_info,
-                current_caption_char_shape_id,
-                current_caption_para_shape_id,
-                current_caption_line_segment,
-            ));
-            caption_text = None; // 다음 테이블을 위해 초기화 / Reset for next table
+            // caption_text가 있으면 caption_texts에 추가 / If caption_text exists, add to caption_texts
+            if let Some(caption) = caption_text.take() {
+                caption_texts.push(caption);
+            }
         } else if found_table {
             // 테이블 다음에 오는 문단에서 텍스트 추출 / Extract text from paragraph after table
             if let ParagraphRecord::ParaText {
@@ -286,6 +253,58 @@ pub fn process_table<'a>(
                     }
                 }
             }
+        }
+    }
+
+    // 마지막 caption_text도 추가 / Add last caption_text as well
+    if let Some(caption) = caption_text {
+        caption_texts.push(caption);
+    }
+
+    // 이제 children을 다시 순회하여 테이블에 캡션 할당
+    // Now iterate through children again to assign captions to tables
+    let mut caption_index = 0;
+
+    for child in children.iter() {
+        if let ParagraphRecord::Table { table } = child {
+            // 캡션 char_shape_id 찾기 / Find caption char_shape_id
+            let current_caption_char_shape_id = if caption_index < caption_char_shape_ids.len() {
+                caption_char_shape_ids[caption_index]
+            } else {
+                None
+            };
+
+            // 캡션 para_shape_id 찾기 / Find caption para_shape_id
+            let current_caption_para_shape_id = if caption_index < caption_para_shape_ids.len() {
+                caption_para_shape_ids[caption_index]
+            } else {
+                None
+            };
+
+            // 캡션 LineSegmentInfo 찾기 / Find caption LineSegmentInfo
+            let current_caption_line_segment = if caption_index < caption_line_segments.len() {
+                caption_line_segments[caption_index]
+            } else {
+                None
+            };
+
+            // 캡션 텍스트 가져오기 / Get caption text
+            let current_caption = if caption_index < caption_texts.len() {
+                Some(caption_texts[caption_index].clone())
+            } else {
+                None
+            };
+
+            caption_index += 1;
+            result.tables.push(TableInfo {
+                table,
+                ctrl_header,
+                caption_text: current_caption,
+                caption_info,
+                caption_char_shape_id: current_caption_char_shape_id,
+                caption_para_shape_id: current_caption_para_shape_id,
+                caption_line_segment: current_caption_line_segment,
+            });
         }
     }
 

@@ -4,18 +4,27 @@ use crate::document::CtrlHeaderData;
 use crate::viewer::html::ctrl_header::table::{CaptionInfo, CaptionText};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
-use crate::{HwpDocument, ParaShape, UINT32};
+use crate::{HwpDocument, ParaShape};
 
-/// 테이블 정보 타입 / Table info type
-pub type TableInfo<'a> = (
-    &'a Table,
-    Option<&'a CtrlHeaderData>,
-    Option<&'a CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
-    Option<CaptionInfo>,     // 캡션 정보 / Caption info
-    Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
-    Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
-    Option<&'a LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
-);
+/// 테이블 정보 구조체 / Table info struct
+#[derive(Debug, Clone)]
+pub struct TableInfo<'a> {
+    pub table: &'a Table,
+    pub ctrl_header: Option<&'a CtrlHeaderData>,
+    pub caption_text: Option<CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
+    pub caption_info: Option<CaptionInfo>, // 캡션 정보 / Caption info
+    pub caption_char_shape_id: Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
+    pub caption_para_shape_id: Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
+    pub caption_line_segment: Option<&'a LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
+}
+
+/// 이미지 정보 구조체 / Image info struct
+#[derive(Debug, Clone)]
+pub struct ImageInfo {
+    pub width: u32,
+    pub height: u32,
+    pub url: String,
+}
 
 /// 라인 세그먼트를 HTML로 렌더링 / Render line segment to HTML
 pub fn render_line_segment(
@@ -99,7 +108,7 @@ pub fn render_line_segments_with_content(
     char_shapes: &[CharShapeInfo],
     document: &HwpDocument,
     para_shape_class: &str,
-    images: &[(UINT32, UINT32, String)],
+    images: &[ImageInfo],
     tables: &[TableInfo],
     options: &HtmlOptions,
     para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
@@ -169,14 +178,14 @@ pub fn render_line_segments_with_content(
         // is_empty_segment 플래그가 true이고 텍스트가 비어있으면 이미지/테이블 배치 / Place images/tables if is_empty_segment is true and text is empty
         if (is_empty_segment || is_text_empty) && !images.is_empty() && empty_count < images.len() {
             // 이미지 렌더링 (빈 세그먼트에 이미지) / Render images (images in empty segments)
-            let (width, height, image_url) = &images[empty_count];
+            let image = &images[empty_count];
             use crate::viewer::html::image::render_image_with_style;
             let image_html = render_image_with_style(
-                image_url,
+                &image.url,
                 0,
                 0,
-                *width as crate::types::INT32,
-                *height as crate::types::INT32,
+                image.width as crate::types::INT32,
+                image.height as crate::types::INT32,
                 0,
                 0,
             );
@@ -202,33 +211,25 @@ pub fn render_line_segments_with_content(
                 // Calculate table position using LineSegment's column_start_position and vertical_position
                 // like_letters=true인 테이블은 hcd_position과 page_def를 전달하여 올바른 htG 생성
                 // For tables with like_letters=true, pass hcd_position and page_def to generate correct htG
-                let (
-                    table,
-                    ctrl_header,
-                    caption_text,
-                    caption_info,
-                    caption_char_shape_id,
-                    caption_para_shape_id,
-                    caption_line_segment,
-                ) = &tables[table_index];
+                let table_info = &tables[table_index];
                 let current_table_number = table_counter_start + table_index as u32;
                 // LineSegment 위치 전달 / Pass LineSegment position
                 let segment_position =
                     Some((segment.column_start_position, segment.vertical_position));
                 let table_html = render_table(
-                    *table,
+                    table_info.table,
                     document,
-                    *ctrl_header,
+                    table_info.ctrl_header,
                     hcd_position,
                     page_def,
                     options,
                     Some(current_table_number), // 테이블 번호 전달 / Pass table number
-                    *caption_text,
-                    *caption_info,          // 캡션 정보 전달 / Pass caption info
-                    *caption_char_shape_id, // 캡션 char_shape_id 전달 / Pass caption char_shape_id
-                    *caption_para_shape_id, // 캡션 para_shape_id 전달 / Pass caption para_shape_id
-                    *caption_line_segment, // 캡션 LineSegmentInfo 전달 / Pass caption LineSegmentInfo
-                    segment_position,      // LineSegment 위치 전달 / Pass LineSegment position
+                    table_info.caption_text.as_ref(),
+                    table_info.caption_info, // 캡션 정보 전달 / Pass caption info
+                    table_info.caption_char_shape_id, // 캡션 char_shape_id 전달 / Pass caption char_shape_id
+                    table_info.caption_para_shape_id, // 캡션 para_shape_id 전달 / Pass caption para_shape_id
+                    table_info.caption_line_segment, // 캡션 LineSegmentInfo 전달 / Pass caption LineSegmentInfo
+                    segment_position, // LineSegment 위치 전달 / Pass LineSegment position
                     None, // line_segment에서는 para_start_vertical_mm 사용 안 함 / para_start_vertical_mm not used in line_segment
                     None, // line_segment에서는 first_para_vertical_mm 사용 안 함 / first_para_vertical_mm not used in line_segment
                 );

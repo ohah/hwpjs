@@ -3,9 +3,10 @@ use super::paragraph::render_paragraph;
 use super::styles;
 use super::styles::round_to_2dp;
 use super::HtmlOptions;
-use crate::document::bodytext::{ColumnDivideType, ParagraphRecord};
+use crate::document::bodytext::{ColumnDivideType, PageDef, ParagraphRecord};
 use crate::document::HwpDocument;
 use crate::types::RoundTo2dp;
+use crate::INT32;
 
 /// 문서에서 첫 번째 PageDef 찾기 / Find first PageDef in document
 fn find_page_def(document: &HwpDocument) -> Option<&PageDef> {
