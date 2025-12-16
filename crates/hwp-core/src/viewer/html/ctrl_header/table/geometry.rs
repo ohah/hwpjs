@@ -3,14 +3,27 @@ use crate::types::Hwpunit16ToMm;
 
 /// 셀의 왼쪽 위치 계산 / Calculate cell left position
 pub(crate) fn calculate_cell_left(table: &Table, cell: &TableCell) -> f64 {
+    // column_positions와 동일한 방식으로 계산 / Calculate using same method as column_positions
+    // 첫 번째 행의 셀들을 정렬하여 누적 / Sort first row cells and accumulate
+    let mut first_row_cells: Vec<_> = table
+        .cells
+        .iter()
+        .filter(|c| c.cell_attributes.row_address == 0)
+        .collect();
+    first_row_cells.sort_by_key(|c| c.cell_attributes.col_address);
+
     let mut left = 0.0;
-    for col_idx in 0..(cell.cell_attributes.col_address as usize) {
-        if let Some(first_row_cell) = table.cells.iter().find(|c| {
-            c.cell_attributes.row_address == 0 && c.cell_attributes.col_address == col_idx as u16
-        }) {
+    let target_col = cell.cell_attributes.col_address;
+    
+    // target_col 이전의 모든 열 너비를 누적 / Accumulate width of all columns before target_col
+    for first_row_cell in &first_row_cells {
+        if first_row_cell.cell_attributes.col_address < target_col {
             left += first_row_cell.cell_attributes.width.to_mm();
+        } else {
+            break;
         }
     }
+    
     left
 }
 
@@ -35,8 +48,8 @@ pub(crate) fn get_row_height(
 ) -> f64 {
     if !table.attributes.row_sizes.is_empty() && row_index < table.attributes.row_sizes.len() {
         if let Some(&row_size) = table.attributes.row_sizes.get(row_index) {
-            // row_size가 1이거나 매우 작은 값(< 100)일 때는 CtrlHeader height를 사용
-            // When row_size is 1 or very small (< 100), use CtrlHeader height
+            // row_size가 0이거나 매우 작은 값(< 100)일 때는 fallback 로직 사용
+            // When row_size is 0 or very small (< 100), use fallback logic
             if row_size < 100 {
                 // CtrlHeader height가 있으면 행 개수로 나눈 값을 사용
                 // If CtrlHeader height exists, use it divided by row count
@@ -46,8 +59,8 @@ pub(crate) fn get_row_height(
                         return row_height;
                     }
                 }
-                // CtrlHeader height가 없으면 셀의 height 속성 사용 (fallback)
-                // If CtrlHeader height doesn't exist, use cell's height attribute (fallback)
+                // CtrlHeader height가 없으면 해당 행의 셀 height 속성 사용 (fallback)
+                // If CtrlHeader height doesn't exist, use cell's height attribute for this row (fallback)
                 let mut max_height: f64 = 0.0;
                 if !table.cells.is_empty() {
                     for cell in &table.cells {
@@ -62,10 +75,31 @@ pub(crate) fn get_row_height(
                 if max_height > 0.0 {
                     return max_height;
                 }
+                // 셀 height도 없으면 0 반환
+                // If no cell height, return 0
+                return 0.0;
             }
+            // row_size가 유효한 값이면 직접 사용
+            // If row_size is valid, use it directly
             let row_height = (row_size as f64 / 7200.0) * 25.4;
             return row_height;
         }
+    }
+    // row_sizes가 없거나 인덱스가 범위를 벗어나면 셀 height 속성 사용 (fallback)
+    // If row_sizes is empty or index out of range, use cell height attribute (fallback)
+    let mut max_height: f64 = 0.0;
+    if !table.cells.is_empty() {
+        for cell in &table.cells {
+            if cell.cell_attributes.row_address as usize == row_index
+                && cell.cell_attributes.row_span == 1
+            {
+                let cell_height = cell.cell_attributes.height.to_mm();
+                max_height = max_height.max(cell_height);
+            }
+        }
+    }
+    if max_height > 0.0 {
+        return max_height;
     }
     0.0
 }

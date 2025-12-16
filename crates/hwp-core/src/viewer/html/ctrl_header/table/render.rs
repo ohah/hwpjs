@@ -121,7 +121,17 @@ pub fn render_table(
     // htG 래퍼 생성 (캡션이 있거나 ctrl_header가 있는 경우) / Create htG wrapper (if caption exists or ctrl_header exists)
     // 캡션 유무는 caption_info 존재 여부로 판단 / Determine caption existence by caption_info presence
     let has_caption = caption_info.is_some();
-    let needs_htg = has_caption || ctrl_header.is_some();
+    // segment_position이 있으면 LineSegment 내부 테이블이므로 htG 생성 안 함
+    // If segment_position exists, it's a table inside LineSegment, so don't create htG
+    // 원본 HTML(fixtures/noori.html)을 보면 LineSegment 내부 테이블은 htb만 있고 htG가 없음
+    // Original HTML (fixtures/noori.html) shows tables inside LineSegment have only htb, no htG
+    let needs_htg = if segment_position.is_some() {
+        // LineSegment 내부 테이블은 캡션이 있어도 htG 없이 htb만 사용
+        // Tables inside LineSegment use only htb without htG even if caption exists
+        false
+    } else {
+        has_caption || ctrl_header.is_some()
+    };
 
     // margin 값 미리 계산 (margin_left_mm, margin_right_mm은 이미 위에서 계산됨) / Pre-calculate margin values (margin_left_mm, margin_right_mm already calculated above)
     let margin_top_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
