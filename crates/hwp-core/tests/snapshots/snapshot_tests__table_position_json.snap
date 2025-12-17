@@ -2037,11 +2037,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 20977,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 27,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 0mm, 글자처럼 취급",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 26,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 39952,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -2115,11 +2217,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -2197,7 +2299,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -2275,7 +2377,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -2787,11 +2889,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -2865,11 +3069,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -2947,7 +3151,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -3025,7 +3229,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -3535,11 +3739,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -3613,11 +3919,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -3695,7 +4001,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -3773,7 +4079,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -4283,11 +4589,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -4361,11 +4769,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -4443,7 +4851,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -4521,7 +4929,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -5031,11 +5439,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -5109,11 +5619,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -5191,7 +5701,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -5269,7 +5779,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -5781,11 +6291,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -5859,11 +6471,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -5941,7 +6553,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -6019,7 +6631,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -6549,11 +7161,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -6627,11 +7341,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -6709,7 +7423,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -6787,7 +7501,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -7297,11 +8011,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -7375,11 +8191,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -7457,7 +8273,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -7535,7 +8351,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -8045,11 +8861,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -8123,11 +9041,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -8205,7 +9123,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -8283,7 +9201,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -8815,11 +9733,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -8893,11 +9913,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -8975,7 +9995,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -9053,7 +10073,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -9583,11 +10603,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -9661,11 +10783,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -9743,7 +10865,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -9821,7 +10943,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -10351,11 +11473,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -10429,11 +11653,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -10511,7 +11735,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -10589,7 +11813,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -11119,11 +12343,113 @@ expression: json
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
+                            }
+                          },
+                          "cell_attributes": {
+                            "col_address": 0,
+                            "row_address": 0,
+                            "col_span": 1,
+                            "row_span": 1,
+                            "width": 10488,
+                            "height": 282,
+                            "left_margin": 141,
+                            "right_margin": 141,
+                            "top_margin": 141,
+                            "bottom_margin": 141,
+                            "border_fill_id": 1
+                          },
+                          "paragraphs": [
+                            {
+                              "para_header": {
+                                "text_char_count": 32,
+                                "control_mask": {
+                                  "value": 262144,
+                                  "flags": [
+                                    "auto_number"
+                                  ]
+                                },
+                                "para_shape_id": 3,
+                                "para_style_id": 0,
+                                "column_divide_type": [],
+                                "char_shape_count": 1,
+                                "range_tag_count": 0,
+                                "line_align_count": 1,
+                                "instance_id": 0,
+                                "section_merge": null
+                              },
+                              "records": [
+                                {
+                                  "type": "para_text",
+                                  "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                                  "control_char_positions": [
+                                    {
+                                      "position": 2,
+                                      "code": 18,
+                                      "name": "AUTO_NUMBER"
+                                    },
+                                    {
+                                      "position": 31,
+                                      "code": 13,
+                                      "name": "PARA_BREAK"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_char_shape",
+                                  "shapes": [
+                                    {
+                                      "position": 0,
+                                      "shape_id": 1
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "para_line_seg",
+                                  "segments": [
+                                    {
+                                      "text_start_position": 0,
+                                      "vertical_position": 0,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 600,
+                                      "column_start_position": 1000,
+                                      "segment_width": 18976,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "ctrl_header",
+                                  "ctrl_id": "atno",
+                                  "ctrl_id_value": 1635020399,
+                                  "data_type": "other"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "list_header": {
+                            "paragraph_count": 1,
+                            "attribute": {
+                              "text_direction": "horizontal",
+                              "line_break": "normal",
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -11197,11 +12523,11 @@ expression: json
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -11279,7 +12605,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -11357,7 +12683,7 @@ expression: json
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {

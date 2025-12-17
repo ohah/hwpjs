@@ -1899,7 +1899,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -2232,7 +2232,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -2565,7 +2565,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -2898,7 +2898,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -3231,7 +3231,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -3564,7 +3564,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -3897,7 +3897,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -4230,7 +4230,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -4563,7 +4563,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -4896,7 +4896,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -5229,7 +5229,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -5562,7 +5562,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -5895,7 +5895,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -6228,7 +6228,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -6561,7 +6561,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [
@@ -6894,7 +6894,7 @@ expression: json
                           "attribute": {
                             "text_direction": "horizontal",
                             "line_break": "normal",
-                            "vertical_align": "top"
+                            "vertical_align": "center"
                           }
                         },
                         "paragraphs": [

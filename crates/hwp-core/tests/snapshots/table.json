@@ -1853,11 +1853,11 @@
                       "cells": [
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -1931,11 +1931,11 @@
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -2009,11 +2009,11 @@
                         },
                         {
                           "list_header": {
-                            "paragraph_count": 0,
+                            "paragraph_count": 1,
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
@@ -2091,7 +2091,7 @@
                             "attribute": {
                               "text_direction": "horizontal",
                               "line_break": "normal",
-                              "vertical_align": "top"
+                              "vertical_align": "center"
                             }
                           },
                           "cell_attributes": {
