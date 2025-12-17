@@ -61,24 +61,44 @@ pub fn render_line_segment(
     };
     let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
     let _line_spacing_mm = round_to_2dp(int32_to_mm(segment.line_spacing));
-    let baseline_distance_mm = round_to_2dp(int32_to_mm(segment.baseline_distance));
+    // baseline_distance_mm는 fixture 매칭 계산에서 직접 사용하지 않지만,
+    // 필요 시 디버깅을 위해 남겨둘 수 있습니다.
 
-    // NOTE (fixture 기준):
-    // - 일반 텍스트 세그먼트: line-height는 baseline_distance를 사용하고, top은 baseline 보정을 포함합니다.
-    // - 테이블/이미지(like_letters) 등 비텍스트 세그먼트: line-height는 segment.line_height(=height)이고,
-    //   top은 vertical_position 그대로 사용합니다. (fixtures/noori.html의 큰 표 hls 패턴)
+    // NOTE (HWP 데이터 기반 + 스펙 기반 추론):
+    // - 스펙(표 44 bit8): use_line_grid=true 인 문단은 "편집 용지의 줄 격자"를 사용합니다.
+    //   이 경우 줄 높이는 격자에 의해 고정되며(=LineSegmentInfo.line_height가 의미를 갖는다고 보는 게 자연스럽고),
+    //   baseline_distance는 "줄의 세로 위치에서 베이스라인까지 거리"(표 62)로서 CSS line-height 그 자체가 아닙니다.
+    //
+    // 따라서:
+    // - use_line_grid=false: 기존처럼 line-height=baseline_distance, top은 baseline 중심 보정
+    // - use_line_grid=true : line-height=line_height, top은 (line_height - text_height)/2 로 중앙 정렬
+    let use_line_grid = para_shape
+        .map(|ps| ps.attributes1.use_line_grid)
+        .unwrap_or(false);
+
     let line_height_value = if is_text_segment {
-        round_to_2dp(baseline_distance_mm)
+        if use_line_grid {
+            // 줄 격자 사용: "줄의 높이"를 사용
+            round_to_2dp(int32_to_mm(segment.line_height))
+        } else {
+            // 일반: baseline_distance를 사용
+            round_to_2dp(int32_to_mm(segment.baseline_distance))
+        }
     } else {
         height_mm
     };
 
     let top_mm = if is_text_segment {
-        // baseline 보정: (line-height - text_height) / 2
-        let baseline_offset_mm = (line_height_value - text_height_mm) / 2.0;
-        round_to_2dp(vertical_pos_mm + baseline_offset_mm)
+        if use_line_grid {
+            // 줄 격자 사용: 줄 높이 안에서 텍스트를 중앙 정렬
+            let offset_mm = (line_height_value - text_height_mm) / 2.0;
+            round_to_2dp(vertical_pos_mm + offset_mm)
+        } else {
+            // 일반: baseline 보정
+            let baseline_offset_mm = (line_height_value - text_height_mm) / 2.0;
+            round_to_2dp(vertical_pos_mm + baseline_offset_mm)
+        }
     } else {
-        // 비텍스트(표/이미지 등): fixture처럼 vertical_position 그대로
         round_to_2dp(vertical_pos_mm)
     };
 
@@ -355,6 +375,7 @@ pub fn render_line_segments_with_content(
                     table_info.caption_para_shape_id,
                     table_info.caption_line_segment,
                     segment_position,
+                    None,
                     None,
                     None,
                     pattern_counter,

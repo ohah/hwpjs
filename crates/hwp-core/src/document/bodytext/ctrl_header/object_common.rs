@@ -19,7 +19,12 @@ pub(crate) fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, HwpErro
 
     let mut offset = 0usize;
 
-    let attribute_value = UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let attribute_value = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let offset_y = SHWPUNIT::from(INT32::from_le_bytes([
@@ -38,13 +43,28 @@ pub(crate) fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, HwpErro
     ]));
     offset += 4;
 
-    let width = HWPUNIT::from(UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]));
+    let width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
     offset += 4;
 
-    let height = HWPUNIT::from(UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]));
+    let height = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
     offset += 4;
 
-    let z_order = INT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let z_order = INT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let margin_bottom = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
@@ -56,10 +76,20 @@ pub(crate) fn parse_object_common(data: &[u8]) -> Result<CtrlHeaderData, HwpErro
     let margin_top = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
     offset += 2;
 
-    let instance_id = UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let instance_id = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
-    let page_divide = INT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let page_divide = INT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let description = if offset + 2 <= data.len() {
@@ -113,8 +143,13 @@ fn parse_object_attribute(value: UINT32) -> ObjectAttribute {
     };
     let vert_relative = ((value >> 5) & 0x07) as u8;
 
+    // NOTE (HWP spec Table 70):
+    // vert_rel_to has Paper/Page/Para; horz_rel_to also has Paper/Page/Column/Para.
+    // Previously we collapsed (0|1) into Page which loses "paper" anchors and breaks fixtures
+    // (e.g. table-position '표 5' should be paper-left 35mm, but became page-left 65mm).
     let horz_rel_to = match (value >> 8) & 0x03 {
-        0 | 1 => HorzRelTo::Page,
+        0 => HorzRelTo::Paper,
+        1 => HorzRelTo::Page,
         2 => HorzRelTo::Column,
         3 => HorzRelTo::Para,
         _ => HorzRelTo::Page,
@@ -185,6 +220,3 @@ fn parse_object_attribute(value: UINT32) -> ObjectAttribute {
         size_protect,
     }
 }
-
-
-

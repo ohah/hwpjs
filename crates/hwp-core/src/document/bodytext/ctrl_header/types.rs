@@ -182,6 +182,7 @@ pub enum VertRelTo {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HorzRelTo {
+    Paper,
     Page,
     Column,
     Para,

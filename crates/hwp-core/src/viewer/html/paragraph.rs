@@ -217,6 +217,18 @@ pub fn render_paragraph(
             .first()
             .map(|seg| seg.vertical_position as f64 * 25.4 / 7200.0)
     });
+    let para_start_column_mm = line_segments
+        .first()
+        .map(|seg| seg.column_start_position as f64 * 25.4 / 7200.0);
+    // base_top(mm): hcD의 top 위치. like_letters=false 테이블(=hpa 레벨로 빠지는 객체)의 vert_rel_to=para 계산에
+    // 페이지 기준(절대) y 좌표가 필요하므로, paragraph 기준 y(vertical_position)에 base_top을 더해 절대값으로 전달한다.
+    let base_top_mm = if let Some((_hcd_left, hcd_top)) = hcd_position {
+        hcd_top
+    } else if let Some(pd) = page_def {
+        pd.top_margin.to_mm() + pd.header_margin.to_mm()
+    } else {
+        24.99
+    };
 
     // LineSegment가 있으면 사용 / Use LineSegment if available
     if !line_segments.is_empty() {
@@ -359,12 +371,17 @@ pub fn render_paragraph(
                 Some(CtrlHeaderData::ObjectCommon { attribute, .. })
                     if matches!(attribute.vert_rel_to, VertRelTo::Para) =>
                 {
+                    // NOTE (fixture/table-position.html):
+                    // vert_rel_to=para인 객체의 기준 문단은 "현재 문단"의 vertical_position입니다.
+                    // (이전 구현처럼 idx+1을 참조하면 표가 한 칸씩 아래로 밀립니다.)
                     current_para_index
-                        .and_then(|idx| para_vertical_positions.get(idx + 1).copied())
+                        .and_then(|idx| para_vertical_positions.get(idx).copied())
                         .or(para_start_vertical_mm)
                 }
                 _ => para_start_vertical_mm,
             };
+            let ref_para_vertical_abs_mm = ref_para_vertical_mm.map(|v| v + base_top_mm);
+            let first_para_vertical_abs_mm = first_para_vertical_mm.map(|v| v + base_top_mm);
 
             let table_html = render_table(
                 table_info.table,
@@ -380,8 +397,9 @@ pub fn render_paragraph(
                 table_info.caption_para_shape_id, // 캡션 para_shape_id 전달 / Pass caption para_shape_id
                 table_info.caption_line_segment, // 캡션 LineSegmentInfo 전달 / Pass caption LineSegmentInfo
                 None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
-                ref_para_vertical_mm, // 참조 문단의 vertical_position 전달 / Pass reference paragraph's vertical_position
-                first_para_vertical_mm, // 첫 번째 문단의 vertical_position 전달 (가설 O) / Pass first paragraph's vertical_position (Hypothesis O)
+                ref_para_vertical_abs_mm, // 참조 문단의 vertical_position(절대) 전달 / Pass reference paragraph's vertical_position (absolute)
+                para_start_column_mm, // 문단 시작 column_start_position 전달 / Pass paragraph start column_start_position
+                first_para_vertical_abs_mm, // 첫 번째 문단의 vertical_position(절대) 전달 (가설 O) / Pass first paragraph's vertical_position (absolute; Hypothesis O)
                 pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
                 color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
             );

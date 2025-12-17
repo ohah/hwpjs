@@ -1,6 +1,6 @@
-use crate::document::bodytext::ctrl_header::{CtrlHeaderData, VertRelTo};
+use crate::document::bodytext::ctrl_header::{CtrlHeaderData, HorzRelTo, VertRelTo};
 use crate::document::bodytext::PageDef;
-use crate::types::{Hwpunit16ToMm, RoundTo2dp, INT32};
+use crate::types::{RoundTo2dp, INT32};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
 /// viewBox 데이터 / ViewBox data
@@ -29,15 +29,15 @@ pub(crate) fn table_position(
     segment_position: Option<(INT32, INT32)>,
     ctrl_header: Option<&CtrlHeaderData>,
     para_start_vertical_mm: Option<f64>,
+    para_start_column_mm: Option<f64>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
 ) -> (f64, f64) {
     // CtrlHeader에서 필요한 정보 추출 / Extract necessary information from CtrlHeader
-    let (offset_x, offset_y, vert_rel_to, margin_top_mm) =
+    let (offset_x, offset_y, vert_rel_to, horz_rel_to) =
         if let Some(CtrlHeaderData::ObjectCommon {
             attribute,
             offset_x,
             offset_y,
-            margin,
             ..
         }) = ctrl_header
         {
@@ -45,7 +45,7 @@ pub(crate) fn table_position(
                 Some(*offset_x),
                 Some(*offset_y),
                 Some(attribute.vert_rel_to),
-                Some(margin.top.to_mm()),
+                Some(attribute.horz_rel_to),
             )
         } else {
             (None, None, None, None)
@@ -68,13 +68,33 @@ pub(crate) fn table_position(
         let segment_top_mm = int32_to_mm(segment_vert);
         (round_to_2dp(segment_left_mm), round_to_2dp(segment_top_mm))
     } else {
+        // 종이(paper) 기준인 경우, 기준 원점은 용지 좌상단이므로 base_left/base_top을 적용하지 않는다.
+        // (page/hcD 기준은 본문 시작점이므로 base_left/base_top이 필요)
+        let base_top_for_obj = if matches!(vert_rel_to, Some(VertRelTo::Paper)) {
+            0.0
+        } else {
+            base_top
+        };
+        let base_left_for_obj = if matches!(horz_rel_to, Some(HorzRelTo::Paper)) {
+            0.0
+        } else {
+            base_left
+        };
         let offset_left_mm = offset_x.map(|x| x.to_mm()).unwrap_or(0.0);
+        // horz_rel_to=para 인 경우, 문단의 column_start_position(=para_start_column_mm)을 함께 더해야 fixture(table-position.html)와 일치합니다.
+        // (예: page_left 30mm + offset_x 5mm + para_col 3.53mm = 38.53mm)
+        let para_left_mm = if matches!(horz_rel_to, Some(HorzRelTo::Para)) {
+            para_start_column_mm.unwrap_or(0.0)
+        } else {
+            0.0
+        };
         let offset_top_mm = if let (Some(VertRelTo::Para), Some(offset)) = (vert_rel_to, offset_y) {
             let offset_mm = offset.to_mm();
             if let Some(para_start) = para_start_vertical_mm {
-                para_start - base_left
+                // y 계산은 base_top 기준이어야 합니다. (base_left 사용은 버그)
+                para_start - base_top_for_obj
             } else if let Some(first_para) = first_para_vertical_mm {
-                let first_para_relative_mm = first_para - base_left;
+                let first_para_relative_mm = first_para - base_top_for_obj;
                 first_para_relative_mm + offset_mm
             } else {
                 offset_mm
@@ -84,8 +104,8 @@ pub(crate) fn table_position(
         };
 
         (
-            round_to_2dp(base_left + offset_left_mm),
-            round_to_2dp(base_top + offset_top_mm),
+            round_to_2dp(base_left_for_obj + offset_left_mm + para_left_mm),
+            round_to_2dp(base_top_for_obj + offset_top_mm),
         )
     }
 }

@@ -3,7 +3,7 @@ use crate::document::bodytext::{LineSegmentInfo, PageDef, Table};
 use crate::types::{Hwpunit16ToMm, HWPUNIT};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
-use crate::{HwpDocument, ParaShape, INT32};
+use crate::{HwpDocument, INT32};
 
 use super::constants::SVG_PADDING_MM;
 use super::position::{table_position, view_box};
@@ -59,6 +59,7 @@ pub fn render_table(
     caption_line_segment: Option<&LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
     segment_position: Option<(INT32, INT32)>,
     para_start_vertical_mm: Option<f64>,
+    para_start_column_mm: Option<f64>, // 현재 문단 시작 column_start_position (mm)
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
     pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
     color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
@@ -112,30 +113,44 @@ pub fn render_table(
         pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
         color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
     );
-    let cells_html = cells::render_cells(table, ctrl_header_height_mm, document, _options, pattern_counter, color_to_pattern);
-    let (left_mm, mut top_mm) = table_position(
+    let cells_html = cells::render_cells(
+        table,
+        ctrl_header_height_mm,
+        document,
+        _options,
+        pattern_counter,
+        color_to_pattern,
+    );
+    let (mut left_mm, mut top_mm) = table_position(
         hcd_position,
         page_def,
         segment_position,
         ctrl_header,
         para_start_vertical_mm,
+        para_start_column_mm,
         first_para_vertical_mm,
     );
 
     // htG 래퍼 생성 (캡션이 있거나 ctrl_header가 있는 경우) / Create htG wrapper (if caption exists or ctrl_header exists)
     // 캡션 유무는 caption_info 존재 여부로 판단 / Determine caption existence by caption_info presence
     let has_caption = caption_info.is_some();
-    // segment_position이 있으면 LineSegment 내부 테이블이므로 htG 생성 안 함
-    // If segment_position exists, it's a table inside LineSegment, so don't create htG
-    // 원본 HTML(fixtures/noori.html)을 보면 LineSegment 내부 테이블은 htb만 있고 htG가 없음
-    // Original HTML (fixtures/noori.html) shows tables inside LineSegment have only htb, no htG
-    let needs_htg = if segment_position.is_some() {
-        // LineSegment 내부 테이블은 캡션이 있어도 htG 없이 htb만 사용
-        // Tables inside LineSegment use only htb without htG even if caption exists
-        false
+    // LineSegment(=글자처럼 취급/인라인) 테이블 처리
+    // - 일부 fixture(noori 등)에서는 htG 없이 htb만 존재하지만,
+    // - table-position 처럼 "캡션이 있는 인라인 테이블"은 htG 래퍼가 필요(캡션 블록이 htG 하위로 들어감)
+    // 따라서: LineSegment 내부라도 캡션이 있으면 htG를 생성한다.
+    let is_inline_table = segment_position.is_some();
+    let needs_htg = if is_inline_table {
+        has_caption
     } else {
         has_caption || ctrl_header.is_some()
     };
+
+    // 인라인 테이블은 문단(line segment) 내부에서 상대 위치로 렌더링되므로,
+    // htG의 left/top은 0으로 고정해야 fixture와 일치한다.
+    if is_inline_table && needs_htg {
+        left_mm = 0.0;
+        top_mm = 0.0;
+    }
 
     // margin 값 미리 계산 (margin_left_mm, margin_right_mm은 이미 위에서 계산됨) / Pre-calculate margin values (margin_left_mm, margin_right_mm already calculated above)
     let margin_top_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
@@ -203,7 +218,7 @@ pub fn render_table(
     };
 
     // 캡션 크기 미리 계산 (htb 위치 및 htG 크기 계산에 필요) / Pre-calculate caption size (needed for htb position and htG size calculation)
-    let (mut caption_width_mm, mut caption_height_mm) = if has_caption {
+    let (caption_width_mm, caption_height_mm) = if has_caption {
         let width = if let Some(info) = caption_info {
             if is_horizontal {
                 // 가로 방향(Top/Bottom): last_width만 사용, include_margin으로 마진 포함 여부 결정
@@ -348,74 +363,22 @@ pub fn render_table(
                 String::new()
             };
 
-            // 캡션 스타일 값 계산: 실제 데이터에서 추출 / Calculate caption style values from actual data
-            // ParaShape와 CharShape를 사용하여 line-height, top 계산
-            // Use ParaShape and CharShape to calculate line-height, top
-            let (line_height_mm, top_offset_mm) = if let Some(para_shape_id) = caption_para_shape_id
-            {
-                // ParaShape 가져오기 / Get ParaShape
-                let para_shape: Option<&ParaShape> =
-                    if para_shape_id < document.doc_info.para_shapes.len() {
-                        Some(&document.doc_info.para_shapes[para_shape_id])
-                    } else {
-                        None
-                    };
-
-                // CharShape에서 폰트 크기 가져오기 / Get font size from CharShape
-                let font_size_pt = if caption_char_shape_id_value
-                    < document.doc_info.char_shapes.len()
-                {
-                    let char_shape = &document.doc_info.char_shapes[caption_char_shape_id_value];
-                    // base_size는 INT32이고 0pt~4096pt 범위 / base_size is INT32 and ranges from 0pt~4096pt
-                    char_shape.base_size as f64 / 100.0 // 100분의 1pt 단위이므로 100으로 나눔 / Divide by 100 since it's in 1/100 pt units
-                } else {
-                    10.0 // 기본값 / Default
-                };
-
-                // line-height 계산: ParaShape와 CharShape를 사용 / Calculate line-height using ParaShape and CharShape
-                let line_height = if let Some(ps) = para_shape {
-                    // ParaShape의 line_height_matches_font 확인 / Check ParaShape's line_height_matches_font
-                    if ps.attributes1.line_height_matches_font {
-                        // 글꼴에 맞는 줄 높이: 폰트 크기 * 1.2 (일반적인 line-height) / Line height matches font: font size * 1.2 (typical line-height)
-                        let calculated = (font_size_pt * 1.2) * 0.352778; // pt to mm (1pt = 0.352778mm)
-                        round_to_2dp(calculated.max(2.79)) // 최소 2.79mm / Minimum 2.79mm
-                    } else {
-                        // line_spacing_old 사용 (HWPUNIT 단위) / Use line_spacing_old (in HWPUNIT)
-                        let line_spacing_mm = round_to_2dp(int32_to_mm(ps.line_spacing_old));
-                        // line_spacing이 0이면 폰트 크기 기반으로 계산 / If line_spacing is 0, calculate based on font size
-                        if line_spacing_mm > 0.0 {
-                            line_spacing_mm
-                        } else {
-                            let calculated = (font_size_pt * 1.2) * 0.352778;
-                            round_to_2dp(calculated.max(2.79))
-                        }
-                    }
-                } else {
-                    // ParaShape가 없으면 폰트 크기 기반으로 계산 / If no ParaShape, calculate based on font size
-                    let calculated = (font_size_pt * 1.2) * 0.352778;
-                    round_to_2dp(calculated.max(2.79))
-                };
-
-                // top offset 계산: LineSegmentInfo에서 실제 값 사용 / Calculate top offset: use actual values from LineSegmentInfo
-                let top_offset = if let Some(segment) = caption_line_segment {
-                    // LineSegmentInfo에서 text_height와 baseline_distance 사용 / Use text_height and baseline_distance from LineSegmentInfo
+            // 캡션 스타일 값 계산: LineSegmentInfo(실제 데이터) 기반으로 계산
+            // - line-height: baseline_distance
+            // - top: (line-height - text_height) / 2
+            // - (left/width)는 segment 값을 사용해 fixture의 좌우 여백(3.53mm 등)을 반영
+            let (line_height_mm, top_offset_mm, caption_hls_left_mm, caption_hls_width_mm) =
+                if let Some(segment) = caption_line_segment {
+                    let lh = round_to_2dp(int32_to_mm(segment.baseline_distance));
                     let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
-                    let baseline_distance_mm = round_to_2dp(int32_to_mm(segment.baseline_distance));
-
-                    // baseline offset 계산: (baseline_distance - text_height) / 2
-                    // Calculate baseline offset: (baseline_distance - text_height) / 2
-                    let baseline_offset = (baseline_distance_mm - text_height_mm) / 2.0;
-                    round_to_2dp(baseline_offset)
+                    let top_off = round_to_2dp((lh - text_height_mm) / 2.0);
+                    let left_mm = round_to_2dp(int32_to_mm(segment.column_start_position));
+                    let width_mm = round_to_2dp(int32_to_mm(segment.segment_width));
+                    (lh, top_off, left_mm, width_mm)
                 } else {
-                    // LineSegmentInfo가 없으면 기본값 사용 / Use default value if LineSegmentInfo is not available
-                    -0.18
+                    // fallback (근거 없는 임의값은 피함)
+                    (2.79, -0.18, 0.0, caption_width_mm)
                 };
-
-                (line_height, top_offset)
-            } else {
-                // 기본값 사용 / Use default values
-                (2.79, -0.18)
-            };
 
             // 세로 방향 캡션의 경우 hcI에 top 스타일 추가 / Add top style to hcI for vertical captions
             let hci_style = if is_vertical {
@@ -435,7 +398,7 @@ pub fn render_table(
             // The width of haN (number box) cannot be directly referenced from JSON data,
             // so we use the browser's natural layout (content-based width).
             format!(
-                r#"<div class="hcD" style="left:{caption_left_mm}mm;top:{caption_top_mm}mm;width:{caption_width_mm}mm;height:{caption_height_mm}mm;overflow:hidden;"><div class="hcI" {hci_style}><div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:0mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div></div></div>"#,
+                r#"<div class="hcD" style="left:{caption_left_mm}mm;top:{caption_top_mm}mm;width:{caption_width_mm}mm;height:{caption_height_mm}mm;overflow:hidden;"><div class="hcI" {hci_style}><div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:{caption_hls_left_mm}mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_hls_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div></div></div>"#,
                 caption_left_mm = caption_left_mm,
                 caption_top_mm = caption_top_mm,
                 caption_width_mm = caption_width_mm,
@@ -444,6 +407,8 @@ pub fn render_table(
                 ps_class = ps_class,
                 line_height_mm = line_height_mm,
                 top_offset_mm = top_offset_mm,
+                caption_hls_left_mm = caption_hls_left_mm,
+                caption_hls_width_mm = caption_hls_width_mm,
                 cs_class = cs_class,
                 caption_label = caption_label,
                 table_num_text = table_num_text,
@@ -488,14 +453,22 @@ pub fn render_table(
     let htb_width_mm = round_to_2dp(htb_width_mm);
     // fixture(noori.html/table*.html)처럼 height도 2dp로 고정해서 출력 값 흔들림(221.19 vs 221.2)을 방지
     let content_height_mm = round_to_2dp(content_size.height);
+    // NOTE (fixture 기준):
+    // - LineSegment(글자처럼 취급) 내부 테이블은 htG가 inline-block/relative로 동작하고,
+    //   htb 자체에는 display/position/vertical-align 스타일을 주지 않습니다. (table-position.html)
+    // - 그 외 케이스는 htb를 inline-block/relative로 두는 레이아웃이 존재합니다.
+    let htb_extra_style = if is_inline_table && needs_htg {
+        ""
+    } else {
+        "display:inline-block;position:relative;vertical-align:middle;"
+    };
     let htb_html = format!(
-        // NOTE: fixture는 htb를 inline-block + relative로 두고 vertical-align:middle을 사용합니다.
-        // 레이아웃이 이 스타일에 의존하는 케이스가 있어 동일하게 맞춥니다.
-        r#"<div class="htb" style="left:{htb_left_mm}mm;width:{htb_width_mm}mm;top:{htb_top_mm}mm;height:{content_height_mm}mm;display:inline-block;position:relative;vertical-align:middle;">{svg}{cells_html}</div>"#,
+        r#"<div class="htb" style="left:{htb_left_mm}mm;width:{htb_width_mm}mm;top:{htb_top_mm}mm;height:{content_height_mm}mm;{htb_extra_style}">{svg}{cells_html}</div>"#,
         htb_left_mm = htb_left_mm,
         htb_width_mm = htb_width_mm,
         htb_top_mm = htb_top_mm,
         content_height_mm = content_height_mm,
+        htb_extra_style = htb_extra_style,
         svg = svg,
         cells_html = cells_html,
     );
@@ -597,27 +570,35 @@ pub fn render_table(
         let htg_width = round_to_2dp(htg_width);
 
         // htG 래퍼와 캡션 생성 / Create htG wrapper and caption
+        // 인라인 테이블의 htG는 htb와 동일하게 inline-block/relative/vertical-align 스타일을 가져야 한다.
+        let inline_htg_style = if is_inline_table {
+            "display:inline-block;position:relative;vertical-align:middle;"
+        } else {
+            ""
+        };
         let html = if has_caption && is_caption_above {
             // 위 캡션: 캡션 먼저, 그 다음 테이블 / Caption above: caption first, then table
             format!(
-                r#"<div class="htG" style="left:{left_mm}mm;width:{htg_width}mm;top:{top_mm}mm;height:{htg_height}mm;">{caption_html}{htb_html}</div>"#,
+                r#"<div class="htG" style="left:{left_mm}mm;width:{htg_width}mm;top:{top_mm}mm;height:{htg_height}mm;{inline_htg_style}">{caption_html}{htb_html}</div>"#,
                 left_mm = left_mm,
                 htg_width = htg_width,
                 top_mm = top_mm,
                 htg_height = htg_height,
                 caption_html = caption_html,
                 htb_html = htb_html,
+                inline_htg_style = inline_htg_style,
             )
         } else {
             // 아래 캡션 또는 캡션 없음: 테이블 먼저, 그 다음 캡션 / Caption below or no caption: table first, then caption
             format!(
-                r#"<div class="htG" style="left:{left_mm}mm;width:{htg_width}mm;top:{top_mm}mm;height:{htg_height}mm;">{htb_html}{caption_html}</div>"#,
+                r#"<div class="htG" style="left:{left_mm}mm;width:{htg_width}mm;top:{top_mm}mm;height:{htg_height}mm;{inline_htg_style}">{htb_html}{caption_html}</div>"#,
                 left_mm = left_mm,
                 htg_width = htg_width,
                 top_mm = top_mm,
                 htg_height = htg_height,
                 htb_html = htb_html,
                 caption_html = caption_html,
+                inline_htg_style = inline_htg_style,
             )
         };
 
