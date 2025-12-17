@@ -4,8 +4,8 @@ use super::line_segment::{ImageInfo, TableInfo};
 use super::text;
 use super::HtmlOptions;
 use crate::document::bodytext::{
-    ctrl_header::{CtrlHeaderData, VertRelTo},
     control_char::ControlChar,
+    ctrl_header::{CtrlHeaderData, VertRelTo},
     PageDef, ParagraphRecord,
 };
 use crate::document::{HwpDocument, Paragraph};

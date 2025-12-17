@@ -133,7 +133,10 @@ pub(crate) fn table_position(
             }
             1 => {
                 // centered: (ref_center - obj_width/2) + offset_x
-                base_left_for_obj + para_left_mm + (ref_width_mm / 2.0 - obj_w_mm / 2.0) + offset_left_mm
+                base_left_for_obj
+                    + para_left_mm
+                    + (ref_width_mm / 2.0 - obj_w_mm / 2.0)
+                    + offset_left_mm
             }
             _ => {
                 // left aligned
@@ -155,6 +158,9 @@ pub(crate) fn table_position(
             offset_y.map(|y| y.to_mm()).unwrap_or(0.0)
         };
 
-        (round_to_2dp(left_mm), round_to_2dp(base_top_for_obj + offset_top_mm))
+        (
+            round_to_2dp(left_mm),
+            round_to_2dp(base_top_for_obj + offset_top_mm),
+        )
     }
 }
