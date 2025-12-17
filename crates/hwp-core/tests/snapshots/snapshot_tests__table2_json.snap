@@ -455,7 +455,7 @@ expression: json
         "borders": [
           {
             "line_type": 1,
-            "width": 0,
+            "width": 1,
             "color": {
               "r": 0,
               "g": 0,
@@ -464,24 +464,24 @@ expression: json
           },
           {
             "line_type": 1,
-            "width": 0,
-            "color": {
-              "r": 1,
-              "g": 1,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 0,
             "width": 1,
             "color": {
               "r": 0,
               "g": 0,
-              "b": 1
+              "b": 0
             }
           },
           {
-            "line_type": 0,
+            "line_type": 1,
+            "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
             "width": 1,
             "color": {
               "r": 0,

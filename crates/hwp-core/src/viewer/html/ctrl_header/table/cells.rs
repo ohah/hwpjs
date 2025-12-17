@@ -442,9 +442,8 @@ pub(crate) fn render_cells(
             } else if !images.is_empty() {
                 // LineSegment와 텍스트가 없지만 이미지가 있는 경우 / No LineSegment or text but images exist
                 // 이미지만 렌더링 / Render images only
-                image::render_image_with_style;
                 for image in &images {
-                    let image_html = render_image_with_style(
+                    let image_html = image::render_image_with_style(
                         &image.url,
                         0,
                         0,

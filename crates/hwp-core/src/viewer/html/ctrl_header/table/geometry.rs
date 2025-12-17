@@ -204,12 +204,16 @@ pub(crate) fn row_positions(
             let mut max_height_mm: Option<f64> = None;
             let mut has_paraline_seg = false;
             let mut paraline_seg_height_mm: Option<f64> = None;
+            let _ = shape_component_height;
 
             // 먼저 children을 순회하여 ParaLineSeg와 다른 shape component들을 찾기 / First iterate through children to find ParaLineSeg and other shape components
             for child in children {
                 match child {
                     // ShapeComponentPicture: shape_component.height 사용
-                    ParagraphRecord::ShapeComponentPicture { .. } => {
+                    ParagraphRecord::ShapeComponentPicture {
+                        shape_component_picture,
+                    } => {
+                        let _ = shape_component_picture;
                         let height_hwpunit = shape_component_height as i32;
                         let height_mm = round_to_2dp(int32_to_mm(height_hwpunit));
                         if max_height_mm.is_none() || height_mm > max_height_mm.unwrap() {

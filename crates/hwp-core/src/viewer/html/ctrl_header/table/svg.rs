@@ -2,9 +2,7 @@
 use crate::document::bodytext::Table;
 use crate::HwpDocument;
 
-use crate::viewer::html::ctrl_header::table::constants::{
-    BORDER_COLOR, BORDER_OFFSET_MM, BORDER_WIDTH_MM,
-};
+use crate::viewer::html::ctrl_header::table::constants::BORDER_OFFSET_MM;
 use crate::viewer::html::ctrl_header::table::geometry::{column_positions, row_positions};
 use crate::viewer::html::ctrl_header::table::position::ViewBox;
 use crate::viewer::html::ctrl_header::table::size::Size;
@@ -41,20 +39,13 @@ pub(crate) fn render_svg(
     }
     let rows = row_positions(table, content.height, document, ctrl_header_height_mm);
 
-    let vertical = borders::render_vertical_borders(
-        table,
-        &cols,
-        content,
-        BORDER_COLOR,
-        BORDER_WIDTH_MM,
-        ctrl_header_height_mm,
-    );
+    let vertical =
+        borders::render_vertical_borders(table, document, &cols, content, ctrl_header_height_mm);
     let horizontal = borders::render_horizontal_borders(
         table,
+        document,
         &rows,
         content,
-        BORDER_COLOR,
-        BORDER_WIDTH_MM,
         BORDER_OFFSET_MM,
         ctrl_header_height_mm,
     );

@@ -1499,7 +1499,7 @@
         "borders": [
           {
             "line_type": 1,
-            "width": 0,
+            "width": 1,
             "color": {
               "r": 0,
               "g": 0,
@@ -1508,24 +1508,24 @@
           },
           {
             "line_type": 1,
-            "width": 0,
-            "color": {
-              "r": 1,
-              "g": 1,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 0,
             "width": 1,
             "color": {
               "r": 0,
               "g": 0,
-              "b": 1
+              "b": 0
             }
           },
           {
-            "line_type": 0,
+            "line_type": 1,
+            "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
             "width": 1,
             "color": {
               "r": 0,
@@ -1562,7 +1562,7 @@
         "borders": [
           {
             "line_type": 1,
-            "width": 96,
+            "width": 7,
             "color": {
               "r": 27,
               "g": 23,
@@ -1570,25 +1570,25 @@
             }
           },
           {
-            "line_type": 7,
-            "width": 0,
+            "line_type": 1,
+            "width": 7,
             "color": {
-              "r": 1,
-              "g": 7,
-              "b": 27
+              "r": 27,
+              "g": 23,
+              "b": 96
             }
           },
           {
-            "line_type": 27,
-            "width": 1,
+            "line_type": 1,
+            "width": 7,
             "color": {
-              "r": 96,
-              "g": 0,
-              "b": 1
+              "r": 27,
+              "g": 23,
+              "b": 96
             }
           },
           {
-            "line_type": 23,
+            "line_type": 1,
             "width": 7,
             "color": {
               "r": 27,
@@ -1636,7 +1636,16 @@
         "borders": [
           {
             "line_type": 1,
-            "width": 96,
+            "width": 7,
+            "color": {
+              "r": 27,
+              "g": 23,
+              "b": 96
+            }
+          },
+          {
+            "line_type": 0,
+            "width": 1,
             "color": {
               "r": 0,
               "g": 0,
@@ -1644,25 +1653,16 @@
             }
           },
           {
-            "line_type": 7,
-            "width": 0,
+            "line_type": 0,
+            "width": 7,
             "color": {
-              "r": 0,
-              "g": 7,
-              "b": 27
+              "r": 27,
+              "g": 23,
+              "b": 96
             }
           },
           {
-            "line_type": 27,
-            "width": 0,
-            "color": {
-              "r": 96,
-              "g": 0,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 23,
+            "line_type": 0,
             "width": 1,
             "color": {
               "r": 0,
@@ -1699,7 +1699,16 @@
         "borders": [
           {
             "line_type": 0,
-            "width": 0,
+            "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 0,
+            "width": 1,
             "color": {
               "r": 0,
               "g": 0,
@@ -1708,25 +1717,16 @@
           },
           {
             "line_type": 1,
-            "width": 0,
+            "width": 7,
             "color": {
-              "r": 1,
-              "g": 7,
-              "b": 27
+              "r": 27,
+              "g": 23,
+              "b": 96
             }
           },
           {
-            "line_type": 0,
-            "width": 0,
-            "color": {
-              "r": 96,
-              "g": 0,
-              "b": 1
-            }
-          },
-          {
-            "line_type": 0,
-            "width": 1,
+            "line_type": 1,
+            "width": 7,
             "color": {
               "r": 27,
               "g": 23,
@@ -1771,7 +1771,7 @@
           },
           {
             "line_type": 0,
-            "width": 255,
+            "width": 0,
             "color": {
               "r": 0,
               "g": 0,
@@ -1783,7 +1783,7 @@
             "width": 0,
             "color": {
               "r": 0,
-              "g": 255,
+              "g": 0,
               "b": 0
             }
           },
@@ -1836,7 +1836,7 @@
         "borders": [
           {
             "line_type": 1,
-            "width": 0,
+            "width": 1,
             "color": {
               "r": 0,
               "g": 0,
@@ -1845,24 +1845,24 @@
           },
           {
             "line_type": 1,
-            "width": 0,
-            "color": {
-              "r": 1,
-              "g": 1,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 0,
             "width": 1,
             "color": {
               "r": 0,
               "g": 0,
-              "b": 1
+              "b": 0
             }
           },
           {
-            "line_type": 0,
+            "line_type": 1,
+            "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
             "width": 1,
             "color": {
               "r": 0,
@@ -1899,7 +1899,7 @@
         "borders": [
           {
             "line_type": 1,
-            "width": 0,
+            "width": 2,
             "color": {
               "r": 0,
               "g": 0,
@@ -1907,25 +1907,88 @@
             }
           },
           {
-            "line_type": 2,
-            "width": 0,
+            "line_type": 1,
+            "width": 6,
             "color": {
-              "r": 1,
-              "g": 1,
+              "r": 0,
+              "g": 0,
               "b": 0
             }
           },
           {
-            "line_type": 0,
+            "line_type": 1,
             "width": 1,
             "color": {
               "r": 0,
               "g": 0,
-              "b": 1
+              "b": 0
             }
           },
           {
-            "line_type": 0,
+            "line_type": 1,
+            "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          }
+        ],
+        "diagonal": {
+          "line_type": 1,
+          "thickness": 0,
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
+        },
+        "fill": {
+          "type": "none"
+        }
+      },
+      {
+        "attributes": {
+          "has_3d_effect": false,
+          "has_shadow": false,
+          "slash_shape": 0,
+          "backslash_shape": 0,
+          "slash_broken_line": 0,
+          "backslash_broken_line": false,
+          "slash_rotated_180": false,
+          "backslash_rotated_180": false,
+          "has_center_line": false
+        },
+        "borders": [
+          {
+            "line_type": 1,
+            "width": 2,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
+            "width": 6,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
+            "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
             "width": 6,
             "color": {
               "r": 0,
@@ -1962,7 +2025,7 @@
         "borders": [
           {
             "line_type": 1,
-            "width": 0,
+            "width": 2,
             "color": {
               "r": 0,
               "g": 0,
@@ -1970,152 +2033,89 @@
             }
           },
           {
-            "line_type": 2,
-            "width": 0,
+            "line_type": 1,
+            "width": 2,
             "color": {
-              "r": 1,
-              "g": 1,
+              "r": 0,
+              "g": 0,
               "b": 0
             }
           },
           {
-            "line_type": 0,
+            "line_type": 1,
             "width": 1,
             "color": {
               "r": 0,
               "g": 0,
-              "b": 1
+              "b": 0
             }
           },
           {
-            "line_type": 0,
+            "line_type": 1,
+            "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          }
+        ],
+        "diagonal": {
+          "line_type": 1,
+          "thickness": 0,
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
+        },
+        "fill": {
+          "type": "none"
+        }
+      },
+      {
+        "attributes": {
+          "has_3d_effect": false,
+          "has_shadow": false,
+          "slash_shape": 0,
+          "backslash_shape": 0,
+          "slash_broken_line": 0,
+          "backslash_broken_line": false,
+          "slash_rotated_180": false,
+          "backslash_rotated_180": false,
+          "has_center_line": false
+        },
+        "borders": [
+          {
+            "line_type": 1,
+            "width": 2,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
+            "width": 2,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
+            "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
             "width": 6,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 0
-            }
-          }
-        ],
-        "diagonal": {
-          "line_type": 1,
-          "thickness": 0,
-          "color": {
-            "r": 0,
-            "g": 0,
-            "b": 0
-          }
-        },
-        "fill": {
-          "type": "none"
-        }
-      },
-      {
-        "attributes": {
-          "has_3d_effect": false,
-          "has_shadow": false,
-          "slash_shape": 0,
-          "backslash_shape": 0,
-          "slash_broken_line": 0,
-          "backslash_broken_line": false,
-          "slash_rotated_180": false,
-          "backslash_rotated_180": false,
-          "has_center_line": false
-        },
-        "borders": [
-          {
-            "line_type": 1,
-            "width": 0,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 2,
-            "width": 0,
-            "color": {
-              "r": 1,
-              "g": 1,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 0,
-            "width": 1,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 1
-            }
-          },
-          {
-            "line_type": 0,
-            "width": 2,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 0
-            }
-          }
-        ],
-        "diagonal": {
-          "line_type": 1,
-          "thickness": 0,
-          "color": {
-            "r": 0,
-            "g": 0,
-            "b": 0
-          }
-        },
-        "fill": {
-          "type": "none"
-        }
-      },
-      {
-        "attributes": {
-          "has_3d_effect": false,
-          "has_shadow": false,
-          "slash_shape": 0,
-          "backslash_shape": 0,
-          "slash_broken_line": 0,
-          "backslash_broken_line": false,
-          "slash_rotated_180": false,
-          "backslash_rotated_180": false,
-          "has_center_line": false
-        },
-        "borders": [
-          {
-            "line_type": 1,
-            "width": 0,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 2,
-            "width": 0,
-            "color": {
-              "r": 1,
-              "g": 1,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 0,
-            "width": 1,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 1
-            }
-          },
-          {
-            "line_type": 0,
-            "width": 2,
             "color": {
               "r": 0,
               "g": 0,
@@ -2151,7 +2151,7 @@
         "borders": [
           {
             "line_type": 8,
-            "width": 0,
+            "width": 7,
             "color": {
               "r": 0,
               "g": 0,
@@ -2159,25 +2159,25 @@
             }
           },
           {
-            "line_type": 7,
-            "width": 0,
+            "line_type": 8,
+            "width": 7,
             "color": {
-              "r": 8,
-              "g": 7,
+              "r": 0,
+              "g": 0,
               "b": 0
             }
           },
           {
-            "line_type": 0,
-            "width": 8,
+            "line_type": 8,
+            "width": 7,
             "color": {
               "r": 0,
               "g": 0,
-              "b": 8
+              "b": 0
             }
           },
           {
-            "line_type": 0,
+            "line_type": 8,
             "width": 7,
             "color": {
               "r": 0,
@@ -2214,7 +2214,7 @@
         "borders": [
           {
             "line_type": 1,
-            "width": 0,
+            "width": 6,
             "color": {
               "r": 0,
               "g": 0,
@@ -2222,26 +2222,26 @@
             }
           },
           {
-            "line_type": 6,
-            "width": 0,
+            "line_type": 1,
+            "width": 2,
             "color": {
-              "r": 1,
-              "g": 1,
+              "r": 0,
+              "g": 0,
               "b": 0
             }
           },
           {
-            "line_type": 0,
+            "line_type": 1,
             "width": 1,
             "color": {
               "r": 0,
               "g": 0,
-              "b": 1
+              "b": 0
             }
           },
           {
-            "line_type": 0,
-            "width": 2,
+            "line_type": 1,
+            "width": 1,
             "color": {
               "r": 0,
               "g": 0,
@@ -2277,7 +2277,7 @@
         "borders": [
           {
             "line_type": 1,
-            "width": 0,
+            "width": 6,
             "color": {
               "r": 0,
               "g": 0,
@@ -2285,162 +2285,25 @@
             }
           },
           {
-            "line_type": 6,
-            "width": 0,
-            "color": {
-              "r": 1,
-              "g": 1,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 0,
-            "width": 1,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 1
-            }
-          },
-          {
-            "line_type": 0,
+            "line_type": 1,
             "width": 2,
             "color": {
               "r": 0,
               "g": 0,
               "b": 0
             }
-          }
-        ],
-        "diagonal": {
-          "line_type": 1,
-          "thickness": 0,
-          "color": {
-            "r": 0,
-            "g": 0,
-            "b": 0
-          }
-        },
-        "fill": {
-          "type": "none"
-        }
-      },
-      {
-        "attributes": {
-          "has_3d_effect": false,
-          "has_shadow": false,
-          "slash_shape": 0,
-          "backslash_shape": 0,
-          "slash_broken_line": 0,
-          "backslash_broken_line": false,
-          "slash_rotated_180": false,
-          "backslash_rotated_180": false,
-          "has_center_line": false
-        },
-        "borders": [
+          },
           {
             "line_type": 1,
-            "width": 0,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 6,
-            "width": 0,
-            "color": {
-              "r": 1,
-              "g": 6,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 0,
             "width": 1,
             "color": {
               "r": 0,
               "g": 0,
-              "b": 1
-            }
-          },
-          {
-            "line_type": 0,
-            "width": 2,
-            "color": {
-              "r": 0,
-              "g": 0,
               "b": 0
             }
-          }
-        ],
-        "diagonal": {
-          "line_type": 1,
-          "thickness": 0,
-          "color": {
-            "r": 0,
-            "g": 0,
-            "b": 0
-          }
-        },
-        "fill": {
-          "type": "solid",
-          "background_color": {
-            "r": 231,
-            "g": 231,
-            "b": 165
           },
-          "pattern_color": {
-            "r": 255,
-            "g": 255,
-            "b": 255
-          },
-          "pattern_type": -1
-        }
-      },
-      {
-        "attributes": {
-          "has_3d_effect": false,
-          "has_shadow": false,
-          "slash_shape": 0,
-          "backslash_shape": 0,
-          "slash_broken_line": 0,
-          "backslash_broken_line": false,
-          "slash_rotated_180": false,
-          "backslash_rotated_180": false,
-          "has_center_line": false
-        },
-        "borders": [
           {
             "line_type": 1,
-            "width": 0,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 2,
-            "width": 0,
-            "color": {
-              "r": 1,
-              "g": 6,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 0,
-            "width": 1,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 1
-            }
-          },
-          {
-            "line_type": 0,
             "width": 6,
             "color": {
               "r": 0,
@@ -2459,6 +2322,143 @@
           }
         },
         "fill": {
+          "type": "none"
+        }
+      },
+      {
+        "attributes": {
+          "has_3d_effect": false,
+          "has_shadow": false,
+          "slash_shape": 0,
+          "backslash_shape": 0,
+          "slash_broken_line": 0,
+          "backslash_broken_line": false,
+          "slash_rotated_180": false,
+          "backslash_rotated_180": false,
+          "has_center_line": false
+        },
+        "borders": [
+          {
+            "line_type": 1,
+            "width": 6,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
+            "width": 2,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
+            "width": 6,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
+            "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          }
+        ],
+        "diagonal": {
+          "line_type": 1,
+          "thickness": 0,
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
+        },
+        "fill": {
+          "type": "solid",
+          "background_color": {
+            "r": 231,
+            "g": 231,
+            "b": 165
+          },
+          "pattern_color": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "pattern_type": -1
+        }
+      },
+      {
+        "attributes": {
+          "has_3d_effect": false,
+          "has_shadow": false,
+          "slash_shape": 0,
+          "backslash_shape": 0,
+          "slash_broken_line": 0,
+          "backslash_broken_line": false,
+          "slash_rotated_180": false,
+          "backslash_rotated_180": false,
+          "has_center_line": false
+        },
+        "borders": [
+          {
+            "line_type": 1,
+            "width": 2,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
+            "width": 6,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
+            "width": 6,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 1,
+            "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          }
+        ],
+        "diagonal": {
+          "line_type": 1,
+          "thickness": 0,
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
+        },
+        "fill": {
           "type": "solid",
           "background_color": {
             "r": 231,
@@ -2488,34 +2488,34 @@
         "borders": [
           {
             "line_type": 0,
-            "width": 0,
+            "width": 1,
             "color": {
               "r": 0,
               "g": 0,
               "b": 0
-            }
-          },
-          {
-            "line_type": 1,
-            "width": 0,
-            "color": {
-              "r": 8,
-              "g": 7,
-              "b": 0
-            }
-          },
-          {
-            "line_type": 0,
-            "width": 0,
-            "color": {
-              "r": 0,
-              "g": 0,
-              "b": 8
             }
           },
           {
             "line_type": 0,
             "width": 1,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 8,
+            "width": 7,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 8,
+            "width": 7,
             "color": {
               "r": 0,
               "g": 0,

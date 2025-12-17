@@ -171,58 +171,136 @@ impl BorderFill {
             has_center_line: (attr_value & 0x2000) != 0,
         };
 
-        // UINT8 array[4] 4방향 테두리선 종류 / UINT8 array[4] 4-direction border line types
+        // NOTE:
+        // BorderFill의 실제 저장 포맷은 구현체/버전에 따라 2가지가 관찰됨.
+        // (A) 스펙(표 23): line_types[4] -> widths[4] -> colors[4]
+        // (B) 레거시(hwpjs.js): (line_type, width, color) * 4 (Left, Right, Top, Bottom) interleave
+        // 여기서는 둘 다 파싱해보고 “더 그럴듯한” 결과를 선택한다.
+        if data.len() < offset + 24 + 1 + 1 + 4 {
+            return Err(HwpError::insufficient_data(
+                "BorderFill (borders+diagonal)",
+                offset + 24 + 1 + 1 + 4,
+                data.len(),
+            ));
+        }
+
+        fn score_borderline(line: &BorderLine) -> i32 {
+            let mut s = 0;
+            // width는 표 26: 0..=15
+            if line.width <= 15 {
+                s += 3;
+            } else {
+                s -= 10;
+            }
+            // line_type는 표 25: 0..=16 (실무에서 확장값이 있을 수 있어 약간 완화)
+            if line.line_type <= 32 {
+                s += 2;
+            } else {
+                s -= 5;
+            }
+            // color는 COLORREF이므로 어떤 값이든 가능하지만, 0xFFFFFFFF 같은 극단값은 감점
+            if line.color.0 == 0xFFFFFFFF {
+                s -= 2;
+            }
+            s
+        }
+
+        fn score_borders(borders: &[BorderLine; 4]) -> i32 {
+            borders.iter().map(score_borderline).sum()
+        }
+
+        let start = offset;
+
+        // (B) interleave: (line, width, color) * 4
+        let mut borders_interleave: [BorderLine; 4] = [
+            BorderLine {
+                line_type: 0,
+                width: 0,
+                color: COLORREF(0),
+            },
+            BorderLine {
+                line_type: 0,
+                width: 0,
+                color: COLORREF(0),
+            },
+            BorderLine {
+                line_type: 0,
+                width: 0,
+                color: COLORREF(0),
+            },
+            BorderLine {
+                line_type: 0,
+                width: 0,
+                color: COLORREF(0),
+            },
+        ];
+        let mut off_i = start;
+        for i in 0..4 {
+            let line_type = data[off_i];
+            off_i += 1;
+            let width = data[off_i];
+            off_i += 1;
+            let color = COLORREF(u32::from_le_bytes([
+                data[off_i],
+                data[off_i + 1],
+                data[off_i + 2],
+                data[off_i + 3],
+            ]));
+            off_i += 4;
+            borders_interleave[i] = BorderLine {
+                line_type,
+                width,
+                color,
+            };
+        }
+
+        // (A) spec arrays: line_types[4], widths[4], colors[4]
+        let mut borders_spec: [BorderLine; 4] = borders_interleave.clone();
+        let mut off_s = start;
         let line_types = [
-            data[offset],
-            data[offset + 1],
-            data[offset + 2],
-            data[offset + 3],
+            data[off_s],
+            data[off_s + 1],
+            data[off_s + 2],
+            data[off_s + 3],
         ];
-        offset += 4;
-
-        // UINT8 array[4] 4방향 테두리선 굵기 / UINT8 array[4] 4-direction border line widths
+        off_s += 4;
         let widths = [
-            data[offset],
-            data[offset + 1],
-            data[offset + 2],
-            data[offset + 3],
+            data[off_s],
+            data[off_s + 1],
+            data[off_s + 2],
+            data[off_s + 3],
         ];
-        offset += 4;
-
-        // COLORREF array[4] 4방향 테두리선 색상 / COLORREF array[4] 4-direction border line colors
+        off_s += 4;
         let mut colors = [COLORREF(0); 4];
         for i in 0..4 {
             colors[i] = COLORREF(u32::from_le_bytes([
-                data[offset],
-                data[offset + 1],
-                data[offset + 2],
-                data[offset + 3],
+                data[off_s],
+                data[off_s + 1],
+                data[off_s + 2],
+                data[off_s + 3],
             ]));
-            offset += 4;
+            off_s += 4;
+        }
+        for i in 0..4 {
+            borders_spec[i] = BorderLine {
+                line_type: line_types[i],
+                width: widths[i],
+                color: colors[i],
+            };
         }
 
-        let borders = [
-            BorderLine {
-                line_type: line_types[0],
-                width: widths[0],
-                color: colors[0],
-            },
-            BorderLine {
-                line_type: line_types[1],
-                width: widths[1],
-                color: colors[1],
-            },
-            BorderLine {
-                line_type: line_types[2],
-                width: widths[2],
-                color: colors[2],
-            },
-            BorderLine {
-                line_type: line_types[3],
-                width: widths[3],
-                color: colors[3],
-            },
-        ];
+        // 점수 비교로 선택
+        let score_i = score_borders(&borders_interleave);
+        let score_s = score_borders(&borders_spec);
+        let borders = if score_i >= score_s {
+            offset = off_i;
+            borders_interleave
+        } else {
+            offset = off_s;
+            borders_spec
+        };
+
+        // debug instrumentation removed
 
         // UINT8 대각선 종류 / UINT8 diagonal line type
         let diagonal_type = data[offset];

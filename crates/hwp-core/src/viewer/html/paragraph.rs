@@ -3,7 +3,10 @@ use super::ctrl_header;
 use super::line_segment::{ImageInfo, TableInfo};
 use super::text;
 use super::HtmlOptions;
-use crate::document::bodytext::{ctrl_header::CtrlHeaderData, PageDef, ParagraphRecord};
+use crate::document::bodytext::{
+    ctrl_header::{CtrlHeaderData, VertRelTo},
+    PageDef, ParagraphRecord,
+};
 use crate::document::{HwpDocument, Paragraph};
 use crate::viewer::html::ctrl_header::table::render_table;
 use crate::INT32;
@@ -265,7 +268,6 @@ pub fn render_paragraph(
 
         // like_letters=false인 이미지를 별도로 렌더링 (hpa 레벨에 배치) / Render images with like_letters=false separately (placed at hpa level)
         for image_info in absolute_images.iter() {
-            use crate::document::bodytext::ctrl_header::VertRelTo;
             use crate::viewer::html::image::render_image;
 
             // vert_rel_to에 따라 위치 계산 / Calculate position based on vert_rel_to
