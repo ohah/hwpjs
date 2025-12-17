@@ -25,6 +25,3 @@ pub(crate) fn parse_footnote_endnote(data: &[u8]) -> Result<CtrlHeaderData, HwpE
         reserved2,
     })
 }
-
-
-

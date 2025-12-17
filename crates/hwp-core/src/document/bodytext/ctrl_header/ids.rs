@@ -100,6 +100,3 @@ impl CtrlId {
     pub const FIELD_PRIVATE_INFO_SECURITY: &str = "%cpr";
     pub const FIELD_TABLE_OF_CONTENTS_ALT: &str = "%oc";
 }
-
-
-

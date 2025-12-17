@@ -305,4 +305,3 @@ pub enum ApplyPage {
     EvenOnly,
     OddOnly,
 }
-

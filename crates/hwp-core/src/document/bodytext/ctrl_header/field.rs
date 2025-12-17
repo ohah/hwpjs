@@ -12,13 +12,23 @@ pub(crate) fn parse_field(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
 
     let mut offset = 0usize;
 
-    let field_type_bytes = [data[offset + 3], data[offset + 2], data[offset + 1], data[offset]];
+    let field_type_bytes = [
+        data[offset + 3],
+        data[offset + 2],
+        data[offset + 1],
+        data[offset],
+    ];
     let field_type = String::from_utf8_lossy(&field_type_bytes)
         .trim_end_matches('\0')
         .to_string();
     offset += 4;
 
-    let attribute = UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let attribute = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let other_attr = UINT8::from_le_bytes([data[offset]]);
@@ -36,7 +46,12 @@ pub(crate) fn parse_field(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     offset += command_len * 2;
 
     let id = if offset + 4 <= data.len() {
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]])
+        UINT32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ])
     } else {
         0
     };
@@ -50,6 +65,3 @@ pub(crate) fn parse_field(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
         id,
     })
 }
-
-
-
