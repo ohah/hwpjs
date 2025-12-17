@@ -403,7 +403,7 @@ impl Section {
         if is_inside_control_header {
             let is_control_paragraph = records.iter().any(|record| {
                 if let ParagraphRecord::CtrlHeader { header, .. } = record {
-                    use crate::document::CtrlId;
+                    use crate::document::bodytext::CtrlId;
                     header.ctrl_id.as_str() == CtrlId::HEADER
                         || header.ctrl_id.as_str() == CtrlId::FOOTER
                         || header.ctrl_id.as_str() == CtrlId::FOOTNOTE
