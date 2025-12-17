@@ -83,7 +83,17 @@ pub fn render_line_segment(
 
     // padding-left 처리 (들여쓰기) / Handle padding-left (indentation)
     if segment.tag.has_indentation {
-        if let Some(indent) = para_shape_indent {
+        // NOTE:
+        // HWP ParaShape의 `indent`는 첫 줄 들여쓰기(음수 가능; 내어쓰기/행잉 인덴트 표현)이고,
+        // `outdent`는 다음 줄(들여쓰기 적용 라인)의 오프셋으로 사용하는 값입니다.
+        // fixture(noori.html)에서 line_segment.tag.has_indentation=true인 라인은
+        // padding-left가 양수로 적용되는데, 이는 `indent`가 아니라 `outdent`에 해당합니다.
+        //
+        // 우선순위: ParaShape.outdent → (fallback) 전달받은 para_shape_indent
+        if let Some(ps) = para_shape {
+            let outdent_mm = round_to_2dp(int32_to_mm(ps.outdent));
+            style.push_str(&format!("padding-left:{:.2}mm;", outdent_mm));
+        } else if let Some(indent) = para_shape_indent {
             let indent_mm = round_to_2dp(int32_to_mm(indent));
             style.push_str(&format!("padding-left:{:.2}mm;", indent_mm));
         }
@@ -188,14 +198,51 @@ pub fn render_line_segments_with_content(
         };
 
         // 이 세그먼트에 해당하는 CharShape 필터링 / Filter CharShape for this segment
-        let segment_char_shapes: Vec<_> = char_shapes
+        //
+        // IMPORTANT:
+        // CharShapeInfo.position은 "문단 전체 텍스트 기준" 인덱스입니다.
+        // 그런데 여기서는 segment_text를 (start_pos..end_pos)로 잘라서 render_text()에 넘기므로,
+        // position을 세그먼트 기준(0부터)으로 보정하지 않으면 스타일(csXX)이 누락되어
+        // `<span class="hrt">...</span>`로 떨어질 수 있습니다. (noori.html에서 재현)
+        //
+        // Strategy:
+        // - 세그먼트 시작 위치(start_pos)에 해당하는 CharShape가 있으면 그것을 0으로 이동
+        // - 없으면 start_pos 이전의 마지막 CharShape를 기본으로 0 위치에 추가
+        // - 세그먼트 범위 내 CharShape는 position -= start_pos 로 이동
+        let mut segment_char_shapes: Vec<CharShapeInfo> = Vec::new();
+
+        // 세그먼트 시작점에 정확히 CharShape 변화가 있는지 확인 / Check if there's a shape change exactly at start_pos
+        let has_shape_at_start = char_shapes
             .iter()
-            .filter(|shape| {
-                let pos = shape.position as usize;
-                pos >= start_pos && pos < end_pos
-            })
-            .cloned()
-            .collect();
+            .any(|shape| shape.position as usize == start_pos);
+
+        // start_pos 이전의 마지막 CharShape를 기본으로 포함 / Include the last shape before start_pos as the default
+        if !has_shape_at_start {
+            if let Some(prev_shape) = char_shapes
+                .iter()
+                .filter(|shape| (shape.position as usize) < start_pos)
+                .max_by_key(|shape| shape.position)
+            {
+                segment_char_shapes.push(CharShapeInfo {
+                    position: 0,
+                    shape_id: prev_shape.shape_id,
+                });
+            }
+        }
+
+        // 세그먼트 범위 내 CharShape를 보정해서 추가 / Add in-range shapes with adjusted positions
+        for shape in char_shapes.iter() {
+            let pos = shape.position as usize;
+            if pos >= start_pos && pos < end_pos {
+                segment_char_shapes.push(CharShapeInfo {
+                    position: (pos - start_pos) as u32,
+                    shape_id: shape.shape_id,
+                });
+            }
+        }
+
+        // position 기준 정렬 (render_text에서 다시 정렬하지만, 여기서도 정렬해두면 안정적) / Sort by position
+        segment_char_shapes.sort_by_key(|s| s.position);
 
         // 세그먼트 인덱스 계산 / Calculate segment index
         let segment_index = segments
