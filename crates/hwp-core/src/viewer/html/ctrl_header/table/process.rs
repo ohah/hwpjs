@@ -24,6 +24,7 @@ fn parse_caption_text(
     text: &str,
     control_char_positions: &[ControlCharPosition],
     table_number: Option<u32>,
+    auto_number_display_text: Option<&str>,
 ) -> CaptionText {
     // AUTO_NUMBER 컨트롤 문자 위치 찾기 / Find AUTO_NUMBER control character position
     let auto_number_pos = control_char_positions
@@ -52,7 +53,10 @@ fn parse_caption_text(
             } else {
                 label
             },
-            number: table_number.map(|n| n.to_string()).unwrap_or_default(),
+            number: auto_number_display_text
+                .map(|s| s.to_string())
+                .or_else(|| table_number.map(|n| n.to_string()))
+                .unwrap_or_default(),
             body,
         }
     } else {
@@ -61,7 +65,8 @@ fn parse_caption_text(
 
         // "표"로 시작하는지 확인 / Check if starts with "표"
         if trimmed.starts_with("표") {
-            let after_label = &trimmed[3..]; // "표" + 공백 제거 / Remove "표" and space
+            // "표" + 공백 제거 / Remove "표" and space
+            let after_label = trimmed.strip_prefix("표 ").unwrap_or(trimmed);
 
             // 숫자 추출 / Extract number
             let number_end = after_label
@@ -92,7 +97,10 @@ fn parse_caption_text(
             // "표"로 시작하지 않으면 전체를 본문으로 처리 / If doesn't start with "표", treat entire text as body
             CaptionText {
                 label: String::new(),
-                number: table_number.map(|n| n.to_string()).unwrap_or_default(),
+                number: auto_number_display_text
+                    .map(|s| s.to_string())
+                    .or_else(|| table_number.map(|n| n.to_string()))
+                    .unwrap_or_default(),
                 body: trimmed.to_string(),
             }
         }
@@ -140,6 +148,7 @@ pub fn process_table<'a>(
     for para in paragraphs {
         let mut caption_text_opt: Option<String> = None;
         let mut caption_control_chars: Vec<ControlCharPosition> = Vec::new();
+        let mut caption_auto_number_display_text_opt: Option<String> = None;
         let mut caption_char_shape_id_opt: Option<usize> = None;
         let mut caption_line_segment_opt: Option<&LineSegmentInfo> = None;
         // para_shape_id 추출 / Extract para_shape_id
@@ -149,12 +158,26 @@ pub fn process_table<'a>(
             if let ParagraphRecord::ParaText {
                 text,
                 control_char_positions,
+                runs,
                 ..
             } = record
             {
                 if !text.trim().is_empty() {
                     caption_text_opt = Some(text.clone());
                     caption_control_chars = control_char_positions.clone();
+                    caption_auto_number_display_text_opt = runs.iter().find_map(|run| {
+                        if let crate::document::bodytext::ParaTextRun::Control {
+                            code,
+                            display_text,
+                            ..
+                        } = run
+                        {
+                            if *code == ControlChar::AUTO_NUMBER {
+                                return display_text.clone();
+                            }
+                        }
+                        None
+                    });
                 }
             } else if let ParagraphRecord::ParaCharShape { shapes } = record {
                 // 첫 번째 char_shape_id 찾기 / Find first char_shape_id
@@ -171,7 +194,12 @@ pub fn process_table<'a>(
 
         if let Some(text) = caption_text_opt {
             // 캡션 텍스트를 구조적으로 분해 (control_char_positions 포함) / Parse caption text into structured components (including control_char_positions)
-            let parsed = parse_caption_text(&text, &caption_control_chars, None);
+            let parsed = parse_caption_text(
+                &text,
+                &caption_control_chars,
+                None,
+                caption_auto_number_display_text_opt.as_deref(),
+            );
             caption_texts.push(parsed);
             caption_char_shape_ids.push(caption_char_shape_id_opt);
             caption_para_shape_ids.push(Some(para_shape_id));
@@ -196,10 +224,29 @@ pub fn process_table<'a>(
             if let ParagraphRecord::ParaText {
                 text,
                 control_char_positions,
+                runs,
                 ..
             } = child
             {
-                caption_text = Some(parse_caption_text(text, control_char_positions, None));
+                let auto_disp = runs.iter().find_map(|run| {
+                    if let crate::document::bodytext::ParaTextRun::Control {
+                        code,
+                        display_text,
+                        ..
+                    } = run
+                    {
+                        if *code == ControlChar::AUTO_NUMBER {
+                            return display_text.as_deref();
+                        }
+                    }
+                    None
+                });
+                caption_text = Some(parse_caption_text(
+                    text,
+                    control_char_positions,
+                    None,
+                    auto_disp,
+                ));
                 break;
             } else if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
                 // ListHeader의 paragraphs에서 텍스트 추출 / Extract text from ListHeader's paragraphs
@@ -208,11 +255,29 @@ pub fn process_table<'a>(
                         if let ParagraphRecord::ParaText {
                             text,
                             control_char_positions,
+                            runs,
                             ..
                         } = record
                         {
-                            caption_text =
-                                Some(parse_caption_text(text, control_char_positions, None));
+                            let auto_disp = runs.iter().find_map(|run| {
+                                if let crate::document::bodytext::ParaTextRun::Control {
+                                    code,
+                                    display_text,
+                                    ..
+                                } = run
+                                {
+                                    if *code == ControlChar::AUTO_NUMBER {
+                                        return display_text.as_deref();
+                                    }
+                                }
+                                None
+                            });
+                            caption_text = Some(parse_caption_text(
+                                text,
+                                control_char_positions,
+                                None,
+                                auto_disp,
+                            ));
                             break;
                         }
                     }
@@ -229,10 +294,29 @@ pub fn process_table<'a>(
             if let ParagraphRecord::ParaText {
                 text,
                 control_char_positions,
+                runs,
                 ..
             } = child
             {
-                caption_text = Some(parse_caption_text(text, control_char_positions, None));
+                let auto_disp = runs.iter().find_map(|run| {
+                    if let crate::document::bodytext::ParaTextRun::Control {
+                        code,
+                        display_text,
+                        ..
+                    } = run
+                    {
+                        if *code == ControlChar::AUTO_NUMBER {
+                            return display_text.as_deref();
+                        }
+                    }
+                    None
+                });
+                caption_text = Some(parse_caption_text(
+                    text,
+                    control_char_positions,
+                    None,
+                    auto_disp,
+                ));
             } else if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
                 // ListHeader의 paragraphs에서 텍스트 추출 / Extract text from ListHeader's paragraphs
                 for para in paragraphs {
@@ -240,11 +324,29 @@ pub fn process_table<'a>(
                         if let ParagraphRecord::ParaText {
                             text,
                             control_char_positions,
+                            runs,
                             ..
                         } = record
                         {
-                            caption_text =
-                                Some(parse_caption_text(text, control_char_positions, None));
+                            let auto_disp = runs.iter().find_map(|run| {
+                                if let crate::document::bodytext::ParaTextRun::Control {
+                                    code,
+                                    display_text,
+                                    ..
+                                } = run
+                                {
+                                    if *code == ControlChar::AUTO_NUMBER {
+                                        return display_text.as_deref();
+                                    }
+                                }
+                                None
+                            });
+                            caption_text = Some(parse_caption_text(
+                                text,
+                                control_char_positions,
+                                None,
+                                auto_disp,
+                            ));
                             break;
                         }
                     }

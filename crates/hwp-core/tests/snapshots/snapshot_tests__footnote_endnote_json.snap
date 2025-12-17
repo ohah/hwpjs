@@ -1823,7 +1823,8 @@ expression: json
                                 "position": 0,
                                 "code": 18,
                                 "name": "AUTO_NUMBER",
-                                "size_wchars": 8
+                                "size_wchars": 8,
+                                "display_text": "1"
                               },
                               {
                                 "kind": "text",
@@ -1888,7 +1889,12 @@ expression: json
                             "type": "ctrl_header",
                             "ctrl_id": "atno",
                             "ctrl_id_value": 1635020399,
-                            "data_type": "other"
+                            "data_type": "auto_number",
+                            "attribute": 1,
+                            "number": 1,
+                            "user_symbol": "\u0000",
+                            "prefix": "\u0000",
+                            "suffix": ")"
                           }
                         ]
                       }
@@ -1924,7 +1930,8 @@ expression: json
                             "position": 0,
                             "code": 18,
                             "name": "AUTO_NUMBER",
-                            "size_wchars": 8
+                            "size_wchars": 8,
+                            "display_text": "1"
                           },
                           {
                             "kind": "text",
@@ -1989,7 +1996,12 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 1,
+                        "number": 1,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": ")"
                       }
                     ]
                   }
@@ -2050,7 +2062,8 @@ expression: json
                                 "position": 0,
                                 "code": 18,
                                 "name": "AUTO_NUMBER",
-                                "size_wchars": 8
+                                "size_wchars": 8,
+                                "display_text": "2"
                               },
                               {
                                 "kind": "text",
@@ -2115,7 +2128,12 @@ expression: json
                             "type": "ctrl_header",
                             "ctrl_id": "atno",
                             "ctrl_id_value": 1635020399,
-                            "data_type": "other"
+                            "data_type": "auto_number",
+                            "attribute": 1,
+                            "number": 1,
+                            "user_symbol": "\u0000",
+                            "prefix": "\u0000",
+                            "suffix": ")"
                           }
                         ]
                       }
@@ -2151,7 +2169,8 @@ expression: json
                             "position": 0,
                             "code": 18,
                             "name": "AUTO_NUMBER",
-                            "size_wchars": 8
+                            "size_wchars": 8,
+                            "display_text": "2"
                           },
                           {
                             "kind": "text",
@@ -2216,7 +2235,12 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 1,
+                        "number": 2,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": ")"
                       }
                     ]
                   }
@@ -2380,7 +2404,8 @@ expression: json
                                 "position": 0,
                                 "code": 18,
                                 "name": "AUTO_NUMBER",
-                                "size_wchars": 8
+                                "size_wchars": 8,
+                                "display_text": "1"
                               },
                               {
                                 "kind": "text",
@@ -2445,7 +2470,12 @@ expression: json
                             "type": "ctrl_header",
                             "ctrl_id": "atno",
                             "ctrl_id_value": 1635020399,
-                            "data_type": "other"
+                            "data_type": "auto_number",
+                            "attribute": 1,
+                            "number": 1,
+                            "user_symbol": "\u0000",
+                            "prefix": "\u0000",
+                            "suffix": ")"
                           }
                         ]
                       }
@@ -2481,7 +2511,8 @@ expression: json
                             "position": 0,
                             "code": 18,
                             "name": "AUTO_NUMBER",
-                            "size_wchars": 8
+                            "size_wchars": 8,
+                            "display_text": "1"
                           },
                           {
                             "kind": "text",
@@ -2546,7 +2577,12 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 2,
+                        "number": 1,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": ")"
                       }
                     ]
                   }
@@ -2607,7 +2643,8 @@ expression: json
                                 "position": 0,
                                 "code": 18,
                                 "name": "AUTO_NUMBER",
-                                "size_wchars": 8
+                                "size_wchars": 8,
+                                "display_text": "2"
                               },
                               {
                                 "kind": "text",
@@ -2672,7 +2709,12 @@ expression: json
                             "type": "ctrl_header",
                             "ctrl_id": "atno",
                             "ctrl_id_value": 1635020399,
-                            "data_type": "other"
+                            "data_type": "auto_number",
+                            "attribute": 1,
+                            "number": 1,
+                            "user_symbol": "\u0000",
+                            "prefix": "\u0000",
+                            "suffix": ")"
                           }
                         ]
                       }
@@ -2708,7 +2750,8 @@ expression: json
                             "position": 0,
                             "code": 18,
                             "name": "AUTO_NUMBER",
-                            "size_wchars": 8
+                            "size_wchars": 8,
+                            "display_text": "2"
                           },
                           {
                             "kind": "text",
@@ -2773,7 +2816,12 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 2,
+                        "number": 2,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": ")"
                       }
                     ]
                   }

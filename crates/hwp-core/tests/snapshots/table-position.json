@@ -2493,7 +2493,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 1,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -3284,7 +3289,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 2,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -4073,7 +4083,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 3,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -4862,7 +4877,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 4,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -5651,7 +5671,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 5,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -6462,7 +6487,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 6,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -7251,7 +7281,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 7,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -8040,7 +8075,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 8,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -8849,7 +8889,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 9,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -9660,7 +9705,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 10,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -10469,7 +10519,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 11,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -11278,7 +11333,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 12,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },
@@ -12087,7 +12147,12 @@
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 4,
+                        "number": 13,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   },

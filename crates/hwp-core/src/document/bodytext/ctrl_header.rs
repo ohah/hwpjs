@@ -3,7 +3,7 @@
 /// 스펙 문서 매핑: 표 64 - 컨트롤 헤더 / Spec mapping: Table 64 - Control header
 use crate::error::HwpError;
 use crate::types::{
-    decode_utf16le, HWPUNIT, HWPUNIT16, INT16, INT32, INT8, SHWPUNIT, UINT16, UINT32, UINT8,
+    decode_utf16le, HWPUNIT, HWPUNIT16, INT32, INT8, SHWPUNIT, UINT16, UINT32, UINT8,
 };
 use serde::{Deserialize, Serialize};
 
@@ -42,7 +42,13 @@ impl CtrlId {
     pub const HEADER_FOOTER: &str = "head";
     /// 자동번호 / Auto numbering
     /// 스펙 문서: 표 127, 표 142 참조 / Spec: See Table 127, Table 142
+    ///
+    /// NOTE:
+    /// - 실제 파일/레거시 구현에서 `"atno"`로 나타나는 경우가 있습니다.
+    /// - 따라서 파서는 `"autn"`과 `"atno"` 모두를 자동번호 컨트롤로 처리합니다.
     pub const AUTO_NUMBER: &str = "autn";
+    /// 자동번호(대체 CHID) / Auto numbering (alternate CHID)
+    pub const AUTO_NUMBER_ALT: &str = "atno";
     /// 새 번호 지정 / New number specification
     /// 스펙 문서: 표 127, 표 144 참조 / Spec: See Table 127, Table 144
     pub const NEW_NUMBER: &str = "newn";
@@ -77,8 +83,8 @@ impl CtrlId {
     /// 2. 그 이후에 필드 데이터(표 152 구조)가 오는데, 첫 4바이트가 필드 타입(표 128의 필드 컨트롤 ID)
     ///    / Field data (Table 152 structure) follows, first 4 bytes are field type (Table 128 field control IDs)
     /// 3. 필드 끝(제어 문자 코드 4)이 있음 / Field end (control character code 4) exists
-    /// 즉, 표 128의 필드 컨트롤 ID들은 필드 데이터의 첫 4바이트에 저장되는 필드 타입 식별자입니다.
-    /// Field control IDs from Table 128 are field type identifiers stored in the first 4 bytes of field data.
+    ///    즉, 표 128의 필드 컨트롤 ID들은 필드 데이터의 첫 4바이트에 저장되는 필드 타입 식별자입니다.
+    ///    Field control IDs from Table 128 are field type identifiers stored in the first 4 bytes of field data.
     pub const FIELD_START: &str = "%%%%";
 
     // 표 128: 필드 컨트롤 ID / Table 128: Field Control IDs
@@ -715,7 +721,7 @@ impl CtrlHeader {
                 // 구역 정의 (표 129) / Section definition (Table 129)
                 parse_section_definition(remaining_data)?
             }
-            CtrlId::AUTO_NUMBER => {
+            CtrlId::AUTO_NUMBER | CtrlId::AUTO_NUMBER_ALT => {
                 // 자동번호 (표 142) / Auto number (Table 142)
                 parse_auto_number(remaining_data)?
             }

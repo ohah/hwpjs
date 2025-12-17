@@ -1905,7 +1905,12 @@ expression: json
                             "type": "ctrl_header",
                             "ctrl_id": "atno",
                             "ctrl_id_value": 1635020399,
-                            "data_type": "other"
+                            "data_type": "auto_number",
+                            "attribute": 3,
+                            "number": 1,
+                            "user_symbol": "\u0000",
+                            "prefix": "\u0000",
+                            "suffix": "\u0000"
                           }
                         ]
                       }
@@ -2257,7 +2262,12 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "atno",
                         "ctrl_id_value": 1635020399,
-                        "data_type": "other"
+                        "data_type": "auto_number",
+                        "attribute": 3,
+                        "number": 1,
+                        "user_symbol": "\u0000",
+                        "prefix": "\u0000",
+                        "suffix": "\u0000"
                       }
                     ]
                   }
