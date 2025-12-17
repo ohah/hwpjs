@@ -112,6 +112,9 @@ pub enum ParagraphRecord {
     ParaText {
         /// 텍스트 내용 (UTF-16LE) / Text content (UTF-16LE)
         text: String,
+        /// 텍스트/컨트롤 토큰 시퀀스 (표/개체 등 위치를 보존하기 위한 구조) / Text/control token sequence
+        #[serde(skip_serializing_if = "Vec::is_empty", default)]
+        runs: Vec<ParaTextRun>,
         /// 제어 문자 위치 정보 / Control character positions
         /// 제어 문자가 없어도 빈 배열로 표시되어 JSON에 포함됩니다 / Empty array is included in JSON even if no control characters
         #[serde(default)]
@@ -295,6 +298,31 @@ pub enum ParagraphRecord {
     },
 }
 
+/// ParaText의 텍스트/컨트롤 토큰 / ParaText token (text or control)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum ParaTextRun {
+    /// 일반 텍스트 조각 / Plain text chunk
+    Text { text: String },
+    /// 컨트롤 토큰(표/개체 등) / Control token (table/shape object etc.)
+    Control {
+        /// 원본 WCHAR 인덱스 위치 / Original WCHAR index position
+        position: usize,
+        /// 제어 문자 코드 (0-31) / Control character code (0-31)
+        code: u8,
+        /// 제어 문자 이름 / Control character name
+        name: String,
+        /// 원본에서 차지하는 WCHAR 길이 / Size in WCHAR units in original stream
+        size_wchars: usize,
+        /// 표시 텍스트(파생값) / Display text (derived value)
+        ///
+        /// - **Source of truth가 아님**: 원본 복원/Writer에서는 `runs`의 컨트롤 정보와 문서 설정으로 재계산해야 합니다.
+        /// - 뷰어/프리뷰 용도로만 사용하며, 불일치 시 무시될 수 있습니다.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        display_text: Option<String>,
+    },
+}
+
 impl Section {
     /// Section 데이터를 파싱하여 Paragraph 리스트로 변환합니다. / Parse section data into paragraph list.
     ///
@@ -436,6 +464,7 @@ impl Section {
                 let mut control_char_positions = Vec::new();
                 let mut inline_control_params = Vec::new();
                 let mut cleaned_text = String::new();
+                let mut runs: Vec<ParaTextRun> = Vec::new();
                 let mut idx = 0;
 
                 while idx < data.len() {
@@ -458,13 +487,22 @@ impl Section {
                     if found_control {
                         // 제어 문자 위치 저장 (문자 인덱스 기준) / Store control character position (based on character index)
                         let char_idx = idx / 2; // UTF-16LE에서 문자 인덱스는 바이트 인덱스 / 2 / Character index in UTF-16LE is byte index / 2
+                        let control_name = ControlChar::to_name(control_code);
                         control_char_positions.push(
                             crate::document::bodytext::control_char::ControlCharPosition {
                                 position: char_idx,
                                 code: control_code,
-                                name: ControlChar::to_name(control_code),
+                                name: control_name.clone(),
                             },
                         );
+
+                        runs.push(ParaTextRun::Control {
+                            position: char_idx,
+                            code: control_code,
+                            name: control_name,
+                            size_wchars: ControlChar::get_size_by_code(control_code),
+                            display_text: None,
+                        });
 
                         // INLINE 타입 제어 문자인 경우 파라미터 파싱 / Parse parameters for INLINE type control characters
                         if ControlChar::get_size_by_code(control_code) == 8
@@ -499,6 +537,9 @@ impl Section {
                             {
                                 if let Some(text_repr) = ControlChar::to_text(control_code) {
                                     cleaned_text.push_str(text_repr);
+                                    runs.push(ParaTextRun::Text {
+                                        text: text_repr.to_string(),
+                                    });
                                 }
                             }
                         }
@@ -524,6 +565,9 @@ impl Section {
                             let text_bytes = &data[idx..text_end];
                             if let Ok(text) = decode_utf16le(text_bytes) {
                                 cleaned_text.push_str(&text);
+                                if !text.is_empty() {
+                                    runs.push(ParaTextRun::Text { text });
+                                }
                             }
                             idx = text_end;
                         } else {
@@ -535,6 +579,7 @@ impl Section {
 
                 Ok(ParagraphRecord::ParaText {
                     text: cleaned_text,
+                    runs,
                     control_char_positions,
                     inline_control_params,
                 })

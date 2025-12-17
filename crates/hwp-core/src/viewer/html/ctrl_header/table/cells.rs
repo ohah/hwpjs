@@ -495,10 +495,24 @@ pub(crate) fn render_cells(
                         image.url
                     ));
                 } else {
+                    // ParaText의 control_char_positions 수집 (원본 WCHAR 인덱스 기준)
+                    let mut control_char_positions = Vec::new();
+                    for record in &para.records {
+                        if let ParagraphRecord::ParaText {
+                            control_char_positions: ccp,
+                            ..
+                        } = record
+                        {
+                            control_char_positions = ccp.clone();
+                            break;
+                        }
+                    }
                     cell_content.push_str(&render_line_segments_with_content(
                         &line_segments,
                         &text,
                         &char_shapes,
+                        &control_char_positions,
+                        para.para_header.text_char_count as usize,
                         document,
                         &para_shape_class,
                         &images,

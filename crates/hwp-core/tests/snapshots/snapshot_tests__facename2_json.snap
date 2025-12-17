@@ -1333,6 +1333,33 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 59,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1564,6 +1591,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko한컴돋움 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko한컴돋움 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 45,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 45,
@@ -1628,6 +1668,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕 enTimesNewRoman cn바탕 jp바탕 other바탕 symbol바탕 user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕 enTimesNewRoman cn바탕 jp바탕 other바탕 symbol바탕 user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 54,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 54,
@@ -1692,6 +1745,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕 enArial cn바탕 jp바탕 other바탕 symbol바탕 user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕 enArial cn바탕 jp바탕 other바탕 symbol바탕 user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 46,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 46,
@@ -1756,6 +1822,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕 en바탕 cn약자漢字 jp바탕 other바탕 symbol바탕 user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕 en바탕 cn약자漢字 jp바탕 other바탕 symbol바탕 user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 45,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 45,
@@ -1820,6 +1899,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕 en바탕 cn간자漢字 jp바탕 other바탕 symbol바탕 user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕 en바탕 cn간자漢字 jp바탕 other바탕 symbol바탕 user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 45,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 45,
@@ -1884,6 +1976,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕 en바탕 cn바탕 jp명조あ other바탕 symbol바탕 user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕 en바탕 cn바탕 jp명조あ other바탕 symbol바탕 user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 44,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 44,
@@ -1948,6 +2053,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕 en바탕 cn바탕 jp고딕あ other바탕 symbol바탕 user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕 en바탕 cn바탕 jp고딕あ other바탕 symbol바탕 user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 44,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 44,

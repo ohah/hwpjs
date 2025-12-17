@@ -2120,6 +2120,33 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 31,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2351,6 +2378,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2419,6 +2459,19 @@
               {
                 "type": "para_text",
                 "text": "|H 글자에 따라 150%",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 글자에 따라 150%"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -2483,6 +2536,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2551,6 +2617,19 @@
               {
                 "type": "para_text",
                 "text": "|H 고정 값 15pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 고정 값 15pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -2615,6 +2694,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2683,6 +2775,19 @@
               {
                 "type": "para_text",
                 "text": "|H 여백만 지정 5pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 여백만 지정 5pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 13,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 13,
@@ -2747,6 +2852,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2815,6 +2933,19 @@
               {
                 "type": "para_text",
                 "text": "|H 글자에 따라 100%",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 글자에 따라 100%"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -2879,6 +3010,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -2947,6 +3091,19 @@
               {
                 "type": "para_text",
                 "text": "|H 고정 값 10pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 고정 값 10pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -3011,6 +3168,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3079,6 +3249,19 @@
               {
                 "type": "para_text",
                 "text": "|H 여백만 지정 0pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 여백만 지정 0pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 13,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 13,
@@ -3143,6 +3326,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3211,6 +3407,19 @@
               {
                 "type": "para_text",
                 "text": "|H 글자에 따라 200%",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 글자에 따라 200%"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -3275,6 +3484,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3343,6 +3565,19 @@
               {
                 "type": "para_text",
                 "text": "|H 고정 값 20pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 고정 값 20pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -3407,6 +3642,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3475,6 +3723,19 @@
               {
                 "type": "para_text",
                 "text": "|H 여백만 지정 10pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 여백만 지정 10pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -3539,6 +3800,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3607,6 +3881,19 @@
               {
                 "type": "para_text",
                 "text": "|H 글자에 따라 100%",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 글자에 따라 100%"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -3675,6 +3962,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3743,6 +4043,19 @@
               {
                 "type": "para_text",
                 "text": "|H 고정 값 0pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 고정 값 0pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 11,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 11,
@@ -3811,6 +4124,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,
@@ -3879,6 +4205,19 @@
               {
                 "type": "para_text",
                 "text": "|H 여백만 지정 0pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|H 여백만 지정 0pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 13,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 13,
@@ -3947,6 +4286,19 @@
               {
                 "type": "para_text",
                 "text": "|HHHHHHHHHHHHHH",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "|HHHHHHHHHHHHHH"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 15,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 15,

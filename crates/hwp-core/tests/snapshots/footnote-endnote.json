@@ -1504,6 +1504,47 @@
               {
                 "type": "para_text",
                 "text": "각주참조",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "각주참조"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 20,
+                    "code": 17,
+                    "name": "FOOTNOTE",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 28,
+                    "code": 17,
+                    "name": "FOOTNOTE",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 36,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1772,6 +1813,26 @@
                           {
                             "type": "para_text",
                             "text": " 각주입니다.",
+                            "runs": [
+                              {
+                                "kind": "control",
+                                "position": 0,
+                                "code": 18,
+                                "name": "AUTO_NUMBER",
+                                "size_wchars": 8
+                              },
+                              {
+                                "kind": "text",
+                                "text": " 각주입니다."
+                              },
+                              {
+                                "kind": "control",
+                                "position": 15,
+                                "code": 13,
+                                "name": "PARA_BREAK",
+                                "size_wchars": 1
+                              }
+                            ],
                             "control_char_positions": [
                               {
                                 "position": 0,
@@ -1853,6 +1914,26 @@
                       {
                         "type": "para_text",
                         "text": " 각주입니다.",
+                        "runs": [
+                          {
+                            "kind": "control",
+                            "position": 0,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 각주입니다."
+                          },
+                          {
+                            "kind": "control",
+                            "position": 15,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 0,
@@ -1959,6 +2040,26 @@
                           {
                             "type": "para_text",
                             "text": " 각주입니다.",
+                            "runs": [
+                              {
+                                "kind": "control",
+                                "position": 0,
+                                "code": 18,
+                                "name": "AUTO_NUMBER",
+                                "size_wchars": 8
+                              },
+                              {
+                                "kind": "text",
+                                "text": " 각주입니다."
+                              },
+                              {
+                                "kind": "control",
+                                "position": 15,
+                                "code": 13,
+                                "name": "PARA_BREAK",
+                                "size_wchars": 1
+                              }
+                            ],
                             "control_char_positions": [
                               {
                                 "position": 0,
@@ -2040,6 +2141,26 @@
                       {
                         "type": "para_text",
                         "text": " 각주 두 번째입니다.",
+                        "runs": [
+                          {
+                            "kind": "control",
+                            "position": 0,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 각주 두 번째입니다."
+                          },
+                          {
+                            "kind": "control",
+                            "position": 20,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 0,
@@ -2121,6 +2242,33 @@
               {
                 "type": "para_text",
                 "text": "미주참조",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "미주참조"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 17,
+                    "name": "FOOTNOTE",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 12,
+                    "code": 17,
+                    "name": "FOOTNOTE",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2222,6 +2370,26 @@
                           {
                             "type": "para_text",
                             "text": " 각주입니다.",
+                            "runs": [
+                              {
+                                "kind": "control",
+                                "position": 0,
+                                "code": 18,
+                                "name": "AUTO_NUMBER",
+                                "size_wchars": 8
+                              },
+                              {
+                                "kind": "text",
+                                "text": " 각주입니다."
+                              },
+                              {
+                                "kind": "control",
+                                "position": 15,
+                                "code": 13,
+                                "name": "PARA_BREAK",
+                                "size_wchars": 1
+                              }
+                            ],
                             "control_char_positions": [
                               {
                                 "position": 0,
@@ -2303,6 +2471,26 @@
                       {
                         "type": "para_text",
                         "text": " 미주입니다.",
+                        "runs": [
+                          {
+                            "kind": "control",
+                            "position": 0,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 미주입니다."
+                          },
+                          {
+                            "kind": "control",
+                            "position": 15,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 0,
@@ -2409,6 +2597,26 @@
                           {
                             "type": "para_text",
                             "text": " 각주입니다.",
+                            "runs": [
+                              {
+                                "kind": "control",
+                                "position": 0,
+                                "code": 18,
+                                "name": "AUTO_NUMBER",
+                                "size_wchars": 8
+                              },
+                              {
+                                "kind": "text",
+                                "text": " 각주입니다."
+                              },
+                              {
+                                "kind": "control",
+                                "position": 15,
+                                "code": 13,
+                                "name": "PARA_BREAK",
+                                "size_wchars": 1
+                              }
+                            ],
                             "control_char_positions": [
                               {
                                 "position": 0,
@@ -2490,6 +2698,26 @@
                       {
                         "type": "para_text",
                         "text": " 미주 두 번째입니다.",
+                        "runs": [
+                          {
+                            "kind": "control",
+                            "position": 0,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 미주 두 번째입니다."
+                          },
+                          {
+                            "kind": "control",
+                            "position": 20,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 0,

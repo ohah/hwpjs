@@ -57,6 +57,9 @@ impl HwpParser {
         // Parse optional streams
         self.parse_optional_streams(&mut cfb, &fileheader, &mut document, data);
 
+        // Resolve derived display texts (e.g., AUTO_NUMBER in captions) for JSON/viewers.
+        document.resolve_display_texts();
+
         Ok(document)
     }
 

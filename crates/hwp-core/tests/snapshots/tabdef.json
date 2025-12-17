@@ -1936,6 +1936,62 @@
               {
                 "type": "para_text",
                 "text": "\t\t\t",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 16,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 24,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 32,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 40,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2204,6 +2260,60 @@
               {
                 "type": "para_text",
                 "text": "\tL\tL\tL",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "L"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "L"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "L"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2305,6 +2415,60 @@
               {
                 "type": "para_text",
                 "text": "\tR\tR\tR",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "R"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "R"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "R"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2406,6 +2570,60 @@
               {
                 "type": "para_text",
                 "text": "\tC\tC\tC",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "C"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "C"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "C"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2507,6 +2725,60 @@
               {
                 "type": "para_text",
                 "text": "\tM\tM\tM",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "M"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "M"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "M"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2608,6 +2880,60 @@
               {
                 "type": "para_text",
                 "text": "\tL\tL\tL",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "L"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "L"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "L"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2709,6 +3035,45 @@
               {
                 "type": "para_text",
                 "text": "\tE\tE",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "E"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "E"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 18,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2799,6 +3164,60 @@
               {
                 "type": "para_text",
                 "text": "\tI\tI\tI",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "I"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "I"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 18,
+                    "code": 9,
+                    "name": "TAB",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "\t"
+                  },
+                  {
+                    "kind": "text",
+                    "text": "I"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 27,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,

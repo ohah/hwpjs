@@ -2765,6 +2765,33 @@
               {
                 "type": "para_text",
                 "text": "strikethrough",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "strikethrough"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 29,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2996,6 +3023,19 @@
               {
                 "type": "para_text",
                 "text": "취소선",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "취소선"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3060,6 +3100,19 @@
               {
                 "type": "para_text",
                 "text": "밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 2,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 2,
@@ -3177,6 +3230,19 @@
               {
                 "type": "para_text",
                 "text": "밑줄취소선굵게",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "밑줄취소선굵게"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,

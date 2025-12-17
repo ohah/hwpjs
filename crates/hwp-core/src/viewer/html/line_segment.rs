@@ -1,6 +1,9 @@
 use crate::document::bodytext::ctrl_header::VertRelTo;
 /// 라인 세그먼트 렌더링 모듈 / Line segment rendering module
-use crate::document::bodytext::{CharShapeInfo, LineSegmentInfo, PageDef, Table};
+use crate::document::bodytext::{
+    control_char::{ControlChar, ControlCharPosition},
+    CharShapeInfo, LineSegmentInfo, PageDef, Table,
+};
 use crate::document::CtrlHeaderData;
 use crate::viewer::html::ctrl_header::table::{CaptionInfo, CaptionText};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
@@ -12,6 +15,9 @@ use crate::{HwpDocument, ParaShape};
 pub struct TableInfo<'a> {
     pub table: &'a Table,
     pub ctrl_header: Option<&'a CtrlHeaderData>,
+    /// 문단 텍스트 내 컨트롤 문자(Shape/Table) 앵커 위치 (UTF-16 WCHAR 인덱스 기준)
+    /// Anchor position of the control char in paragraph text (UTF-16 WCHAR index)
+    pub anchor_char_pos: Option<usize>,
     pub caption_text: Option<CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
     pub caption_info: Option<CaptionInfo>, // 캡션 정보 / Caption info
     pub caption_char_shape_id: Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
@@ -40,7 +46,7 @@ pub fn render_line_segment(
     para_shape_class: &str,
     para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
     para_shape: Option<&ParaShape>, // ParaShape 정보 (옵션) / ParaShape info (optional)
-    is_text_segment: bool, // 텍스트 세그먼트 여부 (테이블/이미지 like_letters 등은 false)
+    is_text_segment: bool,          // 텍스트 세그먼트 여부 (테이블/이미지 like_letters 등은 false)
     override_size_mm: Option<(f64, f64)>, // 비텍스트 세그먼트(이미지 등)에서 hls box 크기 override
 ) -> String {
     let left_mm = round_to_2dp(int32_to_mm(segment.column_start_position));
@@ -54,7 +60,7 @@ pub fn render_line_segment(
         )
     };
     let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
-    let line_spacing_mm = round_to_2dp(int32_to_mm(segment.line_spacing));
+    let _line_spacing_mm = round_to_2dp(int32_to_mm(segment.line_spacing));
     let baseline_distance_mm = round_to_2dp(int32_to_mm(segment.baseline_distance));
 
     // NOTE (fixture 기준):
@@ -140,6 +146,8 @@ pub fn render_line_segments(
         segments,
         text,
         char_shapes,
+        &[],
+        text.chars().count(),
         document,
         para_shape_class,
         &[],
@@ -159,6 +167,8 @@ pub fn render_line_segments_with_content(
     segments: &[LineSegmentInfo],
     text: &str,
     char_shapes: &[CharShapeInfo],
+    control_char_positions: &[ControlCharPosition],
+    original_text_len: usize,
     document: &HwpDocument,
     para_shape_class: &str,
     images: &[ImageInfo],
@@ -173,11 +183,57 @@ pub fn render_line_segments_with_content(
 ) -> String {
     let mut result = String::new();
 
+    // 원본 WCHAR 인덱스(original) -> cleaned_text 인덱스(cleaned) 매핑
+    // Map original WCHAR index -> cleaned_text index.
+    //
+    // control_char_positions.position은 "원본 WCHAR 인덱스" 기준입니다.
+    // text(여기 인자)는 제어 문자를 대부분 제거한 cleaned_text 입니다.
+    fn original_to_cleaned_index(pos: usize, control_chars: &[ControlCharPosition]) -> isize {
+        let mut delta: isize = 0; // cleaned = original + delta
+        for cc in control_chars.iter() {
+            if cc.position >= pos {
+                break;
+            }
+            let size = ControlChar::get_size_by_code(cc.code) as isize;
+            let contributes = if ControlChar::is_convertible(cc.code)
+                && cc.code != ControlChar::PARA_BREAK
+                && cc.code != ControlChar::LINE_BREAK
+            {
+                1
+            } else {
+                0
+            } as isize;
+            delta += contributes - size;
+        }
+        delta
+    }
+
+    fn slice_cleaned_by_original_range(
+        cleaned: &str,
+        control_chars: &[ControlCharPosition],
+        start_original: usize,
+        end_original: usize,
+    ) -> String {
+        let start_delta = original_to_cleaned_index(start_original, control_chars);
+        let end_delta = original_to_cleaned_index(end_original, control_chars);
+
+        let start_cleaned = (start_original as isize + start_delta).max(0) as usize;
+        let end_cleaned = (end_original as isize + end_delta).max(0) as usize;
+
+        let cleaned_chars: Vec<char> = cleaned.chars().collect();
+        let s = start_cleaned.min(cleaned_chars.len());
+        let e = end_cleaned.min(cleaned_chars.len());
+        if s >= e {
+            return String::new();
+        }
+        cleaned_chars[s..e].iter().collect()
+    }
+
     for segment in segments {
         let mut content = String::new();
         let mut override_size_mm: Option<(f64, f64)> = None;
 
-        // 이 세그먼트에 해당하는 텍스트 추출 / Extract text for this segment
+        // 이 세그먼트에 해당하는 텍스트 추출 (원본 WCHAR 인덱스 기준) / Extract text for this segment (based on original WCHAR indices)
         let start_pos = segment.text_start_position as usize;
         let end_pos = if let Some(next_segment) = segments
             .iter()
@@ -185,23 +241,17 @@ pub fn render_line_segments_with_content(
         {
             next_segment.text_start_position as usize
         } else {
-            text.chars().count()
+            original_text_len
         };
 
-        let segment_text = if start_pos < text.chars().count() && end_pos <= text.chars().count() {
-            text.chars()
-                .skip(start_pos)
-                .take(end_pos - start_pos)
-                .collect::<String>()
-        } else {
-            String::new()
-        };
+        let segment_text =
+            slice_cleaned_by_original_range(text, control_char_positions, start_pos, end_pos);
 
         // 이 세그먼트에 해당하는 CharShape 필터링 / Filter CharShape for this segment
         //
         // IMPORTANT:
-        // CharShapeInfo.position은 "문단 전체 텍스트 기준" 인덱스입니다.
-        // 그런데 여기서는 segment_text를 (start_pos..end_pos)로 잘라서 render_text()에 넘기므로,
+        // CharShapeInfo.position은 "문단 전체 텍스트(원본 WCHAR) 기준" 인덱스입니다.
+        // 여기서는 원본(start_pos..end_pos) 범위를 기준으로 segment_char_shapes를 보정해야 합니다.
         // position을 세그먼트 기준(0부터)으로 보정하지 않으면 스타일(csXX)이 누락되어
         // `<span class="hrt">...</span>`로 떨어질 수 있습니다. (noori.html에서 재현)
         //
@@ -268,8 +318,54 @@ pub fn render_line_segments_with_content(
         }
 
         // 이미지와 테이블 렌더링 / Render images and tables
-        // is_empty_segment 플래그가 true이고 텍스트가 비어있으면 이미지/테이블 배치 / Place images/tables if is_empty_segment is true and text is empty
-        if (is_empty_segment || is_text_empty) && !images.is_empty() && empty_count < images.len() {
+        //
+        // 정확도 최우선:
+        // - 테이블(like_letters=true)은 "빈 세그먼트 순서"가 아니라 ParaText control_char_positions(앵커) 기반으로
+        //   어떤 LineSegment에 속하는지 결정해서 딱 한 번만 렌더링합니다.
+        // - 이미지는 기존 empty_count 방식 유지 (향후 필요 시 동일 방식으로 개선 가능)
+
+        // 이 세그먼트 범위에 속하는 테이블 찾기 (앵커 기반; 원본 인덱스 기준) / Find tables for this segment (anchor-based; original indices)
+        let mut tables_for_segment: Vec<&TableInfo> = Vec::new();
+        for t in tables.iter() {
+            if let Some(anchor) = t.anchor_char_pos {
+                if anchor >= start_pos && anchor < end_pos {
+                    tables_for_segment.push(t);
+                }
+            }
+        }
+
+        if !tables_for_segment.is_empty() {
+            // 테이블 렌더링 (앵커 기반) / Render tables (anchor-based)
+            use crate::viewer::html::ctrl_header::table::render_table;
+            for (idx_in_seg, table_info) in tables_for_segment.iter().enumerate() {
+                let current_table_number = table_counter_start + idx_in_seg as u32;
+                let segment_position =
+                    Some((segment.column_start_position, segment.vertical_position));
+                let table_html = render_table(
+                    table_info.table,
+                    document,
+                    table_info.ctrl_header,
+                    hcd_position,
+                    page_def,
+                    options,
+                    Some(current_table_number),
+                    table_info.caption_text.as_ref(),
+                    table_info.caption_info,
+                    table_info.caption_char_shape_id,
+                    table_info.caption_para_shape_id,
+                    table_info.caption_line_segment,
+                    segment_position,
+                    None,
+                    None,
+                    pattern_counter,
+                    color_to_pattern,
+                );
+                content.push_str(&table_html);
+            }
+        } else if (is_empty_segment || is_text_empty)
+            && !images.is_empty()
+            && empty_count < images.len()
+        {
             // 이미지 렌더링 (빈 세그먼트에 이미지) / Render images (images in empty segments)
             let image = &images[empty_count];
             use crate::viewer::html::image::render_image_with_style;
@@ -291,53 +387,6 @@ pub fn render_line_segments_with_content(
                 round_to_2dp(int32_to_mm(segment.segment_width)),
                 round_to_2dp(int32_to_mm(image.height as crate::types::INT32)),
             ));
-        } else if (is_empty_segment || is_text_empty)
-            && !tables.is_empty()
-            && empty_count >= images.len()
-        {
-            // 테이블 렌더링 (이미지 개수 이후의 빈 세그먼트에 테이블) / Render tables (tables in empty segments after images)
-            let table_index = empty_count - images.len();
-            if table_index < tables.len() {
-                use crate::viewer::html::ctrl_header::table::render_table;
-                // 테이블 위치는 LineSegment의 위치를 기준으로 계산 / Calculate table position based on LineSegment position
-                // table.html 샘플을 보면 htb가 hcD 내부에 있고, hcD의 위치는 페이지의 절대 위치입니다
-                // In table.html sample, htb is inside hcD, and hcD position is absolute page position
-                // 하지만 테이블은 LineSegment 내부에 있으므로, LineSegment의 위치를 기준으로 상대 위치를 계산해야 합니다
-                // However, table is inside LineSegment, so we need to calculate relative position based on LineSegment position
-                // table.html에서는 htb가 hcD 내부에 있고 left:31mm, top:35.99mm인데, hcD는 left:30mm, top:35mm입니다
-                // In table.html, htb is inside hcD with left:31mm, top:35.99mm, while hcD is left:30mm, top:35mm
-                // 따라서 테이블의 상대 위치는 left:1mm, top:0.99mm입니다
-                // So table's relative position is left:1mm, top:0.99mm
-                // LineSegment의 column_start_position과 vertical_position을 사용하여 테이블 위치 계산
-                // Calculate table position using LineSegment's column_start_position and vertical_position
-                // like_letters=true인 테이블은 hcd_position과 page_def를 전달하여 올바른 htG 생성
-                // For tables with like_letters=true, pass hcd_position and page_def to generate correct htG
-                let table_info = &tables[table_index];
-                let current_table_number = table_counter_start + table_index as u32;
-                // LineSegment 위치 전달 / Pass LineSegment position
-                let segment_position =
-                    Some((segment.column_start_position, segment.vertical_position));
-                let table_html = render_table(
-                    table_info.table,
-                    document,
-                    table_info.ctrl_header,
-                    hcd_position,
-                    page_def,
-                    options,
-                    Some(current_table_number), // 테이블 번호 전달 / Pass table number
-                    table_info.caption_text.as_ref(),
-                    table_info.caption_info, // 캡션 정보 전달 / Pass caption info
-                    table_info.caption_char_shape_id, // 캡션 char_shape_id 전달 / Pass caption char_shape_id
-                    table_info.caption_para_shape_id, // 캡션 para_shape_id 전달 / Pass caption para_shape_id
-                    table_info.caption_line_segment, // 캡션 LineSegmentInfo 전달 / Pass caption LineSegmentInfo
-                    segment_position, // LineSegment 위치 전달 / Pass LineSegment position
-                    None, // line_segment에서는 para_start_vertical_mm 사용 안 함 / para_start_vertical_mm not used in line_segment
-                    None, // line_segment에서는 first_para_vertical_mm 사용 안 함 / first_para_vertical_mm not used in line_segment
-                    pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
-                    color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
-                );
-                content.push_str(&table_html);
-            }
         } else if !is_text_empty {
             // 텍스트 렌더링 / Render text
             use crate::viewer::html::text::render_text;
@@ -367,7 +416,8 @@ pub fn render_line_segments_with_content(
             para_shape_indent,
             para_shape,
             // 텍스트 렌더링 경로일 때만 true. (이미지/테이블 like_letters를 배치한 세그먼트는 false)
-            !((is_empty_segment || is_text_empty) && (!images.is_empty() || !tables.is_empty())),
+            !(!tables_for_segment.is_empty()
+                || ((is_empty_segment || is_text_empty) && !images.is_empty())),
             override_size_mm,
         ));
     }

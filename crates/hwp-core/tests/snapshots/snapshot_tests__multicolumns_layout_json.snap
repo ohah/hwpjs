@@ -1926,6 +1926,33 @@ expression: json
               {
                 "type": "para_text",
                 "text": "첫페이지 첫 문단: 1단",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "첫페이지 첫 문단: 1단"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 29,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2161,6 +2188,26 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2단 2단 2단 2단 2단 2단 2단 2단 2단",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "2단 2단 2단 2단 2단 2단 2단 2단 2단"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 34,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2424,6 +2471,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2단 2단 2단",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2단 2단 2단"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 8,
@@ -2532,6 +2592,26 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3단 3단 3단 3단  3단  3단  3단 3단 3단 3단 3단 ",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "3단 3단 3단 3단  3단  3단  3단 3단 3단 3단 3단 "
+                  },
+                  {
+                    "kind": "control",
+                    "position": 44,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2819,6 +2899,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3단 3단",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3단 3단"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -2903,6 +2996,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3단 3단 3단",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3단 3단 3단"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 8,
@@ -3012,6 +3118,26 @@ expression: json
               {
                 "type": "para_text",
                 "text": "두 번 째 페이지: 새 쪽으로 2 단",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "두 번 째 페이지: 새 쪽으로 2 단"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 28,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3152,6 +3278,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "다단다단다단다단다단다단다단",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "다단다단다단다단다단다단다단"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -3338,6 +3477,29 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3542,6 +3704,26 @@ expression: json
                               {
                                 "type": "para_text",
                                 "text": "글 상자 안의 다단",
+                                "runs": [
+                                  {
+                                    "kind": "control",
+                                    "position": 0,
+                                    "code": 2,
+                                    "name": "RESERVED_2",
+                                    "size_wchars": 8
+                                  },
+                                  {
+                                    "kind": "text",
+                                    "text": "글 상자 안의 다단"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 18,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 0,
@@ -3649,6 +3831,19 @@ expression: json
                               {
                                 "type": "para_text",
                                 "text": "글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 71,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 71,
@@ -3857,6 +4052,26 @@ expression: json
                               {
                                 "type": "para_text",
                                 "text": "글 상자 안의 다단",
+                                "runs": [
+                                  {
+                                    "kind": "control",
+                                    "position": 0,
+                                    "code": 2,
+                                    "name": "RESERVED_2",
+                                    "size_wchars": 8
+                                  },
+                                  {
+                                    "kind": "text",
+                                    "text": "글 상자 안의 다단"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 18,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 0,
@@ -3964,6 +4179,19 @@ expression: json
                               {
                                 "type": "para_text",
                                 "text": "글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자 글상자"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 71,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 71,
@@ -4280,6 +4508,26 @@ expression: json
                                 {
                                   "type": "para_text",
                                   "text": "표 셀 안의 다단",
+                                  "runs": [
+                                    {
+                                      "kind": "control",
+                                      "position": 0,
+                                      "code": 2,
+                                      "name": "RESERVED_2",
+                                      "size_wchars": 8
+                                    },
+                                    {
+                                      "kind": "text",
+                                      "text": "표 셀 안의 다단"
+                                    },
+                                    {
+                                      "kind": "control",
+                                      "position": 17,
+                                      "code": 13,
+                                      "name": "PARA_BREAK",
+                                      "size_wchars": 1
+                                    }
+                                  ],
                                   "control_char_positions": [
                                     {
                                       "position": 0,
@@ -4367,6 +4615,19 @@ expression: json
                                 {
                                   "type": "para_text",
                                   "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀",
+                                  "runs": [
+                                    {
+                                      "kind": "text",
+                                      "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀"
+                                    },
+                                    {
+                                      "kind": "control",
+                                      "position": 67,
+                                      "code": 13,
+                                      "name": "PARA_BREAK",
+                                      "size_wchars": 1
+                                    }
+                                  ],
                                   "control_char_positions": [
                                     {
                                       "position": 67,
@@ -4595,6 +4856,26 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표 셀 안의 다단",
+                        "runs": [
+                          {
+                            "kind": "control",
+                            "position": 0,
+                            "code": 2,
+                            "name": "RESERVED_2",
+                            "size_wchars": 8
+                          },
+                          {
+                            "kind": "text",
+                            "text": "표 셀 안의 다단"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 17,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 0,
@@ -4682,6 +4963,19 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀 표 셀"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 67,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 67,

@@ -2422,6 +2422,33 @@
               {
                 "type": "para_text",
                 "text": "나를 소개 합니다",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "나를 소개 합니다"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 25,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2706,6 +2733,19 @@
               {
                 "type": "para_text",
                 "text": "① 이름 : ",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "① 이름 : "
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -2778,6 +2818,19 @@
               {
                 "type": "para_text",
                 "text": " 혈액형 : O형",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": " 혈액형 : O형"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 9,
@@ -2850,6 +2903,19 @@
               {
                 "type": "para_text",
                 "text": " 성격 : 자유로운 영혼",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": " 성격 : 자유로운 영혼"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 13,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 13,
@@ -2922,6 +2988,19 @@
               {
                 "type": "para_text",
                 "text": " 좌우명 : A sound mind in a sound body.",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": " 좌우명 : A sound mind in a sound body."
+                  },
+                  {
+                    "kind": "control",
+                    "position": 36,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 36,
@@ -2994,6 +3073,19 @@
               {
                 "type": "para_text",
                 "text": " 소개하는 글",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": " 소개하는 글"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -3062,6 +3154,19 @@
               {
                 "type": "para_text",
                 "text": "어린 시절은 변두리 작은 동네에서 꿈 많은 소녀로 자라났습니다. 할머니, 할아버지, 삼촌들까지 대가족 속에서 막내로 귀여움을 받으면서 살았습니다. 가족들은 저에게 微笑天使라고 부르곤 했습니다. 가족들의 사랑 덕분에 잘 자라날 수 있었습니다.",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "어린 시절은 변두리 작은 동네에서 꿈 많은 소녀로 자라났습니다. 할머니, 할아버지, 삼촌들까지 대가족 속에서 막내로 귀여움을 받으면서 살았습니다. 가족들은 저에게 微笑天使라고 부르곤 했습니다. 가족들의 사랑 덕분에 잘 자라날 수 있었습니다."
+                  },
+                  {
+                    "kind": "control",
+                    "position": 134,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 134,
@@ -3174,6 +3279,19 @@
               {
                 "type": "para_text",
                 "text": "현재 저는 사랑하는 아이들과 남편과 함께 행복(幸福)한 삶을 살아가고 있습니다. 앞으로의 꿈은 아이들이 결혼하고 나면 남편과 시골에서 조그마한 텃밭을 가꾸면서 살아가는 것입니다. 그 꿈을 실현할 수 있기를 바랍니다. ",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "현재 저는 사랑하는 아이들과 남편과 함께 행복(幸福)한 삶을 살아가고 있습니다. 앞으로의 꿈은 아이들이 결혼하고 나면 남편과 시골에서 조그마한 텃밭을 가꾸면서 살아가는 것입니다. 그 꿈을 실현할 수 있기를 바랍니다. "
+                  },
+                  {
+                    "kind": "control",
+                    "position": 121,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 121,

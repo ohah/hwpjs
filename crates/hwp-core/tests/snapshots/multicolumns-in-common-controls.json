@@ -1605,6 +1605,36 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 16,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 24,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1934,6 +1964,26 @@
                                 {
                                   "type": "para_text",
                                   "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 ",
+                                  "runs": [
+                                    {
+                                      "kind": "control",
+                                      "position": 0,
+                                      "code": 2,
+                                      "name": "RESERVED_2",
+                                      "size_wchars": 8
+                                    },
+                                    {
+                                      "kind": "text",
+                                      "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 "
+                                    },
+                                    {
+                                      "kind": "control",
+                                      "position": 56,
+                                      "code": 13,
+                                      "name": "PARA_BREAK",
+                                      "size_wchars": 1
+                                    }
+                                  ],
                                   "control_char_positions": [
                                     {
                                       "position": 0,
@@ -2050,6 +2100,31 @@
                       {
                         "type": "para_text",
                         "text": "표  ",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "1"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 11,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -2129,6 +2204,26 @@
                       {
                         "type": "para_text",
                         "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 ",
+                        "runs": [
+                          {
+                            "kind": "control",
+                            "position": 0,
+                            "code": 2,
+                            "name": "RESERVED_2",
+                            "size_wchars": 8
+                          },
+                          {
+                            "kind": "text",
+                            "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 56,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 0,
@@ -2242,6 +2337,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2359,6 +2470,30 @@
                           {
                             "type": "para_text",
                             "text": "그림  ",
+                            "runs": [
+                              {
+                                "kind": "text",
+                                "text": "그림 "
+                              },
+                              {
+                                "kind": "control",
+                                "position": 3,
+                                "code": 18,
+                                "name": "AUTO_NUMBER",
+                                "size_wchars": 8
+                              },
+                              {
+                                "kind": "text",
+                                "text": " "
+                              },
+                              {
+                                "kind": "control",
+                                "position": 12,
+                                "code": 13,
+                                "name": "PARA_BREAK",
+                                "size_wchars": 1
+                              }
+                            ],
                             "control_char_positions": [
                               {
                                 "position": 3,
@@ -2511,6 +2646,26 @@
                               {
                                 "type": "para_text",
                                 "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 ",
+                                "runs": [
+                                  {
+                                    "kind": "control",
+                                    "position": 0,
+                                    "code": 2,
+                                    "name": "RESERVED_2",
+                                    "size_wchars": 8
+                                  },
+                                  {
+                                    "kind": "text",
+                                    "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 "
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 80,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 0,
@@ -2742,6 +2897,26 @@
                               {
                                 "type": "para_text",
                                 "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 ",
+                                "runs": [
+                                  {
+                                    "kind": "control",
+                                    "position": 0,
+                                    "code": 2,
+                                    "name": "RESERVED_2",
+                                    "size_wchars": 8
+                                  },
+                                  {
+                                    "kind": "text",
+                                    "text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 "
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 80,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 0,
@@ -2995,6 +3170,30 @@
                       {
                         "type": "para_text",
                         "text": "그림  ",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "그림 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 3,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8
+                          },
+                          {
+                            "kind": "text",
+                            "text": " "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 12,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 3,

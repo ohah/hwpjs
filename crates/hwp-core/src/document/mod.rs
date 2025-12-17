@@ -113,4 +113,100 @@ impl HwpDocument {
     pub fn to_html(&self, options: &crate::viewer::html::HtmlOptions) -> String {
         crate::viewer::to_html(self, options)
     }
+
+    /// Resolve derived display texts for control tokens (e.g., AUTO_NUMBER) into `ParaTextRun::Control.display_text`.
+    ///
+    /// IMPORTANT:
+    /// - `runs` (control tokens + document settings) are the source of truth.
+    /// - `display_text` is a derived/cache value for preview/viewers and may be recomputed.
+    pub fn resolve_display_texts(&mut self) {
+        use crate::document::bodytext::{ControlChar, ParaTextRun};
+        use crate::document::ParagraphRecord;
+
+        let mut table_no: u32 = self
+            .doc_info
+            .document_properties
+            .as_ref()
+            .map(|p| p.table_start_number as u32)
+            .unwrap_or(1);
+
+        fn resolve_paragraph_record(
+            record: &mut ParagraphRecord,
+            table_no: &mut u32,
+        ) {
+            match record {
+                ParagraphRecord::CtrlHeader {
+                    header,
+                    children,
+                    paragraphs,
+                    ..
+                } => {
+                    // Table ctrl header ("tbl "): assign table number to the first AUTO_NUMBER found in caption paragraphs.
+                    if header.ctrl_id == "tbl " {
+                        let mut assigned_for_this_table = false;
+                        for p in paragraphs.iter_mut() {
+                            for r in p.records.iter_mut() {
+                                if let ParagraphRecord::ParaText { runs, .. } = r {
+                                    for run in runs.iter_mut() {
+                                        if let ParaTextRun::Control {
+                                            code,
+                                            display_text,
+                                            ..
+                                        } = run
+                                        {
+                                            if *code == ControlChar::AUTO_NUMBER && display_text.is_none() {
+                                                *display_text = Some(table_no.to_string());
+                                                assigned_for_this_table = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                if assigned_for_this_table {
+                                    break;
+                                }
+                            }
+                            if assigned_for_this_table {
+                                break;
+                            }
+                        }
+                        if assigned_for_this_table {
+                            *table_no += 1;
+                        }
+                    }
+
+                    // Recurse into nested structures for completeness.
+                    for c in children.iter_mut() {
+                        resolve_paragraph_record(c, table_no);
+                    }
+                    for p in paragraphs.iter_mut() {
+                        for r in p.records.iter_mut() {
+                            resolve_paragraph_record(r, table_no);
+                        }
+                    }
+                }
+                ParagraphRecord::ListHeader { paragraphs, .. } => {
+                    for p in paragraphs.iter_mut() {
+                        for r in p.records.iter_mut() {
+                            resolve_paragraph_record(r, table_no);
+                        }
+                    }
+                }
+                ParagraphRecord::ShapeComponent { children, .. } => {
+                    for c in children.iter_mut() {
+                        resolve_paragraph_record(c, table_no);
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        for section in self.body_text.sections.iter_mut() {
+            for paragraph in section.paragraphs.iter_mut() {
+                for record in paragraph.records.iter_mut() {
+                    resolve_paragraph_record(record, &mut table_no);
+                }
+            }
+        }
+    }
 }

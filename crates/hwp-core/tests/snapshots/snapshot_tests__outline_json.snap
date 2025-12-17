@@ -2304,6 +2304,33 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요 1",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "개요 1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2588,6 +2615,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -2705,6 +2745,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -2822,6 +2875,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요4",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요4"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -2939,6 +3005,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요 5",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요 5"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3003,6 +3082,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요 5-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요 5-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -3067,6 +3159,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요2-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요2-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3131,6 +3236,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요 6 ",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요 6 "
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3195,6 +3313,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요 6-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요 6-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -3312,6 +3443,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요7",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요7"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3376,6 +3520,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요7-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요7-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3493,6 +3650,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요8",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요8"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3610,6 +3780,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요9",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요9"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3727,6 +3910,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요10",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요10"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3950,6 +4146,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요 1-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요 1-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 6,

@@ -2486,6 +2486,33 @@ expression: json
               {
                 "type": "para_text",
                 "text": "실선밑줄",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "실선밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2717,6 +2744,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "대시밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "대시밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2781,6 +2821,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "점선밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "점선밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2845,6 +2898,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "대시일점밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "대시일점밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -2909,6 +2975,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "대시이점밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "대시이점밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -2973,6 +3052,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "긴대시밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "긴대시밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3037,6 +3129,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "큰점선밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "큰점선밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3101,6 +3206,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "이중실선밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "이중실선밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -3165,6 +3283,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "이중증가밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "이중증가밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -3229,6 +3360,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "이중감소밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "이중감소밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -3293,6 +3437,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "삼중밑줄",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "삼중밑줄"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,

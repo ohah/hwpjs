@@ -2050,6 +2050,33 @@ expression: json
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2281,6 +2308,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2345,6 +2385,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2409,6 +2462,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2526,6 +2592,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "글머리표 두 번째",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표 두 번째"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 9,
@@ -2590,6 +2669,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2654,6 +2746,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2718,6 +2823,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2835,6 +2953,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "문단번호",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "문단번호"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2899,6 +3030,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2963,6 +3107,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3027,6 +3184,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3091,6 +3261,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3155,6 +3338,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3219,6 +3415,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3283,6 +3492,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3347,6 +3569,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3411,6 +3646,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -3475,6 +3723,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "4",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "4"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3592,6 +3853,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "문단번호 두 번째 (번호 이어짐)",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "문단번호 두 번째 (번호 이어짐)"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 18,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 18,
@@ -3656,6 +3930,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "5",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "5"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3720,6 +4007,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "5-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "5-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -3837,6 +4137,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "문단번호 세 번째 (새 번호)",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "문단번호 세 번째 (새 번호)"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 16,
@@ -3901,6 +4214,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3965,6 +4291,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4029,6 +4368,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -4093,6 +4445,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4157,6 +4522,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -4221,6 +4599,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -4285,6 +4676,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -4349,6 +4753,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -4413,6 +4830,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -4477,6 +4907,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "4",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "4"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4543,6 +4986,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 2,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 2,
@@ -4607,6 +5063,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4671,6 +5140,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4735,6 +5217,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -4799,6 +5294,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4863,6 +5371,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -4927,6 +5448,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -4991,6 +5525,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -5055,6 +5602,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -5119,6 +5679,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -5183,6 +5756,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "4",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "4"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5300,6 +5886,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요 두 번째 (번호 이어짐)",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요 두 번째 (번호 이어짐)"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 16,
@@ -5364,6 +5963,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "5",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "5"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5428,6 +6040,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "5-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "5-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -5545,6 +6170,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "개요 세 번째 (새 번호)",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "개요 세 번째 (새 번호)"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 14,
@@ -5619,6 +6257,33 @@ expression: json
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 17,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5850,6 +6515,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5914,6 +6592,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "2-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -5978,6 +6669,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6042,6 +6746,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -6106,6 +6823,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 3,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 3,
@@ -6170,6 +6900,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -6234,6 +6977,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -6298,6 +7054,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "3-2-3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3-2-3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -6362,6 +7131,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "4",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "4"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,

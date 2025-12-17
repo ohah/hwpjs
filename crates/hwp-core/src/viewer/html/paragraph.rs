@@ -5,6 +5,7 @@ use super::text;
 use super::HtmlOptions;
 use crate::document::bodytext::{
     ctrl_header::{CtrlHeaderData, VertRelTo},
+    control_char::ControlChar,
     PageDef, ParagraphRecord,
 };
 use crate::document::{HwpDocument, Paragraph};
@@ -41,6 +42,19 @@ pub fn render_paragraph(
     // 텍스트와 CharShape 추출 / Extract text and CharShape
     let (text, char_shapes) = text::extract_text_and_shapes(paragraph);
 
+    // ParaText의 control_char_positions 수집 (원본 WCHAR 인덱스 기준) / Collect control_char_positions (based on original WCHAR indices)
+    let mut control_char_positions = Vec::new();
+    for record in &paragraph.records {
+        if let ParagraphRecord::ParaText {
+            control_char_positions: ccp,
+            ..
+        } = record
+        {
+            control_char_positions = ccp.clone();
+            break;
+        }
+    }
+
     // LineSegment 찾기 / Find LineSegment
     let mut line_segments = Vec::new();
     for record in &paragraph.records {
@@ -53,6 +67,24 @@ pub fn render_paragraph(
     // 이미지와 테이블 수집 / Collect images and tables
     let mut images = Vec::new();
     let mut tables: Vec<TableInfo> = Vec::new();
+
+    // ParaText의 control_char_positions에서 SHAPE_OBJECT(표/그리기 개체) 앵커 위치 수집
+    // Collect SHAPE_OBJECT anchor positions from ParaText control_char_positions
+    let mut shape_object_anchor_positions: Vec<usize> = Vec::new();
+    for record in &paragraph.records {
+        if let ParagraphRecord::ParaText {
+            control_char_positions,
+            ..
+        } = record
+        {
+            for pos in control_char_positions.iter() {
+                if pos.code == ControlChar::SHAPE_OBJECT {
+                    shape_object_anchor_positions.push(pos.position);
+                }
+            }
+        }
+    }
+    let mut shape_object_anchor_cursor: usize = 0;
 
     for record in &paragraph.records {
         match record {
@@ -129,6 +161,7 @@ pub fn render_paragraph(
                 tables.push(TableInfo {
                     table: &table,
                     ctrl_header: None,
+                    anchor_char_pos: None,
                     caption_text: None,
                     caption_info: None,
                     caption_char_shape_id: None,
@@ -150,7 +183,21 @@ pub fn render_paragraph(
                     document,
                     options,
                 );
-                tables.extend(ctrl_result.tables);
+                // SHAPE_OBJECT(11)는 "표/그리기 개체" 공통 제어문자이므로, ctrl_id가 "tbl "인 경우에만
+                // ParaText의 SHAPE_OBJECT 위치를 순서대로 매칭하여 anchor를 부여합니다.
+                if header.ctrl_id == "tbl " {
+                    let anchor = shape_object_anchor_positions
+                        .get(shape_object_anchor_cursor)
+                        .copied();
+                    shape_object_anchor_cursor = shape_object_anchor_cursor.saturating_add(1);
+                    for t in ctrl_result.tables.iter() {
+                        let mut tt = t.clone();
+                        tt.anchor_char_pos = anchor;
+                        tables.push(tt);
+                    }
+                } else {
+                    tables.extend(ctrl_result.tables);
+                }
                 images.extend(ctrl_result.images);
             }
             _ => {}
@@ -189,6 +236,7 @@ pub fn render_paragraph(
                 inline_tables.push(TableInfo {
                     table: table_info.table,
                     ctrl_header: table_info.ctrl_header,
+                    anchor_char_pos: table_info.anchor_char_pos,
                     caption_text: table_info.caption_text.clone(),
                     caption_info: table_info.caption_info,
                     caption_char_shape_id: table_info.caption_char_shape_id,
@@ -199,6 +247,7 @@ pub fn render_paragraph(
                 absolute_tables.push(TableInfo {
                     table: table_info.table,
                     ctrl_header: table_info.ctrl_header,
+                    anchor_char_pos: table_info.anchor_char_pos,
                     caption_text: table_info.caption_text.clone(),
                     caption_info: table_info.caption_info,
                     caption_char_shape_id: table_info.caption_char_shape_id,
@@ -234,6 +283,7 @@ pub fn render_paragraph(
             .map(|table_info| TableInfo {
                 table: table_info.table,
                 ctrl_header: table_info.ctrl_header,
+                anchor_char_pos: table_info.anchor_char_pos,
                 caption_text: table_info.caption_text.clone(),
                 caption_info: table_info.caption_info,
                 caption_char_shape_id: table_info.caption_char_shape_id,
@@ -247,6 +297,8 @@ pub fn render_paragraph(
             &line_segments,
             &text,
             &char_shapes,
+            &control_char_positions,
+            paragraph.para_header.text_char_count as usize,
             document,
             &para_shape_class,
             &inline_images, // like_letters=true인 이미지만 line_segment에 포함 / Include only images with like_letters=true in line_segment

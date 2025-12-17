@@ -1646,6 +1646,29 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1879,6 +1902,30 @@ expression: json
               {
                 "type": "para_text",
                 "text": "전후",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "전"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "후"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 10,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2374,6 +2421,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 0mm, 글자처럼 취급",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "1"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 0mm, 글자처럼 취급"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 26,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -2669,6 +2741,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3124,6 +3212,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 문단 왼쪽부터 5mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "2"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 문단 왼쪽부터 5mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 31,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -3417,6 +3530,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3872,6 +4001,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 단 왼쪽부터 5mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "3"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 단 왼쪽부터 5mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 30,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -4165,6 +4319,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -4620,6 +4790,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 쪽 왼쪽부터 5mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "4"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 쪽 왼쪽부터 5mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 30,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -4913,6 +5108,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5368,6 +5579,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 종이 왼쪽부터 35mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "5"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 종이 왼쪽부터 35mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 32,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -5663,6 +5899,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -6118,6 +6370,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 문단 오른쪽부터 5mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "6"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 문단 오른쪽부터 5mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 32,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -6431,6 +6708,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -6886,6 +7179,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 단 오른쪽부터 5mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "7"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 단 오른쪽부터 5mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 31,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -7179,6 +7497,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -7634,6 +7968,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 쪽 오른쪽부터 5mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "8"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 쪽 오른쪽부터 5mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 31,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -7927,6 +8286,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -8382,6 +8757,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 종이 오른쪽부터 35mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "9"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 종이 오른쪽부터 35mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 33,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -8697,6 +9097,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -9152,6 +9568,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 문단 가운데로부터 5mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "10"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 문단 가운데로부터 5mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 33,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -9465,6 +9906,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -9920,6 +10377,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 단 가운데로부터 5mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "11"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 단 가운데로부터 5mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 32,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -10233,6 +10715,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -10688,6 +11186,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 쪽 가운데로부터 5mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "12"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 쪽 가운데로부터 5mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 32,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -11001,6 +11524,22 @@ expression: json
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -11456,6 +11995,31 @@ expression: json
                       {
                         "type": "para_text",
                         "text": "표  여백 10mm, 종이 가운데로부터 5mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "13"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 여백 10mm, 종이 가운데로부터 5mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 33,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,

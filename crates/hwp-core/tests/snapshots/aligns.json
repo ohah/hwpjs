@@ -1511,6 +1511,29 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 16,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1744,6 +1767,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1919,6 +1958,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -1983,6 +2035,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -2077,6 +2142,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2252,6 +2333,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -2316,6 +2410,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 10",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 10"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 7,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 7,
@@ -2410,6 +2517,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2585,6 +2708,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -2649,6 +2785,19 @@
                               {
                                 "type": "para_text",
                                 "text": "center 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "center 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 8,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 8,
@@ -2743,6 +2892,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2918,6 +3083,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -2982,6 +3160,19 @@
                               {
                                 "type": "para_text",
                                 "text": "center -10",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "center -10"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 10,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 10,
@@ -3076,6 +3267,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3251,6 +3458,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -3315,6 +3535,19 @@
                               {
                                 "type": "para_text",
                                 "text": "right 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "right 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 7,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 7,
@@ -3409,6 +3642,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3584,6 +3833,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -3648,6 +3910,19 @@
                               {
                                 "type": "para_text",
                                 "text": "right 10",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "right 10"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 8,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 8,
@@ -3742,6 +4017,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -3917,6 +4208,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -3981,6 +4285,19 @@
                               {
                                 "type": "para_text",
                                 "text": "inside 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "inside 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 8,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 8,
@@ -4075,6 +4392,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -4250,6 +4583,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -4314,6 +4660,19 @@
                               {
                                 "type": "para_text",
                                 "text": "inside 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "inside 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 8,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 8,
@@ -4408,6 +4767,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -4583,6 +4958,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -4647,6 +5035,19 @@
                               {
                                 "type": "para_text",
                                 "text": "outside 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "outside 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 9,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 9,
@@ -4741,6 +5142,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -4916,6 +5333,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -4980,6 +5410,19 @@
                               {
                                 "type": "para_text",
                                 "text": "outside 10",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "outside 10"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 10,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 10,
@@ -5074,6 +5517,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5249,6 +5708,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -5313,6 +5785,19 @@
                               {
                                 "type": "para_text",
                                 "text": "top 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "top 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 5,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 5,
@@ -5407,6 +5892,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5582,6 +6083,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -5646,6 +6160,19 @@
                               {
                                 "type": "para_text",
                                 "text": "top 10",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "top 10"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -5740,6 +6267,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -5915,6 +6458,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -5979,6 +6535,19 @@
                               {
                                 "type": "para_text",
                                 "text": "middle 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "middle 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 8,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 8,
@@ -6073,6 +6642,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -6248,6 +6833,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -6312,6 +6910,19 @@
                               {
                                 "type": "para_text",
                                 "text": "middle -10",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "middle -10"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 10,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 10,
@@ -6406,6 +7017,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -6581,6 +7208,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -6645,6 +7285,19 @@
                               {
                                 "type": "para_text",
                                 "text": "bottom 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "bottom 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 8,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 8,
@@ -6739,6 +7392,22 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -6914,6 +7583,19 @@
                               {
                                 "type": "para_text",
                                 "text": "left 0",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "left 0"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 6,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 6,
@@ -6978,6 +7660,19 @@
                               {
                                 "type": "para_text",
                                 "text": "bottom 10",
+                                "runs": [
+                                  {
+                                    "kind": "text",
+                                    "text": "bottom 10"
+                                  },
+                                  {
+                                    "kind": "control",
+                                    "position": 9,
+                                    "code": 13,
+                                    "name": "PARA_BREAK",
+                                    "size_wchars": 1
+                                  }
+                                ],
                                 "control_char_positions": [
                                   {
                                     "position": 9,

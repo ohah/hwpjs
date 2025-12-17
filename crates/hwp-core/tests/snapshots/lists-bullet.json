@@ -1684,6 +1684,33 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 20,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1915,6 +1942,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -1979,6 +2019,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2043,6 +2096,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2107,6 +2173,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2171,6 +2250,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2235,6 +2327,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2299,6 +2404,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2363,6 +2481,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2427,6 +2558,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2491,6 +2635,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2555,6 +2712,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2619,6 +2789,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2683,6 +2866,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2747,6 +2943,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2811,6 +3020,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -2875,6 +3097,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -2939,6 +3174,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3003,6 +3251,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3067,6 +3328,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3131,6 +3405,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3195,6 +3482,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3259,6 +3559,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3323,6 +3636,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3387,6 +3713,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3451,6 +3790,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3515,6 +3867,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3579,6 +3944,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3643,6 +4021,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3707,6 +4098,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3771,6 +4175,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3835,6 +4252,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -3899,6 +4329,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -3963,6 +4406,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4027,6 +4483,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4091,6 +4560,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4155,6 +4637,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -4219,6 +4714,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4283,6 +4791,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4347,6 +4868,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4411,6 +4945,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -4475,6 +5022,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4539,6 +5099,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4603,6 +5176,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4667,6 +5253,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -4731,6 +5330,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4795,6 +5407,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4859,6 +5484,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -4923,6 +5561,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -4987,6 +5638,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5051,6 +5715,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5115,6 +5792,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5179,6 +5869,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -5243,6 +5946,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5307,6 +6023,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5371,6 +6100,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5435,6 +6177,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -5499,6 +6254,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5563,6 +6331,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5627,6 +6408,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5691,6 +6485,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -5755,6 +6562,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5819,6 +6639,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5883,6 +6716,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -5947,6 +6793,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -6011,6 +6870,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6075,6 +6947,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6139,6 +7024,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6203,6 +7101,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -6267,6 +7178,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6331,6 +7255,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6395,6 +7332,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6459,6 +7409,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
@@ -6523,6 +7486,19 @@
               {
                 "type": "para_text",
                 "text": "1",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "1"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6587,6 +7563,19 @@
               {
                 "type": "para_text",
                 "text": "2",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "2"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6651,6 +7640,19 @@
               {
                 "type": "para_text",
                 "text": "3",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "3"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 1,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 1,
@@ -6715,6 +7717,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표 사용자정의 ☀"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -6779,6 +7794,19 @@
               {
                 "type": "para_text",
                 "text": "너비 10pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "너비 10pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -6843,6 +7871,19 @@
               {
                 "type": "para_text",
                 "text": "정렬 가운데",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "정렬 가운데"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -6907,6 +7948,19 @@
               {
                 "type": "para_text",
                 "text": "본문과의 간격 50%",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "본문과의 간격 50%"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 11,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 11,
@@ -6971,6 +8025,19 @@
               {
                 "type": "para_text",
                 "text": "자동 내어쓰기",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "자동 내어쓰기"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7035,6 +8102,19 @@
               {
                 "type": "para_text",
                 "text": "글자모양 없음",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글자모양 없음"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7099,6 +8179,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표 사용자정의 ☀"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -7163,6 +8256,19 @@
               {
                 "type": "para_text",
                 "text": "너비 10pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "너비 10pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7227,6 +8333,19 @@
               {
                 "type": "para_text",
                 "text": "정렬 오른쪽",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "정렬 오른쪽"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 6,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 6,
@@ -7291,6 +8410,19 @@
               {
                 "type": "para_text",
                 "text": "본문과의 간격 50%",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "본문과의 간격 50%"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 11,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 11,
@@ -7355,6 +8487,19 @@
               {
                 "type": "para_text",
                 "text": "자동 내어쓰기",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "자동 내어쓰기"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7419,6 +8564,19 @@
               {
                 "type": "para_text",
                 "text": "글자모양 없음",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글자모양 없음"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7483,6 +8641,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표 사용자정의 ☀"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -7547,6 +8718,19 @@
               {
                 "type": "para_text",
                 "text": "너비 20pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "너비 20pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7611,6 +8795,19 @@
               {
                 "type": "para_text",
                 "text": "정렬 왼쪽",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "정렬 왼쪽"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -7675,6 +8872,19 @@
               {
                 "type": "para_text",
                 "text": "본문과의 간격 50%",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "본문과의 간격 50%"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 11,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 11,
@@ -7739,6 +8949,19 @@
               {
                 "type": "para_text",
                 "text": "자동 내어쓰기",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "자동 내어쓰기"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7803,6 +9026,19 @@
               {
                 "type": "para_text",
                 "text": "글자모양 없음",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글자모양 없음"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7867,6 +9103,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표 사용자정의 ☀"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -7931,6 +9180,19 @@
               {
                 "type": "para_text",
                 "text": "너비 10pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "너비 10pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -7995,6 +9257,19 @@
               {
                 "type": "para_text",
                 "text": "정렬 왼쪽",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "정렬 왼쪽"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -8059,6 +9334,19 @@
               {
                 "type": "para_text",
                 "text": "본문과의 간격 0%",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "본문과의 간격 0%"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 10,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 10,
@@ -8123,6 +9411,19 @@
               {
                 "type": "para_text",
                 "text": "자동 내어쓰기",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "자동 내어쓰기"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -8187,6 +9488,19 @@
               {
                 "type": "para_text",
                 "text": "글자모양 없음",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글자모양 없음"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -8251,6 +9565,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표 사용자정의 ☀"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -8315,6 +9642,19 @@
               {
                 "type": "para_text",
                 "text": "너비 10pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "너비 10pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -8379,6 +9719,19 @@
               {
                 "type": "para_text",
                 "text": "정렬 왼쪽",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "정렬 왼쪽"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -8443,6 +9796,19 @@
               {
                 "type": "para_text",
                 "text": "본문과의 간격 0%",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "본문과의 간격 0%"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 10,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 10,
@@ -8507,6 +9873,19 @@
               {
                 "type": "para_text",
                 "text": "자동 내어쓰기 X",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "자동 내어쓰기 X"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 9,
@@ -8571,6 +9950,19 @@
               {
                 "type": "para_text",
                 "text": "글자모양 없음",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글자모양 없음"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -8635,6 +10027,19 @@
               {
                 "type": "para_text",
                 "text": "글머리표 사용자정의 ☀",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "글머리표 사용자정의 ☀"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 12,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 12,
@@ -8699,6 +10104,19 @@
               {
                 "type": "para_text",
                 "text": "너비 10pt",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "너비 10pt"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -8763,6 +10181,19 @@
               {
                 "type": "para_text",
                 "text": "정렬 왼쪽",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "정렬 왼쪽"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 5,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 5,
@@ -8827,6 +10258,19 @@
               {
                 "type": "para_text",
                 "text": "본문과의 간격 0%",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "본문과의 간격 0%"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 10,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 10,
@@ -8891,6 +10335,19 @@
               {
                 "type": "para_text",
                 "text": "자동 내어쓰기 X",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "자동 내어쓰기 X"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 9,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 9,
@@ -8955,6 +10412,19 @@
               {
                 "type": "para_text",
                 "text": "새 글머리표 모양: sun",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "새 글머리표 모양: sun"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 14,

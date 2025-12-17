@@ -2684,6 +2684,33 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "ko바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 53,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2915,6 +2942,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko한컴바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko한컴바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 39,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 39,
@@ -2987,6 +3027,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko한양신명조en바탕cn바탕jp바탕other바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko한양신명조en바탕cn바탕jp바탕other바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 40,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 40,
@@ -3059,6 +3112,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko휴먼명조en바탕cn바탕jp바탕other바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko휴먼명조en바탕cn바탕jp바탕other바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 39,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 39,
@@ -3131,6 +3197,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕enArialcn바탕jp바탕other바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕enArialcn바탕jp바탕other바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 40,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 40,
@@ -3203,6 +3282,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕enComicSansMScn바탕jp바탕other바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕enComicSansMScn바탕jp바탕other바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 46,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 46,
@@ -3275,6 +3367,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕enCourierNewcn바탕jp바탕other바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕enCourierNewcn바탕jp바탕other바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 45,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 45,
@@ -3347,6 +3452,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕enDejaVuSerifcn바탕jp바탕other바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕enDejaVuSerifcn바탕jp바탕other바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 46,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 46,
@@ -3419,6 +3537,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕en바탕cnSimHeijp바탕other바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕en바탕cnSimHeijp바탕other바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 41,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 41,
@@ -3491,6 +3622,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕en바탕cnSimSunjp바탕other바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕en바탕cnSimSunjp바탕other바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 41,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 41,
@@ -3563,6 +3707,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕en바탕cn바탕jpMSGothicother바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕en바탕cn바탕jpMSGothicother바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 43,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 43,
@@ -3635,6 +3792,19 @@ expression: json
               {
                 "type": "para_text",
                 "text": "ko바탕en바탕cn바탕jpMSMinChoother바탕symbol바탕user바탕",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "ko바탕en바탕cn바탕jpMSMinChoother바탕symbol바탕user바탕"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 43,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 43,

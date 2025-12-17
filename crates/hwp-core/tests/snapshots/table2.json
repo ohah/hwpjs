@@ -2364,6 +2364,43 @@
               {
                 "type": "para_text",
                 "text": "",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 16,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 24,
+                    "code": 11,
+                    "name": "SHAPE_OBJECT",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 32,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -2756,6 +2793,31 @@
                       {
                         "type": "para_text",
                         "text": "표  아래 캡션 개체와의 간격 3.00mm 바깥여백 모두 1.00mm",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "1"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 아래 캡션 개체와의 간격 3.00mm 바깥여백 모두 1.00mm"
+                          },
+                          {
+                            "kind": "control",
+                            "position": 46,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,
@@ -3039,6 +3101,31 @@
                       {
                         "type": "para_text",
                         "text": "표  위 캡션 바깥여백 모두 5.00mm 개체와의 간격 10.00mm ",
+                        "runs": [
+                          {
+                            "kind": "text",
+                            "text": "표 "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 2,
+                            "code": 18,
+                            "name": "AUTO_NUMBER",
+                            "size_wchars": 8,
+                            "display_text": "2"
+                          },
+                          {
+                            "kind": "text",
+                            "text": " 위 캡션 바깥여백 모두 5.00mm 개체와의 간격 10.00mm "
+                          },
+                          {
+                            "kind": "control",
+                            "position": 47,
+                            "code": 13,
+                            "name": "PARA_BREAK",
+                            "size_wchars": 1
+                          }
+                        ],
                         "control_char_positions": [
                           {
                             "position": 2,

@@ -299,6 +299,7 @@ pub fn process_table<'a>(
             result.tables.push(TableInfo {
                 table,
                 ctrl_header,
+                anchor_char_pos: None,
                 caption_text: current_caption,
                 caption_info,
                 caption_char_shape_id: current_caption_char_shape_id,

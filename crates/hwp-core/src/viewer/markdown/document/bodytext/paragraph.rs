@@ -53,6 +53,7 @@ pub fn convert_paragraph_to_markdown(
                 text,
                 control_char_positions,
                 inline_control_params: _,
+                ..
             } => {
                 // ParaText 변환 / Convert ParaText
                 // 표 셀 내부의 텍스트는 이미 Table.cells에 포함되어 convert_table_to_markdown에서 처리되므로

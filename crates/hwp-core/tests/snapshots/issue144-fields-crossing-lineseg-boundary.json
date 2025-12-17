@@ -1683,6 +1683,47 @@
               {
                 "type": "para_text",
                 "text": "google google google google google google",
+                "runs": [
+                  {
+                    "kind": "control",
+                    "position": 0,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 8,
+                    "code": 2,
+                    "name": "RESERVED_2",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 16,
+                    "code": 3,
+                    "name": "RESERVED_3",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "google google google google google google"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 65,
+                    "code": 4,
+                    "name": "FIELD_END",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "control",
+                    "position": 73,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 0,
@@ -1968,6 +2009,30 @@
               {
                 "type": "para_text",
                 "text": "gmail gmail gmail gmail gmail gmail",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "gmail g"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 7,
+                    "code": 3,
+                    "name": "RESERVED_3",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "mail gmail gmail gmail gmail"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 43,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 7,
@@ -2069,6 +2134,30 @@
               {
                 "type": "para_text",
                 "text": "gmaile",
+                "runs": [
+                  {
+                    "kind": "text",
+                    "text": "gmai"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 4,
+                    "code": 4,
+                    "name": "FIELD_END",
+                    "size_wchars": 8
+                  },
+                  {
+                    "kind": "text",
+                    "text": "le"
+                  },
+                  {
+                    "kind": "control",
+                    "position": 14,
+                    "code": 13,
+                    "name": "PARA_BREAK",
+                    "size_wchars": 1
+                  }
+                ],
                 "control_char_positions": [
                   {
                     "position": 4,
