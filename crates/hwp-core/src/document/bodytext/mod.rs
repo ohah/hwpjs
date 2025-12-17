@@ -70,6 +70,7 @@ pub use video_data::VideoData;
 
 use crate::cfb::CfbParser;
 use crate::decompress::decompress_deflate;
+use crate::document::bodytext::ctrl_header::Caption;
 use crate::document::fileheader::FileHeader;
 use crate::error::HwpError;
 use crate::types::{decode_utf16le, RecordHeader, WORD};
@@ -597,13 +598,17 @@ impl Section {
 
                 // TABLE 이전의 LIST_HEADER를 찾아서 캡션으로 파싱 / Find LIST_HEADER before TABLE and parse as caption
                 // hwplib과 hwp-rs 방식: 별도 레코드로 캡션 처리 / hwplib and hwp-rs approach: process caption as separate record
-                let mut caption_opt: Option<crate::document::bodytext::ctrl_header::Caption> = None;
-                if is_table {
-                    // TABLE 위치 찾기 / Find TABLE position
-                    let table_index = children_slice
+                let mut caption_opt: Option<Caption> = None;
+                // TABLE 위치 찾기 / Find TABLE position
+                let table_index = if is_table {
+                    children_slice
                         .iter()
-                        .position(|child| child.tag_id() == HwpTag::TABLE);
+                        .position(|child| child.tag_id() == HwpTag::TABLE)
+                } else {
+                    None
+                };
 
+                if is_table {
                     if let Some(table_idx) = table_index {
                         // TABLE 이전의 LIST_HEADER 찾기 / Find LIST_HEADER before TABLE
                         for child in children_slice.iter().take(table_idx) {
@@ -684,6 +689,15 @@ impl Section {
                             paragraphs.push(paragraph);
                         }
                     } else if child.tag_id() == HwpTag::LIST_HEADER && is_table {
+                        // IMPORTANT:
+                        // TABLE 이전에 오는 LIST_HEADER는 "캡션"으로 사용되며 셀 LIST_HEADER가 아닙니다.
+                        // 이를 셀로도 처리하면 캡션 텍스트가 셀 내부와 ctrl_header paragraphs에 중복으로 나타납니다.
+                        // 따라서 TABLE 이전 LIST_HEADER는 여기서 건너뜁니다.
+                        if let Some(table_idx) = table_index {
+                            if idx < table_idx {
+                                continue;
+                            }
+                        }
                         // LIST_HEADER가 테이블의 셀인 경우 / LIST_HEADER is a table cell
                         // libhwp 방식: TABLE 이후의 LIST_HEADER는 children에 추가하지 않음
                         // libhwp approach: LIST_HEADERs after TABLE are not added to children
@@ -810,6 +824,43 @@ impl Section {
                         use crate::document::bodytext::list_header::ListHeader;
                         use crate::document::bodytext::table::{CellAttributes, TableCell};
                         use crate::types::{HWPUNIT, HWPUNIT16, UINT16, UINT32};
+
+                        // IMPORTANT:
+                        // 일부 파일(table-caption 등)에서 동일한 (row,col) LIST_HEADER가 두 번 잡히는 케이스가 있어
+                        // 그대로 TableCell을 2번 생성하면 <div class="hce">도 2번 렌더링됩니다.
+                        // 근본적으로는 "셀 생성의 단일 소스는 LIST_HEADER"이므로,
+                        // 여기에서 LIST_HEADER 후보를 (row,col) 기준으로 먼저 정규화(dedupe)합니다.
+                        // paragraphs가 있는 엔트리를 우선합니다.
+                        if list_headers_for_table.len() > 1 {
+                            use std::collections::BTreeMap;
+                            let mut by_pos: BTreeMap<
+                                (u16, u16),
+                                (u16, u16, Vec<super::Paragraph>, Option<CellAttributes>),
+                            > = BTreeMap::new();
+                            for (row_addr, col_addr, paragraphs, cell_attrs_opt) in
+                                list_headers_for_table.drain(..)
+                            {
+                                let key = (row_addr, col_addr);
+                                match by_pos.get(&key) {
+                                    None => {
+                                        by_pos.insert(
+                                            key,
+                                            (row_addr, col_addr, paragraphs, cell_attrs_opt),
+                                        );
+                                    }
+                                    Some((_, _, existing_paras, _)) => {
+                                        // Prefer entry that actually has paragraphs.
+                                        if existing_paras.is_empty() && !paragraphs.is_empty() {
+                                            by_pos.insert(
+                                                key,
+                                                (row_addr, col_addr, paragraphs, cell_attrs_opt),
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                            list_headers_for_table = by_pos.into_values().collect();
+                        }
 
                         // LIST_HEADER에서 셀 생성 / Create cells from LIST_HEADER
                         let row_count = table.attributes.row_count.into();
@@ -966,6 +1017,7 @@ impl Section {
                             }
                         }
                     }
+
                     children.push(ParagraphRecord::Table {
                         table: table.clone(),
                     });

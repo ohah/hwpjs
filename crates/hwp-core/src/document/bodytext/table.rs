@@ -150,13 +150,17 @@ impl Table {
         // 표 개체 속성 파싱 (표 75) / Parse table object attributes (Table 75)
         let attributes = parse_table_attributes(data, &mut offset, version)?;
 
-        // 셀 리스트 파싱 (표 79) / Parse cell list (Table 79)
-        let cells = parse_cell_list(
-            &data[offset..],
-            attributes.row_count,
-            attributes.col_count,
-            &attributes.row_sizes,
-        )?;
+        // IMPORTANT:
+        // HWP 5.x 실데이터에서는 "표 셀"의 실제 메타(행/열, 폭/높이, 마진, borderFill 등)와
+        // 셀 내부 문단은 대부분 HWPTAG_LIST_HEADER(테이블 셀 리스트) 트리로 제공됩니다.
+        //
+        // legacy hwpjs / pyhwp 구현도 이 LIST_HEADER 기반을 단일 소스로 취급하는 방식이며,
+        // HWPTAG_TABLE payload(표 79/80)를 추정 파싱하면 오프셋 불일치로 "가짜 셀"이 하나 더 생기는
+        // 케이스(table-caption 등)가 있습니다.
+        //
+        // 따라서 여기서는 HWPTAG_TABLE payload에서 셀 리스트를 만들지 않고,
+        // 트리 결합 단계(document/bodytext/mod.rs)에서 LIST_HEADER 기반으로 table.cells를 구성합니다.
+        let cells = Vec::new();
 
         Ok(Table { attributes, cells })
     }
@@ -313,6 +317,7 @@ fn parse_table_attribute(value: UINT32) -> TableAttribute {
 }
 
 /// 셀 리스트 파싱 (표 79) / Parse cell list (Table 79)
+#[allow(dead_code)]
 fn parse_cell_list(
     data: &[u8],
     row_count: UINT16,
@@ -322,38 +327,26 @@ fn parse_cell_list(
     let mut cells = Vec::new();
     let mut offset = 0;
 
-    // 레거시 코드 방식: 각 행의 셀 개수를 합산
-    let total_cells: usize = row_sizes.iter().map(|&size| size as usize).sum::<usize>();
+    // 셀 개수 산정:
+    // - 스펙/실데이터에서 row_sizes는 "각 행의 실제 셀 개수"로 사용됩니다.
+    // - row_sizes가 유효하면(합>0) 그대로 사용하고, 없으면 row_count*col_count로 폴백합니다.
+    let total_cells_from_row_sizes: usize = row_sizes.iter().map(|&size| size as usize).sum();
+    let total_cells = if total_cells_from_row_sizes > 0 {
+        total_cells_from_row_sizes
+    } else {
+        row_count as usize * col_count as usize
+    };
 
-    // 또는 더 안전하게: 최소한 row_count * col_count는 보장
-    let total_cells = total_cells.max(row_count as usize * col_count as usize);
-
-    for _ in 0..total_cells {
-        if offset >= data.len() {
-            break; // 셀 데이터가 부족할 수 있음 / Cell data may be insufficient
-        }
-
-        // 문단 리스트 헤더 파싱 (표 65 참조) / Parse paragraph list header (see Table 65)
-        // 표 65: INT16(2) + UINT32(4) = 6바이트 (문서 기준)
-        // 하지만 실제 구현에서는 UINT16(2) + UINT16(2) + UINT32(4) = 8바이트일 수 있음
-        // pyhwp를 참고하면 ListHeader는 8바이트로 파싱됨
-        let list_header = ListHeader::parse(&data[offset..]).map_err(|e| HwpError::from(e))?;
-        // ListHeader::parse는 6바이트만 파싱하지만, 실제 데이터에는 추가 2바이트가 있을 수 있음
-        // pyhwp에서는 UINT16 unknown1이 추가로 있음
-        offset += 8; // 실제 구현: UINT16(2) + UINT16(2) + UINT32(4) = 8바이트
-
-        // 셀 속성 파싱 (표 80 참조) / Parse cell attributes (see Table 80)
-        // 표 80: 전체 길이 26바이트
-        // UINT16(2) + UINT16(2) + UINT16(2) + UINT16(2) + HWPUNIT(4) + HWPUNIT(4) + HWPUNIT16[4](8) + UINT16(2) = 26
+    // ListHeader(표 65)는 문서에 6바이트로 되어 있으나, 실제 파일에서는
+    // [paragraph_count:2][unknown1:2][attribute:4]의 8바이트 형태가 존재합니다.
+    //
+    // TableCell에서는 ListHeader 바로 뒤에 CellAttributes(표 80, 26바이트)가 이어지므로,
+    // "6바이트/8바이트" 중 어떤 레이아웃인지 실제 바이트를 보고 판별해야 오프셋이 틀어지지 않습니다.
+    fn parse_cell_attributes_at(data: &[u8], offset: usize) -> Option<CellAttributes> {
         if offset + 26 > data.len() {
-            return Err(HwpError::insufficient_data(
-                "cell attributes",
-                26,
-                data.len() - offset,
-            ));
+            return None;
         }
-
-        let cell_attributes = CellAttributes {
+        Some(CellAttributes {
             col_address: UINT16::from_le_bytes([data[offset], data[offset + 1]]),
             row_address: UINT16::from_le_bytes([data[offset + 2], data[offset + 3]]),
             col_span: UINT16::from_le_bytes([data[offset + 4], data[offset + 5]]),
@@ -375,7 +368,70 @@ fn parse_cell_list(
             top_margin: HWPUNIT16::from_le_bytes([data[offset + 20], data[offset + 21]]),
             bottom_margin: HWPUNIT16::from_le_bytes([data[offset + 22], data[offset + 23]]),
             border_fill_id: UINT16::from_le_bytes([data[offset + 24], data[offset + 25]]),
+        })
+    }
+
+    fn is_plausible_cell_attrs(
+        attrs: &CellAttributes,
+        row_count: UINT16,
+        col_count: UINT16,
+    ) -> bool {
+        // row/col은 테이블 범위 내여야 함
+        if attrs.row_address >= row_count || attrs.col_address >= col_count {
+            return false;
+        }
+        // 폭/높이는 0이 아닌 것이 일반적 (0이면 오프셋 오판 가능성이 큼)
+        if attrs.width.0 == 0 || attrs.height.0 == 0 {
+            return false;
+        }
+        true
+    }
+
+    for _ in 0..total_cells {
+        if offset >= data.len() {
+            break; // 셀 데이터가 부족할 수 있음 / Cell data may be insufficient
+        }
+
+        // 1) ListHeader 크기(6/8) 판별
+        // - 우선 8바이트로 가정한 뒤, 그 다음 26바이트를 CellAttributes로 해석했을 때 값이 그럴듯하면 8
+        // - 아니면 6바이트로 시도
+        // - 둘 다 그럴듯하지 않으면(데이터 손상 등) 8을 기본으로 둠 (기존 로직과 호환)
+        let header_len = {
+            let mut chosen = 8usize;
+            let try8 = parse_cell_attributes_at(data, offset + 8)
+                .filter(|a| is_plausible_cell_attrs(a, row_count, col_count));
+            let try6 = parse_cell_attributes_at(data, offset + 6)
+                .filter(|a| is_plausible_cell_attrs(a, row_count, col_count));
+            if try8.is_some() {
+                chosen = 8;
+            } else if try6.is_some() {
+                chosen = 6;
+            }
+            chosen
         };
+
+        // 2) ListHeader 파싱 (확정된 길이만큼)
+        if offset + header_len > data.len() {
+            break;
+        }
+        let list_header =
+            ListHeader::parse(&data[offset..offset + header_len]).map_err(|e| HwpError::from(e))?;
+        offset += header_len;
+
+        // 셀 속성 파싱 (표 80 참조) / Parse cell attributes (see Table 80)
+        // 표 80: 전체 길이 26바이트
+        // UINT16(2) + UINT16(2) + UINT16(2) + UINT16(2) + HWPUNIT(4) + HWPUNIT(4) + HWPUNIT16[4](8) + UINT16(2) = 26
+        if offset + 26 > data.len() {
+            return Err(HwpError::insufficient_data(
+                "cell attributes",
+                26,
+                data.len() - offset,
+            ));
+        }
+
+        let cell_attributes = parse_cell_attributes_at(data, offset).ok_or_else(|| {
+            HwpError::insufficient_data("cell attributes", 26, data.len().saturating_sub(offset))
+        })?;
         offset += 26;
 
         cells.push(TableCell {
