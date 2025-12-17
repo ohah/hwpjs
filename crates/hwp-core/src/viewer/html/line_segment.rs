@@ -378,6 +378,7 @@ pub fn render_line_segments_with_content(
                     None,
                     None,
                     None,
+                    None,
                     pattern_counter,
                     color_to_pattern,
                 );

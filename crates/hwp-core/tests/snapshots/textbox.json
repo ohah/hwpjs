@@ -1766,7 +1766,7 @@
                   "affect_line_spacing": false,
                   "vert_rel_to": "paper",
                   "vert_relative": 0,
-                  "horz_rel_to": "page",
+                  "horz_rel_to": "paper",
                   "horz_relative": 0,
                   "vert_rel_to_para_limit": false,
                   "overlap": true,

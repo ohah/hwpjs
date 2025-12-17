@@ -220,6 +220,9 @@ pub fn render_paragraph(
     let para_start_column_mm = line_segments
         .first()
         .map(|seg| seg.column_start_position as f64 * 25.4 / 7200.0);
+    let para_segment_width_mm = line_segments
+        .first()
+        .map(|seg| seg.segment_width as f64 * 25.4 / 7200.0);
     // base_top(mm): hcD의 top 위치. like_letters=false 테이블(=hpa 레벨로 빠지는 객체)의 vert_rel_to=para 계산에
     // 페이지 기준(절대) y 좌표가 필요하므로, paragraph 기준 y(vertical_position)에 base_top을 더해 절대값으로 전달한다.
     let base_top_mm = if let Some((_hcd_left, hcd_top)) = hcd_position {
@@ -399,6 +402,7 @@ pub fn render_paragraph(
                 None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
                 ref_para_vertical_abs_mm, // 참조 문단의 vertical_position(절대) 전달 / Pass reference paragraph's vertical_position (absolute)
                 para_start_column_mm, // 문단 시작 column_start_position 전달 / Pass paragraph start column_start_position
+                para_segment_width_mm, // 문단 segment_width 전달 / Pass paragraph segment_width
                 first_para_vertical_abs_mm, // 첫 번째 문단의 vertical_position(절대) 전달 (가설 O) / Pass first paragraph's vertical_position (absolute; Hypothesis O)
                 pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
                 color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern

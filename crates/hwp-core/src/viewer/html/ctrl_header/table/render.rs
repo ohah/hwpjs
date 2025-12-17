@@ -58,8 +58,10 @@ pub fn render_table(
     caption_para_shape_id: Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
     caption_line_segment: Option<&LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
     segment_position: Option<(INT32, INT32)>,
+    // NOTE: obj_outer_width_mm is derived from resolved_size.width (includes margins/padding as in fixtures)
     para_start_vertical_mm: Option<f64>,
     para_start_column_mm: Option<f64>, // 현재 문단 시작 column_start_position (mm)
+    para_segment_width_mm: Option<f64>, // 현재 문단 LineSeg segment_width (mm)
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
     pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
     color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
@@ -126,8 +128,10 @@ pub fn render_table(
         page_def,
         segment_position,
         ctrl_header,
+        Some(resolved_size.width),
         para_start_vertical_mm,
         para_start_column_mm,
+        para_segment_width_mm,
         first_para_vertical_mm,
     );
 

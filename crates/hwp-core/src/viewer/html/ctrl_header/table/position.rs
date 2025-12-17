@@ -28,12 +28,14 @@ pub(crate) fn table_position(
     page_def: Option<&PageDef>,
     segment_position: Option<(INT32, INT32)>,
     ctrl_header: Option<&CtrlHeaderData>,
+    obj_outer_width_mm: Option<f64>,
     para_start_vertical_mm: Option<f64>,
     para_start_column_mm: Option<f64>,
+    para_segment_width_mm: Option<f64>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
 ) -> (f64, f64) {
     // CtrlHeader에서 필요한 정보 추출 / Extract necessary information from CtrlHeader
-    let (offset_x, offset_y, vert_rel_to, horz_rel_to) =
+    let (offset_x, offset_y, vert_rel_to, horz_rel_to, horz_relative) =
         if let Some(CtrlHeaderData::ObjectCommon {
             attribute,
             offset_x,
@@ -46,9 +48,10 @@ pub(crate) fn table_position(
                 Some(*offset_y),
                 Some(attribute.vert_rel_to),
                 Some(attribute.horz_rel_to),
+                Some(attribute.horz_relative),
             )
         } else {
-            (None, None, None, None)
+            (None, None, None, None, None)
         };
 
     let (base_left, base_top) = if let Some((left, top)) = hcd_position {
@@ -81,12 +84,61 @@ pub(crate) fn table_position(
             base_left
         };
         let offset_left_mm = offset_x.map(|x| x.to_mm()).unwrap_or(0.0);
-        // horz_rel_to=para 인 경우, 문단의 column_start_position(=para_start_column_mm)을 함께 더해야 fixture(table-position.html)와 일치합니다.
-        // (예: page_left 30mm + offset_x 5mm + para_col 3.53mm = 38.53mm)
         let para_left_mm = if matches!(horz_rel_to, Some(HorzRelTo::Para)) {
             para_start_column_mm.unwrap_or(0.0)
         } else {
             0.0
+        };
+        let obj_w_mm = obj_outer_width_mm.unwrap_or(0.0);
+
+        // 기준 폭 계산 (right/center 정렬에 필요)
+        // - paper: 용지 폭
+        // - page/column: 본문(content) 폭
+        // - para: 현재 LineSeg의 segment_width
+        let mut ref_width_mm = match horz_rel_to {
+            Some(HorzRelTo::Paper) => page_def.map(|pd| pd.paper_width.to_mm()).unwrap_or(210.0),
+            Some(HorzRelTo::Para) => para_segment_width_mm.unwrap_or(0.0),
+            Some(HorzRelTo::Page) | Some(HorzRelTo::Column) | None => {
+                if let Some(pd) = page_def {
+                    // content width = paper - (left+binding) - right
+                    pd.paper_width.to_mm()
+                        - (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
+                        - pd.right_margin.to_mm()
+                } else {
+                    148.0
+                }
+            }
+        };
+        // ParaLineSeg.segment_width가 0인 케이스가 있어(빈 문단/앵커 문단),
+        // 이 경우에는 content width에서 para_left를 뺀 값으로 폴백한다.
+        if matches!(horz_rel_to, Some(HorzRelTo::Para)) && ref_width_mm <= 0.0 {
+            if let Some(pd) = page_def {
+                let content_w = pd.paper_width.to_mm()
+                    - (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
+                    - pd.right_margin.to_mm();
+                // 문단 기준 폭은 "문단 시작(col_start)"을 좌우에서 모두 제외한 값으로 해석해야
+                // fixture(table-position)의 "문단 오른쪽/가운데" 케이스와 일치한다.
+                // 예) content_w(150) - 2*col_start(3.53) = 142.94mm
+                ref_width_mm = (content_w - (para_left_mm * 2.0)).max(0.0);
+            }
+        }
+
+        // horz_relative (Table 70): 0=left, 1=center, 2=right
+        // NOTE: fixture(table-position.html)의 "오른쪽부터 Nmm" 케이스는 right 기준 계산이 필요합니다.
+        let relative_mode = horz_relative.unwrap_or(0);
+        let left_mm = match relative_mode {
+            2 => {
+                // right aligned: (ref_right - offset_x - obj_width)
+                base_left_for_obj + para_left_mm + (ref_width_mm - offset_left_mm - obj_w_mm)
+            }
+            1 => {
+                // centered: (ref_center - obj_width/2) + offset_x
+                base_left_for_obj + para_left_mm + (ref_width_mm / 2.0 - obj_w_mm / 2.0) + offset_left_mm
+            }
+            _ => {
+                // left aligned
+                base_left_for_obj + para_left_mm + offset_left_mm
+            }
         };
         let offset_top_mm = if let (Some(VertRelTo::Para), Some(offset)) = (vert_rel_to, offset_y) {
             let offset_mm = offset.to_mm();
@@ -103,9 +155,6 @@ pub(crate) fn table_position(
             offset_y.map(|y| y.to_mm()).unwrap_or(0.0)
         };
 
-        (
-            round_to_2dp(base_left_for_obj + offset_left_mm + para_left_mm),
-            round_to_2dp(base_top_for_obj + offset_top_mm),
-        )
+        (round_to_2dp(left_mm), round_to_2dp(base_top_for_obj + offset_top_mm))
     }
 }
