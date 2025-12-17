@@ -318,6 +318,84 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 }
                 // 테이블은 hpa 레벨에 배치 (table.html 샘플 구조에 맞춤) / Tables are placed at hpa level (matching table.html sample structure)
                 for table_html in table_htmls {
+                    // NOTE (fixture/table-caption.html):
+                    // 테이블은 문단의 vertical_position만으로는 페이지 넘침을 감지하기 어렵습니다.
+                    // (여러 테이블이 같은 문단에 매달리거나, 개체 높이가 커서 다음 페이지로 넘어가야 하는 경우)
+                    // 따라서 테이블 HTML의 style(top/height)을 이용해 페이지 콘텐츠 높이(content_height_mm)를 넘으면
+                    // 테이블을 다음 페이지로 넘깁니다.
+                    //
+                    // This is a pragmatic page-break heuristic to match fixtures.
+                    fn extract_top_height_mm(html: &str) -> Option<(f64, f64)> {
+                        fn extract_style_after<'a>(html: &'a str, needle: &str) -> Option<&'a str> {
+                            let idx = html.find(needle)?;
+                            let rest = &html[idx + needle.len()..];
+                            let end = rest.find('"')?;
+                            Some(&rest[..end])
+                        }
+
+                        fn parse_mm(style: &str, key: &str) -> Option<f64> {
+                            // naive but sufficient: find "key:" then parse until "mm"
+                            let needle = format!("{key}:");
+                            let idx = style.find(&needle)?;
+                            let rest = &style[idx + needle.len()..];
+                            let end = rest.find("mm")?;
+                            rest[..end].trim().parse::<f64>().ok()
+                        }
+
+                        // Prefer htG bounding box if present, else fall back to htb.
+                        if let Some(style) =
+                            extract_style_after(html, r#"<div class="htG" style=""#)
+                        {
+                            let top = parse_mm(style, "top")?;
+                            let height = parse_mm(style, "height")?;
+                            return Some((top, height));
+                        }
+                        let style = extract_style_after(html, r#"<div class="htb" style=""#)?;
+                        let top = parse_mm(style, "top")?;
+                        let height = parse_mm(style, "height")?;
+                        Some((top, height))
+                    }
+
+                    if let Some((top_mm, height_mm)) = extract_top_height_mm(&table_html) {
+                        let bottom_mm = top_mm + height_mm;
+                        if bottom_mm > content_height_mm
+                            && (!page_content.is_empty() || !page_tables.is_empty())
+                        {
+                            // Flush current page before placing this table.
+                            use crate::types::RoundTo2dp;
+                            let hcd_pos = if let Some((left, top)) = hcd_position {
+                                Some((left.round_to_2dp(), top.round_to_2dp()))
+                            } else {
+                                let left = page_def
+                                    .map(|pd| {
+                                        (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
+                                            .round_to_2dp()
+                                    })
+                                    .unwrap_or(20.0);
+                                let top = page_def
+                                    .map(|pd| {
+                                        (pd.top_margin.to_mm() + pd.header_margin.to_mm())
+                                            .round_to_2dp()
+                                    })
+                                    .unwrap_or(24.99);
+                                Some((left, top))
+                            };
+                            html.push_str(&page::render_page(
+                                page_number,
+                                &page_content,
+                                &page_tables,
+                                page_def,
+                                first_segment_pos,
+                                hcd_pos,
+                            ));
+                            page_number += 1;
+                            page_content.clear();
+                            page_tables.clear();
+                            current_max_vertical_mm = 0.0;
+                            first_segment_pos = None;
+                            hcd_position = None;
+                        }
+                    }
                     page_tables.push(table_html);
                 }
 

@@ -202,8 +202,18 @@ pub(crate) fn render_cells(
             get_cell_height(table, cell, ctrl_header_height_mm)
         };
 
+        // 셀 마진(mm) 계산은 렌더링 전반(특히 special-case)에서 필요하므로 먼저 계산합니다.
+        let left_margin_mm = cell_margin_to_mm(cell.cell_attributes.left_margin);
+        let right_margin_mm = cell_margin_to_mm(cell.cell_attributes.right_margin);
+        let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
+
         // 셀 내부 문단 렌더링 / Render paragraphs inside cell
         let mut cell_content = String::new();
+        // fixture처럼 hce 바로 아래에 추가로 붙일 HTML(예: 이미지 hsR)을 모읍니다.
+        let mut cell_outside_html = String::new();
+        // 이미지-only 셀 보정용: 이미지가 크고(셀 높이에 근접) 텍스트가 없으면 hcI를 아래로 밀지 않음
+        let mut cell_has_text = false;
+        let mut image_only_max_height_mm: Option<f64> = None;
         // hcI의 top 위치 계산을 위한 첫 번째 LineSegment 정보 저장 / Store first LineSegment info for hcI top position calculation
         let mut first_line_segment: Option<&LineSegmentInfo> = None;
 
@@ -405,6 +415,19 @@ pub(crate) fn render_cells(
                 }
             }
 
+            // 이미지-only 셀 판단을 위해, 이 문단에서 수집된 이미지의 최대 높이를 기록합니다.
+            // (LineSegment 경로로 렌더링되는 경우에도 images는 존재할 수 있으므로 여기서 누적)
+            if !images.is_empty() {
+                for image in &images {
+                    let h_mm = round_to_2dp(int32_to_mm(image.height as INT32));
+                    image_only_max_height_mm = Some(
+                        image_only_max_height_mm
+                            .map(|cur| cur.max(h_mm))
+                            .unwrap_or(h_mm),
+                    );
+                }
+            }
+
             // ParaShape indent 값 가져오기 / Get ParaShape indent value
             let para_shape_indent =
                 if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
@@ -415,22 +438,83 @@ pub(crate) fn render_cells(
 
             // LineSegment가 있으면 사용 / Use LineSegment if available
             if !line_segments.is_empty() {
-                cell_content.push_str(&render_line_segments_with_content(
-                    &line_segments,
-                    &text,
-                    &char_shapes,
-                    document,
-                    &para_shape_class,
-                    &images,
-                    &[], // 셀 내부에서는 테이블 없음 / No tables inside cells
-                    options,
-                    para_shape_indent,
-                    None,             // hcd_position 없음 / No hcd_position
-                    None,             // page_def 없음 / No page_def
-                    0, // table_counter_start (셀 내부에서는 테이블 번호 사용 안 함) / table_counter_start (table numbers not used inside cells)
-                    pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
-                    color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
-                ));
+                // SPECIAL CASE (noori BIN0002 등):
+                // 텍스트가 없고 이미지가 있는데, LineSegment.segment_width가 0에 가까우면 hls width가 0으로 출력되어
+                // 이미지 정렬이 깨집니다. 이 경우에도 hce>hcD>hcI>hls 구조는 유지하되,
+                // hls 박스 width를 '셀의 콘텐츠 폭'으로 강제하고 이미지(hsR)를 그 안에서 가운데 배치합니다.
+                let has_only_images = text.trim().is_empty() && !images.is_empty();
+                let seg_width_mm = line_segments
+                    .first()
+                    .map(|s| round_to_2dp(int32_to_mm(s.segment_width)))
+                    .unwrap_or(0.0);
+                if has_only_images && seg_width_mm.abs() < 0.01 {
+                    // FIXTURE(noori.html) 구조 재현:
+                    // - hcI에는 "빈 문단(hls width=0)"만 남김
+                    // - 실제 이미지는 hce 바로 아래에 hsR로 배치(top/left는 cell margin + ObjectCommon offset)
+                    //
+                    // fixture 예:
+                    //   <div class="hcI"><div class="hls ... width:0mm;"></div></div>
+                    //   <div class="hsR" style="top:0.50mm;left:24.42mm;... background-image:url(...);"></div>
+                    let image = &images[0];
+                    let img_h_mm = round_to_2dp(int32_to_mm(image.height as INT32));
+
+                    // 기본값: margin만 (offset 못 찾으면 0으로)
+                    let mut obj_off_x_mm = 0.0;
+                    let mut obj_off_y_mm = 0.0;
+                    for record in &para.records {
+                        if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                            if let crate::document::CtrlHeaderData::ObjectCommon {
+                                offset_x,
+                                offset_y,
+                                ..
+                            } = &header.data
+                            {
+                                obj_off_x_mm = round_to_2dp(int32_to_mm((*offset_x).into()));
+                                obj_off_y_mm = round_to_2dp(int32_to_mm((*offset_y).into()));
+                                break;
+                            }
+                        }
+                    }
+
+                    // 1) hcI 안에는 빈 hls만
+                    cell_content.push_str(&format!(
+                        r#"<div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:0mm;top:-0.18mm;height:3.53mm;width:0mm;"></div>"#,
+                        para_shape_class, img_h_mm
+                    ));
+
+                    // 2) 실제 이미지는 cell_outside_html로 (hce 바로 아래)
+                    // 좌표는 fixture처럼: top = top_margin_mm + offset_y, left = left_margin_mm + offset_x
+                    let abs_left_mm = round_to_2dp(left_margin_mm + obj_off_x_mm);
+                    let abs_top_mm = round_to_2dp(top_margin_mm + obj_off_y_mm);
+                    cell_outside_html.push_str(&format!(
+                        r#"<div class="hsR" style="top:{:.2}mm;left:{:.2}mm;width:{:.2}mm;height:{:.2}mm;background-repeat:no-repeat;background-size:contain;background-image:url('{}');"></div>"#,
+                        abs_top_mm,
+                        abs_left_mm,
+                        round_to_2dp(int32_to_mm(image.width as INT32)),
+                        round_to_2dp(int32_to_mm(image.height as INT32)),
+                        image.url
+                    ));
+                } else {
+                    cell_content.push_str(&render_line_segments_with_content(
+                        &line_segments,
+                        &text,
+                        &char_shapes,
+                        document,
+                        &para_shape_class,
+                        &images,
+                        &[], // 셀 내부에서는 테이블 없음 / No tables inside cells
+                        options,
+                        para_shape_indent,
+                        None,             // hcd_position 없음 / No hcd_position
+                        None,             // page_def 없음 / No page_def
+                        0, // table_counter_start (셀 내부에서는 테이블 번호 사용 안 함) / table_counter_start (table numbers not used inside cells)
+                        pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
+                        color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
+                    ));
+                    if !text.is_empty() {
+                        cell_has_text = true;
+                    }
+                }
             } else if !text.is_empty() {
                 // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment
                 let rendered_text =
@@ -439,6 +523,7 @@ pub(crate) fn render_cells(
                     r#"<div class="hls {}">{}</div>"#,
                     para_shape_class, rendered_text
                 ));
+                cell_has_text = true;
             } else if !images.is_empty() {
                 // LineSegment와 텍스트가 없지만 이미지가 있는 경우 / No LineSegment or text but images exist
                 // 이미지만 렌더링 / Render images only
@@ -453,44 +538,88 @@ pub(crate) fn render_cells(
                         0,
                     );
                     cell_content.push_str(&image_html);
+                    let h_mm = round_to_2dp(int32_to_mm(image.height as INT32));
+                    image_only_max_height_mm = Some(
+                        image_only_max_height_mm
+                            .map(|cur| cur.max(h_mm))
+                            .unwrap_or(h_mm),
+                    );
                 }
             }
         }
 
-        let left_margin_mm = cell_margin_to_mm(cell.cell_attributes.left_margin);
-        let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
+        // (마진 값은 위에서 이미 계산됨)
         let bottom_margin_mm = cell_margin_to_mm(cell.cell_attributes.bottom_margin);
 
         // hcI의 top 위치 계산 / Calculate hcI top position
-        // 세로 정렬에 따라 셀 높이와 LineSegment 높이를 고려하여 계산
-        // Calculate considering cell height and LineSegment height according to vertical alignment
+        // NOTE: hcI는 "셀 안에서 컨텐츠 블록을 어디에 둘지"만 담당합니다(Top/Center/Bottom).
+        // 글자 baseline/line-height 보정은 LineSegment(hls) 쪽에서 처리합니다.
+        //
+        // IMPORTANT (fixture 기준):
+        // 셀 안에 줄이 여러 개(여러 para_line_seg)인 경우, 첫 줄 높이만으로 center를 계산하면
+        // fixture보다 과하게 내려가므로(예: 6.44mm), 전체 라인 블록 높이(첫 라인 시작~마지막 라인 끝)를 사용합니다.
         let hci_top_mm = if let Some(segment) = first_line_segment {
-            let segment_height_mm = round_to_2dp(int32_to_mm(segment.line_height));
-            let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
-            let baseline_distance_mm = round_to_2dp(int32_to_mm(segment.baseline_distance));
+            // 기본: 단일 라인 높이 / Default: single line height
+            let mut content_height_mm = round_to_2dp(int32_to_mm(segment.line_height));
 
-            match cell.list_header.attribute.vertical_align {
-                VerticalAlign::Top => {
-                    // Top 정렬: baseline_offset 계산 (baseline_distance - text_height) / 2
-                    // Top alignment: calculate baseline_offset (baseline_distance - text_height) / 2
-                    let baseline_offset = (baseline_distance_mm - text_height_mm) / 2.0;
-                    round_to_2dp(baseline_offset)
+            // 셀 내부 모든 para_line_seg를 스캔하여 전체 콘텐츠 높이 계산
+            // (min vertical_position ~ max(vertical_position + line_height))
+            let mut min_vp: Option<i32> = None;
+            let mut max_bottom: Option<i32> = None;
+            for para in &cell.paragraphs {
+                for record in &para.records {
+                    if let ParagraphRecord::ParaLineSeg { segments } = record {
+                        for seg in segments {
+                            let vp = seg.vertical_position;
+                            let bottom = seg.vertical_position + seg.line_height;
+                            min_vp = Some(min_vp.map(|x| x.min(vp)).unwrap_or(vp));
+                            max_bottom = Some(max_bottom.map(|x| x.max(bottom)).unwrap_or(bottom));
+                        }
+                    }
                 }
-                VerticalAlign::Center => {
-                    // Center 정렬: 셀 높이와 LineSegment 높이를 고려하여 중앙 정렬
-                    // Center alignment: center align considering cell height and LineSegment height
-                    let center_offset = (cell_height - segment_height_mm) / 2.0;
-                    round_to_2dp(center_offset)
+            }
+            if let (Some(min_vp), Some(max_bottom)) = (min_vp, max_bottom) {
+                if max_bottom > min_vp {
+                    content_height_mm = round_to_2dp(int32_to_mm(max_bottom - min_vp));
                 }
-                VerticalAlign::Bottom => {
-                    // Bottom 정렬: 셀 높이와 LineSegment 높이를 고려하여 하단 정렬
-                    // Bottom alignment: bottom align considering cell height and LineSegment height
-                    let bottom_offset = cell_height - segment_height_mm;
-                    round_to_2dp(bottom_offset)
+            }
+
+            // 이미지-only 셀(특히 큰 이미지) 보정:
+            // 텍스트가 없고 이미지가 셀 높이에 근접하면, fixture처럼 hcI를 아래로 밀지 않고 top=0으로 둡니다.
+            if !cell_has_text {
+                if let Some(img_h) = image_only_max_height_mm {
+                    if img_h >= cell_height - 1.0 {
+                        0.0
+                    } else {
+                        // 이미지가 컨텐츠 높이보다 크면 컨텐츠 높이를 이미지 기준으로
+                        if img_h > content_height_mm {
+                            content_height_mm = img_h;
+                        }
+                        match cell.list_header.attribute.vertical_align {
+                            VerticalAlign::Top => 0.0,
+                            VerticalAlign::Center => {
+                                round_to_2dp((cell_height - content_height_mm) / 2.0)
+                            }
+                            VerticalAlign::Bottom => round_to_2dp(cell_height - content_height_mm),
+                        }
+                    }
+                } else {
+                    match cell.list_header.attribute.vertical_align {
+                        VerticalAlign::Top => 0.0,
+                        VerticalAlign::Center => {
+                            round_to_2dp((cell_height - content_height_mm) / 2.0)
+                        }
+                        VerticalAlign::Bottom => round_to_2dp(cell_height - content_height_mm),
+                    }
+                }
+            } else {
+                match cell.list_header.attribute.vertical_align {
+                    VerticalAlign::Top => 0.0,
+                    VerticalAlign::Center => round_to_2dp((cell_height - content_height_mm) / 2.0),
+                    VerticalAlign::Bottom => round_to_2dp(cell_height - content_height_mm),
                 }
             }
         } else {
-            // LineSegment가 없으면 기본값 사용 / Use default value if no LineSegment
             0.0
         };
 
@@ -502,7 +631,7 @@ pub(crate) fn render_cells(
         };
 
         cells_html.push_str(&format!(
-            r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI"{}>{}</div></div></div>"#,
+            r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI"{}>{}</div></div>{}</div>"#,
             round_to_2dp(cell_left),
             round_to_2dp(cell_top),
             round_to_2dp(cell_width),
@@ -510,7 +639,8 @@ pub(crate) fn render_cells(
             round_to_2dp(left_margin_mm),
             round_to_2dp(top_margin_mm),
             hci_style,
-            cell_content
+            cell_content,
+            cell_outside_html
         ));
     }
     cells_html

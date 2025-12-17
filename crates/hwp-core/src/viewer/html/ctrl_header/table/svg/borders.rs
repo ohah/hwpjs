@@ -3,7 +3,9 @@ use crate::document::docinfo::border_fill::BorderLine;
 use crate::viewer::html::styles::round_to_2dp;
 use crate::HwpDocument;
 
-use crate::viewer::html::ctrl_header::table::geometry::calculate_cell_left;
+use crate::viewer::html::ctrl_header::table::geometry::{
+    calculate_cell_left, calculate_cell_top, get_cell_height,
+};
 use crate::viewer::html::ctrl_header::table::size::Size;
 
 fn border_width_code_to_mm(code: u8) -> f64 {

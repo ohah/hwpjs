@@ -486,12 +486,16 @@ pub fn render_table(
     let htb_left_mm = round_to_2dp(htb_left_mm);
     let htb_top_mm = round_to_2dp(htb_top_mm);
     let htb_width_mm = round_to_2dp(htb_width_mm);
+    // fixture(noori.html/table*.html)처럼 height도 2dp로 고정해서 출력 값 흔들림(221.19 vs 221.2)을 방지
+    let content_height_mm = round_to_2dp(content_size.height);
     let htb_html = format!(
-        r#"<div class="htb" style="left:{htb_left_mm}mm;width:{htb_width_mm}mm;top:{htb_top_mm}mm;height:{content_size_height}mm;">{svg}{cells_html}</div>"#,
+        // NOTE: fixture는 htb를 inline-block + relative로 두고 vertical-align:middle을 사용합니다.
+        // 레이아웃이 이 스타일에 의존하는 케이스가 있어 동일하게 맞춥니다.
+        r#"<div class="htb" style="left:{htb_left_mm}mm;width:{htb_width_mm}mm;top:{htb_top_mm}mm;height:{content_height_mm}mm;display:inline-block;position:relative;vertical-align:middle;">{svg}{cells_html}</div>"#,
         htb_left_mm = htb_left_mm,
         htb_width_mm = htb_width_mm,
         htb_top_mm = htb_top_mm,
-        content_size_height = content_size.height,
+        content_height_mm = content_height_mm,
         svg = svg,
         cells_html = cells_html,
     );

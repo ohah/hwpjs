@@ -40,20 +40,41 @@ pub fn render_line_segment(
     para_shape_class: &str,
     para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
     para_shape: Option<&ParaShape>, // ParaShape 정보 (옵션) / ParaShape info (optional)
+    is_text_segment: bool, // 텍스트 세그먼트 여부 (테이블/이미지 like_letters 등은 false)
+    override_size_mm: Option<(f64, f64)>, // 비텍스트 세그먼트(이미지 등)에서 hls box 크기 override
 ) -> String {
     let left_mm = round_to_2dp(int32_to_mm(segment.column_start_position));
-    let top_mm = round_to_2dp(int32_to_mm(segment.vertical_position));
-    let width_mm = round_to_2dp(int32_to_mm(segment.segment_width));
-    let height_mm = round_to_2dp(int32_to_mm(segment.line_height));
+    let vertical_pos_mm = int32_to_mm(segment.vertical_position);
+    let (width_mm, height_mm) = if let Some((w, h)) = override_size_mm {
+        (round_to_2dp(w), round_to_2dp(h))
+    } else {
+        (
+            round_to_2dp(int32_to_mm(segment.segment_width)),
+            round_to_2dp(int32_to_mm(segment.line_height)),
+        )
+    };
     let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
     let line_spacing_mm = round_to_2dp(int32_to_mm(segment.line_spacing));
     let baseline_distance_mm = round_to_2dp(int32_to_mm(segment.baseline_distance));
 
-    // line-height 계산: baseline_distance를 직접 사용
-    // 원본 HTML 분석 결과, CSS line-height는 baseline_distance 값을 사용함
-    // Calculate line-height: use baseline_distance directly
-    // Analysis of original HTML shows CSS line-height uses baseline_distance value
-    let line_height_value = round_to_2dp(baseline_distance_mm);
+    // NOTE (fixture 기준):
+    // - 일반 텍스트 세그먼트: line-height는 baseline_distance를 사용하고, top은 baseline 보정을 포함합니다.
+    // - 테이블/이미지(like_letters) 등 비텍스트 세그먼트: line-height는 segment.line_height(=height)이고,
+    //   top은 vertical_position 그대로 사용합니다. (fixtures/noori.html의 큰 표 hls 패턴)
+    let line_height_value = if is_text_segment {
+        round_to_2dp(baseline_distance_mm)
+    } else {
+        height_mm
+    };
+
+    let top_mm = if is_text_segment {
+        // baseline 보정: (line-height - text_height) / 2
+        let baseline_offset_mm = (line_height_value - text_height_mm) / 2.0;
+        round_to_2dp(vertical_pos_mm + baseline_offset_mm)
+    } else {
+        // 비텍스트(표/이미지 등): fixture처럼 vertical_position 그대로
+        round_to_2dp(vertical_pos_mm)
+    };
 
     let mut style = format!(
         "line-height:{:.2}mm;white-space:nowrap;left:{:.2}mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;",
@@ -81,7 +102,15 @@ pub fn render_line_segment_with_indent(
     para_shape_class: &str,
     para_shape_indent: Option<i32>,
 ) -> String {
-    render_line_segment(segment, content, para_shape_class, para_shape_indent, None)
+    render_line_segment(
+        segment,
+        content,
+        para_shape_class,
+        para_shape_indent,
+        None,
+        true,
+        None,
+    )
 }
 
 /// 라인 세그먼트 그룹을 HTML로 렌더링 / Render line segment group to HTML
@@ -136,6 +165,7 @@ pub fn render_line_segments_with_content(
 
     for segment in segments {
         let mut content = String::new();
+        let mut override_size_mm: Option<(f64, f64)> = None;
 
         // 이 세그먼트에 해당하는 텍스트 추출 / Extract text for this segment
         let start_pos = segment.text_start_position as usize;
@@ -206,6 +236,14 @@ pub fn render_line_segments_with_content(
                 0,
             );
             content.push_str(&image_html);
+            // IMPORTANT: 일부 파일(noori 'BIN0002.bmp')에서 LineSegment의 segment_width/line_height가 0에 가깝게 나와
+            // hls 박스가 0폭/작은 높이로 생성되며 이미지 중앙정렬이 깨집니다.
+            // fixture(noori.html) 기준으로는 이미지가 셀에 별도 배치되는 케이스가 있어
+            // hls width는 원래 segment_width(0일 수 있음)를 유지하고, height만 이미지 높이에 맞춥니다.
+            override_size_mm = Some((
+                round_to_2dp(int32_to_mm(segment.segment_width)),
+                round_to_2dp(int32_to_mm(image.height as crate::types::INT32)),
+            ));
         } else if (is_empty_segment || is_text_empty)
             && !tables.is_empty()
             && empty_count >= images.len()
@@ -281,6 +319,9 @@ pub fn render_line_segments_with_content(
             para_shape_class,
             para_shape_indent,
             para_shape,
+            // 텍스트 렌더링 경로일 때만 true. (이미지/테이블 like_letters를 배치한 세그먼트는 false)
+            !((is_empty_segment || is_text_empty) && (!images.is_empty() || !tables.is_empty())),
+            override_size_mm,
         ));
     }
 

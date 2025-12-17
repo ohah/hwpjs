@@ -68,6 +68,11 @@ impl ListHeader {
     /// # Returns
     /// 파싱된 ListHeader 구조체 / Parsed ListHeader structure
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
+        // 표 65에는 6바이트로 되어있지만 실제 파일/구현에서는
+        // - 6바이트: [paragraph_count:2][attribute:4]
+        // - 8바이트: [paragraph_count:2][unknown1:2][attribute:4]
+        // 변형이 존재합니다. pyhwp는 8바이트 구조를 기본으로 사용합니다.
+        // 따라서 최소 6바이트를 허용하되, 8바이트 이상이면 8바이트 구조를 우선합니다.
         if data.len() < 6 {
             return Err(HwpError::insufficient_data("ListHeader", 6, data.len()));
         }
@@ -76,7 +81,13 @@ impl ListHeader {
         let paragraph_count = INT16::from_le_bytes([data[0], data[1]]);
 
         // UINT32 속성 (표 65-1 참조) / UINT32 attribute (see Table 65-1)
-        let attribute_value = UINT32::from_le_bytes([data[2], data[3], data[4], data[5]]);
+        // 6바이트 구조: [paragraph_count:2][attribute:4]
+        // 8바이트 구조: [paragraph_count:2][unknown1:2][attribute:4]
+        let attribute_value = if data.len() >= 8 {
+            UINT32::from_le_bytes([data[4], data[5], data[6], data[7]])
+        } else {
+            UINT32::from_le_bytes([data[2], data[3], data[4], data[5]])
+        };
 
         // 속성 파싱 (표 65-1) / Parse attribute (Table 65-1)
         let attribute = parse_list_header_attribute(attribute_value);
@@ -107,6 +118,7 @@ fn parse_list_header_attribute(value: UINT32) -> ListHeaderAttribute {
 
     // bit 5-6: 세로 정렬 / bit 5-6: vertical alignment
     let vertical_align = match (value >> 5) & 0x03 {
+        // 스펙(표 65-1): 0=top, 1=center, 2=bottom
         0 => VerticalAlign::Top,
         1 => VerticalAlign::Center,
         2 => VerticalAlign::Bottom,

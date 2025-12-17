@@ -710,7 +710,8 @@ impl Section {
                         // children에 추가하지 않음 / Don't add to children
 
                         // LIST_HEADER 원시 데이터에서 CellAttributes 파싱 / Parse CellAttributes from LIST_HEADER raw data
-                        // LIST_HEADER 데이터 구조: ListHeader (10바이트) + CellAttributes (26바이트)
+                        // 레거시(pyhwp/hwp.js/hwplib)와 동일하게, 셀 LIST_HEADER는 선두 8바이트(paraCount + property)를 가진 후
+                        // 바로 CellAttributes(표 80: 26바이트)가 이어지는 형태로 처리합니다.
                         // LIST_HEADER data structure: ListHeader + CellAttributes (26 bytes)
                         // 표 65: ListHeader는 INT16(2) + UINT32(4) = 6바이트 (문서 기준)
                         // 하지만 실제 구현에서는 UINT16 paragraphs + UINT16 unknown1 + UINT32 listflags = 8바이트
@@ -720,12 +721,10 @@ impl Section {
                         //   - UINT16 col, UINT16 row, UINT16 colspan, UINT16 rowspan, ...
                         let cell_data = child.data();
                         let (row_addr, col_addr, cell_attrs_opt) = if cell_data.len() >= 34 {
-                            // ListHeader는 실제로 8바이트 (pyhwp 기준)
-                            // CellAttributes는 ListHeader 이후부터 시작
+                            // CellAttributes는 ListHeader(8바이트) 이후부터 시작
                             use crate::document::bodytext::table::CellAttributes;
                             use crate::types::{HWPUNIT, HWPUNIT16, UINT16, UINT32};
-                            // ListHeader: UINT16(2) + UINT16(2) + UINT32(4) = 8바이트 (pyhwp 실제 구현)
-                            let offset = 8; // ListHeader: UINT16(2) + UINT16(2) + UINT32(4) = 8바이트
+                            let offset = 8;
                             if offset + 26 <= cell_data.len() {
                                 let cell_attrs = CellAttributes {
                                     col_address: UINT16::from_le_bytes([
@@ -843,8 +842,8 @@ impl Section {
                                 for child in node.children() {
                                     if child.tag_id() == HwpTag::LIST_HEADER {
                                         let cell_data = child.data();
-                                        if cell_data.len() >= 36 {
-                                            let offset = 10;
+                                        if cell_data.len() >= 34 {
+                                            let offset = 8;
                                             let check_row = UINT16::from_le_bytes([
                                                 cell_data[offset + 2],
                                                 cell_data[offset + 3],
@@ -883,7 +882,7 @@ impl Section {
                                 } else {
                                     // cell_data에서 파싱 / Parse from cell_data
                                     if let Some((list_header, cell_data)) = found_list_header {
-                                        let offset = 10;
+                                        let offset = 8;
                                         let cell_attributes = CellAttributes {
                                             col_address: UINT16::from_le_bytes([
                                                 cell_data[offset],
