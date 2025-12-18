@@ -321,6 +321,69 @@ src/
 - JavaScript/TypeScript: `oxlint` 및 `oxfmt` 사용
 - 모든 코드는 저장 시 자동 포맷팅
 
+### 함수 파라미터 설계 가이드라인
+
+**중요**: 레이아웃 비교 테스팅 등 빠른 반복 개발이 필요한 경우를 고려한 실용적 접근법입니다.
+
+#### 원칙
+
+1. **전체 구조체 전달이 적합한 경우**:
+   - ID 기반 조회가 많은 경우 (`document.doc_info.char_shapes.get(id)`)
+   - 런타임에 어떤 필드가 필요한지 결정되는 경우 (`paragraph.records` 순회)
+   - 확장 가능성이 높은 경우 (새 필드 추가가 예상됨)
+   - 함수 시그니처 변경 없이 바로 사용 가능하여 빠른 개발이 필요한 경우
+
+2. **구조체로 묶는 것이 적합한 경우**:
+   - 파라미터가 7개 이상인 경우 (가독성 향상)
+   - 필요한 필드가 명확하고 고정된 경우
+   - 관련 데이터가 논리적으로 그룹화 가능한 경우
+   - 테스트 용이성이 중요한 경우
+
+3. **하이브리드 접근 (권장)**:
+   - `document`, `paragraph` 같은 큰 구조체는 전체 전달 (ID 기반 조회, 동적 접근)
+   - 명확한 필드들은 구조체로 묶기 (가독성, 유지보수성)
+   - 개발 단계에서는 전체 구조체 전달 허용, 안정화 후 리팩토링
+
+#### 예시
+
+```rust
+// ✅ 좋은 예: 하이브리드 접근
+pub struct LineSegmentContent<'a> {
+    pub text: &'a str,
+    pub original_text_len: usize,  // text와 함께 묶기
+    pub char_shapes: &'a [CharShapeInfo],
+    pub control_char_positions: &'a [ControlCharPosition],
+    pub images: &'a [ImageInfo],
+    pub tables: &'a [TableInfo],
+}
+
+pub struct LineSegmentRenderContext<'a> {
+    pub document: &'a HwpDocument,  // 전체 전달 (ID 기반 조회 필요)
+    pub para_shape_class: &'a str,
+    pub options: &'a HtmlOptions,
+    pub para_shape_indent: Option<i32>,
+    pub hcd_position: Option<(f64, f64)>,
+    pub page_def: Option<&'a PageDef>,
+}
+
+pub fn render_line_segments_with_content(
+    content: &LineSegmentContent,
+    context: &LineSegmentRenderContext,
+    state: &mut DocumentRenderState,
+) -> String
+```
+
+#### 개발 단계별 전략
+
+- **개발 단계 (레이아웃 비교 테스팅 중)**:
+  - 전체 구조체 전달 허용 (빠른 반복 개발)
+  - 새 필드 필요 시 함수 시그니처 변경 없이 바로 사용
+  - 파라미터가 많아지면 구조체로 묶기 고려
+
+- **안정화 단계**:
+  - 파라미터가 안정화되면 구조체로 리팩토링
+  - 가독성과 유지보수성 향상
+
 ### HWP 자료형 타입 정의 (hwp-core 개발 필수)
 
 **중요**: `crates/hwp-core`에서 HWP 파일을 파싱할 때는 반드시 스펙 문서의 자료형을 별도 타입으로 정의해야 합니다.

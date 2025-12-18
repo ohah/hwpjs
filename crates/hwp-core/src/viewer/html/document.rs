@@ -1,5 +1,7 @@
 use super::page;
-use super::paragraph::render_paragraph;
+use super::paragraph::{
+    render_paragraph, ParagraphPosition, ParagraphRenderContext, ParagraphRenderState,
+};
 use super::styles;
 use super::styles::round_to_2dp;
 use super::HtmlOptions;
@@ -294,20 +296,28 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     None
                 };
 
-                let (para_html, table_htmls) = render_paragraph(
-                    paragraph,
-                    document,
-                    options,
+                let position = ParagraphPosition {
                     hcd_position,
                     page_def,
                     first_para_vertical_mm,
                     current_para_vertical_mm,
-                    &para_vertical_positions, // 모든 문단의 vertical_position 전달 / Pass all paragraphs' vertical_positions
+                    para_vertical_positions: &para_vertical_positions, // 모든 문단의 vertical_position 전달 / Pass all paragraphs' vertical_positions
                     current_para_index, // 현재 문단 인덱스 전달 / Pass current paragraph index
-                    &mut table_counter, // 문서 레벨 table_counter 전달 / Pass document-level table_counter
-                    &mut pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
-                    &mut color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
-                );
+                };
+
+                let context = ParagraphRenderContext {
+                    document,
+                    options,
+                    position,
+                };
+
+                let mut state = ParagraphRenderState {
+                    table_counter: &mut table_counter, // 문서 레벨 table_counter 전달 / Pass document-level table_counter
+                    pattern_counter: &mut pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
+                    color_to_pattern: &mut color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
+                };
+
+                let (para_html, table_htmls) = render_paragraph(paragraph, &context, &mut state);
 
                 // 인덱스 증가 (vertical_position이 있는 문단만) / Increment index (only for paragraphs with vertical_position)
                 if current_para_vertical_mm.is_some() {

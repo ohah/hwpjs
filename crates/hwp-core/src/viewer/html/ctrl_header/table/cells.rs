@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use crate::document::bodytext::list_header::VerticalAlign;
 use crate::document::bodytext::{LineSegmentInfo, ParagraphRecord, Table};
 use crate::document::CtrlHeaderData;
-use crate::viewer::html::line_segment::{render_line_segments_with_content, ImageInfo};
+use crate::viewer::html::line_segment::{
+    render_line_segments_with_content, DocumentRenderState, ImageInfo, LineSegmentContent,
+    LineSegmentRenderContext,
+};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::html::{common, ctrl_header};
 use crate::viewer::html::{image, text};
@@ -506,23 +509,33 @@ pub(crate) fn render_cells(
                             break;
                         }
                     }
-                    cell_content.push_str(&render_line_segments_with_content(
-                        &line_segments,
-                        &text,
-                        &char_shapes,
-                        &control_char_positions,
-                        para.para_header.text_char_count as usize,
+                    let content = LineSegmentContent {
+                        segments: &line_segments,
+                        text: &text,
+                        char_shapes: &char_shapes,
+                        control_char_positions: &control_char_positions,
+                        original_text_len: para.para_header.text_char_count as usize,
+                        images: &images,
+                        tables: &[], // 셀 내부에서는 테이블 없음 / No tables inside cells
+                    };
+                    
+                    let context = LineSegmentRenderContext {
                         document,
-                        &para_shape_class,
-                        &images,
-                        &[], // 셀 내부에서는 테이블 없음 / No tables inside cells
+                        para_shape_class: &para_shape_class,
                         options,
                         para_shape_indent,
-                        None,             // hcd_position 없음 / No hcd_position
-                        None,             // page_def 없음 / No page_def
-                        0, // table_counter_start (셀 내부에서는 테이블 번호 사용 안 함) / table_counter_start (table numbers not used inside cells)
-                        pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
-                        color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
+                        hcd_position: None, // hcd_position 없음 / No hcd_position
+                        page_def: None,     // page_def 없음 / No page_def
+                    };
+                    
+                    let mut state = DocumentRenderState {
+                        table_counter_start: 0, // 셀 내부에서는 테이블 번호 사용 안 함 / table numbers not used inside cells
+                        pattern_counter,
+                        color_to_pattern,
+                    };
+                    
+                    cell_content.push_str(&render_line_segments_with_content(
+                        &content, &context, &mut state,
                     ));
                     if !text.is_empty() {
                         cell_has_text = true;

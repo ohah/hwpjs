@@ -9,6 +9,35 @@ use crate::viewer::html::ctrl_header::table::{CaptionData, TablePosition, TableR
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
 use crate::{HwpDocument, ParaShape};
+use std::collections::HashMap;
+
+/// 라인 세그먼트 렌더링 콘텐츠 / Line segment rendering content
+pub struct LineSegmentContent<'a> {
+    pub segments: &'a [LineSegmentInfo],
+    pub text: &'a str,
+    pub char_shapes: &'a [CharShapeInfo],
+    pub control_char_positions: &'a [ControlCharPosition],
+    pub original_text_len: usize,
+    pub images: &'a [ImageInfo],
+    pub tables: &'a [TableInfo<'a>],
+}
+
+/// 라인 세그먼트 렌더링 컨텍스트 / Line segment rendering context
+pub struct LineSegmentRenderContext<'a> {
+    pub document: &'a HwpDocument,
+    pub para_shape_class: &'a str,
+    pub options: &'a HtmlOptions,
+    pub para_shape_indent: Option<i32>,
+    pub hcd_position: Option<(f64, f64)>,
+    pub page_def: Option<&'a PageDef>,
+}
+
+/// 문서 레벨 렌더링 상태 / Document-level rendering state
+pub struct DocumentRenderState<'a> {
+    pub table_counter_start: u32,
+    pub pattern_counter: &'a mut usize,
+    pub color_to_pattern: &'a mut HashMap<u32, String>,
+}
 
 /// 테이블 정보 구조체 / Table info struct
 #[derive(Debug, Clone)]
@@ -158,45 +187,60 @@ pub fn render_line_segments(
     use std::collections::HashMap;
     let mut pattern_counter = 0;
     let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
-    render_line_segments_with_content(
+
+    let content = LineSegmentContent {
         segments,
         text,
         char_shapes,
-        &[],
-        text.chars().count(),
+        control_char_positions: &[],
+        original_text_len: text.chars().count(),
+        images: &[],
+        tables: &[],
+    };
+
+    let context = LineSegmentRenderContext {
         document,
         para_shape_class,
-        &[],
-        &[],
-        &HtmlOptions::default(),
-        None, // ParaShape indent는 기본값으로 None 사용 / Use None as default for ParaShape indent
-        None, // hcd_position은 기본값으로 None 사용 / Use None as default for hcd_position
-        None, // page_def는 기본값으로 None 사용 / Use None as default for page_def
-        1,    // table_counter_start는 기본값으로 1 사용 / Use 1 as default for table_counter_start
-        &mut pattern_counter,
-        &mut color_to_pattern,
-    )
+        options: &HtmlOptions::default(),
+        para_shape_indent: None,
+        hcd_position: None,
+        page_def: None,
+    };
+
+    let mut state = DocumentRenderState {
+        table_counter_start: 1,
+        pattern_counter: &mut pattern_counter,
+        color_to_pattern: &mut color_to_pattern,
+    };
+
+    render_line_segments_with_content(&content, &context, &mut state)
 }
 
 /// 라인 세그먼트 그룹을 HTML로 렌더링 (이미지와 테이블 포함) / Render line segment group to HTML (with images and tables)
 pub fn render_line_segments_with_content(
-    segments: &[LineSegmentInfo],
-    text: &str,
-    char_shapes: &[CharShapeInfo],
-    control_char_positions: &[ControlCharPosition],
-    original_text_len: usize,
-    document: &HwpDocument,
-    para_shape_class: &str,
-    images: &[ImageInfo],
-    tables: &[TableInfo],
-    options: &HtmlOptions,
-    para_shape_indent: Option<i32>, // ParaShape의 indent 값 (옵션) / ParaShape indent value (optional)
-    hcd_position: Option<(f64, f64)>, // hcD 위치 (mm) / hcD position (mm)
-    page_def: Option<&PageDef>,     // 페이지 정의 / Page definition
-    table_counter_start: u32,       // 테이블 번호 시작값 / Table number start value
-    pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
-    color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
+    content: &LineSegmentContent,
+    context: &LineSegmentRenderContext,
+    state: &mut DocumentRenderState,
 ) -> String {
+    // 구조체에서 개별 값 추출 / Extract individual values from structs
+    let segments = content.segments;
+    let text = content.text;
+    let char_shapes = content.char_shapes;
+    let control_char_positions = content.control_char_positions;
+    let original_text_len = content.original_text_len;
+    let images = content.images;
+    let tables = content.tables;
+
+    let document = context.document;
+    let para_shape_class = context.para_shape_class;
+    let options = context.options;
+    let para_shape_indent = context.para_shape_indent;
+    let hcd_position = context.hcd_position;
+    let page_def = context.page_def;
+
+    let table_counter_start = state.table_counter_start;
+    // pattern_counter와 color_to_pattern은 이미 &mut이므로 직접 사용 / pattern_counter and color_to_pattern are already &mut, so use directly
+
     let mut result = String::new();
 
     // 원본 WCHAR 인덱스(original) -> cleaned_text 인덱스(cleaned) 매핑
@@ -364,8 +408,8 @@ pub fn render_line_segments_with_content(
                     page_def,
                     options,
                     table_number: Some(current_table_number),
-                    pattern_counter,
-                    color_to_pattern,
+                    pattern_counter: state.pattern_counter,
+                    color_to_pattern: state.color_to_pattern,
                 };
 
                 let position = TablePosition {

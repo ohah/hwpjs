@@ -1,6 +1,8 @@
 use super::common;
 use super::ctrl_header;
-use super::line_segment::{ImageInfo, TableInfo};
+use super::line_segment::{
+    DocumentRenderState, ImageInfo, LineSegmentContent, LineSegmentRenderContext, TableInfo,
+};
 use super::text;
 use super::HtmlOptions;
 use crate::document::bodytext::{
@@ -11,23 +13,50 @@ use crate::document::bodytext::{
 use crate::document::{HwpDocument, Paragraph};
 use crate::viewer::html::ctrl_header::table::{render_table, TablePosition, TableRenderContext};
 use crate::INT32;
+use std::collections::HashMap;
+
+/// 문단 위치 정보 / Paragraph position information
+pub struct ParagraphPosition<'a> {
+    pub hcd_position: Option<(f64, f64)>,
+    pub page_def: Option<&'a PageDef>,
+    pub first_para_vertical_mm: Option<f64>,
+    pub current_para_vertical_mm: Option<f64>,
+    pub para_vertical_positions: &'a [f64],
+    pub current_para_index: Option<usize>,
+}
+
+/// 문단 렌더링 컨텍스트 / Paragraph rendering context
+pub struct ParagraphRenderContext<'a> {
+    pub document: &'a HwpDocument,
+    pub options: &'a HtmlOptions,
+    pub position: ParagraphPosition<'a>,
+}
+
+/// 문단 렌더링 상태 / Paragraph rendering state
+pub struct ParagraphRenderState<'a> {
+    pub table_counter: &'a mut u32,
+    pub pattern_counter: &'a mut usize,
+    pub color_to_pattern: &'a mut HashMap<u32, String>,
+}
 
 /// 문단을 HTML로 렌더링 / Render paragraph to HTML
 /// 반환값: (문단 HTML, 테이블 HTML 리스트) / Returns: (paragraph HTML, table HTML list)
 pub fn render_paragraph(
     paragraph: &Paragraph,
-    document: &HwpDocument,
-    options: &HtmlOptions,
-    hcd_position: Option<(f64, f64)>,
-    page_def: Option<&PageDef>,
-    first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
-    current_para_vertical_mm: Option<f64>, // 현재 문단의 vertical_position / Current paragraph's vertical_position
-    para_vertical_positions: &[f64], // 모든 문단의 vertical_position (vert_rel_to: "para"일 때 참조 문단 찾기 위해) / All paragraphs' vertical_positions (to find reference paragraph when vert_rel_to: "para")
-    current_para_index: Option<usize>, // 현재 문단 인덱스 (vertical_position이 있는 문단 기준) / Current paragraph index (based on paragraphs with vertical_position)
-    table_counter: &mut u32, // 문서 레벨 table_counter (문서 전체에서 테이블 번호 연속 유지) / Document-level table_counter (maintain sequential table numbers across document)
-    pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
-    color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
+    context: &ParagraphRenderContext,
+    state: &mut ParagraphRenderState,
 ) -> (String, Vec<String>) {
+    // 구조체에서 개별 값 추출 / Extract individual values from structs
+    let document = context.document;
+    let options = context.options;
+    let hcd_position = context.position.hcd_position;
+    let page_def = context.position.page_def;
+    let first_para_vertical_mm = context.position.first_para_vertical_mm;
+    let current_para_vertical_mm = context.position.current_para_vertical_mm;
+    let para_vertical_positions = context.position.para_vertical_positions;
+    let current_para_index = context.position.current_para_index;
+
+    // table_counter, pattern_counter, color_to_pattern은 이미 &mut이므로 직접 사용 / table_counter, pattern_counter, color_to_pattern are already &mut, so use directly
     let mut result = String::new();
 
     // ParaShape 클래스 가져오기 / Get ParaShape class
@@ -289,28 +318,41 @@ pub fn render_paragraph(
             })
             .collect();
         // 테이블 번호 시작값: 현재 table_counter 사용 (문서 레벨에서 관리) / Table number start value: use current table_counter (managed at document level)
-        let table_counter_start = *table_counter;
-        result.push_str(&super::line_segment::render_line_segments_with_content(
-            &line_segments,
-            &text,
-            &char_shapes,
-            &control_char_positions,
-            paragraph.para_header.text_char_count as usize,
+        let table_counter_start = *state.table_counter;
+
+        let content = LineSegmentContent {
+            segments: &line_segments,
+            text: &text,
+            char_shapes: &char_shapes,
+            control_char_positions: &control_char_positions,
+            original_text_len: paragraph.para_header.text_char_count as usize,
+            images: &inline_images, // like_letters=true인 이미지만 line_segment에 포함 / Include only images with like_letters=true in line_segment
+            tables: inline_table_infos.as_slice(), // like_letters=true인 테이블 포함 / Include tables with like_letters=true
+        };
+
+        let context = LineSegmentRenderContext {
             document,
-            &para_shape_class,
-            &inline_images, // like_letters=true인 이미지만 line_segment에 포함 / Include only images with like_letters=true in line_segment
-            inline_table_infos.as_slice(), // like_letters=true인 테이블 포함 / Include tables with like_letters=true
+            para_shape_class: &para_shape_class,
             options,
             para_shape_indent,
-            hcd_position,        // hcD 위치 전달 / Pass hcD position
-            page_def,            // 페이지 정의 전달 / Pass page definition
-            table_counter_start, // 테이블 번호 시작값 전달 / Pass table number start value
-            pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
-            color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
+            hcd_position,
+            page_def,
+        };
+
+        let mut line_segment_state = DocumentRenderState {
+            table_counter_start,
+            pattern_counter: state.pattern_counter,
+            color_to_pattern: state.color_to_pattern,
+        };
+
+        result.push_str(&super::line_segment::render_line_segments_with_content(
+            &content,
+            &context,
+            &mut line_segment_state,
         ));
 
         // inline_tables의 개수만큼 table_counter 증가 (이미 line_segment에 포함되었으므로) / Increment table_counter by inline_tables count (already included in line_segment)
-        *table_counter += inline_table_infos.len() as u32;
+        *state.table_counter += inline_table_infos.len() as u32;
 
         // like_letters=true인 테이블은 이미 line_segment에 포함되었으므로 여기서는 처리하지 않음
         // Tables with like_letters=true are already included in line_segment, so don't process them here
@@ -373,9 +415,9 @@ pub fn render_paragraph(
                 ctrl_header: table_info.ctrl_header,
                 page_def,
                 options,
-                table_number: Some(*table_counter),
-                pattern_counter,
-                color_to_pattern,
+                table_number: Some(*state.table_counter),
+                pattern_counter: state.pattern_counter,
+                color_to_pattern: state.color_to_pattern,
             };
 
             let position = TablePosition {
@@ -394,7 +436,7 @@ pub fn render_paragraph(
                 table_info.caption.as_ref(),
             );
             table_htmls.push(table_html);
-            *table_counter += 1; // table_counter 증가 / Increment table_counter
+            *state.table_counter += 1; // table_counter 증가 / Increment table_counter
         }
     } else if !text.is_empty() {
         // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment
