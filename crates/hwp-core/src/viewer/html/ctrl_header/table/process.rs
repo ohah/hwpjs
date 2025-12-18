@@ -142,15 +142,20 @@ pub fn process_table<'a>(
     let mut caption_texts: Vec<CaptionText> = Vec::new();
     let mut caption_char_shape_ids: Vec<Option<usize>> = Vec::new();
     let mut caption_para_shape_ids: Vec<Option<usize>> = Vec::new();
-    let mut caption_line_segments: Vec<Option<&LineSegmentInfo>> = Vec::new();
+    let mut caption_line_segments: Vec<Vec<&LineSegmentInfo>> = Vec::new(); // 모든 LineSegment를 저장 / Store all LineSegments
+    let mut caption_original_texts: Vec<String> = Vec::new(); // 원본 텍스트 저장 / Store original text
+    let mut caption_control_char_positions: Vec<Vec<ControlCharPosition>> = Vec::new(); // 컨트롤 문자 위치 저장 / Store control character positions
+    let mut caption_auto_number_positions: Vec<Option<usize>> = Vec::new(); // AUTO_NUMBER 위치 저장 / Store AUTO_NUMBER position
+    let mut caption_auto_number_display_texts: Vec<Option<String>> = Vec::new(); // AUTO_NUMBER 표시 텍스트 저장 / Store AUTO_NUMBER display text
 
     // paragraphs 필드에서 모든 캡션 수집 / Collect all captions from paragraphs field
     for para in paragraphs {
         let mut caption_text_opt: Option<String> = None;
         let mut caption_control_chars: Vec<ControlCharPosition> = Vec::new();
         let mut caption_auto_number_display_text_opt: Option<String> = None;
+        let mut caption_auto_number_position_opt: Option<usize> = None;
         let mut caption_char_shape_id_opt: Option<usize> = None;
-        let mut caption_line_segment_opt: Option<&LineSegmentInfo> = None;
+        let mut caption_line_segments_vec: Vec<&LineSegmentInfo> = Vec::new();
         // para_shape_id 추출 / Extract para_shape_id
         let para_shape_id = para.para_header.para_shape_id as usize;
 
@@ -165,6 +170,11 @@ pub fn process_table<'a>(
                 if !text.trim().is_empty() {
                     caption_text_opt = Some(text.clone());
                     caption_control_chars = control_char_positions.clone();
+                    // AUTO_NUMBER 위치 찾기 / Find AUTO_NUMBER position
+                    caption_auto_number_position_opt = control_char_positions
+                        .iter()
+                        .find(|cp| cp.code == ControlChar::AUTO_NUMBER)
+                        .map(|cp| cp.position);
                     caption_auto_number_display_text_opt = runs.iter().find_map(|run| {
                         if let ParaTextRun::Control {
                             code, display_text, ..
@@ -183,10 +193,8 @@ pub fn process_table<'a>(
                     caption_char_shape_id_opt = Some(shape_info.shape_id as usize);
                 }
             } else if let ParagraphRecord::ParaLineSeg { segments } = record {
-                // 첫 번째 LineSegmentInfo 찾기 / Find first LineSegmentInfo
-                if let Some(segment) = segments.first() {
-                    caption_line_segment_opt = Some(segment);
-                }
+                // 모든 LineSegmentInfo 수집 / Collect all LineSegmentInfo
+                caption_line_segments_vec = segments.iter().collect();
             }
         }
 
@@ -201,7 +209,11 @@ pub fn process_table<'a>(
             caption_texts.push(parsed);
             caption_char_shape_ids.push(caption_char_shape_id_opt);
             caption_para_shape_ids.push(Some(para_shape_id));
-            caption_line_segments.push(caption_line_segment_opt);
+            caption_line_segments.push(caption_line_segments_vec);
+            caption_original_texts.push(text);
+            caption_control_char_positions.push(caption_control_chars);
+            caption_auto_number_positions.push(caption_auto_number_position_opt);
+            caption_auto_number_display_texts.push(caption_auto_number_display_text_opt);
         }
     }
 
@@ -374,10 +386,10 @@ pub fn process_table<'a>(
             };
 
             // 캡션 LineSegmentInfo 찾기 / Find caption LineSegmentInfo
-            let current_caption_line_segment = if caption_index < caption_line_segments.len() {
-                caption_line_segments[caption_index]
+            let current_caption_line_segments = if caption_index < caption_line_segments.len() {
+                caption_line_segments[caption_index].clone()
             } else {
-                None
+                Vec::new()
             };
 
             // 캡션 텍스트 가져오기 / Get caption text
@@ -387,25 +399,52 @@ pub fn process_table<'a>(
                 None
             };
 
-            // CaptionData 생성 / Create CaptionData
-            let caption_data =
-                if let (Some(text), Some(info), Some(char_id), Some(para_id), Some(segment)) = (
-                    current_caption,
-                    caption_info,
-                    current_caption_char_shape_id,
-                    current_caption_para_shape_id,
-                    current_caption_line_segment,
-                ) {
-                    Some(CaptionData {
-                        text,
-                        info,
-                        char_shape_id: char_id,
-                        para_shape_id: para_id,
-                        line_segment: segment,
-                    })
+            // 원본 텍스트 및 AUTO_NUMBER 정보 가져오기 / Get original text and AUTO_NUMBER info
+            let current_original_text = if caption_index < caption_original_texts.len() {
+                caption_original_texts[caption_index].clone()
+            } else {
+                String::new()
+            };
+            let current_control_char_positions =
+                if caption_index < caption_control_char_positions.len() {
+                    caption_control_char_positions[caption_index].clone()
+                } else {
+                    Vec::new()
+                };
+            let current_auto_number_position =
+                if caption_index < caption_auto_number_positions.len() {
+                    caption_auto_number_positions[caption_index]
                 } else {
                     None
                 };
+            let current_auto_number_display_text =
+                if caption_index < caption_auto_number_display_texts.len() {
+                    caption_auto_number_display_texts[caption_index].clone()
+                } else {
+                    None
+                };
+
+            // CaptionData 생성 / Create CaptionData
+            let caption_data = if let (Some(text), Some(info), Some(char_id), Some(para_id)) = (
+                current_caption,
+                caption_info,
+                current_caption_char_shape_id,
+                current_caption_para_shape_id,
+            ) {
+                Some(CaptionData {
+                    text,
+                    info,
+                    char_shape_id: char_id,
+                    para_shape_id: para_id,
+                    line_segments: current_caption_line_segments,
+                    original_text: current_original_text,
+                    control_char_positions: current_control_char_positions,
+                    auto_number_position: current_auto_number_position,
+                    auto_number_display_text: current_auto_number_display_text,
+                })
+            } else {
+                None
+            };
 
             caption_index += 1;
             result.tables.push(TableInfo {
