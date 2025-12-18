@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync } from 'f
 import { join, extname, basename } from 'path';
 // CLI는 빌드된 NAPI 모듈을 사용합니다
 // @ts-ignore - 런타임에 dist/index.js에서 로드됨 (빌드 후 경로: ../../index)
-const { toJson, toMarkdown } = require('../../index');
+const { toJson, toMarkdown, toHtml } = require('../../index');
 
 export function batchCommand(program: Command) {
   program
@@ -11,10 +11,11 @@ export function batchCommand(program: Command) {
     .description('Batch convert HWP files in a directory')
     .argument('<input-dir>', 'Input directory containing HWP files')
     .option('-o, --output-dir <dir>', 'Output directory (default: ./output)', './output')
-    .option('--format <format>', 'Output format (json or markdown)', 'json')
+    .option('--format <format>', 'Output format (json, markdown, html)', 'json')
     .option('-r, --recursive', 'Process subdirectories recursively')
     .option('--pretty', 'Pretty print JSON (only for json format)')
     .option('--include-images', 'Include images as base64 (only for markdown format)')
+    .option('--images-dir <dir>', 'Directory to save images (only for html format, default: images)')
     .action(
       (
         inputDir: string,
@@ -24,6 +25,7 @@ export function batchCommand(program: Command) {
           recursive?: boolean;
           pretty?: boolean;
           includeImages?: boolean;
+          imagesDir?: string;
         }
       ) => {
         try {
@@ -84,6 +86,22 @@ export function batchCommand(program: Command) {
                   outputContent = jsonString;
                 }
                 outputExt = 'json';
+              } else if (format === 'html') {
+                // Determine image output directory for HTML
+                let imageOutputDir: string | undefined;
+                if (options.imagesDir) {
+                  const imagesDir = join(outputDir, options.imagesDir);
+                  if (!require('fs').existsSync(imagesDir)) {
+                    mkdirSync(imagesDir, { recursive: true });
+                  }
+                  imageOutputDir = imagesDir;
+                }
+                // If imagesDir is not specified, images will be embedded as base64
+                outputContent = toHtml(data, {
+                  image_output_dir: imageOutputDir,
+                  html_output_dir: outputDir,
+                });
+                outputExt = 'html';
               } else {
                 const result = toMarkdown(data, {
                   image: options.includeImages ? 'base64' : 'blob',
