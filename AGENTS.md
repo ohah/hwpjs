@@ -349,12 +349,13 @@ src/
 ```rust
 // ✅ 좋은 예: 하이브리드 접근
 pub struct LineSegmentContent<'a> {
+    pub segments: &'a [LineSegmentInfo],
     pub text: &'a str,
     pub original_text_len: usize,  // text와 함께 묶기
     pub char_shapes: &'a [CharShapeInfo],
     pub control_char_positions: &'a [ControlCharPosition],
     pub images: &'a [ImageInfo],
-    pub tables: &'a [TableInfo],
+    pub tables: &'a [TableInfo<'a>],
 }
 
 pub struct LineSegmentRenderContext<'a> {
@@ -366,11 +367,45 @@ pub struct LineSegmentRenderContext<'a> {
     pub page_def: Option<&'a PageDef>,
 }
 
+pub struct DocumentRenderState<'a> {
+    pub table_counter_start: u32,
+    pub pattern_counter: &'a mut usize,
+    pub color_to_pattern: &'a mut HashMap<u32, String>,
+}
+
 pub fn render_line_segments_with_content(
     content: &LineSegmentContent,
     context: &LineSegmentRenderContext,
     state: &mut DocumentRenderState,
 ) -> String
+
+// ✅ 문단 렌더링 예시
+pub struct ParagraphPosition<'a> {
+    pub hcd_position: Option<(f64, f64)>,
+    pub page_def: Option<&'a PageDef>,
+    pub first_para_vertical_mm: Option<f64>,
+    pub current_para_vertical_mm: Option<f64>,
+    pub para_vertical_positions: &'a [f64],
+    pub current_para_index: Option<usize>,
+}
+
+pub struct ParagraphRenderContext<'a> {
+    pub document: &'a HwpDocument,  // 전체 전달 (ID 기반 조회 필요)
+    pub options: &'a HtmlOptions,
+    pub position: ParagraphPosition<'a>,
+}
+
+pub struct ParagraphRenderState<'a> {
+    pub table_counter: &'a mut u32,
+    pub pattern_counter: &'a mut usize,
+    pub color_to_pattern: &'a mut HashMap<u32, String>,
+}
+
+pub fn render_paragraph(
+    paragraph: &Paragraph,
+    context: &ParagraphRenderContext,
+    state: &mut ParagraphRenderState,
+) -> (String, Vec<String>)
 ```
 
 #### 개발 단계별 전략
