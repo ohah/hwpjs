@@ -8,6 +8,8 @@
 /// Output format is handled through the Renderer trait.
 use crate::document::{ColumnDivideType, HwpDocument, Paragraph, ParagraphRecord};
 use crate::viewer::core::renderer::{DocumentParts, Renderer};
+use crate::viewer::markdown::utils::OutlineNumberTracker;
+use crate::viewer::{html, MarkdownOptions};
 
 /// Render paragraph using viewer-specific functions
 /// 뷰어별 함수를 사용하여 문단 렌더링
@@ -65,9 +67,7 @@ trait TrackerRef {
 
     /// Get mutable reference to Markdown tracker
     /// Markdown 추적기의 가변 참조 가져오기
-    unsafe fn as_markdown_tracker_mut(
-        &mut self,
-    ) -> &mut crate::viewer::markdown::utils::OutlineNumberTracker;
+    unsafe fn as_markdown_tracker_mut(&mut self) -> &mut OutlineNumberTracker;
 }
 
 /// Enum to hold tracker by renderer type
@@ -76,7 +76,7 @@ enum Tracker {
     /// HTML 뷰어는 더 이상 OutlineNumberTracker를 사용하지 않음
     /// HTML viewer no longer uses OutlineNumberTracker
     Html(()),
-    Markdown(crate::viewer::markdown::utils::OutlineNumberTracker),
+    Markdown(OutlineNumberTracker),
 }
 
 impl TrackerRef for Tracker {
@@ -91,9 +91,7 @@ impl TrackerRef for Tracker {
         }
     }
 
-    unsafe fn as_markdown_tracker_mut(
-        &mut self,
-    ) -> &mut crate::viewer::markdown::utils::OutlineNumberTracker {
+    unsafe fn as_markdown_tracker_mut(&mut self) -> &mut OutlineNumberTracker {
         match self {
             Tracker::Markdown(tracker) => tracker,
             _ => std::hint::unreachable_unchecked(),
@@ -121,18 +119,14 @@ where
     // 문서 전체에 걸쳐 상태를 유지해야 하므로 한 번만 생성 / Created only once to maintain state across entire document
     // 새로운 HTML 뷰어는 tracker를 사용하지 않음 / New HTML viewer does not use tracker
     let mut tracker: Tracker = if std::any::TypeId::of::<R::Options>()
-        == std::any::TypeId::of::<crate::viewer::html::HtmlOptions>()
+        == std::any::TypeId::of::<HtmlOptions>()
     {
         Tracker::Html(())
-    } else if std::any::TypeId::of::<R::Options>()
-        == std::any::TypeId::of::<crate::viewer::markdown::MarkdownOptions>()
-    {
-        use crate::viewer::markdown::utils::OutlineNumberTracker;
+    } else if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<MarkdownOptions>() {
         Tracker::Markdown(OutlineNumberTracker::new())
     } else {
         // 기본 렌더러는 tracker가 필요 없을 수 있음 / Default renderer may not need tracker
         // 하지만 일단 Markdown tracker를 사용 (나중에 필요시 수정) / But use Markdown tracker for now (modify later if needed)
-        use crate::viewer::markdown::utils::OutlineNumberTracker;
         Tracker::Markdown(OutlineNumberTracker::new())
     };
 
@@ -262,9 +256,9 @@ fn is_page_break_line<R: Renderer>(line: &str, _renderer: &R) -> bool {
 /// Process header
 /// 머리말 처리
 fn process_header<R: Renderer>(
-    _header: &crate::document::CtrlHeader,
+    _header: &CtrlHeader,
     children: &[ParagraphRecord],
-    ctrl_paragraphs: &[crate::document::Paragraph],
+    ctrl_paragraphs: &[Paragraph],
     document: &HwpDocument,
     renderer: &R,
     options: &R::Options,
@@ -306,9 +300,9 @@ fn process_header<R: Renderer>(
 /// Process footer
 /// 꼬리말 처리
 fn process_footer<R: Renderer>(
-    _header: &crate::document::CtrlHeader,
+    _header: &CtrlHeader,
     children: &[ParagraphRecord],
-    ctrl_paragraphs: &[crate::document::Paragraph],
+    ctrl_paragraphs: &[Paragraph],
     document: &HwpDocument,
     renderer: &R,
     options: &R::Options,
@@ -349,9 +343,9 @@ fn process_footer<R: Renderer>(
 /// 각주 처리
 fn process_footnote<R: Renderer>(
     footnote_id: u32,
-    _header: &crate::document::CtrlHeader,
+    _header: &CtrlHeader,
     _children: &[ParagraphRecord],
-    ctrl_paragraphs: &[crate::document::Paragraph],
+    ctrl_paragraphs: &[Paragraph],
     document: &HwpDocument,
     renderer: &R,
     options: &R::Options,
@@ -406,9 +400,9 @@ fn process_footnote<R: Renderer>(
 /// 미주 처리
 fn process_endnote<R: Renderer>(
     endnote_id: u32,
-    _header: &crate::document::CtrlHeader,
+    _header: &CtrlHeader,
     _children: &[ParagraphRecord],
-    ctrl_paragraphs: &[crate::document::Paragraph],
+    ctrl_paragraphs: &[Paragraph],
     document: &HwpDocument,
     renderer: &R,
     options: &R::Options,
@@ -480,12 +474,9 @@ where
 {
     // 타입 체크를 통해 렌더러별 포맷 적용 / Apply renderer-specific format through type checking
     // HTML 렌더러인 경우 / If HTML renderer
-    if std::any::TypeId::of::<R::Options>()
-        == std::any::TypeId::of::<crate::viewer::html::HtmlOptions>()
-    {
+    if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<HtmlOptions>() {
         unsafe {
-            let html_options =
-                &*(options as *const R::Options as *const crate::viewer::html::HtmlOptions);
+            let html_options = &*(options as *const R::Options as *const html::HtmlOptions);
             return format!(
                 r#"      <div id="{}" class="{}footnote">"#,
                 id, html_options.css_class_prefix
@@ -496,9 +487,7 @@ where
     }
 
     // Markdown 렌더러인 경우 / If Markdown renderer
-    if std::any::TypeId::of::<R::Options>()
-        == std::any::TypeId::of::<crate::viewer::markdown::MarkdownOptions>()
-    {
+    if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<MarkdownOptions>() {
         // 마크다운에서는 각주를 [^1]: 형식으로 표시
         // In markdown, footnotes are shown as [^1]:
         return format!("{}{}", back_link, content);
@@ -522,12 +511,9 @@ where
 {
     // 타입 체크를 통해 렌더러별 포맷 적용 / Apply renderer-specific format through type checking
     // HTML 렌더러인 경우 / If HTML renderer
-    if std::any::TypeId::of::<R::Options>()
-        == std::any::TypeId::of::<crate::viewer::html::HtmlOptions>()
-    {
+    if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<HtmlOptions>() {
         unsafe {
-            let html_options =
-                &*(options as *const R::Options as *const crate::viewer::html::HtmlOptions);
+            let html_options = &*(options as *const R::Options as *const html::HtmlOptions);
             return format!(
                 r#"      <div id="{}" class="{}endnote">"#,
                 id, html_options.css_class_prefix
@@ -538,9 +524,7 @@ where
     }
 
     // Markdown 렌더러인 경우 / If Markdown renderer
-    if std::any::TypeId::of::<R::Options>()
-        == std::any::TypeId::of::<crate::viewer::markdown::MarkdownOptions>()
-    {
+    if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<MarkdownOptions>() {
         // 마크다운에서는 미주를 [^1]: 형식으로 표시
         // In markdown, endnotes are shown as [^1]:
         return format!("{}{}", back_link, content);

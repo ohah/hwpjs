@@ -278,8 +278,8 @@ impl ShapeComponent {
                 actual: data.len(),
             });
         }
-        let translation_matrix = parse_matrix(&data[offset..offset + 48])
-            .map_err(|e| HwpError::from(e))?;
+        let translation_matrix =
+            parse_matrix(&data[offset..offset + 48]).map_err(|e| HwpError::from(e))?;
         offset += 48;
 
         // BYTE stream (cnt×48×2): scale matrix/rotation matrix sequence
@@ -295,8 +295,8 @@ impl ShapeComponent {
         let mut matrix_sequence = Vec::new();
         for i in 0..matrix_count as usize {
             let seq_offset = offset + (i * 48 * 2);
-            let scale_matrix = parse_matrix(&data[seq_offset..seq_offset + 48])
-                .map_err(|e| HwpError::from(e))?;
+            let scale_matrix =
+                parse_matrix(&data[seq_offset..seq_offset + 48]).map_err(|e| HwpError::from(e))?;
             let rotation_matrix = parse_matrix(&data[seq_offset + 48..seq_offset + 96])
                 .map_err(|e| HwpError::from(e))?;
             matrix_sequence.push(MatrixPair {

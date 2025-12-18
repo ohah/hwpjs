@@ -1,5 +1,4 @@
 use crate::document::bodytext::{ParagraphRecord, Table, TableCell};
-use crate::types::Hwpunit16ToMm;
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::HwpDocument;
 
