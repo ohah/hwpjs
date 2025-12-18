@@ -177,14 +177,16 @@ impl CharShape {
         offset += 7;
 
         // INT8 array[7] 언어별 자간 / INT8 array[7] language-specific letter spacing
+        // u8을 i8로 캐스팅할 때 부호 확장이 제대로 되도록 i8::from_le_bytes 사용
+        // Use i8::from_le_bytes to properly handle sign extension when casting u8 to i8
         let letter_spacing = LanguageCharAttributesI8 {
-            korean: data[offset] as INT8,
-            english: data[offset + 1] as INT8,
-            chinese: data[offset + 2] as INT8,
-            japanese: data[offset + 3] as INT8,
-            other: data[offset + 4] as INT8,
-            symbol: data[offset + 5] as INT8,
-            user: data[offset + 6] as INT8,
+            korean: i8::from_le_bytes([data[offset]]),
+            english: i8::from_le_bytes([data[offset + 1]]),
+            chinese: i8::from_le_bytes([data[offset + 2]]),
+            japanese: i8::from_le_bytes([data[offset + 3]]),
+            other: i8::from_le_bytes([data[offset + 4]]),
+            symbol: i8::from_le_bytes([data[offset + 5]]),
+            user: i8::from_le_bytes([data[offset + 6]]),
         };
         offset += 7;
 
@@ -201,14 +203,16 @@ impl CharShape {
         offset += 7;
 
         // INT8 array[7] 언어별 글자 위치 / INT8 array[7] language-specific text position
+        // u8을 i8로 캐스팅할 때 부호 확장이 제대로 되도록 i8::from_le_bytes 사용
+        // Use i8::from_le_bytes to properly handle sign extension when casting u8 to i8
         let text_position = LanguageCharAttributesI8 {
-            korean: data[offset] as INT8,
-            english: data[offset + 1] as INT8,
-            chinese: data[offset + 2] as INT8,
-            japanese: data[offset + 3] as INT8,
-            other: data[offset + 4] as INT8,
-            symbol: data[offset + 5] as INT8,
-            user: data[offset + 6] as INT8,
+            korean: i8::from_le_bytes([data[offset]]),
+            english: i8::from_le_bytes([data[offset + 1]]),
+            chinese: i8::from_le_bytes([data[offset + 2]]),
+            japanese: i8::from_le_bytes([data[offset + 3]]),
+            other: i8::from_le_bytes([data[offset + 4]]),
+            symbol: i8::from_le_bytes([data[offset + 5]]),
+            user: i8::from_le_bytes([data[offset + 6]]),
         };
         offset += 7;
 

@@ -117,6 +117,41 @@ pub fn generate_css_styles(document: &HwpDocument) -> String {
             css.push_str("font-style:italic;");
         }
 
+        // 자간 (letter-spacing) / Letter spacing
+        // 스펙 문서 표 33: letter_spacing은 -50%~50% 범위의 INT8 값
+        // Spec Table 33: letter_spacing is INT8 value in range -50%~50%
+        // CSS의 letter-spacing은 텍스트 전체에 적용되므로 하나의 값만 사용
+        // CSS letter-spacing applies to entire text, so use only one value
+        // 한글 우선, 없으면 다른 언어 중 0이 아닌 첫 번째 값 사용
+        // Prefer Korean, otherwise use first non-zero value from other languages
+        let letter_spacing = if char_shape.letter_spacing.korean != 0 {
+            char_shape.letter_spacing.korean
+        } else if char_shape.letter_spacing.english != 0 {
+            char_shape.letter_spacing.english
+        } else if char_shape.letter_spacing.chinese != 0 {
+            char_shape.letter_spacing.chinese
+        } else if char_shape.letter_spacing.japanese != 0 {
+            char_shape.letter_spacing.japanese
+        } else if char_shape.letter_spacing.other != 0 {
+            char_shape.letter_spacing.other
+        } else if char_shape.letter_spacing.symbol != 0 {
+            char_shape.letter_spacing.symbol
+        } else if char_shape.letter_spacing.user != 0 {
+            char_shape.letter_spacing.user
+        } else {
+            0
+        };
+        
+        if letter_spacing != 0 {
+            // INT8 값을 %로 변환하여 em 단위로 적용 / Convert INT8 to % and apply as em unit
+            // 실제 HWP 파일에서는 값이 2배로 저장되어 있으므로 2로 나눔
+            // In actual HWP files, values are stored as 2x, so divide by 2
+            // 예: -5 → -2.5 → -0.025em (반올림하면 -0.03em), 2 → 1 → 0.01em
+            // Example: -5 → -2.5 → -0.025em (rounded to -0.03em), 2 → 1 → 0.01em
+            let letter_spacing_em = (letter_spacing as f64 / 2.0) / 100.0;
+            css.push_str(&format!("letter-spacing:{:.2}em;", letter_spacing_em));
+        }
+
         css.push_str("\n}\n");
     }
 

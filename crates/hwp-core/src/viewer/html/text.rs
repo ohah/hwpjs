@@ -75,10 +75,14 @@ pub fn render_text(
         });
 
         // 텍스트 스타일 적용 / Apply text styles
-        // 마지막 공백을 &nbsp;로 변환 (HTML 태그 적용 전에 처리) / Convert trailing space to &nbsp; (process before applying HTML tags)
+        // 첫 공백과 마지막 공백을 &nbsp;로 변환 (HTML 태그 적용 전에 처리) / Convert leading and trailing spaces to &nbsp; (process before applying HTML tags)
         let mut text_for_styling = segment_text.to_string();
+        // 첫 공백을 &nbsp;로 변환 / Convert leading space to &nbsp;
+        if text_for_styling.starts_with(' ') {
+            text_for_styling = text_for_styling.replacen(' ', "&nbsp;", 1);
+        }
+        // 마지막 공백을 &nbsp;로 변환 / Convert trailing space to &nbsp;
         if text_for_styling.ends_with(' ') {
-            // 마지막 공백을 &nbsp;로 변환 / Convert trailing space to &nbsp;
             text_for_styling.pop();
             text_for_styling.push_str("&nbsp;");
         }
@@ -104,10 +108,9 @@ pub fn render_text(
             ));
 
             // 속성 / Attributes
+            // bold는 CSS의 font-weight:bold로 처리되므로 <strong> 태그 사용하지 않음
+            // Bold is handled by CSS font-weight:bold, so don't use <strong> tag
             let mut styled_text = text_for_styling;
-            if char_shape.attributes.bold {
-                styled_text = format!("<strong>{}</strong>", styled_text);
-            }
             if char_shape.attributes.italic {
                 styled_text = format!("<em>{}</em>", styled_text);
             }
