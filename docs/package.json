@@ -20,5 +20,8 @@
     "@types/node": "^22.8.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3"
+  },
+  "optionalDependencies": {
+    "@ohah/hwpjs-wasm32-wasi": "workspace:*"
   }
 }
