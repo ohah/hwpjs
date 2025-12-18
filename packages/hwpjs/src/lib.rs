@@ -1,9 +1,9 @@
 #![deny(clippy::all)]
 
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use hwp_core::HwpParser;
 use napi::bindgen_prelude::Buffer;
 use napi_derive::napi;
-use base64::{engine::general_purpose::STANDARD, Engine as _};
 
 /// Convert HWP file to JSON
 ///
@@ -22,7 +22,6 @@ pub fn to_json(data: Buffer) -> Result<String, napi::Error> {
     serde_json::to_string(&document)
         .map_err(|e| napi::Error::from_reason(format!("Failed to serialize to JSON: {}", e)))
 }
-
 
 /// Image format option for markdown conversion
 /// 마크다운 변환 시 이미지 형식 옵션
@@ -132,13 +131,16 @@ pub fn to_markdown(
                 let mime_type = get_mime_type_from_bindata_id(&document, bin_item.index);
                 let base64_data_uri = format!("data:{};base64,{}", mime_type, bin_item.data);
                 let image_id = format!("image-{}", index);
-                
+
                 // Replace any placeholder with base64 URI
                 let placeholder_pattern = format!("![이미지]({})", image_id);
                 if markdown.contains(&placeholder_pattern) {
-                    markdown = markdown.replace(&placeholder_pattern, &format!("![이미지]({})", base64_data_uri));
+                    markdown = markdown.replace(
+                        &placeholder_pattern,
+                        &format!("![이미지]({})", base64_data_uri),
+                    );
                 }
-                
+
                 // Also check if there's already a base64 URI and ensure it's correct
                 // (This handles the case where to_markdown already generated base64)
                 // No need to do anything if base64 is already there
@@ -155,9 +157,9 @@ pub fn to_markdown(
                 let image_id = format!("image-{}", index);
 
                 // Decode base64 data for blob format
-                let image_data = STANDARD
-                    .decode(&bin_item.data)
-                    .map_err(|e| napi::Error::from_reason(format!("Failed to decode base64 image data: {}", e)))?;
+                let image_data = STANDARD.decode(&bin_item.data).map_err(|e| {
+                    napi::Error::from_reason(format!("Failed to decode base64 image data: {}", e))
+                })?;
 
                 images.push(ImageData {
                     id: image_id.clone(),
@@ -172,7 +174,10 @@ pub fn to_markdown(
                 markdown = markdown.replace(&pattern, &replacement);
 
                 // Also handle cases where the pattern might be split across lines or have different formatting
-                let pattern2 = format!("![이미지]({})", base64_data_uri.replace("(", "\\(").replace(")", "\\)"));
+                let pattern2 = format!(
+                    "![이미지]({})",
+                    base64_data_uri.replace("(", "\\(").replace(")", "\\)")
+                );
                 markdown = markdown.replace(&pattern2, &replacement);
             }
         }
@@ -182,7 +187,10 @@ pub fn to_markdown(
 }
 
 /// Get file extension from BinData ID
-fn get_extension_from_bindata_id(document: &hwp_core::HwpDocument, bindata_id: hwp_core::WORD) -> String {
+fn get_extension_from_bindata_id(
+    document: &hwp_core::HwpDocument,
+    bindata_id: hwp_core::WORD,
+) -> String {
     for record in &document.doc_info.bin_data {
         if let hwp_core::BinDataRecord::Embedding { embedding, .. } = record {
             if embedding.binary_data_id == bindata_id {
@@ -194,7 +202,10 @@ fn get_extension_from_bindata_id(document: &hwp_core::HwpDocument, bindata_id: h
 }
 
 /// Get MIME type from BinData ID
-fn get_mime_type_from_bindata_id(document: &hwp_core::HwpDocument, bindata_id: hwp_core::WORD) -> String {
+fn get_mime_type_from_bindata_id(
+    document: &hwp_core::HwpDocument,
+    bindata_id: hwp_core::WORD,
+) -> String {
     for record in &document.doc_info.bin_data {
         if let hwp_core::BinDataRecord::Embedding { embedding, .. } = record {
             if embedding.binary_data_id == bindata_id {
@@ -210,6 +221,58 @@ fn get_mime_type_from_bindata_id(document: &hwp_core::HwpDocument, bindata_id: h
         }
     }
     "image/jpeg".to_string()
+}
+
+/// HTML conversion options
+#[napi(object)]
+pub struct ToHtmlOptions {
+    /// Optional directory path to save images as files. If None, images are embedded as base64 data URIs.
+    /// 이미지를 파일로 저장할 디렉토리 경로 (선택). None이면 base64 데이터 URI로 임베드됩니다.
+    pub image_output_dir: Option<String>,
+    /// Directory path where HTML file is saved (used for calculating relative image paths)
+    /// HTML 파일이 저장되는 디렉토리 경로 (이미지 상대 경로 계산에 사용)
+    pub html_output_dir: Option<String>,
+    /// Whether to include version information
+    /// 버전 정보 포함 여부
+    pub include_version: Option<bool>,
+    /// Whether to include page information
+    /// 페이지 정보 포함 여부
+    pub include_page_info: Option<bool>,
+    /// CSS class prefix (default: "" - noori.html style)
+    /// CSS 클래스 접두사 (기본값: "" - noori.html 스타일)
+    pub css_class_prefix: Option<String>,
+}
+
+/// Convert HWP file to HTML format
+///
+/// # Arguments
+/// * `data` - Byte array containing HWP file data (Buffer or Uint8Array)
+/// * `options` - Optional HTML conversion options
+///
+/// # Returns
+/// HTML string representation of the document
+#[napi]
+pub fn to_html(data: Buffer, options: Option<ToHtmlOptions>) -> Result<String, napi::Error> {
+    let parser = HwpParser::new();
+    let data_vec: Vec<u8> = data.into();
+    let document = parser.parse(&data_vec).map_err(napi::Error::from_reason)?;
+
+    // Build HTML options
+    let html_options = hwp_core::viewer::html::HtmlOptions {
+        image_output_dir: options.as_ref().and_then(|o| o.image_output_dir.clone()),
+        html_output_dir: options.as_ref().and_then(|o| o.html_output_dir.clone()),
+        include_version: options.as_ref().and_then(|o| o.include_version),
+        include_page_info: options.as_ref().and_then(|o| o.include_page_info),
+        css_class_prefix: options
+            .as_ref()
+            .and_then(|o| o.css_class_prefix.clone())
+            .unwrap_or_default(),
+    };
+
+    // Convert to HTML
+    let html = document.to_html(&html_options);
+
+    Ok(html)
 }
 
 /// Extract FileHeader from HWP file as JSON
