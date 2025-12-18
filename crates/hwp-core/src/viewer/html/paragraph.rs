@@ -9,7 +9,7 @@ use crate::document::bodytext::{
     PageDef, ParagraphRecord,
 };
 use crate::document::{HwpDocument, Paragraph};
-use crate::viewer::html::ctrl_header::table::render_table;
+use crate::viewer::html::ctrl_header::table::{render_table, TablePosition, TableRenderContext};
 use crate::INT32;
 
 /// 문단을 HTML로 렌더링 / Render paragraph to HTML
@@ -162,11 +162,7 @@ pub fn render_paragraph(
                     table: &table,
                     ctrl_header: None,
                     anchor_char_pos: None,
-                    caption_text: None,
-                    caption_info: None,
-                    caption_char_shape_id: None,
-                    caption_para_shape_id: None,
-                    caption_line_segment: None,
+                    caption: None,
                 });
             }
             ParagraphRecord::CtrlHeader {
@@ -246,28 +242,18 @@ pub fn render_paragraph(
                 })
                 .unwrap_or(false);
             if like_letters {
-                // caption_text는 Option<CaptionText>이므로 clone()하면 Option<CaptionText>가 됨
-                // caption_text is Option<CaptionText>, so clone() gives Option<CaptionText>
                 inline_tables.push(TableInfo {
                     table: table_info.table,
                     ctrl_header: table_info.ctrl_header,
                     anchor_char_pos: table_info.anchor_char_pos,
-                    caption_text: table_info.caption_text.clone(),
-                    caption_info: table_info.caption_info,
-                    caption_char_shape_id: table_info.caption_char_shape_id,
-                    caption_para_shape_id: table_info.caption_para_shape_id,
-                    caption_line_segment: table_info.caption_line_segment,
+                    caption: table_info.caption.clone(),
                 });
             } else {
                 absolute_tables.push(TableInfo {
                     table: table_info.table,
                     ctrl_header: table_info.ctrl_header,
                     anchor_char_pos: table_info.anchor_char_pos,
-                    caption_text: table_info.caption_text.clone(),
-                    caption_info: table_info.caption_info,
-                    caption_char_shape_id: table_info.caption_char_shape_id,
-                    caption_para_shape_id: table_info.caption_para_shape_id,
-                    caption_line_segment: table_info.caption_line_segment,
+                    caption: table_info.caption.clone(),
                 });
             }
         }
@@ -299,11 +285,7 @@ pub fn render_paragraph(
                 table: table_info.table,
                 ctrl_header: table_info.ctrl_header,
                 anchor_char_pos: table_info.anchor_char_pos,
-                caption_text: table_info.caption_text.clone(),
-                caption_info: table_info.caption_info,
-                caption_char_shape_id: table_info.caption_char_shape_id,
-                caption_para_shape_id: table_info.caption_para_shape_id,
-                caption_line_segment: table_info.caption_line_segment,
+                caption: table_info.caption.clone(),
             })
             .collect();
         // 테이블 번호 시작값: 현재 table_counter 사용 (문서 레벨에서 관리) / Table number start value: use current table_counter (managed at document level)
@@ -386,26 +368,30 @@ pub fn render_paragraph(
             let ref_para_vertical_abs_mm = ref_para_vertical_mm.map(|v| v + base_top_mm);
             let first_para_vertical_abs_mm = first_para_vertical_mm.map(|v| v + base_top_mm);
 
-            let table_html = render_table(
-                table_info.table,
+            let mut context = TableRenderContext {
                 document,
-                table_info.ctrl_header, // Option<&CtrlHeaderData>는 Copy이므로 clone 대신 역참조 / Option<&CtrlHeaderData> is Copy, so dereference instead of clone
-                hcd_position,
+                ctrl_header: table_info.ctrl_header,
                 page_def,
                 options,
-                Some(*table_counter), // 현재 table_counter 사용 / Use current table_counter
-                table_info.caption_text.as_ref(), // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
-                table_info.caption_info,          // 캡션 정보 전달 / Pass caption info
-                table_info.caption_char_shape_id, // 캡션 char_shape_id 전달 / Pass caption char_shape_id
-                table_info.caption_para_shape_id, // 캡션 para_shape_id 전달 / Pass caption para_shape_id
-                table_info.caption_line_segment, // 캡션 LineSegmentInfo 전달 / Pass caption LineSegmentInfo
-                None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
-                ref_para_vertical_abs_mm, // 참조 문단의 vertical_position(절대) 전달 / Pass reference paragraph's vertical_position (absolute)
-                para_start_column_mm, // 문단 시작 column_start_position 전달 / Pass paragraph start column_start_position
-                para_segment_width_mm, // 문단 segment_width 전달 / Pass paragraph segment_width
-                first_para_vertical_abs_mm, // 첫 번째 문단의 vertical_position(절대) 전달 (가설 O) / Pass first paragraph's vertical_position (absolute; Hypothesis O)
-                pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
-                color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
+                table_number: Some(*table_counter),
+                pattern_counter,
+                color_to_pattern,
+            };
+
+            let position = TablePosition {
+                hcd_position,
+                segment_position: None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
+                para_start_vertical_mm: ref_para_vertical_abs_mm,
+                para_start_column_mm,
+                para_segment_width_mm,
+                first_para_vertical_mm: first_para_vertical_abs_mm,
+            };
+
+            let table_html = render_table(
+                table_info.table,
+                &mut context,
+                position,
+                table_info.caption.as_ref(),
             );
             table_htmls.push(table_html);
             *table_counter += 1; // table_counter 증가 / Increment table_counter

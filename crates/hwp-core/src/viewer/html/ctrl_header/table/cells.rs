@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::document::bodytext::list_header::VerticalAlign;
 use crate::document::bodytext::{LineSegmentInfo, ParagraphRecord, Table};
+use crate::document::CtrlHeaderData;
 use crate::viewer::html::line_segment::{render_line_segments_with_content, ImageInfo};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::html::{common, ctrl_header};
@@ -463,10 +464,8 @@ pub(crate) fn render_cells(
                     let mut obj_off_y_mm = 0.0;
                     for record in &para.records {
                         if let ParagraphRecord::CtrlHeader { header, .. } = record {
-                            if let crate::document::CtrlHeaderData::ObjectCommon {
-                                offset_x,
-                                offset_y,
-                                ..
+                            if let CtrlHeaderData::ObjectCommon {
+                                offset_x, offset_y, ..
                             } = &header.data
                             {
                                 obj_off_x_mm = round_to_2dp(int32_to_mm((*offset_x).into()));

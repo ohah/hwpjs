@@ -42,30 +42,68 @@ pub struct CaptionText {
     pub body: String,
 }
 
+/// 캡션 데이터 구조체 / Caption data struct
+/// 캡션과 관련된 모든 정보를 하나로 묶음 / Bundles all caption-related information
+#[derive(Debug, Clone)]
+pub struct CaptionData<'a> {
+    pub text: CaptionText,
+    pub info: CaptionInfo,
+    pub char_shape_id: usize,
+    pub para_shape_id: usize,
+    pub line_segment: &'a LineSegmentInfo,
+}
+
+/// 테이블 렌더링 컨텍스트 / Table rendering context
+pub struct TableRenderContext<'a> {
+    pub document: &'a HwpDocument,
+    pub ctrl_header: Option<&'a CtrlHeaderData>,
+    pub page_def: Option<&'a PageDef>,
+    pub options: &'a HtmlOptions,
+    pub table_number: Option<u32>,
+    pub pattern_counter: &'a mut usize,
+    pub color_to_pattern: &'a mut std::collections::HashMap<u32, String>,
+}
+
+/// 테이블 위치 정보 / Table position information
+#[derive(Debug, Clone, Copy)]
+pub struct TablePosition {
+    pub hcd_position: Option<(f64, f64)>,
+    pub segment_position: Option<(INT32, INT32)>,
+    pub para_start_vertical_mm: Option<f64>,
+    pub para_start_column_mm: Option<f64>,
+    pub para_segment_width_mm: Option<f64>,
+    pub first_para_vertical_mm: Option<f64>,
+}
+
 /// 테이블을 HTML로 렌더링 / Render table to HTML
-#[allow(clippy::too_many_arguments)]
 pub fn render_table(
     table: &Table,
-    document: &HwpDocument,
-    ctrl_header: Option<&CtrlHeaderData>,
-    hcd_position: Option<(f64, f64)>,
-    page_def: Option<&PageDef>,
-    _options: &HtmlOptions,
-    table_number: Option<u32>,
-    caption_text: Option<&CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
-    caption_info: Option<CaptionInfo>, // 캡션 정보 (위치, 간격, 높이) / Caption info (position, gap, height)
-    caption_char_shape_id: Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
-    caption_para_shape_id: Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
-    caption_line_segment: Option<&LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
-    segment_position: Option<(INT32, INT32)>,
-    // NOTE: obj_outer_width_mm is derived from resolved_size.width (includes margins/padding as in fixtures)
-    para_start_vertical_mm: Option<f64>,
-    para_start_column_mm: Option<f64>, // 현재 문단 시작 column_start_position (mm)
-    para_segment_width_mm: Option<f64>, // 현재 문단 LineSeg segment_width (mm)
-    first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
-    pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
-    color_to_pattern: &mut std::collections::HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
+    context: &mut TableRenderContext,
+    position: TablePosition,
+    caption: Option<&CaptionData>,
 ) -> String {
+    // 구조체에서 개별 값 추출 / Extract individual values from structs
+    let document = context.document;
+    let ctrl_header = context.ctrl_header;
+    let page_def = context.page_def;
+    let _options = context.options;
+    let table_number = context.table_number;
+    // pattern_counter와 color_to_pattern은 이미 &mut이므로 직접 사용 / pattern_counter and color_to_pattern are already &mut, so use directly
+
+    let hcd_position = position.hcd_position;
+    let segment_position = position.segment_position;
+    let para_start_vertical_mm = position.para_start_vertical_mm;
+    let para_start_column_mm = position.para_start_column_mm;
+    let para_segment_width_mm = position.para_segment_width_mm;
+    let first_para_vertical_mm = position.first_para_vertical_mm;
+
+    // 캡션 데이터에서 개별 필드 추출 / Extract individual fields from caption data
+    let caption_text = caption.as_ref().map(|c| &c.text);
+    let caption_info = caption.as_ref().map(|c| c.info);
+    let caption_char_shape_id = caption.as_ref().map(|c| c.char_shape_id);
+    let caption_para_shape_id = caption.as_ref().map(|c| c.para_shape_id);
+    let caption_line_segment = caption.as_ref().map(|c| c.line_segment);
+
     if table.cells.is_empty() || table.attributes.row_count == 0 {
         return r#"<div class="htb" style="left:0mm;width:0mm;top:0mm;height:0mm;"></div>"#
             .to_string();
@@ -112,16 +150,16 @@ pub fn render_table(
         &view_box,
         content_size,
         ctrl_header_height_mm,
-        pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
-        color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
+        context.pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
+        context.color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
     );
     let cells_html = cells::render_cells(
         table,
         ctrl_header_height_mm,
         document,
         _options,
-        pattern_counter,
-        color_to_pattern,
+        context.pattern_counter,
+        context.color_to_pattern,
     );
     let (mut left_mm, mut top_mm) = table_position(
         hcd_position,

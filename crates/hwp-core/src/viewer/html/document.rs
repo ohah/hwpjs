@@ -362,7 +362,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             && (!page_content.is_empty() || !page_tables.is_empty())
                         {
                             // Flush current page before placing this table.
-                            use crate::types::RoundTo2dp;
                             let hcd_pos = if let Some((left, top)) = hcd_position {
                                 Some((left.round_to_2dp(), top.round_to_2dp()))
                             } else {

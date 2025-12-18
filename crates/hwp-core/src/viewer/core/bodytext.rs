@@ -6,10 +6,10 @@
 ///
 /// Provides common bodytext processing logic used by all viewers.
 /// Output format is handled through the Renderer trait.
-use crate::document::{ColumnDivideType, HwpDocument, Paragraph, ParagraphRecord};
+use crate::document::{ColumnDivideType, CtrlHeader, HwpDocument, Paragraph, ParagraphRecord};
 use crate::viewer::core::renderer::{DocumentParts, Renderer};
 use crate::viewer::markdown::utils::OutlineNumberTracker;
-use crate::viewer::{html, MarkdownOptions};
+use crate::viewer::{html, html::HtmlOptions, MarkdownOptions};
 
 /// Render paragraph using viewer-specific functions
 /// 뷰어별 함수를 사용하여 문단 렌더링

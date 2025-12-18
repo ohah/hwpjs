@@ -1,13 +1,13 @@
 use crate::document::bodytext::ctrl_header::{CaptionAlign, CtrlHeaderData};
 use crate::document::bodytext::{
-    ControlChar, ControlCharPosition, LineSegmentInfo, Paragraph, ParagraphRecord,
+    ControlChar, ControlCharPosition, LineSegmentInfo, ParaTextRun, Paragraph, ParagraphRecord,
 };
 use crate::document::CtrlHeader;
 
 use crate::viewer::html::ctrl_header::CtrlHeaderResult;
 use crate::viewer::html::line_segment::TableInfo;
 
-use super::render::{CaptionInfo, CaptionText};
+use super::render::{CaptionData, CaptionInfo, CaptionText};
 
 /// 캡션 텍스트를 구조적으로 분해 / Parse caption text into structured components
 ///
@@ -166,10 +166,8 @@ pub fn process_table<'a>(
                     caption_text_opt = Some(text.clone());
                     caption_control_chars = control_char_positions.clone();
                     caption_auto_number_display_text_opt = runs.iter().find_map(|run| {
-                        if let crate::document::bodytext::ParaTextRun::Control {
-                            code,
-                            display_text,
-                            ..
+                        if let ParaTextRun::Control {
+                            code, display_text, ..
                         } = run
                         {
                             if *code == ControlChar::AUTO_NUMBER {
@@ -229,10 +227,8 @@ pub fn process_table<'a>(
             } = child
             {
                 let auto_disp = runs.iter().find_map(|run| {
-                    if let crate::document::bodytext::ParaTextRun::Control {
-                        code,
-                        display_text,
-                        ..
+                    if let ParaTextRun::Control {
+                        code, display_text, ..
                     } = run
                     {
                         if *code == ControlChar::AUTO_NUMBER {
@@ -260,10 +256,8 @@ pub fn process_table<'a>(
                         } = record
                         {
                             let auto_disp = runs.iter().find_map(|run| {
-                                if let crate::document::bodytext::ParaTextRun::Control {
-                                    code,
-                                    display_text,
-                                    ..
+                                if let ParaTextRun::Control {
+                                    code, display_text, ..
                                 } = run
                                 {
                                     if *code == ControlChar::AUTO_NUMBER {
@@ -299,10 +293,8 @@ pub fn process_table<'a>(
             } = child
             {
                 let auto_disp = runs.iter().find_map(|run| {
-                    if let crate::document::bodytext::ParaTextRun::Control {
-                        code,
-                        display_text,
-                        ..
+                    if let ParaTextRun::Control {
+                        code, display_text, ..
                     } = run
                     {
                         if *code == ControlChar::AUTO_NUMBER {
@@ -329,10 +321,8 @@ pub fn process_table<'a>(
                         } = record
                         {
                             let auto_disp = runs.iter().find_map(|run| {
-                                if let crate::document::bodytext::ParaTextRun::Control {
-                                    code,
-                                    display_text,
-                                    ..
+                                if let ParaTextRun::Control {
+                                    code, display_text, ..
                                 } = run
                                 {
                                     if *code == ControlChar::AUTO_NUMBER {
@@ -397,16 +387,32 @@ pub fn process_table<'a>(
                 None
             };
 
+            // CaptionData 생성 / Create CaptionData
+            let caption_data =
+                if let (Some(text), Some(info), Some(char_id), Some(para_id), Some(segment)) = (
+                    current_caption,
+                    caption_info,
+                    current_caption_char_shape_id,
+                    current_caption_para_shape_id,
+                    current_caption_line_segment,
+                ) {
+                    Some(CaptionData {
+                        text,
+                        info,
+                        char_shape_id: char_id,
+                        para_shape_id: para_id,
+                        line_segment: segment,
+                    })
+                } else {
+                    None
+                };
+
             caption_index += 1;
             result.tables.push(TableInfo {
                 table,
                 ctrl_header,
                 anchor_char_pos: None,
-                caption_text: current_caption,
-                caption_info,
-                caption_char_shape_id: current_caption_char_shape_id,
-                caption_para_shape_id: current_caption_para_shape_id,
-                caption_line_segment: current_caption_line_segment,
+                caption: caption_data,
             });
         }
     }

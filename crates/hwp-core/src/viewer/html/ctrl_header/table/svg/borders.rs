@@ -1,7 +1,7 @@
 use crate::document::bodytext::{Table, TableCell};
 use crate::document::docinfo::border_fill::BorderLine;
 use crate::viewer::html::styles::round_to_2dp;
-use crate::HwpDocument;
+use crate::{BorderFill, HwpDocument};
 
 use crate::viewer::html::ctrl_header::table::geometry::{
     calculate_cell_left, calculate_cell_top, get_cell_height,
@@ -83,10 +83,7 @@ fn render_border_paths(
     )
 }
 
-fn get_border_fill<'a>(
-    document: &'a HwpDocument,
-    id: u16,
-) -> Option<&'a crate::document::BorderFill> {
+fn get_border_fill<'a>(document: &'a HwpDocument, id: u16) -> Option<&'a BorderFill> {
     if id == 0 {
         return None;
     }

@@ -5,7 +5,7 @@ use crate::document::bodytext::{
     CharShapeInfo, LineSegmentInfo, PageDef, Table,
 };
 use crate::document::CtrlHeaderData;
-use crate::viewer::html::ctrl_header::table::{CaptionInfo, CaptionText};
+use crate::viewer::html::ctrl_header::table::{CaptionData, TablePosition, TableRenderContext};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
 use crate::{HwpDocument, ParaShape};
@@ -18,11 +18,7 @@ pub struct TableInfo<'a> {
     /// 문단 텍스트 내 컨트롤 문자(Shape/Table) 앵커 위치 (UTF-16 WCHAR 인덱스 기준)
     /// Anchor position of the control char in paragraph text (UTF-16 WCHAR index)
     pub anchor_char_pos: Option<usize>,
-    pub caption_text: Option<CaptionText>, // 캡션 텍스트 (구조적으로 분해됨) / Caption text (structurally parsed)
-    pub caption_info: Option<CaptionInfo>, // 캡션 정보 / Caption info
-    pub caption_char_shape_id: Option<usize>, // 캡션 문단의 첫 번째 char_shape_id / First char_shape_id from caption paragraph
-    pub caption_para_shape_id: Option<usize>, // 캡션 문단의 para_shape_id / Para shape ID from caption paragraph
-    pub caption_line_segment: Option<&'a LineSegmentInfo>, // 캡션 문단의 LineSegmentInfo / LineSegmentInfo from caption paragraph
+    pub caption: Option<CaptionData<'a>>, // 캡션 데이터 / Caption data
 }
 
 /// 이미지 정보 구조체 / Image info struct
@@ -361,26 +357,31 @@ pub fn render_line_segments_with_content(
                 let current_table_number = table_counter_start + idx_in_seg as u32;
                 let segment_position =
                     Some((segment.column_start_position, segment.vertical_position));
-                let table_html = render_table(
-                    table_info.table,
+
+                let mut context = TableRenderContext {
                     document,
-                    table_info.ctrl_header,
-                    hcd_position,
+                    ctrl_header: table_info.ctrl_header,
                     page_def,
                     options,
-                    Some(current_table_number),
-                    table_info.caption_text.as_ref(),
-                    table_info.caption_info,
-                    table_info.caption_char_shape_id,
-                    table_info.caption_para_shape_id,
-                    table_info.caption_line_segment,
-                    segment_position,
-                    None,
-                    None,
-                    None,
-                    None,
+                    table_number: Some(current_table_number),
                     pattern_counter,
                     color_to_pattern,
+                };
+
+                let position = TablePosition {
+                    hcd_position,
+                    segment_position,
+                    para_start_vertical_mm: None,
+                    para_start_column_mm: None,
+                    para_segment_width_mm: None,
+                    first_para_vertical_mm: None,
+                };
+
+                let table_html = render_table(
+                    table_info.table,
+                    &mut context,
+                    position,
+                    table_info.caption.as_ref(),
                 );
                 content.push_str(&table_html);
             }
