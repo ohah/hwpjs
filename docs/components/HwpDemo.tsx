@@ -2,7 +2,7 @@ import { NoSSR } from '@rspress/core/runtime';
 // @ts-expect-error - @theme is provided by Rspress at runtime
 import { Tab, Tabs } from '@theme';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './HwpDemo.css';
@@ -17,6 +17,7 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
   const [html, setHtml] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const processHwpFile = useCallback(async (file: File) => {
     setLoading(true);
@@ -100,6 +101,43 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
   const urlTransform = (url: string) => {
     return url.startsWith('data:') ? url : defaultUrlTransform(url);
   };
+
+  // iframe 높이 자동 조절 / Auto-adjust iframe height
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe || !html) return;
+
+    const adjustHeight = () => {
+      try {
+        const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
+        if (iframeDocument) {
+          const body = iframeDocument.body;
+          const htmlElement = iframeDocument.documentElement;
+          const height = Math.max(
+            body?.scrollHeight || 0,
+            body?.offsetHeight || 0,
+            htmlElement?.clientHeight || 0,
+            htmlElement?.scrollHeight || 0,
+            htmlElement?.offsetHeight || 0
+          );
+          if (height > 0) {
+            iframe.style.height = `${height}px`;
+          }
+        }
+      } catch (e) {
+        // Cross-origin 에러 무시 / Ignore cross-origin errors
+        console.warn('Cannot access iframe content:', e);
+      }
+    };
+
+    // iframe 로드 후 높이 조절 / Adjust height after iframe loads
+    iframe.onload = adjustHeight;
+    
+    // 초기 높이 조절 시도 / Try initial height adjustment
+    setTimeout(adjustHeight, 100);
+    setTimeout(adjustHeight, 500);
+    setTimeout(adjustHeight, 1000);
+  }, [html]);
 
   return (
     <NoSSR>
@@ -222,6 +260,7 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
                 {html && (
                   <div className="html-container">
                     <iframe
+                      ref={iframeRef}
                       srcDoc={html}
                       title="HTML Preview"
                       className="html-iframe"
