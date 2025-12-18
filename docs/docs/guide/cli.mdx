@@ -84,6 +84,36 @@ hwpjs to-markdown document.hwp -o output.md --include-page-info
 - `--include-version`: 버전 정보 포함
 - `--include-page-info`: 페이지 정보 포함
 
+### `to-html` - HTML 변환
+
+HWP 파일을 HTML 형식으로 변환합니다.
+
+```bash
+# 기본 변환 (이미지는 base64로 임베드)
+hwpjs to-html document.hwp -o output.html
+
+# 이미지를 별도 파일로 저장
+hwpjs to-html document.hwp -o output.html --images-dir images
+
+# 버전 정보 포함
+hwpjs to-html document.hwp -o output.html --include-version
+
+# 페이지 정보 포함
+hwpjs to-html document.hwp -o output.html --include-page-info
+```
+
+**옵션:**
+- `-o, --output <file>`: 출력 파일 경로 (기본값: stdout)
+- `--images-dir <dir>`: 이미지를 저장할 디렉토리 (지정하지 않으면 base64로 임베드)
+- `--include-version`: 버전 정보 포함
+- `--include-page-info`: 페이지 정보 포함
+
+**특징:**
+- 기본적으로 이미지는 base64 데이터 URI로 HTML에 임베드됩니다
+- `--images-dir` 옵션을 사용하면 이미지를 별도 파일로 저장하고 상대 경로로 참조합니다
+- 완전한 HTML 문서 (`<html>`, `<head>`, `<body>` 포함)를 생성합니다
+- CSS 클래스 기반 스타일링을 사용합니다
+
 ### `info` - 파일 정보
 
 HWP 파일의 기본 정보를 확인합니다.
@@ -145,6 +175,12 @@ hwpjs batch ./documents -o ./output --format json --pretty
 
 # Markdown에 이미지 포함
 hwpjs batch ./documents -o ./output --format markdown --include-images
+
+# HTML 형식으로 변환 (이미지는 base64로 임베드)
+hwpjs batch ./documents -o ./output --format html
+
+# HTML 형식으로 변환 (이미지를 별도 파일로 저장)
+hwpjs batch ./documents -o ./output --format html --images-dir images
 ```
 
 **옵션:**
@@ -168,6 +204,12 @@ hwpjs to-json report.hwp -o report.json --pretty
 
 # HWP 파일을 Markdown으로 변환 (이미지 포함)
 hwpjs to-markdown report.hwp -o report.md --include-images
+
+# HWP 파일을 HTML로 변환 (이미지는 base64로 임베드)
+hwpjs to-html report.hwp -o report.html
+
+# HWP 파일을 HTML로 변환 (이미지를 별도 파일로 저장)
+hwpjs to-html report.hwp -o report.html --images-dir images
 ```
 
 ### 예제 2: 여러 파일 일괄 처리

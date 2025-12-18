@@ -172,6 +172,114 @@ HWPJS를 사용하는 다양한 예제를 확인하세요.
   </div>
 </PlatformTabs>
 
+## HTML 변환
+
+<PlatformTabs defaultPlatform="web">
+  <div data-platform="web">
+    ```typescript
+    import './buffer-polyfill';
+    import * as hwpjs from '@ohah/hwpjs';
+
+    const fileInput = document.querySelector('input[type="file"]');
+    fileInput.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+
+        // HTML로 변환 (이미지는 base64로 임베드)
+        const html = hwpjs.toHtml(data, {
+          includeVersion: true,
+          includePageInfo: false,
+        });
+        
+        // HTML을 화면에 표시
+        const outputDiv = document.getElementById('output');
+        if (outputDiv) {
+          outputDiv.innerHTML = html;
+        }
+      } catch (error) {
+        console.error('변환 실패:', error);
+      }
+    });
+    ```
+  </div>
+
+  <div data-platform="react-native">
+    ```typescript
+    import { Hwpjs } from '@ohah/hwpjs';
+    import RNFS from 'react-native-fs';
+    import { Platform } from 'react-native';
+    import { WebView } from 'react-native-webview';
+
+    try {
+      const filePath = Platform.OS === 'ios' 
+        ? `${RNFS.MainBundlePath}/document.hwp`
+        : `${RNFS.DocumentDirectoryPath}/document.hwp`;
+      const fileData = await RNFS.readFile(filePath, 'base64');
+      
+      // base64를 ArrayBuffer로 변환
+      const binaryString = atob(fileData);
+      const length = binaryString.length;
+      const bytes = new Uint8Array(length);
+      for (let i = 0; i < length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const html = Hwpjs.toHtml(bytes.buffer, {
+        includeVersion: false,
+        includePageInfo: false,
+      });
+      
+      // WebView로 HTML 표시
+      <WebView source={{ html }} />
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+
+  <div data-platform="node">
+    ```typescript
+    import { readFileSync, writeFileSync } from 'fs';
+    import { toHtml } from '@ohah/hwpjs';
+
+    try {
+      const fileBuffer = readFileSync('./document.hwp');
+      
+      // HTML로 변환 (이미지는 base64로 임베드)
+      const html = toHtml(fileBuffer, {
+        includeVersion: true,
+        includePageInfo: false,
+      });
+      
+      // HTML 파일로 저장
+      writeFileSync('./output.html', html, 'utf-8');
+      console.log('HTML 변환 성공: output.html');
+      
+      // 또는 이미지를 별도 파일로 저장하려면
+      // const htmlWithImages = toHtml(fileBuffer, {
+      //   imageOutputDir: './images',
+      //   htmlOutputDir: './',
+      //   includeVersion: true,
+      //   includePageInfo: false,
+      // });
+      // writeFileSync('./output.html', htmlWithImages, 'utf-8');
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+</PlatformTabs>
+
+**HTML 변환 특징:**
+- 기본적으로 이미지는 base64 데이터 URI로 HTML에 임베드됩니다
+- `imageOutputDir` 옵션을 지정하면 이미지를 별도 파일로 저장하고 상대 경로로 참조합니다
+- 완전한 HTML 문서 (`<html>`, `<head>`, `<body>` 포함)를 생성합니다
+- CSS 클래스 기반 스타일링을 사용합니다
+
 ## buffer-polyfill.ts 파일 생성
 
 Web 환경에서는 WASM을 사용하기 위해 `buffer-polyfill.ts`를 먼저 import해야 합니다.
