@@ -31,6 +31,47 @@ export interface ImageData {
 }
 
 /**
+ * Convert HWP file to HTML format
+ *
+ * # Arguments
+ * * `data` - Byte array containing HWP file data (Buffer or Uint8Array)
+ * * `options` - Optional HTML conversion options
+ *
+ * # Returns
+ * HTML string representation of the document
+ */
+export declare function toHtml(data: Buffer, options?: ToHtmlOptions | undefined | null): string
+
+/** HTML conversion options */
+export interface ToHtmlOptions {
+  /**
+   * Optional directory path to save images as files. If None, images are embedded as base64 data URIs.
+   * 이미지를 파일로 저장할 디렉토리 경로 (선택). None이면 base64 데이터 URI로 임베드됩니다.
+   */
+  imageOutputDir?: string
+  /**
+   * Directory path where HTML file is saved (used for calculating relative image paths)
+   * HTML 파일이 저장되는 디렉토리 경로 (이미지 상대 경로 계산에 사용)
+   */
+  htmlOutputDir?: string
+  /**
+   * Whether to include version information
+   * 버전 정보 포함 여부
+   */
+  includeVersion?: boolean
+  /**
+   * Whether to include page information
+   * 페이지 정보 포함 여부
+   */
+  includePageInfo?: boolean
+  /**
+   * CSS class prefix (default: "" - noori.html style)
+   * CSS 클래스 접두사 (기본값: "" - noori.html 스타일)
+   */
+  cssClassPrefix?: string
+}
+
+/**
  * Convert HWP file to JSON
  *
  * # Arguments

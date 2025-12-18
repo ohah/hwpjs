@@ -109,5 +109,6 @@ const { instance: __napiInstance, module: __wasiModule, napiModule: __napiModule
 })
 module.exports = __napiModule.exports
 module.exports.fileHeader = __napiModule.exports.fileHeader
+module.exports.toHtml = __napiModule.exports.toHtml
 module.exports.toJson = __napiModule.exports.toJson
 module.exports.toMarkdown = __napiModule.exports.toMarkdown
