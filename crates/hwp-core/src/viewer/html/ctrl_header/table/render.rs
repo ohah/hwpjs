@@ -1,5 +1,7 @@
 use crate::document::bodytext::ctrl_header::{CaptionAlign, CaptionVAlign, CtrlHeaderData};
-use crate::document::bodytext::{LineSegmentInfo, PageDef, Table};
+use crate::document::bodytext::{
+    ControlChar, ControlCharPosition, LineSegmentInfo, PageDef, Table,
+};
 use crate::types::{Hwpunit16ToMm, HWPUNIT};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
@@ -52,8 +54,8 @@ pub struct CaptionData<'a> {
     pub para_shape_id: usize,
     pub line_segments: Vec<&'a LineSegmentInfo>, // 모든 LineSegment를 저장 / Store all LineSegments
     pub original_text: String, // 원본 텍스트 (control characters 제거된 cleaned 텍스트) / Original text (cleaned text with control characters removed)
-    pub control_char_positions: Vec<crate::document::bodytext::ControlCharPosition>, // 컨트롤 문자 위치 (원본 WCHAR 인덱스 기준) / Control character positions (original WCHAR index)
-    pub auto_number_position: Option<usize>, // AUTO_NUMBER 위치 / AUTO_NUMBER position
+    pub control_char_positions: Vec<ControlCharPosition>, // 컨트롤 문자 위치 (원본 WCHAR 인덱스 기준) / Control character positions (original WCHAR index)
+    pub auto_number_position: Option<usize>,              // AUTO_NUMBER 위치 / AUTO_NUMBER position
     pub auto_number_display_text: Option<String>, // AUTO_NUMBER 표시 텍스트 / AUTO_NUMBER display text
 }
 
@@ -480,7 +482,6 @@ pub fn render_table(
                     let mut hls_htmls = Vec::new();
 
                     // control_char_positions 가져오기 (원본 텍스트 인덱스 변환에 필요) / Get control_char_positions (needed for original text index conversion)
-                    use crate::document::bodytext::ControlChar;
                     let control_char_positions = caption_control_char_positions
                         .map(|v| v.as_slice())
                         .unwrap_or(&[]);
@@ -498,7 +499,7 @@ pub fn render_table(
                     // line_segment.rs와 동일한 로직 사용 / Use same logic as line_segment.rs
                     fn original_to_cleaned_index(
                         pos: usize,
-                        control_chars: &[crate::document::bodytext::ControlCharPosition],
+                        control_chars: &[ControlCharPosition],
                     ) -> isize {
                         let mut delta: isize = 0;
                         for cc in control_chars.iter() {
@@ -521,7 +522,7 @@ pub fn render_table(
 
                     fn slice_cleaned_by_original_range(
                         cleaned: &str,
-                        control_chars: &[crate::document::bodytext::ControlCharPosition],
+                        control_chars: &[ControlCharPosition],
                         start_original: usize,
                         end_original: usize,
                     ) -> String {
