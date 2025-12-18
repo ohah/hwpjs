@@ -277,7 +277,7 @@ pub struct PageNumberPositionFlags {
 }
 
 /// 쪽 번호의 표시 위치 / Page number display position
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PageNumberPosition {
     None,

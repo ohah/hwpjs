@@ -5,6 +5,7 @@ use super::paragraph::{
 use super::styles;
 use super::styles::round_to_2dp;
 use super::HtmlOptions;
+use crate::document::bodytext::ctrl_header::{CtrlHeaderData, CtrlId};
 use crate::document::bodytext::{ColumnDivideType, PageDef, ParagraphRecord};
 use crate::document::HwpDocument;
 use crate::types::RoundTo2dp;
@@ -24,6 +25,24 @@ fn find_page_def(document: &HwpDocument) -> Option<&PageDef> {
                     for child in children {
                         if let ParagraphRecord::PageDef { page_def } = child {
                             return Some(page_def);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// 문서에서 첫 번째 PageNumberPosition 찾기 / Find first PageNumberPosition in document
+fn find_page_number_position(document: &HwpDocument) -> Option<&CtrlHeaderData> {
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            for record in &paragraph.records {
+                if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                    if header.ctrl_id == CtrlId::PAGE_NUMBER || header.ctrl_id == CtrlId::PAGE_NUMBER_POS {
+                        if let CtrlHeaderData::PageNumberPosition { .. } = &header.data {
+                            return Some(&header.data);
                         }
                     }
                 }
@@ -65,6 +84,17 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
     // PageDef 찾기 / Find PageDef
     let page_def = find_page_def(document);
+
+    // PageNumberPosition 찾기 / Find PageNumberPosition
+    let page_number_position = find_page_number_position(document);
+
+    // 페이지 시작 번호 가져오기 / Get page start number
+    let page_start_number = document
+        .doc_info
+        .document_properties
+        .as_ref()
+        .map(|p| p.page_start_number)
+        .unwrap_or(1);
 
     // 페이지별로 렌더링 / Render by page
     let mut page_number = 1;
@@ -220,6 +250,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     page_def,
                     first_segment_pos,
                     hcd_pos,
+                    page_number_position,
+                    page_start_number,
+                    document,
                 ));
                 page_number += 1;
                 page_content.clear();
@@ -396,6 +429,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 page_def,
                                 first_segment_pos,
                                 hcd_pos,
+                                page_number_position,
+                                page_start_number,
+                                document,
                             ));
                             page_number += 1;
                             page_content.clear();
@@ -454,6 +490,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             page_def,
             first_segment_pos,
             hcd_pos,
+            page_number_position,
+            page_start_number,
+            document,
         ));
     }
 
