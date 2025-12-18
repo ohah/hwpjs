@@ -197,6 +197,23 @@ interface ExtractImagesResult {
 - **우선순위**: 중간
 - **상태**: 계획됨
 
+## 보류된 작업
+
+### ShapeComponent의 group_offset 렌더링 지원
+
+- **작업 내용**: 스펙 문서 표 83에 따라 `group_offset`을 렌더링에 사용
+  - `group_offset`은 "개체가 속한 그룹 내에서의 offset" (표 83)
+  - `offset_y`는 "기준점에서의 오프셋" (표 69)
+  - 테이블 셀 내부 이미지에서 `ShapeComponent`가 있으면 `group_offset` 우선 사용
+  - `group_offset`이 없으면 `ObjectCommon`의 `offset_x`, `offset_y` 사용
+- **구현 위치**:
+  - `crates/hwp-core/src/viewer/html/line_segment.rs`: `ImageInfo` 구조체에 `group_offset` 필드 추가
+  - `crates/hwp-core/src/viewer/html/ctrl_header/table/cells.rs`: 테이블 셀 내부 이미지 렌더링 시 `group_offset` 사용
+  - `crates/hwp-core/src/viewer/html/paragraph.rs`: 일반 문단 내 이미지 렌더링 시 `group_offset` 사용
+- **보류 이유**: ShapeComponent는 아직 테스트를 덜 해서 작업 취소
+- **우선순위**: 중간
+- **상태**: 보류됨 (테스트 완료 후 재개 예정)
+
 ## 알 수 없는 요소 (미지원 기능)
 
 ### 알 수 없는 Ctrl ID
