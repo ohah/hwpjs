@@ -1,4 +1,5 @@
 use super::page;
+use super::pagination::{PageBreakReason, PaginationContext};
 use super::paragraph::{
     render_paragraph, ParagraphPosition, ParagraphRenderContext, ParagraphRenderState,
 };
@@ -6,7 +7,7 @@ use super::styles;
 use super::styles::round_to_2dp;
 use super::HtmlOptions;
 use crate::document::bodytext::ctrl_header::{CtrlHeaderData, CtrlId};
-use crate::document::bodytext::{ColumnDivideType, PageDef, ParagraphRecord};
+use crate::document::bodytext::{PageDef, ParagraphRecord};
 use crate::document::HwpDocument;
 use crate::types::RoundTo2dp;
 use crate::INT32;
@@ -40,7 +41,9 @@ fn find_page_number_position(document: &HwpDocument) -> Option<&CtrlHeaderData> 
         for paragraph in &section.paragraphs {
             for record in &paragraph.records {
                 if let ParagraphRecord::CtrlHeader { header, .. } = record {
-                    if header.ctrl_id == CtrlId::PAGE_NUMBER || header.ctrl_id == CtrlId::PAGE_NUMBER_POS {
+                    if header.ctrl_id == CtrlId::PAGE_NUMBER
+                        || header.ctrl_id == CtrlId::PAGE_NUMBER_POS
+                    {
                         if let CtrlHeaderData::PageNumberPosition { .. } = &header.data {
                             return Some(&header.data);
                         }
@@ -127,6 +130,14 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let content_height_mm =
         page_height_mm - top_margin_mm - bottom_margin_mm - header_margin_mm - footer_margin_mm;
 
+    // 페이지네이션 컨텍스트 초기화 / Initialize pagination context
+    let mut pagination_context = PaginationContext {
+        prev_vertical_mm: None,
+        current_max_vertical_mm: 0.0,
+        content_height_mm,
+    };
+    let mut current_page_def = page_def; // 현재 페이지의 PageDef 추적 / Track current page's PageDef
+
     // 현재 페이지의 최대 vertical_position (mm 단위) / Maximum vertical_position of current page (in mm)
     let mut current_max_vertical_mm = 0.0;
     // 이전 문단의 마지막 vertical_position (mm 단위) / Last vertical_position of previous paragraph (in mm)
@@ -162,28 +173,20 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
     for section in &document.body_text.sections {
         for paragraph in &section.paragraphs {
-            // 페이지 나누기 확인 / Check for page break
-            // 1. column_divide_type에서 페이지 나누기 확인 / Check page break from column_divide_type
-            let has_page_break_from_para = paragraph
-                .para_header
-                .column_divide_type
-                .iter()
-                .any(|t| matches!(t, ColumnDivideType::Page | ColumnDivideType::Section));
+            // 페이지네이션 컨텍스트는 아래에서 업데이트됨 / Pagination context will be updated below
 
-            // 2. LineSegment의 vertical_position 확인 / Check vertical_position from LineSegment
-            // 레거시 라이브러리들(ruby-hwp, hwpjs.js)은 is_first_line_of_page를 사용하지 않고
-            // vertical_position이 0이거나 이전보다 작아지면 새 페이지로 간주합니다
-            // Legacy libraries (ruby-hwp, hwpjs.js) don't use is_first_line_of_page,
-            // instead they consider new page when vertical_position is 0 or smaller than previous
+            // 1. 문단 페이지 나누기 확인 (렌더링 전) / Check paragraph page break (before rendering)
+            let para_result = super::pagination::check_paragraph_page_break(
+                paragraph,
+                &pagination_context,
+                current_page_def,
+            );
+
+            // LineSegment의 vertical_position 추출 (기존 로직 유지) / Extract vertical_position from LineSegment (keep existing logic)
             let mut first_vertical_mm: Option<f64> = None;
-            let mut _has_first_line_of_page = false;
             for record in &paragraph.records {
                 if let ParagraphRecord::ParaLineSeg { segments } = record {
                     if let Some(first_segment) = segments.first() {
-                        _has_first_line_of_page = first_segment.tag.is_first_line_of_page;
-                        // vertical_position을 mm로 변환 / Convert vertical_position to mm
-                        // HWPUNIT은 1/7200 inch, INT32는 1/7200 inch 단위
-                        // 1 inch = 25.4 mm, 따라서 1 HWPUNIT = 25.4 / 7200 mm
                         first_vertical_mm =
                             Some(first_segment.vertical_position as f64 * 25.4 / 7200.0);
                     }
@@ -191,42 +194,28 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 }
             }
 
-            // 3. vertical_position이 0으로 리셋되거나 이전보다 작아지면 새 페이지 (hwpjs.js 방식) / New page if vertical_position resets to 0 or becomes smaller (hwpjs.js method)
-            // hwpjs.js: if(data.paragraph.start_line === 0 || preline > parseInt(data.paragraph.start_line))
-            // 레거시 라이브러리들은 is_first_line_of_page 플래그를 사용하지 않고 vertical_position으로만 판단합니다
-            // Legacy libraries don't use is_first_line_of_page flag, they only use vertical_position
-            let vertical_reset =
-                if let (Some(prev), Some(current)) = (prev_vertical_mm, first_vertical_mm) {
-                    // vertical_position이 0이거나 이전보다 작아지면 새 페이지 / New page if vertical_position is 0 or smaller than previous
-                    // hwpjs.js와 동일한 로직: start_line === 0 || preline > start_line
-                    current < 0.1 || (prev > 0.1 && current < prev - 0.1) // 0.1mm 미만이거나 이전보다 0.1mm 이상 작아지면 새 페이지 / New page if less than 0.1mm or 0.1mm smaller than previous
-                } else if let Some(current) = first_vertical_mm {
-                    // 첫 번째 문단이 아니고 vertical_position이 0이면 새 페이지 / New page if not first paragraph and vertical_position is 0
-                    current < 0.1 && prev_vertical_mm.is_some()
-                } else {
-                    false
-                };
-
-            // 4. vertical_position이 페이지 높이를 초과하면 새 페이지 (ruby-hwp 방식) / New page if vertical_position exceeds page height (ruby-hwp method)
-            let vertical_overflow = if let Some(current_vertical) = first_vertical_mm {
-                current_vertical > content_height_mm && current_max_vertical_mm > 0.0
-            } else {
-                false
-            };
-
-            // 페이지 나누기 확인 / Check page break
-            // 레거시 라이브러리들(ruby-hwp, hwpjs.js)은 is_first_line_of_page를 사용하지 않고
-            // vertical_position만으로 페이지를 나눕니다. 따라서 우선순위는:
-            // Legacy libraries (ruby-hwp, hwpjs.js) don't use is_first_line_of_page,
-            // they only use vertical_position. So priority is:
-            // 우선순위: column_divide_type > vertical_reset > vertical_overflow
-            // Priority: column_divide_type > vertical_reset > vertical_overflow
-            // is_first_line_of_page는 실제로 true가 되는 경우가 거의 없으므로 제외
-            // is_first_line_of_page is excluded because it's rarely true in practice
-            let has_page_break = has_page_break_from_para || vertical_reset || vertical_overflow;
+            let has_page_break = para_result.has_page_break;
 
             // 페이지 나누기가 있고 페이지 내용이 있으면 페이지 출력 (문단 렌더링 전) / Output page if page break and page content exists (before rendering paragraph)
             if has_page_break && (!page_content.is_empty() || !page_tables.is_empty()) {
+                // PageDef 업데이트 (PageDefChange인 경우) / Update PageDef (if PageDefChange)
+                if para_result.reason == Some(PageBreakReason::PageDefChange) {
+                    // 문단에서 PageDef 찾기 / Find PageDef in paragraph
+                    for record in &paragraph.records {
+                        if let ParagraphRecord::PageDef { page_def } = record {
+                            current_page_def = Some(page_def);
+                            break;
+                        }
+                        if let ParagraphRecord::CtrlHeader { children, .. } = record {
+                            for child in children {
+                                if let ParagraphRecord::PageDef { page_def } = child {
+                                    current_page_def = Some(page_def);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
                 // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
                 use crate::types::RoundTo2dp;
                 let hcd_pos = if let Some((left, top)) = hcd_position {
@@ -247,7 +236,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     page_number,
                     &page_content,
                     &page_tables,
-                    page_def,
+                    current_page_def,
                     first_segment_pos,
                     hcd_pos,
                     page_number_position,
@@ -258,6 +247,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 page_content.clear();
                 page_tables.clear();
                 current_max_vertical_mm = 0.0;
+                pagination_context.current_max_vertical_mm = 0.0;
+                pagination_context.prev_vertical_mm = None;
                 first_segment_pos = None; // 새 페이지에서는 첫 번째 세그먼트 위치 리셋 / Reset first segment position for new page
                 hcd_position = None;
             }
@@ -331,7 +322,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
                 let position = ParagraphPosition {
                     hcd_position,
-                    page_def,
+                    page_def: current_page_def, // 현재 페이지의 PageDef 사용 / Use current page's PageDef
                     first_para_vertical_mm,
                     current_para_vertical_mm,
                     para_vertical_positions: &para_vertical_positions, // 모든 문단의 vertical_position 전달 / Pass all paragraphs' vertical_positions
@@ -350,7 +341,58 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     color_to_pattern: &mut color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
                 };
 
-                let (para_html, table_htmls) = render_paragraph(paragraph, &context, &mut state);
+                // 2. 문단 렌더링 (내부에서 테이블/이미지 페이지네이션 체크) / Render paragraph (check table/image pagination inside)
+                let (para_html, table_htmls, obj_pagination_result) = render_paragraph(
+                    paragraph,
+                    &context,
+                    &mut state,
+                    &mut pagination_context, // 페이지네이션 컨텍스트 전달 / Pass pagination context
+                );
+
+                // 3. 객체 페이지네이션 결과 처리 / Handle object pagination result
+                if let Some(obj_result) = obj_pagination_result {
+                    if obj_result.has_page_break
+                        && (!page_content.is_empty() || !page_tables.is_empty())
+                    {
+                        // 페이지 출력 / Output page
+                        let hcd_pos = if let Some((left, top)) = hcd_position {
+                            Some((left.round_to_2dp(), top.round_to_2dp()))
+                        } else {
+                            let left = page_def
+                                .map(|pd| {
+                                    (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
+                                        .round_to_2dp()
+                                })
+                                .unwrap_or(20.0);
+                            let top = page_def
+                                .map(|pd| {
+                                    (pd.top_margin.to_mm() + pd.header_margin.to_mm())
+                                        .round_to_2dp()
+                                })
+                                .unwrap_or(24.99);
+                            Some((left, top))
+                        };
+                        html.push_str(&page::render_page(
+                            page_number,
+                            &page_content,
+                            &page_tables,
+                            page_def,
+                            first_segment_pos,
+                            hcd_pos,
+                            page_number_position,
+                            page_start_number,
+                            document,
+                        ));
+                        page_number += 1;
+                        page_content.clear();
+                        page_tables.clear();
+                        current_max_vertical_mm = 0.0;
+                        pagination_context.current_max_vertical_mm = 0.0;
+                        pagination_context.prev_vertical_mm = None;
+                        first_segment_pos = None;
+                        hcd_position = None;
+                    }
+                }
 
                 // 인덱스 증가 (vertical_position이 있는 문단만) / Increment index (only for paragraphs with vertical_position)
                 if current_para_vertical_mm.is_some() {
@@ -360,87 +402,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     page_content.push_str(&para_html);
                 }
                 // 테이블은 hpa 레벨에 배치 (table.html 샘플 구조에 맞춤) / Tables are placed at hpa level (matching table.html sample structure)
+                // 페이지네이션 체크는 render_paragraph 내부에서 이미 수행되었으므로, 여기서는 바로 추가
+                // Pagination check is already performed in render_paragraph, so just add tables here
                 for table_html in table_htmls {
-                    // NOTE (fixture/table-caption.html):
-                    // 테이블은 문단의 vertical_position만으로는 페이지 넘침을 감지하기 어렵습니다.
-                    // (여러 테이블이 같은 문단에 매달리거나, 개체 높이가 커서 다음 페이지로 넘어가야 하는 경우)
-                    // 따라서 테이블 HTML의 style(top/height)을 이용해 페이지 콘텐츠 높이(content_height_mm)를 넘으면
-                    // 테이블을 다음 페이지로 넘깁니다.
-                    //
-                    // This is a pragmatic page-break heuristic to match fixtures.
-                    fn extract_top_height_mm(html: &str) -> Option<(f64, f64)> {
-                        fn extract_style_after<'a>(html: &'a str, needle: &str) -> Option<&'a str> {
-                            let idx = html.find(needle)?;
-                            let rest = &html[idx + needle.len()..];
-                            let end = rest.find('"')?;
-                            Some(&rest[..end])
-                        }
-
-                        fn parse_mm(style: &str, key: &str) -> Option<f64> {
-                            // naive but sufficient: find "key:" then parse until "mm"
-                            let needle = format!("{key}:");
-                            let idx = style.find(&needle)?;
-                            let rest = &style[idx + needle.len()..];
-                            let end = rest.find("mm")?;
-                            rest[..end].trim().parse::<f64>().ok()
-                        }
-
-                        // Prefer htG bounding box if present, else fall back to htb.
-                        if let Some(style) =
-                            extract_style_after(html, r#"<div class="htG" style=""#)
-                        {
-                            let top = parse_mm(style, "top")?;
-                            let height = parse_mm(style, "height")?;
-                            return Some((top, height));
-                        }
-                        let style = extract_style_after(html, r#"<div class="htb" style=""#)?;
-                        let top = parse_mm(style, "top")?;
-                        let height = parse_mm(style, "height")?;
-                        Some((top, height))
-                    }
-
-                    if let Some((top_mm, height_mm)) = extract_top_height_mm(&table_html) {
-                        let bottom_mm = top_mm + height_mm;
-                        if bottom_mm > content_height_mm
-                            && (!page_content.is_empty() || !page_tables.is_empty())
-                        {
-                            // Flush current page before placing this table.
-                            let hcd_pos = if let Some((left, top)) = hcd_position {
-                                Some((left.round_to_2dp(), top.round_to_2dp()))
-                            } else {
-                                let left = page_def
-                                    .map(|pd| {
-                                        (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
-                                            .round_to_2dp()
-                                    })
-                                    .unwrap_or(20.0);
-                                let top = page_def
-                                    .map(|pd| {
-                                        (pd.top_margin.to_mm() + pd.header_margin.to_mm())
-                                            .round_to_2dp()
-                                    })
-                                    .unwrap_or(24.99);
-                                Some((left, top))
-                            };
-                            html.push_str(&page::render_page(
-                                page_number,
-                                &page_content,
-                                &page_tables,
-                                page_def,
-                                first_segment_pos,
-                                hcd_pos,
-                                page_number_position,
-                                page_start_number,
-                                document,
-                            ));
-                            page_number += 1;
-                            page_content.clear();
-                            page_tables.clear();
-                            current_max_vertical_mm = 0.0;
-                            first_segment_pos = None;
-                            hcd_position = None;
-                        }
-                    }
                     page_tables.push(table_html);
                 }
 
@@ -452,10 +416,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             if vertical_mm > current_max_vertical_mm {
                                 current_max_vertical_mm = vertical_mm;
                             }
-                            // 첫 번째 세그먼트의 vertical_position을 prev_vertical_mm으로 저장 / Store first segment's vertical_position as prev_vertical_mm
-                            if prev_vertical_mm.is_none() || first_vertical_mm.is_none() {
-                                prev_vertical_mm = Some(vertical_mm);
-                            }
                         }
                         break;
                     }
@@ -464,6 +424,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 if let Some(vertical) = first_vertical_mm {
                     prev_vertical_mm = Some(vertical);
                 }
+                // 페이지네이션 컨텍스트 업데이트 / Update pagination context
+                pagination_context.current_max_vertical_mm = current_max_vertical_mm;
+                pagination_context.prev_vertical_mm = prev_vertical_mm;
             }
         }
     }
@@ -475,10 +438,10 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             Some((round_to_2dp(left), round_to_2dp(top)))
         } else {
             // hcd_position이 없으면 PageDef 여백 사용 / Use PageDef margins if hcd_position not available
-            let left = page_def
+            let left = current_page_def
                 .map(|pd| round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()))
                 .unwrap_or(20.0);
-            let top = page_def
+            let top = current_page_def
                 .map(|pd| round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()))
                 .unwrap_or(24.99);
             Some((left, top))
@@ -487,7 +450,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             page_number,
             &page_content,
             &page_tables,
-            page_def,
+            current_page_def,
             first_segment_pos,
             hcd_pos,
             page_number_position,

@@ -3,6 +3,7 @@ use super::ctrl_header;
 use super::line_segment::{
     DocumentRenderState, ImageInfo, LineSegmentContent, LineSegmentRenderContext, TableInfo,
 };
+use super::pagination::{self, PaginationContext, PaginationResult};
 use super::text;
 use super::HtmlOptions;
 use crate::document::bodytext::{
@@ -40,12 +41,13 @@ pub struct ParagraphRenderState<'a> {
 }
 
 /// 문단을 HTML로 렌더링 / Render paragraph to HTML
-/// 반환값: (문단 HTML, 테이블 HTML 리스트) / Returns: (paragraph HTML, table HTML list)
+/// 반환값: (문단 HTML, 테이블 HTML 리스트, 페이지네이션 결과) / Returns: (paragraph HTML, table HTML list, pagination result)
 pub fn render_paragraph(
     paragraph: &Paragraph,
     context: &ParagraphRenderContext,
     state: &mut ParagraphRenderState,
-) -> (String, Vec<String>) {
+    pagination_context: &mut PaginationContext,
+) -> (String, Vec<String>, Option<PaginationResult>) {
     // 구조체에서 개별 값 추출 / Extract individual values from structs
     let document = context.document;
     let options = context.options;
@@ -381,6 +383,18 @@ pub fn render_paragraph(
                 }
             };
 
+            // 이미지 크기 계산 (mm 단위) / Calculate image size (in mm)
+            let height_mm = image_info.height as f64 * 25.4 / 7200.0;
+
+            // 페이지네이션 체크 (렌더링 직전) / Check pagination (before rendering)
+            let image_result =
+                pagination::check_object_page_break(top_mm, height_mm, pagination_context);
+
+            if image_result.has_page_break {
+                // 페이지네이션 결과 반환 (document.rs에서 처리) / Return pagination result (handled in document.rs)
+                return (result, table_htmls, Some(image_result));
+            }
+
             let image_html = render_image(
                 &image_info.url,
                 (left_mm * 7200.0 / 25.4) as INT32,
@@ -409,6 +423,41 @@ pub fn render_paragraph(
             };
             let ref_para_vertical_abs_mm = ref_para_vertical_mm.map(|v| v + base_top_mm);
             let first_para_vertical_abs_mm = first_para_vertical_mm.map(|v| v + base_top_mm);
+
+            // 테이블 크기 계산 (mm 단위) / Calculate table size (in mm)
+            // size 모듈은 pub(crate)이므로 같은 크레이트 내에서 접근 가능
+            // size module is pub(crate), so accessible within the same crate
+            use crate::viewer::html::ctrl_header::table;
+            use table::size::{content_size, htb_size, resolve_container_size};
+            let container_size = htb_size(table_info.ctrl_header);
+            let content_size = content_size(table_info.table, table_info.ctrl_header);
+            let resolved_size = resolve_container_size(container_size, content_size);
+            let height_mm = resolved_size.height;
+
+            // 테이블 위치 계산 (정확한 위치) / Calculate table position (exact position)
+            // table_position은 pub(crate)이므로 같은 크레이트 내에서 접근 가능
+            // table_position is pub(crate), so accessible within the same crate
+            use crate::viewer::html::ctrl_header::table::position::table_position;
+            let (_left_mm, top_mm) = table_position(
+                hcd_position,
+                page_def,
+                None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
+                table_info.ctrl_header,
+                Some(resolved_size.width), // obj_outer_width_mm: 테이블 너비 사용 / Use table width
+                ref_para_vertical_abs_mm,
+                para_start_column_mm,
+                para_segment_width_mm,
+                first_para_vertical_abs_mm,
+            );
+
+            // 페이지네이션 체크 (렌더링 직전) / Check pagination (before rendering)
+            let table_result =
+                pagination::check_table_page_break(top_mm, height_mm, pagination_context);
+
+            if table_result.has_page_break {
+                // 페이지네이션 결과 반환 (document.rs에서 처리) / Return pagination result (handled in document.rs)
+                return (result, table_htmls, Some(table_result));
+            }
 
             let mut context = TableRenderContext {
                 document,
@@ -448,5 +497,5 @@ pub fn render_paragraph(
         ));
     }
 
-    (result, table_htmls)
+    (result, table_htmls, None)
 }
