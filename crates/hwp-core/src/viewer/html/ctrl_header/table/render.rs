@@ -44,19 +44,35 @@ pub struct CaptionText {
     pub body: String,
 }
 
+/// 캡션 단일 paragraph 정보 / Caption single paragraph info
+#[derive(Debug, Clone)]
+pub struct CaptionParagraph<'a> {
+    /// 원본 텍스트 (control characters 제거된 cleaned 텍스트) / Original text (cleaned text with control characters removed)
+    pub original_text: String,
+    /// 모든 LineSegment를 저장 / Store all LineSegments
+    pub line_segments: Vec<&'a LineSegmentInfo>,
+    /// 컨트롤 문자 위치 (원본 WCHAR 인덱스 기준) / Control character positions (original WCHAR index)
+    pub control_char_positions: Vec<ControlCharPosition>,
+    /// AUTO_NUMBER 위치 (이 paragraph 내에서의 위치) / AUTO_NUMBER position (within this paragraph)
+    pub auto_number_position: Option<usize>,
+    /// AUTO_NUMBER 표시 텍스트 / AUTO_NUMBER display text
+    pub auto_number_display_text: Option<String>,
+    /// 첫 번째 char_shape_id / First char_shape_id
+    pub char_shape_id: Option<usize>,
+    /// para_shape_id / Para shape ID
+    pub para_shape_id: usize,
+}
+
 /// 캡션 데이터 구조체 / Caption data struct
 /// 캡션과 관련된 모든 정보를 하나로 묶음 / Bundles all caption-related information
 #[derive(Debug, Clone)]
 pub struct CaptionData<'a> {
+    /// 첫 번째 paragraph에서 파싱한 텍스트 (label, number, body) / Parsed text from first paragraph (label, number, body)
     pub text: CaptionText,
+    /// 캡션 정보 / Caption info
     pub info: CaptionInfo,
-    pub char_shape_id: usize,
-    pub para_shape_id: usize,
-    pub line_segments: Vec<&'a LineSegmentInfo>, // 모든 LineSegment를 저장 / Store all LineSegments
-    pub original_text: String, // 원본 텍스트 (control characters 제거된 cleaned 텍스트) / Original text (cleaned text with control characters removed)
-    pub control_char_positions: Vec<ControlCharPosition>, // 컨트롤 문자 위치 (원본 WCHAR 인덱스 기준) / Control character positions (original WCHAR index)
-    pub auto_number_position: Option<usize>,              // AUTO_NUMBER 위치 / AUTO_NUMBER position
-    pub auto_number_display_text: Option<String>, // AUTO_NUMBER 표시 텍스트 / AUTO_NUMBER display text
+    /// 모든 캡션 paragraph 배열 / Array of all caption paragraphs
+    pub paragraphs: Vec<CaptionParagraph<'a>>,
 }
 
 /// 테이블 렌더링 컨텍스트 / Table rendering context
@@ -106,15 +122,21 @@ pub fn render_table(
     // 캡션 데이터에서 개별 필드 추출 / Extract individual fields from caption data
     let caption_text = caption.as_ref().map(|c| &c.text);
     let caption_info = caption.as_ref().map(|c| c.info);
-    let caption_char_shape_id = caption.as_ref().map(|c| c.char_shape_id);
-    let caption_para_shape_id = caption.as_ref().map(|c| c.para_shape_id);
-    let caption_line_segments = caption.as_ref().map(|c| &c.line_segments);
-    let caption_original_text = caption.as_ref().map(|c| &c.original_text);
-    let caption_control_char_positions = caption.as_ref().map(|c| &c.control_char_positions);
-    let caption_auto_number_position = caption.as_ref().and_then(|c| c.auto_number_position);
-    let caption_auto_number_display_text = caption
-        .as_ref()
-        .and_then(|c| c.auto_number_display_text.clone());
+    let caption_paragraphs = caption.as_ref().map(|c| &c.paragraphs);
+
+    // 첫 번째 paragraph에서 기본 정보 추출 / Extract basic info from first paragraph
+    let caption_char_shape_id = caption_paragraphs
+        .and_then(|paras| paras.first())
+        .and_then(|p| p.char_shape_id);
+    let caption_para_shape_id = caption_paragraphs
+        .and_then(|paras| paras.first())
+        .map(|p| p.para_shape_id);
+    let caption_auto_number_position = caption_paragraphs
+        .and_then(|paras| paras.first())
+        .and_then(|p| p.auto_number_position);
+    let caption_auto_number_display_text = caption_paragraphs
+        .and_then(|paras| paras.first())
+        .and_then(|p| p.auto_number_display_text.clone());
 
     if table.cells.is_empty() || table.attributes.row_count == 0 {
         return r#"<div class="htb" style="left:0mm;width:0mm;top:0mm;height:0mm;"></div>"#
@@ -314,11 +336,28 @@ pub fn render_table(
             // 세로 방향: 테이블 높이와 같거나 더 큼 / Vertical direction: same or greater than table height
             content_size.height
         } else {
-            // 가로 방향: 여러 LineSegment가 있으면 전체 높이 계산 / Horizontal direction: calculate total height if multiple LineSegments
-            if let Some(segments) = caption_line_segments {
-                if segments.len() > 1 {
+            // 가로 방향: 모든 paragraph의 LineSegment를 고려하여 전체 높이 계산 / Horizontal direction: calculate total height considering all paragraphs' LineSegments
+            if let Some(paragraphs) = caption_paragraphs {
+                // 모든 paragraph의 LineSegment를 수집 / Collect LineSegments from all paragraphs
+                let mut all_segments = Vec::new();
+                let mut cumulative_text_len = 0;
+
+                for para in paragraphs.iter() {
+                    for segment in para.line_segments.iter() {
+                        all_segments.push((segment, cumulative_text_len));
+                    }
+                    // 다음 paragraph를 위해 누적 길이 업데이트 / Update cumulative length for next paragraph
+                    cumulative_text_len += para.original_text.chars().count()
+                        + para
+                            .control_char_positions
+                            .iter()
+                            .map(|cc| ControlChar::get_size_by_code(cc.code) as usize)
+                            .sum::<usize>();
+                }
+
+                if all_segments.len() > 1 {
                     // 마지막 LineSegment의 vertical_position + line_height를 사용 / Use last segment's vertical_position + line_height
-                    if let Some(last_segment) = segments.last() {
+                    if let Some((last_segment, _)) = all_segments.last() {
                         let last_vertical_mm =
                             round_to_2dp(int32_to_mm(last_segment.vertical_position));
                         let last_line_height_mm =
@@ -327,7 +366,7 @@ pub fn render_table(
                     } else {
                         caption_info.and_then(|info| info.height_mm).unwrap_or(3.53)
                     }
-                } else if let Some(segment) = segments.first() {
+                } else if let Some((segment, _)) = all_segments.first() {
                     // 단일 LineSegment: line_height 사용 / Single LineSegment: use line_height
                     round_to_2dp(int32_to_mm(segment.line_height))
                 } else {
@@ -469,16 +508,38 @@ pub fn render_table(
                 ""
             };
 
-            // 원본 텍스트 사용 (없으면 fallback) / Use original text (fallback if not available)
-            // fallback 텍스트를 먼저 생성하여 수명 문제 해결 / Create fallback text first to resolve lifetime issue
-            let fallback_text = format!("{} {} {}", caption_label, table_num_text, caption_body);
-            let full_caption_text = caption_original_text
-                .map(|s| s.as_str())
-                .unwrap_or_else(|| fallback_text.as_str());
+            // 모든 paragraph의 LineSegment를 별도의 hls div로 렌더링 / Render each LineSegment from all paragraphs as separate hls div
+            let hls_divs = if let Some(paragraphs) = caption_paragraphs {
+                // 모든 paragraph의 LineSegment를 수집 / Collect LineSegments from all paragraphs
+                let mut all_segments_with_info = Vec::new();
+                let mut cumulative_text_len = 0;
 
-            // 각 LineSegment를 별도의 hls div로 렌더링 / Render each LineSegment as separate hls div
-            let hls_divs = if let Some(segments) = caption_line_segments {
-                if segments.is_empty() {
+                for (para_idx, para) in paragraphs.iter().enumerate() {
+                    if para.line_segments.is_empty() {
+                        // LineSegment가 없으면 다음 paragraph로 / Skip if no LineSegments
+                        cumulative_text_len += para.original_text.chars().count()
+                            + para
+                                .control_char_positions
+                                .iter()
+                                .map(|cc| ControlChar::get_size_by_code(cc.code) as usize)
+                                .sum::<usize>();
+                        continue;
+                    }
+
+                    for segment in para.line_segments.iter() {
+                        all_segments_with_info.push((segment, para_idx, para, cumulative_text_len));
+                    }
+
+                    // 다음 paragraph를 위해 누적 길이 업데이트 / Update cumulative length for next paragraph
+                    cumulative_text_len += para.original_text.chars().count()
+                        + para
+                            .control_char_positions
+                            .iter()
+                            .map(|cc| ControlChar::get_size_by_code(cc.code) as usize)
+                            .sum::<usize>();
+                }
+
+                if all_segments_with_info.is_empty() {
                     // LineSegment가 없으면 fallback / Fallback if no LineSegments
                     let (line_height_mm, top_offset_mm, caption_hls_left_mm, caption_hls_width_mm) =
                         (2.79, -0.18, 0.0, caption_width_mm);
@@ -499,22 +560,7 @@ pub fn render_table(
                     // 각 LineSegment에 대해 텍스트 분할 및 렌더링 / Split text and render for each LineSegment
                     let mut hls_htmls = Vec::new();
 
-                    // control_char_positions 가져오기 (원본 텍스트 인덱스 변환에 필요) / Get control_char_positions (needed for original text index conversion)
-                    let control_char_positions = caption_control_char_positions
-                        .map(|v| v.as_slice())
-                        .unwrap_or(&[]);
-
-                    // 원본 텍스트 길이 (컨트롤 문자 포함) / Original text length (including control characters)
-                    // 원본 텍스트는 이미 컨트롤 문자가 제거된 상태이므로, 컨트롤 문자 크기를 더해야 함
-                    // Original text already has control characters removed, so need to add control character sizes
-                    let original_text_len = full_caption_text.chars().count()
-                        + control_char_positions
-                            .iter()
-                            .map(|cc| ControlChar::get_size_by_code(cc.code) as usize)
-                            .sum::<usize>();
-
                     // line_segment.rs의 함수와 동일한 로직 사용 / Use same logic as line_segment.rs
-                    // line_segment.rs와 동일한 로직 사용 / Use same logic as line_segment.rs
                     fn original_to_cleaned_index(
                         pos: usize,
                         control_chars: &[ControlCharPosition],
@@ -559,17 +605,27 @@ pub fn render_table(
                         cleaned_chars[s..e].iter().collect()
                     }
 
-                    for (idx, segment) in segments.iter().enumerate() {
+                    for (global_idx, (segment, para_idx, para, para_cumulative_len)) in
+                        all_segments_with_info.iter().enumerate()
+                    {
                         let lh = round_to_2dp(int32_to_mm(segment.baseline_distance));
                         let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
                         let top_off = round_to_2dp((lh - text_height_mm) / 2.0);
                         let left_mm = round_to_2dp(int32_to_mm(segment.column_start_position));
                         let width_mm = round_to_2dp(int32_to_mm(segment.segment_width));
 
+                        // para_shape_id 가져오기 / Get para_shape_id
+                        let para_ps_class =
+                            if para.para_shape_id < document.doc_info.para_shapes.len() {
+                                format!("ps{}", para.para_shape_id)
+                            } else {
+                                String::new()
+                            };
+
                         // vertical_position을 mm로 변환 / Convert vertical_position to mm
                         // 첫 번째 LineSegment는 top_off만 사용, 이후는 vertical_position을 직접 사용
                         // First LineSegment uses only top_off, others use vertical_position directly
-                        let segment_top_mm = if idx == 0 {
+                        let segment_top_mm = if global_idx == 0 {
                             round_to_2dp(top_off)
                         } else {
                             // 이후 LineSegment는 vertical_position을 mm로 변환하여 사용
@@ -577,32 +633,61 @@ pub fn render_table(
                             round_to_2dp(int32_to_mm(segment.vertical_position))
                         };
 
-                        // text_start_position을 기준으로 텍스트 분할 (원본 WCHAR 인덱스 기준) / Split text based on text_start_position (original WCHAR index)
-                        let start_pos = segment.text_start_position as usize;
-                        let end_pos = if idx + 1 < segments.len() {
-                            segments[idx + 1].text_start_position as usize
+                        // 원본 텍스트 인덱스를 cleaned 텍스트 인덱스로 변환 / Convert original text index to cleaned text index
+                        // 현재 paragraph의 텍스트와 control_char_positions 사용 / Use current paragraph's text and control_char_positions
+                        let segment_text = if global_idx + 1 < all_segments_with_info.len() {
+                            let (next_segment, next_para_idx, _, _) =
+                                &all_segments_with_info[global_idx + 1];
+                            if *para_idx == *next_para_idx {
+                                // 같은 paragraph 내의 다음 segment / Next segment in same paragraph
+                                slice_cleaned_by_original_range(
+                                    &para.original_text,
+                                    &para.control_char_positions,
+                                    segment.text_start_position as usize,
+                                    next_segment.text_start_position as usize,
+                                )
+                            } else {
+                                // 다음 paragraph의 첫 segment / First segment of next paragraph
+                                slice_cleaned_by_original_range(
+                                    &para.original_text,
+                                    &para.control_char_positions,
+                                    segment.text_start_position as usize,
+                                    para.original_text.chars().count()
+                                        + para
+                                            .control_char_positions
+                                            .iter()
+                                            .map(|cc| {
+                                                ControlChar::get_size_by_code(cc.code) as usize
+                                            })
+                                            .sum::<usize>(),
+                                )
+                            }
                         } else {
-                            original_text_len
+                            // 마지막 segment: 현재 paragraph의 텍스트 끝까지 / Last segment: to end of current paragraph's text
+                            slice_cleaned_by_original_range(
+                                &para.original_text,
+                                &para.control_char_positions,
+                                segment.text_start_position as usize,
+                                para.original_text.chars().count()
+                                    + para
+                                        .control_char_positions
+                                        .iter()
+                                        .map(|cc| ControlChar::get_size_by_code(cc.code) as usize)
+                                        .sum::<usize>(),
+                            )
                         };
 
-                        // 원본 텍스트 인덱스를 cleaned 텍스트 인덱스로 변환 / Convert original text index to cleaned text index
-                        let segment_text = slice_cleaned_by_original_range(
-                            full_caption_text,
-                            &control_char_positions,
-                            start_pos,
-                            end_pos,
-                        );
-
-                        // 첫 번째 LineSegment에만 label과 number 포함 / Include label and number only in first LineSegment
-                        let hls_content = if idx == 0 {
+                        // 첫 번째 paragraph의 첫 번째 LineSegment에만 label과 number 포함 / Include label and number only in first paragraph's first LineSegment
+                        let hls_content = if global_idx == 0 {
                             // 첫 번째 segment: AUTO_NUMBER 위치를 고려하여 분할 / First segment: split considering AUTO_NUMBER position
-                            if let Some(auto_pos) = caption_auto_number_position {
+                            if let Some(auto_pos) = para.auto_number_position {
                                 if segment_text.chars().count() > auto_pos {
                                     let before_num: String =
                                         segment_text.chars().take(auto_pos).collect();
                                     let after_num: String =
                                         segment_text.chars().skip(auto_pos + 1).collect();
-                                    let num_text = caption_auto_number_display_text
+                                    let num_text = para
+                                        .auto_number_display_text
                                         .as_deref()
                                         .unwrap_or(&table_num_text);
                                     format!(
@@ -636,7 +721,7 @@ pub fn render_table(
                                 )
                             }
                         } else {
-                            // 나머지 segment: body의 나머지 부분만 / Remaining segments: only remaining part of body
+                            // 나머지 segment: 텍스트만 / Remaining segments: text only
                             format!(
                                 r#"<span class="hrt {cs_class}">{segment_text}</span>"#,
                                 cs_class = cs_class,
@@ -646,7 +731,7 @@ pub fn render_table(
 
                         hls_htmls.push(format!(
                             r#"<div class="hls {ps_class}" style="line-height:{lh}mm;white-space:nowrap;left:{left_mm}mm;top:{segment_top_mm}mm;height:{caption_height_mm}mm;width:{width_mm}mm;">{hls_content}</div>"#,
-                            ps_class = ps_class,
+                            ps_class = para_ps_class,
                             lh = lh,
                             left_mm = left_mm,
                             segment_top_mm = segment_top_mm,

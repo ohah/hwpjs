@@ -7,7 +7,7 @@ use crate::document::CtrlHeader;
 use crate::viewer::html::ctrl_header::CtrlHeaderResult;
 use crate::viewer::html::line_segment::TableInfo;
 
-use super::render::{CaptionData, CaptionInfo, CaptionText};
+use super::render::{CaptionData, CaptionInfo, CaptionParagraph, CaptionText};
 
 /// 캡션 텍스트를 구조적으로 분해 / Parse caption text into structured components
 ///
@@ -139,16 +139,17 @@ pub fn process_table<'a>(
     };
 
     // 캡션 텍스트 추출: paragraphs 필드에서 모든 캡션 수집 / Extract caption text: collect all captions from paragraphs field
+    // 여러 paragraph를 하나의 캡션으로 묶기 위해 paragraph 그룹화 / Group paragraphs to combine multiple paragraphs into one caption
+    let mut caption_paragraph_groups: Vec<Vec<CaptionParagraph>> = Vec::new();
     let mut caption_texts: Vec<CaptionText> = Vec::new();
     let mut caption_char_shape_ids: Vec<Option<usize>> = Vec::new();
     let mut caption_para_shape_ids: Vec<Option<usize>> = Vec::new();
-    let mut caption_line_segments: Vec<Vec<&LineSegmentInfo>> = Vec::new(); // 모든 LineSegment를 저장 / Store all LineSegments
-    let mut caption_original_texts: Vec<String> = Vec::new(); // 원본 텍스트 저장 / Store original text
-    let mut caption_control_char_positions: Vec<Vec<ControlCharPosition>> = Vec::new(); // 컨트롤 문자 위치 저장 / Store control character positions
-    let mut caption_auto_number_positions: Vec<Option<usize>> = Vec::new(); // AUTO_NUMBER 위치 저장 / Store AUTO_NUMBER position
-    let mut caption_auto_number_display_texts: Vec<Option<String>> = Vec::new(); // AUTO_NUMBER 표시 텍스트 저장 / Store AUTO_NUMBER display text
 
     // paragraphs 필드에서 모든 캡션 수집 / Collect all captions from paragraphs field
+    // 여러 paragraph를 하나의 캡션으로 묶기: 첫 번째 paragraph를 메인으로 사용하고, 연속된 paragraph들도 같은 캡션에 포함
+    // Group multiple paragraphs into one caption: use first paragraph as main, include consecutive paragraphs in same caption
+    let mut current_para_group: Vec<CaptionParagraph> = Vec::new();
+
     for para in paragraphs {
         let mut caption_text_opt: Option<String> = None;
         let mut caption_control_chars: Vec<ControlCharPosition> = Vec::new();
@@ -199,22 +200,51 @@ pub fn process_table<'a>(
         }
 
         if let Some(text) = caption_text_opt {
-            // 캡션 텍스트를 구조적으로 분해 (control_char_positions 포함) / Parse caption text into structured components (including control_char_positions)
-            let parsed = parse_caption_text(
-                &text,
-                &caption_control_chars,
-                None,
-                caption_auto_number_display_text_opt.as_deref(),
-            );
-            caption_texts.push(parsed);
-            caption_char_shape_ids.push(caption_char_shape_id_opt);
-            caption_para_shape_ids.push(Some(para_shape_id));
-            caption_line_segments.push(caption_line_segments_vec);
-            caption_original_texts.push(text);
-            caption_control_char_positions.push(caption_control_chars);
-            caption_auto_number_positions.push(caption_auto_number_position_opt);
-            caption_auto_number_display_texts.push(caption_auto_number_display_text_opt);
+            let has_auto_number = caption_auto_number_position_opt.is_some();
+
+            // CaptionParagraph 생성 / Create CaptionParagraph
+            let caption_para = CaptionParagraph {
+                original_text: text.clone(),
+                line_segments: caption_line_segments_vec,
+                control_char_positions: caption_control_chars.clone(),
+                auto_number_position: caption_auto_number_position_opt,
+                auto_number_display_text: caption_auto_number_display_text_opt.clone(),
+                char_shape_id: caption_char_shape_id_opt,
+                para_shape_id,
+            };
+
+            if has_auto_number {
+                // AUTO_NUMBER가 있는 paragraph: 새로운 캡션 그룹 시작 / Paragraph with AUTO_NUMBER: start new caption group
+                // 이전 그룹이 있으면 저장 / Save previous group if exists
+                if !current_para_group.is_empty() {
+                    caption_paragraph_groups.push(current_para_group);
+                    current_para_group = Vec::new();
+                }
+
+                // 캡션 텍스트를 구조적으로 분해 (control_char_positions 포함) / Parse caption text into structured components (including control_char_positions)
+                let parsed = parse_caption_text(
+                    &text,
+                    &caption_control_chars,
+                    None,
+                    caption_auto_number_display_text_opt.as_deref(),
+                );
+                caption_texts.push(parsed);
+                caption_char_shape_ids.push(caption_char_shape_id_opt);
+                caption_para_shape_ids.push(Some(para_shape_id));
+            }
+
+            // 현재 paragraph를 그룹에 추가 / Add current paragraph to group
+            current_para_group.push(caption_para);
+        } else if !current_para_group.is_empty() {
+            // 텍스트가 없는 paragraph: 현재 그룹 종료 / Paragraph without text: end current group
+            caption_paragraph_groups.push(current_para_group);
+            current_para_group = Vec::new();
         }
+    }
+
+    // 마지막 그룹 저장 / Save last group
+    if !current_para_group.is_empty() {
+        caption_paragraph_groups.push(current_para_group);
     }
 
     // 먼저 children을 순회하여 필요한 모든 캡션을 caption_texts에 추가
@@ -371,27 +401,6 @@ pub fn process_table<'a>(
 
     for child in children.iter() {
         if let ParagraphRecord::Table { table } = child {
-            // 캡션 char_shape_id 찾기 / Find caption char_shape_id
-            let current_caption_char_shape_id = if caption_index < caption_char_shape_ids.len() {
-                caption_char_shape_ids[caption_index]
-            } else {
-                None
-            };
-
-            // 캡션 para_shape_id 찾기 / Find caption para_shape_id
-            let current_caption_para_shape_id = if caption_index < caption_para_shape_ids.len() {
-                caption_para_shape_ids[caption_index]
-            } else {
-                None
-            };
-
-            // 캡션 LineSegmentInfo 찾기 / Find caption LineSegmentInfo
-            let current_caption_line_segments = if caption_index < caption_line_segments.len() {
-                caption_line_segments[caption_index].clone()
-            } else {
-                Vec::new()
-            };
-
             // 캡션 텍스트 가져오기 / Get caption text
             let current_caption = if caption_index < caption_texts.len() {
                 Some(caption_texts[caption_index].clone())
@@ -399,48 +408,19 @@ pub fn process_table<'a>(
                 None
             };
 
-            // 원본 텍스트 및 AUTO_NUMBER 정보 가져오기 / Get original text and AUTO_NUMBER info
-            let current_original_text = if caption_index < caption_original_texts.len() {
-                caption_original_texts[caption_index].clone()
+            // 캡션 paragraph 그룹 가져오기 / Get caption paragraph group
+            let current_caption_paragraphs = if caption_index < caption_paragraph_groups.len() {
+                caption_paragraph_groups[caption_index].clone()
             } else {
-                String::new()
+                Vec::new()
             };
-            let current_control_char_positions =
-                if caption_index < caption_control_char_positions.len() {
-                    caption_control_char_positions[caption_index].clone()
-                } else {
-                    Vec::new()
-                };
-            let current_auto_number_position =
-                if caption_index < caption_auto_number_positions.len() {
-                    caption_auto_number_positions[caption_index]
-                } else {
-                    None
-                };
-            let current_auto_number_display_text =
-                if caption_index < caption_auto_number_display_texts.len() {
-                    caption_auto_number_display_texts[caption_index].clone()
-                } else {
-                    None
-                };
 
             // CaptionData 생성 / Create CaptionData
-            let caption_data = if let (Some(text), Some(info), Some(char_id), Some(para_id)) = (
-                current_caption,
-                caption_info,
-                current_caption_char_shape_id,
-                current_caption_para_shape_id,
-            ) {
+            let caption_data = if let (Some(text), Some(info)) = (current_caption, caption_info) {
                 Some(CaptionData {
                     text,
                     info,
-                    char_shape_id: char_id,
-                    para_shape_id: para_id,
-                    line_segments: current_caption_line_segments,
-                    original_text: current_original_text,
-                    control_char_positions: current_control_char_positions,
-                    auto_number_position: current_auto_number_position,
-                    auto_number_display_text: current_auto_number_display_text,
+                    paragraphs: current_caption_paragraphs,
                 })
             } else {
                 None
