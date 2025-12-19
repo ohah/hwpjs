@@ -398,19 +398,37 @@ pub fn render_table(
                 }
             } else {
                 // 가로 방향 (Top/Bottom): 캡션이 가로로 배치됨 / Horizontal direction: caption placed horizontally
-                let left = caption_base_left_mm;
+                // include_margin이 true이면 left는 0mm (last_width가 마진을 포함한 전체 폭이므로)
+                // If include_margin is true, left should be 0mm (last_width includes full width with margin)
+                let left = if let Some(info) = caption_info {
+                    if let Some(include_margin) = info.include_margin {
+                        if include_margin {
+                            // include_margin이 true이면 last_width가 마진을 포함한 전체 폭이므로 left는 0mm
+                            // If include_margin is true, last_width includes full width with margin, so left is 0mm
+                            0.0
+                        } else {
+                            caption_base_left_mm
+                        }
+                    } else {
+                        caption_base_left_mm
+                    }
+                } else {
+                    caption_base_left_mm
+                };
+
                 let top = if is_caption_above {
-                    // 위 캡션:
-                    //  - 캡션의 기준 위치는 객체 margin.top / For top captions, base position is object margin.top
-                    //  - 캡션과 표 사이 여백(gap)은 이미 htb_top_mm 계산에서 caption_margin_mm(= gap)으로 반영됨
-                    //    The gap between caption and table (caption.gap) is already applied via caption_margin_mm in htb_top_mm
-                    //
-                    // 따라서 hcD top은 gap과는 독립적으로 margin.top 값을 그대로 사용해야 함
-                    // So hcD top should simply use margin.top, without any magic constant like 3mm
+                    // 위 캡션: htG 내부에서의 상대 위치는 margin.top
+                    // Top caption: relative position within htG is margin.top
+                    // Fixture 기준: 위 캡션은 htG 내부에서 top:10mm (margin.top 값)
+                    // Based on fixture: top caption is at top:10mm within htG (margin.top value)
                     margin_top_mm
                 } else {
-                    // 아래 캡션: htb top + htb height + 간격 / Caption below: htb top + htb height + spacing
-                    // htb_top_mm은 이미 margin.top이 포함되어 있음 / htb_top_mm already includes margin.top
+                    // 아래 캡션: htG 내부에서 htb 아래에 배치
+                    // Bottom caption: placed below htb within htG
+                    // Fixture 기준: 아래 캡션은 htG 내부에서 top:17.52mm = margin.top(10mm) + content.height(4.52mm) + gap(3mm)
+                    // Based on fixture: bottom caption is at top:17.52mm = margin.top(10mm) + content.height(4.52mm) + gap(3mm)
+                    // 아래 캡션이 있을 때 htb_top_mm은 margin_top_mm이므로, margin_top_mm + content_size.height + caption_margin_mm 사용
+                    // When bottom caption exists, htb_top_mm equals margin_top_mm, so use margin_top_mm + content_size.height + caption_margin_mm
                     margin_top_mm + content_size.height + caption_margin_mm
                 };
                 (left, top)
@@ -730,64 +748,23 @@ pub fn render_table(
     );
 
     // table-caption.html fixture 기준으로, 수직 캡션(Left/Right)이 있는 표의 htG top은
-    // like_letters 기준 위치보다 한 줄(line) 만큼 아래에 배치됩니다.
-    // 단, vertical_align이 "bottom"인 조합 캡션(오른쪽 아래)의 경우에는 오프셋을 적용하지 않습니다.
-    //
+    // like_letters 기준 위치와 동일합니다.
     // fixture 분석:
-    // - 표3 (왼쪽, vertical_align: middle): 오프셋 필요
-    // - 표4 (오른쪽, vertical_align: middle): 오프셋 필요
-    // - 표5 (왼쪽 위, vertical_align: top): 오프셋 필요
-    // - 표6 (오른쪽 아래, vertical_align: bottom): 오프셋 불필요
+    // - 표3 (왼쪽, vertical_align: middle): 오프셋 불필요 (97.10mm)
+    // - 표4 (오른쪽, vertical_align: middle): 오프셋 불필요 (121.62mm)
+    // - 표5 (왼쪽 위, vertical_align: top): 오프셋 불필요 (146.15mm)
+    // - 표6 (오른쪽 아래, vertical_align: bottom): 오프셋 불필요 (170.67mm)
     //
     // According to table-caption.html fixture, htG top for tables with vertical captions (Left/Right)
-    // is placed one line below the like_letters reference position.
-    // However, for combination captions with vertical_align "bottom" (right bottom), the offset is not applied.
+    // is the same as the like_letters reference position.
     //
     // Fixture analysis:
-    // - Table 3 (left, vertical_align: middle): offset needed
-    // - Table 4 (right, vertical_align: middle): offset needed
-    // - Table 5 (left top, vertical_align: top): offset needed
-    // - Table 6 (right bottom, vertical_align: bottom): offset not needed
+    // - Table 3 (left, vertical_align: middle): no offset needed (97.10mm)
+    // - Table 4 (right, vertical_align: middle): no offset needed (121.62mm)
+    // - Table 5 (left top, vertical_align: top): no offset needed (146.15mm)
+    // - Table 6 (right bottom, vertical_align: bottom): no offset needed (170.67mm)
     //
-    // htG's top is calculated in table_position(), so
-    // when a vertical caption exists and vertical_align is not "bottom", we add one line height to htG's top to match the fixture position.
-
-    // vertical_align이 "bottom"이 아닌 모든 수직 캡션에 오프셋 적용
-    // Apply offset to all vertical captions where vertical_align is not "bottom"
-    let should_apply_offset = if let Some(info) = caption_info {
-        if let Some(vertical_align) = info.vertical_align {
-            // vertical_align이 "bottom"이 아니면 오프셋 적용 / Apply offset if vertical_align is not "bottom"
-            vertical_align != CaptionVAlign::Bottom
-        } else {
-            // vertical_align이 없으면 오프셋 적용 (기본값) / Apply offset if vertical_align is not available (default)
-            true
-        }
-    } else {
-        false
-    };
-
-    if needs_htg && has_caption && is_vertical && should_apply_offset {
-        // 한 줄 높이 계산: caption_line_segments의 첫 번째 segment의 line_height + line_spacing 사용
-        // Calculate line height: use line_height + line_spacing from first segment in caption_line_segments
-        // line_height는 줄의 높이를, line_spacing은 줄 간격을 나타냅니다.
-        // line_height represents the line height, and line_spacing represents the line spacing.
-        let line_height_offset_mm = if let Some(segments) = caption_line_segments {
-            if let Some(segment) = segments.first() {
-                let line_height_mm = round_to_2dp(int32_to_mm(segment.line_height));
-                let line_spacing_mm = round_to_2dp(int32_to_mm(segment.line_spacing));
-                round_to_2dp(line_height_mm + line_spacing_mm)
-            } else {
-                // LineSegmentInfo가 없으면 기본값 사용 (일반적인 한 줄 높이)
-                // Use default value if LineSegmentInfo is not available (typical line height)
-                5.47
-            }
-        } else {
-            // LineSegmentInfo가 없으면 기본값 사용 (일반적인 한 줄 높이)
-            // Use default value if LineSegmentInfo is not available (typical line height)
-            5.47
-        };
-        top_mm += line_height_offset_mm;
-    }
+    // Therefore, we do not apply any offset to htG's top for vertical captions.
 
     let result_html = if needs_htg {
         // htG 크기 계산 (테이블 + 캡션) / Calculate htG size (table + caption)
