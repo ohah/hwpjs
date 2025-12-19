@@ -158,9 +158,8 @@ pub(crate) fn table_position(
             offset_y.map(|y| y.to_mm()).unwrap_or(0.0)
         };
 
-        (
-            round_to_2dp(left_mm),
-            round_to_2dp(base_top_for_obj + offset_top_mm),
-        )
+        let final_top_mm = base_top_for_obj + offset_top_mm;
+
+        (round_to_2dp(left_mm), round_to_2dp(final_top_mm))
     }
 }

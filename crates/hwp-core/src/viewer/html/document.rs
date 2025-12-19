@@ -251,6 +251,10 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 pagination_context.prev_vertical_mm = None;
                 first_segment_pos = None; // 새 페이지에서는 첫 번째 세그먼트 위치 리셋 / Reset first segment position for new page
                 hcd_position = None;
+                // 페이지네이션 발생 시 para_index와 para_vertical_positions 리셋 / Reset para_index and para_vertical_positions on pagination
+                para_index = 0;
+                para_vertical_positions.clear();
+                first_para_vertical_mm = None; // 새 페이지의 첫 번째 문단 추적을 위해 리셋 / Reset to track first paragraph of new page
             }
 
             // 문단 렌더링 (일반 본문 문단만) / Render paragraph (only regular body paragraphs)
@@ -347,9 +351,17 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     &context,
                     &mut state,
                     &mut pagination_context, // 페이지네이션 컨텍스트 전달 / Pass pagination context
+                    0, // 처음 렌더링이므로 건너뛸 테이블 없음 / No tables to skip on first render
                 );
 
                 // 3. 객체 페이지네이션 결과 처리 / Handle object pagination result
+                let has_obj_page_break = obj_pagination_result
+                    .as_ref()
+                    .map(|r| {
+                        r.has_page_break && (!page_content.is_empty() || !page_tables.is_empty())
+                    })
+                    .unwrap_or(false);
+
                 if let Some(obj_result) = obj_pagination_result {
                     if obj_result.has_page_break
                         && (!page_content.is_empty() || !page_tables.is_empty())
@@ -391,11 +403,73 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         pagination_context.prev_vertical_mm = None;
                         first_segment_pos = None;
                         hcd_position = None;
+                        // 페이지네이션 발생 시 para_index와 para_vertical_positions 리셋 / Reset para_index and para_vertical_positions on pagination
+                        para_index = 0;
+                        para_vertical_positions.clear();
+                        first_para_vertical_mm = None; // 새 페이지의 첫 번째 문단 추적을 위해 리셋 / Reset to track first paragraph of new page
+                                                       // 페이지네이션 후 새 페이지의 첫 문단은 vertical_position이 0이어야 함 / After pagination, first paragraph of new page should have vertical_position 0
+                                                       // 현재 문단의 vertical_position을 0으로 리셋 (새 페이지 시작) / Reset current paragraph's vertical_position to 0 (new page start)
+                                                       // 새 페이지의 첫 번째 문단(현재 문단)의 vertical_position 추가 (0으로 리셋) / Add first paragraph's vertical_position of new page (reset to 0)
+                        para_vertical_positions.push(0.0);
+
+                        // 페이지네이션 후 같은 문단의 후속 테이블들을 새 페이지에 배치하기 위해 문단을 다시 렌더링
+                        // Re-render paragraph to place subsequent tables on new page after pagination
+                        if !table_htmls.is_empty() {
+                            // 현재 문단의 vertical_position을 0으로 설정하여 새 페이지의 첫 문단으로 처리
+                            // Set current paragraph's vertical_position to 0 to treat it as first paragraph of new page
+                            let current_para_vertical_mm_for_next =
+                                if current_para_vertical_mm.is_some() {
+                                    Some(0.0)
+                                } else {
+                                    current_para_vertical_mm
+                                };
+                            let current_para_index_for_next = Some(0);
+
+                            let position_next = ParagraphPosition {
+                                hcd_position,
+                                page_def: current_page_def,
+                                first_para_vertical_mm: Some(0.0),
+                                current_para_vertical_mm: current_para_vertical_mm_for_next,
+                                para_vertical_positions: &para_vertical_positions,
+                                current_para_index: current_para_index_for_next,
+                            };
+
+                            let context_next = ParagraphRenderContext {
+                                document,
+                                options,
+                                position: position_next,
+                            };
+
+                            let skip_tables_count = table_htmls.len(); // 이미 처리된 테이블 수 건너뛰기 / Skip already processed tables
+                            let (_para_html_next, table_htmls_next, _obj_pagination_result_next) =
+                                render_paragraph(
+                                    paragraph,
+                                    &context_next,
+                                    &mut state,
+                                    &mut pagination_context,
+                                    skip_tables_count,
+                                );
+
+                            // 후속 테이블들을 새 페이지에 추가
+                            // Add subsequent tables to new page
+                            for table_html in table_htmls_next {
+                                page_tables.push(table_html);
+                            }
+                        }
+                    }
+                }
+
+                // 현재 문단의 vertical_position을 para_vertical_positions에 추가 (페이지별로 관리) / Add current paragraph's vertical_position to para_vertical_positions (managed per page)
+                // 페이지네이션이 발생하지 않은 경우에만 추가 (페이지네이션 발생 시에는 이미 위에서 추가됨) / Only add if pagination did not occur (already added above if pagination occurred)
+                if !has_obj_page_break {
+                    if let Some(vertical_mm) = current_para_vertical_mm {
+                        para_vertical_positions.push(vertical_mm);
                     }
                 }
 
                 // 인덱스 증가 (vertical_position이 있는 문단만) / Increment index (only for paragraphs with vertical_position)
-                if current_para_vertical_mm.is_some() {
+                // 페이지네이션이 발생한 경우에는 인덱스를 증가시키지 않음 (이미 0으로 리셋됨) / Don't increment index if pagination occurred (already reset to 0)
+                if !has_obj_page_break && current_para_vertical_mm.is_some() {
                     para_index += 1;
                 }
                 if !para_html.is_empty() {

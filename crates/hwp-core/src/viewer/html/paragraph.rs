@@ -42,11 +42,14 @@ pub struct ParagraphRenderState<'a> {
 
 /// 문단을 HTML로 렌더링 / Render paragraph to HTML
 /// 반환값: (문단 HTML, 테이블 HTML 리스트, 페이지네이션 결과) / Returns: (paragraph HTML, table HTML list, pagination result)
+/// skip_tables_count: 페이지네이션 후 같은 문단을 다시 렌더링할 때 이미 처리된 테이블 수를 건너뛰기 위한 파라미터
+/// skip_tables_count: Parameter to skip already processed tables when re-rendering paragraph after pagination
 pub fn render_paragraph(
     paragraph: &Paragraph,
     context: &ParagraphRenderContext,
     state: &mut ParagraphRenderState,
     pagination_context: &mut PaginationContext,
+    skip_tables_count: usize,
 ) -> (String, Vec<String>, Option<PaginationResult>) {
     // 구조체에서 개별 값 추출 / Extract individual values from structs
     let document = context.document;
@@ -239,11 +242,31 @@ pub fn render_paragraph(
     // 문단의 첫 번째 LineSegment의 vertical_position 계산 (vert_rel_to: "para"일 때 사용) / Calculate first LineSegment's vertical_position (used when vert_rel_to: "para")
     // current_para_vertical_mm이 전달되면 사용하고, 없으면 현재 문단의 첫 번째 LineSegment 사용
     // If current_para_vertical_mm is provided, use it; otherwise use first LineSegment of current paragraph
-    let para_start_vertical_mm = current_para_vertical_mm.or_else(|| {
-        line_segments
-            .first()
-            .map(|seg| seg.vertical_position as f64 * 25.4 / 7200.0)
-    });
+    // table_position 함수는 para_start_vertical_mm을 절대 위치(페이지 기준)로 기대하므로,
+    // 상대 위치일 때는 base_top을 더해서 절대 위치로 변환해야 함
+    // table_position function expects para_start_vertical_mm as absolute position (relative to page),
+    // so if it's relative position, add base_top to convert to absolute position
+    // base_top 계산 (나중에 사용) / Calculate base_top (used later)
+    let base_top_for_calc = if let Some((_, top)) = context.position.hcd_position {
+        top
+    } else if let Some(pd) = context.position.page_def {
+        pd.top_margin.to_mm() + pd.header_margin.to_mm()
+    } else {
+        24.99
+    };
+    let para_start_vertical_mm = if let Some(0) = current_para_index {
+        // 새 페이지의 첫 문단이므로 base_top을 사용 / First paragraph of new page, so use base_top
+        Some(base_top_for_calc)
+    } else {
+        // 상대 위치를 절대 위치로 변환 / Convert relative position to absolute position
+        let relative_mm = current_para_vertical_mm.or_else(|| {
+            line_segments
+                .first()
+                .map(|seg| seg.vertical_position as f64 * 25.4 / 7200.0)
+        });
+        relative_mm.map(|rel| rel + base_top_for_calc)
+    };
+
     let para_start_column_mm = line_segments
         .first()
         .map(|seg| seg.column_start_position as f64 * 25.4 / 7200.0);
@@ -259,6 +282,7 @@ pub fn render_paragraph(
     } else {
         24.99
     };
+
 
     // LineSegment가 있으면 사용 / Use LineSegment if available
     if !line_segments.is_empty() {
@@ -406,23 +430,21 @@ pub fn render_paragraph(
         }
 
         // like_letters=false인 테이블을 별도로 렌더링 (hpa 레벨에 배치) / Render tables with like_letters=false separately (placed at hpa level)
-        for table_info in absolute_tables.iter() {
+        // 페이지네이션 후 같은 문단을 다시 렌더링할 때 이미 처리된 테이블을 건너뛰기 / Skip already processed tables when re-rendering paragraph after pagination
+        for table_info in absolute_tables.iter().skip(skip_tables_count) {
             // vert_rel_to: "para"일 때 다음 문단을 참조 / When vert_rel_to: "para", reference next paragraph
-            let ref_para_vertical_mm = match table_info.ctrl_header {
-                Some(CtrlHeaderData::ObjectCommon { attribute, .. })
-                    if matches!(attribute.vert_rel_to, VertRelTo::Para) =>
-                {
-                    // NOTE (fixture/table-position.html):
-                    // vert_rel_to=para인 객체의 기준 문단은 "현재 문단"의 vertical_position입니다.
-                    // (이전 구현처럼 idx+1을 참조하면 표가 한 칸씩 아래로 밀립니다.)
-                    current_para_index
-                        .and_then(|idx| para_vertical_positions.get(idx).copied())
-                        .or(para_start_vertical_mm)
-                }
-                _ => para_start_vertical_mm,
-            };
-            let ref_para_vertical_abs_mm = ref_para_vertical_mm.map(|v| v + base_top_mm);
-            let first_para_vertical_abs_mm = first_para_vertical_mm.map(|v| v + base_top_mm);
+            // vert_rel_to=para인 객체의 기준 문단은 "현재 문단"의 vertical_position입니다.
+            // para_start_vertical_mm은 이미 현재 문단의 vertical_position이므로 이를 직접 사용
+            // For vert_rel_to=para objects, the reference paragraph is the "current paragraph"'s vertical_position.
+            // para_start_vertical_mm is already the current paragraph's vertical_position, so use it directly
+            let ref_para_vertical_mm = para_start_vertical_mm;
+            // table_position 함수는 para_start_vertical_mm을 상대 위치로 기대하므로,
+            // 절대 위치로 변환하지 않고 상대 위치 그대로 전달
+            // table_position function expects para_start_vertical_mm as relative position,
+            // so pass relative position as-is without converting to absolute
+            let ref_para_vertical_for_table = ref_para_vertical_mm;
+            let first_para_vertical_for_table = first_para_vertical_mm;
+
 
             // 테이블 크기 계산 (mm 단위) / Calculate table size (in mm)
             // size 모듈은 pub(crate)이므로 같은 크레이트 내에서 접근 가능
@@ -438,27 +460,29 @@ pub fn render_paragraph(
             // table_position은 pub(crate)이므로 같은 크레이트 내에서 접근 가능
             // table_position is pub(crate), so accessible within the same crate
             use crate::viewer::html::ctrl_header::table::position::table_position;
+
+
             let (_left_mm, top_mm) = table_position(
                 hcd_position,
                 page_def,
                 None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
                 table_info.ctrl_header,
                 Some(resolved_size.width), // obj_outer_width_mm: 테이블 너비 사용 / Use table width
-                ref_para_vertical_abs_mm,
+                ref_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
                 para_start_column_mm,
                 para_segment_width_mm,
-                first_para_vertical_abs_mm,
+                first_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
             );
+
 
             // 페이지네이션 체크 (렌더링 직전) / Check pagination (before rendering)
             let table_result =
                 pagination::check_table_page_break(top_mm, height_mm, pagination_context);
 
-            if table_result.has_page_break {
-                // 페이지네이션 결과 반환 (document.rs에서 처리) / Return pagination result (handled in document.rs)
-                return (result, table_htmls, Some(table_result));
-            }
-
+            // 페이지네이션이 발생하더라도 테이블을 렌더링하여 table_htmls에 포함시킴
+            // 이렇게 하면 페이지네이션 후 같은 문단을 다시 렌더링할 때 이미 처리된 테이블 수를 올바르게 계산할 수 있음
+            // Render table even if pagination occurs, so it's included in table_htmls
+            // This allows correct calculation of already processed tables when re-rendering paragraph after pagination
             let mut context = TableRenderContext {
                 document,
                 ctrl_header: table_info.ctrl_header,
@@ -472,10 +496,10 @@ pub fn render_paragraph(
             let position = TablePosition {
                 hcd_position,
                 segment_position: None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
-                para_start_vertical_mm: ref_para_vertical_abs_mm,
+                para_start_vertical_mm: ref_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
                 para_start_column_mm,
                 para_segment_width_mm,
-                first_para_vertical_mm: first_para_vertical_abs_mm,
+                first_para_vertical_mm: first_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
             };
 
             let table_html = render_table(
@@ -486,6 +510,11 @@ pub fn render_paragraph(
             );
             table_htmls.push(table_html);
             *state.table_counter += 1; // table_counter 증가 / Increment table_counter
+
+            if table_result.has_page_break {
+                // 페이지네이션 결과 반환 (document.rs에서 처리) / Return pagination result (handled in document.rs)
+                return (result, table_htmls, Some(table_result));
+            }
         }
     } else if !text.is_empty() {
         // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment

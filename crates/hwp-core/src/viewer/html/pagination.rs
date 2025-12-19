@@ -94,13 +94,43 @@ pub fn check_paragraph_page_break(
 
 /// 테이블 페이지 나누기 확인 / Check if table causes page break
 /// 테이블의 top과 height를 받아서 페이지를 넘어가는지 확인
+/// current_max_vertical_mm을 고려하여 테이블이 페이지를 넘어가는지 확인
 pub fn check_table_page_break(
     table_top_mm: f64,
     table_height_mm: f64,
     context: &PaginationContext,
 ) -> PaginationResult {
     let table_bottom_mm = table_top_mm + table_height_mm;
-    if table_bottom_mm > context.content_height_mm && context.current_max_vertical_mm > 0.0 {
+    // 테이블이 페이지를 넘어가는지 확인
+    // 1. 테이블의 bottom이 content_height_mm을 넘어가는 경우
+    // 2. 또는 테이블의 top이 current_max_vertical_mm보다 크고, 테이블의 bottom이 content_height_mm에 매우 가까운 경우 (95% 이상)
+    // Check if table overflows page
+    // 1. Table bottom exceeds content_height_mm
+    // 2. Or table top is greater than current_max_vertical_mm and table bottom is very close to content_height_mm (95% or more)
+    if table_bottom_mm > context.content_height_mm {
+        // 테이블이 페이지를 넘어가는 경우, current_max_vertical_mm이 0보다 크면 페이지네이션 발생
+        // If table overflows, pagination occurs if current_max_vertical_mm > 0
+        if context.current_max_vertical_mm > 0.0 {
+            PaginationResult {
+                has_page_break: true,
+                reason: Some(PageBreakReason::TableOverflow),
+            }
+        } else {
+            // 첫 페이지이지만 테이블이 페이지를 넘어가는 경우, 페이지네이션 발생
+            // Even on first page, if table overflows, pagination occurs
+            PaginationResult {
+                has_page_break: true,
+                reason: Some(PageBreakReason::TableOverflow),
+            }
+        }
+    } else if table_top_mm > context.current_max_vertical_mm
+        && table_bottom_mm > context.content_height_mm
+        && context.current_max_vertical_mm > 0.0
+    {
+        // 테이블이 페이지를 넘어가는 경우 (table_bottom_mm > content_height_mm)
+        // Table overflows page (table_bottom_mm > content_height_mm)
+        // 테이블의 top이 current_max_vertical_mm보다 크고, 테이블의 bottom이 content_height_mm을 넘어가는 경우
+        // If table top is greater than current_max_vertical_mm and table bottom exceeds content_height_mm
         PaginationResult {
             has_page_break: true,
             reason: Some(PageBreakReason::TableOverflow),
