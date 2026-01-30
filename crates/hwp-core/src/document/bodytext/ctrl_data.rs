@@ -51,8 +51,7 @@ impl CtrlData {
         }
 
         // 파라미터 셋 파싱 (표 50) / Parse parameter set (Table 50)
-        let parameter_set = ParameterSet::parse(data)
-            .map_err(|e| HwpError::from(e))?;
+        let parameter_set = ParameterSet::parse(data).map_err(|e| HwpError::from(e))?;
 
         Ok(CtrlData { parameter_set })
     }

@@ -3,8 +3,8 @@
 mod common;
 use common::*;
 
-use hwp_core::*;
 use hwp_core::document::ParagraphRecord;
+use hwp_core::*;
 use insta::{assert_snapshot, with_settings};
 
 // insta가 tests/snapshots 디렉토리를 사용하도록 설정하는 헬퍼 매크로
@@ -654,7 +654,7 @@ fn test_table2_html_snapshot() {
         .join("tests")
         .join("fixtures");
     let file_path = fixtures_dir.join("table2.hwp");
-    
+
     if !file_path.exists() {
         eprintln!("table2.hwp not found, skipping test");
         return;
@@ -1391,7 +1391,7 @@ fn test_footnote_endnote_debug() {
 #[test]
 fn test_debug_charshape_strikethrough() {
     use crate::common::find_fixture_file;
-    
+
     let file_path = match find_fixture_file("charshape.hwp") {
         Some(path) => path,
         None => {
@@ -1418,38 +1418,70 @@ fn test_debug_charshape_strikethrough() {
                         if text.contains("가운데줄") {
                             eprintln!("\n=== DEBUG: Found paragraph with '가운데줄' ===");
                             eprintln!("Text: {}", text);
-                            
+
                             // ParaCharShape 찾기
                             // Find ParaCharShape
                             for record2 in &para.records {
                                 if let ParagraphRecord::ParaCharShape { shapes } = record2 {
                                     eprintln!("\nParaCharShape shapes:");
                                     for shape_info in shapes {
-                                        eprintln!("  position: {}, shape_id: {}", shape_info.position, shape_info.shape_id);
-                                        
+                                        eprintln!(
+                                            "  position: {}, shape_id: {}",
+                                            shape_info.position, shape_info.shape_id
+                                        );
+
                                         // shape_id로 CharShape 가져오기
                                         // Get CharShape by shape_id
-                                        if let Some(char_shape) = document.doc_info.char_shapes.get(shape_info.shape_id as usize) {
-                                            eprintln!("    shape_id {} attributes:", shape_info.shape_id);
+                                        if let Some(char_shape) = document
+                                            .doc_info
+                                            .char_shapes
+                                            .get(shape_info.shape_id as usize)
+                                        {
+                                            eprintln!(
+                                                "    shape_id {} attributes:",
+                                                shape_info.shape_id
+                                            );
                                             eprintln!("      bold: {}", char_shape.attributes.bold);
-                                            eprintln!("      italic: {}", char_shape.attributes.italic);
-                                            eprintln!("      strikethrough: {} (0=none, 1-6=type)", char_shape.attributes.strikethrough);
-                                            eprintln!("      strikethrough_style: {}", char_shape.attributes.strikethrough_style);
-                                            
+                                            eprintln!(
+                                                "      italic: {}",
+                                                char_shape.attributes.italic
+                                            );
+                                            eprintln!(
+                                                "      strikethrough: {} (0=none, 1-6=type)",
+                                                char_shape.attributes.strikethrough
+                                            );
+                                            eprintln!(
+                                                "      strikethrough_style: {}",
+                                                char_shape.attributes.strikethrough_style
+                                            );
+
                                             // "가운데줄" 부분 확인 (position 6에서 shape_id 9)
                                             // Check "가운데줄" part (shape_id 9 at position 6)
-                                            if shape_info.shape_id == 9 && shape_info.position == 6 {
+                                            if shape_info.shape_id == 9 && shape_info.position == 6
+                                            {
                                                 eprintln!("\n*** FOUND shape_id 9 at position 6 (가운데줄) ***");
-                                                eprintln!("  strikethrough: {}", char_shape.attributes.strikethrough);
-                                                eprintln!("  strikethrough_style: {}", char_shape.attributes.strikethrough_style);
-                                                eprintln!("  strikethrough != 0: {}", char_shape.attributes.strikethrough != 0);
+                                                eprintln!(
+                                                    "  strikethrough: {}",
+                                                    char_shape.attributes.strikethrough
+                                                );
+                                                eprintln!(
+                                                    "  strikethrough_style: {}",
+                                                    char_shape.attributes.strikethrough_style
+                                                );
+                                                eprintln!(
+                                                    "  strikethrough != 0: {}",
+                                                    char_shape.attributes.strikethrough != 0
+                                                );
                                                 eprintln!("  underline_type: {} (0=none, 1=below, 2=above)", char_shape.attributes.underline_type);
-                                                eprintln!("  underline_style: {}", char_shape.attributes.underline_style);
+                                                eprintln!(
+                                                    "  underline_style: {}",
+                                                    char_shape.attributes.underline_style
+                                                );
                                                 eprintln!("  NOTE: underline_type=2 might indicate strikethrough in some HWP versions");
                                             }
                                         } else {
-                                            eprintln!("    shape_id {} NOT FOUND in char_shapes array (len={})", 
-                                                shape_info.shape_id, 
+                                            eprintln!("    shape_id {} NOT FOUND in char_shapes array (len={})",
+                                                shape_info.shape_id,
                                                 document.doc_info.char_shapes.len());
                                         }
                                     }

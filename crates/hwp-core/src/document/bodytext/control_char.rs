@@ -52,7 +52,11 @@ impl InlineControlParam {
     /// 파싱된 InlineControlParam 구조체 / Parsed InlineControlParam structure
     pub fn parse(control_code: u8, data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 12 {
-            return Err(HwpError::insufficient_data("InlineControlParam", 12, data.len()));
+            return Err(HwpError::insufficient_data(
+                "InlineControlParam",
+                12,
+                data.len(),
+            ));
         }
 
         let mut param = InlineControlParam {

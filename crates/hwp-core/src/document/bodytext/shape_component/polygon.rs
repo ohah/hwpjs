@@ -52,7 +52,11 @@ impl ShapeComponentPolygon {
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 최소 2바이트 필요 (점의 개수) / Need at least 2 bytes (point count)
         if data.len() < 2 {
-            return Err(HwpError::insufficient_data("ShapeComponentPolygon", 2, data.len()));
+            return Err(HwpError::insufficient_data(
+                "ShapeComponentPolygon",
+                2,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;

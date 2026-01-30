@@ -67,7 +67,11 @@ impl PageBorderFill {
     /// 파싱된 PageBorderFill 구조체 / Parsed PageBorderFill structure
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 12 {
-            return Err(HwpError::insufficient_data("PageBorderFill", 12, data.len()));
+            return Err(HwpError::insufficient_data(
+                "PageBorderFill",
+                12,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;

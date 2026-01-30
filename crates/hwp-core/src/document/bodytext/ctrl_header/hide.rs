@@ -12,6 +12,3 @@ pub(crate) fn parse_hide(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     let attribute = UINT16::from_le_bytes([data[0], data[1]]);
     Ok(CtrlHeaderData::Hide { attribute })
 }
-
-
-

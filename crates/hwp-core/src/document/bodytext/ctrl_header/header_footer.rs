@@ -11,8 +11,12 @@ pub(crate) fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, HwpErro
 
     let mut offset = 0usize;
 
-    let attribute_value =
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let attribute_value = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let apply_page = match attribute_value & 0x03 {
@@ -60,6 +64,3 @@ pub(crate) fn parse_header_footer(data: &[u8]) -> Result<CtrlHeaderData, HwpErro
         number_ref,
     })
 }
-
-
-

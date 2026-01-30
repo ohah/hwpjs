@@ -46,7 +46,7 @@ impl Default for ToMarkdownOptions {
             image: NullableString::default(),
             use_html: false,
             include_version: false,
-            include_page_info: false
+            include_page_info: false,
         }
     }
 }
@@ -54,7 +54,7 @@ impl Default for ToMarkdownOptions {
 impl Default for ToMarkdownResult {
     fn default() -> Self {
         ToMarkdownResult {
-            markdown: String::default()
+            markdown: String::default(),
         }
     }
 }

@@ -73,7 +73,7 @@ impl Renderer for MarkdownRenderer {
     ) -> Option<String> {
         // bindata_id로 직접 이미지 렌더링 / Render image directly by bindata_id
         use crate::viewer::markdown::common::format_image_markdown;
-        
+
         // BinData에서 이미지 데이터 가져오기 / Get image data from BinData
         if let Some(bin_item) = document
             .bin_data
@@ -91,7 +91,7 @@ impl Renderer for MarkdownRenderer {
                 return Some(image_markdown);
             }
         }
-        
+
         None
     }
 
@@ -111,11 +111,7 @@ impl Renderer for MarkdownRenderer {
         to_markdown(document, options)
     }
 
-    fn render_document_header(
-        &self,
-        document: &HwpDocument,
-        options: &Self::Options,
-    ) -> String {
+    fn render_document_header(&self, document: &HwpDocument, options: &Self::Options) -> String {
         let mut md = String::new();
         md.push_str("# HWP 문서\n");
         md.push_str("\n");
@@ -129,11 +125,7 @@ impl Renderer for MarkdownRenderer {
         md
     }
 
-    fn render_document_footer(
-        &self,
-        parts: &DocumentParts,
-        _options: &Self::Options,
-    ) -> String {
+    fn render_document_footer(&self, parts: &DocumentParts, _options: &Self::Options) -> String {
         let mut md = String::new();
 
         if !parts.footnotes.is_empty() {
@@ -187,4 +179,3 @@ impl Renderer for MarkdownRenderer {
         content.to_string()
     }
 }
-

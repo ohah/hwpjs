@@ -74,10 +74,9 @@ impl Style {
             });
         }
         let local_name_bytes = &data[offset..offset + (len1 * 2)];
-        let local_name = decode_utf16le(local_name_bytes)
-            .map_err(|e| HwpError::EncodingError {
-                reason: format!("Failed to decode local name: {}", e),
-            })?;
+        let local_name = decode_utf16le(local_name_bytes).map_err(|e| HwpError::EncodingError {
+            reason: format!("Failed to decode local name: {}", e),
+        })?;
         offset += len1 * 2;
 
         // WORD 길이(len2) / WORD length (len2)
@@ -100,8 +99,8 @@ impl Style {
             });
         }
         let english_name_bytes = &data[offset..offset + (len2 * 2)];
-        let english_name = decode_utf16le(english_name_bytes)
-            .map_err(|e| HwpError::EncodingError {
+        let english_name =
+            decode_utf16le(english_name_bytes).map_err(|e| HwpError::EncodingError {
                 reason: format!("Failed to decode English name: {}", e),
             })?;
         offset += len2 * 2;

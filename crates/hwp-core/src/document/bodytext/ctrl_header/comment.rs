@@ -39,35 +39,60 @@ pub(crate) fn parse_comment(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     offset += sub_text_len.max(1) * 2;
 
     let position = if offset + 4 <= data.len() {
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]])
+        UINT32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ])
     } else {
         0
     };
     offset += 4;
 
     let fsize_ratio = if offset + 4 <= data.len() {
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]])
+        UINT32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ])
     } else {
         0
     };
     offset += 4;
 
     let option = if offset + 4 <= data.len() {
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]])
+        UINT32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ])
     } else {
         0
     };
     offset += 4;
 
     let style_number = if offset + 4 <= data.len() {
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]])
+        UINT32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ])
     } else {
         0
     };
     offset += 4;
 
     let alignment = if offset + 4 <= data.len() {
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]])
+        UINT32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ])
     } else {
         0
     };
@@ -82,6 +107,3 @@ pub(crate) fn parse_comment(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
         alignment,
     })
 }
-
-
-

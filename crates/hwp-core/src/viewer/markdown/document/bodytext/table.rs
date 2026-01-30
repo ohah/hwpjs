@@ -376,4 +376,3 @@ fn fill_cell_content(
         }
     }
 }
-

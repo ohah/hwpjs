@@ -50,7 +50,11 @@ impl ShapeComponentContainer {
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // 최소 2바이트 필요 (개체의 개수) / Need at least 2 bytes (object count)
         if data.len() < 2 {
-            return Err(HwpError::insufficient_data("ShapeComponentContainer", 2, data.len()));
+            return Err(HwpError::insufficient_data(
+                "ShapeComponentContainer",
+                2,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;
@@ -66,7 +70,10 @@ impl ShapeComponentContainer {
         let required_bytes = 2 + 4 * object_count_usize;
         if data.len() < required_bytes {
             return Err(HwpError::InsufficientData {
-                field: format!("ShapeComponentContainer (object_count={})", object_count_usize),
+                field: format!(
+                    "ShapeComponentContainer (object_count={})",
+                    object_count_usize
+                ),
                 expected: required_bytes,
                 actual: data.len(),
             });

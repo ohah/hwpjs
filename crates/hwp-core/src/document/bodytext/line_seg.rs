@@ -76,7 +76,11 @@ impl LineSegmentInfo {
     /// 파싱된 LineSegmentInfo 구조체 / Parsed LineSegmentInfo structure
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 36 {
-            return Err(HwpError::insufficient_data("LineSegmentInfo", 36, data.len()));
+            return Err(HwpError::insufficient_data(
+                "LineSegmentInfo",
+                36,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;
@@ -206,8 +210,8 @@ impl ParaLineSeg {
         for i in 0..count {
             let offset = i * 36;
             let segment_data = &data[offset..offset + 36];
-            let segment_info = LineSegmentInfo::parse(segment_data)
-                .map_err(|e| HwpError::from(e))?;
+            let segment_info =
+                LineSegmentInfo::parse(segment_data).map_err(|e| HwpError::from(e))?;
             segments.push(segment_info);
         }
 

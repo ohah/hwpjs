@@ -111,59 +111,58 @@ impl FaceName {
             });
         }
         let name_bytes = &data[offset..offset + (name_length * 2)];
-        let name = decode_utf16le(name_bytes)
-            .map_err(|e| HwpError::EncodingError {
-                reason: format!("Failed to decode font name: {}", e),
-            })?;
+        let name = decode_utf16le(name_bytes).map_err(|e| HwpError::EncodingError {
+            reason: format!("Failed to decode font name: {}", e),
+        })?;
         offset += name_length * 2;
 
         // 대체 글꼴 처리 (속성 bit 7이 1인 경우) / Process alternative font (if attribute bit 7 is 1)
-        let (alternative_font_type, alternative_font_name) =
-            if (attributes & flags::HAS_ALTERNATIVE) != 0 {
-                if offset >= data.len() {
-                    return Err(HwpError::insufficient_data(
-                        "FaceName alternative font type",
-                        1,
-                        0,
-                    ));
-                }
-                let alt_type_byte = data[offset];
-                offset += 1;
+        let (alternative_font_type, alternative_font_name) = if (attributes
+            & flags::HAS_ALTERNATIVE)
+            != 0
+        {
+            if offset >= data.len() {
+                return Err(HwpError::insufficient_data(
+                    "FaceName alternative font type",
+                    1,
+                    0,
+                ));
+            }
+            let alt_type_byte = data[offset];
+            offset += 1;
 
-                // WORD 대체 글꼴 이름 길이 / WORD alternative font name length
-                if offset + 2 > data.len() {
-                    return Err(HwpError::insufficient_data(
-                        "FaceName alternative font name length",
-                        2,
-                        data.len() - offset,
-                    ));
-                }
-                let alt_name_length =
-                    WORD::from_le_bytes([data[offset], data[offset + 1]]) as usize;
-                offset += 2;
+            // WORD 대체 글꼴 이름 길이 / WORD alternative font name length
+            if offset + 2 > data.len() {
+                return Err(HwpError::insufficient_data(
+                    "FaceName alternative font name length",
+                    2,
+                    data.len() - offset,
+                ));
+            }
+            let alt_name_length = WORD::from_le_bytes([data[offset], data[offset + 1]]) as usize;
+            offset += 2;
 
-                // WCHAR array 대체 글꼴 이름 / WCHAR array alternative font name
-                if offset + (alt_name_length * 2) > data.len() {
-                    return Err(HwpError::InsufficientData {
-                        field: format!("FaceName alternative font name at offset {}", offset),
-                        expected: offset + (alt_name_length * 2),
-                        actual: data.len(),
-                    });
-                }
-                let alt_name_bytes = &data[offset..offset + (alt_name_length * 2)];
-                let alt_name = decode_utf16le(alt_name_bytes)
-                    .map_err(|e| HwpError::EncodingError {
-                        reason: format!("Failed to decode alternative font name: {}", e),
-                    })?;
-                offset += alt_name_length * 2;
+            // WCHAR array 대체 글꼴 이름 / WCHAR array alternative font name
+            if offset + (alt_name_length * 2) > data.len() {
+                return Err(HwpError::InsufficientData {
+                    field: format!("FaceName alternative font name at offset {}", offset),
+                    expected: offset + (alt_name_length * 2),
+                    actual: data.len(),
+                });
+            }
+            let alt_name_bytes = &data[offset..offset + (alt_name_length * 2)];
+            let alt_name = decode_utf16le(alt_name_bytes).map_err(|e| HwpError::EncodingError {
+                reason: format!("Failed to decode alternative font name: {}", e),
+            })?;
+            offset += alt_name_length * 2;
 
-                (
-                    Some(AlternativeFontType::from_byte(alt_type_byte)),
-                    Some(alt_name),
-                )
-            } else {
-                (None, None)
-            };
+            (
+                Some(AlternativeFontType::from_byte(alt_type_byte)),
+                Some(alt_name),
+            )
+        } else {
+            (None, None)
+        };
 
         // 글꼴 유형 정보 처리 (속성 bit 6이 1인 경우) / Process font type info (if attribute bit 6 is 1)
         let font_type_info = if (attributes & flags::HAS_TYPE_INFO) != 0 {
@@ -214,8 +213,8 @@ impl FaceName {
                 });
             }
             let default_name_bytes = &data[offset..offset + (default_name_length * 2)];
-            let default_name = decode_utf16le(default_name_bytes)
-                .map_err(|e| HwpError::EncodingError {
+            let default_name =
+                decode_utf16le(default_name_bytes).map_err(|e| HwpError::EncodingError {
                     reason: format!("Failed to decode default font name: {}", e),
                 })?;
             Some(default_name)

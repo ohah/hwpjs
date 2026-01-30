@@ -163,9 +163,11 @@ impl Numbering {
                 // WCHAR array[format_length] 번호 형식 문자열 / WCHAR array[format_length] number format string
                 let format_bytes = len as usize * 2;
                 if offset + format_bytes <= data.len() {
-                    let str = decode_utf16le(&data[offset..offset + format_bytes])
-                        .map_err(|e| HwpError::EncodingError {
-                            reason: format!("Failed to decode numbering format: {}", e),
+                    let str =
+                        decode_utf16le(&data[offset..offset + format_bytes]).map_err(|e| {
+                            HwpError::EncodingError {
+                                reason: format!("Failed to decode numbering format: {}", e),
+                            }
                         })?;
                     offset += format_bytes;
                     (len, str)
@@ -231,9 +233,11 @@ impl Numbering {
                 // 확장 레벨 데이터가 불완전할 수 있음 / Extended level data may be incomplete
                 break;
             }
-            let format_string = decode_utf16le(&data[offset..offset + format_bytes])
-                .map_err(|e| HwpError::EncodingError {
-                    reason: format!("Failed to decode extended numbering format: {}", e),
+            let format_string =
+                decode_utf16le(&data[offset..offset + format_bytes]).map_err(|e| {
+                    HwpError::EncodingError {
+                        reason: format!("Failed to decode extended numbering format: {}", e),
+                    }
                 })?;
             offset += format_bytes;
 

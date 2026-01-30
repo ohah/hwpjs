@@ -118,7 +118,11 @@ pub fn render_paragraph(
             }
         }
     }
+
+    // Chrome DevTools Protocol cursor rules: Initialize cursor with explicit state tracking
+    // CDP 규칙: 명시적 상태 추적으로 커서 초기화
     let mut shape_object_anchor_cursor: usize = 0;
+    let shape_object_anchor_max = shape_object_anchor_positions.len();
 
     for record in &paragraph.records {
         match record {
@@ -216,10 +220,18 @@ pub fn render_paragraph(
                 // SHAPE_OBJECT(11)는 "표/그리기 개체" 공통 제어문자이므로, ctrl_id가 "tbl "인 경우에만
                 // ParaText의 SHAPE_OBJECT 위치를 순서대로 매칭하여 anchor를 부여합니다.
                 if header.ctrl_id == "tbl " {
-                    let anchor = shape_object_anchor_positions
-                        .get(shape_object_anchor_cursor)
-                        .copied();
-                    shape_object_anchor_cursor = shape_object_anchor_cursor.saturating_add(1);
+                    // Chrome DevTools Protocol cursor rules: Validate cursor bounds before access
+                    // CDP 규칙: 접근 전 커서 범위 검증
+                    let anchor = if shape_object_anchor_cursor < shape_object_anchor_max {
+                        let pos = shape_object_anchor_positions[shape_object_anchor_cursor];
+                        shape_object_anchor_cursor = shape_object_anchor_cursor.saturating_add(1);
+                        Some(pos)
+                    } else {
+                        // CDP 규칙: 범위 초과 시 None 반환 (명시적 처리)
+                        // Chrome DevTools Protocol: Return None on out-of-bounds (explicit handling)
+                        None
+                    };
+
                     for t in ctrl_result.tables.iter() {
                         let mut tt = t.clone();
                         tt.anchor_char_pos = anchor;
@@ -282,7 +294,6 @@ pub fn render_paragraph(
     } else {
         24.99
     };
-
 
     // LineSegment가 있으면 사용 / Use LineSegment if available
     if !line_segments.is_empty() {
@@ -445,7 +456,6 @@ pub fn render_paragraph(
             let ref_para_vertical_for_table = ref_para_vertical_mm;
             let first_para_vertical_for_table = first_para_vertical_mm;
 
-
             // 테이블 크기 계산 (mm 단위) / Calculate table size (in mm)
             // size 모듈은 pub(crate)이므로 같은 크레이트 내에서 접근 가능
             // size module is pub(crate), so accessible within the same crate
@@ -461,7 +471,6 @@ pub fn render_paragraph(
             // table_position is pub(crate), so accessible within the same crate
             use crate::viewer::html::ctrl_header::table::position::table_position;
 
-
             let (_left_mm, top_mm) = table_position(
                 hcd_position,
                 page_def,
@@ -473,7 +482,6 @@ pub fn render_paragraph(
                 para_segment_width_mm,
                 first_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
             );
-
 
             // 페이지네이션 체크 (렌더링 직전) / Check pagination (before rendering)
             let table_result =

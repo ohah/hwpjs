@@ -12,6 +12,3 @@ pub(crate) fn parse_page_adjust(data: &[u8]) -> Result<CtrlHeaderData, HwpError>
     let attribute = UINT32::from_le_bytes([data[0], data[1], data[2], data[3]]);
     Ok(CtrlHeaderData::PageAdjust { attribute })
 }
-
-
-
