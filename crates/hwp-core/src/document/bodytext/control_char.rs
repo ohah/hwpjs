@@ -80,7 +80,7 @@ impl InlineControlParam {
             // Check if can be read as ASCII (all bytes in range 0x20-0x7E or 0x00)
             if chid_bytes
                 .iter()
-                .all(|&b| b == 0 || (b >= 0x20 && b <= 0x7E))
+                .all(|&b| b == 0 || (0x20..=0x7E).contains(&b))
             {
                 let chid_str = String::from_utf8_lossy(chid_bytes)
                     .trim_end_matches('\0')
