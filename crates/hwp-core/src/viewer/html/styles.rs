@@ -2,7 +2,7 @@ use crate::document::docinfo::para_shape::ParagraphAlignment;
 /// CSS 스타일 생성 모듈 / CSS style generation module
 /// noori_style.css 기반으로 CSS 생성
 use crate::document::HwpDocument;
-use crate::types::{COLORREF, INT32};
+use crate::types::INT32;
 
 /// CSS 스타일 생성 / Generate CSS styles
 /// 문서에 정의된 모든 스타일을 미리 생성하여 누락 방지 / Pre-generate all styles defined in document to prevent missing styles
@@ -203,7 +203,3 @@ pub fn int32_to_mm(value: INT32) -> f64 {
     (value as f64 / 7200.0) * 25.4
 }
 
-/// COLORREF를 RGB 문자열로 변환 / Convert COLORREF to RGB string
-pub fn colorref_to_rgb(color: COLORREF) -> String {
-    format!("rgb({},{},{})", color.r(), color.g(), color.b())
-}
