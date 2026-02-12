@@ -83,7 +83,7 @@ impl ParaRangeTag {
         for i in 0..count {
             let offset = i * 12;
             let tag_data = &data[offset..offset + 12];
-            let tag_info = RangeTagInfo::parse(tag_data).map_err(HwpError::from)?;
+            let tag_info = RangeTagInfo::parse(tag_data)?;
             tags.push(tag_info);
         }
 

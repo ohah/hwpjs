@@ -59,8 +59,7 @@ impl RecordTreeNode {
         while offset < data.len() {
             // 레코드 헤더 파싱 / Parse record header
             let remaining_data = &data[offset..];
-            let (header, header_size) =
-                RecordHeader::parse(remaining_data).map_err(HwpError::from)?;
+            let (header, header_size) = RecordHeader::parse(remaining_data)?;
             offset += header_size;
 
             // 데이터 영역 읽기 / Read data area

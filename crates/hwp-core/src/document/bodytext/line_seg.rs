@@ -210,8 +210,7 @@ impl ParaLineSeg {
         for i in 0..count {
             let offset = i * 36;
             let segment_data = &data[offset..offset + 36];
-            let segment_info =
-                LineSegmentInfo::parse(segment_data).map_err(HwpError::from)?;
+            let segment_info = LineSegmentInfo::parse(segment_data)?;
             segments.push(segment_info);
         }
 
