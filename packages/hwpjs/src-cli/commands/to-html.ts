@@ -72,4 +72,3 @@ export function toHtmlCommand(program: Command) {
       }
     );
 }
-
