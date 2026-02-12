@@ -14,7 +14,12 @@ pub fn parse_caption_from_list_header(data: &[u8]) -> Result<Option<Caption>, Hw
     // paraCount (SInt4) - 4 bytes (read but not used)
     offset += 4;
 
-    let list_header_property = UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let list_header_property = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let vertical_align = match (list_header_property >> 5) & 0x03 {
@@ -24,8 +29,12 @@ pub fn parse_caption_from_list_header(data: &[u8]) -> Result<Option<Caption>, Hw
         _ => CaptionVAlign::Middle,
     };
 
-    let caption_property_value =
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let caption_property_value = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let align = match caption_property_value & 0x03 {
@@ -38,14 +47,23 @@ pub fn parse_caption_from_list_header(data: &[u8]) -> Result<Option<Caption>, Hw
 
     let include_margin = (caption_property_value & 0x04) != 0;
 
-    let width = HWPUNIT::from(UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]));
+    let width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
     offset += 4;
 
     let gap = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
     offset += 2;
 
-    let last_width =
-        HWPUNIT::from(UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]));
+    let last_width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
 
     Ok(Some(Caption {
         align,
@@ -65,8 +83,12 @@ fn parse_caption(data: &[u8]) -> Result<Caption, HwpError> {
     }
 
     let mut offset = 0usize;
-    let attribute_value =
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let attribute_value = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let align = match attribute_value & 0x03 {
@@ -79,14 +101,23 @@ fn parse_caption(data: &[u8]) -> Result<Caption, HwpError> {
 
     let include_margin = (attribute_value & 0x04) != 0;
 
-    let width = HWPUNIT::from(UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]));
+    let width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
     offset += 4;
 
     let gap = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
     offset += 2;
 
-    let last_width =
-        HWPUNIT::from(UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]));
+    let last_width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
 
     Ok(Caption {
         align,
@@ -110,8 +141,12 @@ fn parse_caption_12bytes(data: &[u8]) -> Result<Caption, HwpError> {
     }
 
     let mut offset = 0usize;
-    let attribute_value =
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let attribute_value = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let align = match attribute_value & 0x03 {
@@ -124,7 +159,12 @@ fn parse_caption_12bytes(data: &[u8]) -> Result<Caption, HwpError> {
 
     let include_margin = (attribute_value & 0x04) != 0;
 
-    let width = HWPUNIT::from(UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]));
+    let width = HWPUNIT::from(UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]));
     offset += 4;
 
     let gap = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
@@ -139,5 +179,3 @@ fn parse_caption_12bytes(data: &[u8]) -> Result<Caption, HwpError> {
         vertical_align: None,
     })
 }
-
-

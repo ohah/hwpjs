@@ -3,7 +3,6 @@ use crate::document::HwpDocument;
 use crate::types::RoundTo2dp;
 use crate::{document::bodytext::PageDef, INT32};
 /// 페이지 렌더링 모듈 / Page rendering module
-
 /// 페이지를 HTML로 렌더링 / Render page to HTML
 pub fn render_page(
     page_number: usize,

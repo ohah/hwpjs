@@ -498,7 +498,6 @@ impl BorderFill {
                     ));
                 }
                 let image_info = data[offset..offset + 5].to_vec();
-                offset += 5;
 
                 // 나머지는 복잡하므로 일단 기본 구조만 / Rest is complex, so only basic structure for now
                 Ok(FillInfo::Image(ImageFill {

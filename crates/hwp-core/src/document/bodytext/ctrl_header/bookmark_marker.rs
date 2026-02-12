@@ -7,7 +7,11 @@ use super::types::CtrlHeaderData;
 /// 찾아보기 표식 파싱 (표 149) / Parse bookmark marker (Table 149)
 pub(crate) fn parse_bookmark_marker(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     if data.len() < 6 {
-        return Err(HwpError::insufficient_data("Bookmark marker", 6, data.len()));
+        return Err(HwpError::insufficient_data(
+            "Bookmark marker",
+            6,
+            data.len(),
+        ));
     }
 
     let mut offset = 0usize;
@@ -39,6 +43,3 @@ pub(crate) fn parse_bookmark_marker(data: &[u8]) -> Result<CtrlHeaderData, HwpEr
 
     Ok(CtrlHeaderData::BookmarkMarker { keyword1, keyword2 })
 }
-
-
-

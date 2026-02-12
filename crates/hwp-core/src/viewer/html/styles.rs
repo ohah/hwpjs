@@ -141,7 +141,7 @@ pub fn generate_css_styles(document: &HwpDocument) -> String {
         } else {
             0
         };
-        
+
         if letter_spacing != 0 {
             // INT8 값을 %로 변환하여 em 단위로 적용 / Convert INT8 to % and apply as em unit
             // 실제 HWP 파일에서는 값이 2배로 저장되어 있으므로 2로 나눔

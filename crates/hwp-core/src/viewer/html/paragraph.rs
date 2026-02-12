@@ -283,7 +283,6 @@ pub fn render_paragraph(
         24.99
     };
 
-
     // LineSegment가 있으면 사용 / Use LineSegment if available
     if !line_segments.is_empty() {
         // like_letters=true인 테이블과 false인 테이블 분리 / Separate tables with like_letters=true and false
@@ -445,7 +444,6 @@ pub fn render_paragraph(
             let ref_para_vertical_for_table = ref_para_vertical_mm;
             let first_para_vertical_for_table = first_para_vertical_mm;
 
-
             // 테이블 크기 계산 (mm 단위) / Calculate table size (in mm)
             // size 모듈은 pub(crate)이므로 같은 크레이트 내에서 접근 가능
             // size module is pub(crate), so accessible within the same crate
@@ -461,7 +459,6 @@ pub fn render_paragraph(
             // table_position is pub(crate), so accessible within the same crate
             use crate::viewer::html::ctrl_header::table::position::table_position;
 
-
             let (_left_mm, top_mm) = table_position(
                 hcd_position,
                 page_def,
@@ -473,7 +470,6 @@ pub fn render_paragraph(
                 para_segment_width_mm,
                 first_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
             );
-
 
             // 페이지네이션 체크 (렌더링 직전) / Check pagination (before rendering)
             let table_result =

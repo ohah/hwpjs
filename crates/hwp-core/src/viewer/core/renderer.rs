@@ -110,19 +110,11 @@ pub trait Renderer {
 
     /// Render document header (title, version, etc.)
     /// 문서 헤더 렌더링 (제목, 버전 등)
-    fn render_document_header(
-        &self,
-        document: &HwpDocument,
-        options: &Self::Options,
-    ) -> String;
+    fn render_document_header(&self, document: &HwpDocument, options: &Self::Options) -> String;
 
     /// Render document footer (footnotes, endnotes, etc.)
     /// 문서 푸터 렌더링 (각주, 미주 등)
-    fn render_document_footer(
-        &self,
-        parts: &DocumentParts,
-        options: &Self::Options,
-    ) -> String;
+    fn render_document_footer(&self, parts: &DocumentParts, options: &Self::Options) -> String;
 
     // ===== Special Elements =====
     /// Render a footnote reference link
@@ -145,4 +137,3 @@ pub trait Renderer {
     /// 개요 번호 렌더링
     fn render_outline_number(&self, level: u8, number: u32, content: &str) -> String;
 }
-

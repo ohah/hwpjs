@@ -21,7 +21,11 @@ impl DistributeDocData {
     /// 파싱된 DistributeDocData 구조체 / Parsed DistributeDocData structure
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 256 {
-            return Err(HwpError::insufficient_data("DistributeDocData", 256, data.len()));
+            return Err(HwpError::insufficient_data(
+                "DistributeDocData",
+                256,
+                data.len(),
+            ));
         }
 
         let doc_data = data[0..256].to_vec();

@@ -30,4 +30,3 @@ fn test_decompress_zlib_empty() {
         assert!(data.is_empty() || !data.is_empty());
     }
 }
-

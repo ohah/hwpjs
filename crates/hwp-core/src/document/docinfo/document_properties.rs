@@ -46,7 +46,11 @@ impl DocumentProperties {
         // 레거시 코드 기준으로 26바이트를 읽음
         // Read 26 bytes based on legacy code
         if data.len() < 26 {
-            return Err(HwpError::insufficient_data("DocumentProperties", 26, data.len()));
+            return Err(HwpError::insufficient_data(
+                "DocumentProperties",
+                26,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;

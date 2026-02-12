@@ -11,4 +11,3 @@
 //!
 //! This module is currently empty but reserved for future ListHeader-specific conversion logic.
 //! 이 모듈은 현재 비어있지만 향후 ListHeader 전용 변환 로직을 위해 예약되어 있습니다.
-

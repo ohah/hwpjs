@@ -408,7 +408,11 @@ impl ParaHeader {
         // 최소 22바이트 필요 (5.0.3.2 이상은 24바이트) / Need at least 22 bytes (24 bytes for 5.0.3.2 and above)
         let min_size = if version >= 0x05000302 { 24 } else { 22 };
         if data.len() < min_size {
-            return Err(HwpError::insufficient_data("ParaHeader", min_size, data.len()));
+            return Err(HwpError::insufficient_data(
+                "ParaHeader",
+                min_size,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;

@@ -30,7 +30,11 @@ impl LayoutCompatibility {
     /// 파싱된 LayoutCompatibility 구조체 / Parsed LayoutCompatibility structure
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 20 {
-            return Err(HwpError::insufficient_data("LayoutCompatibility", 20, data.len()));
+            return Err(HwpError::insufficient_data(
+                "LayoutCompatibility",
+                20,
+                data.len(),
+            ));
         }
 
         Ok(LayoutCompatibility {

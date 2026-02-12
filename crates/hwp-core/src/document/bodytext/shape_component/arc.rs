@@ -76,7 +76,11 @@ impl ShapeComponentArc {
         // 표 101: 호 개체 속성은 28바이트 / Table 101: Arc shape component attributes is 28 bytes
         // UINT32(4) + INT32(4) * 6 = 28 bytes
         if data.len() < 28 {
-            return Err(HwpError::insufficient_data("ShapeComponentArc", 28, data.len()));
+            return Err(HwpError::insufficient_data(
+                "ShapeComponentArc",
+                28,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;

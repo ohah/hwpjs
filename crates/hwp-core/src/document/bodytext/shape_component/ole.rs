@@ -87,7 +87,11 @@ impl ShapeComponentOle {
         // 표 118: OLE 개체 속성은 24바이트 / Table 118: OLE shape component attributes is 24 bytes
         // UINT16(2) + INT32(4) + INT32(4) + UINT16(2) + COLORREF(4) + INT32(4) + UINT32(4) = 24 bytes
         if data.len() < 24 {
-            return Err(HwpError::insufficient_data("ShapeComponentOle", 24, data.len()));
+            return Err(HwpError::insufficient_data(
+                "ShapeComponentOle",
+                24,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;

@@ -11,11 +11,8 @@
 ///
 /// # Returns / 반환값
 /// 마크다운 문자열 / Markdown string
-pub(crate) fn convert_endnote_ctrl_to_markdown(
-    _header: &crate::document::CtrlHeader,
-) -> String {
+pub(crate) fn convert_endnote_ctrl_to_markdown(_header: &crate::document::CtrlHeader) -> String {
     // 미주 제목 / Endnote title
     // 실제 내용은 자식 레코드에서 처리됨 / Actual content is processed from child records
     "## 미주".to_string()
 }
-
