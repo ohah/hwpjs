@@ -70,7 +70,7 @@ function findIOSSimulator() {
 try {
   const udid = findIOSSimulator();
   console.log(`🚀 Maestro 테스트 실행 중... (시뮬레이터: ${udid})\n`);
-  
+
   execSync(`maestro -p ios --udid ${udid} test ${MAESTRO_FLOW}`, {
     stdio: 'inherit',
   });
@@ -81,4 +81,3 @@ try {
   console.error('❌ 테스트 실행 중 오류 발생:', error.message);
   process.exit(1);
 }
-
