@@ -52,6 +52,7 @@ pub struct TableInfo<'a> {
 
 /// 이미지 정보 구조체 / Image info struct
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ImageInfo {
     pub width: u32,
     pub height: u32,
