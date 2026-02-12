@@ -15,7 +15,10 @@ export function batchCommand(program: Command) {
     .option('-r, --recursive', 'Process subdirectories recursively')
     .option('--pretty', 'Pretty print JSON (only for json format)')
     .option('--include-images', 'Include images as base64 (only for markdown format)')
-    .option('--images-dir <dir>', 'Directory to save images (only for html format, default: images)')
+    .option(
+      '--images-dir <dir>',
+      'Directory to save images (only for html format, default: images)'
+    )
     .action(
       (
         inputDir: string,
