@@ -33,7 +33,9 @@ function testMarkdownImageOptions() {
     const sampleStart = resultBase64.markdown.indexOf('![이미지]');
     if (sampleStart !== -1) {
       console.log('\nSample markdown around first image:');
-      console.log(resultBase64.markdown.substring(Math.max(0, sampleStart - 50), sampleStart + 200));
+      console.log(
+        resultBase64.markdown.substring(Math.max(0, sampleStart - 50), sampleStart + 200)
+      );
     }
 
     console.log('\n=== Blob Option Test ===');
@@ -53,7 +55,9 @@ function testMarkdownImageOptions() {
     const blobSampleStart = resultBlob.markdown.indexOf('![이미지]');
     if (blobSampleStart !== -1) {
       console.log('\nSample markdown around first image:');
-      console.log(resultBlob.markdown.substring(Math.max(0, blobSampleStart - 50), blobSampleStart + 100));
+      console.log(
+        resultBlob.markdown.substring(Math.max(0, blobSampleStart - 50), blobSampleStart + 100)
+      );
     }
 
     console.log('\n=== Default Option Test (should be blob) ===');
@@ -66,9 +70,10 @@ function testMarkdownImageOptions() {
     // Summary
     console.log('\n=== Summary ===');
     console.log('Base64 option: images array should be empty, markdown should contain base64 URIs');
-    console.log('Blob option: images array should have items, markdown should contain placeholders');
+    console.log(
+      'Blob option: images array should have items, markdown should contain placeholders'
+    );
     console.log('Default: should behave like blob option');
-
   } catch (error) {
     console.error('Error:', error);
     if (error instanceof Error) {
@@ -80,4 +85,3 @@ function testMarkdownImageOptions() {
 }
 
 testMarkdownImageOptions();
-
