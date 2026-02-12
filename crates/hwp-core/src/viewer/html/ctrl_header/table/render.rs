@@ -131,10 +131,10 @@ pub fn render_table(
     let caption_para_shape_id = caption_paragraphs
         .and_then(|paras| paras.first())
         .map(|p| p.para_shape_id);
-    let caption_auto_number_position = caption_paragraphs
+    let _caption_auto_number_position = caption_paragraphs
         .and_then(|paras| paras.first())
         .and_then(|p| p.auto_number_position);
-    let caption_auto_number_display_text = caption_paragraphs
+    let _caption_auto_number_display_text = caption_paragraphs
         .and_then(|paras| paras.first())
         .and_then(|p| p.auto_number_display_text.clone());
 
@@ -605,7 +605,7 @@ pub fn render_table(
                         cleaned_chars[s..e].iter().collect()
                     }
 
-                    for (global_idx, (segment, para_idx, para, para_cumulative_len)) in
+                    for (global_idx, (segment, para_idx, para, _para_cumulative_len)) in
                         all_segments_with_info.iter().enumerate()
                     {
                         let lh = round_to_2dp(int32_to_mm(segment.baseline_distance));

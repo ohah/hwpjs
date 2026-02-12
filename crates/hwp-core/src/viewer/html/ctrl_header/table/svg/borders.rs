@@ -324,9 +324,9 @@ pub(crate) fn render_vertical_borders(
 ) -> String {
     let mut svg_paths = String::new();
     let epsilon = 0.01; // 부동소수점 비교를 위한 작은 오차 / Small epsilon for floating point comparison
-    let is_suspect_image_or_caption_table =
+    let _is_suspect_image_or_caption_table =
         table.attributes.row_count as usize >= 6 && table.cells.len() >= 12;
-    let mut h11_logged_count = 0usize;
+    let _h11_logged_count = 0usize;
 
     for &col_x in column_positions {
         let is_left_edge = (col_x - 0.0).abs() < epsilon;

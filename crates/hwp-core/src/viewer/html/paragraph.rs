@@ -58,7 +58,7 @@ pub fn render_paragraph(
     let page_def = context.position.page_def;
     let first_para_vertical_mm = context.position.first_para_vertical_mm;
     let current_para_vertical_mm = context.position.current_para_vertical_mm;
-    let para_vertical_positions = context.position.para_vertical_positions;
+    let _para_vertical_positions = context.position.para_vertical_positions;
     let current_para_index = context.position.current_para_index;
 
     // table_counter, pattern_counter, color_to_pattern은 이미 &mut이므로 직접 사용 / table_counter, pattern_counter, color_to_pattern are already &mut, so use directly
@@ -275,7 +275,7 @@ pub fn render_paragraph(
         .map(|seg| seg.segment_width as f64 * 25.4 / 7200.0);
     // base_top(mm): hcD의 top 위치. like_letters=false 테이블(=hpa 레벨로 빠지는 객체)의 vert_rel_to=para 계산에
     // 페이지 기준(절대) y 좌표가 필요하므로, paragraph 기준 y(vertical_position)에 base_top을 더해 절대값으로 전달한다.
-    let base_top_mm = if let Some((_hcd_left, hcd_top)) = hcd_position {
+    let _base_top_mm = if let Some((_hcd_left, hcd_top)) = hcd_position {
         hcd_top
     } else if let Some(pd) = page_def {
         pd.top_margin.to_mm() + pd.header_margin.to_mm()

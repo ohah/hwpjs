@@ -21,7 +21,7 @@ pub(crate) fn render_fills(
     let mut svg_paths = String::new();
     let mut pattern_defs = String::new();
 
-    for (cell_idx, cell) in table.cells.iter().enumerate() {
+    for (_cell_idx, cell) in table.cells.iter().enumerate() {
         let cell_left = calculate_cell_left(table, cell);
         let cell_top = calculate_cell_top(table, cell, ctrl_header_height_mm);
         let cell_width = cell.cell_attributes.width.to_mm();

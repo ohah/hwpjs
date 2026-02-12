@@ -208,7 +208,7 @@ pub(crate) fn render_cells(
 
         // 셀 마진(mm) 계산은 렌더링 전반(특히 special-case)에서 필요하므로 먼저 계산합니다.
         let left_margin_mm = cell_margin_to_mm(cell.cell_attributes.left_margin);
-        let right_margin_mm = cell_margin_to_mm(cell.cell_attributes.right_margin);
+        let _right_margin_mm = cell_margin_to_mm(cell.cell_attributes.right_margin);
         let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
 
         // 셀 내부 문단 렌더링 / Render paragraphs inside cell
@@ -575,7 +575,7 @@ pub(crate) fn render_cells(
         }
 
         // (마진 값은 위에서 이미 계산됨)
-        let bottom_margin_mm = cell_margin_to_mm(cell.cell_attributes.bottom_margin);
+        let _bottom_margin_mm = cell_margin_to_mm(cell.cell_attributes.bottom_margin);
 
         // hcI의 top 위치 계산 / Calculate hcI top position
         // NOTE: hcI는 "셀 안에서 컨텐츠 블록을 어디에 둘지"만 담당합니다(Top/Center/Bottom).

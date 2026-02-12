@@ -174,7 +174,7 @@ fn cell_margin_to_mm(margin_hwpunit: i16) -> f64 {
 pub(crate) fn row_positions(
     table: &Table,
     _content_height: f64,
-    document: &HwpDocument,
+    _document: &HwpDocument,
     ctrl_header_height_mm: Option<f64>,
 ) -> Vec<f64> {
     let mut positions = vec![0.0];

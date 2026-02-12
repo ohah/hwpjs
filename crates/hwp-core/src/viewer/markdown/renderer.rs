@@ -150,13 +150,13 @@ impl Renderer for MarkdownRenderer {
     }
 
     // ===== Special Elements =====
-    fn render_footnote_ref(&self, id: u32, number: &str, _options: &Self::Options) -> String {
+    fn render_footnote_ref(&self, _id: u32, number: &str, _options: &Self::Options) -> String {
         // 마크다운에서는 각주 참조를 [^1] 형식으로 표시
         // In markdown, footnote references are shown as [^1]
         format!("[^{}]", number)
     }
 
-    fn render_endnote_ref(&self, id: u32, number: &str, _options: &Self::Options) -> String {
+    fn render_endnote_ref(&self, _id: u32, number: &str, _options: &Self::Options) -> String {
         // 마크다운에서는 미주 참조를 [^1] 형식으로 표시
         // In markdown, endnote references are shown as [^1]
         format!("[^{}]", number)
