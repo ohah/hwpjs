@@ -59,12 +59,6 @@ where
 /// Trait for outline number tracker reference
 /// 개요 번호 추적기 참조를 위한 트레이트
 trait TrackerRef {
-    /// Get mutable reference to HTML tracker
-    /// HTML 추적기의 가변 참조 가져오기
-    /// Note: 새로운 HTML 뷰어는 OutlineNumberTracker를 사용하지 않음
-    /// Note: New HTML viewer does not use OutlineNumberTracker
-    unsafe fn as_html_tracker_mut(&mut self) -> &mut ();
-
     /// Get mutable reference to Markdown tracker
     /// Markdown 추적기의 가변 참조 가져오기
     unsafe fn as_markdown_tracker_mut(&mut self) -> &mut OutlineNumberTracker;
@@ -80,17 +74,6 @@ enum Tracker {
 }
 
 impl TrackerRef for Tracker {
-    unsafe fn as_html_tracker_mut(&mut self) -> &mut () {
-        match self {
-            Tracker::Html(_) => {
-                // 새로운 HTML 뷰어는 tracker를 사용하지 않음
-                // New HTML viewer does not use tracker
-                std::hint::unreachable_unchecked()
-            }
-            _ => std::hint::unreachable_unchecked(),
-        }
-    }
-
     unsafe fn as_markdown_tracker_mut(&mut self) -> &mut OutlineNumberTracker {
         match self {
             Tracker::Markdown(tracker) => tracker,
