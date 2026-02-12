@@ -132,7 +132,7 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
 
     // iframe 로드 후 높이 조절 / Adjust height after iframe loads
     iframe.onload = adjustHeight;
-    
+
     // 초기 높이 조절 시도 / Try initial height adjustment
     setTimeout(adjustHeight, 100);
     setTimeout(adjustHeight, 500);
