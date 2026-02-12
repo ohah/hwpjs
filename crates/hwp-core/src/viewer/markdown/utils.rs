@@ -6,7 +6,7 @@ use crate::document::{HeaderShapeType, HwpDocument};
 /// 각 레벨별로 번호를 추적하여 개요 번호를 생성
 /// Tracks numbers per level to generate outline numbers
 #[derive(Debug, Clone)]
-pub(crate) struct OutlineNumberTracker {
+pub struct OutlineNumberTracker {
     /// 각 레벨별 번호 카운터 (인덱스는 레벨-1) / Number counter per level (index is level-1)
     counters: [u32; 7],
 }
