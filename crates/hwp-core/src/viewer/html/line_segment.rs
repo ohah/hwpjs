@@ -156,66 +156,6 @@ pub fn render_line_segment(
     )
 }
 
-/// 라인 세그먼트를 HTML로 렌더링 (ParaShape indent 포함) / Render line segment to HTML (with ParaShape indent)
-pub fn render_line_segment_with_indent(
-    segment: &LineSegmentInfo,
-    content: &str,
-    para_shape_class: &str,
-    para_shape_indent: Option<i32>,
-) -> String {
-    render_line_segment(
-        segment,
-        content,
-        para_shape_class,
-        para_shape_indent,
-        None,
-        true,
-        None,
-    )
-}
-
-/// 라인 세그먼트 그룹을 HTML로 렌더링 / Render line segment group to HTML
-pub fn render_line_segments(
-    segments: &[LineSegmentInfo],
-    text: &str,
-    char_shapes: &[CharShapeInfo],
-    document: &HwpDocument,
-    para_shape_class: &str,
-) -> String {
-    // 이 함수는 레거시 호환성을 위해 유지되지만, 내부적으로는 독립적인 pattern_counter를 사용합니다.
-    // This function is kept for legacy compatibility but uses an independent pattern_counter internally.
-    use std::collections::HashMap;
-    let mut pattern_counter = 0;
-    let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
-
-    let content = LineSegmentContent {
-        segments,
-        text,
-        char_shapes,
-        control_char_positions: &[],
-        original_text_len: text.chars().count(),
-        images: &[],
-        tables: &[],
-    };
-
-    let context = LineSegmentRenderContext {
-        document,
-        para_shape_class,
-        options: &HtmlOptions::default(),
-        para_shape_indent: None,
-        hcd_position: None,
-        page_def: None,
-    };
-
-    let mut state = DocumentRenderState {
-        table_counter_start: 1,
-        pattern_counter: &mut pattern_counter,
-        color_to_pattern: &mut color_to_pattern,
-    };
-
-    render_line_segments_with_content(&content, &context, &mut state)
-}
-
 /// 라인 세그먼트 그룹을 HTML로 렌더링 (이미지와 테이블 포함) / Render line segment group to HTML (with images and tables)
 pub fn render_line_segments_with_content(
     content: &LineSegmentContent,

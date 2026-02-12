@@ -299,7 +299,6 @@ fn fill_cell_content(
                             )
                         {
                             cell_parts.push(image_md);
-                            has_image = true;
                         }
                     }
                     ParagraphRecord::ShapeComponent {
@@ -316,7 +315,6 @@ fn fill_cell_content(
                             );
                         for shape_part in shape_parts {
                             if shape_part.contains("![이미지]") {
-                                has_image = true;
                             }
                             cell_parts.push(shape_part);
                         }
