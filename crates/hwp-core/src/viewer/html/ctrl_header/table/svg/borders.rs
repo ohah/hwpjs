@@ -121,14 +121,6 @@ fn cell_border_fill_id(table: &Table, cell: &TableCell) -> u16 {
     }
 }
 
-fn pick_thicker(a: BorderLine, b: BorderLine) -> BorderLine {
-    if border_width_code_to_mm(b.width) > border_width_code_to_mm(a.width) {
-        b
-    } else {
-        a
-    }
-}
-
 fn default_borderline(
     table: &Table,
     document: &HwpDocument,

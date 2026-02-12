@@ -203,13 +203,6 @@ pub fn int32_to_mm(value: INT32) -> f64 {
     (value as f64 / 7200.0) * 25.4
 }
 
-/// mm를 INT32 단위로 변환 / Convert millimeters to INT32
-pub fn mm_to_int32(value_mm: f64) -> INT32 {
-    // INT32는 1/7200인치 단위 (SHWPUNIT와 동일)
-    // 1 inch = 25.4 mm, 따라서 1 mm = 7200 / 25.4 INT32
-    ((value_mm / 25.4) * 7200.0) as INT32
-}
-
 /// COLORREF를 RGB 문자열로 변환 / Convert COLORREF to RGB string
 pub fn colorref_to_rgb(color: COLORREF) -> String {
     format!("rgb({},{},{})", color.r(), color.g(), color.b())

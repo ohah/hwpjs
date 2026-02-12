@@ -29,8 +29,6 @@ pub struct CaptionInfo {
     pub include_margin: Option<bool>,
     /// 텍스트의 최대 길이(=개체의 폭) / Maximum text length (= object width)
     pub last_width: Option<u32>,
-    /// 캡션 수직 정렬 (조합 캡션 구분용) / Caption vertical alignment (for combination caption detection)
-    pub vertical_align: Option<CaptionVAlign>,
 }
 
 /// 캡션 텍스트 구조 / Caption text structure
