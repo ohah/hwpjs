@@ -1,4 +1,4 @@
-use crate::document::bodytext::ctrl_header::{CaptionAlign, CaptionVAlign, CtrlHeaderData};
+use crate::document::bodytext::ctrl_header::{CaptionAlign, CtrlHeaderData};
 use crate::document::bodytext::{
     ControlChar, ControlCharPosition, LineSegmentInfo, PageDef, Table,
 };
