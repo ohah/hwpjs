@@ -62,6 +62,13 @@ refactor(core): reorganize modules to match HWP file structure
 - Organize modules to match HWP spec Table 2 structure
 ```
 
+## Pre-commit (필수)
+
+커밋 전에 포맷·린트를 통과시키고, Rust(hwp-core) 변경 시 테스트·스냅샷이 통과해야 한다.
+
+- **Rust**: `bun run format:rust:check` (실패 시 `bun run format:rust`), `cargo clippy --all-targets --all-features -- -D warnings` 실행. `crates/hwp-core` 또는 Rust 테스트를 건드렸다면 `bun run test:rust` 또는 `bun run test:rust:snapshot` 실행 후 통과 확인 후 커밋.
+- **TypeScript/JavaScript**: `bun run format`, `bun run lint` 실행 후 커밋.
+
 ## 커밋 원칙
 
 1. **단일 목적**: 하나의 커밋은 하나의 목적만 가져야 함

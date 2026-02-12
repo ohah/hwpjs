@@ -31,7 +31,7 @@ Run format and lint so the project’s tooling is satisfied before committing.
 
 **TypeScript/JavaScript**: Run `bun run format`; run `bun run lint`; stage any changed files; then commit.
 
-**Rust**: Run `bun run format:rust:check` (fix with `bun run format:rust` if needed); run `cargo clippy --all-targets --all-features -- -D warnings` and fix all warnings; then commit.
+**Rust**: Run `bun run format:rust:check` (fix with `bun run format:rust` if needed); run `cargo clippy --all-targets --all-features -- -D warnings` and fix all warnings. If `crates/hwp-core` or Rust tests were touched, run `bun run test:rust` or `bun run test:rust:snapshot` and ensure they pass; then commit.
 
 ## Post-commit (required)
 
