@@ -12,7 +12,7 @@ fn test_hwp_parser_new() {
 fn test_hwp_parser_parse_with_actual_file() {
     // Test with actual HWP file if available
     use crate::common::find_fixture_file;
-    
+
     if let Some(path) = find_fixture_file("noori.hwp") {
         if let Ok(data) = std::fs::read(path) {
             let parser = HwpParser::new();
@@ -37,7 +37,7 @@ fn test_hwp_parser_parse_with_actual_file() {
 fn test_hwp_parser_parse_fileheader_json() {
     // Test FileHeader JSON output
     use crate::common::find_fixture_file;
-    
+
     if let Some(path) = find_fixture_file("noori.hwp") {
         if let Ok(data) = std::fs::read(path) {
             let parser = HwpParser::new();

@@ -172,7 +172,11 @@ impl BinDataRecord {
     /// 표 17: 바이너리 데이터 / Table 17: Binary data
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 2 {
-            return Err(HwpError::insufficient_data("BinDataRecord attributes", 2, data.len()));
+            return Err(HwpError::insufficient_data(
+                "BinDataRecord attributes",
+                2,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;
@@ -206,8 +210,8 @@ impl BinDataRecord {
                     });
                 }
                 let absolute_path_bytes = &data[offset..offset + (len1 * 2)];
-                let absolute_path = decode_utf16le(absolute_path_bytes)
-                    .map_err(|e| HwpError::EncodingError {
+                let absolute_path =
+                    decode_utf16le(absolute_path_bytes).map_err(|e| HwpError::EncodingError {
                         reason: format!("Failed to decode absolute path: {}", e),
                     })?;
                 offset += len1 * 2;
@@ -232,8 +236,8 @@ impl BinDataRecord {
                     });
                 }
                 let relative_path_bytes = &data[offset..offset + (len2 * 2)];
-                let relative_path = decode_utf16le(relative_path_bytes)
-                    .map_err(|e| HwpError::EncodingError {
+                let relative_path =
+                    decode_utf16le(relative_path_bytes).map_err(|e| HwpError::EncodingError {
                         reason: format!("Failed to decode relative path: {}", e),
                     })?;
 
@@ -278,8 +282,8 @@ impl BinDataRecord {
                     });
                 }
                 let extension_bytes = &data[offset..offset + (len3 * 2)];
-                let extension = decode_utf16le(extension_bytes)
-                    .map_err(|e| HwpError::EncodingError {
+                let extension =
+                    decode_utf16le(extension_bytes).map_err(|e| HwpError::EncodingError {
                         reason: format!("Failed to decode extension: {}", e),
                     })?;
 

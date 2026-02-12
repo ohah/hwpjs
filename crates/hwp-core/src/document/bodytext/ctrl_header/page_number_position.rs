@@ -55,4 +55,3 @@ pub(crate) fn parse_page_number_position(data: &[u8]) -> Result<CtrlHeaderData, 
         suffix,
     })
 }
-

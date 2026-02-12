@@ -73,7 +73,12 @@ pub(crate) fn parse_column_definition(data: &[u8]) -> Result<CtrlHeaderData, Hwp
     offset += 1;
 
     let divider_line_color = if offset + 4 <= data.len() {
-        UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]])
+        UINT32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ])
     } else {
         0
     };
@@ -88,6 +93,3 @@ pub(crate) fn parse_column_definition(data: &[u8]) -> Result<CtrlHeaderData, Hwp
         divider_line_color,
     })
 }
-
-
-

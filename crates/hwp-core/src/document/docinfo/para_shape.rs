@@ -442,7 +442,6 @@ impl ParaShape {
                 data[offset + 2],
                 data[offset + 3],
             ]);
-            offset += 4;
             Some(value)
         } else {
             None

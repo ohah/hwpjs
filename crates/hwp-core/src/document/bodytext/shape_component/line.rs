@@ -65,7 +65,11 @@ impl ShapeComponentLine {
         // 표 92: 선 개체 속성은 18바이트 / Table 92: Line shape component attributes is 18 bytes
         // INT32(4) + INT32(4) + INT32(4) + INT32(4) + UINT16(2) = 18 bytes
         if data.len() < 18 {
-            return Err(HwpError::insufficient_data("ShapeComponentLine", 18, data.len()));
+            return Err(HwpError::insufficient_data(
+                "ShapeComponentLine",
+                18,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;

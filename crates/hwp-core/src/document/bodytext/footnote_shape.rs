@@ -193,7 +193,6 @@ impl FootnoteShape {
             data[offset + 2],
             data[offset + 3],
         ]));
-        offset += 4;
 
         Ok(FootnoteShape {
             attributes,

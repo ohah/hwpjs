@@ -33,7 +33,7 @@ pub(crate) fn render_cells(
 
     for cell in &table.cells {
         let row_idx = cell.cell_attributes.row_address as usize;
-        let col_idx = cell.cell_attributes.col_address as usize;
+        let _col_idx = cell.cell_attributes.col_address as usize;
 
         // 실제 셀 높이 가져오기 / Get actual cell height
         let mut cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
@@ -518,7 +518,7 @@ pub(crate) fn render_cells(
                         images: &images,
                         tables: &[], // 셀 내부에서는 테이블 없음 / No tables inside cells
                     };
-                    
+
                     let context = LineSegmentRenderContext {
                         document,
                         para_shape_class: &para_shape_class,
@@ -527,13 +527,13 @@ pub(crate) fn render_cells(
                         hcd_position: None, // hcd_position 없음 / No hcd_position
                         page_def: None,     // page_def 없음 / No page_def
                     };
-                    
+
                     let mut state = DocumentRenderState {
                         table_counter_start: 0, // 셀 내부에서는 테이블 번호 사용 안 함 / table numbers not used inside cells
                         pattern_counter,
                         color_to_pattern,
                     };
-                    
+
                     cell_content.push_str(&render_line_segments_with_content(
                         &content, &context, &mut state,
                     ));

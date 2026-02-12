@@ -68,7 +68,11 @@ impl ShapeComponentRectangle {
         // 표 94: 사각형 개체 속성은 33바이트 / Table 94: Rectangle shape component attributes is 33 bytes
         // BYTE(1) + INT32 array[4](16) + INT32 array[4](16) = 33 bytes
         if data.len() < 33 {
-            return Err(HwpError::insufficient_data("ShapeComponentRectangle", 33, data.len()));
+            return Err(HwpError::insufficient_data(
+                "ShapeComponentRectangle",
+                33,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;

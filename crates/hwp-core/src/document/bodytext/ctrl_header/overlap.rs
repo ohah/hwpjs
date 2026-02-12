@@ -12,7 +12,12 @@ pub(crate) fn parse_overlap(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
 
     let mut offset = 0usize;
 
-    let ctrl_id_bytes = [data[offset + 3], data[offset + 2], data[offset + 1], data[offset]];
+    let ctrl_id_bytes = [
+        data[offset + 3],
+        data[offset + 2],
+        data[offset + 1],
+        data[offset],
+    ];
     let ctrl_id = String::from_utf8_lossy(&ctrl_id_bytes)
         .trim_end_matches('\0')
         .to_string();
@@ -29,12 +34,23 @@ pub(crate) fn parse_overlap(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     };
     offset += text_len * 2;
 
-    let border_type = if offset < data.len() { UINT8::from_le_bytes([data[offset]]) } else { 0 };
+    let border_type = if offset < data.len() {
+        UINT8::from_le_bytes([data[offset]])
+    } else {
+        0
+    };
     offset += 1;
-    let internal_text_size = if offset < data.len() { INT8::from_le_bytes([data[offset]]) } else { 0 };
+    let internal_text_size = if offset < data.len() {
+        INT8::from_le_bytes([data[offset]])
+    } else {
+        0
+    };
     offset += 1;
-    let border_internal_text_spread =
-        if offset < data.len() { UINT8::from_le_bytes([data[offset]]) } else { 0 };
+    let border_internal_text_spread = if offset < data.len() {
+        UINT8::from_le_bytes([data[offset]])
+    } else {
+        0
+    };
     offset += 1;
 
     let cnt = if offset < data.len() {
@@ -47,7 +63,12 @@ pub(crate) fn parse_overlap(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
     let mut char_shape_ids = Vec::new();
     if cnt > 0 && offset + (cnt * 4) <= data.len() {
         for _ in 0..cnt {
-            let id = UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+            let id = UINT32::from_le_bytes([
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
+            ]);
             char_shape_ids.push(id);
             offset += 4;
         }
@@ -62,6 +83,3 @@ pub(crate) fn parse_overlap(data: &[u8]) -> Result<CtrlHeaderData, HwpError> {
         char_shape_ids,
     })
 }
-
-
-

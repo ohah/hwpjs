@@ -15,7 +15,12 @@ pub(crate) fn parse_section_definition(data: &[u8]) -> Result<CtrlHeaderData, Hw
 
     let mut offset = 0usize;
 
-    let attribute = UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let attribute = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let column_spacing = if offset + 2 <= data.len() {
@@ -106,6 +111,3 @@ pub(crate) fn parse_section_definition(data: &[u8]) -> Result<CtrlHeaderData, Hw
         language,
     })
 }
-
-
-

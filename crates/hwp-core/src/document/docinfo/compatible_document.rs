@@ -34,7 +34,11 @@ impl CompatibleDocument {
     /// 파싱된 CompatibleDocument 구조체 / Parsed CompatibleDocument structure
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 4 {
-            return Err(HwpError::insufficient_data("CompatibleDocument", 4, data.len()));
+            return Err(HwpError::insufficient_data(
+                "CompatibleDocument",
+                4,
+                data.len(),
+            ));
         }
 
         let target_program_value = UINT32::from_le_bytes([data[0], data[1], data[2], data[3]]);

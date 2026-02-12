@@ -67,7 +67,11 @@ impl PageBorderFill {
     /// 파싱된 PageBorderFill 구조체 / Parsed PageBorderFill structure
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 12 {
-            return Err(HwpError::insufficient_data("PageBorderFill", 12, data.len()));
+            return Err(HwpError::insufficient_data(
+                "PageBorderFill",
+                12,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;
@@ -102,7 +106,6 @@ impl PageBorderFill {
 
         // UINT16 테두리/배경 ID / UINT16 border/fill ID
         let border_fill_id = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
-        offset += 2;
 
         Ok(PageBorderFill {
             attributes,

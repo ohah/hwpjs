@@ -201,7 +201,11 @@ impl SummaryInformation {
         //   - 각 PropertySetDesc: FMTID (16 bytes) + Offset (4 bytes) = 20 bytes
         //   - N_ARRAY는 먼저 개수(UINT32, 4 bytes)를 읽고, 그 다음 항목들을 읽음
         if data.len() < 24 {
-            return Err(HwpError::insufficient_data("Property Set header", 24, data.len()));
+            return Err(HwpError::insufficient_data(
+                "Property Set header",
+                24,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;
@@ -552,7 +556,11 @@ impl SummaryInformation {
     /// codepage에 따라 적절한 인코딩으로 디코딩 / Decode using appropriate encoding based on codepage
     fn parse_vt_lpstr(data: &[u8], is_big_endian: bool, codepage: u16) -> Result<String, HwpError> {
         if data.len() < 8 {
-            return Err(HwpError::insufficient_data("VT_LPSTR/VT_LPWSTR", 8, data.len()));
+            return Err(HwpError::insufficient_data(
+                "VT_LPSTR/VT_LPWSTR",
+                8,
+                data.len(),
+            ));
         }
 
         // VT type (4 bytes): Should be VT_LPSTR (0x001E) or VT_LPWSTR (0x001F)
@@ -596,13 +604,14 @@ impl SummaryInformation {
 
         // Decode string based on codepage
         // codepage에 따라 적절한 인코딩으로 디코딩
-        Self::decode_string_by_codepage(string_data, codepage)
-            .map_err(|e| HwpError::EncodingError {
+        Self::decode_string_by_codepage(string_data, codepage).map_err(|e| {
+            HwpError::EncodingError {
                 reason: format!(
                     "Failed to decode VT_LPSTR string with codepage {}: {}",
                     codepage, e
                 ),
-            })
+            }
+        })
     }
 
     /// VT_FILETIME 파싱 (날짜/시간) / Parse VT_FILETIME (date/time)
@@ -757,10 +766,11 @@ impl SummaryInformation {
                     }
                     chars.into_iter().collect()
                 }
-                CP_UTF8 => String::from_utf8(data.to_vec())
-                    .map_err(|e| HwpError::EncodingError {
+                CP_UTF8 => {
+                    String::from_utf8(data.to_vec()).map_err(|e| HwpError::EncodingError {
                         reason: format!("UTF-8 decode error: {}", e),
-                    })?,
+                    })?
+                }
                 CP_MS949 => EUC_KR.decode(data).0.to_string(),
                 CP_WINDOWS_1252 => WINDOWS_1252.decode(data).0.to_string(),
                 _ => {

@@ -129,7 +129,11 @@ impl ShapeComponentPicture {
         // 그림 개체 속성(표 107) 파싱 시작 / Start parsing picture shape component attributes (Table 107)
         // 최소 78바이트 필요 (고정 부분) / Need at least 78 bytes (fixed part)
         if data.len() < 78 {
-            return Err(HwpError::insufficient_data("ShapeComponentPicture", 78, data.len()));
+            return Err(HwpError::insufficient_data(
+                "ShapeComponentPicture",
+                78,
+                data.len(),
+            ));
         }
 
         // 표 107: 테두리 색 (COLORREF, 4바이트) / Table 107: Border color (COLORREF, 4 bytes)

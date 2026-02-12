@@ -86,7 +86,11 @@ impl ShapeComponentEllipse {
         // 표 96: 타원 개체 속성은 60바이트 / Table 96: Ellipse shape component attributes is 60 bytes
         // UINT32(4) + INT32(4) * 14 = 60 bytes
         if data.len() < 60 {
-            return Err(HwpError::insufficient_data("ShapeComponentEllipse", 60, data.len()));
+            return Err(HwpError::insufficient_data(
+                "ShapeComponentEllipse",
+                60,
+                data.len(),
+            ));
         }
 
         let mut offset = 0;

@@ -12,7 +12,12 @@ pub(crate) fn parse_auto_number(data: &[u8]) -> Result<CtrlHeaderData, HwpError>
 
     let mut offset = 0usize;
 
-    let attribute = UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let attribute = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let number = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
@@ -40,13 +45,15 @@ pub(crate) fn parse_new_number(data: &[u8]) -> Result<CtrlHeaderData, HwpError> 
     }
 
     let mut offset = 0usize;
-    let attribute = UINT32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]]);
+    let attribute = UINT32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ]);
     offset += 4;
 
     let number = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
 
     Ok(CtrlHeaderData::NewNumber { attribute, number })
 }
-
-
-

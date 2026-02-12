@@ -31,10 +31,9 @@ impl PreviewText {
     /// Since it's stored in UTF-16LE format, we use decode_utf16le function to decode it.
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         // UTF-16LE 디코딩 / Decode UTF-16LE
-        let text = decode_utf16le(data)
-            .map_err(|e| HwpError::EncodingError {
-                reason: format!("Failed to decode preview text: {}", e),
-            })?;
+        let text = decode_utf16le(data).map_err(|e| HwpError::EncodingError {
+            reason: format!("Failed to decode preview text: {}", e),
+        })?;
 
         Ok(PreviewText { text })
     }
