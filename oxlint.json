@@ -3,7 +3,7 @@
   "ignore": [
     "**/node_modules/**",
     "**/dist/**",
-    "**/build/**",
+    "**/build/**","**/npm/**",
     "**/*.generated.ts",
     "**/*.lock",
     "**/target/**",

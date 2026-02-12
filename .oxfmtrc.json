@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": ["**/dist/**", "**/build/**", "**/node_modules/**", "**/legacy/**", "**/npm/**"],
   "printWidth": 100,
   "tabWidth": 2,
   "useTabs": false,
@@ -11,4 +12,3 @@
   "arrowParens": "always",
   "endOfLine": "lf"
 }
-
