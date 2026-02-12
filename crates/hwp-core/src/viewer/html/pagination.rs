@@ -109,18 +109,17 @@ pub fn check_table_page_break(
     // 2. Or table top is greater than current_max_vertical_mm and table bottom is very close to content_height_mm (95% or more)
     if table_bottom_mm > context.content_height_mm {
         // 테이블이 페이지를 넘어가는 경우, current_max_vertical_mm이 0보다 크면 페이지네이션 발생
-        // If table overflows, pagination occurs if current_max_vertical_mm > 0
+        // current_max_vertical_mm이 0이면(빈 페이지) 페이지 나누기 하지 않음
+        // If table overflows, pagination occurs only if current_max_vertical_mm > 0
         if context.current_max_vertical_mm > 0.0 {
             PaginationResult {
                 has_page_break: true,
                 reason: Some(PageBreakReason::TableOverflow),
             }
         } else {
-            // 첫 페이지이지만 테이블이 페이지를 넘어가는 경우, 페이지네이션 발생
-            // Even on first page, if table overflows, pagination occurs
             PaginationResult {
-                has_page_break: true,
-                reason: Some(PageBreakReason::TableOverflow),
+                has_page_break: false,
+                reason: None,
             }
         }
     } else if table_top_mm > context.current_max_vertical_mm
