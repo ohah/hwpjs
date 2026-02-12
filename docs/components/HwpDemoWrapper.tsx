@@ -13,13 +13,15 @@ export function HwpDemoWrapper({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoWra
 
   useEffect(() => {
     // 동적 import로 HwpDemo 컴포넌트 로드 (SSG 빌드 시 번들러가 의존성을 분석하지 않도록)
-    import('./HwpDemo').then((module) => {
-      setHwpDemo(() => module.HwpDemo);
-      setLoading(false);
-    }).catch((err) => {
-      console.error('Failed to load HwpDemo component:', err);
-      setLoading(false);
-    });
+    import('./HwpDemo')
+      .then((module) => {
+        setHwpDemo(() => module.HwpDemo);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load HwpDemo component:', err);
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {
@@ -48,4 +50,3 @@ export function HwpDemoWrapper({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoWra
     </NoSSR>
   );
 }
-
