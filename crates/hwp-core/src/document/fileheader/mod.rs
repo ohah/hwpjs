@@ -110,7 +110,7 @@ impl FileHeader {
 
     /// Convert FileHeader to JSON string
     pub fn to_json(&self) -> Result<String, HwpError> {
-        serde_json::to_string_pretty(self).map_err(HwpError::from)
+        Ok(serde_json::to_string_pretty(self)?)
     }
 
     /// Get version as string (e.g., "5.0.3.0")
