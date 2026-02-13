@@ -258,6 +258,8 @@ fn process_header<R: Renderer>(
 ) where
     R::Options: 'static,
 {
+    #[allow(clippy::too_many_arguments)]
+    {
     // 헤더 처리 컨텍스트 / Header processing context
     let ctx = HeaderProcessContext { document, renderer, options };
 
@@ -285,6 +287,7 @@ fn process_header<R: Renderer>(
                 parts.headers.push(para_content);
             }
         }
+    }
     }
 }
 
