@@ -291,8 +291,6 @@ fn horizontal_segment_borderline(
 
     if is_top_edge {
         from_lower_cell_top.or(from_upper_cell_bottom)
-    } else if is_bottom_edge {
-        from_upper_cell_bottom.or(from_lower_cell_top)
     } else {
         from_upper_cell_bottom.or(from_lower_cell_top)
     }

@@ -50,17 +50,22 @@ pub(crate) fn render_svg(
         ctrl_header_height_mm,
     );
 
+    let view_left = view_box.left;
+    let view_top = view_box.top;
+    let view_width = view_box.width;
+    let view_height = view_box.height;
+
     format!(
         r#"<svg class="hs" viewBox="{} {} {} {}" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><defs>{}</defs>{}</svg>"#,
-        view_box.left,
-        view_box.top,
-        view_box.width,
-        view_box.height,
-        view_box.left,
-        view_box.top,
-        view_box.width,
-        view_box.height,
+        view_left,
+        view_top,
+        view_width,
+        view_height,
+        view_left,
+        view_top,
+        view_width,
+        view_height,
         pattern_defs,
-        format!("{fills}{vertical}{horizontal}")
+        (format!("{fills}{vertical}{horizontal}"))
     )
 }
