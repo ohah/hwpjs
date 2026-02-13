@@ -256,7 +256,7 @@ impl ParameterItem {
 
         // 파라미터 아이템 데이터 파싱 / Parse parameter item data
         let (data_value, data_size) =
-            parse_parameter_item_data(&data[offset..], item_type).map_err(|e| HwpError::from(e))?;
+            parse_parameter_item_data(&data[offset..], item_type)?;
         offset += data_size;
 
         Ok((
@@ -375,7 +375,7 @@ fn parse_parameter_item_data(
         ParameterItemType::Set => {
             // PIT_SET: Parameter Set / PIT_SET: Parameter Set
             // 재귀적으로 파싱 / Parse recursively
-            let parameter_set = ParameterSet::parse(data).map_err(|e| HwpError::from(e))?;
+            let parameter_set = ParameterSet::parse(data)?;
             // 사용된 바이트 수 계산 (대략적으로) / Calculate bytes consumed (approximately)
             let size = 4 + parameter_set.items.iter().map(|_| 4).sum::<usize>(); // 최소 크기 / Minimum size
             Ok((ParameterItemData::Set(parameter_set), size))

@@ -349,7 +349,7 @@ pub fn render_table(
                         + para
                             .control_char_positions
                             .iter()
-                            .map(|cc| ControlChar::get_size_by_code(cc.code) as usize)
+                            .map(|cc| ControlChar::get_size_by_code(cc.code))
                             .sum::<usize>();
                 }
 
@@ -519,7 +519,7 @@ pub fn render_table(
                             + para
                                 .control_char_positions
                                 .iter()
-                                .map(|cc| ControlChar::get_size_by_code(cc.code) as usize)
+                                .map(|cc| ControlChar::get_size_by_code(cc.code))
                                 .sum::<usize>();
                         continue;
                     }
@@ -533,7 +533,7 @@ pub fn render_table(
                         + para
                             .control_char_positions
                             .iter()
-                            .map(|cc| ControlChar::get_size_by_code(cc.code) as usize)
+                            .map(|cc| ControlChar::get_size_by_code(cc.code))
                             .sum::<usize>();
                 }
 
@@ -655,7 +655,7 @@ pub fn render_table(
                                             .control_char_positions
                                             .iter()
                                             .map(|cc| {
-                                                ControlChar::get_size_by_code(cc.code) as usize
+                                                ControlChar::get_size_by_code(cc.code)
                                             })
                                             .sum::<usize>(),
                                 )
@@ -670,7 +670,7 @@ pub fn render_table(
                                     + para
                                         .control_char_positions
                                         .iter()
-                                        .map(|cc| ControlChar::get_size_by_code(cc.code) as usize)
+                                        .map(|cc| ControlChar::get_size_by_code(cc.code))
                                         .sum::<usize>(),
                             )
                         };

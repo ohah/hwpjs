@@ -105,7 +105,7 @@ fn convert_text_with_char_shapes<'a>(
     let mut break_positions: Vec<usize> = control_positions
         .iter()
         .filter(|pos| pos.code == ControlChar::PARA_BREAK || pos.code == ControlChar::LINE_BREAK)
-        .map(|pos| usize::from(pos.position))
+        .map(|pos| pos.position)
         .collect();
     break_positions.sort();
 

@@ -126,9 +126,7 @@ pub fn convert_table_to_markdown(
     for row_idx in 0..row_count {
         let row_data: Vec<String> = (0..col_count)
             .map(|col| {
-                grid[row_idx][col]
-                    .as_ref()
-                    .map(|s| s.clone())
+                grid[row_idx][col].clone()
                     .unwrap_or_else(|| " ".to_string())
             })
             .collect();
@@ -314,8 +312,7 @@ fn fill_cell_content(
                                 tracker,
                             );
                         for shape_part in shape_parts {
-                            if shape_part.contains("![이미지]") {
-                            }
+                            shape_part.contains("![이미지]");
                             cell_parts.push(shape_part);
                         }
                     }

@@ -193,7 +193,7 @@ pub fn render_paragraph(
             }
             ParagraphRecord::Table { table } => {
                 tables.push(TableInfo {
-                    table: &table,
+                    table,
                     ctrl_header: None,
                     anchor_char_pos: None,
                     caption: None,
@@ -207,9 +207,9 @@ pub fn render_paragraph(
             } => {
                 // CtrlHeader 처리 / Process CtrlHeader
                 let ctrl_result = ctrl_header::process_ctrl_header(
-                    &header,
-                    &children,
-                    &paragraphs,
+                    header,
+                    children,
+                    paragraphs,
                     document,
                     options,
                 );

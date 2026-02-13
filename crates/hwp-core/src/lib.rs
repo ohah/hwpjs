@@ -71,7 +71,7 @@ impl HwpParser {
         cfb: &mut CompoundFile<Cursor<&[u8]>>,
     ) -> Result<FileHeader, HwpError> {
         let fileheader_data = CfbParser::read_stream(cfb, "FileHeader")?;
-        FileHeader::parse(&fileheader_data).map_err(|e| error::HwpError::from(e))
+        FileHeader::parse(&fileheader_data)
     }
 
     /// Parse DocInfo stream
@@ -81,7 +81,7 @@ impl HwpParser {
         fileheader: &FileHeader,
     ) -> Result<DocInfo, HwpError> {
         let docinfo_data = CfbParser::read_stream(cfb, "DocInfo")?;
-        DocInfo::parse(&docinfo_data, fileheader).map_err(|e| error::HwpError::from(e))
+        DocInfo::parse(&docinfo_data, fileheader)
     }
 
     /// Parse BodyText storage
@@ -97,7 +97,7 @@ impl HwpParser {
             .as_ref()
             .map(|props| props.area_count)
             .unwrap_or(1); // 기본값은 1 / Default is 1
-        BodyText::parse(cfb, fileheader, section_count).map_err(|e| error::HwpError::from(e))
+        BodyText::parse(cfb, fileheader, section_count)
     }
 
     /// Parse BinData storage
@@ -110,7 +110,6 @@ impl HwpParser {
     ) -> Result<BinData, HwpError> {
         use crate::document::BinaryDataFormat;
         BinData::parse(cfb, BinaryDataFormat::Base64, &doc_info.bin_data)
-            .map_err(|e| error::HwpError::from(e))
     }
 
     // ===== Optional parsing methods =====
@@ -333,10 +332,10 @@ impl HwpParser {
         // Read and parse FileHeader
         let fileheader_data = CfbParser::read_stream(&mut cfb, "FileHeader")?;
         let fileheader =
-            FileHeader::parse(&fileheader_data).map_err(|e| error::HwpError::from(e))?;
+            FileHeader::parse(&fileheader_data)?;
 
         // Convert to JSON
-        fileheader.to_json().map_err(|e| error::HwpError::from(e))
+        fileheader.to_json()
     }
 
     /// Parse HWP file and return SummaryInformation as JSON
@@ -354,8 +353,7 @@ impl HwpParser {
         match Self::read_summary_information_stream(&mut cfb, data) {
             Ok(summary_bytes) => {
                 let summary_information =
-                    crate::document::SummaryInformation::parse(&summary_bytes)
-                        .map_err(|e| error::HwpError::from(e))?;
+                    crate::document::SummaryInformation::parse(&summary_bytes)?;
                 // Convert to JSON
                 serde_json::to_string_pretty(&summary_information).map_err(error::HwpError::from)
             }

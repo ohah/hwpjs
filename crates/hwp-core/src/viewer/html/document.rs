@@ -71,7 +71,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html.push_str("<!DOCTYPE html>\n");
     html.push_str("<html>\n");
     html.push_str("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">\n");
-    html.push_str("\n");
+    html.push('\n');
     html.push_str("<head>\n");
     html.push_str("  <title></title>\n");
     html.push_str("  <meta http_quiv=\"content-type\" content=\"text/html; charset=utf-8\">\n");
@@ -81,8 +81,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html.push_str(&styles::generate_css_styles(document));
     html.push_str("  </style>\n");
     html.push_str("</head>\n");
-    html.push_str("\n");
-    html.push_str("\n");
+    html.push('\n');
+    html.push('\n');
     html.push_str("<body>\n");
 
     // PageDef 찾기 / Find PageDef

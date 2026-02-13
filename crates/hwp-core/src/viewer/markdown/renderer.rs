@@ -114,12 +114,12 @@ impl Renderer for MarkdownRenderer {
     fn render_document_header(&self, document: &HwpDocument, options: &Self::Options) -> String {
         let mut md = String::new();
         md.push_str("# HWP 문서\n");
-        md.push_str("\n");
+        md.push('\n');
 
         if options.include_version != Some(false) {
             use crate::viewer::markdown::document::fileheader::format_version;
             md.push_str(&format!("**버전**: {}\n", format_version(document)));
-            md.push_str("\n");
+            md.push('\n');
         }
 
         md
@@ -130,19 +130,19 @@ impl Renderer for MarkdownRenderer {
 
         if !parts.footnotes.is_empty() {
             md.push_str("## 각주\n");
-            md.push_str("\n");
+            md.push('\n');
             for footnote in &parts.footnotes {
                 md.push_str(footnote);
-                md.push_str("\n");
+                md.push('\n');
             }
         }
 
         if !parts.endnotes.is_empty() {
             md.push_str("## 미주\n");
-            md.push_str("\n");
+            md.push('\n');
             for endnote in &parts.endnotes {
                 md.push_str(endnote);
-                md.push_str("\n");
+                md.push('\n');
             }
         }
 

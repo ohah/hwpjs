@@ -95,7 +95,7 @@ fn format_outline_number(level: u8, number: u32) -> String {
         4 => format!("{})", number_to_hangul(number)),  // 가)
         5 => format!("({})", number),                   // (1)
         6 => format!("({})", number_to_hangul(number)), // (가)
-        7 => format!("{}", number_to_circled(number)),  // ①
+        7 => number_to_circled(number).to_string(),  // ①
         _ => format!("{}.", number),                    // 기본값 / default
     }
 }
@@ -159,7 +159,7 @@ fn is_format_string_empty_or_null(format_string: &str) -> bool {
     if format_string.len() == 1 {
         // 문자로 확인
         // Check as character
-        if format_string.chars().next() == Some('\u{0000}') {
+        if format_string.starts_with('\u{0000}') {
             return true;
         }
         // UTF-8 바이트로 확인
@@ -197,7 +197,7 @@ pub(crate) fn convert_to_outline_with_number(
                 // para_style_id를 사용하여 스타일 이름에서 레벨 추출
                 // Use para_style_id to extract level from style name
                 if let Some(line_spacing) = para_shape.line_spacing {
-                    if line_spacing >= 7 && line_spacing <= 10 {
+                    if (7..=10).contains(&line_spacing) {
                         // para_style_id로 스타일 찾기 / Find style by para_style_id
                         if let Some(style) = document
                             .doc_info
@@ -209,7 +209,7 @@ pub(crate) fn convert_to_outline_with_number(
                             if style.local_name.starts_with("개요 ") {
                                 if let Ok(style_level) = style.local_name[3..].trim().parse::<u8>()
                                 {
-                                    if style_level >= 8 && style_level <= 10 {
+                                    if (8..=10).contains(&style_level) {
                                         style_level
                                     } else {
                                         // 스타일 레벨이 범위를 벗어나면 line_spacing 기반 계산
