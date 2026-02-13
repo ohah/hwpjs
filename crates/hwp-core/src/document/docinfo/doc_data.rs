@@ -306,7 +306,7 @@ fn parse_parameter_item_data(
         }
         ParameterItemType::I1 => {
             // PIT_I1: INT8 / PIT_I1: INT8
-            if data.len() < 1 {
+            if data.is_empty() {
                 return Err(HwpError::insufficient_data("I1", 1, data.len()));
             }
             Ok((ParameterItemData::I1(INT8::from_le_bytes([data[0]])), 1))
@@ -333,14 +333,14 @@ fn parse_parameter_item_data(
         }
         ParameterItemType::I => {
             // PIT_I: INT8 / PIT_I: INT8
-            if data.len() < 1 {
+            if data.is_empty() {
                 return Err(HwpError::insufficient_data("I", 1, data.len()));
             }
             Ok((ParameterItemData::I(INT8::from_le_bytes([data[0]])), 1))
         }
         ParameterItemType::Ui1 => {
             // PIT_UI1: UINT8 / PIT_UI1: UINT8
-            if data.len() < 1 {
+            if data.is_empty() {
                 return Err(HwpError::insufficient_data("UI1", 1, data.len()));
             }
             Ok((ParameterItemData::Ui1(UINT8::from_le_bytes([data[0]])), 1))
@@ -367,7 +367,7 @@ fn parse_parameter_item_data(
         }
         ParameterItemType::Ui => {
             // PIT_UI: UINT8 / PIT_UI: UINT8
-            if data.len() < 1 {
+            if data.is_empty() {
                 return Err(HwpError::insufficient_data("UI", 1, data.len()));
             }
             Ok((ParameterItemData::Ui(UINT8::from_le_bytes([data[0]])), 1))
