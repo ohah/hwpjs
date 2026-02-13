@@ -302,6 +302,8 @@ fn process_footer<R: Renderer>(
 ) where
     R::Options: 'static,
 {
+    #[allow(clippy::too_many_arguments)]
+    {
     // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
     // If LIST_HEADER exists, process from children, otherwise from paragraphs
     let mut found_list_header = false;
@@ -327,6 +329,7 @@ fn process_footer<R: Renderer>(
                 parts.footers.push(para_content);
             }
         }
+    }
     }
 }
 
