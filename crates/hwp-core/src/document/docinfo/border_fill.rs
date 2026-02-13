@@ -235,8 +235,7 @@ impl BorderFill {
             },
         ];
         let mut off_i = start;
-        let mut fill_idx = 0;
-        for _ in data[start as usize..start as usize + 4].iter() {
+        for (fill_idx, _) in data[start..start + 4].iter().enumerate() {
             let line_type = data[off_i];
             off_i += 1;
             let width = data[off_i];
@@ -253,7 +252,6 @@ impl BorderFill {
                 width,
                 color,
             };
-            fill_idx += 1;
         }
 
         // (A) spec arrays: line_types[4], widths[4], colors[4]
@@ -274,8 +272,7 @@ impl BorderFill {
         ];
         off_s += 4;
         let mut colors = [COLORREF(0); 4];
-        let mut fill_idx = 0;
-        for _ in 0..4 {
+        for (fill_idx, _) in (0..4).enumerate() {
             colors[fill_idx] = COLORREF(u32::from_le_bytes([
                 data[off_s],
                 data[off_s + 1],
@@ -283,7 +280,6 @@ impl BorderFill {
                 data[off_s + 3],
             ]));
             off_s += 4;
-            fill_idx += 1;
         }
         for i in 0..4 {
             borders_spec[i] = BorderLine {
