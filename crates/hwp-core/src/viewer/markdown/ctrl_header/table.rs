@@ -21,11 +21,9 @@ pub(crate) fn convert_table_ctrl_to_markdown(header: &CtrlHeader, has_table: boo
         return String::new();
     }
     let mut md = String::from("**표**");
-    if let CtrlHeaderData::ObjectCommon { description, .. } = &header.data {
-        if let Some(desc) = description {
-            if !desc.trim().is_empty() {
-                md.push_str(&format!(": {}", desc.trim()));
-            }
+    if let CtrlHeaderData::ObjectCommon { description: Some(desc), .. } = &header.data {
+        if !desc.trim().is_empty() {
+            md.push_str(&format!(": {}", desc.trim()));
         }
     }
     md.push_str("\n\n*[표 내용은 추출되지 않았습니다]*");
