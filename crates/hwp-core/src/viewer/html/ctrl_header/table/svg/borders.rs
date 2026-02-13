@@ -62,21 +62,18 @@ fn render_border_paths(
         return String::new();
     }
     // 사용자 요청: 굵기(stroke-width)는 그대로 유지하고,
-    // 색(stroke)과 “그려야 하는 선”만 맞춘다.
+    // 색(stroke)과 "그려야 하는 선"만 맞춘다.
     // 따라서 line_type에 따른 2중/3중선(다중 스트로크) 표현은 여기서는 하지 않는다.
     let stroke = borderline_stroke_color(line);
     let w = round_to_2dp(borderline_base_width_mm(line));
-    let (ax1, ay1, ax2, ay2) = if is_vertical {
-        (x1, y1, x2, y2)
-    } else {
-        (x1, y1, x2, y2)
-    };
+    // Note: is_vertical parameter is unused but kept for API compatibility
+    // If needed, the else branch can be removed or logic added
     format!(
         r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};"></path>"#,
-        round_to_2dp(ax1),
-        round_to_2dp(ay1),
-        round_to_2dp(ax2),
-        round_to_2dp(ay2),
+        round_to_2dp(x1),
+        round_to_2dp(y1),
+        round_to_2dp(x2),
+        round_to_2dp(y2),
         stroke,
         w
     )
@@ -162,7 +159,7 @@ fn vertical_segment_borderline(
     let mut from_left_cell_right: Option<BorderLine> = None;
     let mut from_right_cell_left: Option<BorderLine> = None;
 
-    // 셀 순서를 고정(행,열 오름차순)해서 “첫 셀 우선” 규칙이 안정적으로 동작하도록 함
+    // 셀 순서를 고정(행,열 오름차순)해서 "첫 셀 우선" 규칙이 안정적으로 동작하도록 함
     let mut cells: Vec<&TableCell> = table.cells.iter().collect();
     cells.sort_by_key(|c| (c.cell_attributes.row_address, c.cell_attributes.col_address));
 
@@ -185,7 +182,7 @@ fn vertical_segment_borderline(
             None => continue,
         };
 
-        // 왼쪽 셀의 Right: 여러 셀이 매칭되면 “첫 셀” 우선(원본/레거시 동작에 더 근접)
+        // 왼쪽 셀의 Right: 여러 셀이 매칭되면 "첫 셀" 우선(원본/레거시 동작에 더 근접)
         if (cell_right - col_x).abs() < eps {
             let cand = bf.borders[1].clone();
             if from_left_cell_right.is_none() {
@@ -193,7 +190,7 @@ fn vertical_segment_borderline(
             }
         }
 
-        // 오른쪽 셀의 Left: 여러 셀이 매칭되면 “첫 셀” 우선
+        // 오른쪽 셀의 Left: 여러 셀이 매칭되면 "첫 셀" 우선
         if (cell_left - col_x).abs() < eps {
             let cand = bf.borders[0].clone();
             if from_right_cell_left.is_none() {
@@ -244,7 +241,7 @@ fn horizontal_segment_borderline(
     let mut from_upper_cell_bottom: Option<BorderLine> = None;
     let mut from_lower_cell_top: Option<BorderLine> = None;
 
-    // 셀 순서를 고정(행,열 오름차순)해서 “첫 셀 우선” 규칙이 안정적으로 동작하도록 함
+    // 셀 순서를 고정(행,열 오름차순)해서 "첫 셀 우선" 규칙이 안정적으로 동작하도록 함
     let mut cells: Vec<&TableCell> = table.cells.iter().collect();
     cells.sort_by_key(|c| (c.cell_attributes.row_address, c.cell_attributes.col_address));
 
@@ -275,7 +272,7 @@ fn horizontal_segment_borderline(
             None => continue,
         };
 
-        // 위쪽 셀의 Bottom: 여러 셀이 매칭되면 “첫 셀” 우선
+        // 위쪽 셀의 Bottom: 여러 셀이 매칭되면 "첫 셀" 우선
         if (cell_bottom - row_y).abs() < eps {
             let cand = bf.borders[3].clone();
             if from_upper_cell_bottom.is_none() {
@@ -283,7 +280,7 @@ fn horizontal_segment_borderline(
             }
         }
 
-        // 아래쪽 셀의 Top: 여러 셀이 매칭되면 “첫 셀” 우선
+        // 아래쪽 셀의 Top: 여러 셀이 매칭되면 "첫 셀" 우선
         if (cell_top - row_y).abs() < eps {
             let cand = bf.borders[2].clone();
             if from_lower_cell_top.is_none() {
@@ -319,7 +316,7 @@ pub(crate) fn render_vertical_borders(
         let is_left_edge = (col_x - 0.0).abs() < epsilon;
         let is_right_edge = (col_x - content.width).abs() < epsilon;
         // 레거시/fixture 정합:
-        // 좌/우 외곽선은 “항상 전체 높이”로 그려야 한다.
+        // 좌/우 외곽선은 "항상 전체 높이"로 그려야 한다.
         // (부동소수점 오차로 covered_ranges가 생기거나, 셀 병합/커버 계산 때문에
         // 외곽선이 위/아래로 끊기는 현상이 발생할 수 있음)
         if is_left_edge || is_right_edge {
