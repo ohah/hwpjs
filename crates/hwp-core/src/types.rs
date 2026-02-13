@@ -21,22 +21,27 @@ impl RoundTo2dp for f64 {
 }
 
 /// BYTE: 부호 없는 한 바이트(0~255)
+#[allow(clippy::upper_case_acronyms)]
 pub type BYTE = u8;
 
 /// WORD: 16비트 unsigned int
+#[allow(clippy::upper_case_acronyms)]
 pub type WORD = u16;
 
 /// DWORD: 32비트 unsigned long
+#[allow(clippy::upper_case_acronyms)]
 pub type DWORD = u32;
 
 /// WCHAR: 유니코드 기반 문자 (2바이트)
 /// 한글의 내부 코드로 표현된 문자 한 글자
+#[allow(clippy::upper_case_acronyms)]
 pub type WCHAR = u16;
 
 /// HWPUNIT: 1/7200인치 단위 (unsigned)
 /// 문자의 크기, 그림의 크기, 용지 여백 등 문서 구성 요소의 크기를 표현
 ///
 /// 스펙 문서와 호환성을 위한 구조체 타입 (BYTE, WORD 등 타입 별칭과 비슷함)
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct HWPUNIT(pub u32);
 
@@ -83,6 +88,7 @@ impl From<HWPUNIT> for u32 {
 /// HWPUNIT의 부호 있는 버전
 ///
 /// 스펙 문서와 호환성을 위한 구조체 타입 (HWPUNIT와 구조가 비슷함)
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SHWPUNIT(pub i32);
 
@@ -143,6 +149,7 @@ impl Hwpunit16ToMm for i16 {
 /// rr: red 1 byte (하위 바이트), gg: green 1 byte (중간 바이트), bb: blue 1 byte (상위 바이트)
 ///
 /// 스펙 문서와 호환성을 위한 구조체 타입 (DWORD 타입 별칭과 구조가 비슷함)
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct COLORREF(pub u32);
 
@@ -276,6 +283,7 @@ pub type UINT16 = u16;
 pub type UINT32 = u32;
 
 /// UINT: UINT32와 동일
+#[allow(clippy::upper_case_acronyms)]
 pub type UINT = UINT32;
 
 /// INT8: signed int8

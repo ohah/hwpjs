@@ -236,6 +236,14 @@ fn is_page_break_line<R: Renderer>(line: &str, _renderer: &R) -> bool {
     line.contains("<hr") || line == "---"
 }
 
+/// Header processing context
+/// 헤더 처리 컨텍스트
+struct HeaderProcessContext<'a, R: Renderer> {
+    document: &'a HwpDocument,
+    renderer: &'a R,
+    options: &'a R::Options,
+}
+
 /// Process header
 /// 머리말 처리
 fn process_header<R: Renderer>(
@@ -250,6 +258,9 @@ fn process_header<R: Renderer>(
 ) where
     R::Options: 'static,
 {
+    // 헤더 처리 컨텍스트 / Header processing context
+    let ctx = HeaderProcessContext { document, renderer, options };
+
     // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
     // If LIST_HEADER exists, process from children, otherwise from paragraphs
     let mut found_list_header = false;
@@ -257,11 +268,9 @@ fn process_header<R: Renderer>(
         if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record {
             found_list_header = true;
             // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
-            // 기존 뷰어 함수를 직접 호출 (글자 모양, 개요 번호 등 복잡한 처리를 위해)
-            // Call existing viewer functions directly (for complex processing like character shapes, outline numbers, etc.)
             for para in paragraphs {
-                let para_content =
-                    render_paragraph_with_viewer(para, document, renderer, options, tracker);
+                // 기존 뷰어 함수를 직접 호출 (글자 모양, 개요 번호 등 복잡한 처리를 위해)
+                let para_content = render_paragraph_with_viewer(para, &ctx.document, ctx.renderer, &ctx.options, tracker);
                 if !para_content.is_empty() {
                     parts.headers.push(para_content);
                 }
@@ -271,8 +280,7 @@ fn process_header<R: Renderer>(
     // LIST_HEADER가 없으면 paragraphs 처리 / If no LIST_HEADER, process paragraphs
     if !found_list_header {
         for para in ctrl_paragraphs {
-            let para_content =
-                render_paragraph_with_viewer(para, document, renderer, options, tracker);
+            let para_content = render_paragraph_with_viewer(para, &ctx.document, ctx.renderer, &ctx.options, tracker);
             if !para_content.is_empty() {
                 parts.headers.push(para_content);
             }
