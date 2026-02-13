@@ -4,11 +4,12 @@ use super::line_segment::{
     DocumentRenderState, ImageInfo, LineSegmentContent, LineSegmentRenderContext, TableInfo,
 };
 use super::pagination::{self, PaginationContext, PaginationResult};
-use super::text;
+use super::text::{self, extract_text_and_shapes};
 use super::HtmlOptions;
 use crate::document::bodytext::{
     control_char::ControlChar,
     ctrl_header::{CtrlHeaderData, VertRelTo},
+    LineSegmentInfo,
     PageDef, ParagraphRecord,
 };
 use crate::document::{HwpDocument, Paragraph};
@@ -40,6 +41,116 @@ pub struct ParagraphRenderState<'a> {
     pub color_to_pattern: &'a mut HashMap<u32, String>,
 }
 
+// Private helper functions to reduce render_paragraph complexity
+fn collect_control_char_positions(
+    paragraph: &Paragraph,
+) -> (Vec<crate::document::bodytext::control_char::ControlCharPosition>, Vec<usize>) {
+    let mut control_char_positions = Vec::new();
+    let mut shape_object_anchor_positions = Vec::new();
+
+    for record in &paragraph.records {
+        if let ParagraphRecord::ParaText { control_char_positions: ccp, .. } = record {
+            control_char_positions = ccp.clone();
+            for pos in control_char_positions.iter() {
+                if pos.code == ControlChar::SHAPE_OBJECT {
+                    shape_object_anchor_positions.push(pos.position);
+                }
+            }
+            break;
+        }
+    }
+
+    (control_char_positions, shape_object_anchor_positions)
+}
+
+fn collect_line_segments(paragraph: &Paragraph) -> Vec<LineSegmentInfo> {
+    let mut line_segments = Vec::new();
+    for record in &paragraph.records {
+        if let ParagraphRecord::ParaLineSeg { segments } = record {
+            line_segments = segments.clone();
+            break;
+        }
+    }
+    line_segments
+}
+
+fn collect_images(
+    paragraph: &Paragraph,
+    document: &HwpDocument,
+    options: &HtmlOptions,
+) -> Vec<ImageInfo> {
+    let mut images = Vec::new();
+
+    for record in &paragraph.records {
+        match record {
+            ParagraphRecord::ShapeComponent {
+                shape_component,
+                children,
+            } => {
+                for child in children {
+                    if let ParagraphRecord::ShapeComponentPicture {
+                        shape_component_picture,
+                    } = child
+                    {
+                        let bindata_id = shape_component_picture.picture_info.bindata_id;
+                        let image_url = common::get_image_url(
+                            document,
+                            bindata_id,
+                            options.image_output_dir.as_deref(),
+                            options.html_output_dir.as_deref(),
+                        );
+                        if !image_url.is_empty() {
+                            images.push(super::line_segment::ImageInfo {
+                                width: shape_component.width,
+                                height: shape_component.height,
+                                url: image_url,
+                                like_letters: false,
+                                affect_line_spacing: false,
+                                vert_rel_to: None,
+                            });
+                        }
+                    }
+                }
+            }
+            ParagraphRecord::ShapeComponentPicture {
+                shape_component_picture,
+            } => {
+                let bindata_id = shape_component_picture.picture_info.bindata_id;
+                let image_url = common::get_image_url(
+                    document,
+                    bindata_id,
+                    options.image_output_dir.as_deref(),
+                    options.html_output_dir.as_deref(),
+                );
+                if !image_url.is_empty() {
+                    let width = (shape_component_picture.border_rectangle_x.right
+                        - shape_component_picture.border_rectangle_x.left)
+                        as u32;
+                    let mut height = (shape_component_picture.border_rectangle_y.bottom
+                        - shape_component_picture.border_rectangle_y.top)
+                        as u32;
+                    if height == 0 {
+                        height = (shape_component_picture.crop_rectangle.bottom
+                            - shape_component_picture.crop_rectangle.top)
+                            as u32;
+                    }
+                    images.push(super::line_segment::ImageInfo {
+                        width,
+                        height,
+                        url: image_url,
+                        like_letters: false,
+                        affect_line_spacing: false,
+                        vert_rel_to: None,
+                    });
+                }
+            }
+            _ => {}
+        }
+    }
+
+    images
+}
+
 /// 문단을 HTML로 렌더링 / Render paragraph to HTML
 /// 반환값: (문단 HTML, 테이블 HTML 리스트, 페이지네이션 결과) / Returns: (paragraph HTML, table HTML list, pagination result)
 /// skip_tables_count: 페이지네이션 후 같은 문단을 다시 렌더링할 때 이미 처리된 테이블 수를 건너뛰기 위한 파라미터
@@ -58,7 +169,6 @@ pub fn render_paragraph(
     let page_def = context.position.page_def;
     let first_para_vertical_mm = context.position.first_para_vertical_mm;
     let current_para_vertical_mm = context.position.current_para_vertical_mm;
-    let _para_vertical_positions = context.position.para_vertical_positions;
     let current_para_index = context.position.current_para_index;
 
     // table_counter, pattern_counter, color_to_pattern은 이미 &mut이므로 직접 사용 / table_counter, pattern_counter, color_to_pattern are already &mut, so use directly
@@ -74,51 +184,21 @@ pub fn render_paragraph(
     };
 
     // 텍스트와 CharShape 추출 / Extract text and CharShape
-    let (text, char_shapes) = text::extract_text_and_shapes(paragraph);
+    let (text, char_shapes) = extract_text_and_shapes(paragraph);
 
-    // ParaText의 control_char_positions 수집 (원본 WCHAR 인덱스 기준) / Collect control_char_positions (based on original WCHAR indices)
-    let mut control_char_positions = Vec::new();
-    for record in &paragraph.records {
-        if let ParagraphRecord::ParaText {
-            control_char_positions: ccp,
-            ..
-        } = record
-        {
-            control_char_positions = ccp.clone();
-            break;
-        }
-    }
-
-    // LineSegment 찾기 / Find LineSegment
-    let mut line_segments = Vec::new();
-    for record in &paragraph.records {
-        if let ParagraphRecord::ParaLineSeg { segments } = record {
-            line_segments = segments.clone();
-            break;
-        }
-    }
-
-    // 이미지와 테이블 수집 / Collect images and tables
-    let mut images = Vec::new();
-    let mut tables: Vec<TableInfo> = Vec::new();
-
-    // ParaText의 control_char_positions에서 SHAPE_OBJECT(표/그리기 개체) 앵커 위치 수집
-    // Collect SHAPE_OBJECT anchor positions from ParaText control_char_positions
-    let mut shape_object_anchor_positions: Vec<usize> = Vec::new();
-    for record in &paragraph.records {
-        if let ParagraphRecord::ParaText {
-            control_char_positions,
-            ..
-        } = record
-        {
-            for pos in control_char_positions.iter() {
-                if pos.code == ControlChar::SHAPE_OBJECT {
-                    shape_object_anchor_positions.push(pos.position);
-                }
-            }
-        }
-    }
+    // ParaText의 control_char_positions와 shape_object_anchor_positions 수집
+    let (control_char_positions, shape_object_anchor_positions) =
+        collect_control_char_positions(paragraph);
     let mut shape_object_anchor_cursor: usize = 0;
+
+    // LineSegment 수집 / Collect line segments
+    let line_segments = collect_line_segments(paragraph);
+
+    // 이미지 수집 / Collect images
+    let mut images = collect_images(paragraph, document, options);
+
+    // 테이블 수집 / Collect tables
+    let mut tables: Vec<TableInfo> = Vec::new();
 
     for record in &paragraph.records {
         match record {
