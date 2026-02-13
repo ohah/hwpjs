@@ -23,6 +23,7 @@ pub(crate) fn view_box(htb_width: f64, htb_height: f64, padding: f64) -> ViewBox
 }
 
 /// 테이블 절대 위치 계산 / Calculate absolute table position
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn table_position(
     hcd_position: Option<(f64, f64)>,
     page_def: Option<&PageDef>,
