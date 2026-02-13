@@ -160,6 +160,8 @@ fn fill_cell_content(
     options: &crate::viewer::markdown::MarkdownOptions,
     tracker: &mut crate::viewer::markdown::utils::OutlineNumberTracker,
 ) {
+    #[allow(clippy::too_many_arguments)]
+    {
     // 셀 내용을 텍스트와 이미지로 변환 / Convert cell content to text and images
     let mut cell_parts = Vec::new();
     let mut has_image = false;
@@ -373,5 +375,6 @@ fn fill_cell_content(
                 }
             }
         }
+    }
     }
 }
