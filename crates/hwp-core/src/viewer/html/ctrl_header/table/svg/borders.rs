@@ -207,6 +207,7 @@ fn vertical_segment_borderline(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn horizontal_segment_borderline(
     table: &Table,
     document: &HwpDocument,
