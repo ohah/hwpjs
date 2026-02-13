@@ -123,7 +123,7 @@ pub fn convert_table_to_markdown(
     lines.push(String::new()); // 빈 줄 추가 / Add empty line
 
     // 모든 행을 순서대로 출력 / Output all rows in order
-    for row_idx in 0..row_count {
+    for (row_idx, _) in grid.iter().take(row_count).enumerate() {
         let row_data: Vec<String> = (0..col_count)
             .map(|col| {
                 grid[row_idx][col]
@@ -355,7 +355,8 @@ fn fill_cell_content(
 
         // 병합된 열을 빈 셀로 채움 (마크다운에서는 병합을 직접 표현할 수 없으므로 빈 셀로 처리)
         // Fill merged columns with empty cells (markdown doesn't support cell merging directly)
-        for c in (col + 1)..(col + col_span).min(col_count) {
+        for _ in (col + 1)..(col + col_span).min(col_count) {
+            let c = col + 1;
             if grid[row][c].is_none() {
                 grid[row][c] = Some(" ".to_string());
             }
@@ -363,8 +364,10 @@ fn fill_cell_content(
 
         // 병합된 행을 빈 셀로 채움
         // Fill merged rows with empty cells
+        #[allow(clippy::needless_range_loop)]
         for r in (row + 1)..(row + row_span).min(row_count) {
-            for c in col..(col + col_span).min(col_count) {
+            for _ in col..(col + col_span).min(col_count) {
+                let c = col;
                 if grid[r][c].is_none() {
                     grid[r][c] = Some(" ".to_string());
                 }
