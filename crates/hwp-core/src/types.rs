@@ -2,6 +2,9 @@
 ///
 /// 표 1: 자료형에 따른 타입 정의
 /// 스펙 문서와 1:1 매핑을 위해 모든 자료형을 명시적으로 정의합니다.
+///
+/// 스펙 문서와의 호환성을 위해 자료형별 주요 이니셜을 대문자로 사용합니다
+/// (BYTE, WORD, DWORD, WCHAR 등). 이는 "형식에 맞는 코드"를 유지하기 위함입니다.
 use crate::error::HwpError;
 use serde::{Deserialize, Serialize};
 
@@ -32,6 +35,8 @@ pub type WCHAR = u16;
 
 /// HWPUNIT: 1/7200인치 단위 (unsigned)
 /// 문자의 크기, 그림의 크기, 용지 여백 등 문서 구성 요소의 크기를 표현
+///
+/// 스펙 문서와 호환성을 위한 구조체 타입 (BYTE, WORD 등 타입 별칭과 비슷함)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct HWPUNIT(pub u32);
 
@@ -76,6 +81,8 @@ impl From<HWPUNIT> for u32 {
 
 /// SHWPUNIT: 1/7200인치 단위 (signed)
 /// HWPUNIT의 부호 있는 버전
+///
+/// 스펙 문서와 호환성을 위한 구조체 타입 (HWPUNIT와 구조가 비슷함)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SHWPUNIT(pub i32);
 
@@ -134,6 +141,8 @@ impl Hwpunit16ToMm for i16 {
 /// 스펙 문서: RGB값(0x00bbggrr) - 실제로는 BGR 순서로 저장됨
 /// Spec: RGB value (0x00bbggrr) - actually stored in BGR order
 /// rr: red 1 byte (하위 바이트), gg: green 1 byte (중간 바이트), bb: blue 1 byte (상위 바이트)
+///
+/// 스펙 문서와 호환성을 위한 구조체 타입 (DWORD 타입 별칭과 구조가 비슷함)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct COLORREF(pub u32);
 
