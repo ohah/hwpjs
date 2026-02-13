@@ -39,7 +39,6 @@ fn colorref_to_hex(c: u32) -> String {
 }
 
 fn borderline_stroke_color(line: &BorderLine) -> String {
-    
     colorref_to_hex(line.color.0)
 }
 
@@ -203,8 +202,6 @@ fn vertical_segment_borderline(
         }
     }
 
-    
-
     if is_left_edge {
         from_right_cell_left.or(from_left_cell_right)
     } else if is_right_edge {
@@ -294,8 +291,6 @@ fn horizontal_segment_borderline(
             }
         }
     }
-
-    
 
     if is_top_edge {
         from_lower_cell_top.or(from_upper_cell_bottom)

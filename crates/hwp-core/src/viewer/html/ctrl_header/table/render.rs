@@ -654,9 +654,7 @@ pub fn render_table(
                                         + para
                                             .control_char_positions
                                             .iter()
-                                            .map(|cc| {
-                                                ControlChar::get_size_by_code(cc.code)
-                                            })
+                                            .map(|cc| ControlChar::get_size_by_code(cc.code))
                                             .sum::<usize>(),
                                 )
                             }

@@ -126,7 +126,8 @@ pub fn convert_table_to_markdown(
     for row_idx in 0..row_count {
         let row_data: Vec<String> = (0..col_count)
             .map(|col| {
-                grid[row_idx][col].clone()
+                grid[row_idx][col]
+                    .clone()
                     .unwrap_or_else(|| " ".to_string())
             })
             .collect();

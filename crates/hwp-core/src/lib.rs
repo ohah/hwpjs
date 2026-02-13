@@ -331,8 +331,7 @@ impl HwpParser {
 
         // Read and parse FileHeader
         let fileheader_data = CfbParser::read_stream(&mut cfb, "FileHeader")?;
-        let fileheader =
-            FileHeader::parse(&fileheader_data)?;
+        let fileheader = FileHeader::parse(&fileheader_data)?;
 
         // Convert to JSON
         fileheader.to_json()

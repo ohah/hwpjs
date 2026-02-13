@@ -207,11 +207,7 @@ pub fn render_paragraph(
             } => {
                 // CtrlHeader 처리 / Process CtrlHeader
                 let ctrl_result = ctrl_header::process_ctrl_header(
-                    header,
-                    children,
-                    paragraphs,
-                    document,
-                    options,
+                    header, children, paragraphs, document, options,
                 );
                 // SHAPE_OBJECT(11)는 "표/그리기 개체" 공통 제어문자이므로, ctrl_id가 "tbl "인 경우에만
                 // ParaText의 SHAPE_OBJECT 위치를 순서대로 매칭하여 anchor를 부여합니다.

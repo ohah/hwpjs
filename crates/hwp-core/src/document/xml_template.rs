@@ -37,10 +37,10 @@ impl XmlTemplate {
     /// - _SchemaName: Schema 이름 (표 10)
     /// - Schema: Schema 문자열 (표 11)
     /// - Instance: Instance 문자열 (표 12)
-    /// According to spec 3.2.10, XMLTemplate storage contains the following streams:
-    /// - _SchemaName: Schema name (Table 10)
-    /// - Schema: Schema string (Table 11)
-    /// - Instance: Instance string (Table 12)
+    ///   According to spec 3.2.10, XMLTemplate storage contains the following streams:
+    ///   - _SchemaName: Schema name (Table 10)
+    ///   - Schema: Schema string (Table 11)
+    ///   - Instance: Instance string (Table 12)
     pub fn parse(cfb: &mut cfb::CompoundFile<std::io::Cursor<&[u8]>>) -> Result<Self, HwpError> {
         let mut xml_template = XmlTemplate::default();
 

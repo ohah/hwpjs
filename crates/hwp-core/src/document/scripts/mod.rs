@@ -37,9 +37,9 @@ impl Scripts {
     /// 스펙 문서 3.2.9에 따르면 Scripts 스토리지에는 다음 스트림이 포함됩니다:
     /// - JScriptVersion: 스크립트 버전 (표 8)
     /// - DefaultJScript: 스크립트 내용 (표 9)
-    /// According to spec 3.2.9, Scripts storage contains the following streams:
-    /// - JScriptVersion: Script version (Table 8)
-    /// - DefaultJScript: Script content (Table 9)
+    ///   According to spec 3.2.9, Scripts storage contains the following streams:
+    ///   - JScriptVersion: Script version (Table 8)
+    ///   - DefaultJScript: Script content (Table 9)
     pub fn parse(cfb: &mut cfb::CompoundFile<std::io::Cursor<&[u8]>>) -> Result<Self, HwpError> {
         let mut scripts = Scripts::default();
 

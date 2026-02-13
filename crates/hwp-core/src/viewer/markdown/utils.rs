@@ -95,7 +95,7 @@ fn format_outline_number(level: u8, number: u32) -> String {
         4 => format!("{})", number_to_hangul(number)),  // 가)
         5 => format!("({})", number),                   // (1)
         6 => format!("({})", number_to_hangul(number)), // (가)
-        7 => number_to_circled(number).to_string(),  // ①
+        7 => number_to_circled(number).to_string(),     // ①
         _ => format!("{}.", number),                    // 기본값 / default
     }
 }

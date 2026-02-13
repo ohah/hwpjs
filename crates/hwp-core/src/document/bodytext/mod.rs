@@ -332,9 +332,7 @@ impl Section {
         let mut paragraphs = Vec::new();
         for child in tree.children() {
             if child.tag_id() == HwpTag::PARA_HEADER {
-                paragraphs.push(
-                    Self::parse_paragraph_from_tree(child, version, data)?,
-                );
+                paragraphs.push(Self::parse_paragraph_from_tree(child, version, data)?);
             }
         }
 
@@ -376,9 +374,7 @@ impl Section {
 
         // 자식들을 처리 / Process children
         for child in node.children() {
-            records.push(
-                Self::parse_record_from_tree(child, version, original_data)?,
-            );
+            records.push(Self::parse_record_from_tree(child, version, original_data)?);
         }
 
         // 컨트롤 헤더 내부의 머리말/꼬리말/각주/미주 문단인 경우에만 ParaText 레코드 제거 (중복 방지, hwplib 방식)
@@ -572,22 +568,19 @@ impl Section {
                 })
             }
             HwpTag::PARA_CHAR_SHAPE => {
-                let para_char_shape =
-                    ParaCharShape::parse(node.data())?;
+                let para_char_shape = ParaCharShape::parse(node.data())?;
                 Ok(ParagraphRecord::ParaCharShape {
                     shapes: para_char_shape.shapes,
                 })
             }
             HwpTag::PARA_LINE_SEG => {
-                let para_line_seg =
-                    ParaLineSeg::parse(node.data())?;
+                let para_line_seg = ParaLineSeg::parse(node.data())?;
                 Ok(ParagraphRecord::ParaLineSeg {
                     segments: para_line_seg.segments,
                 })
             }
             HwpTag::PARA_RANGE_TAG => {
-                let para_range_tag =
-                    ParaRangeTag::parse(node.data())?;
+                let para_range_tag = ParaRangeTag::parse(node.data())?;
                 Ok(ParagraphRecord::ParaRangeTag {
                     tags: para_range_tag.tags,
                 })
@@ -665,8 +658,7 @@ impl Section {
                 for (idx, child) in children_slice.iter().enumerate() {
                     if child.tag_id() == HwpTag::TABLE {
                         // TABLE은 별도로 처리 / TABLE is processed separately
-                        let table_data =
-                            Table::parse(child.data(), version)?;
+                        let table_data = Table::parse(child.data(), version)?;
                         table_opt = Some(table_data);
                     } else if child.tag_id() == HwpTag::PARA_HEADER {
                         // CTRL_HEADER 내부의 PARA_HEADER를 Paragraph로 변환
@@ -840,9 +832,7 @@ impl Section {
                             cell_attrs_opt,
                         ));
                     } else {
-                        children.push(
-                            Self::parse_record_from_tree(child, version, original_data)?,
-                        );
+                        children.push(Self::parse_record_from_tree(child, version, original_data)?);
                     }
                 }
 
@@ -1122,9 +1112,11 @@ impl Section {
                 while let Some(current_node) = stack.pop() {
                     for child in current_node.children() {
                         if child.tag_id() == HwpTag::PARA_HEADER {
-                            paragraphs.push(
-                                Self::parse_paragraph_from_tree(child, version, original_data)?,
-                            );
+                            paragraphs.push(Self::parse_paragraph_from_tree(
+                                child,
+                                version,
+                                original_data,
+                            )?);
                         } else {
                             // 자식의 자식도 확인하기 위해 스택에 추가 / Add to stack to check children of children
                             stack.push(child);
@@ -1372,9 +1364,7 @@ impl Section {
 
                         children.push(list_header_with_paragraphs);
                     } else {
-                        children.push(
-                            Self::parse_record_from_tree(child, version, original_data)?,
-                        );
+                        children.push(Self::parse_record_from_tree(child, version, original_data)?);
                         index += 1;
                     }
                 }

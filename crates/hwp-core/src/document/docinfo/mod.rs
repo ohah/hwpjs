@@ -122,8 +122,7 @@ impl DocInfo {
         while offset < decompressed_data.len() {
             // 레코드 헤더 파싱 / Parse record header
             let remaining_data = &decompressed_data[offset..];
-            let (header, header_size) =
-                RecordHeader::parse(remaining_data)?;
+            let (header, header_size) = RecordHeader::parse(remaining_data)?;
             offset += header_size;
 
             // 데이터 영역 읽기 / Read data area
@@ -158,24 +157,21 @@ impl DocInfo {
                 HwpTag::BIN_DATA => {
                     if header.level == 1 {
                         // BinDataRecord는 완전히 파싱 / Fully parse BinDataRecord
-                        let bin_data_record =
-                            BinDataRecord::parse(record_data)?;
+                        let bin_data_record = BinDataRecord::parse(record_data)?;
                         doc_info.bin_data.push(bin_data_record);
                     }
                 }
                 HwpTag::FACE_NAME => {
                     if header.level == 1 {
                         // FaceName은 완전히 파싱 / Fully parse FaceName
-                        let face_name =
-                            FaceName::parse(record_data)?;
+                        let face_name = FaceName::parse(record_data)?;
                         doc_info.face_names.push(face_name);
                     }
                 }
                 HwpTag::BORDER_FILL => {
                     if header.level == 1 {
                         // BorderFill은 완전히 파싱 / Fully parse BorderFill
-                        let border_fill =
-                            BorderFill::parse(record_data)?;
+                        let border_fill = BorderFill::parse(record_data)?;
                         doc_info.border_fill.push(border_fill);
                     }
                 }
@@ -223,16 +219,14 @@ impl DocInfo {
                 HwpTag::DOC_DATA => {
                     if header.level == 0 {
                         // 문서 임의의 데이터 파싱 / Parse document arbitrary data
-                        let doc_data =
-                            DocData::parse(record_data)?;
+                        let doc_data = DocData::parse(record_data)?;
                         doc_info.doc_data.push(doc_data);
                     }
                 }
                 HwpTag::DISTRIBUTE_DOC_DATA => {
                     if header.level == 0 {
                         // 배포용 문서 데이터 파싱 / Parse distribution document data
-                        let distribute_doc_data =
-                            DistributeDocData::parse(record_data)?;
+                        let distribute_doc_data = DistributeDocData::parse(record_data)?;
                         doc_info.distribute_doc_data = Some(distribute_doc_data);
                     }
                 }
@@ -253,24 +247,21 @@ impl DocInfo {
                 HwpTag::TRACKCHANGE => {
                     if header.level == 1 {
                         // 변경 추적 정보 파싱 / Parse track change information
-                        let track_change =
-                            TrackChange::parse(record_data)?;
+                        let track_change = TrackChange::parse(record_data)?;
                         doc_info.track_change = Some(track_change);
                     }
                 }
                 HwpTag::MEMO_SHAPE => {
                     if header.level == 1 {
                         // 메모 모양 파싱 / Parse memo shape
-                        let memo_shape =
-                            MemoShape::parse(record_data)?;
+                        let memo_shape = MemoShape::parse(record_data)?;
                         doc_info.memo_shapes.push(memo_shape);
                     }
                 }
                 HwpTag::FORBIDDEN_CHAR => {
                     if header.level == 0 {
                         // 금칙처리 문자 파싱 / Parse forbidden character
-                        let forbidden_char =
-                            ForbiddenChar::parse(record_data)?;
+                        let forbidden_char = ForbiddenChar::parse(record_data)?;
                         doc_info.forbidden_chars.push(forbidden_char);
                     }
                 }
@@ -284,8 +275,7 @@ impl DocInfo {
                 HwpTag::TRACK_CHANGE_AUTHOR => {
                     if header.level == 1 {
                         // 변경 추적 작성자 파싱 / Parse track change author
-                        let track_change_author =
-                            TrackChangeAuthor::parse(record_data)?;
+                        let track_change_author = TrackChangeAuthor::parse(record_data)?;
                         doc_info.track_change_authors.push(track_change_author);
                     }
                 }

@@ -261,8 +261,9 @@ pub(crate) fn render_cells(
                 // CtrlHeader가 없을 때만 직접 처리 / Only process directly if no CtrlHeader
                 for record in &para.records {
                     if let ParagraphRecord::ShapeComponentPicture {
-                            shape_component_picture,
-                        } = record {
+                        shape_component_picture,
+                    } = record
+                    {
                         let bindata_id = shape_component_picture.picture_info.bindata_id;
                         let image_url = common::get_image_url(
                             document,
@@ -273,18 +274,17 @@ pub(crate) fn render_cells(
                         if !image_url.is_empty() {
                             // ShapeComponentPicture가 직접 올 때는 border_rectangle 사용 (부모 ShapeComponent가 없음)
                             // When ShapeComponentPicture comes directly, use border_rectangle (no parent ShapeComponent)
-                            let width_hwpunit =
-                                shape_component_picture.border_rectangle_x.right
-                                    - shape_component_picture.border_rectangle_x.left;
+                            let width_hwpunit = shape_component_picture.border_rectangle_x.right
+                                - shape_component_picture.border_rectangle_x.left;
                             let mut height_hwpunit =
                                 shape_component_picture.border_rectangle_y.bottom
-                                    - shape_component_picture.border_rectangle_y.top ;
+                                    - shape_component_picture.border_rectangle_y.top;
 
                             // border_rectangle_y의 top과 bottom이 같으면 crop_rectangle 사용
                             // If border_rectangle_y's top and bottom are the same, use crop_rectangle
                             if height_hwpunit == 0 {
                                 height_hwpunit = shape_component_picture.crop_rectangle.bottom
-                                    - shape_component_picture.crop_rectangle.top ;
+                                    - shape_component_picture.crop_rectangle.top;
                             }
 
                             let width = width_hwpunit.max(0) as u32;

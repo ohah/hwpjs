@@ -255,8 +255,7 @@ impl ParameterItem {
         };
 
         // 파라미터 아이템 데이터 파싱 / Parse parameter item data
-        let (data_value, data_size) =
-            parse_parameter_item_data(&data[offset..], item_type)?;
+        let (data_value, data_size) = parse_parameter_item_data(&data[offset..], item_type)?;
         offset += data_size;
 
         Ok((

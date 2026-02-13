@@ -202,4 +202,3 @@ pub fn int32_to_mm(value: INT32) -> f64 {
     // INT32는 1/7200인치 단위 (SHWPUNIT와 동일)
     (value as f64 / 7200.0) * 25.4
 }
-

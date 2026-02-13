@@ -37,12 +37,12 @@ pub struct OleAttributes {
     /// - DVASPECT_THUMBNAIL = 2
     /// - DVASPECT_ICON = 4
     /// - DVASPECT_DOCPRINT = 8
-    /// 자세한 설명은 MSDN의 MFC COleClientItem::m_nDrawAspect 참고
-    /// See MSDN MFC COleClientItem::m_nDrawAspect for details
+    ///   자세한 설명은 MSDN의 MFC COleClientItem::m_nDrawAspect 참고
+    ///   See MSDN MFC COleClientItem::m_nDrawAspect for details
     pub drawing_aspect: u8,
     /// TRUE if moniker is assigned (bit 8)
-    /// 자세한 설명은 MSDN의 MFC COleClientItem::m_bMoniker 참고
-    /// See MSDN MFC COleClientItem::m_bMoniker for details
+    ///   자세한 설명은 MSDN의 MFC COleClientItem::m_bMoniker 참고
+    ///   See MSDN MFC COleClientItem::m_bMoniker for details
     pub has_moniker: bool,
     /// 베이스라인 (bit 9-15)
     /// 0은 기본값(85%), 1-101은 0-100%를 나타냄. 현재는 수식만 별도의 베이스라인을 가짐

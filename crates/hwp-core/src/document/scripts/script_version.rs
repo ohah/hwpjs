@@ -27,9 +27,9 @@ impl ScriptVersion {
     /// 스펙 문서 표 8에 따르면 스크립트 버전은 8바이트입니다:
     /// - DWORD (4 bytes): 스크립트 버전 HIGH
     /// - DWORD (4 bytes): 스크립트 버전 LOW
-    /// According to spec Table 8, script version is 8 bytes:
-    /// - DWORD (4 bytes): Script version HIGH
-    /// - DWORD (4 bytes): Script version LOW
+    ///   According to spec Table 8, script version is 8 bytes:
+    ///   - DWORD (4 bytes): Script version HIGH
+    ///   - DWORD (4 bytes): Script version LOW
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         if data.len() < 8 {
             return Err(HwpError::insufficient_data("ScriptVersion", 8, data.len()));

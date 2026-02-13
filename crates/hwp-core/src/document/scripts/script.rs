@@ -38,16 +38,16 @@ impl Script {
     /// - DWORD (4 bytes): 스크립트 Post 소스 길이 (len4)
     /// - WCHAR array[len4] (2×len4 bytes): 스크립트 Post 소스
     /// - DWORD (4 bytes): 스크립트 end flag (-1)
-    /// According to spec Table 9, script has the following structure:
-    /// - DWORD (4 bytes): Script header length (len1)
-    /// - WCHAR array[len1] (2×len1 bytes): Script header
-    /// - DWORD (4 bytes): Script source length (len2)
-    /// - WCHAR array[len2] (2×len2 bytes): Script source
-    /// - DWORD (4 bytes): Script pre source length (len3)
-    /// - WCHAR array[len3] (2×len3 bytes): Script pre source
-    /// - DWORD (4 bytes): Script post source length (len4)
-    /// - WCHAR array[len4] (2×len4 bytes): Script post source
-    /// - DWORD (4 bytes): Script end flag (-1)
+    ///   According to spec Table 9, script has the following structure:
+    ///   - DWORD (4 bytes): Script header length (len1)
+    ///   - WCHAR array[len1] (2×len1 bytes): Script header
+    ///   - DWORD (4 bytes): Script source length (len2)
+    ///   - WCHAR array[len2] (2×len2 bytes): Script source
+    ///   - DWORD (4 bytes): Script pre source length (len3)
+    ///   - WCHAR array[len3] (2×len3 bytes): Script pre source
+    ///   - DWORD (4 bytes): Script post source length (len4)
+    ///   - WCHAR array[len4] (2×len4 bytes): Script post source
+    ///   - DWORD (4 bytes): Script end flag (-1)
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         let mut offset = 0;
 
