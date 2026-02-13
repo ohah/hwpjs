@@ -246,6 +246,7 @@ struct HeaderProcessContext<'a, R: Renderer> {
 
 /// Process header
 /// 머리말 처리
+#[allow(clippy::too_many_arguments)]
 fn process_header<R: Renderer>(
     _header: &CtrlHeader,
     children: &[ParagraphRecord],
@@ -293,6 +294,7 @@ fn process_header<R: Renderer>(
 
 /// Process footer
 /// 꼬리말 처리
+#[allow(clippy::too_many_arguments)]
 fn process_footer<R: Renderer>(
     _header: &CtrlHeader,
     children: &[ParagraphRecord],
@@ -338,6 +340,7 @@ fn process_footer<R: Renderer>(
 
 /// Process footnote
 /// 각주 처리
+#[allow(clippy::too_many_arguments)]
 fn process_footnote<R: Renderer>(
     footnote_id: u32,
     _header: &CtrlHeader,
