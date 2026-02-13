@@ -270,7 +270,7 @@ fn process_header<R: Renderer>(
             // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
             for para in paragraphs {
                 // 기존 뷰어 함수를 직접 호출 (글자 모양, 개요 번호 등 복잡한 처리를 위해)
-                let para_content = render_paragraph_with_viewer(para, &ctx.document, ctx.renderer, &ctx.options, tracker);
+                let para_content = render_paragraph_with_viewer(para, ctx.document, ctx.renderer, ctx.options, tracker);
                 if !para_content.is_empty() {
                     parts.headers.push(para_content);
                 }
@@ -280,7 +280,7 @@ fn process_header<R: Renderer>(
     // LIST_HEADER가 없으면 paragraphs 처리 / If no LIST_HEADER, process paragraphs
     if !found_list_header {
         for para in ctrl_paragraphs {
-            let para_content = render_paragraph_with_viewer(para, &ctx.document, ctx.renderer, &ctx.options, tracker);
+            let para_content = render_paragraph_with_viewer(para, ctx.document, ctx.renderer, ctx.options, tracker);
             if !para_content.is_empty() {
                 parts.headers.push(para_content);
             }
