@@ -886,6 +886,7 @@ impl Section {
                         let col_count = table.attributes.col_count.into();
 
                         // row_address와 col_address를 사용하여 셀 매핑 / Map cells using row_address and col_address
+                        #[allow(clippy::type_complexity)]
                         let mut cell_map: Vec<Vec<Option<(usize, Vec<super::Paragraph>)>>> =
                             vec![vec![None; col_count]; row_count];
 
