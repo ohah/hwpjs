@@ -398,6 +398,7 @@ fn process_footnote<R: Renderer>(
 
 /// Process endnote
 /// 미주 처리
+#[allow(clippy::too_many_arguments)]
 fn process_endnote<R: Renderer>(
     endnote_id: u32,
     _header: &CtrlHeader,

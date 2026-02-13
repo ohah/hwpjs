@@ -149,6 +149,7 @@ pub fn convert_table_to_markdown(
 
 /// Fill cell content and handle cell merging
 /// 셀 내용을 채우고 셀 병합을 처리
+#[allow(clippy::too_many_arguments)]
 fn fill_cell_content(
     grid: &mut [Vec<Option<String>>],
     cell: &crate::document::bodytext::TableCell,
@@ -160,8 +161,6 @@ fn fill_cell_content(
     options: &crate::viewer::markdown::MarkdownOptions,
     tracker: &mut crate::viewer::markdown::utils::OutlineNumberTracker,
 ) {
-    #[allow(clippy::too_many_arguments)]
-    {
     // 셀 내용을 텍스트와 이미지로 변환 / Convert cell content to text and images
     let mut cell_parts = Vec::new();
     let mut has_image = false;
@@ -375,6 +374,5 @@ fn fill_cell_content(
                 }
             }
         }
-    }
     }
 }

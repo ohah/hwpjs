@@ -4,6 +4,7 @@ use crate::types::RoundTo2dp;
 use crate::{document::bodytext::PageDef, INT32};
 /// 페이지 렌더링 모듈 / Page rendering module
 /// 페이지를 HTML로 렌더링 / Render page to HTML
+#[allow(clippy::too_many_arguments)]
 pub fn render_page(
     page_number: usize,
     content: &str,
