@@ -16,18 +16,27 @@ use crate::viewer::markdown::MarkdownOptions;
 pub use paragraph::convert_paragraph_to_markdown;
 pub use table::convert_table_to_markdown;
 
+/// Result of converting body text to markdown
+/// 본문 텍스트를 마크다운으로 변환한 결과
+pub struct BodyTextMarkdownResult {
+    /// Headers in markdown
+    pub headers: Vec<String>,
+    /// Body lines in markdown
+    pub body_lines: Vec<String>,
+    /// Footers in markdown
+    pub footers: Vec<String>,
+    /// Footnotes in markdown
+    pub footnotes: Vec<String>,
+    /// Endnotes in markdown
+    pub endnotes: Vec<String>,
+}
+
 /// Convert body text to markdown
 /// 본문 텍스트를 마크다운으로 변환
 pub fn convert_bodytext_to_markdown(
     document: &HwpDocument,
     options: &MarkdownOptions,
-) -> (
-    Vec<String>, // headers
-    Vec<String>, // body_lines
-    Vec<String>, // footers
-    Vec<String>, // footnotes
-    Vec<String>, // endnotes
-) {
+) -> BodyTextMarkdownResult {
     // 머리말, 본문, 꼬리말, 각주, 미주를 분리하여 수집 / Collect headers, body, footers, footnotes, and endnotes separately
     let mut headers = Vec::new();
     let mut body_lines = Vec::new();
@@ -220,5 +229,11 @@ pub fn convert_bodytext_to_markdown(
         }
     }
 
-    (headers, body_lines, footers, footnotes, endnotes)
+    BodyTextMarkdownResult {
+        headers,
+        body_lines,
+        footers,
+        footnotes,
+        endnotes,
+    }
 }
