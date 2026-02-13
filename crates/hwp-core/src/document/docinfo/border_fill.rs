@@ -236,7 +236,7 @@ impl BorderFill {
         ];
         let mut off_i = start;
         let mut fill_idx = 0;
-        for (i, _) in data[start as usize..start as usize + 4].iter().enumerate() {
+        for _ in data[start as usize..start as usize + 4].iter() {
             let line_type = data[off_i];
             off_i += 1;
             let width = data[off_i];
@@ -275,7 +275,7 @@ impl BorderFill {
         off_s += 4;
         let mut colors = [COLORREF(0); 4];
         let mut fill_idx = 0;
-        for (i, _) in (0..4).enumerate() {
+        for _ in 0..4 {
             colors[fill_idx] = COLORREF(u32::from_le_bytes([
                 data[off_s],
                 data[off_s + 1],
