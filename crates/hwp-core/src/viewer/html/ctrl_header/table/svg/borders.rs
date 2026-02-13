@@ -128,6 +128,7 @@ fn default_borderline(
     get_border_fill(document, table.attributes.border_fill_id).map(|bf| bf.borders[side].clone())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn vertical_segment_borderline(
     table: &Table,
     document: &HwpDocument,
