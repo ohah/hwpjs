@@ -404,8 +404,8 @@ pub fn render_line_segments_with_content(
 
         // 라인 세그먼트 렌더링 / Render line segment
         // ParaShape 정보 가져오기 (para_shape_class에서 ID 추출) / Get ParaShape info (extract ID from para_shape_class)
-        let para_shape = if para_shape_class.starts_with("ps") {
-            if let Ok(para_shape_id) = para_shape_class[2..].parse::<usize>() {
+        let para_shape = if let Some(id_str) = para_shape_class.strip_prefix("ps") {
+            if let Ok(para_shape_id) = id_str.parse::<usize>() {
                 if para_shape_id < document.doc_info.para_shapes.len() {
                     Some(&document.doc_info.para_shapes[para_shape_id])
                 } else {
