@@ -145,7 +145,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut first_para_vertical_mm: Option<f64> = None; // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
                                                         // 각 문단의 vertical_position을 저장 (vert_rel_to: "para"일 때 참조 문단 찾기 위해) / Store each paragraph's vertical_position (to find reference paragraph when vert_rel_to: "para")
                                                         // 먼저 모든 문단의 vertical_position을 수집 / First collect all paragraphs' vertical_positions
-    let mut para_vertical_positions: Vec<f64> = Vec::new();
     for section in &document.body_text.sections {
         for paragraph in &section.paragraphs {
             let control_mask = &paragraph.para_header.control_mask;
@@ -162,7 +161,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     }
                 });
                 if let Some(vertical_mm) = vertical_mm {
-                    para_vertical_positions.push(vertical_mm);
+                    // 문단 vertical_position 저장 (후속 기능을 위해) / Store paragraph vertical_position (for future features)
+                    first_para_vertical_mm = Some(vertical_mm);
                 }
             }
         }
@@ -251,9 +251,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 pagination_context.prev_vertical_mm = None;
                 first_segment_pos = None; // 새 페이지에서는 첫 번째 세그먼트 위치 리셋 / Reset first segment position for new page
                 hcd_position = None;
-                // 페이지네이션 발생 시 para_index와 para_vertical_positions 리셋 / Reset para_index and para_vertical_positions on pagination
+                // 페이지네이션 발생 시 para_index 리셋 / Reset para_index on pagination
                 para_index = 0;
-                para_vertical_positions.clear();
                 first_para_vertical_mm = None; // 새 페이지의 첫 번째 문단 추적을 위해 리셋 / Reset to track first paragraph of new page
             }
 
@@ -329,7 +328,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     page_def: current_page_def, // 현재 페이지의 PageDef 사용 / Use current page's PageDef
                     first_para_vertical_mm,
                     current_para_vertical_mm,
-                    para_vertical_positions: &para_vertical_positions, // 모든 문단의 vertical_position 전달 / Pass all paragraphs' vertical_positions
                     current_para_index, // 현재 문단 인덱스 전달 / Pass current paragraph index
                 };
 
@@ -403,14 +401,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         pagination_context.prev_vertical_mm = None;
                         first_segment_pos = None;
                         hcd_position = None;
-                        // 페이지네이션 발생 시 para_index와 para_vertical_positions 리셋 / Reset para_index and para_vertical_positions on pagination
+                        // 페이지네이션 발생 시 para_index 리셋 / Reset para_index on pagination
                         para_index = 0;
-                        para_vertical_positions.clear();
                         first_para_vertical_mm = None; // 새 페이지의 첫 번째 문단 추적을 위해 리셋 / Reset to track first paragraph of new page
-                                                       // 페이지네이션 후 새 페이지의 첫 문단은 vertical_position이 0이어야 함 / After pagination, first paragraph of new page should have vertical_position 0
-                                                       // 현재 문단의 vertical_position을 0으로 리셋 (새 페이지 시작) / Reset current paragraph's vertical_position to 0 (new page start)
-                                                       // 새 페이지의 첫 번째 문단(현재 문단)의 vertical_position 추가 (0으로 리셋) / Add first paragraph's vertical_position of new page (reset to 0)
-                        para_vertical_positions.push(0.0);
 
                         // 페이지네이션 후 같은 문단의 후속 테이블들을 새 페이지에 배치하기 위해 문단을 다시 렌더링
                         // Re-render paragraph to place subsequent tables on new page after pagination
@@ -430,7 +423,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 page_def: current_page_def,
                                 first_para_vertical_mm: Some(0.0),
                                 current_para_vertical_mm: current_para_vertical_mm_for_next,
-                                para_vertical_positions: &para_vertical_positions,
                                 current_para_index: current_para_index_for_next,
                             };
 
@@ -459,16 +451,16 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     }
                 }
 
-                // 현재 문단의 vertical_position을 para_vertical_positions에 추가 (페이지별로 관리) / Add current paragraph's vertical_position to para_vertical_positions (managed per page)
-                // 페이지네이션이 발생하지 않은 경우에만 추가 (페이지네이션 발생 시에는 이미 위에서 추가됨) / Only add if pagination did not occur (already added above if pagination occurred)
+                // 현재 문단의 vertical_position 저장 (페이지별로 관리) / Store current paragraph's vertical_position (managed per page)
+                // 페이지네이션이 발생하지 않은 경우에만 추가 (페이지네이션 발생 시에는 이미 위에서 설정됨) / Only set if pagination did not occur (already set above if pagination occurred)
                 if !has_obj_page_break {
                     if let Some(vertical_mm) = current_para_vertical_mm {
-                        para_vertical_positions.push(vertical_mm);
+                        first_para_vertical_mm = Some(vertical_mm);
                     }
                 }
 
                 // 인덱스 증가 (vertical_position이 있는 문단만) / Increment index (only for paragraphs with vertical_position)
-                // 페이지네이션이 발생한 경우에는 인덱스를 증가시키지 않음 (이미 0으로 리셋됨) / Don't increment index if pagination occurred (already reset to 0)
+                // 페이지네이션이 발생한 경우에는 인덱스를 증가시키지 않음 (이미 리셋됨) / Don't increment index if pagination occurred (already reset)
                 if !has_obj_page_break && current_para_vertical_mm.is_some() {
                     para_index += 1;
                 }
