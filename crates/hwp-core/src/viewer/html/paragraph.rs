@@ -18,6 +18,7 @@ use crate::INT32;
 use std::collections::HashMap;
 
 /// 문단 위치 정보 / Paragraph position information
+#[allow(dead_code)]
 pub struct ParagraphPosition<'a> {
     pub hcd_position: Option<(f64, f64)>,
     pub page_def: Option<&'a PageDef>,
