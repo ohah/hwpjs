@@ -22,18 +22,18 @@ mod flags {
 pub enum AlternativeFontType {
     /// 원래 종류를 알 수 없을 때 / Unknown original type
     Unknown = 0,
-    /// 트루타입 글꼴(TTF) / TrueType font (TTF)
-    TTF = 1,
-    /// 한글 전용 글꼴(HFT) / HWP font (HFT)
-    HFT = 2,
+    /// 트루타입 글꼴(TTF) / TrueType font (Ttf)
+    Ttf = 1,
+    /// 한글 전용 글꼴(HFT) / HWP font (Hft)
+    Hft = 2,
 }
 
 impl AlternativeFontType {
     /// BYTE 값에서 AlternativeFontType 생성 / Create AlternativeFontType from BYTE value
     fn from_byte(value: BYTE) -> Self {
         match value {
-            1 => AlternativeFontType::TTF,
-            2 => AlternativeFontType::HFT,
+            1 => AlternativeFontType::Ttf,
+            2 => AlternativeFontType::Hft,
             _ => AlternativeFontType::Unknown,
         }
     }
