@@ -124,6 +124,7 @@ pub fn process_shape_object<'a>(
 }
 
 /// ParagraphRecord 배열에서 재귀적으로 이미지 수집 / Recursively collect images from ParagraphRecord array
+#[allow(clippy::too_many_arguments)]
 fn collect_images_from_records(
     records: &[ParagraphRecord],
     document: &HwpDocument,
