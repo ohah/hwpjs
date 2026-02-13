@@ -6,8 +6,62 @@ use crate::types::Hwpunit16ToMm;
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
 /// 셀 마진을 mm 단위로 변환 / Convert cell margin to mm
-fn cell_margin_to_mm(margin_hwpunit: i16) -> f64 {
+pub(crate) fn cell_margin_to_mm(margin_hwpunit: i16) -> f64 {
     round_to_2dp(int32_to_mm(margin_hwpunit as i32))
+}
+
+/// 모든 ShapeComponent 중 최대 높이 찾기 / Find maximum height among all ShapeComponents
+pub(crate) fn find_max_shape_height(
+    children: &[ParagraphRecord],
+    shape_height: u32,
+) -> Option<f64> {
+    let mut max_height_mm: Option<f64> = None;
+
+    for child in children {
+        match child {
+            ParagraphRecord::ShapeComponentPicture { .. } => {
+                let height_hwpunit = shape_height as i32;
+                let height_mm = round_to_2dp(int32_to_mm(height_hwpunit));
+                max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
+            }
+
+            ParagraphRecord::ShapeComponent {
+                shape_component,
+                children: nested_children,
+            } => {
+                if let Some(height) =
+                    find_max_shape_height(nested_children, shape_component.height)
+                {
+                    max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height));
+                }
+            }
+
+            ParagraphRecord::ShapeComponentLine { .. }
+            | ParagraphRecord::ShapeComponentRectangle { .. }
+            | ParagraphRecord::ShapeComponentEllipse { .. }
+            | ParagraphRecord::ShapeComponentArc { .. }
+            | ParagraphRecord::ShapeComponentPolygon { .. }
+            | ParagraphRecord::ShapeComponentCurve { .. }
+            | ParagraphRecord::ShapeComponentOle { .. }
+            | ParagraphRecord::ShapeComponentContainer { .. }
+            | ParagraphRecord::ShapeComponentTextArt { .. }
+            | ParagraphRecord::ShapeComponentUnknown { .. } => {
+                let height_mm = round_to_2dp(int32_to_mm(shape_height as i32));
+                max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
+            }
+
+            ParagraphRecord::ParaLineSeg { segments } => {
+                let total_height_hwpunit: i32 =
+                    segments.iter().map(|seg| seg.line_height).sum();
+                let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
+                max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
+            }
+
+            _ => {}
+        }
+    }
+
+    max_height_mm
 }
 
 /// 크기 데이터 / Size data
@@ -68,119 +122,39 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
                     // shape component가 있는 셀의 경우 shape 높이 + 마진을 고려 / For cells with shape components, consider shape height + margin
                     let mut max_shape_height_mm: Option<f64> = None;
 
-                    // 재귀적으로 모든 ShapeComponent의 높이를 찾는 헬퍼 함수 / Helper function to recursively find height of all ShapeComponents
-                    fn find_shape_component_height(
-                        children: &[ParagraphRecord],
-                        shape_component_height: u32,
-                    ) -> Option<f64> {
-                        let mut max_height_mm: Option<f64> = None;
-
-                        for child in children {
-                            match child {
-                                // ShapeComponentPicture: shape_component.height 사용
-                                ParagraphRecord::ShapeComponentPicture { .. } => {
-                                    let height_hwpunit = shape_component_height as i32;
-                                    let height_mm = round_to_2dp(int32_to_mm(height_hwpunit));
-                                    if max_height_mm.is_none() || height_mm > max_height_mm.unwrap()
-                                    {
-                                        max_height_mm = Some(height_mm);
-                                    }
-                                }
-
-                                // 중첩된 ShapeComponent: 재귀적으로 탐색
-                                ParagraphRecord::ShapeComponent {
-                                    shape_component,
-                                    children: nested_children,
-                                } => {
-                                    if let Some(height) = find_shape_component_height(
-                                        nested_children,
-                                        shape_component.height,
-                                    ) {
-                                        if max_height_mm.is_none()
-                                            || height > max_height_mm.unwrap()
-                                        {
-                                            max_height_mm = Some(height);
-                                        }
-                                    }
-                                }
-
-                                // 다른 shape component 타입들: shape_component.height 사용
-                                ParagraphRecord::ShapeComponentLine { .. }
-                                | ParagraphRecord::ShapeComponentRectangle { .. }
-                                | ParagraphRecord::ShapeComponentEllipse { .. }
-                                | ParagraphRecord::ShapeComponentArc { .. }
-                                | ParagraphRecord::ShapeComponentPolygon { .. }
-                                | ParagraphRecord::ShapeComponentCurve { .. }
-                                | ParagraphRecord::ShapeComponentOle { .. }
-                                | ParagraphRecord::ShapeComponentContainer { .. }
-                                | ParagraphRecord::ShapeComponentTextArt { .. }
-                                | ParagraphRecord::ShapeComponentUnknown { .. } => {
-                                    // shape_component.height 사용 / Use shape_component.height
-                                    let height_mm =
-                                        round_to_2dp(int32_to_mm(shape_component_height as i32));
-                                    if max_height_mm.is_none() || height_mm > max_height_mm.unwrap()
-                                    {
-                                        max_height_mm = Some(height_mm);
-                                    }
-                                }
-
-                                // ParaLineSeg: line_height 합산하여 높이 계산
-                                ParagraphRecord::ParaLineSeg { segments } => {
-                                    let total_height_hwpunit: i32 =
-                                        segments.iter().map(|seg| seg.line_height).sum();
-                                    let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
-                                    if max_height_mm.is_none() || height_mm > max_height_mm.unwrap()
-                                    {
-                                        max_height_mm = Some(height_mm);
-                                    }
-                                }
-
-                                _ => {}
-                            }
-                        }
-
-                        max_height_mm
-                    }
-
                     for para in &cell.paragraphs {
-                        // ShapeComponent의 children에서 모든 shape 높이 찾기 (재귀적으로) / Find all shape heights in ShapeComponent's children (recursively)
                         for record in &para.records {
-                            match record {
-                                ParagraphRecord::ShapeComponent {
-                                    shape_component,
+                            if let ParagraphRecord::ShapeComponent {
+                                shape_component,
+                                children,
+                            } = record
+                            {
+                                if let Some(new_max_height) = find_max_shape_height(
                                     children,
-                                } => {
-                                    if let Some(shape_height_mm) = find_shape_component_height(
-                                        children,
-                                        shape_component.height,
-                                    ) {
-                                        if max_shape_height_mm.is_none()
-                                            || shape_height_mm > max_shape_height_mm.unwrap()
-                                        {
-                                            max_shape_height_mm = Some(shape_height_mm);
-                                        }
-                                    }
-                                    break; // ShapeComponent는 하나만 있음 / Only one ShapeComponent per paragraph
+                                    shape_component.height,
+                                ) {
+                                    max_shape_height_mm = Some(
+                                        max_shape_height_mm.unwrap_or(0.0).max(new_max_height),
+                                    );
                                 }
-                                // ParaLineSeg가 paragraph records에 직접 있는 경우도 처리 / Also handle ParaLineSeg directly in paragraph records
-                                ParagraphRecord::ParaLineSeg { segments } => {
-                                    let total_height_hwpunit: i32 =
-                                        segments.iter().map(|seg| seg.line_height).sum();
-                                    let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
-                                    if max_shape_height_mm.is_none()
-                                        || height_mm > max_shape_height_mm.unwrap()
-                                    {
-                                        max_shape_height_mm = Some(height_mm);
-                                    }
-                                }
-                                _ => {}
+                                break;
+                            }
+
+                            if let ParagraphRecord::ParaLineSeg { segments } = record {
+                                let total_height_hwpunit: i32 =
+                                    segments.iter().map(|seg| seg.line_height).sum();
+                                let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
+                                max_shape_height_mm = Some(
+                                    max_shape_height_mm.unwrap_or(0.0).max(height_mm),
+                                );
                             }
                         }
                     }
 
                     // shape component가 있으면 셀 높이 = shape 높이 + 마진 / If shape component exists, cell height = shape height + margin
                     if let Some(shape_height_mm) = max_shape_height_mm {
-                        let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
+                        let top_margin_mm =
+                            cell_margin_to_mm(cell.cell_attributes.top_margin);
                         let bottom_margin_mm =
                             cell_margin_to_mm(cell.cell_attributes.bottom_margin);
                         let shape_height_with_margin =
@@ -205,19 +179,11 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
                 }
             }
 
-            // 행 높이 합계 계산 / Calculate sum of row heights
-            let mut calculated_height = 0.0;
-            for row_idx in 0..table.attributes.row_count as usize {
-                if let Some(&height) = max_row_heights_with_shapes.get(&row_idx) {
-                    calculated_height += height;
-                } else if base_row_height_mm > 0.0 {
-                    // max_row_heights_with_shapes에 없으면 object_common.height를 행 개수로 나눈 값 사용 / If not in max_row_heights_with_shapes, use object_common.height divided by row count
-                    calculated_height += base_row_height_mm;
-                } else if let Some(&row_size) = table.attributes.row_sizes.get(row_idx) {
-                    let row_height = (row_size as f64 / 7200.0) * 25.4;
-                    calculated_height += row_height;
-                }
-            }
+            // 행 높이 핑계 계산 / Calculate sum of row heights
+            let calculated_height: f64 = max_row_heights_with_shapes
+                .values()
+                .copied()
+                .fold(0.0, |sum, height| sum.max(height));
 
             // ctrl_header.height가 있으면 우선 사용 (이미 shape component 높이를 포함할 수 있음)
             // If ctrl_header.height exists, use it preferentially (may already include shape component height)
