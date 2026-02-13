@@ -334,7 +334,7 @@ impl Section {
             if child.tag_id() == HwpTag::PARA_HEADER {
                 paragraphs.push(
                     Self::parse_paragraph_from_tree(child, version, data)
-                        .map_err(|e| HwpError::from(e))?,
+                        .map_err(HwpError::from)?,
                 );
             }
         }
@@ -372,14 +372,14 @@ impl Section {
             });
         }
 
-        let para_header = ParaHeader::parse(node.data(), version).map_err(|e| HwpError::from(e))?;
+        let para_header = ParaHeader::parse(node.data(), version).map_err(HwpError::from)?;
         let mut records = Vec::new();
 
         // 자식들을 처리 / Process children
         for child in node.children() {
             records.push(
                 Self::parse_record_from_tree(child, version, original_data)
-                    .map_err(|e| HwpError::from(e))?,
+                    .map_err(HwpError::from)?,
             );
         }
 
@@ -575,27 +575,27 @@ impl Section {
             }
             HwpTag::PARA_CHAR_SHAPE => {
                 let para_char_shape =
-                    ParaCharShape::parse(node.data()).map_err(|e| HwpError::from(e))?;
+                    ParaCharShape::parse(node.data()).map_err(HwpError::from)?;
                 Ok(ParagraphRecord::ParaCharShape {
                     shapes: para_char_shape.shapes,
                 })
             }
             HwpTag::PARA_LINE_SEG => {
                 let para_line_seg =
-                    ParaLineSeg::parse(node.data()).map_err(|e| HwpError::from(e))?;
+                    ParaLineSeg::parse(node.data()).map_err(HwpError::from)?;
                 Ok(ParagraphRecord::ParaLineSeg {
                     segments: para_line_seg.segments,
                 })
             }
             HwpTag::PARA_RANGE_TAG => {
                 let para_range_tag =
-                    ParaRangeTag::parse(node.data()).map_err(|e| HwpError::from(e))?;
+                    ParaRangeTag::parse(node.data()).map_err(HwpError::from)?;
                 Ok(ParagraphRecord::ParaRangeTag {
                     tags: para_range_tag.tags,
                 })
             }
             HwpTag::CTRL_HEADER => {
-                let ctrl_header = CtrlHeader::parse(node.data()).map_err(|e| HwpError::from(e))?;
+                let ctrl_header = CtrlHeader::parse(node.data()).map_err(HwpError::from)?;
                 // 디버그: CTRL_HEADER 파싱 시작 / Debug: Start parsing CTRL_HEADER
                 use crate::document::bodytext::ctrl_header::CtrlId;
                 #[cfg(debug_assertions)]
@@ -668,7 +668,7 @@ impl Section {
                     if child.tag_id() == HwpTag::TABLE {
                         // TABLE은 별도로 처리 / TABLE is processed separately
                         let table_data =
-                            Table::parse(child.data(), version).map_err(|e| HwpError::from(e))?;
+                            Table::parse(child.data(), version).map_err(HwpError::from)?;
                         table_opt = Some(table_data);
                     } else if child.tag_id() == HwpTag::PARA_HEADER {
                         // CTRL_HEADER 내부의 PARA_HEADER를 Paragraph로 변환
@@ -719,7 +719,7 @@ impl Section {
                                 original_data,
                                 true, // 컨트롤 헤더 내부이므로 true / true because inside control header
                             )
-                            .map_err(|e| HwpError::from(e))?;
+                            .map_err(HwpError::from)?;
                             paragraphs.push(paragraph);
                         }
                     } else if child.tag_id() == HwpTag::LIST_HEADER && is_table {
@@ -737,7 +737,7 @@ impl Section {
                         // libhwp approach: LIST_HEADERs after TABLE are not added to children
                         let list_header_record =
                             Self::parse_record_from_tree(child, version, original_data)
-                                .map_err(|e| HwpError::from(e))?;
+                                .map_err(HwpError::from)?;
                         // 테이블 셀로 처리하기 위해 paragraphs 추출 / Extract paragraphs for table cell processing
                         let paragraphs_for_cell = if let ParagraphRecord::ListHeader {
                             header: _,
@@ -846,7 +846,7 @@ impl Section {
                     } else {
                         children.push(
                             Self::parse_record_from_tree(child, version, original_data)
-                                .map_err(|e| HwpError::from(e))?,
+                                .map_err(HwpError::from)?,
                         );
                     }
                 }
@@ -1129,7 +1129,7 @@ impl Section {
                         if child.tag_id() == HwpTag::PARA_HEADER {
                             paragraphs.push(
                                 Self::parse_paragraph_from_tree(child, version, original_data)
-                                    .map_err(|e| HwpError::from(e))?,
+                                    .map_err(HwpError::from)?,
                             );
                         } else {
                             // 자식의 자식도 확인하기 위해 스택에 추가 / Add to stack to check children of children
@@ -1225,7 +1225,7 @@ impl Section {
                                                             version,
                                                             original_data,
                                                         )
-                                                        .map_err(|e| HwpError::from(e))?;
+                                                        .map_err(HwpError::from)?;
                                                     // 디버그: ListHeader 내부의 ParaText 확인 / Debug: Check ParaText inside ListHeader
                                                     if let ParagraphRecord::ParaText {
                                                         text, ..
@@ -1323,7 +1323,7 @@ impl Section {
                         // LIST_HEADER 파싱 / Parse LIST_HEADER
                         let list_header_record =
                             Self::parse_record_from_tree(child, version, original_data)
-                                .map_err(|e| HwpError::from(e))?;
+                                .map_err(HwpError::from)?;
 
                         // LIST_HEADER 다음에 PARA_HEADER가 있는지 확인하고 처리
                         // Check if PARA_HEADER follows LIST_HEADER and process it
@@ -1382,7 +1382,7 @@ impl Section {
                     } else {
                         children.push(
                             Self::parse_record_from_tree(child, version, original_data)
-                                .map_err(|e| HwpError::from(e))?,
+                                .map_err(HwpError::from)?,
                         );
                         index += 1;
                     }
@@ -1632,7 +1632,7 @@ impl BodyText {
 
                     // Section 데이터를 Paragraph 리스트로 파싱 / Parse section data into paragraph list
                     let paragraphs = Section::parse_data(&section_data, file_header.version)
-                        .map_err(|e| HwpError::from(e))?;
+                        .map_err(HwpError::from)?;
 
                     sections.push(Section {
                         index: i,
