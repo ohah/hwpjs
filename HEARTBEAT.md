@@ -35,20 +35,28 @@
      ```
      (또는 `bun run test:rust:snapshot:review` — 워크스페이스 전체)
    - 대화형으로 각 변경을 **accept**(의도한 개선) 또는 **reject**(회귀) 선택. reject 시 저장된 스냅샷은 그대로 두고, 코드만 원복한 뒤 턴 종료.
-   - **의도한 개선**이면 accept 후 4단계(커밋/푸시) 진행. **회귀**로 판단되면 reject 하고 코드 원복 후 턴 종료.
+   - **의도한 개선**이면 accept 후 4단계(커밋/푸시 또는 PR) 진행. **회귀**로 판단되면 reject 하고 코드 원복 후 턴 종료.
    - 한 턴에서 스냅샷을 자동 전부 accept 하지 말 것 (`cargo insta review --accept` 사용 금지).
 
 4. **커밋 및 푸시 (조건 충족 시에만)**  
    - 빌드·테스트 통과  
-   - 스냅샷: 변화 없음 또는 의도한 개선만 있음  
-   → **무조건 main에 커밋 및 푸시** 진행.
+   - 스냅샷: 변화 없음 또는 의도한 개선만 accept함  
+   → 커밋까지 진행. **단, 이번 턴에서 스냅샷이 변경된 경우** main 푸시 대신 **PR**로 올리기.
 
    ```bash
-   git -C /Users/yoonhb/Documents/workspace/hwpjs status
+   cd /Users/yoonhb/Documents/workspace/hwpjs
+   git status
    # 변경 있으면:
-   git -C /Users/yoonhb/Documents/workspace/hwpjs add -A
-   git -C /Users/yoonhb/Documents/workspace/hwpjs commit -m "refactor(core): <한 줄 요약>"
-   git -C /Users/yoonhb/Documents/workspace/hwpjs push origin main
+   git add -A
+   git commit -m "refactor(core): <한 줄 요약>"
+
+   # 스냅샷이 바뀌지 않았으면: main 푸시
+   # git push origin main
+
+   # 스냅샷이 바뀌었으면: 브랜치 푸시 후 gh로 PR 생성
+   # git checkout -b refactor/<짧은-설명>
+   # git push -u origin refactor/<짧은-설명>
+   # gh pr create --base main --title "refactor(core): <한 줄 요약>" --body "스냅샷 변경 포함. 리뷰 후 머지."
    ```
 
    커밋 메시지는 `commit-rules.md` 형식 (refactor(core): …).
@@ -62,6 +70,7 @@
 
 - 빌드/테스트 실패한 상태에서 커밋·푸시하지 않기.
 - 스냅샷 회귀가 있으면 그대로 커밋하지 말고 원복 후 턴 종료.
+- **코드 변경으로 스냅샷이 바뀐 경우** main에 직접 푸시하지 말고, 브랜치 푸시 후 PR로 올리기.
 
 ---
 
