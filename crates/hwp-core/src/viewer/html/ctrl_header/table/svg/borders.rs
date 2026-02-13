@@ -201,8 +201,6 @@ fn vertical_segment_borderline(
 
     if is_left_edge {
         from_right_cell_left.or(from_left_cell_right)
-    } else if is_right_edge {
-        from_left_cell_right.or(from_right_cell_left)
     } else {
         from_left_cell_right.or(from_right_cell_left)
     }
