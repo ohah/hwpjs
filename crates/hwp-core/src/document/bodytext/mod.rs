@@ -852,6 +852,7 @@ impl Section {
                         // paragraphs가 있는 엔트리를 우선합니다.
                         if list_headers_for_table.len() > 1 {
                             use std::collections::BTreeMap;
+                            #[allow(clippy::type_complexity)]
                             let mut by_pos: BTreeMap<
                                 (u16, u16),
                                 (u16, u16, Vec<super::Paragraph>, Option<CellAttributes>),
