@@ -326,7 +326,7 @@ impl Section {
     /// 파싱된 Paragraph 리스트 / Parsed paragraph list
     pub fn parse_data(data: &[u8], version: u32) -> Result<Vec<Paragraph>, HwpError> {
         // 먼저 레코드를 트리 구조로 파싱 / First parse records into tree structure
-        let tree = RecordTreeNode::parse_tree(data).map_err(HwpError::from)?;
+        let tree = RecordTreeNode::parse_tree(data)?;
 
         // 트리를 재귀적으로 방문하여 Paragraph 리스트로 변환 / Recursively visit tree to convert to Paragraph list
         let mut paragraphs = Vec::new();

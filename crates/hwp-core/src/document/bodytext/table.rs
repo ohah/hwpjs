@@ -414,8 +414,7 @@ fn parse_cell_list(
         if offset + header_len > data.len() {
             break;
         }
-        let list_header =
-            ListHeader::parse(&data[offset..offset + header_len]).map_err(HwpError::from)?;
+        let list_header = ListHeader::parse(&data[offset..offset + header_len])?;
         offset += header_len;
 
         // 셀 속성 파싱 (표 80 참조) / Parse cell attributes (see Table 80)
