@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 /// Helper function to find test HWP files directory
+#[allow(dead_code)]
 pub fn find_fixtures_dir() -> Option<PathBuf> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
         .ok()
@@ -27,6 +28,7 @@ pub fn find_fixtures_dir() -> Option<PathBuf> {
 }
 
 /// Helper function to find test HWP file (for snapshot tests, uses noori.hwp)
+#[allow(dead_code)]
 pub fn find_test_file() -> Option<String> {
     if let Some(dir) = find_fixtures_dir() {
         let file_path = dir.join("noori.hwp");
@@ -49,6 +51,7 @@ pub fn find_headerfooter_file() -> Option<String> {
 }
 
 /// Helper function to get all HWP files in fixtures directory
+#[allow(dead_code)]
 pub fn find_all_hwp_files() -> Vec<String> {
     if let Some(dir) = find_fixtures_dir() {
         let mut files = Vec::new();
