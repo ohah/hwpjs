@@ -431,6 +431,143 @@ impl Section {
         })
     }
 
+    /// 텍스트 데이터를 파싱하여 ParaText 레코드를 생성합니다. / Parses text data to create a ParaText record.
+    ///
+    /// 제어 문자(0x0001~0x001F)를 찾고, 텍스트와 컨트롤 데이터를 분리합니다.
+    /// Finds control characters (0x0001~0x001F) and separates text from control data.
+    ///
+    /// # Arguments
+    /// * `data` - UTF-16LE 인코딩된 텍스트 데이터 / UTF-16LE encoded text data
+    ///
+    /// # Returns
+    /// 파싱된 ParaText 레코드 / Parsed ParaText record
+    fn parse_para_text_with_control_chars(
+        data: &[u8],
+    ) -> ParagraphRecord {
+        let mut control_char_positions = Vec::new();
+        let mut inline_control_params = Vec::new();
+        let mut cleaned_text = String::new();
+        let mut runs: Vec<ParaTextRun> = Vec::new();
+        let mut idx = 0;
+
+        while idx < data.len() {
+            // 제어 문자 찾기 (UTF-16LE 바이트 배열에서) / Find control character (in UTF-16LE byte array)
+            let mut found_control = false;
+            let mut control_code = 0u8;
+            let mut control_size = 0usize;
+
+            // 현재 위치에서 제어 문자 확인 (0-31 범위) / Check for control character at current position (range 0-31)
+            if idx + 1 < data.len() {
+                let code = data[idx] as u32;
+                // 제어 문자는 UTF-16LE에서 하위 바이트가 0-31이고 상위 바이트가 0인 경우 / Control character is when lower byte is 0-31 and upper byte is 0 in UTF-16LE
+                if code <= 31 && data[idx + 1] == 0 {
+                    control_code = code as u8;
+                    control_size = ControlChar::get_size_by_code(control_code) * 2; // WCHAR를 바이트로 변환 / Convert WCHAR to bytes
+                    found_control = true;
+                }
+            }
+
+            if found_control {
+                // 제어 문자 위치 저장 (문자 인덱스 기준) / Store control character position (based on character index)
+                let char_idx = idx / 2; // UTF-16LE에서 문자 인덱스는 바이트 인덱스 / 2 / Character index in UTF-16LE is byte index / 2
+                let control_name = ControlChar::to_name(control_code);
+                control_char_positions.push(
+                    crate::document::bodytext::control_char::ControlCharPosition {
+                        position: char_idx,
+                        code: control_code,
+                        name: control_name.clone(),
+                    },
+                );
+
+                runs.push(ParaTextRun::Control {
+                    position: char_idx,
+                    code: control_code,
+                    name: control_name,
+                    size_wchars: ControlChar::get_size_by_code(control_code),
+                    display_text: None,
+                });
+
+                // INLINE 타입 제어 문자인 경우 파라미터 파싱 / Parse parameters for INLINE type control characters
+                if ControlChar::get_size_by_code(control_code) == 8
+                    && matches!(
+                        control_code,
+                        ControlChar::FIELD_END
+                            | ControlChar::RESERVED_5_7_START..=ControlChar::RESERVED_5_7_END
+                            | ControlChar::TITLE_MARK
+                            | ControlChar::TAB
+                            | ControlChar::RESERVED_19_20_START..=ControlChar::RESERVED_19_20_END
+                    )
+                {
+                    // 제어 문자 코드(2 bytes) 이후의 파라미터(12 bytes) 파싱 / Parse parameter (12 bytes) after control character code (2 bytes)
+                    if idx + 2 + 12 <= data.len() {
+                        let param_data = &data[idx + 2..idx + 2 + 12];
+                        if let Ok(param) =
+                            crate::document::bodytext::control_char::InlineControlParam::parse(control_code, param_data)
+                        {
+                            inline_control_params.push((char_idx, param));
+                        }
+                    }
+                }
+
+                // 텍스트로 표현 가능한 제어 문자는 텍스트에 변환된 형태로 추가 / Add convertible control characters as converted text
+                // 단, PARA_BREAK와 LINE_BREAK는 control_char_positions에만 저장하고 텍스트에는 포함하지 않음
+                // However, PARA_BREAK and LINE_BREAK are only stored in control_char_positions, not added to text
+                if ControlChar::is_convertible(control_code) {
+                    // PARA_BREAK와 LINE_BREAK는 텍스트에 추가하지 않음 (control_char_positions에만 저장)
+                    // Don't add PARA_BREAK and LINE_BREAK to text (only store in control_char_positions)
+                    if control_code != ControlChar::PARA_BREAK
+                        && control_code != ControlChar::LINE_BREAK
+                    {
+                        if let Some(text_repr) = ControlChar::to_text(control_code) {
+                            cleaned_text.push_str(text_repr);
+                            runs.push(ParaTextRun::Text {
+                                text: text_repr.to_string(),
+                            });
+                        }
+                    }
+                }
+                // 제거해야 할 제어 문자는 텍스트에 추가하지 않음 / Don't add removable control characters to text
+
+                idx += control_size; // 제어 문자와 파라미터 건너뛰기 / Skip control character and parameters
+            } else {
+                // 텍스트 부분 디코딩 / Decode text portion
+                // 다음 제어 문자까지 또는 끝까지 / Until next control character or end
+                let mut text_end = idx;
+                while text_end < data.len() {
+                    if text_end + 1 < data.len() {
+                        let code = data[text_end] as u32;
+                        if code <= 31 && data[text_end + 1] == 0 {
+                            break; // 제어 문자 발견 / Control character found
+                        }
+                    }
+                    text_end += 2; // UTF-16LE는 2바이트 단위 / UTF-16LE is 2-byte units
+                }
+
+                if text_end > idx {
+                    // 텍스트 부분 디코딩 / Decode text portion
+                    let text_bytes = &data[idx..text_end];
+                    if let Ok(text) = decode_utf16le(text_bytes) {
+                        cleaned_text.push_str(&text);
+                        if !text.is_empty() {
+                            runs.push(ParaTextRun::Text { text });
+                        }
+                    }
+                    idx = text_end;
+                } else {
+                    // 더 이상 처리할 데이터 없음 / No more data to process
+                    break;
+                }
+            }
+        }
+
+        ParagraphRecord::ParaText {
+            text: cleaned_text,
+            runs,
+            control_char_positions,
+            inline_control_params,
+        }
+    }
+
     /// 트리 노드에서 ParagraphRecord를 파싱합니다. / Parse ParagraphRecord from tree node.
     ///
     /// 모든 레벨의 레코드를 재귀적으로 처리합니다.
@@ -441,132 +578,7 @@ impl Section {
         original_data: &[u8],
     ) -> Result<ParagraphRecord, HwpError> {
         match node.tag_id() {
-            HwpTag::PARA_TEXT => {
-                let data = node.data();
-                // pyhwp처럼 제어 문자를 찾고 텍스트만 추출 / Find control characters and extract only text like pyhwp
-                let mut control_char_positions = Vec::new();
-                let mut inline_control_params = Vec::new();
-                let mut cleaned_text = String::new();
-                let mut runs: Vec<ParaTextRun> = Vec::new();
-                let mut idx = 0;
-
-                while idx < data.len() {
-                    // 제어 문자 찾기 (UTF-16LE 바이트 배열에서) / Find control character (in UTF-16LE byte array)
-                    let mut found_control = false;
-                    let mut control_code = 0u8;
-                    let mut control_size = 0usize;
-
-                    // 현재 위치에서 제어 문자 확인 (0-31 범위) / Check for control character at current position (range 0-31)
-                    if idx + 1 < data.len() {
-                        let code = data[idx] as u32;
-                        // 제어 문자는 UTF-16LE에서 하위 바이트가 0-31이고 상위 바이트가 0인 경우 / Control character is when lower byte is 0-31 and upper byte is 0 in UTF-16LE
-                        if code <= 31 && data[idx + 1] == 0 {
-                            control_code = code as u8;
-                            control_size = ControlChar::get_size_by_code(control_code) * 2; // WCHAR를 바이트로 변환 / Convert WCHAR to bytes
-                            found_control = true;
-                        }
-                    }
-
-                    if found_control {
-                        // 제어 문자 위치 저장 (문자 인덱스 기준) / Store control character position (based on character index)
-                        let char_idx = idx / 2; // UTF-16LE에서 문자 인덱스는 바이트 인덱스 / 2 / Character index in UTF-16LE is byte index / 2
-                        let control_name = ControlChar::to_name(control_code);
-                        control_char_positions.push(
-                            crate::document::bodytext::control_char::ControlCharPosition {
-                                position: char_idx,
-                                code: control_code,
-                                name: control_name.clone(),
-                            },
-                        );
-
-                        runs.push(ParaTextRun::Control {
-                            position: char_idx,
-                            code: control_code,
-                            name: control_name,
-                            size_wchars: ControlChar::get_size_by_code(control_code),
-                            display_text: None,
-                        });
-
-                        // INLINE 타입 제어 문자인 경우 파라미터 파싱 / Parse parameters for INLINE type control characters
-                        if ControlChar::get_size_by_code(control_code) == 8
-                            && matches!(
-                                control_code,
-                                ControlChar::FIELD_END
-                                    | ControlChar::RESERVED_5_7_START..=ControlChar::RESERVED_5_7_END
-                                    | ControlChar::TITLE_MARK
-                                    | ControlChar::TAB
-                                    | ControlChar::RESERVED_19_20_START..=ControlChar::RESERVED_19_20_END
-                            )
-                        {
-                            // 제어 문자 코드(2 bytes) 이후의 파라미터(12 bytes) 파싱 / Parse parameter (12 bytes) after control character code (2 bytes)
-                            if idx + 2 + 12 <= data.len() {
-                                let param_data = &data[idx + 2..idx + 2 + 12];
-                                if let Ok(param) =
-                                    crate::document::bodytext::control_char::InlineControlParam::parse(control_code, param_data)
-                                {
-                                    inline_control_params.push((char_idx, param));
-                                }
-                            }
-                        }
-
-                        // 텍스트로 표현 가능한 제어 문자는 텍스트에 변환된 형태로 추가 / Add convertible control characters as converted text
-                        // 단, PARA_BREAK와 LINE_BREAK는 control_char_positions에만 저장하고 텍스트에는 포함하지 않음
-                        // However, PARA_BREAK and LINE_BREAK are only stored in control_char_positions, not added to text
-                        if ControlChar::is_convertible(control_code) {
-                            // PARA_BREAK와 LINE_BREAK는 텍스트에 추가하지 않음 (control_char_positions에만 저장)
-                            // Don't add PARA_BREAK and LINE_BREAK to text (only store in control_char_positions)
-                            if control_code != ControlChar::PARA_BREAK
-                                && control_code != ControlChar::LINE_BREAK
-                            {
-                                if let Some(text_repr) = ControlChar::to_text(control_code) {
-                                    cleaned_text.push_str(text_repr);
-                                    runs.push(ParaTextRun::Text {
-                                        text: text_repr.to_string(),
-                                    });
-                                }
-                            }
-                        }
-                        // 제거해야 할 제어 문자는 텍스트에 추가하지 않음 / Don't add removable control characters to text
-
-                        idx += control_size; // 제어 문자와 파라미터 건너뛰기 / Skip control character and parameters
-                    } else {
-                        // 텍스트 부분 디코딩 / Decode text portion
-                        // 다음 제어 문자까지 또는 끝까지 / Until next control character or end
-                        let mut text_end = idx;
-                        while text_end < data.len() {
-                            if text_end + 1 < data.len() {
-                                let code = data[text_end] as u32;
-                                if code <= 31 && data[text_end + 1] == 0 {
-                                    break; // 제어 문자 발견 / Control character found
-                                }
-                            }
-                            text_end += 2; // UTF-16LE는 2바이트 단위 / UTF-16LE is 2-byte units
-                        }
-
-                        if text_end > idx {
-                            // 텍스트 부분 디코딩 / Decode text portion
-                            let text_bytes = &data[idx..text_end];
-                            if let Ok(text) = decode_utf16le(text_bytes) {
-                                cleaned_text.push_str(&text);
-                                if !text.is_empty() {
-                                    runs.push(ParaTextRun::Text { text });
-                                }
-                            }
-                            idx = text_end;
-                        } else {
-                            // 더 이상 처리할 데이터 없음 / No more data to process
-                            break;
-                        }
-                    }
-                }
-
-                Ok(ParagraphRecord::ParaText {
-                    text: cleaned_text,
-                    runs,
-                    control_char_positions,
-                    inline_control_params,
-                })
-            }
+            HwpTag::PARA_TEXT => Ok(Self::parse_para_text_with_control_chars(node.data())),
             HwpTag::PARA_CHAR_SHAPE => {
                 let para_char_shape = ParaCharShape::parse(node.data())?;
                 Ok(ParagraphRecord::ParaCharShape {
