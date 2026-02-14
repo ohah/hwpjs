@@ -317,7 +317,6 @@ fn parse_table_attribute(value: UINT32) -> TableAttribute {
 }
 
 /// 셀 리스트 파싱 (표 79) / Parse cell list (Table 79)
-#[allow(dead_code)] // TODO: enable when parsing cells from HWPTAG_TABLE payload is needed
 fn parse_cell_list(
     data: &[u8],
     row_count: UINT16,
