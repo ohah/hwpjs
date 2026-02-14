@@ -76,6 +76,7 @@ pub fn parse_caption_from_list_header(data: &[u8]) -> Result<Option<Caption>, Hw
 }
 
 /// 캡션 파싱 (표 72 - 14바이트) / Parse caption (Table 72 - 14 bytes)
+#[allow(dead_code)] // TODO: enable and use when parsing captions from HWPTAG_CAPTION tag
 fn parse_caption(data: &[u8]) -> Result<Caption, HwpError> {
     if data.len() < 14 {
         return Err(HwpError::insufficient_data("Caption", 14, data.len()));
@@ -129,6 +130,7 @@ fn parse_caption(data: &[u8]) -> Result<Caption, HwpError> {
 }
 
 /// 캡션 파싱 (표 72 - 12바이트 버전) / Parse caption (Table 72 - 12 bytes version)
+#[allow(dead_code)] // TODO: enable and use when parsing captions from HWPTAG_CAPTION tag
 fn parse_caption_12bytes(data: &[u8]) -> Result<Caption, HwpError> {
     if data.len() < 12 {
         return Err(HwpError::insufficient_data(
