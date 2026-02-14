@@ -443,7 +443,7 @@ impl Section {
     /// 파싱된 ParaText 레코드 / Parsed ParaText record
     fn parse_para_text_with_control_chars(
         data: &[u8],
-    ) -> ParagraphRecord {
+    ) -> Result<ParagraphRecord, HwpError> {
         let mut control_char_positions = Vec::new();
         let mut inline_control_params = Vec::new();
         let mut cleaned_text = String::new();
@@ -560,12 +560,57 @@ impl Section {
             }
         }
 
-        ParagraphRecord::ParaText {
+        Ok(ParagraphRecord::ParaText {
             text: cleaned_text,
             runs,
             control_char_positions,
             inline_control_params,
-        }
+        })
+    }
+
+    /// 문단 CharacterShape 레코드를 파싱합니다. / Parses Paragraph CharacterShape record.
+    ///
+    /// # Arguments
+    /// * `data` - CharacterShape 데이터 / CharacterShape data
+    ///
+    /// # Returns
+    /// 파싱된 CharacterShape 레코드 / Parsed CharacterShape record
+    fn parse_paragraph_char_shape(
+        data: &[u8],
+    ) -> Result<ParagraphRecord, HwpError> {
+        Ok(ParagraphRecord::ParaCharShape {
+            shapes: ParaCharShape::parse(data)?.shapes,
+        })
+    }
+
+    /// 문단 LineSeg 레코드를 파싱합니다. / Parses Paragraph LineSeg record.
+    ///
+    /// # Arguments
+    /// * `data` - LineSeg 데이터 / LineSeg data
+    ///
+    /// # Returns
+    /// 파싱된 LineSeg 레코드 / Parsed LineSeg record
+    fn parse_paragraph_line_seg(
+        data: &[u8],
+    ) -> Result<ParagraphRecord, HwpError> {
+        Ok(ParagraphRecord::ParaLineSeg {
+            segments: ParaLineSeg::parse(data)?.segments,
+        })
+    }
+
+    /// 문단 RangeTag 레코드를 파싱합니다. / Parses Paragraph RangeTag record.
+    ///
+    /// # Arguments
+    /// * `data` - RangeTag 데이터 / RangeTag data
+    ///
+    /// # Returns
+    /// 파싱된 RangeTag 레코드 / Parsed RangeTag record
+    fn parse_paragraph_range_tag(
+        data: &[u8],
+    ) -> Result<ParagraphRecord, HwpError> {
+        Ok(ParagraphRecord::ParaRangeTag {
+            tags: ParaRangeTag::parse(data)?.tags,
+        })
     }
 
     /// 트리 노드에서 ParagraphRecord를 파싱합니다. / Parse ParagraphRecord from tree node.
@@ -578,25 +623,10 @@ impl Section {
         original_data: &[u8],
     ) -> Result<ParagraphRecord, HwpError> {
         match node.tag_id() {
-            HwpTag::PARA_TEXT => Ok(Self::parse_para_text_with_control_chars(node.data())),
-            HwpTag::PARA_CHAR_SHAPE => {
-                let para_char_shape = ParaCharShape::parse(node.data())?;
-                Ok(ParagraphRecord::ParaCharShape {
-                    shapes: para_char_shape.shapes,
-                })
-            }
-            HwpTag::PARA_LINE_SEG => {
-                let para_line_seg = ParaLineSeg::parse(node.data())?;
-                Ok(ParagraphRecord::ParaLineSeg {
-                    segments: para_line_seg.segments,
-                })
-            }
-            HwpTag::PARA_RANGE_TAG => {
-                let para_range_tag = ParaRangeTag::parse(node.data())?;
-                Ok(ParagraphRecord::ParaRangeTag {
-                    tags: para_range_tag.tags,
-                })
-            }
+            HwpTag::PARA_TEXT => Self::parse_para_text_with_control_chars(node.data()),
+            HwpTag::PARA_CHAR_SHAPE => Self::parse_paragraph_char_shape(node.data()),
+            HwpTag::PARA_LINE_SEG => Self::parse_paragraph_line_seg(node.data()),
+            HwpTag::PARA_RANGE_TAG => Self::parse_paragraph_range_tag(node.data()),
             HwpTag::CTRL_HEADER => {
                 let ctrl_header = CtrlHeader::parse(node.data())?;
                 // 디버그: CTRL_HEADER 파싱 시작 / Debug: Start parsing CTRL_HEADER
