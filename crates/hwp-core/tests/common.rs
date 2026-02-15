@@ -40,6 +40,7 @@ pub fn find_test_file() -> Option<String> {
 }
 
 /// Helper function to find headerfooter.hwp file
+#[allow(dead_code)]
 pub fn find_headerfooter_file() -> Option<String> {
     if let Some(dir) = find_fixtures_dir() {
         let file_path = dir.join("headerfooter.hwp");
