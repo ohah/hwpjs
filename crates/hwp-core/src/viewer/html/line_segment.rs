@@ -58,9 +58,6 @@ pub struct ImageInfo {
     pub url: String,
     /// object_common 속성: 글자처럼 취급 여부 / object_common attribute: treat as letters
     pub like_letters: bool,
-    /// object_common 속성: 줄 간격에 영향 여부 (현재 미사용, 향후 기능) / object_common attribute: affect line spacing (currently unused, for future features)
-    #[allow(dead_code)]
-    pub affect_line_spacing: bool,
     /// object_common 속성: 세로 기준 위치 / object_common attribute: vertical reference position
     pub vert_rel_to: Option<VertRelTo>,
 }

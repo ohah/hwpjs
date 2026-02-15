@@ -18,13 +18,12 @@ pub fn process_shape_object<'a>(
     let mut result = CtrlHeaderResult::new();
 
     // object_common 속성 추출 / Extract object_common attributes
-    let (like_letters, affect_line_spacing, vert_rel_to) = match &header.data {
+    let (like_letters, vert_rel_to) = match &header.data {
         CtrlHeaderData::ObjectCommon { attribute, .. } => (
             attribute.like_letters,
-            attribute.affect_line_spacing,
             Some(attribute.vert_rel_to),
         ),
-        _ => (false, false, None),
+        _ => (false, None),
     };
 
     // children과 paragraphs에서 첫 번째 ShapeComponent 찾기 (크기 정보 추출용) / Find first ShapeComponent in children and paragraphs (for size extraction)
@@ -94,7 +93,6 @@ pub fn process_shape_object<'a>(
             document,
             options,
             like_letters,
-            affect_line_spacing,
             vert_rel_to,
             initial_width,  // parent_shape_component_width
             initial_height, // parent_shape_component_height
@@ -111,7 +109,6 @@ pub fn process_shape_object<'a>(
                 document,
                 options,
                 like_letters,
-                affect_line_spacing,
                 vert_rel_to,
                 initial_width,
                 initial_height,
@@ -130,7 +127,6 @@ fn collect_images_from_records(
     document: &HwpDocument,
     options: &HtmlOptions,
     like_letters: bool,
-    affect_line_spacing: bool,
     vert_rel_to: Option<VertRelTo>,
     parent_shape_component_width: Option<u32>,
     parent_shape_component_height: Option<u32>,
@@ -159,7 +155,6 @@ fn collect_images_from_records(
                             height,
                             url: image_url,
                             like_letters,
-                            affect_line_spacing,
                             vert_rel_to,
                         });
                     }
@@ -175,7 +170,6 @@ fn collect_images_from_records(
                     document,
                     options,
                     like_letters,
-                    affect_line_spacing,
                     vert_rel_to,
                     Some(shape_component.width),
                     Some(shape_component.height),
@@ -190,7 +184,6 @@ fn collect_images_from_records(
                     document,
                     options,
                     like_letters,
-                    affect_line_spacing,
                     vert_rel_to,
                     parent_shape_component_width,
                     parent_shape_component_height,

@@ -296,7 +296,6 @@ pub(crate) fn render_cells(
                                     height,
                                     url: image_url,
                                     like_letters: false, // 셀 내부 이미지는 ctrl_header 정보 없음 / Images inside cells have no ctrl_header info
-                                    affect_line_spacing: false,
                                     vert_rel_to: None,
                                 });
                             }
@@ -334,7 +333,6 @@ pub(crate) fn render_cells(
                                         height: shape_component_height,
                                         url: image_url,
                                         like_letters: false, // 셀 내부 이미지는 ctrl_header 정보 없음 / Images inside cells have no ctrl_header info
-                                        affect_line_spacing: false,
                                         vert_rel_to: None,
                                     });
                                 }

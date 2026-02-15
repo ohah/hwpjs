@@ -104,7 +104,6 @@ fn collect_images(
                                 height: shape_component.height,
                                 url: image_url,
                                 like_letters: false,
-                                affect_line_spacing: false,
                                 vert_rel_to: None,
                             });
                         }
@@ -138,7 +137,6 @@ fn collect_images(
                         height,
                         url: image_url,
                         like_letters: false,
-                        affect_line_spacing: false,
                         vert_rel_to: None,
                     });
                 }
@@ -225,7 +223,6 @@ pub fn render_paragraph(
                                 height: shape_component.height,
                                 url: image_url,
                                 like_letters: false, // ShapeComponent에서 직접 온 이미지는 ctrl_header 정보 없음 / Images from ShapeComponent directly have no ctrl_header info
-                                affect_line_spacing: false,
                                 vert_rel_to: None,
                             });
                         }
@@ -265,7 +262,6 @@ pub fn render_paragraph(
                         height,
                         url: image_url,
                         like_letters: false, // ShapeComponentPicture에서 직접 온 이미지는 ctrl_header 정보 없음 / Images from ShapeComponentPicture directly have no ctrl_header info
-                        affect_line_spacing: false,
                         vert_rel_to: None,
                     });
                 }
