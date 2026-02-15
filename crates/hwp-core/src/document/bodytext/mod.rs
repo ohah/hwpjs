@@ -1419,110 +1419,54 @@ impl Section {
                 })
             }
             HwpTag::SHAPE_COMPONENT_LINE => {
-                // 직선 개체 파싱 / Parse line shape component
-                // 스펙 문서 매핑: 표 92 - 선 개체 속성 / Spec mapping: Table 92 - Line shape component attributes
-                // 레거시 코드는 선 개체 속성 부분만 파싱하고 있습니다.
-                // Legacy code only parses the line shape component attributes part.
-                // 실제 파일 구조를 확인하여 필요시 수정이 필요할 수 있습니다.
-                // Actual file structure may need to be verified and modified if necessary.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_LINE 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_LINE records, so it has not been tested with actual files
                 let shape_component_line = ShapeComponentLine::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentLine {
                     shape_component_line,
                 })
             }
             HwpTag::SHAPE_COMPONENT_RECTANGLE => {
-                // 사각형 개체 파싱 / Parse rectangle shape component
-                // 스펙 문서 매핑: 표 94 - 사각형 개체 속성 / Spec mapping: Table 94 - Rectangle shape component attributes
-                // 레거시 코드는 사각형 개체 속성 부분만 파싱하고 있습니다.
-                // Legacy code only parses the rectangle shape component attributes part.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_RECTANGLE 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_RECTANGLE records, so it has not been tested with actual files
                 let shape_component_rectangle = ShapeComponentRectangle::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentRectangle {
                     shape_component_rectangle,
                 })
             }
             HwpTag::SHAPE_COMPONENT_ELLIPSE => {
-                // 타원 개체 파싱 / Parse ellipse shape component
-                // 스펙 문서 매핑: 표 96 - 타원 개체 속성 / Spec mapping: Table 96 - Ellipse shape component attributes
-                // 레거시 코드는 타원 개체 속성 부분만 파싱하고 있습니다.
-                // Legacy code only parses the ellipse shape component attributes part.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_ELLIPSE 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_ELLIPSE records, so it has not been tested with actual files
                 let shape_component_ellipse = ShapeComponentEllipse::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentEllipse {
                     shape_component_ellipse,
                 })
             }
             HwpTag::SHAPE_COMPONENT_ARC => {
-                // 호 개체 파싱 / Parse arc shape component
-                // 스펙 문서 매핑: 표 101 - 호 개체 속성 / Spec mapping: Table 101 - Arc shape component attributes
-                // 레거시 코드는 호 개체 속성 부분만 파싱하고 있습니다.
-                // Legacy code only parses the arc shape component attributes part.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_ARC 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_ARC records, so it has not been tested with actual files
                 let shape_component_arc = ShapeComponentArc::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentArc {
                     shape_component_arc,
                 })
             }
             HwpTag::SHAPE_COMPONENT_POLYGON => {
-                // 다각형 개체 파싱 / Parse polygon shape component
-                // 스펙 문서 매핑: 표 99 - 다각형 개체 속성 / Spec mapping: Table 99 - Polygon shape component attributes
-                // 레거시 코드는 다각형 개체 속성 부분만 파싱하고 있습니다.
-                // Legacy code only parses the polygon shape component attributes part.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_POLYGON 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_POLYGON records, so it has not been tested with actual files
                 let shape_component_polygon = ShapeComponentPolygon::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentPolygon {
                     shape_component_polygon,
                 })
             }
             HwpTag::SHAPE_COMPONENT_CURVE => {
-                // 곡선 개체 파싱 / Parse curve shape component
-                // 스펙 문서 매핑: 표 103 - 곡선 개체 속성 / Spec mapping: Table 103 - Curve shape component attributes
-                // 레거시 코드는 곡선 개체 속성 부분만 파싱하고 있습니다.
-                // Legacy code only parses the curve shape component attributes part.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_CURVE 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_CURVE records, so it has not been tested with actual files
                 let shape_component_curve = ShapeComponentCurve::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentCurve {
                     shape_component_curve,
                 })
             }
             HwpTag::SHAPE_COMPONENT_OLE => {
-                // OLE 개체 파싱 / Parse OLE shape component
-                // 스펙 문서 매핑: 표 118 - OLE 개체 속성 / Spec mapping: Table 118 - OLE shape component attributes
-                // 레거시 코드는 OLE 개체 속성을 파싱하지 않고 있습니다.
-                // Legacy code does not parse OLE shape component attributes.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_OLE 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_OLE records, so it has not been tested with actual files
                 let shape_component_ole = ShapeComponentOle::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentOle {
                     shape_component_ole,
                 })
             }
             HwpTag::SHAPE_COMPONENT_PICTURE => {
-                // 그림 개체 파싱 / Parse picture shape component
-                // 스펙 문서 매핑: 표 107 - 그림 개체 속성 / Spec mapping: Table 107 - Picture shape component attributes
-                // 레거시 코드는 그림 개체 속성의 일부만 파싱하고 있습니다.
-                // Legacy code only parses part of picture shape component attributes.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_PICTURE 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_PICTURE records, so it has not been tested with actual files
                 let shape_component_picture = ShapeComponentPicture::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentPicture {
                     shape_component_picture,
                 })
             }
             HwpTag::SHAPE_COMPONENT_CONTAINER => {
-                // 묶음 개체 파싱 / Parse container shape component
-                // 스펙 문서 매핑: 표 121 - 묶음 개체 속성 / Spec mapping: Table 121 - Container shape component attributes
-                // 레거시 코드는 묶음 개체 속성을 파싱하지 않고 있습니다.
-                // Legacy code does not parse container shape component attributes.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_CONTAINER 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_CONTAINER records, so it has not been tested with actual files
                 let shape_component_container = ShapeComponentContainer::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentContainer {
                     shape_component_container,
@@ -1539,21 +1483,10 @@ impl Section {
                 Ok(ParagraphRecord::CtrlData { ctrl_data })
             }
             HwpTag::EQEDIT => {
-                // 수식 개체 파싱 / Parse equation editor object
-                // 스펙 문서 매핑: 표 105 - 수식 개체 속성 / Spec mapping: Table 105 - Equation editor object attributes
-                // 레거시 코드는 수식 개체 속성의 일부만 파싱하고 있습니다.
-                // Legacy code only parses part of equation editor object attributes.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 EQEDIT 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain EQEDIT records, so it has not been tested with actual files
                 let eqedit = EqEdit::parse(node.data())?;
                 Ok(ParagraphRecord::EqEdit { eqedit })
             }
             HwpTag::SHAPE_COMPONENT_TEXTART => {
-                // 글맵시 개체 파싱 / Parse text art shape component
-                // 스펙 문서에 상세 구조가 명시되어 있지 않으므로 raw 데이터로 저장합니다.
-                // Raw data is stored because the spec document does not specify detailed structure.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_TEXTART 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_TEXTART records, so it has not been tested with actual files
                 let shape_component_textart = ShapeComponentTextArt::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentTextArt {
                     shape_component_textart,
@@ -1596,21 +1529,10 @@ impl Section {
                 Ok(ParagraphRecord::ChartData { chart_data })
             }
             HwpTag::VIDEO_DATA => {
-                // 비디오 데이터 파싱 / Parse video data
-                // 스펙 문서 매핑: 표 123 - 동영상 개체 속성 / Spec mapping: Table 123 - Video object attributes
-                // 레거시 코드는 동영상 개체 속성을 파싱하지 않고 있습니다.
-                // Legacy code does not parse video object attributes.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 VIDEO_DATA 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain VIDEO_DATA records, so it has not been tested with actual files
                 let video_data = VideoData::parse(node.data())?;
                 Ok(ParagraphRecord::VideoData { video_data })
             }
             HwpTag::SHAPE_COMPONENT_UNKNOWN => {
-                // Unknown 개체 파싱 / Parse unknown shape component
-                // 스펙 문서에 상세 구조가 명시되어 있지 않으므로 raw 데이터로 저장합니다.
-                // Raw data is stored because the spec document does not specify detailed structure.
-                // 참고: 현재 테스트 파일(`noori.hwp`)에 SHAPE_COMPONENT_UNKNOWN 레코드가 없어 실제 파일로 테스트되지 않음
-                // Note: Current test file (`noori.hwp`) does not contain SHAPE_COMPONENT_UNKNOWN records, so it has not been tested with actual files
                 let shape_component_unknown = ShapeComponentUnknown::parse(node.data())?;
                 Ok(ParagraphRecord::ShapeComponentUnknown {
                     shape_component_unknown,
