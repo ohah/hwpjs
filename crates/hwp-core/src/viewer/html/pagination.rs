@@ -238,11 +238,18 @@ mod tests {
     use crate::document::bodytext::ParaHeader;
 
     fn create_test_paragraph() -> Paragraph {
-        let mut para_header = ParaHeader::default();
-        para_header.para_shape_id = 0;
-        para_header.column_divide_type = vec![];
-        para_header.control_mask = crate::document::bodytext::ControlMask::new(0);
-        para_header.text_char_count = 0;
+        let para_header = ParaHeader {
+            text_char_count: 0,
+            control_mask: crate::document::bodytext::ControlMask::new(0),
+            para_shape_id: 0,
+            para_style_id: 0,
+            column_divide_type: vec![],
+            char_shape_count: 0,
+            range_tag_count: 0,
+            line_align_count: 0,
+            instance_id: 0,
+            section_merge: None,
+        };
 
         Paragraph {
             para_header,
