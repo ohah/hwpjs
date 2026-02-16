@@ -243,12 +243,7 @@ pub fn convert_para_text_to_markdown_with_char_shapes<'a>(
     // CharShape 정보가 있으면 텍스트를 구간별로 나누어 스타일 적용 / If CharShape info exists, divide text into segments and apply styles
     if !char_shapes.is_empty() {
         return get_char_shape.and_then(|fn_char_shape| {
-            convert_text_with_char_shapes(
-                text,
-                control_positions,
-                char_shapes,
-                fn_char_shape,
-            )
+            convert_text_with_char_shapes(text, control_positions, char_shapes, fn_char_shape)
         });
     }
 

@@ -9,8 +9,7 @@ use super::HtmlOptions;
 use crate::document::bodytext::{
     control_char::ControlChar,
     ctrl_header::{CtrlHeaderData, VertRelTo},
-    LineSegmentInfo,
-    PageDef, ParagraphRecord,
+    LineSegmentInfo, PageDef, ParagraphRecord,
 };
 use crate::document::{HwpDocument, Paragraph};
 use crate::viewer::html::ctrl_header::table::{render_table, TablePosition, TableRenderContext};
@@ -43,12 +42,19 @@ pub struct ParagraphRenderState<'a> {
 // Private helper functions to reduce render_paragraph complexity
 fn collect_control_char_positions(
     paragraph: &Paragraph,
-) -> (Vec<crate::document::bodytext::control_char::ControlCharPosition>, Vec<usize>) {
+) -> (
+    Vec<crate::document::bodytext::control_char::ControlCharPosition>,
+    Vec<usize>,
+) {
     let mut control_char_positions = Vec::new();
     let mut shape_object_anchor_positions = Vec::new();
 
     for record in &paragraph.records {
-        if let ParagraphRecord::ParaText { control_char_positions: ccp, .. } = record {
+        if let ParagraphRecord::ParaText {
+            control_char_positions: ccp,
+            ..
+        } = record
+        {
             control_char_positions = ccp.clone();
             for pos in control_char_positions.iter() {
                 if pos.code == ControlChar::SHAPE_OBJECT {

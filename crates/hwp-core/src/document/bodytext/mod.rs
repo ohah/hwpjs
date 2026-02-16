@@ -441,9 +441,7 @@ impl Section {
     ///
     /// # Returns
     /// 파싱된 ParaText 레코드 / Parsed ParaText record
-    fn parse_para_text_with_control_chars(
-        data: &[u8],
-    ) -> Result<ParagraphRecord, HwpError> {
+    fn parse_para_text_with_control_chars(data: &[u8]) -> Result<ParagraphRecord, HwpError> {
         let mut control_char_positions = Vec::new();
         let mut inline_control_params = Vec::new();
         let mut cleaned_text = String::new();
@@ -502,7 +500,10 @@ impl Section {
                     if idx + 2 + 12 <= data.len() {
                         let param_data = &data[idx + 2..idx + 2 + 12];
                         if let Ok(param) =
-                            crate::document::bodytext::control_char::InlineControlParam::parse(control_code, param_data)
+                            crate::document::bodytext::control_char::InlineControlParam::parse(
+                                control_code,
+                                param_data,
+                            )
                         {
                             inline_control_params.push((char_idx, param));
                         }
@@ -575,9 +576,7 @@ impl Section {
     ///
     /// # Returns
     /// 파싱된 CharacterShape 레코드 / Parsed CharacterShape record
-    fn parse_paragraph_char_shape(
-        data: &[u8],
-    ) -> Result<ParagraphRecord, HwpError> {
+    fn parse_paragraph_char_shape(data: &[u8]) -> Result<ParagraphRecord, HwpError> {
         Ok(ParagraphRecord::ParaCharShape {
             shapes: ParaCharShape::parse(data)?.shapes,
         })
@@ -590,9 +589,7 @@ impl Section {
     ///
     /// # Returns
     /// 파싱된 LineSeg 레코드 / Parsed LineSeg record
-    fn parse_paragraph_line_seg(
-        data: &[u8],
-    ) -> Result<ParagraphRecord, HwpError> {
+    fn parse_paragraph_line_seg(data: &[u8]) -> Result<ParagraphRecord, HwpError> {
         Ok(ParagraphRecord::ParaLineSeg {
             segments: ParaLineSeg::parse(data)?.segments,
         })
@@ -605,9 +602,7 @@ impl Section {
     ///
     /// # Returns
     /// 파싱된 RangeTag 레코드 / Parsed RangeTag record
-    fn parse_paragraph_range_tag(
-        data: &[u8],
-    ) -> Result<ParagraphRecord, HwpError> {
+    fn parse_paragraph_range_tag(data: &[u8]) -> Result<ParagraphRecord, HwpError> {
         Ok(ParagraphRecord::ParaRangeTag {
             tags: ParaRangeTag::parse(data)?.tags,
         })
@@ -930,8 +925,9 @@ impl Section {
 
                         // row_address와 col_address를 사용하여 셀 매핑 / Map cells using row_address and col_address
                         #[allow(clippy::type_complexity)]
-                        let mut cell_map: Vec<Vec<Option<(usize, Vec<super::Paragraph>)>>> =
-                            vec![vec![None; col_count]; row_count];
+                        let mut cell_map: Vec<
+                            Vec<Option<(usize, Vec<super::Paragraph>)>>,
+                        > = vec![vec![None; col_count]; row_count];
 
                         for (idx, (row_addr, col_addr, paragraphs, _)) in
                             list_headers_for_table.iter().enumerate()

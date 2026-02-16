@@ -12,8 +12,8 @@ mod image;
 mod line_segment;
 mod options;
 mod page;
-mod paragraph;
 mod pagination;
+mod paragraph;
 mod styles;
 mod text;
 

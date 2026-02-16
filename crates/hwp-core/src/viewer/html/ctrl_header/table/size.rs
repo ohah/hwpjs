@@ -29,8 +29,7 @@ pub(crate) fn find_max_shape_height(
                 shape_component,
                 children: nested_children,
             } => {
-                if let Some(height) =
-                    find_max_shape_height(nested_children, shape_component.height)
+                if let Some(height) = find_max_shape_height(nested_children, shape_component.height)
                 {
                     max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height));
                 }
@@ -51,8 +50,7 @@ pub(crate) fn find_max_shape_height(
             }
 
             ParagraphRecord::ParaLineSeg { segments } => {
-                let total_height_hwpunit: i32 =
-                    segments.iter().map(|seg| seg.line_height).sum();
+                let total_height_hwpunit: i32 = segments.iter().map(|seg| seg.line_height).sum();
                 let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
                 max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
             }
@@ -129,10 +127,9 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
                                 children,
                             } = record
                             {
-                                if let Some(new_max_height) = find_max_shape_height(
-                                    children,
-                                    shape_component.height,
-                                ) {
+                                if let Some(new_max_height) =
+                                    find_max_shape_height(children, shape_component.height)
+                                {
                                     max_shape_height_mm = Some(
                                         max_shape_height_mm.unwrap_or(0.0).max(new_max_height),
                                     );
@@ -144,17 +141,15 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
                                 let total_height_hwpunit: i32 =
                                     segments.iter().map(|seg| seg.line_height).sum();
                                 let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
-                                max_shape_height_mm = Some(
-                                    max_shape_height_mm.unwrap_or(0.0).max(height_mm),
-                                );
+                                max_shape_height_mm =
+                                    Some(max_shape_height_mm.unwrap_or(0.0).max(height_mm));
                             }
                         }
                     }
 
                     // shape component가 있으면 셀 높이 = shape 높이 + 마진 / If shape component exists, cell height = shape height + margin
                     if let Some(shape_height_mm) = max_shape_height_mm {
-                        let top_margin_mm =
-                            cell_margin_to_mm(cell.cell_attributes.top_margin);
+                        let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
                         let bottom_margin_mm =
                             cell_margin_to_mm(cell.cell_attributes.bottom_margin);
                         let shape_height_with_margin =

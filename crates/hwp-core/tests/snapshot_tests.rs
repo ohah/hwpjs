@@ -1481,7 +1481,7 @@ fn test_debug_charshape_strikethrough() {
                                             }
                                         } else {
                                             eprintln!("    shape_id {} NOT FOUND in char_shapes array (len={})", 
-                                                shape_info.shape_id, 
+                                                shape_info.shape_id,
                                                 document.doc_info.char_shapes.len());
                                         }
                                     }

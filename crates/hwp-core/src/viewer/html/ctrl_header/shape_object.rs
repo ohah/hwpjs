@@ -19,10 +19,9 @@ pub fn process_shape_object<'a>(
 
     // object_common 속성 추출 / Extract object_common attributes
     let (like_letters, vert_rel_to) = match &header.data {
-        CtrlHeaderData::ObjectCommon { attribute, .. } => (
-            attribute.like_letters,
-            Some(attribute.vert_rel_to),
-        ),
+        CtrlHeaderData::ObjectCommon { attribute, .. } => {
+            (attribute.like_letters, Some(attribute.vert_rel_to))
+        }
         _ => (false, None),
     };
 

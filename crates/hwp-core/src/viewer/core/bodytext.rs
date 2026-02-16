@@ -261,34 +261,50 @@ fn process_header<R: Renderer>(
 {
     #[allow(clippy::too_many_arguments)]
     {
-    // 헤더 처리 컨텍스트 / Header processing context
-    let ctx = HeaderProcessContext { document, renderer, options };
+        // 헤더 처리 컨텍스트 / Header processing context
+        let ctx = HeaderProcessContext {
+            document,
+            renderer,
+            options,
+        };
 
-    // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
-    // If LIST_HEADER exists, process from children, otherwise from paragraphs
-    let mut found_list_header = false;
-    for child_record in children {
-        if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record {
-            found_list_header = true;
-            // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
-            for para in paragraphs {
-                // 기존 뷰어 함수를 직접 호출 (글자 모양, 개요 번호 등 복잡한 처리를 위해)
-                let para_content = render_paragraph_with_viewer(para, ctx.document, ctx.renderer, ctx.options, tracker);
+        // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
+        // If LIST_HEADER exists, process from children, otherwise from paragraphs
+        let mut found_list_header = false;
+        for child_record in children {
+            if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record {
+                found_list_header = true;
+                // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
+                for para in paragraphs {
+                    // 기존 뷰어 함수를 직접 호출 (글자 모양, 개요 번호 등 복잡한 처리를 위해)
+                    let para_content = render_paragraph_with_viewer(
+                        para,
+                        ctx.document,
+                        ctx.renderer,
+                        ctx.options,
+                        tracker,
+                    );
+                    if !para_content.is_empty() {
+                        parts.headers.push(para_content);
+                    }
+                }
+            }
+        }
+        // LIST_HEADER가 없으면 paragraphs 처리 / If no LIST_HEADER, process paragraphs
+        if !found_list_header {
+            for para in ctrl_paragraphs {
+                let para_content = render_paragraph_with_viewer(
+                    para,
+                    ctx.document,
+                    ctx.renderer,
+                    ctx.options,
+                    tracker,
+                );
                 if !para_content.is_empty() {
                     parts.headers.push(para_content);
                 }
             }
         }
-    }
-    // LIST_HEADER가 없으면 paragraphs 처리 / If no LIST_HEADER, process paragraphs
-    if !found_list_header {
-        for para in ctrl_paragraphs {
-            let para_content = render_paragraph_with_viewer(para, ctx.document, ctx.renderer, ctx.options, tracker);
-            if !para_content.is_empty() {
-                parts.headers.push(para_content);
-            }
-        }
-    }
     }
 }
 
@@ -309,14 +325,25 @@ fn process_footer<R: Renderer>(
 {
     #[allow(clippy::too_many_arguments)]
     {
-    // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
-    // If LIST_HEADER exists, process from children, otherwise from paragraphs
-    let mut found_list_header = false;
-    for child_record in children {
-        if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record {
-            found_list_header = true;
-            // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
-            for para in paragraphs {
+        // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
+        // If LIST_HEADER exists, process from children, otherwise from paragraphs
+        let mut found_list_header = false;
+        for child_record in children {
+            if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record {
+                found_list_header = true;
+                // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
+                for para in paragraphs {
+                    let para_content =
+                        render_paragraph_with_viewer(para, document, renderer, options, tracker);
+                    if !para_content.is_empty() {
+                        parts.footers.push(para_content);
+                    }
+                }
+            }
+        }
+        // LIST_HEADER가 없으면 paragraphs 처리 / If no LIST_HEADER, process paragraphs
+        if !found_list_header {
+            for para in ctrl_paragraphs {
                 let para_content =
                     render_paragraph_with_viewer(para, document, renderer, options, tracker);
                 if !para_content.is_empty() {
@@ -324,17 +351,6 @@ fn process_footer<R: Renderer>(
                 }
             }
         }
-    }
-    // LIST_HEADER가 없으면 paragraphs 처리 / If no LIST_HEADER, process paragraphs
-    if !found_list_header {
-        for para in ctrl_paragraphs {
-            let para_content =
-                render_paragraph_with_viewer(para, document, renderer, options, tracker);
-            if !para_content.is_empty() {
-                parts.footers.push(para_content);
-            }
-        }
-    }
     }
 }
 
