@@ -293,6 +293,36 @@ interface ExtractImagesResult {
 - **우선순위**: 중간
 - **상태**: 알려진 제한사항
 
+### 렌더러별 파싱/처리 기능 미구현 (TODO 주석 정리 중)
+
+- **문제**: `crates/hwp-core/src/viewer/core/paragraph.rs`에 여러 TODO 주석이 남아 있음
+  - 글자 모양 정보 수집 및 적용 (렌더러별로 다름)
+  - 글자 모양 적용 로직 구현 (렌더러별로 다름)
+  - 개요 번호 처리 (렌더러별로 다름)
+- **현재 상태**:
+  - 위 TODO들이 현재 코멘트로 남아 있음 (코드 작성 직후 여유를 위해 표시됨)
+  - 렌더러 트레이트(HTML, Markdown)에서 이러한 기능들이 필요로 함
+  - HTML 렌더러에서는 이 정보가 span 태그 등에 반영되어야 함
+  - Markdown 렌더러에서는 이 정보가 마크다운 형식(굵게, 기울임, 밑줄 등)에 반영되어야 함
+- **영향 범위**:
+  - `crates/hwp-core/src/viewer/core/paragraph.rs`: 3개의 TODO 주석
+  - `crates/hwp-core/src/document/bodytext/para_text.rs`: ParaText 레코드에서 글자 모양 정보가 추출되면 이를 렌더러에 전달
+  - `crates/hwp-core/src/viewer/html/`: 글자 모양 정보를 HTML span 태그의 style에 적용
+  - `crates/hwp-core/src/viewer/markdown/`: 글자 모양 정보를 Markdown 특수문자(**, *, ~~ 등)에 적용
+- **구현 방법**:
+  - ParaText 레코드에서 CharShape 정보를 추출하고 ParaText 구조체에 추가
+  - Renderer 트레이트에 글자 모양 적용 관련 메서드 추가 (예: `render_paragraph_with_style`)
+  - `process_paragraph` 함수를 수정하여 글자 모양 정보를 렌더러에 전달
+  - HTML 렌더러: span 태그의 style에 color, font-weight, font-style, text-decoration 등 적용
+  - Markdown 렌더러: 텍스트에 `**`, `*`, `~~` 등의 마크다운 구문 적용
+- **고려사항**:
+  - 글자 모양 정보(CharShape)가 ParaText와 분리되어 있어 데이터 구조 변경 필요
+  - HWP 스펙 문서 표 34, 35: CharShape 필드 중 사용할 필드들 선별
+  - 이스케이프 문자 처리: 마크다운에서 특수문자가 이스케이프되지 않도록 처리
+  - 문단 렌더링 시 글자 모양 정보와 텍스트 순서 유지
+- **우선순위**: 높음
+- **상태**: TODO 주석 문서화 완료, 백로그 연결 ✅
+
 ### 취소선 속성 파싱 문제
 
 - **문제**: 취소선 속성을 제대로 가져오지 못함
