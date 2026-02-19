@@ -5,6 +5,7 @@ use crate::generated::*;
 use hwp_core::HwpParser;
 
 pub struct Hwpjs {
+    #[allow(dead_code)]
     ctx: Context,
 }
 

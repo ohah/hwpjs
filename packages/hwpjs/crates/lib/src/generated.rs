@@ -5,11 +5,17 @@ use craby::prelude::*;
 
 use crate::ffi::bridging::*;
 
+#[allow(dead_code)]
 pub trait HwpjsSpec {
+    #[allow(dead_code)]
     fn new(ctx: Context) -> Self;
+    #[allow(dead_code)]
     fn id(&self) -> usize;
+    #[allow(dead_code)]
     fn file_header(&mut self, data: ArrayBuffer) -> String;
+    #[allow(dead_code)]
     fn to_json(&mut self, data: ArrayBuffer) -> String;
+    #[allow(dead_code)]
     fn to_markdown(&mut self, data: ArrayBuffer, options: ToMarkdownOptions) -> ToMarkdownResult;
 }
 

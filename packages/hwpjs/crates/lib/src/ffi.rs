@@ -62,6 +62,7 @@ fn create_vec_from_slice(data: &[u8]) -> Vec<u8> {
     data.to_vec()
 }
 
+#[allow(clippy::let_and_return)]
 fn hwpjs_file_header(it_: &mut Hwpjs, data: Vec<u8>) -> Result<String, anyhow::Error> {
     craby::catch_panic!({
         let ret = it_.file_header(data);
@@ -69,6 +70,7 @@ fn hwpjs_file_header(it_: &mut Hwpjs, data: Vec<u8>) -> Result<String, anyhow::E
     })
 }
 
+#[allow(clippy::let_and_return)]
 fn hwpjs_to_json(it_: &mut Hwpjs, data: Vec<u8>) -> Result<String, anyhow::Error> {
     craby::catch_panic!({
         let ret = it_.to_json(data);
@@ -76,6 +78,7 @@ fn hwpjs_to_json(it_: &mut Hwpjs, data: Vec<u8>) -> Result<String, anyhow::Error
     })
 }
 
+#[allow(clippy::let_and_return)]
 fn hwpjs_to_markdown(
     it_: &mut Hwpjs,
     data: Vec<u8>,
