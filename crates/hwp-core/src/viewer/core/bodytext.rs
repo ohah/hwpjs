@@ -236,6 +236,39 @@ fn is_page_break_line<R: Renderer>(line: &str, _renderer: &R) -> bool {
     line.contains("<hr") || line == "---"
 }
 
+/// Find paragraphs from either children or ctrl_paragraphs based on LIST_HEADER
+/// LIST_HEADER에 따라 children 또는 ctrl_paragraphs에서 문단 찾기
+fn find_paragraphs_in_records<'a>(
+    children: &'a [ParagraphRecord],
+    _ctrl_paragraphs: &'a [Paragraph],
+) -> Option<&'a [Paragraph]> {
+    for child_record in children {
+        if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record {
+            return Some(paragraphs);
+        }
+    }
+    None
+}
+
+/// Process paragraphs and collect their rendered content
+/// 문단을 처리하고 렌더링된 내용을 수집
+fn process_paragraphs<'a, R: Renderer>(
+    paragraphs: &'a [Paragraph],
+    ctx: &HeaderProcessContext<'a, R>,
+    tracker: &mut dyn TrackerRef,
+    target: &mut Vec<String>,
+) where
+    R::Options: 'static,
+{
+    for para in paragraphs {
+        let para_content =
+            render_paragraph_with_viewer(para, ctx.document, ctx.renderer, ctx.options, tracker);
+        if !para_content.is_empty() {
+            target.push(para_content);
+        }
+    }
+}
+
 /// Header processing context
 /// 헤더 처리 컨텍스트
 struct HeaderProcessContext<'a, R: Renderer> {
@@ -270,41 +303,11 @@ fn process_header<R: Renderer>(
 
         // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
         // If LIST_HEADER exists, process from children, otherwise from paragraphs
-        let mut found_list_header = false;
-        for child_record in children {
-            if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record {
-                found_list_header = true;
-                // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
-                for para in paragraphs {
-                    // 기존 뷰어 함수를 직접 호출 (글자 모양, 개요 번호 등 복잡한 처리를 위해)
-                    let para_content = render_paragraph_with_viewer(
-                        para,
-                        ctx.document,
-                        ctx.renderer,
-                        ctx.options,
-                        tracker,
-                    );
-                    if !para_content.is_empty() {
-                        parts.headers.push(para_content);
-                    }
-                }
-            }
-        }
-        // LIST_HEADER가 없으면 paragraphs 처리 / If no LIST_HEADER, process paragraphs
-        if !found_list_header {
-            for para in ctrl_paragraphs {
-                let para_content = render_paragraph_with_viewer(
-                    para,
-                    ctx.document,
-                    ctx.renderer,
-                    ctx.options,
-                    tracker,
-                );
-                if !para_content.is_empty() {
-                    parts.headers.push(para_content);
-                }
-            }
-        }
+        if let Some(paragraphs) = find_paragraphs_in_records(children, ctrl_paragraphs) {
+            process_paragraphs(paragraphs, &ctx, tracker, parts.headers.as_mut())
+        } else {
+            process_paragraphs(ctrl_paragraphs, &ctx, tracker, parts.headers.as_mut())
+        };
     }
 }
 
@@ -327,30 +330,11 @@ fn process_footer<R: Renderer>(
     {
         // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
         // If LIST_HEADER exists, process from children, otherwise from paragraphs
-        let mut found_list_header = false;
-        for child_record in children {
-            if let ParagraphRecord::ListHeader { paragraphs, .. } = child_record {
-                found_list_header = true;
-                // LIST_HEADER 내부의 문단 처리 / Process paragraphs inside LIST_HEADER
-                for para in paragraphs {
-                    let para_content =
-                        render_paragraph_with_viewer(para, document, renderer, options, tracker);
-                    if !para_content.is_empty() {
-                        parts.footers.push(para_content);
-                    }
-                }
-            }
-        }
-        // LIST_HEADER가 없으면 paragraphs 처리 / If no LIST_HEADER, process paragraphs
-        if !found_list_header {
-            for para in ctrl_paragraphs {
-                let para_content =
-                    render_paragraph_with_viewer(para, document, renderer, options, tracker);
-                if !para_content.is_empty() {
-                    parts.footers.push(para_content);
-                }
-            }
-        }
+        if let Some(paragraphs) = find_paragraphs_in_records(children, ctrl_paragraphs) {
+            process_paragraphs(paragraphs, &HeaderProcessContext { document, renderer, options }, tracker, parts.footers.as_mut())
+        } else {
+            process_paragraphs(ctrl_paragraphs, &HeaderProcessContext { document, renderer, options }, tracker, parts.footers.as_mut())
+        };
     }
 }
 
@@ -374,43 +358,37 @@ fn process_footnote<R: Renderer>(
     // Footnote number format (TODO: Get from FootnoteShape)
     let footnote_number = format!("{}", footnote_id);
 
-    // 본문에 각주 참조 링크 삽입 / Insert footnote reference link in body
-    if !parts.body_lines.is_empty() {
-        let last_idx = parts.body_lines.len() - 1;
-        let last_line = &mut parts.body_lines[last_idx];
-        // 렌더러별로 각주 참조 링크 추가 방법이 다름
-        // Method to add footnote reference link varies by renderer
-        let footnote_ref = renderer.render_footnote_ref(footnote_id, &footnote_number, options);
-        *last_line = append_to_last_paragraph(last_line, &footnote_ref, renderer);
-    } else {
-        // 본문이 비어있으면 새 문단으로 추가 / Add as new paragraph if body is empty
-        let footnote_ref = renderer.render_footnote_ref(footnote_id, &footnote_number, options);
-        parts
-            .body_lines
-            .push(renderer.render_paragraph(&footnote_ref));
-    }
-
     // 각주 내용 수집 / Collect footnote content
-    for para in ctrl_paragraphs {
-        let para_content = render_paragraph_with_viewer(para, document, renderer, options, tracker);
-        if !para_content.is_empty() {
-            let footnote_ref_id = format!("footnote-{}-ref", footnote_id);
-            let footnote_back = renderer.render_footnote_back(&footnote_ref_id, options);
-            let footnote_id_str = format!("footnote-{}", footnote_id);
+    let footnote_contents = collect_footnote_content(ctrl_paragraphs, document, renderer, options, tracker);
 
-            // 렌더러별 각주 컨테이너 형식 (HTML: <div>, Markdown: 일반 텍스트)
-            // Footnote container format by renderer (HTML: <div>, Markdown: plain text)
-            let footnote_container = format_footnote_container(
-                &footnote_id_str,
-                &footnote_back,
-                &para_content,
-                renderer,
-                options,
-            );
-            parts.footnotes.push(footnote_container);
+    for (_footnote_ref_id, footnote_back, content) in footnote_contents {
+        let footnote_id_str = format!("footnote-{}", footnote_id);
+        let footnote_container = format_footnote_container(
+            &footnote_id_str,
+            &footnote_back,
+            &content,
+            renderer,
+            options,
+        );
+
+        // 본문에 각주 참조 링크 삽입 / Insert footnote reference link in body
+        if !parts.body_lines.is_empty() {
+            let last_idx = parts.body_lines.len() - 1;
+            let last_line = &mut parts.body_lines[last_idx];
+            // 렌더러별로 각주 참조 링크 추가 방법이 다름
+            // Method to add footnote reference link varies by renderer
+            let footnote_ref = renderer.render_footnote_ref(footnote_id, &footnote_number, options);
+            *last_line = append_to_last_paragraph(last_line, &footnote_ref, renderer);
+        } else {
+            // 본문이 비어있으면 새 문단으로 추가 / Add as new paragraph if body is empty
+            let footnote_ref = renderer.render_footnote_ref(footnote_id, &footnote_number, options);
+            parts
+                .body_lines
+                .push(renderer.render_paragraph(&footnote_ref));
         }
-    }
-}
+
+        parts.footnotes.push(footnote_container);
+    }}
 
 /// Process endnote
 /// 미주 처리
@@ -432,36 +410,33 @@ fn process_endnote<R: Renderer>(
     // Endnote number format (TODO: Get from FootnoteShape)
     let endnote_number = format!("{}", endnote_id);
 
-    // 본문에 미주 참조 링크 삽입 / Insert endnote reference link in body
-    if !parts.body_lines.is_empty() {
-        let last_idx = parts.body_lines.len() - 1;
-        let last_line = &mut parts.body_lines[last_idx];
-        let endnote_ref = renderer.render_endnote_ref(endnote_id, &endnote_number, options);
-        *last_line = append_to_last_paragraph(last_line, &endnote_ref, renderer);
-    } else {
-        // 본문이 비어있으면 새 문단으로 추가 / Add as new paragraph if body is empty
-        let endnote_ref = renderer.render_endnote_ref(endnote_id, &endnote_number, options);
-        parts
-            .body_lines
-            .push(renderer.render_paragraph(&endnote_ref));
-    }
-
     // 미주 내용 수집 / Collect endnote content
-    for para in ctrl_paragraphs {
-        let para_content = render_paragraph_with_viewer(para, document, renderer, options, tracker);
-        if !para_content.is_empty() {
-            let endnote_ref_id = format!("endnote-{}-ref", endnote_id);
-            let endnote_back = renderer.render_endnote_back(&endnote_ref_id, options);
-            let endnote_id_str = format!("endnote-{}", endnote_id);
+    let endnote_contents = collect_footnote_content(ctrl_paragraphs, document, renderer, options, tracker);
 
-            parts.endnotes.push(format_endnote_container(
-                &endnote_id_str,
-                &endnote_back,
-                &para_content,
-                renderer,
-                options,
-            ));
+    for (_endnote_ref_id, endnote_back, content) in endnote_contents {
+        let endnote_id_str = format!("endnote-{}", endnote_id);
+
+        // 본문에 미주 참조 링크 삽입 / Insert endnote reference link in body
+        if !parts.body_lines.is_empty() {
+            let last_idx = parts.body_lines.len() - 1;
+            let last_line = &mut parts.body_lines[last_idx];
+            let endnote_ref = renderer.render_endnote_ref(endnote_id, &endnote_number, options);
+            *last_line = append_to_last_paragraph(last_line, &endnote_ref, renderer);
+        } else {
+            // 본문이 비어있으면 새 문단으로 추가 / Add as new paragraph if body is empty
+            let endnote_ref = renderer.render_endnote_ref(endnote_id, &endnote_number, options);
+            parts
+                .body_lines
+                .push(renderer.render_paragraph(&endnote_ref));
         }
+
+        parts.endnotes.push(format_endnote_container(
+            &endnote_id_str,
+            &endnote_back,
+            &content,
+            renderer,
+            options,
+        ));
     }
 }
 
@@ -475,6 +450,32 @@ fn append_to_last_paragraph<R: Renderer>(last_line: &str, content: &str, _render
     } else {
         format!("{} {}", last_line, content)
     }
+}
+
+/// Process paragraphs and collect rendered content with backlinks
+/// 문단을 처리하고 렌더링된 내용을 수집
+fn collect_footnote_content<R: Renderer>(
+    ctrl_paragraphs: &[Paragraph],
+    document: &HwpDocument,
+    renderer: &R,
+    options: &R::Options,
+    tracker: &mut dyn TrackerRef,
+) -> Vec<(String, String, String)>
+where
+    R::Options: 'static,
+{
+    let mut result = Vec::new();
+
+    for para in ctrl_paragraphs {
+        let para_content = render_paragraph_with_viewer(para, document, renderer, options, tracker);
+        if !para_content.is_empty() {
+            let unique_id = "[footnote-id]".to_string(); // TODO: Use proper tracking
+            let back_link = "[^1]".to_string(); // TODO: Generate proper backlink
+            result.push((unique_id, back_link, para_content));
+        }
+    }
+
+    result
 }
 
 /// Format footnote container (renderer-specific)
