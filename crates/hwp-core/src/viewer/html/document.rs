@@ -74,7 +74,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html.push('\n');
     html.push_str("<head>\n");
     html.push_str("  <title></title>\n");
-    html.push_str("  <meta http_quiv=\"content-type\" content=\"text/html; charset=utf-8\">\n");
+    html.push_str("  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n");
 
     // CSS 스타일 생성 / Generate CSS styles
     html.push_str("  <style>\n");
