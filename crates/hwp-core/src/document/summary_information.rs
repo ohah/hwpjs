@@ -89,7 +89,10 @@ impl FileTime {
 
         // ISO 8601 형식으로 변환 (YYYY-MM-DDTHH:MM:SS+09:00)
         // Convert to ISO 8601 format (YYYY-MM-DDTHH:MM:SS+09:00)
-        let total_secs = utc9_datetime.duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let total_secs_duration = utc9_datetime
+            .duration_since(UNIX_EPOCH)
+            .expect("datetime should be after UNIX epoch");
+        let total_secs = total_secs_duration.as_secs();
         let days = total_secs / 86400;
         let secs_in_day = total_secs % 86400;
         let hours = secs_in_day / 3600;
