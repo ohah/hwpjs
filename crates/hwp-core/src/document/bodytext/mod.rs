@@ -612,6 +612,50 @@ impl Section {
     ///
     /// 모든 레벨의 레코드를 재귀적으로 처리합니다.
     /// Recursively processes records at all levels.
+    /// 레코드 트리 노드를 파싱하여 ParagraphRecord로 변환합니다.
+    ///
+    /// 이 함수는 HWP 문서의 다양한 태그 타입을 지원하며, 특히 CTRL_HEADER의 복잡한 처리 로직을 포함합니다.
+    ///
+    /// **주요 처리 루틴:**
+    ///
+    /// **PARA_XXX 태그들:**
+    /// - `PARA_TEXT`, `PARA_CHAR_SHAPE`, `PARA_LINE_SEG`, `PARA_RANGE_TAG`
+    /// - 이들은 직접 파싱하여 Paragraph를 생성합니다.
+    ///
+    /// **CTRL_HEADER (가장 복잡한 부분):**
+    /// - 머리말(HEADER), 꼬리말(FOOTER), 각주(FOOTNOTE), 미주(ENDNOTE) 등의 컨트롤 헤더
+    /// - 테이블(TABLE)과 테이블 셀(LIST_HEADER)처리
+    /// - 캡션(CAPTION) 파싱
+    ///
+    /// **PARA_HEADER 처리 로직 (중요):**
+    ///
+    /// CTRL_HEADER 내부의 PARA_HEADER는 컨트롤 타입에 따라 다르게 처리됩니다:
+    ///
+    /// 1. **머리말/꼬리말(HEADER/FOOTER):**
+    ///    - LIST_HEADER가 있으면: 실제 텍스트는 LIST_HEADER 내부 paragraphs에 저장 → PARA_HEADER를 추가하지 않음 (중복 방지)
+    ///    - LIST_HEADER가 없으면: 실제 텍스트는 PARA_HEADER의 ParaText에 저장 → PARA_HEADER를 추가
+    ///
+    /// 2. **같주/미주(FOOTNOTE/ENDNOTE):**
+    ///    - LIST_HEADER는 자동 번호 템플릿만 포함 → PARA_HEADER는 필수
+    ///    - 실제 텍스트는 PARA_HEADER의 ParaText에 저장
+    ///    - LIST_HEADER가 있어도 PARA_HEADER를 처리해야 실제 텍스트를 얻을 수 있음
+    ///
+    /// **테이블 및 LIST_HEADER 처리:**
+    /// - TABLE 태그는 테이블 구조로 파싱하여 별도로 저장
+    /// - LIST_HEADER는 테이블 셀 정보(행/열 주소, 행span/열span, 테두리/배경 등)를 포함
+    /// - list_headers_for_table 벡터는 (row_address, col_address, paragraphs, cell_attributes)의 튜플을 저장
+    /// - 각 LIST_HEADER와 대응하는 PARA_HEADER들을 테이블 셀에 매핑하여 셀 생성
+    ///
+    /// 이 긴 함수는 HWP 파일 형식의 복잡성을 반영하며, 각 레코드 타입과 그 상호작용을 명확히 설명하기 위해
+    /// 여러 줄 주석과 문서화를 제공합니다.
+    ///
+    /// # Arguments
+    /// * `node` - 레코드 트리 노드
+    /// * `version` - HWP 파일 버전
+    /// * `original_data` - 원본 데이터 (재귀 호출 시 이전 레벨의 데이터 참조용)
+    ///
+    /// # Returns
+    /// 파싱된 ParagraphRecord
     fn parse_record_from_tree(
         node: &RecordTreeNode,
         version: u32,
