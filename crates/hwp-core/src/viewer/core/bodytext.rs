@@ -369,7 +369,7 @@ fn process_note_entries<R: Renderer>(
     R::Options: 'static,
 {
     for (_ref_id, back_link, content) in note_contents {
-        let id_str = notes_container.get(0).map(String::as_str).unwrap_or("");
+        let id_str = notes_container.first().map(String::as_str).unwrap_or("");
         let note_container = format_footnote_container(id_str, &back_link, &content, renderer, options);
 
         // Add reference link to body
@@ -540,39 +540,3 @@ where
     format!("{} {}", back_link, content)
 }
 
-/// Format endnote container (renderer-specific)
-/// 미주 컨테이너 포맷 (렌더러별)
-fn format_endnote_container<R: Renderer>(
-    id: &str,
-    back_link: &str,
-    content: &str,
-    _renderer: &R,
-    options: &R::Options,
-) -> String
-where
-    R::Options: 'static,
-{
-    // 타입 체크를 통해 렌더러별 포맷 적용 / Apply renderer-specific format through type checking
-    // HTML 렌더러인 경우 / If HTML renderer
-    if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<HtmlOptions>() {
-        unsafe {
-            let html_options = &*(options as *const R::Options as *const html::HtmlOptions);
-            return format!(
-                r#"      <div id="{}" class="{}endnote">"#,
-                id, html_options.css_class_prefix
-            ) + &format!(r#"        {}"#, back_link)
-                + content
-                + "      </div>";
-        }
-    }
-
-    // Markdown 렌더러인 경우 / If Markdown renderer
-    if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<MarkdownOptions>() {
-        // 마크다운에서는 미주를 [^1]: 형식으로 표시
-        // In markdown, endnotes are shown as [^1]:
-        return format!("{}{}", back_link, content);
-    }
-
-    // 기본: 일반 텍스트 / Default: plain text
-    format!("{} {}", back_link, content)
-}
