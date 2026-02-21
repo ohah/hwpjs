@@ -213,4 +213,3 @@ fn pdf_generated_table_snapshot() {
     assert!(!pdf.is_empty());
     assert!(pdf.starts_with(b"%PDF"), "PDF magic bytes");
 }
-
