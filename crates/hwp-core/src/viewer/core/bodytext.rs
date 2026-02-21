@@ -331,9 +331,27 @@ fn process_footer<R: Renderer>(
         // LIST_HEADER가 있으면 children에서 처리, 없으면 paragraphs에서 처리
         // If LIST_HEADER exists, process from children, otherwise from paragraphs
         if let Some(paragraphs) = find_paragraphs_in_records(children, ctrl_paragraphs) {
-            process_paragraphs(paragraphs, &HeaderProcessContext { document, renderer, options }, tracker, parts.footers.as_mut())
+            process_paragraphs(
+                paragraphs,
+                &HeaderProcessContext {
+                    document,
+                    renderer,
+                    options,
+                },
+                tracker,
+                parts.footers.as_mut(),
+            )
         } else {
-            process_paragraphs(ctrl_paragraphs, &HeaderProcessContext { document, renderer, options }, tracker, parts.footers.as_mut())
+            process_paragraphs(
+                ctrl_paragraphs,
+                &HeaderProcessContext {
+                    document,
+                    renderer,
+                    options,
+                },
+                tracker,
+                parts.footers.as_mut(),
+            )
         };
     }
 }
@@ -359,7 +377,15 @@ fn process_footnote<R: Renderer>(
     let footnote_number = format!("{}", footnote_id);
 
     // 각주 내용 수집 / Collect footnote content
-    let footnote_contents = collect_footnote_content(ctrl_paragraphs, document, renderer, options, tracker);
+    let footnote_contents = collect_footnote_content(
+        ctrl_paragraphs,
+        document,
+        renderer,
+        options,
+        tracker,
+        footnote_id,
+        "footnote",
+    );
 
     for (_footnote_ref_id, footnote_back, content) in footnote_contents {
         let footnote_id_str = format!("footnote-{}", footnote_id);
@@ -388,7 +414,8 @@ fn process_footnote<R: Renderer>(
         }
 
         parts.footnotes.push(footnote_container);
-    }}
+    }
+}
 
 /// Process endnote
 /// 미주 처리
@@ -411,7 +438,15 @@ fn process_endnote<R: Renderer>(
     let endnote_number = format!("{}", endnote_id);
 
     // 미주 내용 수집 / Collect endnote content
-    let endnote_contents = collect_footnote_content(ctrl_paragraphs, document, renderer, options, tracker);
+    let endnote_contents = collect_footnote_content(
+        ctrl_paragraphs,
+        document,
+        renderer,
+        options,
+        tracker,
+        endnote_id,
+        "endnote",
+    );
 
     for (_endnote_ref_id, endnote_back, content) in endnote_contents {
         let endnote_id_str = format!("endnote-{}", endnote_id);
@@ -460,18 +495,20 @@ fn collect_footnote_content<R: Renderer>(
     renderer: &R,
     options: &R::Options,
     tracker: &mut dyn TrackerRef,
+    note_id: u32,
+    id_prefix: &str,
 ) -> Vec<(String, String, String)>
 where
     R::Options: 'static,
 {
     let mut result = Vec::new();
+    let unique_id = format!("{}-{}", id_prefix, note_id);
+    let back_link = format!("[^{}]", note_id);
 
     for para in ctrl_paragraphs {
         let para_content = render_paragraph_with_viewer(para, document, renderer, options, tracker);
         if !para_content.is_empty() {
-            let unique_id = "[footnote-id]".to_string(); // TODO: Use proper tracking
-            let back_link = "[^1]".to_string(); // TODO: Generate proper backlink
-            result.push((unique_id, back_link, para_content));
+            result.push((unique_id.clone(), back_link.clone(), para_content));
         }
     }
 
