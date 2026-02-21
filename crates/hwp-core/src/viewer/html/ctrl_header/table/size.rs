@@ -94,10 +94,7 @@ pub(crate) fn htb_size(ctrl_header: Option<&CtrlHeaderData>) -> Size {
 
 /// row_sizes 합을 mm로 변환 (HWPUNIT16: 1/7200 inch) / Convert row_sizes sum to mm (HWPUNIT16: 1/7200 inch)
 fn row_sizes_sum_mm(row_sizes: &[crate::types::HWPUNIT16]) -> f64 {
-    row_sizes
-        .iter()
-        .map(|s| (*s as f64 / 7200.0) * 25.4)
-        .sum()
+    row_sizes.iter().map(|s| (*s as f64 / 7200.0) * 25.4).sum()
 }
 
 /// 셀 기반 콘텐츠 크기 계산 / Calculate content size from cells
@@ -181,7 +178,12 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
 
                 // 행별 높이 합산 (총 content_height) / Sum row heights for total content_height
                 let calculated_sum: f64 = (0..table.attributes.row_count as usize)
-                    .map(|row_idx| max_row_heights_with_shapes.get(&row_idx).copied().unwrap_or(0.0))
+                    .map(|row_idx| {
+                        max_row_heights_with_shapes
+                            .get(&row_idx)
+                            .copied()
+                            .unwrap_or(0.0)
+                    })
                     .sum();
                 content_height = if calculated_sum > 0.0 {
                     round_to_2dp(calculated_sum)
