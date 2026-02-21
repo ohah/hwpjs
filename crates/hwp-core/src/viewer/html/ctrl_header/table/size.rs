@@ -92,124 +92,120 @@ pub(crate) fn htb_size(ctrl_header: Option<&CtrlHeaderData>) -> Size {
     }
 }
 
+/// row_sizes 합을 mm로 변환 (HWPUNIT16: 1/7200 inch) / Convert row_sizes sum to mm (HWPUNIT16: 1/7200 inch)
+fn row_sizes_sum_mm(row_sizes: &[crate::types::HWPUNIT16]) -> f64 {
+    row_sizes
+        .iter()
+        .map(|s| (*s as f64 / 7200.0) * 25.4)
+        .sum()
+}
+
 /// 셀 기반 콘텐츠 크기 계산 / Calculate content size from cells
+/// content_height: row_sizes 합 또는 셀 높이 합 우선, ctrl_header.height는 보조/폴백만 사용
 pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) -> Size {
     let mut content_width = 0.0;
     let mut content_height = 0.0;
 
-    if table.attributes.row_count > 0 && !table.attributes.row_sizes.is_empty() {
-        if let Some(CtrlHeaderData::ObjectCommon { height, .. }) = ctrl_header {
-            let ctrl_header_height_mm = height.to_mm();
+    if table.attributes.row_count > 0 {
+        // 1) row_sizes가 있으면 합을 content_height로 사용 (fixture: 25mm+25mm 등)
+        // When row_sizes exists, use its sum as content_height (e.g. fixture 25mm+25mm)
+        if !table.attributes.row_sizes.is_empty()
+            && table.attributes.row_sizes.len() >= table.attributes.row_count as usize
+        {
+            let from_row_sizes = row_sizes_sum_mm(
+                &table.attributes.row_sizes[..table.attributes.row_count as usize],
+            );
+            content_height = round_to_2dp(from_row_sizes);
+        }
 
-            // object_common.height를 행 개수로 나눈 기본 행 높이 계산 / Calculate base row height from object_common.height divided by row count
-            let base_row_height_mm = if table.attributes.row_count > 0 {
-                ctrl_header_height_mm / table.attributes.row_count as f64
-            } else {
-                0.0
-            };
+        if content_height < 0.01 {
+            // 2) row_sizes 없거나 0이면 셀/ctrl_header 기반 계산
+            // When row_sizes missing or zero, compute from cells or ctrl_header
+            if let Some(CtrlHeaderData::ObjectCommon { height, .. }) = ctrl_header {
+                let ctrl_header_height_mm = height.to_mm();
+                let base_row_height_mm = ctrl_header_height_mm / table.attributes.row_count as f64;
 
-            // ctrl_header.height가 있어도, shape component가 있는 셀의 실제 높이를 확인하여 더 큰 값을 사용
-            // Even if ctrl_header.height exists, check actual cell heights with shape components and use the larger value
-            let mut max_row_heights_with_shapes: HashMap<usize, f64> = HashMap::new();
-            for cell in &table.cells {
-                if cell.cell_attributes.row_span == 1 {
-                    let row_idx = cell.cell_attributes.row_address as usize;
-                    // 먼저 실제 셀 높이를 가져옴 (cell.cell_attributes.height 우선) / First get actual cell height (cell.cell_attributes.height has priority)
-                    let mut cell_height = cell.cell_attributes.height.to_mm();
+                let mut max_row_heights_with_shapes: HashMap<usize, f64> = HashMap::new();
+                for cell in &table.cells {
+                    if cell.cell_attributes.row_span == 1 {
+                        let row_idx = cell.cell_attributes.row_address as usize;
+                        let mut cell_height = cell.cell_attributes.height.to_mm();
+                        let mut max_shape_height_mm: Option<f64> = None;
 
-                    // shape component가 있는 셀의 경우 shape 높이 + 마진을 고려 / For cells with shape components, consider shape height + margin
-                    let mut max_shape_height_mm: Option<f64> = None;
-
-                    for para in &cell.paragraphs {
-                        for record in &para.records {
-                            if let ParagraphRecord::ShapeComponent {
-                                shape_component,
-                                children,
-                            } = record
-                            {
-                                if let Some(new_max_height) =
-                                    find_max_shape_height(children, shape_component.height)
+                        for para in &cell.paragraphs {
+                            for record in &para.records {
+                                if let ParagraphRecord::ShapeComponent {
+                                    shape_component,
+                                    children,
+                                } = record
                                 {
-                                    max_shape_height_mm = Some(
-                                        max_shape_height_mm.unwrap_or(0.0).max(new_max_height),
-                                    );
+                                    if let Some(new_max_height) =
+                                        find_max_shape_height(children, shape_component.height)
+                                    {
+                                        max_shape_height_mm = Some(
+                                            max_shape_height_mm.unwrap_or(0.0).max(new_max_height),
+                                        );
+                                    }
+                                    break;
                                 }
-                                break;
-                            }
-
-                            if let ParagraphRecord::ParaLineSeg { segments } = record {
-                                let total_height_hwpunit: i32 =
-                                    segments.iter().map(|seg| seg.line_height).sum();
-                                let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
-                                max_shape_height_mm =
-                                    Some(max_shape_height_mm.unwrap_or(0.0).max(height_mm));
+                                if let ParagraphRecord::ParaLineSeg { segments } = record {
+                                    let total_height_hwpunit: i32 =
+                                        segments.iter().map(|seg| seg.line_height).sum();
+                                    let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
+                                    max_shape_height_mm =
+                                        Some(max_shape_height_mm.unwrap_or(0.0).max(height_mm));
+                                }
                             }
                         }
-                    }
 
-                    // shape component가 있으면 셀 높이 = shape 높이 + 마진 / If shape component exists, cell height = shape height + margin
-                    if let Some(shape_height_mm) = max_shape_height_mm {
-                        let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
-                        let bottom_margin_mm =
-                            cell_margin_to_mm(cell.cell_attributes.bottom_margin);
-                        let shape_height_with_margin =
-                            shape_height_mm + top_margin_mm + bottom_margin_mm;
-                        // shape 높이 + 마진이 기존 셀 높이보다 크면 사용 / Use shape height + margin if larger than existing cell height
-                        if shape_height_with_margin > cell_height {
-                            cell_height = shape_height_with_margin;
+                        if let Some(shape_height_mm) = max_shape_height_mm {
+                            let top_margin_mm = cell_margin_to_mm(cell.cell_attributes.top_margin);
+                            let bottom_margin_mm =
+                                cell_margin_to_mm(cell.cell_attributes.bottom_margin);
+                            let shape_height_with_margin =
+                                shape_height_mm + top_margin_mm + bottom_margin_mm;
+                            if shape_height_with_margin > cell_height {
+                                cell_height = shape_height_with_margin;
+                            }
                         }
+                        if max_shape_height_mm.is_none()
+                            && cell_height < 0.1
+                            && base_row_height_mm > 0.0
+                        {
+                            cell_height = base_row_height_mm;
+                        }
+                        let entry = max_row_heights_with_shapes.entry(row_idx).or_insert(0.0f64);
+                        *entry = (*entry).max(cell_height);
                     }
-
-                    // shape component가 없고 셀 높이가 매우 작으면 object_common.height를 베이스로 사용 (fallback)
-                    // If no shape component and cell height is very small, use object_common.height as base (fallback)
-                    if max_shape_height_mm.is_none()
-                        && cell_height < 0.1
-                        && base_row_height_mm > 0.0
-                    {
-                        cell_height = base_row_height_mm;
-                    }
-
-                    let entry = max_row_heights_with_shapes.entry(row_idx).or_insert(0.0f64);
-                    *entry = (*entry).max(cell_height);
                 }
-            }
 
-            // 행 높이 핑계 계산 / Calculate sum of row heights
-            let calculated_height: f64 = max_row_heights_with_shapes
-                .values()
-                .copied()
-                .fold(0.0, |sum, height| sum.max(height));
-
-            // ctrl_header.height가 있으면 우선 사용 (이미 shape component 높이를 포함할 수 있음)
-            // If ctrl_header.height exists, use it preferentially (may already include shape component height)
-            // 계산된 높이는 참고용으로만 사용 (ctrl_header.height가 없거나 너무 작을 때만 사용)
-            // Calculated height is only for reference (use only if ctrl_header.height is missing or too small)
-            if calculated_height > ctrl_header_height_mm * 1.1 {
-                // 계산된 높이가 ctrl_header.height보다 10% 이상 크면 사용 (shape component가 추가된 경우)
-                // Use calculated height if it's more than 10% larger than ctrl_header.height (shape component added case)
-                content_height = calculated_height;
+                // 행별 높이 합산 (총 content_height) / Sum row heights for total content_height
+                let calculated_sum: f64 = (0..table.attributes.row_count as usize)
+                    .map(|row_idx| max_row_heights_with_shapes.get(&row_idx).copied().unwrap_or(0.0))
+                    .sum();
+                content_height = if calculated_sum > 0.0 {
+                    round_to_2dp(calculated_sum)
+                } else {
+                    ctrl_header_height_mm
+                };
             } else {
-                // 그렇지 않으면 ctrl_header.height 사용
-                // Otherwise use ctrl_header.height
-                content_height = ctrl_header_height_mm;
-            }
-        } else {
-            let mut max_row_heights: HashMap<usize, f64> = HashMap::new();
-            for cell in &table.cells {
-                if cell.cell_attributes.row_span == 1 {
-                    let row_idx = cell.cell_attributes.row_address as usize;
-                    let cell_height = cell.cell_attributes.height.to_mm();
-                    let entry = max_row_heights.entry(row_idx).or_insert(0.0f64);
-                    *entry = (*entry).max(cell_height);
+                let mut max_row_heights: HashMap<usize, f64> = HashMap::new();
+                for cell in &table.cells {
+                    if cell.cell_attributes.row_span == 1 {
+                        let row_idx = cell.cell_attributes.row_address as usize;
+                        let cell_height = cell.cell_attributes.height.to_mm();
+                        let entry = max_row_heights.entry(row_idx).or_insert(0.0f64);
+                        *entry = (*entry).max(cell_height);
+                    }
                 }
-            }
-            for row_idx in 0..table.attributes.row_count as usize {
-                if let Some(&height) = max_row_heights.get(&row_idx) {
-                    content_height += height;
-                } else if let Some(&row_size) = table.attributes.row_sizes.get(row_idx) {
-                    let row_height = (row_size as f64 / 7200.0) * 25.4;
-                    content_height += row_height;
+                for row_idx in 0..table.attributes.row_count as usize {
+                    if let Some(&height) = max_row_heights.get(&row_idx) {
+                        content_height += height;
+                    } else if let Some(&row_size) = table.attributes.row_sizes.get(row_idx) {
+                        content_height += (row_size as f64 / 7200.0) * 25.4;
+                    }
                 }
+                content_height = round_to_2dp(content_height);
             }
         }
     }
