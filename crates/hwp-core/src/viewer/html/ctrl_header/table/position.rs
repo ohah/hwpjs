@@ -171,13 +171,16 @@ pub(crate) fn table_position(
         // vert_rel_to=para이고 앵커+테이블 높이가 콘텐츠 영역을 넘을 때: 테이블 하단이 앵커 줄에 맞도록 위로 올려 배치 (fixture table-caption 표7)
         // content_height_mm은 페이지 상단 기준 콘텐츠 영역 절대 하단(mm)으로 해석 (pagination과 동일한 기준).
         if matches!(vert_rel_to, Some(VertRelTo::Para))
-            && para_start_vertical_mm.is_some()
-            && content_height_mm.is_some()
-            && table_height_mm.is_some()
         {
-            let para_start = para_start_vertical_mm.unwrap();
-            let content_bottom = content_height_mm.unwrap(); // 절대 하단(페이지 상단 기준)
-            let th = table_height_mm.unwrap();
+            let Some(para_start) = para_start_vertical_mm else {
+                return (round_to_2dp(left_mm), round_to_2dp(final_top_mm));
+            };
+            let Some(content_bottom) = content_height_mm else {
+                return (round_to_2dp(left_mm), round_to_2dp(final_top_mm));
+            };
+            let Some(th) = table_height_mm else {
+                return (round_to_2dp(left_mm), round_to_2dp(final_top_mm));
+            };
             if para_start + th > content_bottom {
                 final_top_mm = round_to_2dp(para_start - th);
             }

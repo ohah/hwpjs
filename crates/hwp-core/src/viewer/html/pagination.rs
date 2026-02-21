@@ -59,8 +59,8 @@ pub fn check_paragraph_page_break(
     // vertical_reset이어도, 새 위치가 현재 페이지 상단 구간이 아니면 브레이크하지 않음.
     // 예: 이전 231.9mm, 현재 196.72mm → 리셋이지만 196.72는 1페이지 내이므로 브레이크 없음.
     // Only treat vertical_reset as page break when the new position is in the "top of page" region.
-    // 상단 구간: 50mm 이하 (한/글 기본 상단 여백+헤더 영역 수준).
-    let top_region_mm = 50.0_f64.min(context.content_height_mm * 0.2);
+    // 상단 구간: 문서 상단(0.1mm 미만) 또는 현재 페이지 content 높이의 상단 20% 이하 (PageDef·문서에서 유도).
+    let top_region_mm = context.content_height_mm * 0.2;
     let has_vertical_reset = check_vertical_reset(context.prev_vertical_mm, first_vertical_mm)
         && first_vertical_mm
             .map(|v| v < 0.1 || v < top_region_mm)
