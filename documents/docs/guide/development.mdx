@@ -66,10 +66,57 @@ rustup target add wasm32-wasip1-threads
   cargo install cargo-xwin
   ```
 
+- **Linux 크로스 컴파일**: `cross`가 Docker(또는 Podman)를 사용합니다. 아래 "Linux x64 크로스 빌드 (macOS)" 절을 참고해 환경을 설치한 뒤 `build:node:linux-x64`를 실행하면 됩니다.
+
 **빌드 스크립트**:
 
 - `build:node:windows-*`: `--cross-compile` 플래그 사용 (cargo-xwin 자동 감지)
 - `build:node:linux-*`: `--use-cross` 플래그 사용 (Docker 필요)
 - `build:node:macos-*`: 네이티브 빌드 (Mac만 가능)
 - `build:wasm`: WASM 빌드
+
+### Linux x64 크로스 빌드 (macOS)
+
+맥에서 Linux x64용 Node 네이티브 모듈을 빌드하려면 Docker와 cross가 필요합니다. **Apple Silicon (M1/M2 등)** 에서는 QEMU로 x86_64를 에뮬레이션하므로, 프로젝트는 Ubuntu 24 기반 커스텀 이미지와 LLD 링커를 사용해 빌드 안정성을 높였습니다.
+
+#### 1. Colima + Docker 설치 (macOS, Docker Desktop 없을 때)
+
+Docker CLI만 쓰고 싶다면 Colima로 VM을 띄우면 됩니다.
+
+```bash
+# Colima와 Docker CLI 설치
+brew install colima docker
+
+# Colima VM 시작 (처음 한 번)
+colima start
+```
+
+이후 `docker` 명령이 사용 가능해집니다.
+
+#### 2. cross 설치
+
+```bash
+cargo install cross
+```
+
+#### 3. Linux x64 빌드 실행
+
+```bash
+cd packages/hwpjs
+bun run build:node:linux-x64
+```
+
+**Apple Silicon 맥**에서 실행할 때는, 커스텀 Docker 이미지를 amd64로 빌드하기 위해 다음처럼 플랫폼을 지정하는 것이 좋습니다.
+
+```bash
+cd packages/hwpjs
+CROSS_BUILD_OPTS="--platform linux/amd64" bun run build:node:linux-x64
+```
+
+빌드가 끝나면 `packages/hwpjs/dist/hwpjs.linux-x64-gnu.node`가 생성됩니다. 첫 빌드는 Docker 이미지 빌드와 의존성 컴파일 때문에 시간이 꽤 걸릴 수 있습니다.
+
+#### 참고: 프로젝트 설정
+
+- **Cross.toml**: Linux x64 타겟에 대해 `docker/Dockerfile.x86_64-unknown-linux-gnu`(Ubuntu 24.04 + Rust + LLD)를 사용하도록 설정되어 있습니다.
+- Docker Desktop을 이미 사용 중이라면 Colima 없이 `cross`와 Docker만으로 위 빌드가 동작합니다.
 
