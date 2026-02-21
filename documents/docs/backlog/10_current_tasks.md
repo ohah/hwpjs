@@ -193,7 +193,7 @@ interface ExtractImagesResult {
   - 테스트 스크립트 추가: `package.json`
   - CI/CD 파이프라인 업데이트: `.github/workflows/`
   - 테스트 파일: `tests/e2e/` 또는 각 예제 프로젝트 내
-  - 문서: `docs/docs/guide/examples.md` 업데이트
+  - 문서: `documents/docs/guide/examples.md` 업데이트
 - **우선순위**: 중간
 - **상태**: 계획됨
 
@@ -247,7 +247,7 @@ interface ExtractImagesResult {
 
 ### 차트 형식 명세서 작성
 
-- **파일**: `docs/docs/spec/chart.md`
+- **파일**: `documents/docs/spec/chart.md`
 - **현재 상태**: 내용 준비 중
 - **작업 내용**: HWP 파일 형식의 차트 개체에 대한 명세서 작성
 - **참고**: HWP 5.0 명세서의 "4.3.9.6. 차트 개체" 섹션 참조
@@ -256,7 +256,7 @@ interface ExtractImagesResult {
 
 ### 배포용 문서 형식 명세서 작성
 
-- **파일**: `docs/docs/spec/distribution.md`
+- **파일**: `documents/docs/spec/distribution.md`
 - **현재 상태**: 내용 준비 중
 - **작업 내용**: HWP 파일 형식의 배포용 문서 데이터에 대한 명세서 작성
 - **참고**: HWP 5.0 명세서의 "4.2.13. 배포용 문서 데이터" 섹션 참조
@@ -265,7 +265,7 @@ interface ExtractImagesResult {
 
 ### HWP 3.0 / HWPML 형식 명세서 작성
 
-- **파일**: `docs/docs/spec/hwp-3.0-hwpml.md`
+- **파일**: `documents/docs/spec/hwp-3.0-hwpml.md`
 - **현재 상태**: 내용 준비 중
 - **작업 내용**: HWP 3.0 및 HWPML 형식에 대한 명세서 작성
 - **참고**: HWP 5.0 명세서의 "본 문서에 대하여" 섹션에서 언급

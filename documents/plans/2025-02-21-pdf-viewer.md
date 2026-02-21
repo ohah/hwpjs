@@ -273,6 +273,20 @@ git commit -m "feat(core): iterate all body paragraphs in PDF export"
 
 ---
 
+## 알려진 한계: PDF에서 텍스트가 안 보일 때
+
+**의도:** 문단 텍스트(ParaText)는 계획대로 `elements::Paragraph::new(text)`로 PDF에 넣고 있음 (Task 3·5).
+
+**현상:** 스냅샷/실제 PDF에서 표·이미지는 나오는데 **텍스트만 비어 보이는** 경우가 있음.
+
+**원인:** PDF는 폰트의 **글리프**로만 글자를 그림. Liberation Sans 등 라틴 전용 폰트에는 한글 글리프가 없어서, 한글 문단은 레이아웃만 잡히고 문자는 그려지지 않음.
+
+**대응:**
+- 한글이 나오게 하려면 **한글 지원 폰트**(예: Noto Sans KR)를 `font_dir`로 지정해야 함. 패키지 기본 번들(`fonts/NotoSansKR-Regular.ttf`) 또는 `--font-dir ./fonts` 사용.
+- 테스트/스냅샷에서 `find_font_dir()`가 Liberation만 주면 한글 텍스트는 비어 보이는 것이 정상이며, 폰트를 Noto Sans KR로 바꾸면 텍스트가 표시됨.
+
+---
+
 ## 참고 파일
 
 - 뷰어 공통: `crates/hwp-core/src/viewer/core/renderer.rs` (Renderer는 PDF에서 사용하지 않음)
@@ -287,7 +301,7 @@ git commit -m "feat(core): iterate all body paragraphs in PDF export"
 새 채팅을 열고 **executing-plans** 스킬을 사용해 이 계획을 실행할 때, 아래를 복사해 붙여넣으면 된다.
 
 ```
-Read docs/plans/2025-02-21-pdf-viewer.md. Use superpowers:executing-plans and implement the plan task-by-task. Start from Task 1, run tests/commands as specified, commit after each task. Stop at Task 5 (full body iteration); Task 6 is optional. If font loading fails (LiberationSans), make tests skip when font_dir is missing or document the requirement.
+Read documents/plans/2025-02-21-pdf-viewer.md. Use superpowers:executing-plans and implement the plan task-by-task. Start from Task 1, run tests/commands as specified, commit after each task. Stop at Task 5 (full body iteration); Task 6 is optional. If font loading fails (LiberationSans), make tests skip when font_dir is missing or document the requirement.
 ```
 
 ---

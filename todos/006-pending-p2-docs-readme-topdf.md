@@ -33,7 +33,7 @@ PDF 기능의 발견 가능성이 부족함. README의 CLI·Node 예시에 `to-p
 
 ## Technical Details
 
-- **파일**: packages/hwpjs/README.md, docs(가이드)
+- **파일**: packages/hwpjs/README.md, documents(가이드)
 - **타입**: NAPI 생성 타입에 toPdf/ToPdfOptions 포함 여부 확인 후, 수동 정의 시 추가.
 
 ## Acceptance Criteria

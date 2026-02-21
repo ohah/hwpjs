@@ -28,6 +28,7 @@
 - `node`: Node.js 바인딩 관련
 - `react-native`: React Native 바인딩 관련
 - `docs`: 문서 관련
+- `documents`: 문서 사이트(Rspress, `documents/`) 관련
 
 ## Subject (필수)
 

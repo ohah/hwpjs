@@ -82,8 +82,8 @@
 - **`#[allow(dead_code)]` 정리**: `table.rs`, `line_segment.rs`, `border_fill.rs`, `ctrl_header/caption.rs` 등 — 해당 코드 사용처 추가 또는 미사용 코드 제거 후 allow 제거.
 - **긴 함수 분리**: `bodytext/mod.rs`의 `parse_record_from_tree` 등 100줄 넘는 match/블록은 태그별로 헬퍼 함수로 쪼개기.
 - **중복 로직 추출**: 파싱/렌더링에서 반복되는 패턴을 공통 함수나 모듈로 묶기.
-- **명세 정합성**: 스펙 문서(`docs/docs/spec/`, `.cursor/skills/hwp-spec/`)와 필드명·주석·자료형 맞추기.
-- **TODO 주석 정리**: `viewer/core`, `viewer/html/ctrl_header` 등에 있는 TODO를 백로그(`docs/docs/backlog/`) 항목과 연결하거나 주석 보강.
+- **명세 정합성**: 스펙 문서(`documents/docs/spec/`, `.cursor/skills/hwp-spec/`)와 필드명·주석·자료형 맞추기.
+- **TODO 주석 정리**: `viewer/core`, `viewer/html/ctrl_header` 등에 있는 TODO를 백로그(`documents/docs/backlog/`) 항목과 연결하거나 주석 보강.
 
 ---
 
@@ -91,4 +91,4 @@
 
 - 스냅샷 경로: `crates/hwp-core/tests/snapshots/`
 - 스냅샷 검토(accept/reject): `cargo insta review -p hwp-core`
-- 명세/가이드: `AGENTS.md`, `docs/docs/spec/`, `.cursor/skills/hwp-spec/`
+- 명세/가이드: `AGENTS.md`, `documents/docs/spec/`, `.cursor/skills/hwp-spec/`

@@ -19,18 +19,18 @@ HWPJS는 한글과컴퓨터의 한/글 문서 파일(.hwp)을 읽고 파싱하�
 
 **중요**: `.hwp` 파일을 읽고 파싱할 때는 반드시 다음 문서들을 참조해야 합니다:
 
-- **한글 문서 파일 형식 5.0 명세서**: `docs/docs/spec/hwp-5.0.md`
+- **한글 문서 파일 형식 5.0 명세서**: `documents/docs/spec/hwp-5.0.md`
   - 한글과컴퓨터에서 공개한 한/글 문서 파일 형식 5.0의 공식 스펙 문서입니다.
   - HWP 파일의 구조, 데이터 레코드, 스토리지 정보 등 모든 구현은 이 문서를 기준으로 해야 합니다.
   - 문서 사이트의 "명세서" 메뉴에서도 확인할 수 있습니다.
 
 - **기타 형식 문서**:
-  - **HWP 3.0 / HWPML 형식**: `docs/docs/spec/hwp-3.0-hwpml.md` (내용 준비 중)
-  - **배포용 문서 형식**: `docs/docs/spec/distribution.md` (내용 준비 중)
-  - **수식 형식**: `docs/docs/spec/formula.md`
-  - **차트 형식**: `docs/docs/spec/chart.md` (내용 준비 중)
+  - **HWP 3.0 / HWPML 형식**: `documents/docs/spec/hwp-3.0-hwpml.md` (내용 준비 중)
+  - **배포용 문서 형식**: `documents/docs/spec/distribution.md` (내용 준비 중)
+  - **수식 형식**: `documents/docs/spec/formula.md`
+  - **차트 형식**: `documents/docs/spec/chart.md` (내용 준비 중)
 
-모든 명세서는 `docs/docs/spec/` 디렉토리에 있으며, 문서 사이트의 "명세서" 메뉴에서 확인할 수 있습니다.
+모든 명세서는 `documents/docs/spec/` 디렉토리에 있으며, 문서 사이트의 "명세서" 메뉴에서 확인할 수 있습니다.
 
 ## 프로젝트 구조
 
@@ -67,7 +67,7 @@ hwpjs/
 │   ├── web/               # Web 예제
 │   ├── react-native/      # React Native 예제
 │   └── cli/               # CLI 사용 예제
-├── docs/                  # 문서 사이트 (Rspress)
+├── documents/             # 문서 사이트 (Rspress)
 └── legacy/                # 기존 JavaScript 구현
 ```
 
@@ -389,7 +389,7 @@ HTML 뷰어 구현 및 디버깅 시 다음 규칙을 준수해야 합니다:
 3. **스펙 문서 및 JSON 기반 추론**: 모든 값은 스펙 문서와 JSON 데이터를 참조하여 추론해야 합니다.
    - **절대 임의의 상수나 값을 집어넣지 않음**: 하드코딩된 값, 추측한 값, 임의의 상수 사용 금지
    - 모든 값은 다음 중 하나에서 유도되어야 함:
-     - HWP 스펙 문서 (`docs/docs/spec/hwp-5.0.md` 등)
+     - HWP 스펙 문서 (`documents/docs/spec/hwp-5.0.md` 등)
      - JSON 스냅샷 데이터 (`crates/hwp-core/tests/snapshots/*.json`)
      - 원본 HTML 스냅샷 (`crates/hwp-core/tests/fixtures/*.html`)
    - 불확실한 값이 있으면 스펙 문서를 먼저 확인하고, JSON 데이터를 검증하여 사용
@@ -454,6 +454,7 @@ HTML 뷰어 구현 및 디버깅 시 다음 규칙을 준수해야 합니다:
 - `node`: Node.js 바인딩 관련
 - `react-native`: React Native 바인딩 관련
 - `docs`: 문서 관련
+- `documents`: 문서 사이트(Rspress, `documents/`) 관련
 
 #### Subject (필수)
 
@@ -602,7 +603,7 @@ refactor(core): reorganize modules to match HWP file structure
   - `react-native/`: React Native 앱 예제
   - `cli/`: CLI 도구 사용 예제
 
-### `docs/`
+### `documents/`
 - **역할**: 프로젝트 문서 사이트
 - **도구**: Rspress
 - **위치**: packages 밖 (루트 레벨)
@@ -632,12 +633,12 @@ refactor(core): reorganize modules to match HWP file structure
 
 프로젝트의 전략적 계획과 구체적인 작업 항목은 다음 디렉토리에서 관리됩니다:
 
-- **로드맵**: `docs/docs/roadmap/` - 전략적 계획 및 장기 목표
+- **로드맵**: `documents/docs/roadmap/` - 전략적 계획 및 장기 목표
   - 단기 계획: HWP 5.0 파서 구현, 마크다운 뷰어, 수식 및 차트 지원
   - 장기 계획: PDF/이미지 뷰어, HWPX 형식 구현
-- **백로그**: `docs/docs/backlog/` - 구체적인 작업 항목
-  - 백로그 개요: `docs/docs/backlog/00_overview.md` (AI가 읽어야 할 주요 파일)
-  - 현재 작업: `docs/docs/backlog/10_current_tasks.md`
+- **백로그**: `documents/docs/backlog/` - 구체적인 작업 항목
+  - 백로그 개요: `documents/docs/backlog/00_overview.md` (AI가 읽어야 할 주요 파일)
+  - 현재 작업: `documents/docs/backlog/10_current_tasks.md`
 
 로드맵과 백로그는 Rspress 문서 사이트에도 포함되어 공개됩니다.
 

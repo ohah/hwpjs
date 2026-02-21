@@ -7,10 +7,10 @@
     "packages/*",
     "examples/*",
     "packages/hwpjs/npm/*",
-    "docs"
+    "documents"
   ],
   "scripts": {
-    "dev:docs": "bun run --filter=@hwpjs/docs dev",
+    "dev:docs": "bun run --filter=@hwpjs/documents dev",
     "dev:web": "bun run --filter=@hwpjs/web dev",
     "dev:react-native": "bun run --filter=@hwpjs/react-native dev",
     "dev:react-native:android": "bun run --filter=@hwpjs/react-native dev",
@@ -29,7 +29,7 @@
     "format:rust": "cargo fmt --all",
     "format:rust:check": "cargo fmt --all -- --check",
     "build": "bun run --filter=@ohah/hwpjs build && bun run --filter=@ohah/hwpjs build && bun run --filter=@hwpjs/react-native build",
-    "build:docs": "bun run --filter=@hwpjs/docs build",
+    "build:docs": "bun run --filter=@hwpjs/documents build",
     "build:node": "bun run --filter=@ohah/hwpjs build",
     "build:crabygen": "bun run --filter=@hwpjs/hwpjs build:crabygen",
     "build:react-native": "bun run --filter=@hwpjs/hwpjs build:react-native"
