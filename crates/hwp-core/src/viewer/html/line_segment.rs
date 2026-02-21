@@ -85,43 +85,32 @@ pub fn render_line_segment(
             round_to_2dp(int32_to_mm(segment.line_height)),
         )
     };
-    // body_default_hls 사용 시 fixture와 동일하게 height 3.53mm 사용 (table-caption 등)
+    // body_default_hls 사용 시 fixture와 동일하게 height 3.53mm 사용 (table-caption 등).
+    // 텍스트 세그먼트는 height를 text_height 기반으로 (fixture 3.53/7.06/5.29mm).
     let (width_mm, height_mm) = if let Some((_, _)) = body_default_hls {
         (width_mm, 3.53)
+    } else if is_text_segment {
+        let h = round_to_2dp(int32_to_mm(segment.text_height));
+        (width_mm, h)
     } else {
         (width_mm, height_mm)
     };
     let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
     let _line_spacing_mm = round_to_2dp(int32_to_mm(segment.line_spacing));
-    // baseline_distance_mm는 fixture 매칭 계산에서 직접 사용하지 않지만,
-    // 필요 시 디버깅을 위해 남겨둘 수 있습니다.
 
-    // NOTE (HWP 데이터 기반 + 스펙 기반 추론):
-    // - 스펙(표 44 bit8): use_line_grid=true 인 문단은 "편집 용지의 줄 격자"를 사용합니다.
-    //   이 경우 줄 높이는 격자에 의해 고정되며(=LineSegmentInfo.line_height가 의미를 갖는다고 보는 게 자연스럽고),
-    //   baseline_distance는 "줄의 세로 위치에서 베이스라인까지 거리"(표 62)로서 CSS line-height 그 자체가 아닙니다.
-    //
-    // 따라서:
-    // - use_line_grid=false: 기존처럼 line-height=baseline_distance, top은 baseline 중심 보정
-    // - use_line_grid=true : line-height=line_height, top은 (line_height - text_height)/2 로 중앙 정렬
-    let use_line_grid = para_shape
-        .map(|ps| ps.attributes1.use_line_grid)
-        .unwrap_or(false);
+    // HWP 5.0 표 62(문단의 레이아웃) 기준: 줄의 세로 위치, 줄의 높이, 텍스트 부분의 높이를 그대로 사용.
+    // 보정 계수 없이 스펙 필드 → mm 변환만 적용. (1 HWPUNIT = 1/7200 inch, 25.4 mm/inch)
 
+    // CSS line-height: 표 62 "줄의 높이" (line_height) → mm
     let line_height_value = if let Some((lh, _)) = body_default_hls {
         lh
     } else if is_text_segment {
-        if use_line_grid {
-            // 줄 격자 사용: "줄의 높이"를 사용
-            round_to_2dp(int32_to_mm(segment.line_height))
-        } else {
-            // 일반: baseline_distance를 사용
-            round_to_2dp(int32_to_mm(segment.baseline_distance))
-        }
+        round_to_2dp(int32_to_mm(segment.line_height))
     } else {
         height_mm
     };
 
+    // CSS top: 표 62 "줄의 세로 위치" (vertical_position) → mm. 줄 높이 안에서 텍스트 세로 정렬 시 오프셋 추가.
     let top_mm = if let Some((_, top_off)) = body_default_hls {
         if vertical_pos_mm == 0.0 {
             top_off
@@ -129,15 +118,8 @@ pub fn render_line_segment(
             round_to_2dp(vertical_pos_mm)
         }
     } else if is_text_segment {
-        if use_line_grid {
-            // 줄 격자 사용: 줄 높이 안에서 텍스트를 중앙 정렬
-            let offset_mm = (line_height_value - text_height_mm) / 2.0;
-            round_to_2dp(vertical_pos_mm + offset_mm)
-        } else {
-            // 일반: baseline 보정
-            let baseline_offset_mm = (line_height_value - text_height_mm) / 2.0;
-            round_to_2dp(vertical_pos_mm + baseline_offset_mm)
-        }
+        let offset_mm = (line_height_value - text_height_mm) / 2.0;
+        round_to_2dp(vertical_pos_mm + offset_mm)
     } else {
         round_to_2dp(vertical_pos_mm)
     };
@@ -437,8 +419,11 @@ pub fn render_line_segments_with_content(
         }
 
         // 라인 세그먼트 렌더링 / Render line segment
-        // ParaShape 정보 가져오기 (para_shape_class에서 ID 추출) / Get ParaShape info (extract ID from para_shape_class)
-        let para_shape = if let Some(id_str) = para_shape_class.strip_prefix("ps") {
+        // ParaShape 정보 가져오기 (para_shape_class에서 ID 추출; css_class_prefix 제거 후 ps숫자 파싱)
+        let class_after_prefix = para_shape_class
+            .strip_prefix(context.options.css_class_prefix.as_str())
+            .unwrap_or(para_shape_class);
+        let para_shape = if let Some(id_str) = class_after_prefix.strip_prefix("ps") {
             if let Ok(para_shape_id) = id_str.parse::<usize>() {
                 if para_shape_id < document.doc_info.para_shapes.len() {
                     Some(&document.doc_info.para_shapes[para_shape_id])
