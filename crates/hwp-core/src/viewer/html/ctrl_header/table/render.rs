@@ -205,19 +205,12 @@ pub fn render_table(
         first_para_vertical_mm,
     );
 
-    // htG 래퍼 생성 (캡션이 있거나 ctrl_header가 있는 경우) / Create htG wrapper (if caption exists or ctrl_header exists)
-    // 캡션 유무는 caption_info 존재 여부로 판단 / Determine caption existence by caption_info presence
+    // htG 래퍼 생성 (캡션이 있는 경우에만) / Create htG wrapper only when caption exists
+    // Fixture table.html: 캡션 없음 → htG 없이 htb만 (left:31mm, top:35.99mm 등)
+    // table-caption / table-position: 캡션 있음 → htG 래퍼 사용
     let has_caption = caption_info.is_some();
-    // LineSegment(=글자처럼 취급/인라인) 테이블 처리
-    // - 일부 fixture(noori 등)에서는 htG 없이 htb만 존재하지만,
-    // - table-position 처럼 "캡션이 있는 인라인 테이블"은 htG 래퍼가 필요(캡션 블록이 htG 하위로 들어감)
-    // 따라서: LineSegment 내부라도 캡션이 있으면 htG를 생성한다.
     let is_inline_table = segment_position.is_some();
-    let needs_htg = if is_inline_table {
-        has_caption
-    } else {
-        has_caption || ctrl_header.is_some()
-    };
+    let needs_htg = has_caption;
 
     // 인라인 테이블은 문단(line segment) 내부에서 상대 위치로 렌더링되므로,
     // htG의 left/top은 0으로 고정해야 fixture와 일치한다.
@@ -774,40 +767,35 @@ pub fn render_table(
         String::new()
     };
 
-    // htb 위치 조정 (마진 및 캡션 고려) / Adjust htb position (considering margin and caption)
-    let htb_left_mm = if is_vertical && is_left {
-        // 왼쪽 캡션: margin.left + 캡션 width + gap / Left caption: margin.left + caption width + gap
-        margin_left_mm + caption_width_mm + caption_margin_mm
+    // htb 위치·크기: 캡션 없을 때(htG 없음)는 절대 위치/전체 크기, 캡션 있을 때는 htG 내부 상대/콘텐츠 크기
+    // htb position/size: when no caption (no htG) use absolute position and full size; when caption use inner relative/content size
+    let (htb_left_mm, htb_top_mm, htb_width_mm, content_height_mm) = if needs_htg {
+        let left = if is_vertical && is_left {
+            margin_left_mm + caption_width_mm + caption_margin_mm
+        } else {
+            margin_left_mm
+        };
+        let top = if has_caption && is_caption_above {
+            margin_top_mm + caption_height_mm + caption_margin_mm
+        } else {
+            margin_top_mm
+        };
+        let w = resolved_size.width - margin_left_mm - margin_right_mm;
+        (
+            round_to_2dp(left),
+            round_to_2dp(top),
+            round_to_2dp(w),
+            round_to_2dp(content_size.height),
+        )
     } else {
-        // 오른쪽 캡션이나 가로 방향: margin.left만 사용 / Right caption or horizontal: use margin.left only
-        margin_left_mm
+        // Fixture table.html: htb만 사용, left/top은 table_position() 절대값, 크기는 전체(마진 포함)
+        (
+            round_to_2dp(left_mm),
+            round_to_2dp(top_mm),
+            round_to_2dp(resolved_size.width),
+            round_to_2dp(resolved_height_with_margin),
+        )
     };
-
-    let htb_top_mm = if has_caption && is_caption_above {
-        // 위 캡션이 있으면 테이블을 아래로 이동 / Move table down if caption is above
-        margin_top_mm + caption_height_mm + caption_margin_mm
-    } else if has_caption {
-        // 아래 캡션이 있으면 margin.top만 적용 / If caption is below, only apply margin.top
-        margin_top_mm
-    } else {
-        margin_top_mm
-    };
-
-    // htb 높이는 콘텐츠 높이를 사용 (마진 제외) / htb height uses content height (excluding margin)
-    // Fixture 기준: htb height = content_height (4.52mm), not resolved_size.height (6.52mm with margin)
-    // Based on fixture: htb height = content_height (4.52mm), not resolved_size.height (6.52mm with margin)
-    // htb width도 마진을 제외한 실제 테이블 width를 사용해야 함
-    // htb width should also use actual table width excluding margin
-    // resolved_size.width는 이미 margin.left + margin.right가 포함되어 있을 수 있으므로,
-    // resolved_size.width already may include margin.left + margin.right, so
-    // 실제 테이블 width는 resolved_size.width - margin.left - margin.right
-    // actual table width is resolved_size.width - margin.left - margin_right
-    let htb_width_mm = resolved_size.width - margin_left_mm - margin_right_mm;
-    let htb_left_mm = round_to_2dp(htb_left_mm);
-    let htb_top_mm = round_to_2dp(htb_top_mm);
-    let htb_width_mm = round_to_2dp(htb_width_mm);
-    // fixture(noori.html/table*.html)처럼 height도 2dp로 고정해서 출력 값 흔들림(221.19 vs 221.2)을 방지
-    let content_height_mm = round_to_2dp(content_size.height);
     // NOTE (fixture 기준):
     // - LineSegment(글자처럼 취급) 내부 테이블은 htG가 inline-block/relative로 동작하고,
     //   htb 자체에는 display/position/vertical-align 스타일을 주지 않습니다. (table-position.html)
