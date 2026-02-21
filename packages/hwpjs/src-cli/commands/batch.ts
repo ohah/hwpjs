@@ -1,24 +1,22 @@
 import { Command } from 'commander';
-import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync, existsSync } from 'fs';
-import { join, extname, basename, resolve, dirname } from 'path';
+import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync } from 'fs';
+import { join, extname, basename } from 'path';
 // CLI는 빌드된 NAPI 모듈을 사용합니다
 // @ts-ignore - 런타임에 dist/index.js에서 로드됨 (빌드 후 경로: ../../index)
-const { toJson, toMarkdown, toHtml, toPdf } = require('../../index');
+const { toJson, toMarkdown, toHtml /* , toPdf */ } = require('../../index');
 
-/** PDF용 기본 폰트 디렉터리: 옵션 → cwd/fonts → 패키지 fonts (한글 Noto Sans KR 등). */
-function getDefaultFontDir(fontDir?: string): string | undefined {
-  if (fontDir) return fontDir;
-  const cwdFonts = resolve(process.cwd(), 'fonts');
-  if (existsSync(cwdFonts)) return cwdFonts;
-  try {
-    const pkgRoot = dirname(require.resolve('@ohah/hwpjs/package.json'));
-    const bundled = join(pkgRoot, 'fonts');
-    if (existsSync(bundled)) return bundled;
-  } catch {
-    /* 패키지가 로컬 경로로 로드된 경우 등 무시 */
-  }
-  return undefined;
-}
+/** PDF용 기본 폰트 디렉터리 (to-pdf 활성화 시 사용). */
+// function getDefaultFontDir(fontDir?: string): string | undefined {
+//   if (fontDir) return fontDir;
+//   const cwdFonts = resolve(process.cwd(), 'fonts');
+//   if (existsSync(cwdFonts)) return cwdFonts;
+//   try {
+//     const pkgRoot = dirname(require.resolve('@ohah/hwpjs/package.json'));
+//     const bundled = join(pkgRoot, 'fonts');
+//     if (existsSync(bundled)) return bundled;
+//   } catch { /* 패키지가 로컬 경로로 로드된 경우 등 무시 */ }
+//   return undefined;
+// }
 
 export function batchCommand(program: Command) {
   program
@@ -26,7 +24,8 @@ export function batchCommand(program: Command) {
     .description('Batch convert HWP files in a directory')
     .argument('<input-dir>', 'Input directory containing HWP files')
     .option('-o, --output-dir <dir>', 'Output directory (default: ./output)', './output')
-    .option('--format <format>', 'Output format (json, markdown, html, pdf)', 'json')
+    .option('--format <format>', 'Output format (json, markdown, html)', 'json')
+    // .option('--format <format>', 'Output format (json, markdown, html, pdf)', 'json')
     .option('-r, --recursive', 'Process subdirectories recursively')
     .option('--pretty', 'Pretty print JSON (only for json format)')
     .option('--include-images', 'Include images as base64 (only for markdown format)')
@@ -34,11 +33,8 @@ export function batchCommand(program: Command) {
       '--images-dir <dir>',
       'Directory to save images (only for html format, default: images)'
     )
-    .option(
-      '--font-dir <dir>',
-      'Font directory for PDF (TTF/OTF). If omitted, ./fonts is used when it exists'
-    )
-    .option('--no-embed-images', 'Do not embed images in PDF (only for pdf format)')
+    // .option('--font-dir <dir>', 'Font directory for PDF (TTF/OTF). If omitted, ./fonts is used when it exists')
+    // .option('--no-embed-images', 'Do not embed images in PDF (only for pdf format)')
     .action(
       (
         inputDir: string,
@@ -49,8 +45,8 @@ export function batchCommand(program: Command) {
           pretty?: boolean;
           includeImages?: boolean;
           imagesDir?: string;
-          fontDir?: string;
-          embedImages?: boolean;
+          // fontDir?: string;
+          // embedImages?: boolean;
         }
       ) => {
         try {
@@ -129,13 +125,12 @@ export function batchCommand(program: Command) {
                 });
                 outputExt = 'html';
               } else if (format === 'pdf') {
-                const fontDir = getDefaultFontDir(options.fontDir);
-                outputContent = toPdf(data, {
-                  font_dir: fontDir,
-                  embed_images: options.embedImages,
-                });
-                outputExt = 'pdf';
-                isBinary = true;
+                console.error('PDF format is currently disabled.');
+                process.exit(1);
+                // const fontDir = getDefaultFontDir(options.fontDir);
+                // outputContent = toPdf(data, { font_dir: fontDir, embed_images: options.embedImages });
+                // outputExt = 'pdf';
+                // isBinary = true;
               } else {
                 const result = toMarkdown(data, {
                   image: options.includeImages ? 'base64' : 'blob',

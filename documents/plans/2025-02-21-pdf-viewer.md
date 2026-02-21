@@ -267,6 +267,8 @@ git commit -m "feat(core): iterate all body paragraphs in PDF export"
 
 이 항목들은 MVP 이후 별도 태스크로 쪼개어 진행하는 것을 권장.
 
+**CLI 비활성화:** 현재 `to-pdf` 명령과 batch의 `--format pdf`·`--font-dir`·`--no-embed-images`는 코드는 두고 주석 처리하여 비활성화해 두었습니다. 추후 구현이 정리되면 해당 주석을 해제해 활성화할 예정입니다. 문서는 [CLI 가이드](../docs/guide/cli.mdx) 참고사항에 동일 내용을 적어 두었습니다.
+
 ---
 
 **테스트·폰트:** 테스트에서는 `tests/fixtures/fonts/`에 폰트 번들을 두고 `find_font_dir()`를 사용하면 자동으로 폰트 경로를 잡을 수 있다.
