@@ -305,7 +305,7 @@ pub fn to_pdf(data: Buffer, options: Option<ToPdfOptions>) -> Result<Buffer, nap
         font_dir: options
             .as_ref()
             .and_then(|o| o.font_dir.as_ref())
-            .map(|s| std::path::PathBuf::from(s)),
+            .map(std::path::PathBuf::from),
         embed_images: options
             .as_ref()
             .and_then(|o| o.embed_images)

@@ -136,3 +136,30 @@ export interface ToMarkdownResult {
    */
   images: Array<ImageData>
 }
+
+/**
+ * Convert HWP file to PDF format
+ *
+ * # Arguments
+ * * `data` - Byte array containing HWP file data (Buffer or Uint8Array)
+ * * `options` - Optional PDF conversion options (font_dir recommended)
+ *
+ * # Returns
+ * PDF file content as Buffer
+ */
+export declare function toPdf(data: Buffer, options?: ToPdfOptions | undefined | null): Buffer
+
+/** PDF conversion options */
+export interface ToPdfOptions {
+  /**
+   * Directory path containing TTF/OTF font files (e.g. LiberationSans). Required for PDF export.
+   * Use only trusted paths; do not pass arbitrary user input.
+   * TTF/OTF 폰트 파일이 있는 디렉토리 경로 (예: LiberationSans). 신뢰할 수 있는 경로만 사용하세요.
+   */
+  fontDir?: string
+  /**
+   * Whether to embed images in PDF (default: true)
+   * PDF에 이미지 임베드 여부 (기본값: true)
+   */
+  embedImages?: boolean
+}
