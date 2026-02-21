@@ -201,7 +201,7 @@ fn parse_object_attribute(value: UINT32) -> ObjectAttribute {
         _ => ObjectCategory::None,
     };
 
-    let size_protect = (value & 0x100000) != 0;
+    let size_protect = (value & 0x0010_0000) != 0;
 
     ObjectAttribute {
         like_letters,
