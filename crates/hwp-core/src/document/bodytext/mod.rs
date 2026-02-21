@@ -608,6 +608,39 @@ impl Section {
         })
     }
 
+    /// 테이블 캡션을 파싱합니다. / Parse table caption.
+    ///
+    /// TABLE가 있는 CTRL_HEADER 내의 첫 번째 LIST_HEADER를 찾아 캡션으로 파싱합니다.
+    /// Finds the first LIST_HEADER inside a CTRL_HEADER that has TABLE and parses it as a caption.
+    ///
+    /// # Arguments
+    /// * `children_slice` - CTRL_HEADER의 자식 레코드 목록 / List of child records in CTRL_HEADER
+    ///
+    /// # Returns
+    /// 캡션(Option) - 찾은 경우 캡션 값, 없으면 None
+    /// Optional caption - caption value if found, None otherwise
+    fn try_parse_table_caption(children_slice: &[&RecordTreeNode]) -> Result<Option<Caption>, HwpError> {
+        use crate::document::bodytext::ctrl_header::parse_caption_from_list_header;
+
+        // TABLE 위치를 찾습니다. / Find TABLE position.
+        let table_idx = children_slice
+            .iter()
+            .position(|child| child.tag_id() == HwpTag::TABLE)
+            .unwrap_or(0);
+
+        // TABLE 이전의 첫 번째 LIST_HEADER를 캡션으로 파싱합니다.
+        // Parse the first LIST_HEADER before TABLE as a caption.
+        let caption = children_slice
+            .iter()
+            .take(table_idx)
+            .find(|child| child.tag_id() == HwpTag::LIST_HEADER)
+            .map(|child| parse_caption_from_list_header(child.data()))
+            .transpose()?
+            .flatten();
+
+        Ok(caption)
+    }
+
     /// 트리 노드에서 ParagraphRecord를 파싱합니다. / Parse ParagraphRecord from tree node.
     ///
     /// 모든 레벨의 레코드를 재귀적으로 처리합니다.
@@ -716,15 +749,7 @@ impl Section {
 
                 if is_table {
                     if let Some(table_idx) = table_index {
-                        // TABLE 이전의 LIST_HEADER 찾기 / Find LIST_HEADER before TABLE
-                        for child in children_slice.iter().take(table_idx) {
-                            if child.tag_id() == HwpTag::LIST_HEADER {
-                                // 캡션으로 파싱 / Parse as caption
-                                use crate::document::bodytext::ctrl_header::parse_caption_from_list_header;
-                                caption_opt = parse_caption_from_list_header(child.data())?;
-                                break; // 첫 번째 LIST_HEADER만 캡션으로 처리 / Only process first LIST_HEADER as caption
-                            }
-                        }
+                        caption_opt = Self::try_parse_table_caption(&children_slice)?;
                     }
                 }
 
