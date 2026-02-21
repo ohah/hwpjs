@@ -275,6 +275,43 @@ pub fn to_html(data: Buffer, options: Option<ToHtmlOptions>) -> Result<String, n
     Ok(html)
 }
 
+/// PDF conversion options
+#[napi(object)]
+pub struct ToPdfOptions {
+    /// Directory path containing TTF/OTF font files (e.g. LiberationSans). Required for PDF export.
+    /// TTF/OTF 폰트 파일이 있는 디렉토리 경로 (예: LiberationSans). PDF 변환에 필요합니다.
+    pub font_dir: Option<String>,
+    /// Whether to embed images in PDF (default: true)
+    /// PDF에 이미지 임베드 여부 (기본값: true)
+    pub embed_images: Option<bool>,
+}
+
+/// Convert HWP file to PDF format
+///
+/// # Arguments
+/// * `data` - Byte array containing HWP file data (Buffer or Uint8Array)
+/// * `options` - Optional PDF conversion options (font_dir recommended)
+///
+/// # Returns
+/// PDF file content as Buffer
+#[napi]
+pub fn to_pdf(data: Buffer, options: Option<ToPdfOptions>) -> Result<Buffer, napi::Error> {
+    let parser = HwpParser::new();
+    let data_vec: Vec<u8> = data.into();
+    let document = parser.parse(&data_vec).map_err(napi::Error::from_reason)?;
+
+    let pdf_options = hwp_core::viewer::PdfOptions {
+        font_dir: options
+            .as_ref()
+            .and_then(|o| o.font_dir.as_ref())
+            .map(|s| std::path::PathBuf::from(s)),
+        embed_images: options.as_ref().and_then(|o| o.embed_images).unwrap_or(true),
+    };
+
+    let pdf_bytes = document.to_pdf(&pdf_options);
+    Ok(Buffer::from(pdf_bytes))
+}
+
 /// Extract FileHeader from HWP file as JSON
 ///
 /// # Arguments
