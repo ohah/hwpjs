@@ -1,8 +1,11 @@
 //! PDF converter for HWP documents
 //! HWP 문서를 PDF로 변환하는 모듈
 
-use crate::document::bodytext::ParagraphRecord;
+use crate::document::bodytext::{ParagraphRecord, Table};
 use crate::document::HwpDocument;
+use base64::{engine::general_purpose::STANDARD, Engine as _};
+use genpdf::{elements, fonts, Document};
+use std::path::Path;
 
 /// PDF 변환 옵션
 #[derive(Debug, Clone)]
@@ -22,31 +25,70 @@ impl Default for PdfOptions {
     }
 }
 
-/// 본문 전체를 순회하여 문단 텍스트와 테이블/이미지 플레이스홀더를 수집
-fn collect_body_elements(document: &HwpDocument) -> Vec<String> {
-    let mut elements = Vec::new();
-    for section in &document.body_text.sections {
-        for paragraph in &section.paragraphs {
-            for record in &paragraph.records {
-                match record {
-                    ParagraphRecord::ParaText { text, .. } => {
-                        if !text.is_empty() {
-                            elements.push(text.clone());
-                        }
-                    }
-                    ParagraphRecord::Table { .. } => {
-                        elements.push("[Table]".to_string());
-                    }
-                    ParagraphRecord::ShapeComponent { .. }
-                    | ParagraphRecord::ShapeComponentPicture { .. } => {
-                        elements.push("[Image]".to_string());
-                    }
-                    _ => {}
-                }
+/// 문단 리스트에서 ParaText만 모아 하나의 문자열로 반환
+fn paragraph_text_from_paragraphs(paragraphs: &[crate::document::Paragraph]) -> String {
+    let mut s = String::new();
+    for para in paragraphs {
+        for record in &para.records {
+            if let ParagraphRecord::ParaText { text, .. } = record {
+                s.push_str(text);
             }
         }
     }
-    elements
+    s
+}
+
+/// HWP Table을 genpdf TableLayout으로 변환
+fn build_table_layout(table: &Table) -> elements::TableLayout {
+    let rows = table.attributes.row_count as usize;
+    let cols = table.attributes.col_count as usize;
+    if rows == 0 || cols == 0 {
+        let mut t = elements::TableLayout::new(vec![1]);
+        t.set_cell_decorator(elements::FrameCellDecorator::new(true, true, false));
+        let mut row_builder = t.row();
+        row_builder.push_element(elements::Paragraph::new(""));
+        row_builder.push().expect("row");
+        return t;
+    }
+    let column_weights = (0..cols).map(|_| 1).collect::<Vec<_>>();
+    let mut layout = elements::TableLayout::new(column_weights);
+    layout.set_cell_decorator(elements::FrameCellDecorator::new(true, true, false));
+
+    let mut grid: Vec<Vec<String>> = vec![vec![String::new(); cols]; rows];
+    for cell in &table.cells {
+        let r = cell.cell_attributes.row_address as usize;
+        let c = cell.cell_attributes.col_address as usize;
+        if r < rows && c < cols {
+            grid[r][c] = paragraph_text_from_paragraphs(&cell.paragraphs);
+        }
+    }
+    for row in grid {
+        let mut row_builder = layout.row();
+        for cell in row {
+            row_builder.push_element(elements::Paragraph::new(cell));
+        }
+        row_builder.push().expect("table row");
+    }
+    layout
+}
+
+/// BinData에서 이미지 바이트를 찾아 genpdf Image 요소로 변환 (embed_images가 true일 때만)
+fn try_build_image(
+    document: &HwpDocument,
+    bindata_id: u16,
+    embed_images: bool,
+) -> Option<elements::Image> {
+    if !embed_images {
+        return None;
+    }
+    let item = document
+        .bin_data
+        .items
+        .iter()
+        .find(|i| i.index == bindata_id)?;
+    let decoded = STANDARD.decode(item.data.as_bytes()).ok()?;
+    let dynamic = image::load_from_memory(&decoded).ok()?;
+    genpdf::elements::Image::from_dynamic_image(dynamic).ok()
 }
 
 /// HWP 문서를 PDF 바이트로 변환
@@ -58,21 +100,6 @@ fn collect_body_elements(document: &HwpDocument) -> Vec<String> {
 /// # Returns
 /// PDF 파일 내용 (Vec<u8>). 빈 문서라도 유효한 PDF가 반환됨.
 pub fn to_pdf(document: &HwpDocument, options: &PdfOptions) -> Vec<u8> {
-    let elements = collect_body_elements(document);
-    render_pdf(options, &elements)
-}
-
-/// 최소 유효 PDF (빈 페이지 1장) 반환. 스텁/테스트용.
-/// 폰트는 options.font_dir 또는 현재 디렉터리에서 LiberationSans 사용.
-#[allow(dead_code)]
-fn minimal_pdf_bytes(options: &PdfOptions) -> Vec<u8> {
-    render_pdf(options, &[])
-}
-
-/// 폰트 로드 후 본문 요소 목록을 넣어 PDF 렌더링
-fn render_pdf(options: &PdfOptions, body_elements: &[String]) -> Vec<u8> {
-    use genpdf::{elements, fonts, Document};
-    use std::path::Path;
     let dir = options
         .font_dir
         .as_deref()
@@ -82,13 +109,67 @@ fn render_pdf(options: &PdfOptions, body_elements: &[String]) -> Vec<u8> {
         .expect("font: set font_dir to a path containing LiberationSans TTF files");
     let mut doc = Document::new(font);
     doc.set_title("HWP Export");
-    if body_elements.is_empty() {
-        doc.push(elements::Paragraph::new(""));
-    } else {
-        for el in body_elements {
-            doc.push(elements::Paragraph::new(el.clone()));
+
+    let mut has_any = false;
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            for record in &paragraph.records {
+                match record {
+                    ParagraphRecord::ParaText { text, .. } => {
+                        if !text.is_empty() {
+                            doc.push(elements::Paragraph::new(text.clone()));
+                            has_any = true;
+                        }
+                    }
+                    ParagraphRecord::Table { table } => {
+                        let layout = build_table_layout(table);
+                        doc.push(layout);
+                        has_any = true;
+                    }
+                    ParagraphRecord::ShapeComponentPicture {
+                        shape_component_picture,
+                    } => {
+                        let bindata_id = shape_component_picture.picture_info.bindata_id;
+                        if let Some(img_el) =
+                            try_build_image(document, bindata_id, options.embed_images)
+                        {
+                            doc.push(img_el);
+                            has_any = true;
+                        } else {
+                            doc.push(elements::Paragraph::new("[Image]"));
+                            has_any = true;
+                        }
+                    }
+                    ParagraphRecord::ShapeComponent { .. } => {
+                        doc.push(elements::Paragraph::new("[Image]"));
+                        has_any = true;
+                    }
+                    _ => {}
+                }
+            }
         }
     }
+    if !has_any {
+        doc.push(elements::Paragraph::new(""));
+    }
+    let mut output = Vec::new();
+    doc.render(&mut output).expect("render");
+    output
+}
+
+/// 최소 유효 PDF (빈 페이지 1장) 반환. 스텁/테스트용.
+#[allow(dead_code)]
+fn minimal_pdf_bytes(options: &PdfOptions) -> Vec<u8> {
+    let dir = options
+        .font_dir
+        .as_deref()
+        .unwrap_or(Path::new("."));
+    let font = fonts::from_files(dir, "LiberationSans", Some(fonts::Builtin::Helvetica))
+        .or_else(|_| fonts::from_files(dir, "Liberation Sans", Some(fonts::Builtin::Helvetica)))
+        .expect("font: set font_dir to a path containing LiberationSans TTF files");
+    let mut doc = Document::new(font);
+    doc.set_title("HWP Export");
+    doc.push(elements::Paragraph::new(""));
     let mut output = Vec::new();
     doc.render(&mut output).expect("render");
     output
