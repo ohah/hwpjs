@@ -747,10 +747,8 @@ impl Section {
                     None
                 };
 
-                if is_table {
-                    if let Some(table_idx) = table_index {
-                        caption_opt = Self::try_parse_table_caption(&children_slice)?;
-                    }
+                if is_table && table_index.is_some() {
+                    caption_opt = Self::try_parse_table_caption(&children_slice)?;
                 }
 
                 // CTRL_HEADER가 LIST_HEADER를 가지고 있는지 먼저 확인 (머리말/꼬리말/각주/미주의 경우)
