@@ -39,6 +39,8 @@ pub(crate) fn table_position(
     para_start_column_mm: Option<f64>,
     para_segment_width_mm: Option<f64>,
     first_para_vertical_mm: Option<f64>, // 첫 번째 문단의 vertical_position (가설 O) / First paragraph's vertical_position (Hypothesis O)
+    content_height_mm: Option<f64>,
+    table_height_mm: Option<f64>,
 ) -> (f64, f64) {
     // CtrlHeader에서 필요한 정보 추출 / Extract necessary information from CtrlHeader
     let (offset_x, offset_y, vert_rel_to, horz_rel_to, horz_relative) =
@@ -164,7 +166,22 @@ pub(crate) fn table_position(
             offset_y.map(|y| y.to_mm()).unwrap_or(0.0)
         };
 
-        let final_top_mm = base_top_for_obj + offset_top_mm;
+        let mut final_top_mm = base_top_for_obj + offset_top_mm;
+
+        // vert_rel_to=para이고 앵커+테이블 높이가 콘텐츠 영역을 넘을 때: 테이블 하단이 앵커 줄에 맞도록 위로 올려 배치 (fixture table-caption 표7)
+        // content_height_mm은 페이지 상단 기준 콘텐츠 영역 절대 하단(mm)으로 해석 (pagination과 동일한 기준).
+        if matches!(vert_rel_to, Some(VertRelTo::Para))
+            && para_start_vertical_mm.is_some()
+            && content_height_mm.is_some()
+            && table_height_mm.is_some()
+        {
+            let para_start = para_start_vertical_mm.unwrap();
+            let content_bottom = content_height_mm.unwrap(); // 절대 하단(페이지 상단 기준)
+            let th = table_height_mm.unwrap();
+            if para_start + th > content_bottom {
+                final_top_mm = round_to_2dp(para_start - th);
+            }
+        }
 
         (round_to_2dp(left_mm), round_to_2dp(final_top_mm))
     }

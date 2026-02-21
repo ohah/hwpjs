@@ -127,6 +127,8 @@ pub struct TablePosition {
     pub para_start_column_mm: Option<f64>,
     pub para_segment_width_mm: Option<f64>,
     pub first_para_vertical_mm: Option<f64>,
+    /// 페이지 콘텐츠 영역 높이(mm). vert_rel_to=para인 테이블 overflow 시 앵커 위로 올릴 때 사용.
+    pub content_height_mm: Option<f64>,
 }
 
 /// 테이블을 HTML로 렌더링 / Render table to HTML
@@ -240,6 +242,8 @@ pub fn render_table(
         para_start_column_mm,
         para_segment_width_mm,
         first_para_vertical_mm,
+        position.content_height_mm,
+        Some(resolved_size.height),
     );
 
     // htG 래퍼 생성 (캡션이 있는 경우에만) / Create htG wrapper only when caption exists

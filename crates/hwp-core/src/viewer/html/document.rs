@@ -330,6 +330,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     first_para_vertical_mm,
                     current_para_vertical_mm,
                     current_para_index, // 현재 문단 인덱스 전달 / Pass current paragraph index
+                    content_height_mm: Some(content_height_mm),
                 };
 
                 let context = ParagraphRenderContext {
@@ -425,6 +426,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 first_para_vertical_mm: Some(0.0),
                                 current_para_vertical_mm: current_para_vertical_mm_for_next,
                                 current_para_index: current_para_index_for_next,
+                                content_height_mm: Some(content_height_mm),
                             };
 
                             let context_next = ParagraphRenderContext {

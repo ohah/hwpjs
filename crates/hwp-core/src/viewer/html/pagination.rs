@@ -56,7 +56,15 @@ pub fn check_paragraph_page_break(
 
     // 3. 모든 전략 확인 (우선순위: explicit > page_def_change > vertical_reset > vertical_overflow)
     let has_explicit = check_explicit_page_break(paragraph);
-    let has_vertical_reset = check_vertical_reset(context.prev_vertical_mm, first_vertical_mm);
+    // vertical_reset이어도, 새 위치가 현재 페이지 상단 구간이 아니면 브레이크하지 않음.
+    // 예: 이전 231.9mm, 현재 196.72mm → 리셋이지만 196.72는 1페이지 내이므로 브레이크 없음.
+    // Only treat vertical_reset as page break when the new position is in the "top of page" region.
+    // 상단 구간: 50mm 이하 (한/글 기본 상단 여백+헤더 영역 수준).
+    let top_region_mm = 50.0_f64.min(context.content_height_mm * 0.2);
+    let has_vertical_reset = check_vertical_reset(context.prev_vertical_mm, first_vertical_mm)
+        && first_vertical_mm
+            .map(|v| v < 0.1 || v < top_region_mm)
+            .unwrap_or(false);
     let has_vertical_overflow = check_vertical_overflow(
         first_vertical_mm,
         context.content_height_mm,

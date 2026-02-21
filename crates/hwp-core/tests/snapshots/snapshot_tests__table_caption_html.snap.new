@@ -1,3 +1,8 @@
+---
+source: crates/hwp-core/tests/snapshot_tests.rs
+assertion_line: 628
+expression: html
+---
 <!DOCTYPE html>
 <html>
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
