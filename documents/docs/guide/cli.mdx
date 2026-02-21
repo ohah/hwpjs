@@ -295,6 +295,7 @@ npx @ohah/hwpjs <command>
 ## 참고사항
 
 - CLI는 Node.js 환경에서만 작동합니다.
+- **PDF 변환 (`to-pdf`, `batch --format pdf`)**: 코어/NAPI에는 PDF 변환 API가 구현되어 있으나, CLI에서는 아직 비활성화되어 있습니다. 추후 구현이 정리되면 `to-pdf` 명령 및 batch의 `--format pdf`, `--font-dir`, `--no-embed-images` 옵션을 활성화할 예정입니다.
 - 모든 명령어는 `--help` 옵션으로 상세한 도움말을 볼 수 있습니다.
 - 출력 파일이 이미 존재하는 경우 덮어씌워집니다.
 - 배치 변환 시 오류가 발생한 파일은 스킵되고 계속 진행됩니다.
