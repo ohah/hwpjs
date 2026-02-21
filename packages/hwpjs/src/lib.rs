@@ -305,7 +305,10 @@ pub fn to_pdf(data: Buffer, options: Option<ToPdfOptions>) -> Result<Buffer, nap
             .as_ref()
             .and_then(|o| o.font_dir.as_ref())
             .map(|s| std::path::PathBuf::from(s)),
-        embed_images: options.as_ref().and_then(|o| o.embed_images).unwrap_or(true),
+        embed_images: options
+            .as_ref()
+            .and_then(|o| o.embed_images)
+            .unwrap_or(true),
     };
 
     let pdf_bytes = document.to_pdf(&pdf_options);

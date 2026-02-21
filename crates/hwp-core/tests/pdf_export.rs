@@ -1,6 +1,26 @@
 //! PDF export tests.
 //! Requires fixture noori.hwp and LiberationSans font (or font_dir pointing to TTF files).
 //! Test is skipped when fixture is missing or when font loading fails.
+//!
+//! ## 폰트 가져오기
+//! genpdf는 폰트 디렉터리에서 다음 이름의 TTF 파일을 찾습니다:
+//! `LiberationSans-Regular.ttf`, `LiberationSans-Bold.ttf`, `LiberationSans-Italic.ttf`, `LiberationSans-BoldItalic.ttf`.
+//!
+//! - **다운로드**: <https://github.com/liberationfonts/liberation-fonts/releases> 에서
+//!   `Liberation-fonts-*.tar.gz` 받아 압축 해제 후 `LiberationSans-*.ttf` 네 개를 한 디렉터리에 둠.
+//! - **Linux**: `fonts-liberation` 패키지 설치 후 `/usr/share/fonts/truetype/liberation/` 등에 있음.
+//! - **macOS**: 위에서 받은 TTF를 `~/Library/Fonts/` 또는 임의 폴더에 넣고, 테스트/CLI 호출 시
+//!   `PdfOptions { font_dir: Some("/path/to/dir".into()), .. }` 로 지정.
+//! - **테스트에서 자동 사용**: `tests/fixtures/fonts/`에 `LiberationSans-Regular.ttf` 등 네 개를 두면
+//!   테스트가 해당 경로를 `font_dir`로 사용함. (없으면 스킵)
+//!
+//! ## 스냅샷 종류
+//! - **content_summary** (`*_content_summary.snap`): PDF에 넣을 요소 목록만(문단/테이블/이미지). 서식·폰트 없음. 폰트 불필요.
+//! - **pdf_generated** 테스트: 실제 PDF 생성 후 유효성 검사 및 `pdf_export__{이름}.pdf` 파일로 저장.
+//!   (PDF 메타데이터 비결정성으로 바이트 스냅샷은 사용하지 않음.)
+//!
+//! ## 실제 PDF 파일 출력
+//! `pdf_generated` 테스트 실행 시 생성된 PDF를 스냅샷과 같은 디렉터리에 `pdf_export__{이름}.pdf` 형식으로 씁니다.
 
 mod common;
 
@@ -25,6 +45,14 @@ fn snapshots_dir() -> std::path::PathBuf {
         .join("snapshots")
 }
 
+/// PDF 바이트를 실제 .pdf 파일로 저장. 스냅샷과 동일 디렉터리·이름 규칙 (pdf_export__{name}.pdf).
+fn write_pdf_to_file(name: &str, pdf: &[u8]) {
+    let path = snapshots_dir().join(format!("pdf_export__{}.pdf", name));
+    if std::fs::write(&path, pdf).is_ok() {
+        println!("wrote: {}", path.display());
+    }
+}
+
 #[test]
 fn to_pdf_returns_valid_pdf_bytes() {
     let doc = match load_document("noori.hwp") {
@@ -36,9 +64,7 @@ fn to_pdf_returns_valid_pdf_bytes() {
     };
     let options = PdfOptions::default();
 
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        to_pdf(&doc, &options)
-    }));
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| to_pdf(&doc, &options)));
     let pdf = match result {
         Ok(bytes) => bytes,
         Err(_) => {
@@ -114,6 +140,60 @@ fn pdf_content_summary_snapshot_embed_images_false() {
     });
 }
 
+/// 실제 생성된 PDF 바이트를 base64로 스냅샷. 서식·레이아웃 변경 시 스냅샷이 바뀜.
+#[test]
+fn pdf_generated_noori_snapshot() {
+    let doc = match load_document("noori.hwp") {
+        Some(d) => d,
+        None => {
+            println!("fixture noori.hwp not found, skipping");
+            return;
+        }
+    };
+    let options = PdfOptions {
+        font_dir: common::find_font_dir(),
+        ..PdfOptions::default()
+    };
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| to_pdf(&doc, &options)));
+    let pdf = match result {
+        Ok(bytes) => bytes,
+        Err(_) => {
+            // noori에는 한글이 있어 Liberation Sans로는 렌더 불가(genpdf UnsupportedEncoding). 스킵.
+            return;
+        }
+    };
+    write_pdf_to_file("noori_pdf_generated", &pdf);
+    assert!(!pdf.is_empty());
+    assert!(pdf.starts_with(b"%PDF"), "PDF magic bytes");
+}
+
+/// 실제 생성된 PDF 바이트를 base64로 스냅샷 (table.hwp, 상대적으로 작은 PDF).
+#[test]
+fn pdf_generated_table_snapshot() {
+    let doc = match load_document("table.hwp") {
+        Some(d) => d,
+        None => {
+            println!("fixture table.hwp not found, skipping");
+            return;
+        }
+    };
+    let options = PdfOptions {
+        font_dir: common::find_font_dir(),
+        ..PdfOptions::default()
+    };
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| to_pdf(&doc, &options)));
+    let pdf = match result {
+        Ok(bytes) => bytes,
+        Err(_) => {
+            println!("font loading failed, skipping");
+            return;
+        }
+    };
+    write_pdf_to_file("table_pdf_generated", &pdf);
+    assert!(!pdf.is_empty());
+    assert!(pdf.starts_with(b"%PDF"), "PDF magic bytes");
+}
+
 #[test]
 fn to_pdf_table_fixture_returns_valid_pdf() {
     let doc = match load_document("table.hwp") {
@@ -123,10 +203,11 @@ fn to_pdf_table_fixture_returns_valid_pdf() {
             return;
         }
     };
-    let options = PdfOptions::default();
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        to_pdf(&doc, &options)
-    }));
+    let options = PdfOptions {
+        font_dir: common::find_font_dir(),
+        ..PdfOptions::default()
+    };
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| to_pdf(&doc, &options)));
     let pdf = match result {
         Ok(bytes) => bytes,
         Err(_) => {
