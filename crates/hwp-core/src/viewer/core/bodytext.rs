@@ -356,6 +356,37 @@ fn process_footer<R: Renderer>(
     }
 }
 
+/// Helper: Process note entries (footnote or endnote) / 공통 처리: 각주/미주 항목 처리
+fn process_note_entries<R: Renderer>(
+    note_id: u32,
+    note_number: &str,
+    notes_container: &mut Vec<String>,
+    body_lines: &mut Vec<String>,
+    renderer: &R,
+    options: &R::Options,
+    note_contents: Vec<(String, String, String)>,
+) where
+    R::Options: 'static,
+{
+    for (_ref_id, back_link, content) in note_contents {
+        let id_str = notes_container.get(0).map(String::as_str).unwrap_or("");
+        let note_container = format_footnote_container(id_str, &back_link, &content, renderer, options);
+
+        // Add reference link to body
+        if !body_lines.is_empty() {
+            let last_idx = body_lines.len() - 1;
+            let last_line = &mut body_lines[last_idx];
+            let note_ref = renderer.render_footnote_ref(note_id, note_number, options);
+            *last_line = append_to_last_paragraph(last_line, &note_ref, renderer);
+        } else {
+            let note_ref = renderer.render_footnote_ref(note_id, note_number, options);
+            body_lines.push(renderer.render_paragraph(&note_ref));
+        }
+
+        notes_container.push(note_container);
+    }
+}
+
 /// Process footnote
 /// 각주 처리
 #[allow(clippy::too_many_arguments)]
@@ -372,11 +403,7 @@ fn process_footnote<R: Renderer>(
 ) where
     R::Options: 'static,
 {
-    // 각주 번호 형식 (TODO: FootnoteShape에서 가져오기)
-    // Footnote number format (TODO: Get from FootnoteShape)
     let footnote_number = format!("{}", footnote_id);
-
-    // 각주 내용 수집 / Collect footnote content
     let footnote_contents = collect_footnote_content(
         ctrl_paragraphs,
         document,
@@ -387,34 +414,15 @@ fn process_footnote<R: Renderer>(
         "footnote",
     );
 
-    for (_footnote_ref_id, footnote_back, content) in footnote_contents {
-        let footnote_id_str = format!("footnote-{}", footnote_id);
-        let footnote_container = format_footnote_container(
-            &footnote_id_str,
-            &footnote_back,
-            &content,
-            renderer,
-            options,
-        );
-
-        // 본문에 각주 참조 링크 삽입 / Insert footnote reference link in body
-        if !parts.body_lines.is_empty() {
-            let last_idx = parts.body_lines.len() - 1;
-            let last_line = &mut parts.body_lines[last_idx];
-            // 렌더러별로 각주 참조 링크 추가 방법이 다름
-            // Method to add footnote reference link varies by renderer
-            let footnote_ref = renderer.render_footnote_ref(footnote_id, &footnote_number, options);
-            *last_line = append_to_last_paragraph(last_line, &footnote_ref, renderer);
-        } else {
-            // 본문이 비어있으면 새 문단으로 추가 / Add as new paragraph if body is empty
-            let footnote_ref = renderer.render_footnote_ref(footnote_id, &footnote_number, options);
-            parts
-                .body_lines
-                .push(renderer.render_paragraph(&footnote_ref));
-        }
-
-        parts.footnotes.push(footnote_container);
-    }
+    process_note_entries(
+        footnote_id,
+        &footnote_number,
+        &mut parts.footnotes,
+        &mut parts.body_lines,
+        renderer,
+        options,
+        footnote_contents,
+    );
 }
 
 /// Process endnote
@@ -433,11 +441,7 @@ fn process_endnote<R: Renderer>(
 ) where
     R::Options: 'static,
 {
-    // 미주 번호 형식 (TODO: FootnoteShape에서 가져오기)
-    // Endnote number format (TODO: Get from FootnoteShape)
     let endnote_number = format!("{}", endnote_id);
-
-    // 미주 내용 수집 / Collect endnote content
     let endnote_contents = collect_footnote_content(
         ctrl_paragraphs,
         document,
@@ -448,31 +452,15 @@ fn process_endnote<R: Renderer>(
         "endnote",
     );
 
-    for (_endnote_ref_id, endnote_back, content) in endnote_contents {
-        let endnote_id_str = format!("endnote-{}", endnote_id);
-
-        // 본문에 미주 참조 링크 삽입 / Insert endnote reference link in body
-        if !parts.body_lines.is_empty() {
-            let last_idx = parts.body_lines.len() - 1;
-            let last_line = &mut parts.body_lines[last_idx];
-            let endnote_ref = renderer.render_endnote_ref(endnote_id, &endnote_number, options);
-            *last_line = append_to_last_paragraph(last_line, &endnote_ref, renderer);
-        } else {
-            // 본문이 비어있으면 새 문단으로 추가 / Add as new paragraph if body is empty
-            let endnote_ref = renderer.render_endnote_ref(endnote_id, &endnote_number, options);
-            parts
-                .body_lines
-                .push(renderer.render_paragraph(&endnote_ref));
-        }
-
-        parts.endnotes.push(format_endnote_container(
-            &endnote_id_str,
-            &endnote_back,
-            &content,
-            renderer,
-            options,
-        ));
-    }
+    process_note_entries(
+        endnote_id,
+        &endnote_number,
+        &mut parts.endnotes,
+        &mut parts.body_lines,
+        renderer,
+        options,
+        endnote_contents,
+    );
 }
 
 /// Append content to last paragraph (renderer-specific)
