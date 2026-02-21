@@ -1,5 +1,5 @@
 use super::common;
-use super::ctrl_header;
+use super::ctrl_header::{self, FootnoteEndnoteState};
 use super::line_segment::{
     DocumentRenderState, ImageInfo, LineSegmentContent, LineSegmentRenderContext, TableInfo,
 };
@@ -39,6 +39,54 @@ pub struct ParagraphRenderState<'a> {
     pub table_counter: &'a mut u32,
     pub pattern_counter: &'a mut usize,
     pub color_to_pattern: &'a mut HashMap<u32, String>,
+    /// 각주/미주 수집 (문서 레벨). None이면 수집하지 않음.
+    pub note_state: Option<&'a mut FootnoteEndnoteState<'a>>,
+}
+
+/// 각주/미주 내용용 문단 목록을 HTML 조각으로 렌더링 (페이지/테이블 컨텍스트 없음)
+/// Renders a list of paragraphs to HTML fragment for footnote/endnote content (no page/table context)
+pub fn render_paragraphs_fragment(
+    paragraphs: &[Paragraph],
+    document: &HwpDocument,
+    options: &HtmlOptions,
+) -> String {
+    use std::collections::HashMap;
+    let mut out = String::new();
+    let mut table_counter = 1u32;
+    let mut pattern_counter = 0usize;
+    let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
+    let position = ParagraphPosition {
+        hcd_position: None,
+        page_def: None,
+        first_para_vertical_mm: None,
+        current_para_vertical_mm: None,
+        current_para_index: None,
+        content_height_mm: None,
+    };
+    let context = ParagraphRenderContext {
+        document,
+        options,
+        position,
+    };
+    let mut state = ParagraphRenderState {
+        table_counter: &mut table_counter,
+        pattern_counter: &mut pattern_counter,
+        color_to_pattern: &mut color_to_pattern,
+        note_state: None,
+    };
+    let mut pagination_context = PaginationContext {
+        prev_vertical_mm: None,
+        current_max_vertical_mm: 0.0,
+        content_height_mm: 297.0,
+    };
+    for para in paragraphs {
+        let (para_html, _table_htmls, _) =
+            render_paragraph(para, &context, &mut state, &mut pagination_context, 0);
+        if !para_html.is_empty() {
+            out.push_str(&para_html);
+        }
+    }
+    out
 }
 
 // Private helper functions to reduce render_paragraph complexity
@@ -204,6 +252,9 @@ pub fn render_paragraph(
 
     // 테이블 수집 / Collect tables
     let mut tables: Vec<TableInfo> = Vec::new();
+    // 각주/미주 본문 참조 마크업 (문단 끝에 붙임) / Footnote/endnote in-body ref markup (append at end of paragraph)
+    let mut footnote_refs: Vec<String> = Vec::new();
+    let mut endnote_refs: Vec<String> = Vec::new();
 
     for record in &paragraph.records {
         match record {
@@ -290,8 +341,19 @@ pub fn render_paragraph(
             } => {
                 // CtrlHeader 처리 / Process CtrlHeader
                 let ctrl_result = ctrl_header::process_ctrl_header(
-                    header, children, paragraphs, document, options,
+                    header,
+                    children,
+                    paragraphs,
+                    document,
+                    options,
+                    state.note_state.as_deref_mut(),
                 );
+                if let Some(ref s) = ctrl_result.footnote_ref_html {
+                    footnote_refs.push(s.clone());
+                }
+                if let Some(ref s) = ctrl_result.endnote_ref_html {
+                    endnote_refs.push(s.clone());
+                }
                 // SHAPE_OBJECT(11)는 "표/그리기 개체" 공통 제어문자이므로, ctrl_id가 "tbl "인 경우에만
                 // ParaText의 SHAPE_OBJECT 위치를 순서대로 매칭하여 anchor를 부여합니다.
                 if header.ctrl_id == "tbl " {
@@ -622,6 +684,10 @@ pub fn render_paragraph(
             para_shape_class, rendered_text
         ));
     }
+
+    // 각주/미주 본문 참조를 문단 끝에 붙임 / Append footnote/endnote in-body refs at end of paragraph
+    result.push_str(&footnote_refs.join(""));
+    result.push_str(&endnote_refs.join(""));
 
     (result, table_htmls, None)
 }

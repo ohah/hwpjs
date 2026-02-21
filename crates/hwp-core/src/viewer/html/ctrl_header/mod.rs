@@ -18,6 +18,15 @@ use crate::viewer::html::line_segment::{ImageInfo, TableInfo};
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
 
+/// 문서 레벨 각주/미주 수집 상태 (HTML 뷰어에서 본문 반복 시 전달)
+/// Document-level footnote/endnote collection state (passed during body iteration in HTML viewer)
+pub struct FootnoteEndnoteState<'a> {
+    pub footnote_counter: &'a mut u32,
+    pub endnote_counter: &'a mut u32,
+    pub footnote_contents: &'a mut Vec<String>,
+    pub endnote_contents: &'a mut Vec<String>,
+}
+
 /// CtrlHeader 처리 결과 / CtrlHeader processing result
 #[derive(Debug, Default)]
 pub struct CtrlHeaderResult<'a> {
@@ -25,6 +34,10 @@ pub struct CtrlHeaderResult<'a> {
     pub tables: Vec<TableInfo<'a>>,
     /// 추출된 이미지들 / Extracted images
     pub images: Vec<ImageInfo>,
+    /// 본문 내 각주 참조 HTML (한 건당 한 번만 설정) / In-body footnote reference HTML (one per encounter)
+    pub footnote_ref_html: Option<String>,
+    /// 본문 내 미주 참조 HTML / In-body endnote reference HTML
+    pub endnote_ref_html: Option<String>,
 }
 
 impl<'a> CtrlHeaderResult<'a> {
@@ -32,6 +45,8 @@ impl<'a> CtrlHeaderResult<'a> {
         Self {
             tables: Vec::new(),
             images: Vec::new(),
+            footnote_ref_html: None,
+            endnote_ref_html: None,
         }
     }
 }
@@ -39,13 +54,16 @@ impl<'a> CtrlHeaderResult<'a> {
 /// CtrlHeader 처리 / Process CtrlHeader
 ///
 /// ctrl_id에 따라 적절한 모듈의 처리 함수를 호출합니다.
+/// note_state가 있으면 각주/미주 시 참조·내용을 수집합니다.
 /// Calls the appropriate module's processing function according to ctrl_id.
+/// When note_state is present, footnote/endnote ref and content are collected.
 pub fn process_ctrl_header<'a>(
     header: &'a CtrlHeader,
     children: &'a [ParagraphRecord],
     paragraphs: &'a [Paragraph],
     document: &'a HwpDocument,
     options: &'a HtmlOptions,
+    note_state: Option<&mut FootnoteEndnoteState<'_>>,
 ) -> CtrlHeaderResult<'a> {
     match header.ctrl_id.as_str() {
         CtrlId::TABLE => {
@@ -74,11 +92,11 @@ pub fn process_ctrl_header<'a>(
         }
         CtrlId::FOOTNOTE => {
             // 각주 처리 / Process footnote
-            footnote::process_footnote(header, children, paragraphs)
+            footnote::process_footnote(header, children, paragraphs, document, options, note_state)
         }
         CtrlId::ENDNOTE => {
             // 미주 처리 / Process endnote
-            endnote::process_endnote(header, children, paragraphs)
+            endnote::process_endnote(header, children, paragraphs, document, options, note_state)
         }
         _ => {
             // 기타 CtrlHeader 처리 / Process other CtrlHeader types

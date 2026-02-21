@@ -1,3 +1,4 @@
+use super::ctrl_header::FootnoteEndnoteState;
 use super::page;
 use super::pagination::{PageBreakReason, PaginationContext};
 use super::paragraph::{
@@ -119,6 +120,12 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut pattern_counter = 0;
     let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
 
+    // 각주/미주 수집 (문서 끝에 블록으로 출력) / Footnote/endnote collection (output as blocks at document end)
+    let mut footnote_counter = 0u32;
+    let mut endnote_counter = 0u32;
+    let mut footnote_contents: Vec<String> = Vec::new();
+    let mut endnote_contents: Vec<String> = Vec::new();
+
     // 페이지 높이 계산 (mm 단위) / Calculate page height (in mm)
     let page_height_mm = page_def.map(|pd| pd.paper_height.to_mm()).unwrap_or(297.0);
     let top_margin_mm = page_def.map(|pd| pd.top_margin.to_mm()).unwrap_or(24.99);
@@ -149,8 +156,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         for paragraph in &section.paragraphs {
             let control_mask = &paragraph.para_header.control_mask;
             let has_header_footer = control_mask.has_header_footer();
-            let has_footnote_endnote = control_mask.has_footnote_endnote();
-            if !has_header_footer && !has_footnote_endnote {
+            if !has_header_footer {
                 let vertical_mm = paragraph.records.iter().find_map(|record| {
                     if let ParagraphRecord::ParaLineSeg { segments } = record {
                         segments
@@ -256,12 +262,11 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 first_para_vertical_mm = None; // 새 페이지의 첫 번째 문단 추적을 위해 리셋 / Reset to track first paragraph of new page
             }
 
-            // 문단 렌더링 (일반 본문 문단만) / Render paragraph (only regular body paragraphs)
+            // 문단 렌더링 (머리말/꼬리말 제외; 각주/미주 포함하여 본문 참조 출력) / Render paragraph (exclude header/footer; include footnote/endnote for in-body refs)
             let control_mask = &paragraph.para_header.control_mask;
             let has_header_footer = control_mask.has_header_footer();
-            let has_footnote_endnote = control_mask.has_footnote_endnote();
 
-            if !has_header_footer && !has_footnote_endnote {
+            if !has_header_footer {
                 // 첫 번째 LineSegment 위치 저장 / Store first LineSegment position
                 // PageDef 여백을 직접 사용 / Use PageDef margins directly
                 if first_segment_pos.is_none() {
@@ -339,10 +344,17 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     position,
                 };
 
+                let mut note_state = FootnoteEndnoteState {
+                    footnote_counter: &mut footnote_counter,
+                    endnote_counter: &mut endnote_counter,
+                    footnote_contents: &mut footnote_contents,
+                    endnote_contents: &mut endnote_contents,
+                };
                 let mut state = ParagraphRenderState {
-                    table_counter: &mut table_counter, // 문서 레벨 table_counter 전달 / Pass document-level table_counter
-                    pattern_counter: &mut pattern_counter, // 문서 레벨 pattern_counter 전달 / Pass document-level pattern_counter
-                    color_to_pattern: &mut color_to_pattern, // 문서 레벨 color_to_pattern 전달 / Pass document-level color_to_pattern
+                    table_counter: &mut table_counter,
+                    pattern_counter: &mut pattern_counter,
+                    color_to_pattern: &mut color_to_pattern,
+                    note_state: Some(&mut note_state),
                 };
 
                 // 2. 문단 렌더링 (내부에서 테이블/이미지 페이지네이션 체크) / Render paragraph (check table/image pagination inside)
@@ -526,6 +538,29 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             page_start_number,
             document,
         ));
+    }
+
+    // 각주/미주 블록을 본문 끝에 출력 / Output footnote/endnote blocks at end of body
+    let prefix = &options.css_class_prefix;
+    if !footnote_contents.is_empty() {
+        html.push_str(&format!(
+            r#"<div class="{}footnotes">"#,
+            prefix
+        ));
+        for block in &footnote_contents {
+            html.push_str(block);
+        }
+        html.push_str("</div>\n");
+    }
+    if !endnote_contents.is_empty() {
+        html.push_str(&format!(
+            r#"<div class="{}endnotes">"#,
+            prefix
+        ));
+        for block in &endnote_contents {
+            html.push_str(block);
+        }
+        html.push_str("</div>\n");
     }
 
     html.push_str("</body>");
