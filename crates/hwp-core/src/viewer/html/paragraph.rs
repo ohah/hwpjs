@@ -352,8 +352,8 @@ pub fn render_paragraph(
         .first()
         .map(|seg| seg.segment_width as f64 * 25.4 / 7200.0);
     let content_height_mm = context.position.content_height_mm; // 블록 내 테이블 위치 계산용 / For table position inside block
-    // base_top(mm): hcD의 top 위치. like_letters=false 테이블(=hpa 레벨로 빠지는 객체)의 vert_rel_to=para 계산에
-    // 페이지 기준(절대) y 좌표가 필요하므로, paragraph 기준 y(vertical_position)에 base_top을 더해 절대값으로 전달한다.
+                                                                // base_top(mm): hcD의 top 위치. like_letters=false 테이블(=hpa 레벨로 빠지는 객체)의 vert_rel_to=para 계산에
+                                                                // 페이지 기준(절대) y 좌표가 필요하므로, paragraph 기준 y(vertical_position)에 base_top을 더해 절대값으로 전달한다.
     let _base_top_mm = if let Some((_hcd_left, hcd_top)) = hcd_position {
         hcd_top
     } else if let Some(pd) = page_def {
@@ -536,11 +536,10 @@ pub fn render_paragraph(
                 .zip(content_height_mm)
                 .map(|(r, ch)| r + height_mm > ch)
                 .unwrap_or(false);
-            let overflow_check = (would_overflow && !overflow_already_applied)
-                .then(|| {
-                    overflow_already_applied = true;
-                    (content_height_mm, Some(height_mm))
-                });
+            let overflow_check = (would_overflow && !overflow_already_applied).then(|| {
+                overflow_already_applied = true;
+                (content_height_mm, Some(height_mm))
+            });
 
             // 테이블 위치 계산 (정확한 위치) / Calculate table position (exact position)
             // table_position은 pub(crate)이므로 같은 크레이트 내에서 접근 가능

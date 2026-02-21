@@ -22,7 +22,10 @@ fn hls_from_char_shape(cs: &crate::document::docinfo::CharShape) -> (f64, f64) {
 
 /// 문서 CharShape로 기본 line_height_mm, top_offset_mm 유도.
 /// char_shape_id: 캡션 문단 등 특정 문단의 CharShape 사용 시; None이면 첫 번째 사용. 없으면 fallback (2.79, -0.18).
-pub(crate) fn default_hls_from_document(document: &HwpDocument, char_shape_id: Option<usize>) -> (f64, f64) {
+pub(crate) fn default_hls_from_document(
+    document: &HwpDocument,
+    char_shape_id: Option<usize>,
+) -> (f64, f64) {
     let cs = char_shape_id
         .and_then(|id| document.doc_info.char_shapes.get(id))
         .or_else(|| document.doc_info.char_shapes.first());
@@ -540,10 +543,11 @@ pub fn render_table(
                 ""
             };
 
-            // haN(자동 번호 영역) 너비: 캡션 문단 CharShape + 번호 문자열로 계산. 원본에서 유도. 없으면 생략.
-            let han_width_style = caption_han_width_mm(document, caption_char_shape_id, &table_num_text)
-                .map(|w| format!("width:{}mm;", w))
-                .unwrap_or_default();
+            // haN(자동 번호 영역) 너비: 캡션 문단 CharShape + 번호 문자열로 계산. 원본에서 유도. fixture와 동일하게 소수 1자리(2.1mm).
+            let han_width_style =
+                caption_han_width_mm(document, caption_char_shape_id, &table_num_text)
+                    .map(|w| format!("width:{:.1}mm;", round_to_2dp(w)))
+                    .unwrap_or_default();
 
             // 모든 paragraph의 LineSegment를 별도의 hls div로 렌더링 / Render each LineSegment from all paragraphs as separate hls div
             let hls_divs = if let Some(paragraphs) = caption_paragraphs {
@@ -647,7 +651,8 @@ pub fn render_table(
                     for (global_idx, (segment, para_idx, para, _para_cumulative_len)) in
                         all_segments_with_info.iter().enumerate()
                     {
-                        let lh = round_to_2dp(int32_to_mm(segment.baseline_distance));
+                        // fixture 일치: line_height·top은 LineSegment.line_height/text_height에서 유도 (문서 파싱값만 사용)
+                        let lh = round_to_2dp(int32_to_mm(segment.line_height));
                         let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
                         let top_off = round_to_2dp((lh - text_height_mm) / 2.0);
                         let left_mm = round_to_2dp(int32_to_mm(segment.column_start_position));

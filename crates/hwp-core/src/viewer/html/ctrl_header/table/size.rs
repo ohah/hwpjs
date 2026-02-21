@@ -115,9 +115,9 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
             content_height = round_to_2dp(from_row_sizes);
         }
 
-        if content_height < 0.01 {
-            // 2) row_sizes 없거나 0이면 셀/ctrl_header 기반 계산
-            // When row_sizes missing or zero, compute from cells or ctrl_header
+        // row_sizes 합이 극소(예: [2,2] HWPUNIT → ~0.01mm)인 경우 셀/ctrl_header 기반으로 재계산
+        // When row_sizes sum is negligible (e.g. [2,2] HWPUNIT → ~0.01mm), recompute from cells or ctrl_header
+        if content_height < 0.1 {
             if let Some(CtrlHeaderData::ObjectCommon { height, .. }) = ctrl_header {
                 let ctrl_header_height_mm = height.to_mm();
                 let base_row_height_mm = ctrl_header_height_mm / table.attributes.row_count as f64;
