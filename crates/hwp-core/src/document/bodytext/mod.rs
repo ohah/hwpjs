@@ -619,7 +619,9 @@ impl Section {
     /// # Returns
     /// 캡션(Option) - 찾은 경우 캡션 값, 없으면 None
     /// Optional caption - caption value if found, None otherwise
-    fn try_parse_table_caption(children_slice: &[&RecordTreeNode]) -> Result<Option<Caption>, HwpError> {
+    fn try_parse_table_caption(
+        children_slice: &[&RecordTreeNode],
+    ) -> Result<Option<Caption>, HwpError> {
         use crate::document::bodytext::ctrl_header::parse_caption_from_list_header;
 
         // TABLE 위치를 찾습니다. / Find TABLE position.
