@@ -370,7 +370,8 @@ fn process_note_entries<R: Renderer>(
 {
     for (_ref_id, back_link, content) in note_contents {
         let id_str = notes_container.first().map(String::as_str).unwrap_or("");
-        let note_container = format_footnote_container(id_str, &back_link, &content, renderer, options);
+        let note_container =
+            format_footnote_container(id_str, &back_link, &content, renderer, options);
 
         // Add reference link to body
         if !body_lines.is_empty() {
@@ -539,4 +540,3 @@ where
     // 기본: 일반 텍스트 / Default: plain text
     format!("{} {}", back_link, content)
 }
-
