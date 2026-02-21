@@ -453,7 +453,6 @@ pub(crate) fn render_cells(
                     //   <div class="hcI"><div class="hls ... width:0mm;"></div></div>
                     //   <div class="hsR" style="top:0.50mm;left:24.42mm;... background-image:url(...);"></div>
                     let image = &images[0];
-                    let img_h_mm = round_to_2dp(int32_to_mm(image.height as INT32));
 
                     // 기본값: margin만 (offset 못 찾으면 0으로)
                     let mut obj_off_x_mm = 0.0;
@@ -471,10 +470,28 @@ pub(crate) fn render_cells(
                         }
                     }
 
-                    // 1) hcI 안에는 빈 hls만
+                    // 1) hcI 안에는 빈 hls만. line_height/top/height는 첫 LineSegment 또는 문서 CharShape 기반
+                    let (line_height_mm, top_mm, height_mm) = line_segments
+                        .first()
+                        .map(|seg| {
+                            let lh = round_to_2dp(int32_to_mm(seg.line_height));
+                            let th = round_to_2dp(int32_to_mm(seg.text_height));
+                            let top = round_to_2dp((lh - th) / 2.0);
+                            (lh, top, lh)
+                        })
+                        .unwrap_or_else(|| {
+                            let font_mm = document
+                                .doc_info
+                                .char_shapes
+                                .first()
+                                .map(|cs| (cs.base_size as f64 / 100.0) * 0.352778)
+                                .unwrap_or(2.79);
+                            let lh = round_to_2dp(font_mm * 1.2);
+                            (lh, round_to_2dp((lh - font_mm) / 2.0), lh)
+                        });
                     cell_content.push_str(&format!(
-                        r#"<div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:0mm;top:-0.18mm;height:3.53mm;width:0mm;"></div>"#,
-                        para_shape_class, img_h_mm
+                        r#"<div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:0mm;top:{:.2}mm;height:{:.2}mm;width:0mm;"></div>"#,
+                        para_shape_class, line_height_mm, top_mm, height_mm
                     ));
 
                     // 2) 실제 이미지는 cell_outside_html로 (hce 바로 아래)
