@@ -2,12 +2,15 @@ use super::CtrlHeaderResult;
 use crate::document::bodytext::ParagraphRecord;
 use crate::document::{CtrlHeader, Paragraph};
 
-/// 단 정의 처리 / Process column definition
+/// HTML 뷰어용 단 정의 처리 플레이스홀더
+///
+/// # Status / 상태
+/// 이 모듈은 향후 구현 예정이며 현재는 빈 결과를 반환합니다.
+/// This module is planned for future implementation and currently returns empty results.
 pub fn process_column_def<'a>(
     _header: &'a CtrlHeader,
     _children: &'a [ParagraphRecord],
     _paragraphs: &[Paragraph],
 ) -> CtrlHeaderResult<'a> {
-    // TODO: 단 정의 처리 로직 추가 / Add column definition processing logic
     CtrlHeaderResult::new()
 }
