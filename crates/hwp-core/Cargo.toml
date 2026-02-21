@@ -20,6 +20,7 @@ pathdiff = "0.2.1"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 thiserror = "2.0.17"
+genpdf = "0.2"
 
 [dev-dependencies]
 insta = "1.43.2"
