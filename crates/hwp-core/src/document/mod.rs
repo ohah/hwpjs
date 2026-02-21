@@ -114,6 +114,18 @@ impl HwpDocument {
         crate::viewer::to_html(self, options)
     }
 
+    /// Convert HWP document to PDF format
+    /// HWP 문서를 PDF 형식으로 변환
+    ///
+    /// # Arguments / 매개변수
+    /// * `options` - PDF conversion options / PDF 변환 옵션
+    ///
+    /// # Returns / 반환값
+    /// PDF file content as bytes / PDF 파일 바이트
+    pub fn to_pdf(&self, options: &crate::viewer::pdf::PdfOptions) -> Vec<u8> {
+        crate::viewer::to_pdf(self, options)
+    }
+
     /// Resolve derived display texts for control tokens (e.g., AUTO_NUMBER) into `ParaTextRun::Control.display_text`.
     ///
     /// IMPORTANT:
