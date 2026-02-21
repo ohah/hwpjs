@@ -1,6 +1,7 @@
 //! PDF converter for HWP documents
 //! HWP 문서를 PDF로 변환하는 모듈
 
+use crate::document::bodytext::ParagraphRecord;
 use crate::document::HwpDocument;
 
 /// PDF 변환 옵션
@@ -21,6 +22,24 @@ impl Default for PdfOptions {
     }
 }
 
+/// 첫 번째 문단에서 ParaText 레코드의 텍스트만 모아 반환
+fn first_paragraph_text(document: &HwpDocument) -> String {
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            let mut text = String::new();
+            for record in &paragraph.records {
+                if let ParagraphRecord::ParaText { text: t, .. } = record {
+                    text.push_str(t);
+                }
+            }
+            if !text.is_empty() {
+                return text;
+            }
+        }
+    }
+    String::new()
+}
+
 /// HWP 문서를 PDF 바이트로 변환
 ///
 /// # Arguments
@@ -30,13 +49,19 @@ impl Default for PdfOptions {
 /// # Returns
 /// PDF 파일 내용 (Vec<u8>). 빈 문서라도 유효한 PDF가 반환됨.
 pub fn to_pdf(document: &HwpDocument, options: &PdfOptions) -> Vec<u8> {
-    let _ = document;
-    minimal_pdf_bytes(options)
+    let first_text = first_paragraph_text(document);
+    render_pdf(options, Some(&first_text))
 }
 
 /// 최소 유효 PDF (빈 페이지 1장) 반환. 스텁/테스트용.
 /// 폰트는 options.font_dir 또는 현재 디렉터리에서 LiberationSans 사용.
+#[allow(dead_code)]
 fn minimal_pdf_bytes(options: &PdfOptions) -> Vec<u8> {
+    render_pdf(options, None)
+}
+
+/// 폰트 로드 후 본문 텍스트(선택)를 넣어 PDF 렌더링
+fn render_pdf(options: &PdfOptions, body_text: Option<&str>) -> Vec<u8> {
     use genpdf::{elements, fonts, Document};
     use std::path::Path;
     let dir = options
@@ -48,7 +73,8 @@ fn minimal_pdf_bytes(options: &PdfOptions) -> Vec<u8> {
         .expect("font: set font_dir to a path containing LiberationSans TTF files");
     let mut doc = Document::new(font);
     doc.set_title("HWP Export");
-    doc.push(elements::Paragraph::new(""));
+    let paragraph_text = body_text.unwrap_or("");
+    doc.push(elements::Paragraph::new(paragraph_text));
     let mut output = Vec::new();
     doc.render(&mut output).expect("render");
     output
