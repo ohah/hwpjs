@@ -51,6 +51,27 @@ bun run build:web:wasm
 bun run build:react-native
 ```
 
+### 맥에서 Windows / Linux 크로스 빌드
+
+맥(macOS)에서 Windows·Linux용 Node 네이티브 모듈을 빌드하려면 아래 도구를 설치한 뒤 위 플랫폼별 스크립트를 사용하면 됩니다.
+
+- **Windows용 (맥 → win32)**  
+  `build:node:windows-*`는 `--cross-compile`을 사용하며, **cargo-xwin**이 있으면 자동으로 사용합니다.
+  ```bash
+  cargo install cargo-xwin
+  rustup target add x86_64-pc-windows-msvc i686-pc-windows-msvc aarch64-pc-windows-msvc
+  cd packages/hwpjs && bun run build:node:windows-x64   # 또는 windows-x86, windows-arm64
+  ```
+
+- **Linux용 (맥 → linux)**  
+  `build:node:linux-x64`는 `--use-cross`를 사용하며, **Docker**와 **cross**가 필요합니다.
+  ```bash
+  cargo install cross
+  cd packages/hwpjs && bun run build:node:linux-x64
+  ```
+
+자세한 내용은 문서 사이트의 [개발 가이드](https://ohah.github.io/hwpjs/guide/development)를 참고하세요.
+
 ### 릴리스 빌드
 
 ```bash
