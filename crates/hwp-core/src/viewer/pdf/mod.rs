@@ -91,6 +91,59 @@ fn try_build_image(
     genpdf::elements::Image::from_dynamic_image(dynamic).ok()
 }
 
+/// PDF로 출력될 요소들의 텍스트 요약. 스냅샷 테스트용 (폰트 불필요).
+/// 각 줄: "paragraph: <처음 80자>", "table: RxC", "image: bindata_id=N" / "image: [placeholder]"
+pub fn pdf_content_summary(document: &HwpDocument, options: &PdfOptions) -> Vec<String> {
+    const TRUNCATE: usize = 80;
+    let mut lines = Vec::new();
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            for record in &paragraph.records {
+                match record {
+                    ParagraphRecord::ParaText { text, .. } => {
+                        if !text.is_empty() {
+                            let s: String = text
+                                .chars()
+                                .take(TRUNCATE)
+                                .map(|c| if c == '\n' { ' ' } else { c })
+                                .collect();
+                            let suffix = if text.chars().count() > TRUNCATE {
+                                "..."
+                            } else {
+                                ""
+                            };
+                            lines.push(format!("paragraph: {}{}", s, suffix));
+                        }
+                    }
+                    ParagraphRecord::Table { table } => {
+                        let r = table.attributes.row_count;
+                        let c = table.attributes.col_count;
+                        lines.push(format!("table: {}x{}", r, c));
+                    }
+                    ParagraphRecord::ShapeComponentPicture {
+                        shape_component_picture,
+                    } => {
+                        let id = shape_component_picture.picture_info.bindata_id;
+                        if options.embed_images {
+                            lines.push(format!("image: bindata_id={}", id));
+                        } else {
+                            lines.push("image: [placeholder]".to_string());
+                        }
+                    }
+                    ParagraphRecord::ShapeComponent { .. } => {
+                        lines.push("image: [placeholder]".to_string());
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+    if lines.is_empty() {
+        lines.push("(empty)".to_string());
+    }
+    lines
+}
+
 /// HWP 문서를 PDF 바이트로 변환
 ///
 /// # Arguments

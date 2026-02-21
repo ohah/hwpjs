@@ -1,0 +1,6 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+assertion_line: 90
+expression: text
+---
+(empty)
