@@ -29,24 +29,24 @@ impl Script {
     ///
     /// # Note
     /// 스펙 문서 표 9에 따르면 스크립트는 다음 구조를 가집니다:
-    /// - DWORD (4 bytes): 스크립트 헤더 길이 (len1&lt;u32&gt;)
-    /// - WCHAR array\[len1\] (2×len1 bytes): 스크립트 헤더
-    /// - DWORD (4 bytes): 스크립트 소스 길이 (len2&lt;u32&gt;)
-    /// - WCHAR array\[len2\] (2×len2 bytes): 스크립트 소스
-    /// - DWORD (4 bytes): 스크립트 Pre 소스 길이 (len3&lt;u32&gt;)
-    /// - WCHAR array\[len3\] (2×len3 bytes): 스크립트 Pre 소스
-    /// - DWORD (4 bytes): 스크립트 Post 소스 길이 (len4&lt;u32&gt;)
-    /// - WCHAR array\[len4\] (2×len4 bytes): 스크립트 Post 소스
+    /// - DWORD (4 bytes): 스크립트 헤더 길이 (DWORD)
+    /// - WCHAR array[DWORD] (2×DWORD bytes): 스크립트 헤더
+    /// - DWORD (4 bytes): 스크립트 소스 길이 (DWORD)
+    /// - WCHAR array[DWORD] (2×DWORD bytes): 스크립트 소스
+    /// - DWORD (4 bytes): 스크립트 Pre 소스 길이 (DWORD)
+    /// - WCHAR array[DWORD] (2×DWORD bytes): 스크립트 Pre 소스
+    /// - DWORD (4 bytes): 스크립트 Post 소스 길이 (DWORD)
+    /// - WCHAR array[DWORD] (2×DWORD bytes): 스크립트 Post 소스
     /// - DWORD (4 bytes): 스크립트 end flag (-1)
     ///   According to spec Table 9, script has the following structure:
-    ///   - DWORD (4 bytes): Script header length (len1&lt;u32&gt;)
-    ///   - WCHAR array\[len1\] (2×len1 bytes): Script header
-    ///   - DWORD (4 bytes): Script source length (len2&lt;u32&gt;)
-    ///   - WCHAR array\[len2\] (2×len2 bytes): Script source
-    ///   - DWORD (4 bytes): Script pre source length (len3&lt;u32&gt;)
-    ///   - WCHAR array\[len3\] (2×len3 bytes): Script pre source
-    ///   - DWORD (4 bytes): Script post source length (len4)
-    ///   - WCHAR array\[len4\] (2×len4 bytes): Script post source
+    ///   - DWORD (4 bytes): Script header length (DWORD)
+    ///   - WCHAR array[DWORD] (2×DWORD bytes): Script header
+    ///   - DWORD (4 bytes): Script source length (DWORD)
+    ///   - WCHAR array[DWORD] (2×DWORD bytes): Script source
+    ///   - DWORD (4 bytes): Script pre source length (DWORD)
+    ///   - WCHAR array[DWORD] (2×DWORD bytes): Script pre source
+    ///   - DWORD (4 bytes): Script post source length (DWORD)
+    ///   - WCHAR array[DWORD] (2×DWORD bytes): Script post source
     ///   - DWORD (4 bytes): Script end flag (-1)
     pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
         let mut offset = 0;
