@@ -12,6 +12,24 @@ use super::position::{table_position, view_box};
 use super::size::{content_size, htb_size, resolve_container_size};
 use super::{cells, svg};
 
+/// 문서 첫 CharShape의 base_size(1/100 pt)로 기본 line_height_mm, top_offset_mm 유도.
+/// LineSegment가 없을 때만 사용. CharShape 없으면 fallback (2.79, -0.18).
+fn default_hls_from_document(document: &HwpDocument) -> (f64, f64) {
+    let (line_height_mm, top_offset_mm) = document
+        .doc_info
+        .char_shapes
+        .first()
+        .map(|cs| {
+            // base_size: 1/100 pt → pt → mm (1 pt = 0.352778 mm)
+            let font_size_mm = (cs.base_size as f64 / 100.0) * 0.352778;
+            let lh = round_to_2dp(font_size_mm * 1.2);
+            let top = round_to_2dp((lh - font_size_mm) / 2.0);
+            (lh, top)
+        })
+        .unwrap_or((2.79, -0.18)); // 문서에 CharShape 없을 때만 사용
+    (line_height_mm, top_offset_mm)
+}
+
 /// 캡션 정보 / Caption information
 #[derive(Debug, Clone, Copy)]
 pub struct CaptionInfo {
@@ -531,9 +549,9 @@ pub fn render_table(
                 }
 
                 if all_segments_with_info.is_empty() {
-                    // LineSegment가 없으면 fallback / Fallback if no LineSegments
-                    let (line_height_mm, top_offset_mm, caption_hls_left_mm, caption_hls_width_mm) =
-                        (2.79, -0.18, 0.0, caption_width_mm);
+                    // LineSegment가 없으면 문서 CharShape 기반 기본값 사용 / Use document CharShape-based default when no LineSegments
+                    let (line_height_mm, top_offset_mm) = default_hls_from_document(document);
+                    let (caption_hls_left_mm, caption_hls_width_mm) = (0.0, caption_width_mm);
                     vec![format!(
                         r#"<div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:{caption_hls_left_mm}mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_hls_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div>"#,
                         ps_class = ps_class,
@@ -732,9 +750,9 @@ pub fn render_table(
                     hls_htmls
                 }
             } else {
-                // LineSegment 정보가 없으면 fallback / Fallback if no LineSegment info
-                let (line_height_mm, top_offset_mm, caption_hls_left_mm, caption_hls_width_mm) =
-                    (2.79, -0.18, 0.0, caption_width_mm);
+                // LineSegment 정보가 없으면 문서 CharShape 기반 기본값 / Document CharShape-based default when no LineSegment info
+                let (line_height_mm, top_offset_mm) = default_hls_from_document(document);
+                let (caption_hls_left_mm, caption_hls_width_mm) = (0.0, caption_width_mm);
                 vec![format!(
                     r#"<div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:{caption_hls_left_mm}mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_hls_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div>"#,
                     ps_class = ps_class,
