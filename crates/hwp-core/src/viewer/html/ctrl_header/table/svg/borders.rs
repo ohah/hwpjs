@@ -8,6 +8,8 @@ use crate::viewer::html::ctrl_header::table::geometry::{
 };
 use crate::viewer::html::ctrl_header::table::size::Size;
 
+/// 테두리 선 두께 코드(0..15)를 mm로 변환. 스펙(한글 문서 파일 형식 5.0) 테두리/선 두께 표 기준.
+/// Border width code (0..15) to mm. Per HWP 5.0 spec table for border/line width.
 fn border_width_code_to_mm(code: u8) -> f64 {
     match code {
         0 => 0.10,
@@ -26,7 +28,7 @@ fn border_width_code_to_mm(code: u8) -> f64 {
         13 => 3.00,
         14 => 4.00,
         15 => 5.00,
-        _ => 0.12,
+        _ => 0.12, // 알 수 없는 코드 시 기본값 / default for unknown code
     }
 }
 
