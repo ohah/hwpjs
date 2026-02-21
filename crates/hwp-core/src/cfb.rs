@@ -160,6 +160,7 @@ impl CfbParser {
         // 하지만 dir_sector가 -1 (ENDOFCHAIN)이면 디렉토리가 없음
         let dir_entry_size = 128;
         let dir_start = if dir_sector == 0xFFFFFFFF {
+            #[allow(overflowing_literals)]
             return Err(HwpError::InvalidDirectorySector {
                 reason: "ENDOFCHAIN marker found".to_string(),
             });

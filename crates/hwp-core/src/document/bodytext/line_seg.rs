@@ -31,8 +31,8 @@ impl LineSegmentTag {
     /// UINT32 태그 값에서 LineSegmentTag를 파싱합니다. / Parse LineSegmentTag from UINT32 tag value.
     fn from_bits(tag: UINT32) -> Self {
         LineSegmentTag {
-            is_first_line_of_page: (tag & 0x00000001) != 0,
-            is_first_line_of_column: (tag & 0x00000002) != 0,
+            is_first_line_of_page: (tag & 0x0000_0001) != 0,
+            is_first_line_of_column: (tag & 0x0000_0002) != 0,
             is_empty_segment: (tag & 0x00010000) != 0,
             is_first_segment_of_line: (tag & 0x00020000) != 0,
             is_last_segment_of_line: (tag & 0x00040000) != 0,
