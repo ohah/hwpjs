@@ -13,7 +13,8 @@ use std::path::Path;
 /// PDF 변환 옵션
 #[derive(Debug, Clone)]
 pub struct PdfOptions {
-    /// 기본 폰트으로 사용할 TTF/OTF 경로. None이면 genpdf 기본 폰트 사용.
+    /// 기본 폰트으로 사용할 TTF/OTF가 있는 디렉터리 경로. None이면 genpdf 기본 폰트 사용.
+    /// **보안**: 신뢰할 수 있는 경로만 지정하세요. 사용자 입력을 그대로 사용하지 마세요.
     pub font_dir: Option<std::path::PathBuf>,
     /// 이미지 임베드 여부 (기본 true)
     pub embed_images: bool,
@@ -75,8 +76,14 @@ fn build_table_layout(table: &Table) -> elements::TableLayout {
     layout
 }
 
+/// Base64 입력 최대 길이 (메모리 DoS 방지).
+const MAX_BASE64_INPUT_LEN: usize = 16 * 1024 * 1024; // 16 MiB
+/// 디코딩된 이미지 바이트 최대 길이 (메모리 DoS 방지).
+const MAX_IMAGE_DECODED_LEN: usize = 12 * 1024 * 1024; // 12 MiB
+
 /// BinData에서 이미지 바이트를 찾아 genpdf Image 요소로 변환 (embed_images가 true일 때만).
 /// Base64 디코딩·이미지 로드·투명도 제거(RGB 변환) 실패 시 None을 반환해 [Image] 플레이스홀더로 대체.
+/// 입력/디코딩 길이 상한을 초과하면 None을 반환한다.
 fn try_build_image(
     document: &HwpDocument,
     bindata_id: u16,
@@ -90,8 +97,14 @@ fn try_build_image(
         .items
         .iter()
         .find(|i| i.index == bindata_id)?;
+    if item.data.len() > MAX_BASE64_INPUT_LEN {
+        return None;
+    }
     // Base64: 공백/줄바꿈 무시하고 디코딩 시도
     let decoded = decode_bindata_base64(item.data.as_bytes()).ok()?;
+    if decoded.len() > MAX_IMAGE_DECODED_LEN {
+        return None;
+    }
     let dynamic = image::load_from_memory(&decoded).ok()?;
     // genpdf/printpdf는 투명 채널 미지원 → 알파 제거 후 RGB로 변환
     let opaque = dynamic.to_rgb8();
@@ -279,17 +292,3 @@ pub fn to_pdf(document: &HwpDocument, options: &PdfOptions) -> Vec<u8> {
     output
 }
 
-/// 최소 유효 PDF (빈 페이지 1장) 반환. 스텁/테스트용.
-#[allow(dead_code)]
-fn minimal_pdf_bytes(options: &PdfOptions) -> Vec<u8> {
-    let dir = options.font_dir.as_deref().unwrap_or(Path::new("."));
-    let font = fonts::from_files(dir, "LiberationSans", Some(fonts::Builtin::Helvetica))
-        .or_else(|_| fonts::from_files(dir, "Liberation Sans", Some(fonts::Builtin::Helvetica)))
-        .expect("font: set font_dir to a path containing LiberationSans TTF files");
-    let mut doc = Document::new(font);
-    doc.set_title("HWP Export");
-    doc.push(elements::Paragraph::new(""));
-    let mut output = Vec::new();
-    doc.render(&mut output).expect("render");
-    output
-}

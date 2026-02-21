@@ -19,9 +19,15 @@ export interface ToMarkdownResult {
   markdown: string;
 }
 
+export interface ToPdfOptions {
+  fontDir: string | null;
+  embedImages: boolean;
+}
+
 interface Spec extends NativeModule {
   toJson(data: ArrayBuffer): string;
   toMarkdown(data: ArrayBuffer, options: ToMarkdownOptions): ToMarkdownResult;
+  toPdf(data: ArrayBuffer, options: ToPdfOptions): ArrayBuffer;
   fileHeader(data: ArrayBuffer): string;
 }
 

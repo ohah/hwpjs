@@ -21,6 +21,7 @@
 //!
 //! ## 실제 PDF 파일 출력
 //! `pdf_generated` 테스트 실행 시 생성된 PDF를 스냅샷과 같은 디렉터리에 `pdf_export__{이름}.pdf` 형식으로 씁니다.
+//! `pdftoppm`(poppler-utils)이 설치되어 있으면 첫 페이지를 `pdf_export__{이름}-1.png`로 저장해 결과를 눈으로 확인할 수 있음.
 
 mod common;
 
@@ -50,6 +51,25 @@ fn write_pdf_to_file(name: &str, pdf: &[u8]) {
     let path = snapshots_dir().join(format!("pdf_export__{}.pdf", name));
     if std::fs::write(&path, pdf).is_ok() {
         println!("wrote: {}", path.display());
+        write_pdf_first_page_to_png(&path, name);
+    }
+}
+
+/// pdftoppm(poppler-utils)으로 PDF 첫 페이지를 PNG로 저장. 결과물 확인용. 설치되어 있을 때만 실행.
+fn write_pdf_first_page_to_png(pdf_path: &std::path::Path, name: &str) {
+    let out_prefix = snapshots_dir().join(format!("pdf_export__{}", name));
+    let status = std::process::Command::new("pdftoppm")
+        .args(["-png", "-f", "1", "-l", "1"])
+        .arg(pdf_path)
+        .arg(&out_prefix)
+        .status();
+    if let Ok(s) = status {
+        if s.success() {
+            let png = snapshots_dir().join(format!("pdf_export__{}-1.png", name));
+            if png.exists() {
+                println!("wrote: {}", png.display());
+            }
+        }
     }
 }
 
@@ -140,7 +160,7 @@ fn pdf_content_summary_snapshot_embed_images_false() {
     });
 }
 
-/// 실제 생성된 PDF 바이트를 base64로 스냅샷. 서식·레이아웃 변경 시 스냅샷이 바뀜.
+/// 실제 생성된 PDF 바이트를 유효성 검사 후 pdf_export__noori_pdf_generated.pdf로 저장.
 #[test]
 fn pdf_generated_noori_snapshot() {
     let doc = match load_document("noori.hwp") {
@@ -167,7 +187,7 @@ fn pdf_generated_noori_snapshot() {
     assert!(pdf.starts_with(b"%PDF"), "PDF magic bytes");
 }
 
-/// 실제 생성된 PDF 바이트를 base64로 스냅샷 (table.hwp, 상대적으로 작은 PDF).
+/// 실제 생성된 PDF 바이트를 유효성 검사 후 pdf_export__table_pdf_generated.pdf로 저장 (table.hwp).
 #[test]
 fn pdf_generated_table_snapshot() {
     let doc = match load_document("table.hwp") {
@@ -194,27 +214,3 @@ fn pdf_generated_table_snapshot() {
     assert!(pdf.starts_with(b"%PDF"), "PDF magic bytes");
 }
 
-#[test]
-fn to_pdf_table_fixture_returns_valid_pdf() {
-    let doc = match load_document("table.hwp") {
-        Some(d) => d,
-        None => {
-            println!("fixture table.hwp not found, skipping");
-            return;
-        }
-    };
-    let options = PdfOptions {
-        font_dir: common::find_font_dir(),
-        ..PdfOptions::default()
-    };
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| to_pdf(&doc, &options)));
-    let pdf = match result {
-        Ok(bytes) => bytes,
-        Err(_) => {
-            println!("font loading failed, skipping");
-            return;
-        }
-    };
-    assert!(!pdf.is_empty());
-    assert!(pdf.starts_with(b"%PDF"), "PDF magic bytes");
-}

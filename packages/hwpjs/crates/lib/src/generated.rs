@@ -2,6 +2,7 @@
 // Hash: 1761b519b16719d6
 #[rustfmt::skip]
 use craby::prelude::*;
+use anyhow;
 
 use crate::ffi::bridging::*;
 
@@ -17,6 +18,8 @@ pub trait HwpjsSpec {
     fn to_json(&mut self, data: ArrayBuffer) -> String;
     #[allow(dead_code)]
     fn to_markdown(&mut self, data: ArrayBuffer, options: ToMarkdownOptions) -> ToMarkdownResult;
+    #[allow(dead_code)]
+    fn to_pdf(&mut self, data: ArrayBuffer, options: ToPdfOptions) -> Result<Vec<u8>, anyhow::Error>;
 }
 
 impl Default for NullableString {
@@ -61,6 +64,15 @@ impl Default for ToMarkdownResult {
     fn default() -> Self {
         ToMarkdownResult {
             markdown: String::default(),
+        }
+    }
+}
+
+impl Default for ToPdfOptions {
+    fn default() -> Self {
+        ToPdfOptions {
+            font_dir: NullableString::default(),
+            embed_images: true,
         }
     }
 }
