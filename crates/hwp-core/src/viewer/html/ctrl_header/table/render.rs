@@ -12,21 +12,21 @@ use super::position::{table_position, view_box};
 use super::size::{content_size, htb_size, resolve_container_size};
 use super::{cells, svg};
 
-/// 문서 첫 CharShape의 base_size(1/100 pt)로 기본 line_height_mm, top_offset_mm 유도.
-/// LineSegment가 없을 때만 사용. CharShape 없으면 fallback (2.79, -0.18).
-fn default_hls_from_document(document: &HwpDocument) -> (f64, f64) {
-    let (line_height_mm, top_offset_mm) = document
-        .doc_info
-        .char_shapes
-        .first()
-        .map(|cs| {
-            // base_size: 1/100 pt → pt → mm (1 pt = 0.352778 mm)
-            let font_size_mm = (cs.base_size as f64 / 100.0) * 0.352778;
-            let lh = round_to_2dp(font_size_mm * 1.2);
-            let top = round_to_2dp((lh - font_size_mm) / 2.0);
-            (lh, top)
-        })
-        .unwrap_or((2.79, -0.18)); // 문서에 CharShape 없을 때만 사용
+/// CharShape 한 개로 line_height_mm, top_offset_mm 유도 (base_size 1/100 pt 기준).
+fn hls_from_char_shape(cs: &crate::document::docinfo::CharShape) -> (f64, f64) {
+    let font_size_mm = (cs.base_size as f64 / 100.0) * 0.352778;
+    let lh = round_to_2dp(font_size_mm * 1.2);
+    let top = round_to_2dp((lh - font_size_mm) / 2.0);
+    (lh, top)
+}
+
+/// 문서 CharShape로 기본 line_height_mm, top_offset_mm 유도.
+/// char_shape_id: 캡션 문단 등 특정 문단의 CharShape 사용 시; None이면 첫 번째 사용. 없으면 fallback (2.79, -0.18).
+fn default_hls_from_document(document: &HwpDocument, char_shape_id: Option<usize>) -> (f64, f64) {
+    let cs = char_shape_id
+        .and_then(|id| document.doc_info.char_shapes.get(id))
+        .or_else(|| document.doc_info.char_shapes.first());
+    let (line_height_mm, top_offset_mm) = cs.map(hls_from_char_shape).unwrap_or((2.79, -0.18)); // 문서에 CharShape 없을 때만 사용
     (line_height_mm, top_offset_mm)
 }
 
@@ -114,12 +114,13 @@ pub struct TablePosition {
 }
 
 /// 테이블을 HTML로 렌더링 / Render table to HTML
+/// 반환: (HTML 문자열, htG 사용 시 htG 높이 mm) / Returns: (HTML string, htG height in mm when htG is used)
 pub fn render_table(
     table: &Table,
     context: &mut TableRenderContext,
     position: TablePosition,
     caption: Option<&CaptionData>,
-) -> String {
+) -> (String, Option<f64>) {
     // 구조체에서 개별 값 추출 / Extract individual values from structs
     let document = context.document;
     let ctrl_header = context.ctrl_header;
@@ -155,8 +156,10 @@ pub fn render_table(
         .and_then(|p| p.auto_number_display_text.clone());
 
     if table.cells.is_empty() || table.attributes.row_count == 0 {
-        return r#"<div class="htb" style="left:0mm;width:0mm;top:0mm;height:0mm;"></div>"#
-            .to_string();
+        return (
+            r#"<div class="htb" style="left:0mm;width:0mm;top:0mm;height:0mm;"></div>"#.to_string(),
+            None,
+        );
     }
 
     // CtrlHeader에서 필요한 정보 추출 / Extract necessary information from CtrlHeader
@@ -549,8 +552,9 @@ pub fn render_table(
                 }
 
                 if all_segments_with_info.is_empty() {
-                    // LineSegment가 없으면 문서 CharShape 기반 기본값 사용 / Use document CharShape-based default when no LineSegments
-                    let (line_height_mm, top_offset_mm) = default_hls_from_document(document);
+                    // LineSegment가 없으면 캡션 문단 CharShape 또는 문서 첫 CharShape 사용 / Use caption para CharShape or doc first when no LineSegments
+                    let (line_height_mm, top_offset_mm) =
+                        default_hls_from_document(document, caption_char_shape_id);
                     let (caption_hls_left_mm, caption_hls_width_mm) = (0.0, caption_width_mm);
                     vec![format!(
                         r#"<div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:{caption_hls_left_mm}mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_hls_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div>"#,
@@ -750,8 +754,9 @@ pub fn render_table(
                     hls_htmls
                 }
             } else {
-                // LineSegment 정보가 없으면 문서 CharShape 기반 기본값 / Document CharShape-based default when no LineSegment info
-                let (line_height_mm, top_offset_mm) = default_hls_from_document(document);
+                // LineSegment 정보가 없으면 캡션 문단 CharShape 또는 문서 첫 CharShape / Caption para or doc first CharShape when no LineSegment info
+                let (line_height_mm, top_offset_mm) =
+                    default_hls_from_document(document, caption_char_shape_id);
                 let (caption_hls_left_mm, caption_hls_width_mm) = (0.0, caption_width_mm);
                 vec![format!(
                     r#"<div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:{caption_hls_left_mm}mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_hls_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div>"#,
@@ -815,13 +820,13 @@ pub fn render_table(
         )
     };
     // NOTE (fixture 기준):
-    // - LineSegment(글자처럼 취급) 내부 테이블은 htG가 inline-block/relative로 동작하고,
-    //   htb 자체에는 display/position/vertical-align 스타일을 주지 않습니다. (table-position.html)
-    // - 그 외 케이스는 htb를 inline-block/relative로 두는 레이아웃이 존재합니다.
-    let htb_extra_style = if is_inline_table && needs_htg {
-        ""
-    } else {
+    // - like_letters=false(absolute) 테이블: htb에 inline-block 없음 (table2.html)
+    // - LineSegment(글자처럼 취급) 내부 테이블 + htG 있음: htG만 inline-block, htb에는 없음 (table-position.html)
+    // - 인라인 테이블 + htG 없음: htb를 inline-block/relative로
+    let htb_extra_style = if is_inline_table && !needs_htg {
         "display:inline-block;position:relative;vertical-align:middle;"
+    } else {
+        ""
     };
     let htb_html = format!(
         r#"<div class="htb" style="left:{htb_left_mm}mm;width:{htb_width_mm}mm;top:{htb_top_mm}mm;height:{content_height_mm}mm;{htb_extra_style}">{svg}{cells_html}</div>"#,
@@ -853,6 +858,7 @@ pub fn render_table(
     //
     // Therefore, we do not apply any offset to htG's top for vertical captions.
 
+    let mut opt_htg_height: Option<f64> = None;
     let result_html = if needs_htg {
         // htG 크기 계산 (테이블 + 캡션) / Calculate htG size (table + caption)
         let actual_caption_height_mm = if has_caption { caption_height_mm } else { 0.0 };
@@ -894,6 +900,7 @@ pub fn render_table(
         // htG 크기를 mm 2자리까지 반올림 / Round htG size to 2 decimal places
         let htg_height = round_to_2dp(htg_height);
         let htg_width = round_to_2dp(htg_width);
+        opt_htg_height = Some(htg_height);
 
         // htG 래퍼와 캡션 생성 / Create htG wrapper and caption
         // 인라인 테이블의 htG는 htb와 동일하게 inline-block/relative/vertical-align 스타일을 가져야 한다.
@@ -933,5 +940,5 @@ pub fn render_table(
         htb_html
     };
 
-    result_html
+    (result_html, opt_htg_height)
 }

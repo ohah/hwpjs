@@ -359,7 +359,7 @@ pub fn render_line_segments_with_content(
                     first_para_vertical_mm: None,
                 };
 
-                let table_html = render_table(
+                let (table_html, _) = render_table(
                     table_info.table,
                     &mut context,
                     position,
