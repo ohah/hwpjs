@@ -64,13 +64,21 @@ bun run build:react-native
   ```
 
 - **Linux용 (맥 → linux)**  
-  `build:node:linux-x64`는 `--use-cross`를 사용하며, **Docker**와 **cross**가 필요합니다.
+  `build:node:linux-x64`는 `--use-cross`를 사용하며, **Docker**와 **cross**가 필요합니다. macOS에서 CLI만으로 Docker를 쓰려면 Colima를 사용하면 됩니다.
   ```bash
-  cargo install cross
-  cd packages/hwpjs && bun run build:node:linux-x64
-  ```
+  # 1) Colima + Docker 설치 (Docker Desktop 없을 때)
+  brew install colima docker
+  colima start
 
-자세한 내용은 문서 사이트의 [개발 가이드](https://ohah.github.io/hwpjs/guide/development)를 참고하세요.
+  # 2) cross 설치
+  cargo install cross
+
+  # 3) Linux x64 빌드 (Apple Silicon에서는 플랫폼 지정 권장)
+  cd packages/hwpjs
+  CROSS_BUILD_OPTS="--platform linux/amd64" bun run build:node:linux-x64
+  ```
+  결과물: `dist/hwpjs.linux-x64-gnu.node`  
+  자세한 설치·설정은 문서 사이트의 [개발 가이드 - Linux x64 크로스 빌드](https://ohah.github.io/hwpjs/guide/development#linux-x64-크로스-빌드-macos)를 참고하세요.
 
 ### 릴리스 빌드
 
