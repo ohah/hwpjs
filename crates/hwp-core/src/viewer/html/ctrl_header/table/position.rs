@@ -3,6 +3,11 @@ use crate::document::bodytext::PageDef;
 use crate::types::{RoundTo2dp, INT32};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
+/// PageDef·hcd_position이 모두 없을 때만 사용하는 기준 위치 (스펙 기본 여백 대응).
+/// 가능하면 hcd_position 또는 PageDef 전달을 보장할 것.
+pub(super) const FALLBACK_BASE_LEFT_MM: f64 = 20.0;
+pub(super) const FALLBACK_BASE_TOP_MM: f64 = 24.99;
+
 /// viewBox 데이터 / ViewBox data
 #[derive(Clone, Copy)]
 pub(crate) struct ViewBox {
@@ -62,7 +67,7 @@ pub(crate) fn table_position(
         let top = (pd.top_margin.to_mm() + pd.header_margin.to_mm()).round_to_2dp();
         (left, top)
     } else {
-        (20.0, 24.99)
+        (FALLBACK_BASE_LEFT_MM, FALLBACK_BASE_TOP_MM)
     };
 
     if let Some((segment_col, segment_vert)) = segment_position {

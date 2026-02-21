@@ -311,12 +311,12 @@ pub fn render_table(
                     resolved_size.width - (margin_left_mm * 2.0)
                 }
             } else {
-                // 세로 방향(Left/Right): width만 사용
-                // Vertical direction: use width only
+                // 세로 방향(Left/Right): width만 사용. 없으면 테이블 실제 폭(마진 제외) 사용
+                // Vertical direction: use width only; if missing, use actual table width (excluding margin)
                 if let Some(width_hwpunit) = info.width {
                     HWPUNIT::from(width_hwpunit).to_mm()
                 } else {
-                    30.0 // 기본값: fixture에서 확인한 값 / Default: value from fixture
+                    resolved_size.width - margin_left_mm - margin_right_mm
                 }
             }
         } else {
