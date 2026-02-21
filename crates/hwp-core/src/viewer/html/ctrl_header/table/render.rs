@@ -22,12 +22,28 @@ fn hls_from_char_shape(cs: &crate::document::docinfo::CharShape) -> (f64, f64) {
 
 /// 문서 CharShape로 기본 line_height_mm, top_offset_mm 유도.
 /// char_shape_id: 캡션 문단 등 특정 문단의 CharShape 사용 시; None이면 첫 번째 사용. 없으면 fallback (2.79, -0.18).
-fn default_hls_from_document(document: &HwpDocument, char_shape_id: Option<usize>) -> (f64, f64) {
+pub(crate) fn default_hls_from_document(document: &HwpDocument, char_shape_id: Option<usize>) -> (f64, f64) {
     let cs = char_shape_id
         .and_then(|id| document.doc_info.char_shapes.get(id))
         .or_else(|| document.doc_info.char_shapes.first());
     let (line_height_mm, top_offset_mm) = cs.map(hls_from_char_shape).unwrap_or((2.79, -0.18)); // 문서에 CharShape 없을 때만 사용
     (line_height_mm, top_offset_mm)
+}
+
+/// 캡션 문단 CharShape와 번호 문자열로 haN(자동 번호 영역) 너비(mm) 추정.
+/// 원본에서 글자 모양을 가져와 번호 텍스트 너비를 계산. 없으면 None(고정 상수 사용 안 함).
+fn caption_han_width_mm(
+    document: &HwpDocument,
+    char_shape_id: Option<usize>,
+    number_text: &str,
+) -> Option<f64> {
+    let cs = char_shape_id
+        .and_then(|id| document.doc_info.char_shapes.get(id))
+        .or_else(|| document.doc_info.char_shapes.first())?;
+    let font_size_mm = (cs.base_size as f64 / 100.0) * 0.352778; // pt → mm (1pt = 25.4/72 mm)
+    let char_count = number_text.chars().count().max(1);
+    let width_mm = round_to_2dp(font_size_mm * 0.6 * char_count as f64);
+    Some(width_mm)
 }
 
 /// 캡션 정보 / Caption information
@@ -520,6 +536,11 @@ pub fn render_table(
                 ""
             };
 
+            // haN(자동 번호 영역) 너비: 캡션 문단 CharShape + 번호 문자열로 계산. 원본에서 유도. 없으면 생략.
+            let han_width_style = caption_han_width_mm(document, caption_char_shape_id, &table_num_text)
+                .map(|w| format!("width:{}mm;", w))
+                .unwrap_or_default();
+
             // 모든 paragraph의 LineSegment를 별도의 hls div로 렌더링 / Render each LineSegment from all paragraphs as separate hls div
             let hls_divs = if let Some(paragraphs) = caption_paragraphs {
                 // 모든 paragraph의 LineSegment를 수집 / Collect LineSegments from all paragraphs
@@ -557,7 +578,7 @@ pub fn render_table(
                         default_hls_from_document(document, caption_char_shape_id);
                     let (caption_hls_left_mm, caption_hls_width_mm) = (0.0, caption_width_mm);
                     vec![format!(
-                        r#"<div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:{caption_hls_left_mm}mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_hls_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div>"#,
+                        r#"<div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:{caption_hls_left_mm}mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_hls_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;{han_width_style}height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div>"#,
                         ps_class = ps_class,
                         line_height_mm = line_height_mm,
                         top_offset_mm = top_offset_mm,
@@ -566,6 +587,7 @@ pub fn render_table(
                         caption_hls_width_mm = caption_hls_width_mm,
                         cs_class = cs_class,
                         caption_label = caption_label,
+                        han_width_style = han_width_style,
                         table_num_text = table_num_text,
                         caption_body = caption_body
                     )]
@@ -702,9 +724,10 @@ pub fn render_table(
                                         .as_deref()
                                         .unwrap_or(&table_num_text);
                                     format!(
-                                        r#"<span class="hrt {cs_class}">{before_num}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{num_text}</span></div><span class="hrt {cs_class}">&nbsp;{after_num}</span>"#,
+                                        r#"<span class="hrt {cs_class}">{before_num}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;{han_width_style}height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{num_text}</span></div><span class="hrt {cs_class}">&nbsp;{after_num}</span>"#,
                                         cs_class = cs_class,
                                         before_num = before_num.trim(),
+                                        han_width_style = han_width_style,
                                         caption_height_mm = caption_height_mm,
                                         num_text = num_text,
                                         after_num = after_num
@@ -712,9 +735,10 @@ pub fn render_table(
                                 } else {
                                     // AUTO_NUMBER 위치가 텍스트 범위를 벗어남 / AUTO_NUMBER position out of range
                                     format!(
-                                        r#"<span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span>"#,
+                                        r#"<span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;{han_width_style}height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span>"#,
                                         cs_class = cs_class,
                                         caption_label = caption_label,
+                                        han_width_style = han_width_style,
                                         caption_height_mm = caption_height_mm,
                                         table_num_text = table_num_text,
                                         caption_body = caption_body
@@ -723,9 +747,10 @@ pub fn render_table(
                             } else {
                                 // AUTO_NUMBER 위치가 없으면 fallback / Fallback if no AUTO_NUMBER position
                                 format!(
-                                    r#"<span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span>"#,
+                                    r#"<span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;{han_width_style}height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span>"#,
                                     cs_class = cs_class,
                                     caption_label = caption_label,
+                                    han_width_style = han_width_style,
                                     caption_height_mm = caption_height_mm,
                                     table_num_text = table_num_text,
                                     caption_body = caption_body
@@ -759,7 +784,7 @@ pub fn render_table(
                     default_hls_from_document(document, caption_char_shape_id);
                 let (caption_hls_left_mm, caption_hls_width_mm) = (0.0, caption_width_mm);
                 vec![format!(
-                    r#"<div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:{caption_hls_left_mm}mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_hls_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div>"#,
+                    r#"<div class="hls {ps_class}" style="line-height:{line_height_mm}mm;white-space:nowrap;left:{caption_hls_left_mm}mm;top:{top_offset_mm}mm;height:{caption_height_mm}mm;width:{caption_hls_width_mm}mm;"><span class="hrt {cs_class}">{caption_label}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;{han_width_style}height:{caption_height_mm}mm;"><span class="hrt {cs_class}">{table_num_text}</span></div><span class="hrt {cs_class}">&nbsp;{caption_body}</span></div>"#,
                     ps_class = ps_class,
                     line_height_mm = line_height_mm,
                     top_offset_mm = top_offset_mm,
@@ -768,6 +793,7 @@ pub fn render_table(
                     caption_hls_width_mm = caption_hls_width_mm,
                     cs_class = cs_class,
                     caption_label = caption_label,
+                    han_width_style = han_width_style,
                     table_num_text = table_num_text,
                     caption_body = caption_body
                 )]
@@ -909,31 +935,18 @@ pub fn render_table(
         } else {
             ""
         };
-        let html = if has_caption && is_caption_above {
-            // 위 캡션: 캡션 먼저, 그 다음 테이블 / Caption above: caption first, then table
-            format!(
-                r#"<div class="htG" style="left:{left_mm}mm;width:{htg_width}mm;top:{top_mm}mm;height:{htg_height}mm;{inline_htg_style}">{caption_html}{htb_html}</div>"#,
-                left_mm = left_mm,
-                htg_width = htg_width,
-                top_mm = top_mm,
-                htg_height = htg_height,
-                caption_html = caption_html,
-                htb_html = htb_html,
-                inline_htg_style = inline_htg_style,
-            )
-        } else {
-            // 아래 캡션 또는 캡션 없음: 테이블 먼저, 그 다음 캡션 / Caption below or no caption: table first, then caption
-            format!(
-                r#"<div class="htG" style="left:{left_mm}mm;width:{htg_width}mm;top:{top_mm}mm;height:{htg_height}mm;{inline_htg_style}">{htb_html}{caption_html}</div>"#,
-                left_mm = left_mm,
-                htg_width = htg_width,
-                top_mm = top_mm,
-                htg_height = htg_height,
-                htb_html = htb_html,
-                caption_html = caption_html,
-                inline_htg_style = inline_htg_style,
-            )
-        };
+        // Fixture table-caption.html: 위/아래 모두 DOM 순서가 htb(테이블) 먼저, 그 다음 캡션(hcD)
+        // Fixture table-caption.html: both top and bottom caption have htb first, then caption (hcD) in DOM order
+        let html = format!(
+            r#"<div class="htG" style="left:{left_mm}mm;width:{htg_width}mm;top:{top_mm}mm;height:{htg_height}mm;{inline_htg_style}">{htb_html}{caption_html}</div>"#,
+            left_mm = left_mm,
+            htg_width = htg_width,
+            top_mm = top_mm,
+            htg_height = htg_height,
+            htb_html = htb_html,
+            caption_html = caption_html,
+            inline_htg_style = inline_htg_style,
+        );
 
         html
     } else {
