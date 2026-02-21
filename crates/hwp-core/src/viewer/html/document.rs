@@ -265,8 +265,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 // 첫 번째 LineSegment 위치 저장 / Store first LineSegment position
                 // PageDef 여백을 직접 사용 / Use PageDef margins directly
                 if first_segment_pos.is_none() {
-                    // hcD 위치는 left_margin + binding_margin, top_margin + header_margin을 직접 사용
-                    // hcD position uses left_margin + binding_margin, top_margin + header_margin directly
+                    // hcD 위치는 PageDef만 사용 (상수 없음). 테이블 절대 위치는 table_position()에서
+                    // hcd_position 또는 segment_position으로만 계산.
+                    // hcD position from PageDef only (no constants). Table position from hcd_position or segment_position only.
                     let left_margin_mm = page_def
                         .map(|pd| {
                             (pd.left_margin.to_mm() + pd.binding_margin.to_mm()).round_to_2dp()
