@@ -557,7 +557,7 @@ pub fn render_paragraph(
                 para_start_column_mm,
                 para_segment_width_mm,
                 first_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
-                overflow_check.map(|(ch, _)| ch).flatten(),
+                overflow_check.and_then(|(ch, _)| ch),
                 overflow_check.and_then(|(_, th)| th),
             );
 
