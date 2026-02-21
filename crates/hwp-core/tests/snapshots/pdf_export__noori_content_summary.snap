@@ -3,6 +3,23 @@ source: crates/hwp-core/tests/pdf_export.rs
 assertion_line: 70
 expression: text
 ---
+image: bindata_id=1
+table: 3x4
+paragraph: 보도일시
+paragraph: 2018. 9. 4.(화) 조간(온라인 9. 3. 12:00)부터 보도해 주시기 바랍니다.  
+paragraph: 배포일시
+paragraph: 2018. 9. 3.(월) 09:00
+paragraph: 담당부서
+paragraph: 거대공공연구정책과
+paragraph: 담당과장
+paragraph: 장인숙(02-2110-2430)
+paragraph: 담 당 자
+paragraph:  용찬재 사무관(02-2110-2428)
+table: 1x1
+paragraph: 우리가 독자 개발하여 최초 발사하는 한국형발사체,
+paragraph: 국민이 정한 그 이름은 ｢누리｣
+paragraph: “세상”의 옛말로, 우주까지 확장된 새로운 세상을 연다는 의미 -
+paragraph: 명칭공모전에 1만건 이상 응모, 뜨거운 관심 보여 -
 paragraph: □ 과학기술정보통신부(장관 유영민, 이하 ‘과기정통부’)는 우리나라 최초로 순수 우리기술로 개발 중인 한국형발사체(KSLV-2)의 새로운 이름으...
 paragraph:   o 한국형발사체는 1.5톤급 실용위성을 지구 저궤도(600km~800km)까지 쏘아 올릴 수 있는 3단형 우주발사체로, 연간 130여개 기관...
 paragraph:   o 올해 10월에는 한국형발사체의 핵심부품인 75톤 액체엔진의 비행성능을 확인하기 위해 시험발사체를 발사할 예정이다.
@@ -14,3 +31,35 @@ paragraph: □ 이러한 절차를 거쳐 한국형발사체의 새로운 명칭
 paragraph:   o 동 명칭을 제출한 경상대학교 에너지기계공학과 백승엽 학생은 ‘누리’는 ‘세상’의 옛말로 우주로까지 확장된 새로운 세상을 연다는 의미로, ...
 paragraph:   o 백승엽학생에게는 오는 9월 7일(금)에 과기정통부 장관상과 함께 소정의 상금이 수여될 예정이다. 
 paragraph: □ 과기정통부 거대공공연구정책관은 “명칭 공모전을 통해 우리국민의 우주에 대한 높은 관심을 확인할 수 있었다”며 “새로운 이름에 걸맞게 무한한 ...
+table: 1x2
+image: bindata_id=4
+paragraph: 이 자료에 대하여 더욱 자세한 내용을 원하시면
+paragraph: 과학기술정보통신부 용찬재 사무관(☎ 02-2110-2428)에게 연락주시기 바랍니다.
+table: 1x3
+paragraph: 붙임
+paragraph:  한국형발사체(누리호)와 시험발사체 비교
+table: 8x3
+paragraph: 구 분
+paragraph: 한국형발사체(누리호)
+paragraph: 시험발사체
+paragraph: 형 상
+image: bindata_id=2
+image: bindata_id=3
+paragraph: 목 적
+paragraph: 1.5톤급 실용위성을 지구저궤도(600~800km)에 투입
+paragraph: 한국형발사체 75톤급 엔진의 비행성능 검증
+paragraph: 총 길이
+paragraph: 47.2 m
+paragraph: 25.8 m
+paragraph: 최대 직경
+paragraph: 3.5 m
+paragraph: 2.6 m
+paragraph: 이륙 중량
+paragraph: 200 톤
+paragraph: 52.1 톤
+paragraph: 탑재체 중량
+paragraph: 1.5 톤
+paragraph: -
+paragraph: 단 수 
+paragraph: 3단
+paragraph: 1단

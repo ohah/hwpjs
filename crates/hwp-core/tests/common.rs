@@ -72,6 +72,20 @@ pub fn find_all_hwp_files() -> Vec<String> {
     Vec::new()
 }
 
+/// PDF 테스트용 폰트 디렉터리. `tests/fixtures/fonts`에 LiberationSans-*.ttf를 두면 사용됨.
+#[allow(dead_code)]
+pub fn find_font_dir() -> Option<PathBuf> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
+    let font_path = manifest_dir.join("tests").join("fixtures").join("fonts");
+    if font_path.is_dir() && font_path.join("LiberationSans-Regular.ttf").exists() {
+        return Some(font_path);
+    }
+    None
+}
+
 /// Helper function to find a specific HWP file in fixtures directory
 pub fn find_fixture_file(filename: &str) -> Option<String> {
     if let Some(dir) = find_fixtures_dir() {
