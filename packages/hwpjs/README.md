@@ -32,6 +32,11 @@ hwpjs to-json document.hwp -o output.json --pretty
 # Markdown 변환
 hwpjs to-markdown document.hwp -o output.md --include-images
 
+# PDF 변환 (폰트 디렉터리 지정 권장)
+hwpjs to-pdf document.hwp -o output.pdf --font-dir ./fonts
+# 이미지 미포함 PDF
+hwpjs to-pdf document.hwp -o output.pdf --font-dir ./fonts --no-embed-images
+
 # 파일 정보 확인
 hwpjs info document.hwp
 
@@ -40,6 +45,8 @@ hwpjs extract-images document.hwp -o ./images
 
 # 배치 변환
 hwpjs batch ./documents -o ./output --format json --recursive
+# 배치 PDF 변환
+hwpjs batch ./documents -o ./output --format pdf --font-dir ./fonts
 ```
 
 더 자세한 내용은 [CLI 가이드](https://ohah.github.io/hwpjs/guide/cli)를 참고하세요.
@@ -48,10 +55,17 @@ hwpjs batch ./documents -o ./output --format json --recursive
 
 ```typescript
 import { readFileSync } from 'fs';
-import { toJson, toMarkdown, fileHeader } from '@ohah/hwpjs';
+import { toJson, toMarkdown, toPdf, fileHeader } from '@ohah/hwpjs';
 
 // HWP 파일 읽기
 const fileBuffer = readFileSync('./document.hwp');
+
+// PDF로 변환 (font_dir에 TTF/OTF 폰트 디렉터리 지정)
+const pdfBuffer = toPdf(fileBuffer, {
+  font_dir: './fonts',
+  embed_images: true,
+});
+require('fs').writeFileSync('./output.pdf', pdfBuffer);
 
 // JSON으로 변환
 const jsonString = toJson(fileBuffer);
@@ -191,6 +205,28 @@ const fileBuffer = readFileSync('./document.hwp');
 const headerString = fileHeader(fileBuffer);
 const header = JSON.parse(headerString);
 console.log(header.version);
+```
+
+### `toPdf(data: Buffer | Uint8Array, options?: ToPdfOptions): Buffer`
+
+HWP 파일을 PDF 바이트로 변환합니다. 한글 등이 포함된 문서는 `font_dir`에 한글 지원 폰트(예: Noto Sans KR)를 넣어야 합니다.
+
+**Parameters:**
+- `data`: HWP 파일의 바이트 배열 (Buffer 또는 Uint8Array)
+- `options`: 변환 옵션 (선택)
+  - `font_dir`: TTF/OTF 폰트가 있는 디렉터리 경로 (신뢰할 수 있는 경로만 사용)
+  - `embed_images`: PDF에 이미지 임베드 여부 (기본값: `true`)
+
+**Returns:**
+- PDF 파일 내용 (Buffer)
+
+**Example:**
+```typescript
+const pdfBuffer = toPdf(fileBuffer, {
+  font_dir: './fonts',
+  embed_images: true,
+});
+require('fs').writeFileSync('./output.pdf', pdfBuffer);
 ```
 
 ## 예제

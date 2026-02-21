@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync } from 'fs';
-import { join, extname, basename } from 'path';
+import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync, existsSync } from 'fs';
+import { join, extname, basename, resolve } from 'path';
 // CLI는 빌드된 NAPI 모듈을 사용합니다
 // @ts-ignore - 런타임에 dist/index.js에서 로드됨 (빌드 후 경로: ../../index)
-const { toJson, toMarkdown, toHtml } = require('../../index');
+const { toJson, toMarkdown, toHtml, toPdf } = require('../../index');
 
 export function batchCommand(program: Command) {
   program
@@ -11,7 +11,7 @@ export function batchCommand(program: Command) {
     .description('Batch convert HWP files in a directory')
     .argument('<input-dir>', 'Input directory containing HWP files')
     .option('-o, --output-dir <dir>', 'Output directory (default: ./output)', './output')
-    .option('--format <format>', 'Output format (json, markdown, html)', 'json')
+    .option('--format <format>', 'Output format (json, markdown, html, pdf)', 'json')
     .option('-r, --recursive', 'Process subdirectories recursively')
     .option('--pretty', 'Pretty print JSON (only for json format)')
     .option('--include-images', 'Include images as base64 (only for markdown format)')
@@ -19,6 +19,11 @@ export function batchCommand(program: Command) {
       '--images-dir <dir>',
       'Directory to save images (only for html format, default: images)'
     )
+    .option(
+      '--font-dir <dir>',
+      'Font directory for PDF (TTF/OTF). If omitted, ./fonts is used when it exists'
+    )
+    .option('--no-embed-images', 'Do not embed images in PDF (only for pdf format)')
     .action(
       (
         inputDir: string,
@@ -29,6 +34,8 @@ export function batchCommand(program: Command) {
           pretty?: boolean;
           includeImages?: boolean;
           imagesDir?: string;
+          fontDir?: string;
+          embedImages?: boolean;
         }
       ) => {
         try {
@@ -77,8 +84,9 @@ export function batchCommand(program: Command) {
               const fileName = basename(filePath, '.hwp');
               const data = readFileSync(filePath);
 
-              let outputContent: string;
+              let outputContent: string | Buffer;
               let outputExt: string;
+              let isBinary = false;
 
               if (format === 'json') {
                 const jsonString = toJson(data);
@@ -105,6 +113,16 @@ export function batchCommand(program: Command) {
                   html_output_dir: outputDir,
                 });
                 outputExt = 'html';
+              } else if (format === 'pdf') {
+                const fontDir =
+                  options.fontDir ||
+                  (existsSync(resolve(process.cwd(), 'fonts')) ? resolve(process.cwd(), 'fonts') : undefined);
+                outputContent = toPdf(data, {
+                  font_dir: fontDir,
+                  embed_images: options.embedImages,
+                });
+                outputExt = 'pdf';
+                isBinary = true;
               } else {
                 const result = toMarkdown(data, {
                   image: options.includeImages ? 'base64' : 'blob',
@@ -114,7 +132,7 @@ export function batchCommand(program: Command) {
               }
 
               const outputPath = join(outputDir, `${fileName}.${outputExt}`);
-              writeFileSync(outputPath, outputContent, 'utf-8');
+              writeFileSync(outputPath, outputContent, isBinary ? undefined : 'utf-8');
 
               console.log(`✓ ${filePath} → ${outputPath}`);
               successCount++;

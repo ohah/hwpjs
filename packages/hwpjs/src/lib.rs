@@ -279,7 +279,8 @@ pub fn to_html(data: Buffer, options: Option<ToHtmlOptions>) -> Result<String, n
 #[napi(object)]
 pub struct ToPdfOptions {
     /// Directory path containing TTF/OTF font files (e.g. LiberationSans). Required for PDF export.
-    /// TTF/OTF 폰트 파일이 있는 디렉토리 경로 (예: LiberationSans). PDF 변환에 필요합니다.
+    /// Use only trusted paths; do not pass arbitrary user input.
+    /// TTF/OTF 폰트 파일이 있는 디렉토리 경로 (예: LiberationSans). 신뢰할 수 있는 경로만 사용하세요.
     pub font_dir: Option<String>,
     /// Whether to embed images in PDF (default: true)
     /// PDF에 이미지 임베드 여부 (기본값: true)
