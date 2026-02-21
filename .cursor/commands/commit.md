@@ -13,7 +13,7 @@ When creating or suggesting git commits, follow these rules. Full details in `AG
 ```
 
 - **Type** (required): `feat` | `fix` | `refactor` | `test` | `docs` | `chore` | `style`
-- **Scope** (optional): `core` | `node` | `react-native` | `docs` | `scripts` | `config`
+- **Scope** (optional): `core` | `node` | `react-native` | `docs` | `documents` | `scripts` | `config`
 - **Subject** (required): imperative, lowercase start, ≤50 chars, no trailing period
 - **Body** (optional): wrap at 72 chars; explain what and why
 - **Footer** (optional): breaking changes, issue refs

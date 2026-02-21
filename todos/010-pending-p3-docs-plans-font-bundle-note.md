@@ -6,7 +6,7 @@ tags: [code-review, documentation]
 dependencies: []
 ---
 
-# P3: docs/plans에 폰트 번들 사용 안내 한 줄 추가
+# P3: documents/plans에 폰트 번들 사용 안내 한 줄 추가
 
 ## Problem Statement
 
@@ -14,7 +14,7 @@ PDF 뷰어 계획 문서에 "폰트 없으면 스킵"만 있고, 실제로 `test
 
 ## Findings
 
-- **위치**: docs/plans/2025-02-21-pdf-viewer.md (Task 3 등)
+- **위치**: documents/plans/2025-02-21-pdf-viewer.md (Task 3 등)
 - **관련**: learnings-researcher — PR은 계획과 정합, "폰트는 tests/fixtures/fonts/ 번들 사용 가능, find_font_dir()로 자동 지정" 한 줄 추가 권장.
 
 ## Proposed Solutions
@@ -30,8 +30,8 @@ PDF 뷰어 계획 문서에 "폰트 없으면 스킵"만 있고, 실제로 `test
 
 ## Technical Details
 
-- **파일**: docs/plans/2025-02-21-pdf-viewer.md
-- **Protected**: docs/plans/*.md는 삭제/제거 대상이 아님(리뷰 규칙).
+- **파일**: documents/plans/2025-02-21-pdf-viewer.md
+- **Protected**: documents/plans/*.md는 삭제/제거 대상이 아님(리뷰 규칙).
 
 ## Acceptance Criteria
 
@@ -42,7 +42,7 @@ PDF 뷰어 계획 문서에 "폰트 없으면 스킵"만 있고, 실제로 `test
 | 날짜 | 작업 | 비고 |
 |------|------|------|
 | (리뷰일) | 코드 리뷰에서 발견 | learnings-researcher |
-| 2025-02-21 | docs/plans/2025-02-21-pdf-viewer.md에 테스트·폰트 안내 한 줄 추가 | resolve_todo_parallel |
+| 2025-02-21 | documents/plans/2025-02-21-pdf-viewer.md에 테스트·폰트 안내 한 줄 추가 | resolve_todo_parallel |
 
 ## Resources
 

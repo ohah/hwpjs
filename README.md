@@ -20,7 +20,7 @@ hwpjs/
 │   ├── web/               # Web 예제
 │   ├── react-native/      # React Native 예제
 │   └── cli/               # CLI 사용 예제
-├── docs/                  # 문서 사이트 (Rspress)
+├── documents/             # 문서 사이트 (Rspress)
 └── legacy/                # 기존 JavaScript 구현
 ```
 

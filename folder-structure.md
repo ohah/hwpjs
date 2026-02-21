@@ -35,7 +35,7 @@ hwpjs/
 │   ├── web/               # Web 예제
 │   ├── react-native/      # React Native 예제
 │   └── cli/               # CLI 사용 예제
-├── docs/                  # 문서 사이트 (Rspress)
+├── documents/             # 문서 사이트 (Rspress)
 └── legacy/                # 기존 JavaScript 구현
 ```
 
@@ -81,7 +81,7 @@ src/
 | `crates/hwp-core` | HWP 파싱 + 뷰어 | `src/document/`, `src/viewer/`, `tests/fixtures/`, `tests/snapshots/` |
 | `packages/hwpjs` | Node/Web/RN 래퍼 | `src/`(NAPI-RS), `src-cli/`, `src-reactnative/`, `crates/lib/`, `cpp/`, `android/`, `ios/` |
 | `examples/` | 사용 예제 | `node/`, `web/`, `react-native/`, `cli/` |
-| `docs/` | 문서 사이트 (Rspress) | 루트 레벨 |
+| `documents/` | 문서 사이트 (Rspress) | 루트 레벨 |
 
 ## packages/hwpjs 이중 빌드 시스템
 
