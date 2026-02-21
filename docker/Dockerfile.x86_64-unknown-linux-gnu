@@ -1,0 +1,22 @@
+# Ubuntu 24.04 기반 Linux x64 크로스 빌드 이미지
+# --platform linux/amd64 로 빌드하면 컨테이너 내부는 x86_64 네이티브 빌드가 되며,
+# LLD를 사용해 Apple Silicon + QEMU 환경에서의 ld 세그폴트를 피함.
+
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    build-essential \
+    lld \
+    && rm -rf /var/lib/apt/lists/*
+
+# Rust 설치 (cross는 이미지 내 Rust 사용)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+ENV PATH="/root/.cargo/bin:$PATH"
+
+RUN rustup target add x86_64-unknown-linux-gnu
+
+# LLD로 링크 (QEMU 환경에서 ld 세그폴트 방지)
+ENV CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS="-C link-arg=-fuse-ld=lld"

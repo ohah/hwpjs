@@ -1,0 +1,5 @@
+# Linux x64: Ubuntu 24.04 기반 커스텀 이미지 사용
+# (QEMU 환경에서 ld 세그폴트 방지 위해 LLD 사용, Ubuntu 24에서 lld 패키지 설치 용이)
+
+[target.x86_64-unknown-linux-gnu]
+dockerfile = "docker/Dockerfile.x86_64-unknown-linux-gnu"
