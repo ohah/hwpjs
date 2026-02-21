@@ -211,9 +211,14 @@ pub fn pdf_content_summary(document: &HwpDocument, options: &PdfOptions) -> Vec<
 /// PDF 파일 내용 (Vec<u8>). 빈 문서라도 유효한 PDF가 반환됨.
 pub fn to_pdf(document: &HwpDocument, options: &PdfOptions) -> Vec<u8> {
     let dir = options.font_dir.as_deref().unwrap_or(Path::new("."));
-    let font = fonts::from_files(dir, "LiberationSans", Some(fonts::Builtin::Helvetica))
+    // 한글 지원: NotoSansKR(또는 Noto Sans KR) 우선 시도, 없으면 라틴 전용 Liberation Sans
+    let font = fonts::from_files(dir, "NotoSansKR", Some(fonts::Builtin::Helvetica))
+        .or_else(|_| fonts::from_files(dir, "Noto Sans KR", Some(fonts::Builtin::Helvetica)))
+        .or_else(|_| fonts::from_files(dir, "LiberationSans", Some(fonts::Builtin::Helvetica)))
         .or_else(|_| fonts::from_files(dir, "Liberation Sans", Some(fonts::Builtin::Helvetica)))
-        .expect("font: set font_dir to a path containing LiberationSans TTF files");
+        .expect(
+            "font: set font_dir to a path containing Noto Sans KR or LiberationSans TTF/OTF files",
+        );
     let mut doc = Document::new(font);
     doc.set_title("HWP Export");
 
@@ -291,4 +296,3 @@ pub fn to_pdf(document: &HwpDocument, options: &PdfOptions) -> Vec<u8> {
     doc.render(&mut output).expect("render");
     output
 }
-

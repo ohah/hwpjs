@@ -97,8 +97,7 @@ pub fn find_fixture_file(filename: &str) -> Option<String> {
         let file_path = dir.join(filename);
         if file_path.exists() {
             // 경로가 fixtures 하위인지 검증 (심볼릭 링크 등 대비)
-            if let (Ok(canon_file), Ok(canon_dir)) =
-                (file_path.canonicalize(), dir.canonicalize())
+            if let (Ok(canon_file), Ok(canon_dir)) = (file_path.canonicalize(), dir.canonicalize())
             {
                 if !canon_file.starts_with(canon_dir) {
                     return None;
