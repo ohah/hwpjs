@@ -23,6 +23,8 @@ pub struct ParagraphPosition<'a> {
     pub first_para_vertical_mm: Option<f64>,
     pub current_para_vertical_mm: Option<f64>,
     pub current_para_index: Option<usize>,
+    /// 페이지 콘텐츠 영역 높이(mm). vert_rel_to=para인 테이블이 넘칠 때 앵커 위로 올려 배치하는 데 사용.
+    pub content_height_mm: Option<f64>,
 }
 
 /// 문단 렌더링 컨텍스트 / Paragraph rendering context
@@ -320,10 +322,9 @@ pub fn render_paragraph(
     // current_para_vertical_mm이 전달되면 사용하고, 없으면 현재 문단의 첫 번째 LineSegment 사용
     // If current_para_vertical_mm is provided, use it; otherwise use first LineSegment of current paragraph
     // table_position 함수는 para_start_vertical_mm을 절대 위치(페이지 기준)로 기대하므로,
-    // 상대 위치일 때는 base_top을 더해서 절대 위치로 변환해야 함
-    // table_position function expects para_start_vertical_mm as absolute position (relative to page),
-    // so if it's relative position, add base_top to convert to absolute position
-    // base_top 계산 (나중에 사용) / Calculate base_top (used later)
+    // 콘텐츠 기준 세로 위치(vertical_position)에 base_top을 더해 절대 위치로 변환한다.
+    // table_position expects para_start_vertical_mm as absolute position (relative to page),
+    // so we add base_top to content-relative vertical_position.
     let base_top_for_calc = if let Some((_, top)) = context.position.hcd_position {
         top
     } else if let Some(pd) = context.position.page_def {
@@ -335,7 +336,7 @@ pub fn render_paragraph(
         // 새 페이지의 첫 문단이므로 base_top을 사용 / First paragraph of new page, so use base_top
         Some(base_top_for_calc)
     } else {
-        // 상대 위치를 절대 위치로 변환 / Convert relative position to absolute position
+        // 콘텐츠 기준 세로 위치를 절대 위치로 변환 / Convert content-relative vertical to absolute
         let relative_mm = current_para_vertical_mm.or_else(|| {
             line_segments
                 .first()
@@ -350,6 +351,7 @@ pub fn render_paragraph(
     let para_segment_width_mm = line_segments
         .first()
         .map(|seg| seg.segment_width as f64 * 25.4 / 7200.0);
+    let content_height_mm = context.position.content_height_mm; // 블록 내 테이블 위치 계산용 / For table position inside block
     // base_top(mm): hcD의 top 위치. like_letters=false 테이블(=hpa 레벨로 빠지는 객체)의 vert_rel_to=para 계산에
     // 페이지 기준(절대) y 좌표가 필요하므로, paragraph 기준 y(vertical_position)에 base_top을 더해 절대값으로 전달한다.
     let _base_top_mm = if let Some((_hcd_left, hcd_top)) = hcd_position {
@@ -513,6 +515,7 @@ pub fn render_paragraph(
         // DOM order: fixture outputs higher top (lower on page) first → sort by top_mm descending
         let mut next_para_vertical_mm = para_start_vertical_mm;
         let mut table_entries: Vec<(f64, String)> = Vec::new();
+        let mut overflow_already_applied = false; // 문단 내 overflow 보정은 한 번만 (fixture 표7만 1페이지 하단, 표8은 2페이지 상단)
         for table_info in absolute_tables.iter().skip(skip_tables_count) {
             let ref_para_vertical_for_table = next_para_vertical_mm;
             let first_para_vertical_for_table = first_para_vertical_mm;
@@ -526,6 +529,18 @@ pub fn render_paragraph(
             let content_size = content_size(table_info.table, table_info.ctrl_header);
             let resolved_size = resolve_container_size(container_size, content_size);
             let height_mm = resolved_size.height;
+
+            // overflow 보정(앵커 위로 올리기)은 이 문단에서 처음으로 콘텐츠를 넘치는 테이블에만 적용.
+            // 두 번째 넘치는 테이블은 보정 없이 넘치게 해 페이지 브레이크 후 다음 페이지 상단에 배치 (fixture 표7·표8).
+            let would_overflow = ref_para_vertical_for_table
+                .zip(content_height_mm)
+                .map(|(r, ch)| r + height_mm > ch)
+                .unwrap_or(false);
+            let overflow_check = (would_overflow && !overflow_already_applied)
+                .then(|| {
+                    overflow_already_applied = true;
+                    (content_height_mm, Some(height_mm))
+                });
 
             // 테이블 위치 계산 (정확한 위치) / Calculate table position (exact position)
             // table_position은 pub(crate)이므로 같은 크레이트 내에서 접근 가능
@@ -542,6 +557,8 @@ pub fn render_paragraph(
                 para_start_column_mm,
                 para_segment_width_mm,
                 first_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
+                overflow_check.map(|(ch, _)| ch).flatten(),
+                overflow_check.and_then(|(_, th)| th),
             );
 
             // 페이지네이션 체크 (렌더링 직전) / Check pagination (before rendering)
@@ -569,6 +586,7 @@ pub fn render_paragraph(
                 para_start_column_mm,
                 para_segment_width_mm,
                 first_para_vertical_mm: first_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
+                content_height_mm,
             };
 
             let (table_html, htg_height_opt) = render_table(
