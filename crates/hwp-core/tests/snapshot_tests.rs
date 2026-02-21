@@ -578,6 +578,57 @@ fn test_headerfooter_html() {
     }
 }
 
+/// footnote-endnote.hwp가 있으면 HTML에 각주/미주 본문 참조와 블록이 포함되는지 검증
+#[test]
+fn test_footnote_endnote_html_snapshot() {
+    let file_path = match find_fixture_file("footnote-endnote.hwp") {
+        Some(p) => p,
+        None => {
+            eprintln!("footnote-endnote.hwp not found, skipping test");
+            return;
+        }
+    };
+
+    let parser = HwpParser::new();
+    let data = std::fs::read(&file_path).expect("read fixture");
+    let document = parser.parse(&data).expect("parse");
+    let options = hwp_core::viewer::html::HtmlOptions {
+        image_output_dir: None,
+        html_output_dir: None,
+        include_version: Some(false),
+        include_page_info: Some(false),
+        css_class_prefix: "ohah-hwpjs-".to_string(),
+    };
+    let html = document.to_html(&options);
+
+    // 본문 내 각주/미주 참조 마크업 (sup/a)
+    assert!(
+        html.contains("ohah-hwpjs-fn-") || html.contains("ohah-hwpjs-en-"),
+        "HTML should contain footnote or endnote in-body reference (e.g. id or href for fn/en)"
+    );
+    // 문서 끝 각주/미주 블록
+    assert!(
+        html.contains("ohah-hwpjs-footnotes"),
+        "HTML should contain footnote block (class or id ohah-hwpjs-footnotes)"
+    );
+    assert!(
+        html.contains("ohah-hwpjs-endnotes"),
+        "HTML should contain endnote block (class or id ohah-hwpjs-endnotes)"
+    );
+
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let snapshots_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("snapshots");
+    // 전용 스냅샷 이름 사용 (test_all_fixtures_html_snapshots는 css_class_prefix=""로 동일 파일을 footnote_endnote_html로 저장함)
+    let snapshot_name_html = "footnote_endnote_with_prefix_html";
+    with_settings!({
+        snapshot_path => snapshots_dir
+    }, {
+        assert_snapshot!(snapshot_name_html, html);
+    });
+}
+
 #[test]
 fn test_all_fixtures_html_snapshots() {
     // 모든 fixtures 파일에 대해 HTML 스냅샷 생성 / Generate HTML snapshots for all fixtures files

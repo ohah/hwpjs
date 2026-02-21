@@ -405,6 +405,7 @@ pub(crate) fn render_cells(
                             paragraphs_to_use,
                             document,
                             options,
+                            None,
                         );
                         images.extend(ctrl_result.images);
                     }
