@@ -507,18 +507,14 @@ pub fn render_paragraph(
 
         // like_letters=false인 테이블을 별도로 렌더링 (hpa 레벨에 배치) / Render tables with like_letters=false separately (placed at hpa level)
         // 페이지네이션 후 같은 문단을 다시 렌더링할 때 이미 처리된 테이블을 건너뛰기 / Skip already processed tables when re-rendering paragraph after pagination
+        // 같은 문단 내 여러 테이블: 두 번째 테이블부터는 이전 테이블 하단을 기준으로 배치 (fixture table2 캡션 위치 일치)
+        // Multiple tables in same paragraph: place each subsequent table below the previous one (match fixture table2 caption order)
+        // DOM 순서: fixture는 top이 큰 블록(아래쪽)을 먼저 출력 → top_mm 내림차순 정렬
+        // DOM order: fixture outputs higher top (lower on page) first → sort by top_mm descending
+        let mut next_para_vertical_mm = para_start_vertical_mm;
+        let mut table_entries: Vec<(f64, String)> = Vec::new();
         for table_info in absolute_tables.iter().skip(skip_tables_count) {
-            // vert_rel_to: "para"일 때 다음 문단을 참조 / When vert_rel_to: "para", reference next paragraph
-            // vert_rel_to=para인 객체의 기준 문단은 "현재 문단"의 vertical_position입니다.
-            // para_start_vertical_mm은 이미 현재 문단의 vertical_position이므로 이를 직접 사용
-            // For vert_rel_to=para objects, the reference paragraph is the "current paragraph"'s vertical_position.
-            // para_start_vertical_mm is already the current paragraph's vertical_position, so use it directly
-            let ref_para_vertical_mm = para_start_vertical_mm;
-            // table_position 함수는 para_start_vertical_mm을 상대 위치로 기대하므로,
-            // 절대 위치로 변환하지 않고 상대 위치 그대로 전달
-            // table_position function expects para_start_vertical_mm as relative position,
-            // so pass relative position as-is without converting to absolute
-            let ref_para_vertical_for_table = ref_para_vertical_mm;
+            let ref_para_vertical_for_table = next_para_vertical_mm;
             let first_para_vertical_for_table = first_para_vertical_mm;
 
             // 테이블 크기 계산 (mm 단위) / Calculate table size (in mm)
@@ -575,19 +571,30 @@ pub fn render_paragraph(
                 first_para_vertical_mm: first_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
             };
 
-            let table_html = render_table(
+            let (table_html, htg_height_opt) = render_table(
                 table_info.table,
                 &mut context,
                 position,
                 table_info.caption.as_ref(),
             );
-            table_htmls.push(table_html);
+            table_entries.push((top_mm, table_html));
             *state.table_counter += 1; // table_counter 증가 / Increment table_counter
 
+            // 다음 테이블의 기준 세로 위치 = 이번 테이블 하단 (htG 높이 사용 시 캡션·마진 포함)
+            // Next table's reference vertical position = this table's bottom (use htG height when available)
+            let block_height_mm = htg_height_opt.unwrap_or(height_mm);
+            next_para_vertical_mm = Some(top_mm + block_height_mm);
+
             if table_result.has_page_break {
-                // 페이지네이션 결과 반환 (document.rs에서 처리) / Return pagination result (handled in document.rs)
+                // 페이지네이션 시 정렬 없이 순서 유지 후 반환 / On page break return without reorder
+                table_htmls.extend(table_entries.into_iter().map(|(_, h)| h));
                 return (result, table_htmls, Some(table_result));
             }
+        }
+        // fixture DOM 순서: top 큰 순(아래 블록 먼저) / Fixture DOM order: higher top first
+        table_entries.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+        for (_, html) in table_entries {
+            table_htmls.push(html);
         }
     } else if !text.is_empty() {
         // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment
