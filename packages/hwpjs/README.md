@@ -115,7 +115,7 @@ fileInput.addEventListener('change', async (e) => {
 ### React Native
 
 ```typescript
-import { toJson, toMarkdown } from '@ohah/hwpjs';
+import { toJson, toMarkdown, toPdf } from '@ohah/hwpjs';
 import * as FileSystem from 'expo-file-system';
 
 // HWP 파일 읽기
@@ -133,6 +133,18 @@ const document = JSON.parse(jsonString);
 const { markdown, images } = toMarkdown(uint8Array, {
   image: 'blob',
 });
+
+// PDF로 변환 (한글 폰트 경로 필요)
+// 패키지에 포함된 폰트: node_modules/@ohah/hwpjs/fonts/ 를 앱 문서 디렉터리 등에 복사한 뒤 그 경로를 넘기세요.
+const pdfBuffer = toPdf(uint8Array, {
+  fontDir: '/path/to/fonts', // NotoSansKR-Regular.ttf 가 있는 디렉터리
+  embedImages: true,
+});
+await FileSystem.writeAsStringAsync(
+  `${FileSystem.documentDirectory}output.pdf`,
+  Buffer.from(pdfBuffer).toString('base64'),
+  { encoding: FileSystem.EncodingType.Base64 }
+);
 ```
 
 ## API

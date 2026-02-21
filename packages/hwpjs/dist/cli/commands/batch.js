@@ -5,17 +5,38 @@ const fs_1 = require("fs");
 const path_1 = require("path");
 // CLI는 빌드된 NAPI 모듈을 사용합니다
 // @ts-ignore - 런타임에 dist/index.js에서 로드됨 (빌드 후 경로: ../../index)
-const { toJson, toMarkdown } = require('../../index');
+const { toJson, toMarkdown, toHtml, toPdf } = require('../../index');
+/** PDF용 기본 폰트 디렉터리: 옵션 → cwd/fonts → 패키지 fonts (한글 Noto Sans KR 등). */
+function getDefaultFontDir(fontDir) {
+    if (fontDir)
+        return fontDir;
+    const cwdFonts = (0, path_1.resolve)(process.cwd(), 'fonts');
+    if ((0, fs_1.existsSync)(cwdFonts))
+        return cwdFonts;
+    try {
+        const pkgRoot = (0, path_1.dirname)(require.resolve('@ohah/hwpjs/package.json'));
+        const bundled = (0, path_1.join)(pkgRoot, 'fonts');
+        if ((0, fs_1.existsSync)(bundled))
+            return bundled;
+    }
+    catch {
+        /* 패키지가 로컬 경로로 로드된 경우 등 무시 */
+    }
+    return undefined;
+}
 function batchCommand(program) {
     program
         .command('batch')
         .description('Batch convert HWP files in a directory')
         .argument('<input-dir>', 'Input directory containing HWP files')
         .option('-o, --output-dir <dir>', 'Output directory (default: ./output)', './output')
-        .option('--format <format>', 'Output format (json or markdown)', 'json')
+        .option('--format <format>', 'Output format (json, markdown, html, pdf)', 'json')
         .option('-r, --recursive', 'Process subdirectories recursively')
         .option('--pretty', 'Pretty print JSON (only for json format)')
         .option('--include-images', 'Include images as base64 (only for markdown format)')
+        .option('--images-dir <dir>', 'Directory to save images (only for html format, default: images)')
+        .option('--font-dir <dir>', 'Font directory for PDF (TTF/OTF). If omitted, ./fonts is used when it exists')
+        .option('--no-embed-images', 'Do not embed images in PDF (only for pdf format)')
         .action((inputDir, options) => {
         try {
             const outputDir = options.outputDir || './output';
@@ -55,6 +76,7 @@ function batchCommand(program) {
                     const data = (0, fs_1.readFileSync)(filePath);
                     let outputContent;
                     let outputExt;
+                    let isBinary = false;
                     if (format === 'json') {
                         const jsonString = toJson(data);
                         if (options.pretty) {
@@ -66,6 +88,32 @@ function batchCommand(program) {
                         }
                         outputExt = 'json';
                     }
+                    else if (format === 'html') {
+                        // Determine image output directory for HTML
+                        let imageOutputDir;
+                        if (options.imagesDir) {
+                            const imagesDir = (0, path_1.join)(outputDir, options.imagesDir);
+                            if (!require('fs').existsSync(imagesDir)) {
+                                (0, fs_1.mkdirSync)(imagesDir, { recursive: true });
+                            }
+                            imageOutputDir = imagesDir;
+                        }
+                        // If imagesDir is not specified, images will be embedded as base64
+                        outputContent = toHtml(data, {
+                            image_output_dir: imageOutputDir,
+                            html_output_dir: outputDir,
+                        });
+                        outputExt = 'html';
+                    }
+                    else if (format === 'pdf') {
+                        const fontDir = getDefaultFontDir(options.fontDir);
+                        outputContent = toPdf(data, {
+                            font_dir: fontDir,
+                            embed_images: options.embedImages,
+                        });
+                        outputExt = 'pdf';
+                        isBinary = true;
+                    }
                     else {
                         const result = toMarkdown(data, {
                             image: options.includeImages ? 'base64' : 'blob',
@@ -74,7 +122,7 @@ function batchCommand(program) {
                         outputExt = 'md';
                     }
                     const outputPath = (0, path_1.join)(outputDir, `${fileName}.${outputExt}`);
-                    (0, fs_1.writeFileSync)(outputPath, outputContent, 'utf-8');
+                    (0, fs_1.writeFileSync)(outputPath, outputContent, isBinary ? undefined : 'utf-8');
                     console.log(`✓ ${filePath} → ${outputPath}`);
                     successCount++;
                 }
