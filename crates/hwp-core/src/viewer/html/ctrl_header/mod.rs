@@ -18,6 +18,20 @@ use crate::viewer::html::line_segment::{ImageInfo, TableInfo};
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
 
+/// children에서 ListHeader의 paragraphs 반환, 없으면 ctrl_paragraphs 사용.
+/// Return paragraphs from ListHeader in children, or ctrl_paragraphs if not found.
+pub(super) fn paragraphs_from_children_or_param<'a>(
+    children: &'a [ParagraphRecord],
+    ctrl_paragraphs: &'a [Paragraph],
+) -> &'a [Paragraph] {
+    for child in children {
+        if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
+            return paragraphs;
+        }
+    }
+    ctrl_paragraphs
+}
+
 /// 문서 레벨 각주/미주 수집 상태 (HTML 뷰어에서 본문 반복 시 전달)
 /// Document-level footnote/endnote collection state (passed during body iteration in HTML viewer)
 pub struct FootnoteEndnoteState<'a> {

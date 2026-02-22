@@ -1,22 +1,9 @@
-use super::CtrlHeaderResult;
+use super::{paragraphs_from_children_or_param, CtrlHeaderResult};
 use crate::document::bodytext::ParagraphRecord;
 use crate::document::{CtrlHeader, Paragraph};
 use crate::viewer::html::paragraph::render_paragraphs_fragment;
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
-
-/// children에서 ListHeader의 paragraphs 반환, 없으면 ctrl_paragraphs 사용
-fn paragraphs_from_children_or_param<'a>(
-    children: &'a [ParagraphRecord],
-    ctrl_paragraphs: &'a [Paragraph],
-) -> &'a [Paragraph] {
-    for child in children {
-        if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
-            return paragraphs;
-        }
-    }
-    ctrl_paragraphs
-}
 
 /// HTML 뷰어용 꼬리말 처리: 문단 목록을 HTML로 렌더링하여 본문 하단에 출력할 HTML 반환
 pub fn process_footer<'a>(

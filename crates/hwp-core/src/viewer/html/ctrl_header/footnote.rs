@@ -1,22 +1,9 @@
-use super::{CtrlHeaderResult, FootnoteEndnoteState};
+use super::{paragraphs_from_children_or_param, CtrlHeaderResult, FootnoteEndnoteState};
 use crate::document::bodytext::ParagraphRecord;
 use crate::document::{CtrlHeader, Paragraph};
 use crate::viewer::html::paragraph::render_paragraphs_fragment;
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
-
-/// children에서 ListHeader의 paragraphs 반환, 없으면 ctrl_paragraphs 사용
-fn paragraphs_from_children_or_param<'a>(
-    children: &'a [ParagraphRecord],
-    ctrl_paragraphs: &'a [Paragraph],
-) -> &'a [Paragraph] {
-    for child in children {
-        if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
-            return paragraphs;
-        }
-    }
-    ctrl_paragraphs
-}
 
 /// HTML 뷰어용 각주 처리: 본문 참조 마크업 + 문서 끝 블록용 내용 HTML 생성
 pub fn process_footnote<'a>(
