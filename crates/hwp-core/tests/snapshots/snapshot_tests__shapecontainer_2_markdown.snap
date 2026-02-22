@@ -1,6 +1,5 @@
 ---
 source: crates/hwp-core/tests/snapshot_tests.rs
-assertion_line: 446
 expression: markdown
 ---
 # HWP 문서
@@ -8,8 +7,3 @@ expression: markdown
 
 
 **버전**: 5.01.00.01
-
-
-
-글 상자  
-글 상자

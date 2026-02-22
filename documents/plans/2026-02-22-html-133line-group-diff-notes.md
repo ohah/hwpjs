@@ -56,3 +56,18 @@
 ### 일괄 수정 범위 vs stem별 개별 수정
 - **133줄 그룹:** 본문 구조·클래스·인라인 스타일 값은 이미 fixture와 일치. diff는 위 허용 차이(link/style, 포맷, BOM, meta) 때문이므로 **뷰어 코드 일괄 수정 불필요**. (minify 출력 옵션을 넣지 않는 한 현재 상태로 "의미상 일치"로 간주 가능.)
 - **전략:** Phase 2는 **stem별 개별 수정**으로 진행. facename2(112줄)부터 diff가 허용 차이를 넘는 stem만 코드 수정 대상. 133줄 그룹은 별도 코드 변경 없이 다음 stem(footnote-endnote, shaperect 등)부터 진행.
+
+---
+
+## facename2 (112줄 diff → Task 4 적용 후)
+
+### 적용 완료 (2026-02-22)
+- **`<title>`:** `summary_information.title`을 사용하도록 `document.rs` 수정. facename2는 JSON에 `"title": "ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕"` 있음 → 스냅샷이 fixture와 동일한 제목 출력.
+
+### 남은 차이 (linespacing·포맷 작업 시 일괄 처리 권장)
+- **line-height:** fixture 2.79mm, snapshot 3.53mm (스펙 표 62 line_height 1000 HWPUNIT → 3.53mm; 2.79는 linespacing 해석 이슈).
+- **top (첫 줄):** fixture -0.18mm, snapshot 0.00mm.
+- **top (이후 줄):** fixture 5.47/11.11/16.76…, snapshot 5.64/11.29/16.93… (line-height 차이에 따른 누적).
+- **width 포맷:** fixture 150mm, snapshot 150.00mm (정수 시 소수 생략 여부).
+- **span 인라인 스타일:** fixture는 `class="hrt cs0"`만, snapshot은 `style="font-size:10pt;color:rgb(0,0,0);"` 추가 → 클래스와 중복 시 생략 검토.
+- **공통:** link vs style, BOM, 포맷(minified vs 여러 줄) — 허용 차이.

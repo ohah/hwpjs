@@ -24,8 +24,8 @@ expression: json
       "table_start_number": 1,
       "formula_start_number": 1,
       "list_id": 0,
-      "paragraph_id": 42,
-      "character_position": 0
+      "paragraph_id": 41,
+      "character_position": 4
     },
     "id_mappings": {
       "binary_data": 0,
@@ -4295,9 +4295,9 @@ expression: json
     "revision_number": "10, 0, 0, 5060 WIN32LEWindows_8",
     "last_printed": "1970-01-01T00:00:00+09:00",
     "create_time": "2010-07-02T12:36:13+09:00",
-    "last_saved_time": "2025-12-09T03:35:35+09:00",
-    "page_count": 2,
+    "last_saved_time": "2026-02-22T09:28:51+09:00",
+    "page_count": 0,
     "date_string": "2010년 7월 2일 금요일 오후 12:36:13",
-    "para_count": 42
+    "para_count": 0
   }
 }
