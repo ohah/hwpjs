@@ -42,6 +42,8 @@ pub struct CtrlHeaderResult<'a> {
     pub header_html: Option<String>,
     /// 꼬리말 영역 HTML (본문 하단에 출력) / Footer area HTML (output at bottom of body)
     pub footer_html: Option<String>,
+    /// 구역/단 등 인라인 콘텐츠 HTML (해당 컨트롤 위치에 출력) / Section/column etc. inline content HTML (output at control position)
+    pub extra_content: Option<String>,
 }
 
 impl<'a> CtrlHeaderResult<'a> {
@@ -53,6 +55,7 @@ impl<'a> CtrlHeaderResult<'a> {
             endnote_ref_html: None,
             header_html: None,
             footer_html: None,
+            extra_content: None,
         }
     }
 }
@@ -82,11 +85,11 @@ pub fn process_ctrl_header<'a>(
         }
         CtrlId::SECTION_DEF => {
             // 구역 정의 처리 / Process section definition
-            section_def::process_section_def(header, children, paragraphs)
+            section_def::process_section_def(header, children, paragraphs, document, options)
         }
         CtrlId::COLUMN_DEF => {
             // 단 정의 처리 / Process column definition
-            column_def::process_column_def(header, children, paragraphs)
+            column_def::process_column_def(header, children, paragraphs, document, options)
         }
         CtrlId::HEADER => {
             // 머리말 처리 / Process header
