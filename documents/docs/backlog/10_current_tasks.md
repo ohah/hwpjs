@@ -345,7 +345,7 @@ interface ExtractImagesResult {
     - hwp-rs: bits 18-20 범위 값 읽기
     - hwpjs.js: bits 18-20 읽기
 - **우선순위**: 높음
-- **상태**: 조사 중
+- **상태**: 뷰어 폴백 적용 완료 (underline_type=2 → 취소선으로 렌더링, char_shape.rs bit 18–20 파싱 유지)
 
 ## 버전 관리
 

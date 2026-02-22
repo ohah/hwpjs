@@ -124,11 +124,14 @@ fn convert_text_with_char_shapes<'a>(
                 let segment_text: String = text_chars[*start..*end].iter().collect();
                 if !segment_text.trim().is_empty() {
                     if let Some(shape) = char_shape {
+                        // 일부 HWP에서는 취소선이 underline_type=2(글자 위)로 저장됨 (백로그 참고)
+                        let effective_strikethrough =
+                            shape.attributes.strikethrough != 0 || shape.attributes.underline_type == 2;
                         let styled = apply_markdown_styles(
                             &segment_text,
                             shape.attributes.bold,
                             shape.attributes.italic,
-                            shape.attributes.strikethrough != 0,
+                            effective_strikethrough,
                         );
                         result.push_str(&styled);
                     } else {
@@ -148,11 +151,13 @@ fn convert_text_with_char_shapes<'a>(
                         let segment_text: String = text_chars[seg_start..seg_end].iter().collect();
                         if !segment_text.trim().is_empty() {
                             if let Some(shape) = char_shape {
+                                let effective_strikethrough = shape.attributes.strikethrough != 0
+                                    || shape.attributes.underline_type == 2;
                                 let styled = apply_markdown_styles(
                                     &segment_text,
                                     shape.attributes.bold,
                                     shape.attributes.italic,
-                                    shape.attributes.strikethrough != 0,
+                                    effective_strikethrough,
                                 );
                                 result.push_str(&styled);
                             } else {
