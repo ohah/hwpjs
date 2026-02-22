@@ -26,3 +26,19 @@
 ### aligns 결론
 - **허용 차이:** link→style, 출력 포맷(한 줄 vs 여러 줄), BOM 유무.
 - **수정 고려:** meta `http_quiv` → `http-equiv`는 fixture 오타이므로 snapshot이 맞음. 클래스·본문 구조·인라인 스타일은 이미 일치.
+
+---
+
+## page (133줄 diff)
+
+### diff 요약
+- **총 diff 라인 수:** 133줄 (fixture 2줄 vs snapshot 128줄)
+
+### aligns와 공통 패턴
+- **`<link>` vs `<style>`:** Fixture는 `<link rel="stylesheet" href="page_style.css">`, Snapshot은 인라인 `<style>` 블록. 허용 차이.
+- **클래스명/접두사:** 동일 (hpa, hcD, hcI, hls, ps0, hpN, hrt, cs0, cs1 등). 접두사 없음.
+- **메타/head:** Fixture `http_quiv` 오타, Snapshot `http-equiv` 정상. Fixture BOM(﻿), minified 한 줄; Snapshot 줄바꿈·들여쓰기.
+- **본문 구조·인라인 스타일:** 동일 (hpa, hcD, hcI, hls mm 단위, hpN 쪽 번호 "- 1 -", "- 2 -" 등). 구조·스타일 값 일치.
+
+### page 결론
+- aligns와 **동일한 공통 이슈**: link→style, 포맷(한 줄 vs 여러 줄), BOM, meta 오타. 본문·클래스·인라인 스타일은 이미 일치.
