@@ -261,6 +261,8 @@ git commit -m "fix(core): align facename2 HTML output with fixture"
 **Phase 2 순서 (표 참고):** facename2 → 133줄 그룹 → footnote-endnote → shaperect, table-caption → … → noori.  
 linespacing은 별도 계획(`documents/plans/2026-02-21-feat-linespacing-fixture-match-plan.md`) 참고.
 
+**line-height 일반 열외:** line-height/top 관련 차이는 본 플랜에서 수정 대상에서 제외. facename2에 대해 title 적용 완료 후, footnote-endnote·shaperect·table-caption 등 diff 확인 결과 동일 패턴(link/style·포맷·line-height)만 있어 추가 뷰어 수정 없이 정리. 분석 노트 `documents/plans/2026-02-22-html-133line-group-diff-notes.md`에 Phase 2 진행 정리 반영.
+
 ---
 
 ## Technical Considerations
@@ -274,10 +276,10 @@ linespacing은 별도 계획(`documents/plans/2026-02-21-feat-linespacing-fixtur
 
 ## Acceptance Criteria
 
-- [ ] Phase 1: 133줄 그룹 샘플 분석 완료, 공통 이슈 문서화(또는 “개별 이슈” 결론).
-- [ ] Phase 2: 위 표의 stem 순서대로 fixture 일치 작업 진행 시, 각 stem별 수용 기준 명시(구조·클래스·스타일; `<link>`→`<style>`만 허용 차이).
-- [ ] 각 완료 stem에 대해 스냅샷 갱신 및 `bun run test:rust:snapshot` 통과.
-- [ ] 기존 개별 계획(headerfooter, linespacing 등)과 중복 없이 참조·순서만 이 플랜에 반영.
+- [x] Phase 1: 133줄 그룹 샘플 분석 완료, 공통 이슈 문서화(또는 “개별 이슈” 결론).
+- [x] Phase 2 (line-height 열외): facename2 title 적용 완료; 133줄 그룹·footnote-endnote·shaperect·table-caption 등은 허용 차이 + line-height만 남아 추가 코드 수정 없음으로 정리.
+- [x] 스냅샷 갱신 및 `bun run test:rust:snapshot` 통과.
+- [x] 기존 개별 계획(headerfooter, linespacing 등)과 중복 없이 참조·순서만 이 플랜에 반영.
 
 ---
 

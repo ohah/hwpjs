@@ -71,3 +71,19 @@
 - **width 포맷:** fixture 150mm, snapshot 150.00mm (정수 시 소수 생략 여부).
 - **span 인라인 스타일:** fixture는 `class="hrt cs0"`만, snapshot은 `style="font-size:10pt;color:rgb(0,0,0);"` 추가 → 클래스와 중복 시 생략 검토.
 - **공통:** link vs style, BOM, 포맷(minified vs 여러 줄) — 허용 차이.
+
+---
+
+## Phase 2 진행 정리 (line-height 일반 열외)
+
+**결정:** line-height/top 관련 차이는 별도 linespacing 계획으로 열외. 본 플랜에서는 title·허용 차이만 적용.
+
+### 적용 완료
+- **facename2:** `<title>`을 `summary_information.title`로 출력 (document.rs 수정).
+
+### 추가 코드 수정 없음 (허용 차이 + line-height 열외)
+- **133줄 그룹:** aligns, page 등 — 본문 구조·클래스·스타일 일치, diff는 link/style·포맷·BOM·meta만.
+- **footnote-endnote:** title "각주참조" 이미 일치(summary_information). 나머지 diff는 link/style·포맷·line-height(열외).
+- **shaperect, table-caption:** 동일 — link/style·포맷·line-height(열외). title 없음 문서는 `<title></title>` 유지.
+
+이후 stem(issue144, shapecontainer-2, table-position 등)도 line-height 열외 시 동일 패턴이면, stem별 추가 뷰어 수정 없이 "의미상 일치"로 간주 가능.
