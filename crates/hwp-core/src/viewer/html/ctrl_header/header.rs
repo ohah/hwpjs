@@ -21,11 +21,7 @@ pub fn process_header<'a>(
     }
 
     let body = render_paragraphs_fragment(para_list, document, options);
-    let prefix = &options.css_class_prefix;
-    let html = format!(
-        r#"<div class="{}header">{}</div>"#,
-        prefix, body
-    );
-    result.header_html = Some(html);
+    // hcI 내용만 반환 (래퍼는 page.rs 또는 document에서 적용) / Return hcI content only (wrapper applied in page.rs or document)
+    result.header_html = Some(body);
     result
 }

@@ -1,13 +1,12 @@
 {
   "file_header": {
     "signature": "HWP Document File",
-    "version": "5.0.1.7",
+    "version": "5.1.0.1",
     "document_flags": [
-      "compressed",
-      "xml_template"
+      "compressed"
     ],
     "license_flags": [],
-    "encrypt_version": 0,
+    "encrypt_version": 4,
     "kogl_country": 0
   },
   "doc_info": {
@@ -33,7 +32,7 @@
       "font_other": 2,
       "font_symbol": 2,
       "font_user": 2,
-      "border_fill": 1,
+      "border_fill": 2,
       "char_shape": 5,
       "tab_def": 3,
       "paragraph_numbering": 1,
@@ -41,8 +40,8 @@
       "paragraph_shape": 12,
       "style": 14,
       "memo_shape": 0,
-      "track_change": null,
-      "track_change_author": null
+      "track_change": 0,
+      "track_change_author": 0
     },
     "bin_data": [],
     "face_names": [
@@ -214,15 +213,15 @@
         "alternative_font_name": null,
         "font_type_info": {
           "font_family": 2,
-          "serif": 3,
+          "serif": 11,
           "bold": 6,
-          "proportion": 0,
-          "contrast": 0,
-          "stroke_variation": 1,
-          "stroke_type": 1,
-          "letter_type": 1,
-          "middle_line": 1,
-          "x_height": 1
+          "proportion": 4,
+          "contrast": 2,
+          "stroke_variation": 2,
+          "stroke_type": 2,
+          "letter_type": 2,
+          "middle_line": 2,
+          "x_height": 4
         },
         "default_font_name": "Batang"
       },
@@ -300,6 +299,69 @@
       }
     ],
     "border_fill": [
+      {
+        "attributes": {
+          "has_3d_effect": false,
+          "has_shadow": false,
+          "slash_shape": 0,
+          "backslash_shape": 0,
+          "slash_broken_line": 0,
+          "backslash_broken_line": false,
+          "slash_rotated_180": false,
+          "backslash_rotated_180": false,
+          "has_center_line": false
+        },
+        "borders": [
+          {
+            "line_type": 0,
+            "width": 0,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 0,
+            "width": 0,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 0,
+            "width": 0,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          },
+          {
+            "line_type": 0,
+            "width": 0,
+            "color": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          }
+        ],
+        "diagonal": {
+          "line_type": 1,
+          "thickness": 0,
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
+        },
+        "fill": {
+          "type": "none"
+        }
+      },
       {
         "attributes": {
           "has_3d_effect": false,
@@ -462,8 +524,12 @@
           "g": 178,
           "b": 178
         },
-        "border_fill_id": null,
-        "strikethrough_color": null
+        "border_fill_id": 1,
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -551,8 +617,12 @@
           "g": 178,
           "b": 178
         },
-        "border_fill_id": null,
-        "strikethrough_color": null
+        "border_fill_id": 1,
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -640,8 +710,12 @@
           "g": 178,
           "b": 178
         },
-        "border_fill_id": null,
-        "strikethrough_color": null
+        "border_fill_id": 1,
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -729,8 +803,12 @@
           "g": 178,
           "b": 178
         },
-        "border_fill_id": null,
-        "strikethrough_color": null
+        "border_fill_id": 1,
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       },
       {
         "font_ids": {
@@ -818,8 +896,12 @@
           "g": 178,
           "b": 178
         },
-        "border_fill_id": null,
-        "strikethrough_color": null
+        "border_fill_id": 1,
+        "strikethrough_color": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        }
       }
     ],
     "tab_defs": [
@@ -880,9 +962,78 @@
             "format_string": "\f\u0000\u00002￿￿\u0003^3)Č\u0000\u00002￿￿\u0003^4)\f\u0000\u00002￿￿\u0004(^5)Č\u0000\u00002￿￿\u0004(^6),\u0000\u00002",
             "start_number": 65535,
             "level_start_number": 196607
+          },
+          {
+            "attributes": {
+              "align_type": "right",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "value"
+            },
+            "width": 0,
+            "distance": 1,
+            "char_shape_id": 65536,
+            "format_length": 0,
+            "format_string": "",
+            "start_number": 1,
+            "level_start_number": 65536
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": false,
+              "auto_outdent": false,
+              "distance_type": "ratio"
+            },
+            "width": 0,
+            "distance": 1,
+            "char_shape_id": 65536,
+            "format_length": 0,
+            "format_string": "",
+            "start_number": 0,
+            "level_start_number": 0
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": false,
+              "auto_outdent": false,
+              "distance_type": "ratio"
+            },
+            "width": 0,
+            "distance": 0,
+            "char_shape_id": 0,
+            "format_length": 0,
+            "format_string": "",
+            "start_number": 0,
+            "level_start_number": 0
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": false,
+              "auto_outdent": false,
+              "distance_type": "ratio"
+            },
+            "width": 0,
+            "distance": 0,
+            "char_shape_id": 0,
+            "format_length": 0,
+            "format_string": "",
+            "start_number": 0,
+            "level_start_number": 1
           }
         ],
-        "extended_levels": []
+        "extended_levels": [
+          {
+            "format_length": 1,
+            "format_string": "\u0000"
+          },
+          {
+            "format_length": 1,
+            "format_string": "\u0000"
+          }
+        ]
       }
     ],
     "bullets": [],
@@ -914,16 +1065,22 @@
         "top_spacing": 0,
         "bottom_spacing": 130,
         "line_spacing_old": 1,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "marginonly"
+        },
+        "line_spacing": 0
       },
       {
         "attributes1": {
@@ -952,16 +1109,22 @@
         "top_spacing": 0,
         "bottom_spacing": 160,
         "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 0
       },
       {
         "attributes1": {
@@ -990,16 +1153,22 @@
         "top_spacing": 0,
         "bottom_spacing": 160,
         "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 0
       },
       {
         "attributes1": {
@@ -1028,16 +1197,22 @@
         "top_spacing": 0,
         "bottom_spacing": 160,
         "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 1
       },
       {
         "attributes1": {
@@ -1066,16 +1241,22 @@
         "top_spacing": 0,
         "bottom_spacing": 160,
         "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 2
       },
       {
         "attributes1": {
@@ -1104,16 +1285,22 @@
         "top_spacing": 0,
         "bottom_spacing": 160,
         "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 3
       },
       {
         "attributes1": {
@@ -1142,16 +1329,22 @@
         "top_spacing": 0,
         "bottom_spacing": 160,
         "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 4
       },
       {
         "attributes1": {
@@ -1180,16 +1373,22 @@
         "top_spacing": 0,
         "bottom_spacing": 160,
         "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 5
       },
       {
         "attributes1": {
@@ -1218,16 +1417,22 @@
         "top_spacing": 0,
         "bottom_spacing": 160,
         "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 6
       },
       {
         "attributes1": {
@@ -1256,16 +1461,22 @@
         "top_spacing": 0,
         "bottom_spacing": 160,
         "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 0
       },
       {
         "attributes1": {
@@ -1294,16 +1505,22 @@
         "top_spacing": 0,
         "bottom_spacing": 160,
         "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 0
       },
       {
         "attributes1": {
@@ -1332,16 +1549,22 @@
         "top_spacing": 0,
         "bottom_spacing": 150,
         "line_spacing_old": 2,
-        "tab_def_id": 1,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
-        "attributes2": null,
-        "attributes3": null,
-        "line_spacing": null
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 0
       }
     ],
     "styles": [
@@ -1474,9 +1697,17 @@
     ],
     "doc_data": [],
     "distribute_doc_data": null,
-    "compatible_document": null,
-    "layout_compatibility": null,
-    "track_change": null,
+    "compatible_document": {
+      "target_program": "hwp_current"
+    },
+    "layout_compatibility": {
+      "character_format": 0,
+      "paragraph_format": 0,
+      "section_format": 0,
+      "object_format": 0,
+      "field_format": 0
+    },
+    "track_change": {},
     "memo_shapes": [],
     "forbidden_chars": [],
     "track_change_contents": [],
@@ -1506,7 +1737,7 @@
               "range_tag_count": 0,
               "line_align_count": 1,
               "instance_id": 0,
-              "section_merge": null
+              "section_merge": 0
             },
             "records": [
               {
@@ -1693,7 +1924,7 @@
                       "right_spacing": 1417,
                       "top_spacing": 1417,
                       "bottom_spacing": 1417,
-                      "border_fill_id": 0
+                      "border_fill_id": 1
                     }
                   },
                   {
@@ -1709,7 +1940,7 @@
                       "right_spacing": 1417,
                       "top_spacing": 1417,
                       "bottom_spacing": 1417,
-                      "border_fill_id": 0
+                      "border_fill_id": 1
                     }
                   },
                   {
@@ -1725,7 +1956,7 @@
                       "right_spacing": 1417,
                       "top_spacing": 1417,
                       "bottom_spacing": 1417,
-                      "border_fill_id": 0
+                      "border_fill_id": 1
                     }
                   }
                 ]
@@ -1766,7 +1997,7 @@
               "range_tag_count": 0,
               "line_align_count": 1,
               "instance_id": 0,
-              "section_merge": null
+              "section_merge": 0
             },
             "records": [
               {
@@ -1887,7 +2118,7 @@
                           "range_tag_count": 0,
                           "line_align_count": 1,
                           "instance_id": 2147483648,
-                          "section_merge": null
+                          "section_merge": 0
                         },
                         "records": [
                           {
@@ -2019,7 +2250,7 @@
                           "range_tag_count": 0,
                           "line_align_count": 1,
                           "instance_id": 0,
-                          "section_merge": null
+                          "section_merge": 0
                         },
                         "records": [
                           {
@@ -2099,13 +2330,13 @@
     "text": "첫 페이지\r\n\r\n"
   },
   "preview_image": {
-    "data": "R0lGODlhsQD6APcAAAAAAIAAAACAAICAAAAAgIAAgACAgMDAwP7+/vHx8eTk5NbW1snJybu7u66urqGhoZOTk4aGhnh4eGtra11dXVBQUENDQzU1NSgoKBoaGg0NDQEBAfjMyPiwsPiYmPiAgPhkYPhMSPgwMPgYGPgAAOAAAMgAALAAAJgAAIEAAGAAAEgAAPjkyPjYsPjMmPi8gPisYPikSPiYMPiMGPh8AOBwAMhkALBYAJhMAIBAAGAwAEggAPj8yPj8sPj8mPj8gPj8YPj8SPj8MPj8GPj8AODkAMjMALCwAJiYAIGBAGBkAEhMAOD8yNj8sMj8mLj8gLD8YKD8SJj8MIj8GHj8AHDkAGDMAFiwAEiYAECAADBkACBMAMj8yLD8sJj8mID8gGD8YEj8SDD8MBj8GAD8AADkAADMAACwAACYAACBAABkAABMAMj84LD82Jj8yID8uGD8sEj8oDD8mBj8iAD8eADkcADMYACwWACYSACAQABkMABMIMj8+LD8+Jj8+ID8+GD8+Ej8+DD8+Bj8+AD8+ADk4ADMyACwsACYmACBgQBkYABMSMjk+LDY+JjM+IC8+GCw+Eik+DCY+BiM+AB8+ABw4ABkyABYsABMmABAgAAwYAAkSMjM+LCw+JiY+ICA+GBk+EhM+DAw+BgY+AAA+AAA4AAAyAAAsAAAmAAAgQAAYAAASODM+Niw+MiY+LiA+LBk+KBM+Jgw+IgY+HgA+HAA4GAAyFgAsEgAmEAAgDAAYCAASPjM+Piw+PiY+PiA+Phk+PhI+Pgw+PgY+PgA+OAA4MgAyLMAs5gAmIEAgWAAYEgASPjM4Piw2PiYyPiAuPhksPhMoPgwmPgYiPgAeOAAcMgAYLAAWJgASIAAQGAAMEgAIPjcyPjUuPjMsPjEoPC0kOCkgNiYcMiIWLh4SLBwQKBoQJhkOJBgOIhYMHhUMHBIIJhkeJhkiJhkmHhkmGBkmGBwmGB8mGCYmGCYeGCYcGCYYHiYYICAgP8AAAD/AP//AAAA//8A/wD//////yH5BAAAAAgALAAAAACxAPoAAAj+AP8JHEiwoMGDCBMqXMiwocOHECNKnEixosWLGDNq3Mixo8ePIEOKHEmypMmTKFOqXMmypcuXMGPKnEmzps2bOHPq3Mmzp8+fQIMKHUq0qNGjSJMqXboSAFOgAKJKlSpw6j+qUa9OzWr16lOfW7ti1UrWKlezX9OqXcu2rdu3cOPKnUu3rt27ePPq3cu3r9+TWauadfoXrFetTgkTLsy4sePHkCNLnky5suXLmDNr3sy5s+fPoEOLHk26tOnTqFOrXs26tevXsGPLnk27tu3buHPr3s27t+/fwIMLH068uPHjyJMrX868ufPn0KNLn069uvXr2LNr3869u/fv4MOZix9Pvrz58+jTq1/Pvr379/Djy59Pv779+/jz69/Pv7///wAGKOCABBZo4IEIJqjgggw26OCDEEYo4YQUVmjhhRhmqOGGHHbo4YcghijiiCSWaOKJKKao4oostujiizDGKOOMNNZo44045qjjjjz26OOPQAYp5JDwhRXYYIkluRVii8VmpGJclRWWlFQRaeWVWGap5ZZc3hUQADs=",
-    "format": "GIF"
+    "data": "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oAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkENAACBoAYAgEBQAwBAIKgBACAQ1AAAEAhqAAAIBDUAAASCGgAAAkFN8vX19e+a7a5fnR3WM2dzq9382fl5dt3fXa9rmL8Pu7nD3fVstzeeOdawmwUAfp838Jtb4+knouknnnFYnzNf3/3G3ezZ+bvnrtb5u/Pz/t3Z35qdlVkA4G94A7+534ikn3rmVezd/caxP6/V2fmz+2fW+bvz8/7d2XX21bNXe6syCwD8DW/gN3cXScf+WKvd3npvvR7O7s92Z4bvnpsd99f11Hrm7hnz/u7suob5++Hq+m52VmYBgL/hDfzmjkha1zB/Pzzde3J+5zvnd/df+a3vuvqPw3FvrNlu9kx57u7s8HT2ah8A+B3evm/uu7H1yt7xua5h/n5mnbk6f1yfPfNs9mq9YszN8+vZq2ft9o57u1VcnV/3nswCAH/DG/jNfTe2XtlbZ2ZXe8Mrv3Hmyex37J6/+52r337yv548e73/5D88mQUA/oY38Jv7bmy9svfk/E45f+xfzdydf+K7v3O2d9xf185ubqzZej0rswDA3/AGfnN3kXTsj7U625vvXc284jvn572zuavzd46zd2t2tj8+Z7t7Z85mz567rnF/tc6NmfE5rNcAwO/wxuVX7GJujr/Z3f11/ZWz31r/z1g7r86deTK/zj79LQDge7xxAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAAEghoAAAJBDQAAgaAGAIBAUAMAQCCoAQAgENQAABAIagAACAQ1AAB82z///A9mmlm647F9bQAAAABJRU5ErkJggg==",
+    "format": "UNKNOWN"
   },
   "scripts": {
     "version": {
-      "high": 6317155,
-      "low": 3757506563
+      "high": 8414307,
+      "low": 2296379136
     },
     "default_script": null
   },
@@ -2116,11 +2347,11 @@
     "author": "mete0r",
     "keywords": "",
     "comments": "",
-    "last_saved_by": "user",
-    "revision_number": "6, 5, 0, 825 WIN6",
+    "last_saved_by": "shifeed",
+    "revision_number": "10, 0, 0, 5060 WIN32LEWindows_8",
     "last_printed": "1970-01-01T00:00:00+09:00",
     "create_time": "2011-05-25T20:24:16+09:00",
-    "last_saved_time": "2014-11-05T20:58:18+09:00",
+    "last_saved_time": "2026-02-22T09:27:12+09:00",
     "page_count": 0,
     "date_string": "2011년 5월 25일 수요일 오후 8:24:16",
     "para_count": 0
