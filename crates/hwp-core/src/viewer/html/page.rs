@@ -15,6 +15,8 @@ pub fn render_page(
     page_number_position: Option<&CtrlHeaderData>,
     page_start_number: u16,
     document: &HwpDocument,
+    header_fragment: Option<&str>,
+    footer_fragment: Option<&str>,
 ) -> String {
     let width_mm = page_def
         .map(|pd| pd.paper_width.to_mm().round_to_2dp())
@@ -37,11 +39,40 @@ pub fn render_page(
         (left, top)
     };
 
+    // 머리말/꼬리말 hcD 위치 (PageDef 또는 fallback) / Header/footer hcD position (PageDef or fallback)
+    let header_top_mm = page_def
+        .map(|pd| pd.top_margin.to_mm().round_to_2dp())
+        .unwrap_or(20.0);
+    let footer_top_mm = page_def
+        .map(|pd| {
+            (height_mm - pd.bottom_margin.to_mm() - pd.footer_margin.to_mm()).round_to_2dp()
+        })
+        .unwrap_or_else(|| (height_mm - 10.0).round_to_2dp());
+
     // 일반 내용은 hcD > hcI 안에 배치 / Place regular content in hcD > hcI
     let mut html = format!(
         r#"<div class="hpa" style="width:{}mm;height:{}mm;">"#,
         width_mm, height_mm
     );
+
+    // 머리말 hcD (fixture 순서: header → footer → body) / Header hcD (fixture order: header → footer → body)
+    if let Some(s) = header_fragment {
+        if !s.is_empty() {
+            html.push_str(&format!(
+                r#"<div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI">{}</div></div>"#,
+                left_mm, header_top_mm, s
+            ));
+        }
+    }
+    // 꼬리말 hcD / Footer hcD
+    if let Some(s) = footer_fragment {
+        if !s.is_empty() {
+            html.push_str(&format!(
+                r#"<div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI">{}</div></div>"#,
+                left_mm, footer_top_mm, s
+            ));
+        }
+    }
 
     if !content.is_empty() {
         html.push_str(&format!(

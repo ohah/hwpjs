@@ -557,14 +557,27 @@ fn test_headerfooter_html() {
 
                     let html = document.to_html(&options);
 
-                    // 머리말/꼬리말 영역이 HTML에 포함되는지 검증 / Verify header/footer areas are present in HTML
+                    // 머리말/꼬리말이 hpa 안에 hcD로 출력되는지 검증 (body 직하위 블록 아님) / Verify header/footer are inside hpa as hcD (not body-level blocks)
                     assert!(
-                        html.contains("ohah-hwpjs-header"),
-                        "HTML should contain header area (class ohah-hwpjs-header)"
+                        html.contains("Header 이것은 머리말입니다"),
+                        "HTML should contain header text"
                     );
                     assert!(
-                        html.contains("ohah-hwpjs-footer"),
-                        "HTML should contain footer area (class ohah-hwpjs-footer)"
+                        html.contains("Footer 이것은 꼬리말입니다"),
+                        "HTML should contain footer text"
+                    );
+                    assert!(
+                        html.contains(r#"<div class="hpa""#),
+                        "HTML should contain page container (hpa)"
+                    );
+                    // body 직하위에 ohah-hwpjs-header/footer가 없어야 함 (hpa 내부 hcD로만 출력) / No body-level header/footer blocks
+                    assert!(
+                        !html.contains("ohah-hwpjs-header"),
+                        "Header should be inside hpa as hcD, not body-level ohah-hwpjs-header"
+                    );
+                    assert!(
+                        !html.contains("ohah-hwpjs-footer"),
+                        "Footer should be inside hpa as hcD, not body-level ohah-hwpjs-footer"
                     );
 
                     // 스냅샷 생성 / Create snapshot

@@ -112,50 +112,8 @@ pub fn process_paragraph<R: Renderer>(
         let paragraph_content = if char_shapes.is_empty() {
             renderer.render_paragraph(&combined_text)
         } else {
-            // 구간별로 CharShape 적용하여 렌더링 / Render by segment with CharShape
-            let text_chars: Vec<char> = combined_text.chars().collect();
-            let text_len = text_chars.len();
-            let mut sorted_shapes: Vec<_> = char_shapes.iter().collect();
-            sorted_shapes.sort_by_key(|s| s.position);
-
-            let mut positions = vec![0];
-            for s in &sorted_shapes {
-                let pos = s.position as usize;
-                if pos <= text_len {
-                    positions.push(pos);
-                }
-            }
-            positions.push(text_len);
-            positions.sort();
-            positions.dedup();
-
-            let mut styled_parts = Vec::new();
-            for i in 0..positions.len().saturating_sub(1) {
-                let start = positions[i];
-                let end = positions[i + 1];
-                if start >= end {
-                    continue;
-                }
-                let segment_text: String = text_chars[start..end].iter().collect();
-                if segment_text.is_empty() {
-                    continue;
-                }
-
-                let shape_id_opt = sorted_shapes
-                    .iter()
-                    .rev()
-                    .find(|s| (s.position as usize) <= start)
-                    .map(|s| s.shape_id as usize);
-
-                let styles = shape_id_opt
-                    .and_then(|id| document.doc_info.char_shapes.get(id))
-                    .map(char_shape_to_text_styles)
-                    .unwrap_or_default();
-
-                styled_parts.push(renderer.render_text(&segment_text, &styles));
-            }
-            let styled_content = styled_parts.join("");
-            renderer.render_paragraph(&styled_content)
+            let styled_text = apply_char_shapes_to_segments(&combined_text, &char_shapes, document, renderer);
+            renderer.render_paragraph(&styled_text)
         };
         parts.push(paragraph_content);
     }
@@ -181,6 +139,63 @@ pub fn process_paragraph<R: Renderer>(
     }
 
     combined_content
+}
+
+/// Apply character shapes to text by segments
+/// 글자 모양을 구간별로 텍스트에 적용
+fn apply_char_shapes_to_segments<R: Renderer>(
+    text: &str,
+    char_shapes: &[CharShapeInfo],
+    document: &HwpDocument,
+    renderer: &R,
+) -> String {
+    if char_shapes.is_empty() {
+        return text.to_string();
+    }
+
+    let text_chars: Vec<char> = text.chars().collect();
+    let text_len = text_chars.len();
+    let mut sorted_shapes: Vec<_> = char_shapes.iter().collect();
+    sorted_shapes.sort_by_key(|s| s.position);
+
+    let mut positions = vec![0];
+    for s in &sorted_shapes {
+        let pos = s.position as usize;
+        if pos <= text_len {
+            positions.push(pos);
+        }
+    }
+    positions.push(text_len);
+    positions.sort();
+    positions.dedup();
+
+    let mut styled_parts = Vec::new();
+    for i in 0..positions.len().saturating_sub(1) {
+        let start = positions[i];
+        let end = positions[i + 1];
+        if start >= end {
+            continue;
+        }
+        let segment_text: String = text_chars[start..end].iter().collect();
+        if segment_text.is_empty() {
+            continue;
+        }
+
+        let shape_id_opt = sorted_shapes
+            .iter()
+            .rev()
+            .find(|s| (s.position as usize) <= start)
+            .map(|s| s.shape_id as usize);
+
+        let styles = shape_id_opt
+            .and_then(|id| document.doc_info.char_shapes.get(id))
+            .map(char_shape_to_text_styles)
+            .unwrap_or_default();
+
+        styled_parts.push(renderer.render_text(&segment_text, &styles));
+    }
+
+    styled_parts.join("")
 }
 
 /// Process CtrlHeader
