@@ -42,3 +42,17 @@
 
 ### page 결론
 - aligns와 **동일한 공통 이슈**: link→style, 포맷(한 줄 vs 여러 줄), BOM, meta 오타. 본문·클래스·인라인 스타일은 이미 일치.
+
+---
+
+## 결론: 공통 이슈 및 전략
+
+### 공통 이슈 (133줄 그룹 공통)
+1. **`<link>` vs `<style>`** — Fixture는 외부 CSS 링크, Snapshot은 인라인 `<style>`. 플랜 기준 **허용 차이**.
+2. **출력 포맷** — Fixture는 minified(한 줄), Snapshot은 줄바꿈·들여쓰기. 가독성상 Snapshot 유지 권장.
+3. **BOM** — Fixture 일부에 UTF-8 BOM(﻿) 있음. Snapshot은 BOM 없음으로 유지.
+4. **meta 오타** — Fixture에 `http_quiv` 오타 있음. Snapshot의 `http-equiv`가 올바름.
+
+### 일괄 수정 범위 vs stem별 개별 수정
+- **133줄 그룹:** 본문 구조·클래스·인라인 스타일 값은 이미 fixture와 일치. diff는 위 허용 차이(link/style, 포맷, BOM, meta) 때문이므로 **뷰어 코드 일괄 수정 불필요**. (minify 출력 옵션을 넣지 않는 한 현재 상태로 "의미상 일치"로 간주 가능.)
+- **전략:** Phase 2는 **stem별 개별 수정**으로 진행. facename2(112줄)부터 diff가 허용 차이를 넘는 stem만 코드 수정 대상. 133줄 그룹은 별도 코드 변경 없이 다음 stem(footnote-endnote, shaperect 등)부터 진행.
