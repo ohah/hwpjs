@@ -108,8 +108,6 @@ where
         == std::any::TypeId::of::<HtmlOptions>()
     {
         Tracker::Html(OutlineNumberTracker::new())
-    } else if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<MarkdownOptions>() {
-        Tracker::Markdown(OutlineNumberTracker::new())
     } else {
         Tracker::Markdown(OutlineNumberTracker::new())
     };

@@ -30,6 +30,7 @@ examples/**/dist
 
 # Misc
 .DS_Store
+*.bak
 *.pem
 *.pid
 *.seed
