@@ -110,14 +110,19 @@ pub fn render_text(
             // 속성 / Attributes
             // bold는 CSS의 font-weight:bold로 처리되므로 <strong> 태그 사용하지 않음
             // Bold is handled by CSS font-weight:bold, so don't use <strong> tag
+            // 일부 HWP에서는 취소선이 underline_type=2(글자 위)로 저장됨 → 취소선으로 표시 (백로그 참고)
+            // Some HWP files store strikethrough as underline_type=2 (above) → render as <s>
+            let effective_strikethrough = char_shape.attributes.strikethrough > 0
+                || (char_shape.attributes.underline_type == 2);
+            let effective_underline = char_shape.attributes.underline_type == 1;
             let mut styled_text = text_for_styling;
             if char_shape.attributes.italic {
                 styled_text = format!("<em>{}</em>", styled_text);
             }
-            if char_shape.attributes.underline_type > 0 {
+            if effective_underline {
                 styled_text = format!("<u>{}</u>", styled_text);
             }
-            if char_shape.attributes.strikethrough > 0 {
+            if effective_strikethrough {
                 styled_text = format!("<s>{}</s>", styled_text);
             }
             if char_shape.attributes.superscript {
