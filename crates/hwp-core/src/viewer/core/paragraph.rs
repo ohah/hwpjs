@@ -185,6 +185,7 @@ pub fn process_paragraph<R: Renderer>(
 
 /// Process CtrlHeader
 /// 컨트롤 헤더 처리
+#[allow(clippy::too_many_arguments)]
 fn process_ctrl_header<R: Renderer>(
     header: &crate::document::CtrlHeader,
     children: &[ParagraphRecord],

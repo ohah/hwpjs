@@ -90,13 +90,9 @@ fn is_format_string_empty_or_null(format_string: &str) -> bool {
     if format_string.chars().all(|c| c == '\u{0000}') {
         return true;
     }
+    // 첫 번째 글자가 null이면 개요 번호 제거 가능 / First character is null, outline number can be removed
     if format_string.as_bytes().iter().all(|&b| b == 0) {
         return true;
-    }
-    if format_string.len() == 1 {
-        if format_string.starts_with('\u{0000}') || format_string.as_bytes()[0] == 0 {
-            return true;
-        }
     }
     false
 }
