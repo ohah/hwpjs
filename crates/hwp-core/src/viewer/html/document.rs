@@ -15,6 +15,21 @@ use crate::types::RoundTo2dp;
 use crate::viewer::core::OutlineNumberTracker;
 use crate::INT32;
 
+/// HTML 속성값 이스케이프 (title 등) / Escape HTML attribute value (e.g. title)
+fn escape_html_attribute(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
 /// 문서에서 첫 번째 PageDef 찾기 / Find first PageDef in document
 fn find_page_def(document: &HwpDocument) -> Option<&PageDef> {
     for section in &document.body_text.sections {
@@ -76,7 +91,13 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html.push_str("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">\n");
     html.push('\n');
     html.push_str("<head>\n");
-    html.push_str("  <title></title>\n");
+    let title = document
+        .summary_information
+        .as_ref()
+        .and_then(|s| s.title.as_deref())
+        .unwrap_or("");
+    let title_escaped = escape_html_attribute(title);
+    html.push_str(&format!("  <title>{}</title>\n", title_escaped));
     html.push_str("  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n");
 
     // CSS 스타일 생성 / Generate CSS styles
