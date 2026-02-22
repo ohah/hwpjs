@@ -255,6 +255,8 @@ pub fn render_paragraph(
     // 각주/미주 본문 참조 마크업 (문단 끝에 붙임) / Footnote/endnote in-body ref markup (append at end of paragraph)
     let mut footnote_refs: Vec<String> = Vec::new();
     let mut endnote_refs: Vec<String> = Vec::new();
+    // 구역/단 등 인라인 콘텐츠 (문단 끝에 붙임) / Section/column etc. inline content (append at end of paragraph)
+    let mut extra_contents: Vec<String> = Vec::new();
 
     for record in &paragraph.records {
         match record {
@@ -353,6 +355,9 @@ pub fn render_paragraph(
                 }
                 if let Some(ref s) = ctrl_result.endnote_ref_html {
                     endnote_refs.push(s.clone());
+                }
+                if let Some(s) = ctrl_result.extra_content {
+                    extra_contents.push(s);
                 }
                 // SHAPE_OBJECT(11)는 "표/그리기 개체" 공통 제어문자이므로, ctrl_id가 "tbl "인 경우에만
                 // ParaText의 SHAPE_OBJECT 위치를 순서대로 매칭하여 anchor를 부여합니다.
@@ -688,6 +693,10 @@ pub fn render_paragraph(
     // 각주/미주 본문 참조를 문단 끝에 붙임 / Append footnote/endnote in-body refs at end of paragraph
     result.push_str(&footnote_refs.join(""));
     result.push_str(&endnote_refs.join(""));
+    // 구역/단 등 인라인 콘텐츠를 문단 끝에 붙임 / Append section/column etc. inline content at end of paragraph
+    for s in &extra_contents {
+        result.push_str(s);
+    }
 
     (result, table_htmls, None)
 }
