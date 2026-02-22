@@ -24,6 +24,7 @@
     "test:mobile:e2e": "maestro test .maestro/app-launch.yaml",
     "test:mobile:e2e:android": "maestro test .maestro/app-launch.yaml",
     "test:mobile:e2e:ios": "node scripts/test-ios-e2e.js",
+    "test:doc-snapshots": "bun run --cwd e2e/document-snapshots test:e2e",
     "lint": "oxlint .",
     "format": "oxfmt .",
     "format:rust": "cargo fmt --all",
