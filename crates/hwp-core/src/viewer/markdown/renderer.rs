@@ -10,9 +10,32 @@ impl Renderer for MarkdownRenderer {
     type Options = crate::viewer::markdown::MarkdownOptions;
 
     // ===== Text Styling =====
-    fn render_text(&self, text: &str, _styles: &TextStyles) -> String {
-        // TODO: 스타일 적용 (마크다운에서는 제한적)
-        text.to_string()
+    fn render_text(&self, text: &str, styles: &TextStyles) -> String {
+        if text.is_empty() {
+            return String::new();
+        }
+        // 안쪽부터 적용: italic -> bold -> underline -> strikethrough -> superscript -> subscript
+        // Apply from innermost: italic -> bold -> underline -> strikethrough -> superscript -> subscript
+        let mut result = text.to_string();
+        if styles.italic {
+            result = self.render_italic(&result);
+        }
+        if styles.bold {
+            result = self.render_bold(&result);
+        }
+        if styles.underline {
+            result = self.render_underline(&result);
+        }
+        if styles.strikethrough {
+            result = self.render_strikethrough(&result);
+        }
+        if styles.superscript {
+            result = self.render_superscript(&result);
+        }
+        if styles.subscript {
+            result = self.render_subscript(&result);
+        }
+        result
     }
 
     fn render_bold(&self, text: &str) -> String {

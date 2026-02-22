@@ -1454,6 +1454,55 @@ fn test_footnote_endnote_debug() {
     }
 }
 
+/// process_paragraph applies character shape (bold/italic/strikethrough) via Renderer.
+/// charshape.hwp has paragraphs with ParaCharShape; output must contain markdown styling.
+#[test]
+fn test_process_paragraph_applies_char_shape() {
+    use crate::common::find_fixture_file;
+    use hwp_core::viewer::core::process_paragraph;
+    use hwp_core::viewer::markdown::{MarkdownOptions, MarkdownRenderer};
+
+    let file_path = match find_fixture_file("charshape.hwp") {
+        Some(path) => path,
+        None => {
+            eprintln!("charshape.hwp not found, skipping test");
+            return;
+        }
+    };
+
+    let data = std::fs::read(&file_path).expect("read fixture");
+    let document = HwpParser::new().parse(&data).expect("parse");
+    let renderer = MarkdownRenderer;
+    let options = MarkdownOptions {
+        image_output_dir: None,
+        use_html: Some(true),
+        include_version: Some(false),
+        include_page_info: Some(false),
+    };
+
+    // Find a paragraph that has both ParaText and ParaCharShape (e.g. contains "가운데줄" with strikethrough)
+    for section in &document.body_text.sections {
+        for para in &section.paragraphs {
+            let has_para_text = para.records.iter().any(|r| matches!(r, ParagraphRecord::ParaText { .. }));
+            let has_char_shape = para.records.iter().any(|r| matches!(r, ParagraphRecord::ParaCharShape { .. }));
+            if has_para_text && has_char_shape {
+                let out = process_paragraph(para, &document, &renderer, &options);
+                // When char shape is applied, output contains markdown/HTML styling (**, *, ~~, or <u>, <em>, <strong>, etc.)
+                let has_styling = out.contains("~~") || out.contains("<u>") || out.contains("**") || out.contains("*") || out.contains("<em>") || out.contains("<strong>");
+                if out.contains("가운데줄") && has_styling {
+                    return; // pass: char shape applied
+                }
+                if out.contains("가운데줄") {
+                    panic!(
+                        "process_paragraph should apply char shape (e.g. ~~, <u>, **); got no styling: {:?}",
+                        out
+                    );
+                }
+            }
+        }
+    }
+}
+
 #[test]
 fn test_debug_charshape_strikethrough() {
     use crate::common::find_fixture_file;

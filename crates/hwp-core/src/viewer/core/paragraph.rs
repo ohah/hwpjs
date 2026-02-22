@@ -6,9 +6,30 @@
 ///
 /// Provides common paragraph processing logic used by all viewers.
 /// Output format is handled through the Renderer trait.
-use crate::document::{HwpDocument, Paragraph, ParagraphRecord};
-use crate::viewer::core::renderer::Renderer;
+use crate::document::bodytext::CharShapeInfo;
+use crate::document::{CharShape, HwpDocument, Paragraph, ParagraphRecord};
+use crate::viewer::core::renderer::{Renderer, TextStyles};
 use crate::viewer::markdown::collect::collect_text_and_images_from_paragraph;
+
+/// CharShape을 TextStyles로 변환 / Map CharShape to TextStyles
+fn char_shape_to_text_styles(cs: &CharShape) -> TextStyles {
+    TextStyles {
+        bold: cs.attributes.bold,
+        italic: cs.attributes.italic,
+        underline: cs.attributes.underline_type > 0,
+        strikethrough: cs.attributes.strikethrough > 0,
+        superscript: cs.attributes.superscript,
+        subscript: cs.attributes.subscript,
+        font_size: Some(cs.base_size as f32 / 100.0),
+        color: Some(format!(
+            "rgb({},{},{})",
+            cs.text_color.r(),
+            cs.text_color.g(),
+            cs.text_color.b()
+        )),
+        ..TextStyles::default()
+    }
+}
 
 /// Process a paragraph and return rendered content
 /// 문단을 처리하고 렌더링된 내용을 반환
@@ -24,8 +45,7 @@ pub fn process_paragraph<R: Renderer>(
 
     let mut parts = Vec::new();
     let mut text_parts = Vec::new(); // 같은 문단 내의 텍스트 레코드들을 모음
-                                     // TODO: 글자 모양 정보 수집 및 적용 (렌더러별로 다름)
-                                     // Character shape information collection and application (varies by renderer)
+    let mut char_shapes: Vec<CharShapeInfo> = Vec::new();
 
     // Process all records in order / 모든 레코드를 순서대로 처리
     for record in &paragraph.records {
@@ -35,13 +55,10 @@ pub fn process_paragraph<R: Renderer>(
                 control_char_positions: _,
                 ..
             } => {
-                // ParaText 처리 / Process ParaText
-                // TODO: 글자 모양 적용 로직 구현 (렌더러별로 다름)
-                // Character shape application logic (varies by renderer)
-                // 현재는 간단히 텍스트만 사용
-                // For now, just use text
-                let text_content = text.to_string();
-                text_parts.push(text_content);
+                text_parts.push(text.to_string());
+            }
+            ParagraphRecord::ParaCharShape { shapes } => {
+                char_shapes.extend(shapes.iter().cloned());
             }
             ParagraphRecord::ShapeComponentPicture {
                 shape_component_picture,
@@ -85,12 +102,58 @@ pub fn process_paragraph<R: Renderer>(
         }
     }
 
-    // 같은 문단 내의 텍스트를 합침 / Combine text in the same paragraph
+    // 같은 문단 내의 텍스트를 합침 및 글자 모양 적용 / Combine text and apply character shape
     if !text_parts.is_empty() {
         let combined_text = text_parts.join("");
-        // TODO: 개요 번호 처리 (렌더러별로 다름)
-        // Outline number processing (varies by renderer)
-        parts.push(renderer.render_paragraph(&combined_text));
+        let paragraph_content = if char_shapes.is_empty() {
+            renderer.render_paragraph(&combined_text)
+        } else {
+            // 구간별로 CharShape 적용하여 렌더링 / Render by segment with CharShape
+            let text_chars: Vec<char> = combined_text.chars().collect();
+            let text_len = text_chars.len();
+            let mut sorted_shapes: Vec<_> = char_shapes.iter().collect();
+            sorted_shapes.sort_by_key(|s| s.position);
+
+            let mut positions = vec![0];
+            for s in &sorted_shapes {
+                let pos = s.position as usize;
+                if pos <= text_len {
+                    positions.push(pos);
+                }
+            }
+            positions.push(text_len);
+            positions.sort();
+            positions.dedup();
+
+            let mut styled_parts = Vec::new();
+            for i in 0..positions.len().saturating_sub(1) {
+                let start = positions[i];
+                let end = positions[i + 1];
+                if start >= end {
+                    continue;
+                }
+                let segment_text: String = text_chars[start..end].iter().collect();
+                if segment_text.is_empty() {
+                    continue;
+                }
+
+                let shape_id_opt = sorted_shapes
+                    .iter()
+                    .rev()
+                    .find(|s| (s.position as usize) <= start)
+                    .map(|s| s.shape_id as usize);
+
+                let styles = shape_id_opt
+                    .and_then(|id| document.doc_info.char_shapes.get(id))
+                    .map(char_shape_to_text_styles)
+                    .unwrap_or_default();
+
+                styled_parts.push(renderer.render_text(&segment_text, &styles));
+            }
+            let styled_content = styled_parts.join("");
+            renderer.render_paragraph(&styled_content)
+        };
+        parts.push(paragraph_content);
     }
 
     // HTML로 결합 / Combine into output
