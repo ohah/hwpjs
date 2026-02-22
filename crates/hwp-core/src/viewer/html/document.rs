@@ -1,3 +1,4 @@
+use super::ctrl_header::process_ctrl_header;
 use super::ctrl_header::FootnoteEndnoteState;
 use super::page;
 use super::pagination::{PageBreakReason, PaginationContext};
@@ -84,7 +85,53 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     html.push_str("</head>\n");
     html.push('\n');
     html.push('\n');
+
+    // 머리말/꼬리말 수집 (본문 상단/하단에 출력) / Collect header/footer (output at top/bottom of body)
+    let mut header_contents: Vec<String> = Vec::new();
+    let mut footer_contents: Vec<String> = Vec::new();
+    for section in &document.body_text.sections {
+        for paragraph in &section.paragraphs {
+            let control_mask = &paragraph.para_header.control_mask;
+            if !control_mask.has_header_footer() {
+                continue;
+            }
+            for record in &paragraph.records {
+                if let ParagraphRecord::CtrlHeader {
+                    header: ctrl_header,
+                    children,
+                    paragraphs: ctrl_paragraphs,
+                } = record
+                {
+                    if ctrl_header.ctrl_id.as_str() == CtrlId::HEADER
+                        || ctrl_header.ctrl_id.as_str() == CtrlId::FOOTER
+                    {
+                        let r = process_ctrl_header(
+                            ctrl_header,
+                            children,
+                            ctrl_paragraphs,
+                            document,
+                            options,
+                            None,
+                        );
+                        if let Some(h) = r.header_html {
+                            header_contents.push(h);
+                        }
+                        if let Some(h) = r.footer_html {
+                            footer_contents.push(h);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     html.push_str("<body>\n");
+
+    // 머리말 출력 (본문 상단) / Output header (top of body)
+    for block in &header_contents {
+        html.push_str(block);
+        html.push('\n');
+    }
 
     // PageDef 찾기 / Find PageDef
     let page_def = find_page_def(document);
@@ -538,6 +585,12 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             page_start_number,
             document,
         ));
+    }
+
+    // 꼬리말 출력 (본문 하단, 각주/미주 블록 앞) / Output footer (bottom of body, before footnote/endnote blocks)
+    for block in &footer_contents {
+        html.push_str(block);
+        html.push('\n');
     }
 
     // 각주/미주 블록을 본문 끝에 출력 / Output footnote/endnote blocks at end of body

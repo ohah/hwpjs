@@ -38,6 +38,10 @@ pub struct CtrlHeaderResult<'a> {
     pub footnote_ref_html: Option<String>,
     /// 본문 내 미주 참조 HTML / In-body endnote reference HTML
     pub endnote_ref_html: Option<String>,
+    /// 머리말 영역 HTML (문서 상단에 출력) / Header area HTML (output at top of body)
+    pub header_html: Option<String>,
+    /// 꼬리말 영역 HTML (본문 하단에 출력) / Footer area HTML (output at bottom of body)
+    pub footer_html: Option<String>,
 }
 
 impl<'a> CtrlHeaderResult<'a> {
@@ -47,6 +51,8 @@ impl<'a> CtrlHeaderResult<'a> {
             images: Vec::new(),
             footnote_ref_html: None,
             endnote_ref_html: None,
+            header_html: None,
+            footer_html: None,
         }
     }
 }
@@ -84,11 +90,11 @@ pub fn process_ctrl_header<'a>(
         }
         CtrlId::HEADER => {
             // 머리말 처리 / Process header
-            header::process_header(header, children, paragraphs)
+            header::process_header(header, children, paragraphs, document, options)
         }
         CtrlId::FOOTER => {
             // 꼬리말 처리 / Process footer
-            footer::process_footer(header, children, paragraphs)
+            footer::process_footer(header, children, paragraphs, document, options)
         }
         CtrlId::FOOTNOTE => {
             // 각주 처리 / Process footnote
