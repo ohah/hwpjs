@@ -127,6 +127,8 @@ body {padding:0;}
 
 
 <body>
-<div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps9" style="line-height:3.53mm;white-space:nowrap;left:0.00mm;top:0.00mm;height:3.53mm;width:150.00mm;"><span class="hrt cs1" style="font-size:10pt;color:rgb(0,0,0);">첫 페이지</span></div></div></div></div></body>
+<div class="ohah-hwpjs-header"><div class="hls ps11" style="line-height:3.18mm;white-space:nowrap;left:0.00mm;top:0.00mm;height:3.18mm;width:150.00mm;"><span class="hrt cs2" style="font-size:9pt;color:rgb(0,0,0);">Header 이것은 머리말입니다.</span></div></div>
+<div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps9" style="line-height:3.53mm;white-space:nowrap;left:0.00mm;top:0.00mm;height:3.53mm;width:150.00mm;"><span class="hrt cs1" style="font-size:10pt;color:rgb(0,0,0);">첫 페이지</span></div></div></div></div><div class="ohah-hwpjs-footer"><div class="hls ps11" style="line-height:3.18mm;white-space:nowrap;left:0.00mm;top:0.00mm;height:3.18mm;width:150.00mm;"><span class="hrt cs2" style="font-size:9pt;color:rgb(0,0,0);">Footer 이것은 꼬리말입니다.</span></div></div>
+</body>
 
 </html>

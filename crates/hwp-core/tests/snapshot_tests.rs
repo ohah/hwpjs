@@ -557,6 +557,16 @@ fn test_headerfooter_html() {
 
                     let html = document.to_html(&options);
 
+                    // 머리말/꼬리말 영역이 HTML에 포함되는지 검증 / Verify header/footer areas are present in HTML
+                    assert!(
+                        html.contains("ohah-hwpjs-header"),
+                        "HTML should contain header area (class ohah-hwpjs-header)"
+                    );
+                    assert!(
+                        html.contains("ohah-hwpjs-footer"),
+                        "HTML should contain footer area (class ohah-hwpjs-footer)"
+                    );
+
                     // 스냅샷 생성 / Create snapshot
                     assert_snapshot_with_path!(snapshot_name_html.as_str(), html);
 
@@ -668,7 +678,12 @@ fn test_all_fixtures_html_snapshots() {
                             html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
                             include_version: Some(true),
                             include_page_info: Some(true),
-                            css_class_prefix: String::new(), // table.html과 일치하도록 빈 문자열 사용
+                            // headerfooter는 전용 테스트(test_headerfooter_html)와 동일한 스냅샷을 사용하므로 접두사 일치
+                            css_class_prefix: if file_name == "headerfooter" {
+                                "ohah-hwpjs-".to_string()
+                            } else {
+                                String::new() // table.html과 일치하도록 빈 문자열 사용
+                            },
                         };
                         if file_name == "table" {
                             eprintln!("DEBUG: Processing table.hwp file");
