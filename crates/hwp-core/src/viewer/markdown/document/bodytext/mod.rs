@@ -45,7 +45,7 @@ pub fn convert_bodytext_to_markdown(
     let mut endnotes = Vec::new();
 
     // 개요 번호 추적기 생성 / Create outline number tracker
-    let mut outline_tracker = crate::viewer::markdown::utils::OutlineNumberTracker::new();
+    let mut outline_tracker = crate::viewer::core::OutlineNumberTracker::new();
 
     // Convert body text to markdown / 본문 텍스트를 마크다운으로 변환
     for section in &document.body_text.sections {

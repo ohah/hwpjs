@@ -13,9 +13,8 @@ use crate::viewer::markdown::document::bodytext::para_text::{
 use crate::viewer::markdown::document::bodytext::shape_component::convert_shape_component_children_to_markdown;
 use crate::viewer::markdown::document::bodytext::shape_component_picture::convert_shape_component_picture_to_markdown;
 use crate::viewer::markdown::document::bodytext::table::convert_table_to_markdown;
-use crate::viewer::markdown::utils::{
-    convert_to_outline_with_number, is_text_part, OutlineNumberTracker,
-};
+use crate::viewer::markdown::utils::{convert_to_outline_with_number, is_text_part};
+use crate::viewer::core::OutlineNumberTracker;
 use crate::viewer::markdown::MarkdownOptions;
 
 /// Convert a paragraph to markdown

@@ -8,7 +8,7 @@
 /// Output format is handled through the Renderer trait.
 use crate::document::{ColumnDivideType, CtrlHeader, HwpDocument, Paragraph, ParagraphRecord};
 use crate::viewer::core::renderer::{DocumentParts, Renderer};
-use crate::viewer::markdown::utils::OutlineNumberTracker;
+use crate::viewer::core::OutlineNumberTracker;
 use crate::viewer::{html, html::HtmlOptions, MarkdownOptions};
 
 /// Render paragraph using viewer-specific functions
@@ -51,25 +51,25 @@ where
         }
     }
 
-    // 기본: 공통 paragraph 처리 사용 / Default: Use common paragraph processing
+    // 기본: 공통 paragraph 처리 사용 (개요 번호 트래커 전달) / Default: Use common paragraph processing (with outline tracker)
     use crate::viewer::core::paragraph::process_paragraph;
-    process_paragraph(paragraph, document, renderer, options)
+    let mut outline_opt = tracker.as_outline_tracker_mut();
+    process_paragraph(paragraph, document, renderer, options, &mut outline_opt)
 }
 
 /// Trait for outline number tracker reference
 /// 개요 번호 추적기 참조를 위한 트레이트
 trait TrackerRef {
-    /// Get mutable reference to Markdown tracker
-    /// Markdown 추적기의 가변 참조 가져오기
+    /// Get mutable reference to Markdown tracker (for convert_paragraph_to_markdown)
     unsafe fn as_markdown_tracker_mut(&mut self) -> &mut OutlineNumberTracker;
+    /// Get mutable reference to outline tracker (for process_paragraph outline numbering)
+    fn as_outline_tracker_mut(&mut self) -> Option<&mut OutlineNumberTracker>;
 }
 
 /// Enum to hold tracker by renderer type
 /// 렌더러 타입별 추적기를 보관하는 열거형
 enum Tracker {
-    /// HTML 뷰어는 더 이상 OutlineNumberTracker를 사용하지 않음
-    /// HTML viewer no longer uses OutlineNumberTracker
-    Html(()),
+    Html(OutlineNumberTracker),
     Markdown(OutlineNumberTracker),
 }
 
@@ -78,6 +78,11 @@ impl TrackerRef for Tracker {
         match self {
             Tracker::Markdown(tracker) => tracker,
             _ => std::hint::unreachable_unchecked(),
+        }
+    }
+    fn as_outline_tracker_mut(&mut self) -> Option<&mut OutlineNumberTracker> {
+        match self {
+            Tracker::Html(tracker) | Tracker::Markdown(tracker) => Some(tracker),
         }
     }
 }
@@ -98,18 +103,14 @@ where
     let mut footnote_counter = 1u32;
     let mut endnote_counter = 1u32;
 
-    // 개요 번호 추적기 생성 (렌더러별로 다름) / Create outline number tracker (varies by renderer)
-    // 문서 전체에 걸쳐 상태를 유지해야 하므로 한 번만 생성 / Created only once to maintain state across entire document
-    // 새로운 HTML 뷰어는 tracker를 사용하지 않음 / New HTML viewer does not use tracker
+    // 개요 번호 추적기 생성 (HTML·Markdown 공통) / Create outline number tracker (shared for HTML and Markdown)
     let mut tracker: Tracker = if std::any::TypeId::of::<R::Options>()
         == std::any::TypeId::of::<HtmlOptions>()
     {
-        Tracker::Html(())
+        Tracker::Html(OutlineNumberTracker::new())
     } else if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<MarkdownOptions>() {
         Tracker::Markdown(OutlineNumberTracker::new())
     } else {
-        // 기본 렌더러는 tracker가 필요 없을 수 있음 / Default renderer may not need tracker
-        // 하지만 일단 Markdown tracker를 사용 (나중에 필요시 수정) / But use Markdown tracker for now (modify later if needed)
         Tracker::Markdown(OutlineNumberTracker::new())
     };
 

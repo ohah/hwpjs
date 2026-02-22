@@ -11,7 +11,7 @@ pub fn convert_table_to_markdown(
     table: &Table,
     document: &HwpDocument,
     options: &crate::viewer::markdown::MarkdownOptions,
-    tracker: &mut crate::viewer::markdown::utils::OutlineNumberTracker,
+    tracker: &mut crate::viewer::core::OutlineNumberTracker,
 ) -> String {
     let row_count = table.attributes.row_count as usize;
     let col_count = table.attributes.col_count as usize;
@@ -159,7 +159,7 @@ fn fill_cell_content(
     col_count: usize,
     document: &HwpDocument,
     options: &crate::viewer::markdown::MarkdownOptions,
-    tracker: &mut crate::viewer::markdown::utils::OutlineNumberTracker,
+    tracker: &mut crate::viewer::core::OutlineNumberTracker,
 ) {
     // 셀 내용을 텍스트와 이미지로 변환 / Convert cell content to text and images
     let mut cell_parts = Vec::new();
