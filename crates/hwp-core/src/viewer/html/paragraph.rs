@@ -12,6 +12,9 @@ use crate::document::bodytext::{
     LineSegmentInfo, PageDef, ParagraphRecord,
 };
 use crate::document::{HwpDocument, Paragraph};
+use crate::viewer::core::outline::{
+    compute_outline_number, format_outline_number, OutlineNumberTracker,
+};
 use crate::viewer::html::ctrl_header::table::{render_table, TablePosition, TableRenderContext};
 use crate::INT32;
 use std::collections::HashMap;
@@ -41,6 +44,8 @@ pub struct ParagraphRenderState<'a> {
     pub color_to_pattern: &'a mut HashMap<u32, String>,
     /// 각주/미주 수집 (문서 레벨). None이면 수집하지 않음.
     pub note_state: Option<&'a mut FootnoteEndnoteState<'a>>,
+    /// 개요 번호 추적기 (본문 렌더 시에만 사용, fragment는 None)
+    pub outline_tracker: Option<&'a mut OutlineNumberTracker>,
 }
 
 /// 각주/미주 내용용 문단 목록을 HTML 조각으로 렌더링 (페이지/테이블 컨텍스트 없음)
@@ -73,6 +78,7 @@ pub fn render_paragraphs_fragment(
         pattern_counter: &mut pattern_counter,
         color_to_pattern: &mut color_to_pattern,
         note_state: None,
+        outline_tracker: None,
     };
     let mut pagination_context = PaginationContext {
         prev_vertical_mm: None,
@@ -696,6 +702,18 @@ pub fn render_paragraph(
     // 구역/단 등 인라인 콘텐츠를 문단 끝에 붙임 / Append section/column etc. inline content at end of paragraph
     for s in &extra_contents {
         result.push_str(s);
+    }
+
+    // 개요 번호가 있으면 문단 앞에 span으로 추가 / Prepend outline number span when present
+    if let Some(ref mut tracker) = state.outline_tracker {
+        if let Some((level, number)) =
+            compute_outline_number(&paragraph.para_header, document, tracker)
+        {
+            let num_str = format_outline_number(level, number);
+            let class_name = format!("{}outline-number", options.css_class_prefix);
+            let span = format!(r#"<span class="{}">{}</span>"#, class_name, num_str);
+            result.insert_str(0, &span);
+        }
     }
 
     (result, table_htmls, None)

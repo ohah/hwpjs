@@ -639,6 +639,52 @@ fn test_footnote_endnote_html_snapshot() {
     });
 }
 
+/// 본문에 개요 문단이 있는 문서는 HTML에 outline-number 클래스가 포함되는지 검증
+#[test]
+fn test_outline_number_in_html_when_document_has_outline() {
+    use hwp_core::document::HeaderShapeType;
+    let hwp_files = find_all_hwp_files();
+    if hwp_files.is_empty() {
+        return;
+    }
+    let parser = HwpParser::new();
+    for file_path in &hwp_files {
+        let Ok(data) = std::fs::read(file_path) else {
+            continue;
+        };
+        let Ok(document) = parser.parse(&data) else {
+            continue;
+        };
+        // 본문 섹션에 개요 문단이 있는지만 검사 (머리말/꼬리말만 있는 문서 제외)
+        let has_outline_in_body = document.body_text.sections.iter().any(|section| {
+            section.paragraphs.iter().any(|p| {
+                document
+                    .doc_info
+                    .para_shapes
+                    .get(p.para_header.para_shape_id as usize)
+                    .map(|ps| ps.attributes1.header_shape_type == HeaderShapeType::Outline)
+                    .unwrap_or(false)
+            })
+        });
+        if !has_outline_in_body {
+            continue;
+        }
+        let options = hwp_core::viewer::html::HtmlOptions {
+            image_output_dir: None,
+            html_output_dir: None,
+            include_version: Some(false),
+            include_page_info: Some(false),
+            css_class_prefix: "ohah-hwpjs-".to_string(),
+        };
+        let html = document.to_html(&options);
+        assert!(
+            html.contains("ohah-hwpjs-outline-number"),
+            "When document has outline paragraph in body, HTML should contain class ohah-hwpjs-outline-number; file: {}",
+            file_path
+        );
+    }
+}
+
 #[test]
 fn test_all_fixtures_html_snapshots() {
     // 모든 fixtures 파일에 대해 HTML 스냅샷 생성 / Generate HTML snapshots for all fixtures files

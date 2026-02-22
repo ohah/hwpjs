@@ -7,9 +7,11 @@
 /// This module provides common logic used by all viewers (HTML, Markdown, PDF, Image, etc.).
 /// Uses a renderer pattern where only the output format differs.
 pub mod bodytext;
+pub mod outline;
 mod paragraph;
 pub mod renderer;
 
 pub use bodytext::process_bodytext;
+pub use outline::{compute_outline_number, format_outline_number, OutlineNumberTracker};
 pub use paragraph::process_paragraph;
 pub use renderer::{DocumentParts, Renderer, TextStyles};

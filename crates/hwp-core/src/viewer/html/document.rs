@@ -12,6 +12,7 @@ use crate::document::bodytext::ctrl_header::{CtrlHeaderData, CtrlId};
 use crate::document::bodytext::{PageDef, ParagraphRecord};
 use crate::document::HwpDocument;
 use crate::types::RoundTo2dp;
+use crate::viewer::core::OutlineNumberTracker;
 use crate::INT32;
 
 /// 문서에서 첫 번째 PageDef 찾기 / Find first PageDef in document
@@ -166,6 +167,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     use std::collections::HashMap;
     let mut pattern_counter = 0;
     let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
+    let mut outline_tracker = OutlineNumberTracker::new();
 
     // 각주/미주 수집 (문서 끝에 블록으로 출력) / Footnote/endnote collection (output as blocks at document end)
     let mut footnote_counter = 0u32;
@@ -402,6 +404,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     pattern_counter: &mut pattern_counter,
                     color_to_pattern: &mut color_to_pattern,
                     note_state: Some(&mut note_state),
+                    outline_tracker: Some(&mut outline_tracker),
                 };
 
                 // 2. 문단 렌더링 (내부에서 테이블/이미지 페이지네이션 체크) / Render paragraph (check table/image pagination inside)

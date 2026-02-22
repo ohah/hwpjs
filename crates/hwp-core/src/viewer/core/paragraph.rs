@@ -8,6 +8,7 @@
 /// Output format is handled through the Renderer trait.
 use crate::document::bodytext::CharShapeInfo;
 use crate::document::{CharShape, HwpDocument, Paragraph, ParagraphRecord};
+use crate::viewer::core::outline::{compute_outline_number, OutlineNumberTracker};
 use crate::viewer::core::renderer::{Renderer, TextStyles};
 use crate::viewer::markdown::collect::collect_text_and_images_from_paragraph;
 
@@ -33,11 +34,13 @@ fn char_shape_to_text_styles(cs: &CharShape) -> TextStyles {
 
 /// Process a paragraph and return rendered content
 /// 문단을 처리하고 렌더링된 내용을 반환
+/// tracker가 있으면 개요 번호를 계산하여 renderer.render_outline_number로 감싼다.
 pub fn process_paragraph<R: Renderer>(
     paragraph: &Paragraph,
     document: &HwpDocument,
     renderer: &R,
     options: &R::Options,
+    tracker: &mut Option<&mut OutlineNumberTracker>,
 ) -> String {
     if paragraph.records.is_empty() {
         return String::new();
@@ -94,6 +97,7 @@ pub fn process_paragraph<R: Renderer>(
                     renderer,
                     options,
                     &mut parts,
+                    tracker,
                 );
             }
             _ => {
@@ -161,11 +165,22 @@ pub fn process_paragraph<R: Renderer>(
         return String::new();
     }
 
-    if parts.len() == 1 {
-        return parts[0].clone();
+    let combined_content = if parts.len() == 1 {
+        parts[0].clone()
+    } else {
+        parts.join("")
+    };
+
+    // 개요 번호 처리 / Outline number handling
+    if let Some(track) = tracker.as_deref_mut() {
+        if let Some((level, number)) =
+            compute_outline_number(&paragraph.para_header, document, track)
+        {
+            return renderer.render_outline_number(level, number, &combined_content);
+        }
     }
 
-    parts.join("")
+    combined_content
 }
 
 /// Process CtrlHeader
@@ -178,6 +193,7 @@ fn process_ctrl_header<R: Renderer>(
     renderer: &R,
     options: &R::Options,
     parts: &mut Vec<String>,
+    tracker: &mut Option<&mut OutlineNumberTracker>,
 ) {
     use crate::document::CtrlId;
 
@@ -260,7 +276,7 @@ fn process_ctrl_header<R: Renderer>(
 
         // 표 셀 내부가 아닌 경우에만 처리 / Only process if not inside table cell
         if !is_table_cell {
-            let para_content = process_paragraph(para, document, renderer, options);
+            let para_content = process_paragraph(para, document, renderer, options, tracker);
             if !para_content.is_empty() {
                 parts.push(para_content);
             }

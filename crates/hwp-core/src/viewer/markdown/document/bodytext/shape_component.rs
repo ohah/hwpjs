@@ -21,7 +21,7 @@ pub(crate) fn convert_shape_component_children_to_markdown(
     children: &[ParagraphRecord],
     document: &HwpDocument,
     image_output_dir: Option<&str>,
-    tracker: &mut crate::viewer::markdown::utils::OutlineNumberTracker,
+    tracker: &mut crate::viewer::core::OutlineNumberTracker,
 ) -> Vec<String> {
     use crate::viewer::markdown::document::bodytext::paragraph::convert_paragraph_to_markdown;
     use crate::viewer::markdown::MarkdownOptions;

@@ -1,6 +1,7 @@
 /// Markdown Renderer implementation
 /// Markdown 렌더러 구현
 use crate::document::{bodytext::Table, HwpDocument};
+use crate::viewer::core::outline::format_outline_number;
 use crate::viewer::core::renderer::{DocumentParts, Renderer, TextStyles};
 
 /// Markdown Renderer
@@ -83,7 +84,7 @@ impl Renderer for MarkdownRenderer {
     ) -> String {
         // 기존 테이블 변환 함수 사용
         use crate::viewer::markdown::document::bodytext::table::convert_table_to_markdown;
-        use crate::viewer::markdown::utils::OutlineNumberTracker;
+        use crate::viewer::core::OutlineNumberTracker;
         let mut tracker = OutlineNumberTracker::new();
         convert_table_to_markdown(table, document, options, &mut tracker)
     }
@@ -197,8 +198,8 @@ impl Renderer for MarkdownRenderer {
         String::new()
     }
 
-    fn render_outline_number(&self, _level: u8, _number: u32, content: &str) -> String {
-        // TODO: 개요 번호 형식 적용
-        content.to_string()
+    fn render_outline_number(&self, level: u8, number: u32, content: &str) -> String {
+        let num_str = format_outline_number(level, number);
+        format!("{} {}", num_str, content)
     }
 }
