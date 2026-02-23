@@ -616,20 +616,14 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     // 각주/미주 블록을 본문 끝에 출력 / Output footnote/endnote blocks at end of body
     let prefix = &options.css_class_prefix;
     if !footnote_contents.is_empty() {
-        html.push_str(&format!(
-            r#"<div class="{}footnotes">"#,
-            prefix
-        ));
+        html.push_str(&format!(r#"<div class="{}footnotes">"#, prefix));
         for block in &footnote_contents {
             html.push_str(block);
         }
         html.push_str("</div>\n");
     }
     if !endnote_contents.is_empty() {
-        html.push_str(&format!(
-            r#"<div class="{}endnotes">"#,
-            prefix
-        ));
+        html.push_str(&format!(r#"<div class="{}endnotes">"#, prefix));
         for block in &endnote_contents {
             html.push_str(block);
         }

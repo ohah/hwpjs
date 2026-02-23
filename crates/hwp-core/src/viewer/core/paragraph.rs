@@ -112,7 +112,8 @@ pub fn process_paragraph<R: Renderer>(
         let paragraph_content = if char_shapes.is_empty() {
             renderer.render_paragraph(&combined_text)
         } else {
-            let styled_text = apply_char_shapes_to_segments(&combined_text, &char_shapes, document, renderer);
+            let styled_text =
+                apply_char_shapes_to_segments(&combined_text, &char_shapes, document, renderer);
             renderer.render_paragraph(&styled_text)
         };
         parts.push(paragraph_content);

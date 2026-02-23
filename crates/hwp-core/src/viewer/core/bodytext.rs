@@ -104,13 +104,12 @@ where
     let mut endnote_counter = 1u32;
 
     // 개요 번호 추적기 생성 (HTML·Markdown 공통) / Create outline number tracker (shared for HTML and Markdown)
-    let mut tracker: Tracker = if std::any::TypeId::of::<R::Options>()
-        == std::any::TypeId::of::<HtmlOptions>()
-    {
-        Tracker::Html(OutlineNumberTracker::new())
-    } else {
-        Tracker::Markdown(OutlineNumberTracker::new())
-    };
+    let mut tracker: Tracker =
+        if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<HtmlOptions>() {
+            Tracker::Html(OutlineNumberTracker::new())
+        } else {
+            Tracker::Markdown(OutlineNumberTracker::new())
+        };
 
     // Convert body text / 본문 텍스트를 변환
     for section in &document.body_text.sections {

@@ -44,9 +44,7 @@ pub fn render_page(
         .map(|pd| pd.top_margin.to_mm().round_to_2dp())
         .unwrap_or(20.0);
     let footer_top_mm = page_def
-        .map(|pd| {
-            (height_mm - pd.bottom_margin.to_mm() - pd.footer_margin.to_mm()).round_to_2dp()
-        })
+        .map(|pd| (height_mm - pd.bottom_margin.to_mm() - pd.footer_margin.to_mm()).round_to_2dp())
         .unwrap_or_else(|| (height_mm - 10.0).round_to_2dp());
 
     // 일반 내용은 hcD > hcI 안에 배치 / Place regular content in hcD > hcI
