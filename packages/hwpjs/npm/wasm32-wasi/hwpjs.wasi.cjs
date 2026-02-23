@@ -112,3 +112,4 @@ module.exports.fileHeader = __napiModule.exports.fileHeader
 module.exports.toHtml = __napiModule.exports.toHtml
 module.exports.toJson = __napiModule.exports.toJson
 module.exports.toMarkdown = __napiModule.exports.toMarkdown
+module.exports.toPdf = __napiModule.exports.toPdf
