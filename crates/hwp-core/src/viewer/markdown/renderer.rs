@@ -83,8 +83,8 @@ impl Renderer for MarkdownRenderer {
         options: &Self::Options,
     ) -> String {
         // 기존 테이블 변환 함수 사용
-        use crate::viewer::markdown::document::bodytext::table::convert_table_to_markdown;
         use crate::viewer::core::OutlineNumberTracker;
+        use crate::viewer::markdown::document::bodytext::table::convert_table_to_markdown;
         let mut tracker = OutlineNumberTracker::new();
         convert_table_to_markdown(table, document, options, &mut tracker)
     }

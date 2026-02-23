@@ -22,10 +22,7 @@ pub fn process_column_def<'a>(
 
     let body = render_paragraphs_fragment(para_list, document, options);
     let prefix = &options.css_class_prefix;
-    let html = format!(
-        r#"<div class="{}column-def">{}</div>"#,
-        prefix, body
-    );
+    let html = format!(r#"<div class="{}column-def">{}</div>"#, prefix, body);
     result.extra_content = Some(html);
     result
 }
