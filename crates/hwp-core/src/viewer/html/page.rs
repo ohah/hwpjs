@@ -2,6 +2,25 @@ use crate::document::bodytext::ctrl_header::{CtrlHeaderData, PageNumberPosition}
 use crate::document::HwpDocument;
 use crate::types::RoundTo2dp;
 use crate::{document::bodytext::PageDef, INT32};
+
+/// HTML page break marker
+/// HTML 페이지 나눔 표시자
+#[derive(Debug, Clone)]
+pub struct HtmlPageBreak;
+
+impl HtmlPageBreak {
+    /// Create a new page break marker
+    /// 새 페이지 나눔 표시자 생성
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl std::fmt::Display for HtmlPageBreak {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "<span></span>")
+    }
+}
 /// 페이지 렌더링 모듈 / Page rendering module
 /// 페이지를 HTML로 렌더링 / Render page to HTML
 #[allow(clippy::too_many_arguments)]

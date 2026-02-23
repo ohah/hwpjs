@@ -64,7 +64,7 @@ pub fn format_outline_number(level: u8, number: u32) -> String {
     }
 }
 
-fn number_to_hangul(number: u32) -> String {
+pub fn number_to_hangul(number: u32) -> String {
     const HANGUL_SYLLABLES: [char; 14] = [
         '가', '나', '다', '라', '마', '바', '사', '아', '자', '차', '카', '타', '파', '하',
     ];
@@ -75,7 +75,7 @@ fn number_to_hangul(number: u32) -> String {
     HANGUL_SYLLABLES[index].to_string()
 }
 
-fn number_to_circled(number: u32) -> String {
+pub fn number_to_circled(number: u32) -> String {
     if number == 0 || number > 20 {
         return number.to_string();
     }

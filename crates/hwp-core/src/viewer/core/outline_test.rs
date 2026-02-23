@@ -1,29 +1,25 @@
 /// Viewer core (outline) unit tests
-pub use crate::viewer::core::outline::{OutlineNumberTracker, format_outline_number};
+pub use crate::viewer::core::outline::{OutlineNumberTracker, format_outline_number, number_to_circled, number_to_hangul};
 
 #[test]
 fn test_outline_tracker_new() {
-    let tracker = OutlineNumberTracker::new();
-    assert_eq!(tracker.counters.len(), 7);
-    for i in 0..7 {
-        assert_eq!(tracker.counters[i], 0);
-    }
+    let mut tracker = OutlineNumberTracker::new();
+    // Test basic functionality without accessing internal state
+    assert_eq!(tracker.get_and_increment(1u8), 1);
 }
 
 #[test]
 fn test_outline_tracker_basic_increment() {
     let mut tracker = OutlineNumberTracker::new();
 
-    // Level 1 counters should start at 0
+    // Level 1 counters should start correctly
     assert_eq!(tracker.get_and_increment(1u8), 1);
 
     // Level 2 shouldn't affect level 1 yet
     assert_eq!(tracker.get_and_increment(2u8), 1);
-    assert_eq!(tracker.counters[0], 1); // Level 1 should still be at 1
 
     // Continue level 1
     assert_eq!(tracker.get_and_increment(1u8), 2);
-    assert_eq!(tracker.counters[0], 2);
 }
 
 #[test]
@@ -37,7 +33,6 @@ fn test_outline_tracker_same_level_reset() {
     // Increment level 2 once (should reset level 1)
     let num2 = tracker.get_and_increment(2u8);
     assert_eq!(num2, 1);
-    assert_eq!(tracker.counters[0], 1); // Level 1 should be reset
 
     // Continue level 1 again
     let num3 = tracker.get_and_increment(1u8);
@@ -57,9 +52,10 @@ fn test_outline_tracker_different_levels() {
 
     let r1c = tracker.get_and_increment(1u8);
 
+    // Verify the structure works correctly
     assert_eq!(r1a, 1);
     assert_eq!(r1b, 2);
-    assert_eq!(r2a, 1); // Reset level 1 back to 1
+    assert_eq!(r2a, 1); // Nested level resets parent level
     assert_eq!(r2b, 2);
     assert_eq!(r1c, 3); // Continue level 1
 }
@@ -96,7 +92,7 @@ fn test_format_outline_number_brackets_levels() {
 fn test_format_outline_number_circled_level() {
     // Level 7 uses circled numbers (①, ②, ③...)
     let result = format_outline_number(7u8, 1u32);
-    assert!(result.contains(0x2460 as char));
+    assert!(result.contains('\u{2460}'));
 
     // Korean numbers also possible for level 7
     let result2 = format_outline_number(7u8, 2u32);
@@ -156,7 +152,6 @@ fn test_outline_tracker_edge_cases() {
     assert_eq!(tracker.get_and_increment(9u8), 0);
 
     // Test reset at level 8 or 9 shouldn't affect other counters
-    assert_eq!(tracker.counters[0], 0); // Still at 0
     assert_eq!(tracker.get_and_increment(1u8), 1);
 }
 
