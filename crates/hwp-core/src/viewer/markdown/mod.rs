@@ -27,6 +27,9 @@ pub use document::bodytext::convert_paragraph_to_markdown;
 pub use document::bodytext::convert_table_to_markdown;
 pub use renderer::MarkdownRenderer;
 
+#[cfg(test)]
+mod mod_test;
+
 /// Markdown 변환 옵션 / Markdown conversion options
 #[derive(Debug, Clone)]
 pub struct MarkdownOptions {
