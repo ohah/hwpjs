@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "screenshot:noori": "playwright test -g \"save noori\""
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",

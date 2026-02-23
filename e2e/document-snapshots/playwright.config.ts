@@ -3,7 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const snapshotsDir = path.resolve(__dirname, '../../crates/hwp-core/tests/snapshots');
+const testsDir = path.resolve(__dirname, '../../crates/hwp-core/tests');
+const snapshotsDir = path.join(testsDir, 'snapshots');
 
 export default defineConfig({
   testDir: './e2e',
@@ -16,7 +17,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: `bunx serve "${snapshotsDir}" -l 17775`,
+    command: `bunx serve "${testsDir}" -l 17775`,
     url: 'http://localhost:17775',
     reuseExistingServer: !process.env.CI,
     stdout: 'ignore',
