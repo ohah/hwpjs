@@ -492,6 +492,19 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
                         // 페이지네이션 후 같은 문단의 후속 테이블들을 새 페이지에 배치하기 위해 문단을 다시 렌더링
                         // Re-render paragraph to place subsequent tables on new page after pagination
+                        // 새 페이지의 hcD 좌표를 current_page_def에서 계산해 position_next에 넣어 재렌더 시 테이블 위치가 올바른 기준을 사용하도록 함
+                        // Compute new page's hcD from current_page_def so re-render uses correct content origin (fixes page 3 layout)
+                        let hcd_pos_next = current_page_def
+                            .map(|pd| {
+                                (
+                                    (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
+                                        .round_to_2dp(),
+                                    (pd.top_margin.to_mm() + pd.header_margin.to_mm())
+                                        .round_to_2dp(),
+                                )
+                            })
+                            .unwrap_or((20.0, 24.99));
+
                         if !table_htmls.is_empty() {
                             // 현재 문단의 vertical_position을 0으로 설정하여 새 페이지의 첫 문단으로 처리
                             // Set current paragraph's vertical_position to 0 to treat it as first paragraph of new page
@@ -504,7 +517,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             let current_para_index_for_next = Some(0);
 
                             let position_next = ParagraphPosition {
-                                hcd_position,
+                                hcd_position: Some(hcd_pos_next),
                                 page_def: current_page_def,
                                 first_para_vertical_mm: Some(0.0),
                                 current_para_vertical_mm: current_para_vertical_mm_for_next,
