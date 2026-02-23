@@ -383,3 +383,214 @@ pub fn decode_utf16le(bytes: &[u8]) -> Result<String, HwpError> {
         reason: format!("Failed to decode UTF-16LE string: {}", e),
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // HWPUNIT Tests
+    #[test]
+    fn test_hwpunit_basic() {
+        let unit = HWPUNIT(7200);
+        assert_eq!(unit.value(), 7200);
+
+        let unit2 = HWPUNIT::from(7200);
+        assert_eq!(unit2, HWPUNIT(7200));
+
+        let unit3 = HWPUNIT::from(unit2.0);
+        assert_eq!(unit3, HWPUNIT(7200));
+
+        let from_u32: u32 = unit3.into();
+        assert_eq!(from_u32, 7200);
+    }
+
+    #[test]
+    fn test_hwpunit_inches_conversion() {
+        let unit = HWPUNIT::from_inches(1.0);
+        assert_eq!(unit.0, 7200u32);
+
+        let inches = unit.to_inches();
+        assert_eq!(inches, 1.0);
+    }
+
+    #[test]
+    fn test_hwpunit_mm_conversion() {
+        let unit = HWPUNIT::from_mm(1.0); // 1mm ≈ 0.0393701 inches = 283.5 in HWPUNIT
+        assert!(unit.to_mm() > 0.99);
+        assert!(unit.to_mm() < 1.01);
+
+        let mm = unit.to_mm();
+        assert_eq!(mm, 1.0);
+    }
+
+    #[test]
+    fn test_hwpunit_zero() {
+        let unit = HWPUNIT(0);
+        assert_eq!(unit.to_inches(), 0.0);
+        assert_eq!(unit.to_mm(), 0.0);
+    }
+
+    #[test]
+    fn test_hwpunit_round_to_2dp_trait() {
+        let val: f64 = 12.345;
+        let rounded = val.round_to_2dp();
+        assert_eq!(rounded, 12.35);
+    }
+
+    // SHWPUNIT Tests
+    #[test]
+    fn test_shwpunit_basic() {
+        let unit = SHWPUNIT(7200);
+        assert_eq!(unit.value(), 7200);
+
+        let unit2 = SHWPUNIT::from(7200);
+        assert_eq!(unit2, SHWPUNIT(7200));
+    }
+
+    #[test]
+    fn test_shwpunit_inches_conversion() {
+        let unit = SHWPUNIT::from_inches(1.0);
+        assert_eq!(unit.0, 7200i32);
+
+        let inches = unit.to_inches();
+        assert_eq!(inches, 1.0);
+    }
+
+    #[test]
+    fn test_shwpunit_mm_conversion() {
+        let unit = SHWPUNIT::from_mm(1.0);
+        assert!(unit.to_mm() > 0.99);
+        assert!(unit.to_mm() < 1.01);
+
+        let mm = unit.to_mm();
+        assert_eq!(mm, 1.0);
+    }
+
+    #[test]
+    fn test_shwpunit_zero() {
+        let unit = SHWPUNIT(0);
+        assert_eq!(unit.to_inches(), 0.0);
+        assert_eq!(unit.to_mm(), 0.0);
+    }
+
+    // COLORREF Tests
+    #[test]
+    fn test_colorref_basic() {
+        let color = COLORREF::rgb(255, 128, 64);
+        assert_eq!(color.r(), 255);
+        assert_eq!(color.g(), 128);
+        assert_eq!(color.b(), 64);
+        assert_eq!(color.value(), 0x00648000);
+    }
+
+    #[test]
+    fn test_colorref_black() {
+        let color = COLORREF::rgb(0, 0, 0);
+        assert_eq!(color.r(), 0);
+        assert_eq!(color.g(), 0);
+        assert_eq!(color.b(), 0);
+        assert_eq!(color.value(), 0);
+    }
+
+    #[test]
+    fn test_colorref_white() {
+        let color = COLORREF::rgb(255, 255, 255);
+        assert_eq!(color.r(), 255);
+        assert_eq!(color.g(), 255);
+        assert_eq!(color.b(), 255);
+        assert_eq!(color.value(), 0xFFFFFF);
+    }
+
+    #[test]
+    fn test_colorref_serialization() {
+        let color = COLORREF::rgb(200, 100, 50);
+        let json = serde_json::to_string(&color).unwrap();
+        assert_eq!(json, r#"{"r":200,"g":100,"b":50}"#);
+    }
+
+    #[test]
+    fn test_colorref_deserialization() {
+        let color: COLORREF = serde_json::from_str(r#"{"r":200,"g":100,"b":50}"#).unwrap();
+        assert_eq!(color.r(), 200);
+        assert_eq!(color.g(), 100);
+        assert_eq!(color.b(), 50);
+    }
+
+    #[test]
+    fn test_colorref_roundtrip() {
+        let original = COLORREF::rgb(150, 200, 125);
+        let json = serde_json::to_string(&original).unwrap();
+        let restored: COLORREF = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored, original);
+    }
+
+    // RecordHeader Tests
+    #[test]
+    fn test_recordheader_parse_basic() {
+        let data = [0x00, 0x01, 0x00, 0x34]; // tag_id=1, level=0, size=0x034
+        let (header, _) = RecordHeader::parse(&data).unwrap();
+        assert_eq!(header.tag_id, 1u16);
+        assert_eq!(header.level, 0u16);
+        assert_eq!(header.size, 0x034u32);
+        assert!(!header.has_extended_size);
+    }
+
+    #[test]
+    fn test_recordheader_extended_size() {
+        let data = [0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0x00, 0x80]; // size=0xFFF, extended_size=0x00010080 (256)
+        let (header, _) = RecordHeader::parse(&data).unwrap();
+        assert_eq!(header.tag_id, 0);
+        assert_eq!(header.level, 0);
+        assert_eq!(header.size, 0xFFFu32);
+        assert!(header.has_extended_size);
+    }
+
+    #[test]
+    fn test_recordheader_too_short() {
+        let data = [0x00, 0x01, 0x00, 0x34];
+        let result = RecordHeader::parse(&data[0..3]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_recordheader_extended_too_short() {
+        let data = [0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x01];
+        let result = RecordHeader::parse(&data);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_recordheader_all_levels() {
+        // tag_id: bits 0-9 (10 bits) = max 1023
+        // level: bits 10-19 (10 bits) = max 1023
+        // size: bits 20-31 (12 bits) = max 4095
+
+        let data = [0xFF, 0xBF, 0xFF, 0xFF]; // tag_id=1023, level=1023, size=4095
+        let (header, _) = RecordHeader::parse(&data).unwrap();
+        assert_eq!(header.tag_id, 1023);
+        assert_eq!(header.level, 1023);
+        assert_eq!(header.size, 4095);
+    }
+
+    // UTF-16LE decoding Tests
+    #[test]
+    fn test_decode_utf16le_basic() {
+        let bytes = [0x48, 0x57, 0x50, 0x20, 0x44, 0x6F, 0x63, 0x75]; // "HWP Docu"
+        let result = decode_utf16le(&bytes).unwrap();
+        assert_eq!(result, "HWP Docu");
+    }
+
+    #[test]
+    fn test_decode_utf16le_odd_length() {
+        let bytes = [0x48, 0x57, 0x50]; // odd length
+        let result = decode_utf16le(&bytes);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_decode_utf16le_valid_utf8() {
+        let bytes = [0xAE, 0xB0, 0xD5, 0xC5]; // "한글" in EUC-KR encoded as UTF-16LE? Not actually but testing the logic
+        let result = decode_utf16le(&bytes);
+        assert!(result.is_ok());
+    }
+}

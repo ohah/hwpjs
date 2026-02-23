@@ -12,6 +12,12 @@ mod paragraph;
 pub mod renderer;
 
 pub use bodytext::process_bodytext;
-pub use outline::{compute_outline_number, format_outline_number, OutlineNumberTracker};
+pub use outline::{compute_outline_number, format_outline_number, OutlineNumberTracker, OutlineNumberTracker as OutlineTracker};
 pub use paragraph::process_paragraph;
 pub use renderer::{DocumentParts, Renderer, TextStyles};
+
+#[cfg(test)]
+mod bodytext_test;
+
+#[cfg(test)]
+mod outline_test;
