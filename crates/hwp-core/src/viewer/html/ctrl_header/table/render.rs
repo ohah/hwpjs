@@ -846,10 +846,16 @@ pub fn render_table(
             round_to_2dp(content_size.height),
         )
     } else {
-        // Fixture table.html: htb만 사용, left/top은 table_position() 절대값, 크기는 전체(마진 포함)
+        // Fixture noori.html: 인라인 테이블(캡션 없음)은 htb가 hls 내부이므로 left/top 0 (hls가 이미 절대 위치 보유)
+        // Absolute table: htb uses table_position() absolute left/top
+        let (l, t) = if is_inline_table {
+            (0.0, 0.0)
+        } else {
+            (left_mm, top_mm)
+        };
         (
-            round_to_2dp(left_mm),
-            round_to_2dp(top_mm),
+            round_to_2dp(l),
+            round_to_2dp(t),
             round_to_2dp(resolved_size.width),
             round_to_2dp(resolved_height_with_margin),
         )
