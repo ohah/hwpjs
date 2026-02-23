@@ -132,6 +132,8 @@ pub struct TablePosition {
     pub first_para_vertical_mm: Option<f64>,
     /// 페이지 콘텐츠 영역 높이(mm). vert_rel_to=para인 테이블 overflow 시 앵커 위로 올릴 때 사용.
     pub content_height_mm: Option<f64>,
+    /// 이번 페이지에 그리는 테이블 조각 높이(mm). Some이면 htb height와 SVG viewBox를 이 값으로 사용.
+    pub fragment_height_mm: Option<f64>,
 }
 
 /// 테이블을 HTML로 렌더링 / Render table to HTML
@@ -210,12 +212,12 @@ pub fn render_table(
     };
     let margin_right_mm = round_to_2dp(margin_right_mm);
 
-    // SVG viewBox는 실제 테이블 콘텐츠 크기를 기준으로 계산해야 함 (margin 제외)
-    // SVG viewBox should be calculated based on actual table content size (excluding margin)
-    // resolved_size.width는 margin을 포함할 수 있으므로, margin을 제외한 실제 테이블 width를 사용
-    // resolved_size.width may include margin, so use actual table width excluding margin
+    // SVG viewBox는 실제 테이블 콘텐츠 크기를 기준으로 계산 (margin 제외). fragment_height_mm이 있으면 조각 높이 사용 (0 이하는 방지).
     let svg_width = resolved_size.width - margin_left_mm - margin_right_mm;
-    let svg_height = content_size.height;
+    let svg_height = position
+        .fragment_height_mm
+        .map(|h| h.max(0.0))
+        .unwrap_or(content_size.height);
     let view_box = view_box(svg_width, svg_height, SVG_PADDING_MM);
 
     let svg = svg::render_svg(
@@ -860,6 +862,11 @@ pub fn render_table(
             round_to_2dp(resolved_height_with_margin),
         )
     };
+    // fragment_height_mm이 있으면 htb height를 조각 높이로 사용 (테이블 페이지 나눔). 0 이하는 방지.
+    let content_height_mm = position
+        .fragment_height_mm
+        .map(|h| round_to_2dp(h.max(0.0)))
+        .unwrap_or(content_height_mm);
     // NOTE (fixture 기준):
     // - like_letters=false(absolute) 테이블: htb에 inline-block 없음 (table2.html)
     // - LineSegment(글자처럼 취급) 내부 테이블 + htG 있음: htG만 inline-block, htb에는 없음 (table-position.html)

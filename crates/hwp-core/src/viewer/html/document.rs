@@ -404,6 +404,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     current_para_vertical_mm,
                     current_para_index, // 현재 문단 인덱스 전달 / Pass current paragraph index
                     content_height_mm: Some(content_height_mm),
+                    table_fragment_height_mm: None,
+                    table_fragment_apply_at_index: None,
                 };
 
                 let context = ParagraphRenderContext {
@@ -443,7 +445,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     })
                     .unwrap_or(false);
 
-                if let Some(obj_result) = obj_pagination_result {
+                if let Some(ref obj_result) = obj_pagination_result {
                     if obj_result.has_page_break
                         && (!page_content.is_empty() || !page_tables.is_empty())
                     {
@@ -516,6 +518,16 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 };
                             let current_para_index_for_next = Some(0);
 
+                            // TableOverflow일 때만 remainder와 적용 인덱스를 넣고 재렌더 시 skip_tables_count=0으로 같은 테이블을 연속 조각으로 그림
+                            let (table_fragment_height_mm, table_fragment_apply_at_index) =
+                                if obj_result.reason == Some(PageBreakReason::TableOverflow) {
+                                    (
+                                        obj_result.table_overflow_remainder_mm,
+                                        obj_result.table_overflow_at_index,
+                                    )
+                                } else {
+                                    (None, None)
+                                };
                             let position_next = ParagraphPosition {
                                 hcd_position: Some(hcd_pos_next),
                                 page_def: current_page_def,
@@ -523,6 +535,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 current_para_vertical_mm: current_para_vertical_mm_for_next,
                                 current_para_index: current_para_index_for_next,
                                 content_height_mm: Some(content_height_mm),
+                                table_fragment_height_mm,
+                                table_fragment_apply_at_index,
                             };
 
                             let context_next = ParagraphRenderContext {
@@ -531,7 +545,13 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 position: position_next,
                             };
 
-                            let skip_tables_count = table_htmls.len(); // 이미 처리된 테이블 수 건너뛰기 / Skip already processed tables
+                            // TableOverflow 시에만 0 (같은 테이블 연속 조각); 그 외는 이미 그린 테이블 수만큼 스킵
+                            let skip_tables_count =
+                                if obj_result.reason == Some(PageBreakReason::TableOverflow) {
+                                    0
+                                } else {
+                                    table_htmls.len()
+                                };
                             let (_para_html_next, table_htmls_next, _obj_pagination_result_next) =
                                 render_paragraph(
                                     paragraph,
@@ -567,10 +587,14 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     page_content.push_str(&para_html);
                 }
                 // 테이블은 hpa 레벨에 배치 (table.html 샘플 구조에 맞춤) / Tables are placed at hpa level (matching table.html sample structure)
-                // 페이지네이션 체크는 render_paragraph 내부에서 이미 수행되었으므로, 여기서는 바로 추가
-                // Pagination check is already performed in render_paragraph, so just add tables here
-                for table_html in table_htmls {
-                    page_tables.push(table_html);
+                // TableOverflow일 때는 첫 조각은 이미 이전 페이지에 출력했으므로 table_htmls를 다시 넣지 않음
+                let skip_adding_table_htmls = obj_pagination_result
+                    .as_ref()
+                    .is_some_and(|r| r.reason == Some(PageBreakReason::TableOverflow));
+                if !skip_adding_table_htmls {
+                    for table_html in table_htmls {
+                        page_tables.push(table_html);
+                    }
                 }
 
                 // vertical_position 업데이트 (문단의 모든 LineSegment 확인) / Update vertical_position (check all LineSegments in paragraph)
