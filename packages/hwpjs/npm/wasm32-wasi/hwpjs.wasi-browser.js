@@ -60,3 +60,4 @@ export const fileHeader = __napiModule.exports.fileHeader
 export const toHtml = __napiModule.exports.toHtml
 export const toJson = __napiModule.exports.toJson
 export const toMarkdown = __napiModule.exports.toMarkdown
+export const toPdf = __napiModule.exports.toPdf
