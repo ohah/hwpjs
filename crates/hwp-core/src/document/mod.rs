@@ -30,6 +30,9 @@ pub use scripts::Scripts;
 pub use summary_information::SummaryInformation;
 pub use xml_template::XmlTemplate;
 
+#[cfg(test)]
+mod mod_test;
+
 use serde::{Deserialize, Serialize};
 
 /// Main HWP document structure
