@@ -14,9 +14,12 @@ mod options;
 mod page;
 mod pagination;
 mod paragraph;
+mod render;
 mod styles;
 mod text;
 
 // Re-export public API
 pub use document::to_html;
 pub use options::HtmlOptions;
+pub use page::HtmlPageBreak;
+pub use render::HtmlRenderer;
