@@ -3,7 +3,7 @@ use super::ctrl_header::{self, FootnoteEndnoteState};
 use super::line_segment::{
     DocumentRenderState, ImageInfo, LineSegmentContent, LineSegmentRenderContext, TableInfo,
 };
-use super::pagination::{self, PaginationContext, PaginationResult};
+use super::pagination::{self, PageBreakReason, PaginationContext, PaginationResult};
 use super::text::{self, extract_text_and_shapes};
 use super::HtmlOptions;
 use crate::document::bodytext::{
@@ -28,6 +28,10 @@ pub struct ParagraphPosition<'a> {
     pub current_para_index: Option<usize>,
     /// 페이지 콘텐츠 영역 높이(mm). vert_rel_to=para인 테이블이 넘칠 때 앵커 위로 올려 배치하는 데 사용.
     pub content_height_mm: Option<f64>,
+    /// 테이블이 페이지에 걸쳐 나뉠 때 이번 페이지에 그리는 조각 높이(mm). 재렌더 시 연속 조각에만 Some(remainder).
+    pub table_fragment_height_mm: Option<f64>,
+    /// 재렌더 시 table_fragment_height_mm을 적용할 테이블의 루프 인덱스(0-based). None이면 첫 테이블(0)에만 적용.
+    pub table_fragment_apply_at_index: Option<usize>,
 }
 
 /// 문단 렌더링 컨텍스트 / Paragraph rendering context
@@ -67,6 +71,8 @@ pub fn render_paragraphs_fragment(
         current_para_vertical_mm: None,
         current_para_index: None,
         content_height_mm: None,
+        table_fragment_height_mm: None,
+        table_fragment_apply_at_index: None,
     };
     let context = ParagraphRenderContext {
         document,
@@ -425,6 +431,8 @@ pub fn render_paragraph(
         .first()
         .map(|seg| seg.segment_width as f64 * 25.4 / 7200.0);
     let content_height_mm = context.position.content_height_mm; // 블록 내 테이블 위치 계산용 / For table position inside block
+    let position_table_fragment_height_mm = context.position.table_fragment_height_mm;
+    let position_table_fragment_apply_at_index = context.position.table_fragment_apply_at_index; // 재렌더 시 어느 테이블에 remainder 적용할지 (아래에서 context가 LineSegmentRenderContext로 섀도됨)
                                                                 // base_top(mm): hcD의 top 위치. like_letters=false 테이블(=hpa 레벨로 빠지는 객체)의 vert_rel_to=para 계산에
                                                                 // 페이지 기준(절대) y 좌표가 필요하므로, paragraph 기준 y(vertical_position)에 base_top을 더해 절대값으로 전달한다.
     let _base_top_mm = if let Some((_hcd_left, hcd_top)) = hcd_position {
@@ -589,7 +597,11 @@ pub fn render_paragraph(
         let mut next_para_vertical_mm = para_start_vertical_mm;
         let mut table_entries: Vec<(f64, String)> = Vec::new();
         let mut overflow_already_applied = false; // 문단 내 overflow 보정은 한 번만 (fixture 표7만 1페이지 하단, 표8은 2페이지 상단)
-        for table_info in absolute_tables.iter().skip(skip_tables_count) {
+        for (table_loop_index, table_info) in absolute_tables
+            .iter()
+            .skip(skip_tables_count)
+            .enumerate()
+        {
             let ref_para_vertical_for_table = next_para_vertical_mm;
             let first_para_vertical_for_table = first_para_vertical_mm;
 
@@ -637,11 +649,34 @@ pub fn render_paragraph(
             let table_result =
                 pagination::check_table_page_break(top_mm, height_mm, pagination_context);
 
-            // 페이지네이션이 발생하더라도 테이블을 렌더링하여 table_htmls에 포함시킴
-            // 이렇게 하면 페이지네이션 후 같은 문단을 다시 렌더링할 때 이미 처리된 테이블 수를 올바르게 계산할 수 있음
-            // Render table even if pagination occurs, so it's included in table_htmls
-            // This allows correct calculation of already processed tables when re-rendering paragraph after pagination
-            let mut context = TableRenderContext {
+            // TableOverflow 시 첫 조각만 렌더하고 remainder 반환; 재렌더 시 position.table_fragment_height_mm을 첫 테이블에만 전달
+            let (fragment_height_mm, table_result_with_remainder) = if table_result.has_page_break
+                && table_result.reason == Some(PageBreakReason::TableOverflow)
+            {
+                let content_h = content_height_mm.unwrap_or(0.0);
+                let height_drawn_mm = content_h - top_mm;
+                let remainder_mm = (height_mm - height_drawn_mm).max(0.0);
+                (
+                    Some(height_drawn_mm),
+                    Some(PaginationResult {
+                        has_page_break: true,
+                        reason: Some(PageBreakReason::TableOverflow),
+                        table_overflow_remainder_mm: Some(remainder_mm),
+                        table_overflow_at_index: Some(skip_tables_count + table_loop_index),
+                    }),
+                )
+            } else {
+                let frag = match position_table_fragment_apply_at_index {
+                    Some(idx) if idx == skip_tables_count + table_loop_index => {
+                        position_table_fragment_height_mm
+                    }
+                    None if table_loop_index == 0 => position_table_fragment_height_mm, // 기존: 첫 테이블에만 적용
+                    _ => None,
+                };
+                (frag, None)
+            };
+
+            let mut table_context = TableRenderContext {
                 document,
                 ctrl_header: table_info.ctrl_header,
                 page_def,
@@ -654,29 +689,34 @@ pub fn render_paragraph(
             let position = TablePosition {
                 hcd_position,
                 segment_position: None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
-                para_start_vertical_mm: ref_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
+                para_start_vertical_mm: ref_para_vertical_for_table,
                 para_start_column_mm,
                 para_segment_width_mm,
-                first_para_vertical_mm: first_para_vertical_for_table, // 상대 위치로 전달 / Pass as relative position
+                first_para_vertical_mm: first_para_vertical_for_table,
                 content_height_mm,
+                fragment_height_mm,
             };
 
             let (table_html, htg_height_opt) = render_table(
                 table_info.table,
-                &mut context,
+                &mut table_context,
                 position,
                 table_info.caption.as_ref(),
             );
             table_entries.push((top_mm, table_html));
-            *state.table_counter += 1; // table_counter 증가 / Increment table_counter
+            *state.table_counter += 1;
 
             // 다음 테이블의 기준 세로 위치 = 이번 테이블 하단 (htG 높이 사용 시 캡션·마진 포함)
-            // Next table's reference vertical position = this table's bottom (use htG height when available)
             let block_height_mm = htg_height_opt.unwrap_or(height_mm);
             next_para_vertical_mm = Some(top_mm + block_height_mm);
 
+            if let Some(tr) = table_result_with_remainder {
+                // TableOverflow: 첫 조각만 출력하고 remainder와 함께 반환 / First fragment only, return with remainder
+                table_htmls.extend(table_entries.into_iter().map(|(_, h)| h));
+                return (result, table_htmls, Some(tr));
+            }
             if table_result.has_page_break {
-                // 페이지네이션 시 정렬 없이 순서 유지 후 반환 / On page break return without reorder
+                // 그 외 페이지 브레이크: 기존처럼 반환 / Other page break: return as before
                 table_htmls.extend(table_entries.into_iter().map(|(_, h)| h));
                 return (result, table_htmls, Some(table_result));
             }

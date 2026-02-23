@@ -10,12 +10,47 @@ pub(crate) fn cell_margin_to_mm(margin_hwpunit: i16) -> f64 {
     round_to_2dp(int32_to_mm(margin_hwpunit as i32))
 }
 
+/// 단일 record/children 리스트에서 셀 내 최대 shape 높이(mm) 찾기.
+/// CtrlHeader 자식(문단 내 그림 개체)도 재귀적으로 검사하여 형상 행 높이가 반영되도록 함.
+fn cell_max_shape_height_from_records(records: &[ParagraphRecord]) -> Option<f64> {
+    let mut max_height_mm: Option<f64> = None;
+    for record in records {
+        match record {
+            ParagraphRecord::ShapeComponent {
+                shape_component,
+                children,
+            } => {
+                if let Some(h) = find_max_shape_height(children, shape_component.height) {
+                    max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(h));
+                }
+            }
+            ParagraphRecord::ParaLineSeg { segments } => {
+                let total_height_hwpunit: i32 = segments.iter().map(|seg| seg.line_height).sum();
+                let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
+                max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
+            }
+            ParagraphRecord::CtrlHeader { children, .. } => {
+                if let Some(h) = cell_max_shape_height_from_records(children) {
+                    max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(h));
+                }
+            }
+            _ => {}
+        }
+    }
+    max_height_mm
+}
+
 /// 모든 ShapeComponent 중 최대 높이 찾기 / Find maximum height among all ShapeComponents
+/// children이 비어 있으면(문단 내 그림이 형제 레코드로만 있을 때) shape_height를 mm로 반환.
 pub(crate) fn find_max_shape_height(
     children: &[ParagraphRecord],
     shape_height: u32,
 ) -> Option<f64> {
     let mut max_height_mm: Option<f64> = None;
+
+    if children.is_empty() {
+        return Some(round_to_2dp(int32_to_mm(shape_height as i32)));
+    }
 
     for child in children {
         match child {
@@ -130,28 +165,9 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
                         let mut max_shape_height_mm: Option<f64> = None;
 
                         for para in &cell.paragraphs {
-                            for record in &para.records {
-                                if let ParagraphRecord::ShapeComponent {
-                                    shape_component,
-                                    children,
-                                } = record
-                                {
-                                    if let Some(new_max_height) =
-                                        find_max_shape_height(children, shape_component.height)
-                                    {
-                                        max_shape_height_mm = Some(
-                                            max_shape_height_mm.unwrap_or(0.0).max(new_max_height),
-                                        );
-                                    }
-                                    break;
-                                }
-                                if let ParagraphRecord::ParaLineSeg { segments } = record {
-                                    let total_height_hwpunit: i32 =
-                                        segments.iter().map(|seg| seg.line_height).sum();
-                                    let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
-                                    max_shape_height_mm =
-                                        Some(max_shape_height_mm.unwrap_or(0.0).max(height_mm));
-                                }
+                            if let Some(h) = cell_max_shape_height_from_records(&para.records) {
+                                max_shape_height_mm =
+                                    Some(max_shape_height_mm.unwrap_or(0.0).max(h));
                             }
                         }
 

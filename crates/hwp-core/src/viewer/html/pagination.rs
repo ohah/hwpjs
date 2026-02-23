@@ -21,6 +21,10 @@ pub struct PaginationResult {
     pub has_page_break: bool,
     /// 페이지 나누기 원인
     pub reason: Option<PageBreakReason>,
+    /// 테이블 overflow 시 다음 페이지에 그릴 조각 높이(mm). TableOverflow일 때만 Some.
+    pub table_overflow_remainder_mm: Option<f64>,
+    /// 테이블 overflow 시 overflow한 테이블의 루프 내 인덱스(0-based). 재렌더 시 이 인덱스에만 remainder 적용.
+    pub table_overflow_at_index: Option<usize>,
 }
 
 /// 페이지 나누기 원인 / Page break reason
@@ -76,26 +80,36 @@ pub fn check_paragraph_page_break(
         PaginationResult {
             has_page_break: true,
             reason: Some(PageBreakReason::Explicit),
+            table_overflow_remainder_mm: None,
+            table_overflow_at_index: None,
         }
     } else if has_page_def_change {
         PaginationResult {
             has_page_break: true,
             reason: Some(PageBreakReason::PageDefChange),
+            table_overflow_remainder_mm: None,
+            table_overflow_at_index: None,
         }
     } else if has_vertical_reset {
         PaginationResult {
             has_page_break: true,
             reason: Some(PageBreakReason::VerticalReset),
+            table_overflow_remainder_mm: None,
+            table_overflow_at_index: None,
         }
     } else if has_vertical_overflow {
         PaginationResult {
             has_page_break: true,
             reason: Some(PageBreakReason::VerticalOverflow),
+            table_overflow_remainder_mm: None,
+            table_overflow_at_index: None,
         }
     } else {
         PaginationResult {
             has_page_break: false,
             reason: None,
+            table_overflow_remainder_mm: None,
+            table_overflow_at_index: None,
         }
     }
 }
@@ -123,11 +137,15 @@ pub fn check_table_page_break(
             PaginationResult {
                 has_page_break: true,
                 reason: Some(PageBreakReason::TableOverflow),
+                table_overflow_remainder_mm: None,
+                table_overflow_at_index: None,
             }
         } else {
             PaginationResult {
                 has_page_break: false,
                 reason: None,
+                table_overflow_remainder_mm: None,
+                table_overflow_at_index: None,
             }
         }
     } else if table_top_mm > context.current_max_vertical_mm
@@ -141,11 +159,15 @@ pub fn check_table_page_break(
         PaginationResult {
             has_page_break: true,
             reason: Some(PageBreakReason::TableOverflow),
+            table_overflow_remainder_mm: None,
+            table_overflow_at_index: None,
         }
     } else {
         PaginationResult {
             has_page_break: false,
             reason: None,
+            table_overflow_remainder_mm: None,
+            table_overflow_at_index: None,
         }
     }
 }
@@ -161,11 +183,15 @@ pub fn check_object_page_break(
         PaginationResult {
             has_page_break: true,
             reason: Some(PageBreakReason::ObjectOverflow),
+            table_overflow_remainder_mm: None,
+            table_overflow_at_index: None,
         }
     } else {
         PaginationResult {
             has_page_break: false,
             reason: None,
+            table_overflow_remainder_mm: None,
+            table_overflow_at_index: None,
         }
     }
 }
