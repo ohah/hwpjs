@@ -13,20 +13,7 @@
 
 모듈 구조 상세: [folder-structure.md](folder-structure.md)
 
-## 환경별 래퍼
-
-### `packages/hwpjs`
-
-- 멀티 플랫폼 패키지 (Node.js, Web, React Native 모두 지원)
-- **Node.js/Web**: NAPI-RS를 사용하여 네이티브 모듈 생성
-  - `hwp-core`를 의존성으로 사용
-  - Node.js 환경의 파일 읽기 구현
-  - Bun을 사용한 유닛 테스트
-  - tsdown을 사용한 배포
-- **React Native**: Craby를 사용하여 React Native 바인딩
-  - `hwp-core`를 의존성으로 사용
-  - React Native 환경의 파일 읽기 구현
-  - Maestro를 사용한 E2E 테스트
+패키지 상세: [packages-hwpjs.md](packages-hwpjs.md)
 
 ## 워크스페이스 설정
 
