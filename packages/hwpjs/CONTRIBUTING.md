@@ -64,11 +64,11 @@ bun run build:react-native
   ```
 
 - **Linux용 (맥 → linux)**  
-  `build:node:linux-x64`는 `--use-cross`를 사용하며, **Docker**와 **cross**가 필요합니다. macOS에서 CLI만으로 Docker를 쓰려면 Colima를 사용하면 됩니다.
+  `build:node:linux-x64`는 `--use-cross`를 사용하며, **Colima**(또는 Docker/Podman)와 **cross**가 필요합니다. macOS에서는 Colima를 권장합니다(Docker Desktop 없이 Docker 호환 환경 제공).
   ```bash
-  # 1) Colima + Docker 설치 (Docker Desktop 없을 때)
+  # 1) Colima + Docker CLI 설치 (macOS 권장)
   brew install colima docker
-  colima start
+  colima start   # VM 시작 후 docker 명령 사용 가능
 
   # 2) cross 설치
   cargo install cross
@@ -101,7 +101,16 @@ bun test
 
 ## 배포
 
-### 사전 준비
+### CI/자동 배포 (GitHub Actions)
+
+- **워크플로**: 루트 `.github/workflows/ci.yml`  
+  - `main` 브랜치/PR 푸시: 린트, 플랫폼별 빌드(Windows/macOS/Linux/WASM), 바인딩 테스트
+  - **태그 푸시**: 위 단계 통과 후 npm 자동 배포
+- **npm 자동 배포 조건**: 태그를 푸시하면 빌드·테스트 후 `NPM_TOKEN`으로 npm publish 실행  
+  - 버전에 `rc`/`beta`/`alpha`가 있으면 `--tag next`, 아니면 `latest`
+- **필요 시크릿**: 저장소 Settings → Secrets and variables → Actions에 `NPM_TOKEN` 등록 (npm 배포용)
+
+### 사전 준비 (로컬 배포 시)
 
 1. **NPM 인증 설정**
    - `.npmrc` 파일에 토큰 설정 또는 `NPM_OHAH_TOKEN` 환경변수 설정
@@ -153,6 +162,33 @@ bun run publish:npm
 이 스크립트는 다음을 수행합니다:
 - 플랫폼별 패키지들 배포 (`npm/*/` 폴더의 각 패키지)
 - 메인 패키지 배포 (`@ohah/hwpjs`)
+
+### 로컬 배포 실행 순서
+
+**실행 위치**: 아래 명령은 모두 **`packages/hwpjs` 디렉터리**에서 실행합니다.
+
+```bash
+cd packages/hwpjs
+```
+
+| 순서 | 명령 | 설명 |
+|------|------|------|
+| 0 | (선택) 버전 수정 | `package.json`의 `version` 수정 후 커밋 |
+| 1 | `bun run build:release` | Windows/macOS/Linux/WASM 전 플랫폼 빌드, `npm/` 디렉터리·아티팩트 준비 (실패한 플랫폼은 건너뜀) |
+| 2 | `bun run release` | 현재 버전으로 Git 태그 생성·푸시, GitHub Release 생성, `npm/*.zip`·`dist.zip` 등 업로드 (내부: `scripts/releash.sh`) |
+| 3 | `bun run publish:npm:next` 또는 `bun run publish:npm:latest` | npm 배포 (내부: `scripts/publish.sh`). rc/beta/alpha면 `next`, 아니면 `latest` 태그 사용 |
+
+**한 줄 요약** (pre-release 예시):
+
+```bash
+cd packages/hwpjs
+bun run build:release && bun run release && bun run publish:npm:next
+```
+
+**주의**:
+- `build:release`는 **packages/hwpjs** 기준으로 동작하며, Linux 빌드는 Colima+Docker+cross가 필요합니다 (실패 시 `|| true`로 나머지 플랫폼만 진행).
+- `release`는 **GitHub CLI(`gh`)**와 `gh auth login`이 필요하며, 태그 푸시로 인해 **CI에서도 npm 배포**가 돌 수 있습니다. CI를 쓰려면 저장소에 `NPM_TOKEN` 시크릿을 등록해 두세요.
+- npm 배포는 **NPM_TOKEN** 또는 `npm login`으로 인증된 상태에서 실행합니다.
 
 ### 전체 배포 예시
 

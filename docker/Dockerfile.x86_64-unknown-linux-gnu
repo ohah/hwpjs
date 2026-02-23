@@ -1,8 +1,10 @@
 # Ubuntu 24.04 기반 Linux x64 크로스 빌드 이미지
 # --platform linux/amd64 로 빌드하면 컨테이너 내부는 x86_64 네이티브 빌드가 되며,
 # LLD를 사용해 Apple Silicon + QEMU 환경에서의 ld 세그폴트를 피함.
-
-FROM ubuntu:24.04
+#
+# Apple Silicon에서 "content digest not found" 방지: 플랫폼과 amd64 digest를 명시해
+# multi-arch manifest 해석 시 arm64 레이어를 참조하지 않도록 함.
+FROM --platform=linux/amd64 ubuntu:24.04@sha256:98ff7968124952e719a8a69bb3cccdd217f5fe758108ac4f21ad22e1df44d237
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
