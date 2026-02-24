@@ -13,6 +13,7 @@ mod image;
 mod image_test;
 mod line_segment;
 mod options;
+mod options_test;
 mod page;
 mod pagination;
 mod paragraph;
