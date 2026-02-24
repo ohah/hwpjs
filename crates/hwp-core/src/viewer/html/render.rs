@@ -148,6 +148,7 @@ impl Renderer for HtmlRenderer {
 
     fn render_outline_number(&self, level: u8, number: u32, content: &str) -> String {
         // Convert (level, number) to outline format
+        let _content = content;
         format_outline_number(level, number)
     }
 }

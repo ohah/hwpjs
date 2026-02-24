@@ -8,6 +8,7 @@
 mod common;
 mod ctrl_header;
 mod document;
+mod html_test;
 mod image;
 mod line_segment;
 mod options;
