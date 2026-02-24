@@ -10,6 +10,7 @@ mod ctrl_header;
 mod document;
 mod html_test;
 mod image;
+mod image_test;
 mod line_segment;
 mod options;
 mod page;
