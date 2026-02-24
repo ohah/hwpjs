@@ -18,6 +18,7 @@ mod pagination;
 mod paragraph;
 mod render;
 mod styles;
+mod styles_test;
 mod text;
 
 // Re-export public API
