@@ -16,6 +16,7 @@ mod options;
 mod options_test;
 mod page;
 mod pagination;
+mod pagination_test;
 mod paragraph;
 mod render;
 mod styles;
