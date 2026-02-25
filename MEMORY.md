@@ -19,6 +19,7 @@ Long-term memory and context for this workspace. Update this file with decisions
 | 2026-02-25 | test/viewer-html-pagination-unit-tests | test(core): add viewer/html pagination module unit tests (PR #29) | PaginationContext/PaginationResult 구조체, PageBreakReason 열거형, 컨텍스트 초기화 및 결과 검증 테스트 추가 |
 | 2026-02-25 | test/viewer-html-render-module-unit-tests | test(core): add viewer/html render module unit tests (PR #30) | TextStyles 기본값, 렌더러 메서드 (render_text, render_bold, render_italic, render_underline, render_strikethrough, render_superscript, render_subscript), 엣지 케이스 및 경계값 테스트 14개 추가 |
 | 2026-02-25 | test/viewer-html-text-module-unit-tests | test(core): add viewer/html text module unit tests (PR #31) | ParaText, ParaCharShape 레코드 처리 검증. CharShapeInfo 필드(shape_id, position) 및 형 변환(usize → u32) 8개 단위 테스트 추가 |
+| 2026-02-25 | test/viewer-html-page-module-unit-tests | test(core): add viewer/html page module unit tests (PR #32) | HtmlPageBreak 구조체 및 Display impl 테스트, HTML 포맷팅 태그 검증 (5개 테스트), 코드 정리 (text_test/styles_test 경고 수정) |
 
 ---
 
