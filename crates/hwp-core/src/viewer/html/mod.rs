@@ -6,6 +6,7 @@
 ///
 /// noori.html 스타일의 정확한 레이아웃 HTML 뷰어
 mod common;
+mod common_test;
 mod ctrl_header;
 mod document;
 mod html_test;
