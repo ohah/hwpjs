@@ -9,6 +9,7 @@
 pub mod bodytext;
 pub mod outline;
 mod paragraph;
+mod paragraph_test;
 pub mod renderer;
 
 pub use bodytext::process_bodytext;
