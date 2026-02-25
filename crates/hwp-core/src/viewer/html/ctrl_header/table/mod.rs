@@ -15,6 +15,7 @@ pub mod render;
 pub mod render_test;
 pub mod size;
 pub mod svg;
+pub mod svg_test;
 
 pub use process::process_table;
 pub use render::{render_table, CaptionData, TablePosition, TableRenderContext};
