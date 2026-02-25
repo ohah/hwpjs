@@ -16,6 +16,7 @@ pub mod scripts;
 pub mod summary_information;
 pub mod summary_information_test;
 pub mod xml_template;
+pub mod xml_template_test;
 
 pub use bindata::{BinData, BinaryDataFormat};
 pub use bodytext::{
