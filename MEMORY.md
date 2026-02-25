@@ -1,3 +1,3 @@
-| 2026-02-26 | test/viewer-html-document-module-unit-tests | test(core): add viewer/html document module basic structure tests (PR #62) | Added 4 unit tests: document module compilation, to_html, escape_html_attribute, and module structure validation
+| 2026-02-26 | test/viewer-html-line_segment-module-unit-tests | test(core): add viewer/html line_segment module basic structure tests (PR #63) | Added 4 unit tests: line_segment module compilation, render functions, content structure, and module validation
 
 ---
