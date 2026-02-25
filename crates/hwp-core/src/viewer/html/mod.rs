@@ -20,7 +20,6 @@ mod pagination;
 mod pagination_test;
 mod paragraph;
 mod render;
-mod render_test;
 mod styles;
 mod styles_test;
 mod text;
