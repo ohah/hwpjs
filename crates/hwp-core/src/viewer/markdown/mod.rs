@@ -21,6 +21,9 @@ pub mod document;
 mod renderer;
 pub mod utils;
 
+#[cfg(test)]
+mod markdown_unit_test;
+
 use crate::document::HwpDocument;
 
 pub use ctrl_header::convert_control_to_markdown;
