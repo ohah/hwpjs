@@ -199,4 +199,66 @@ mod tests {
         };
         assert_eq!(get_image_url(&doc, 0xFFFF, None, None), "");
     }
+
+    // ========== Edge Case Tests ==
+
+    #[test]
+    fn test_get_mime_type_gif_format() {
+        // Test GIF format returns correct MIME type
+        let doc = HwpDocument {
+            file_header: create_test_file_header(),
+            doc_info: DocInfo {
+                bin_data: vec![BinDataRecord::Embedding {
+                    attributes: BinDataAttributes {
+                        storage_type: BinDataStorageType::Link,
+                        compression: CompressionType::StorageDefault,
+                        access: AccessState::Never,
+                    },
+                    embedding: BinDataEmbedding {
+                        binary_data_id: 0x1002,
+                        extension: "gif".to_string(),
+                    },
+                }],
+                ..Default::default()
+            },
+            body_text: Default::default(),
+            bin_data: Default::default(),
+            preview_text: None,
+            preview_image: None,
+            scripts: None,
+            xml_template: None,
+            summary_information: None,
+        };
+        assert_eq!(get_mime_type_from_bindata_id(&doc, 0x1002), "image/gif");
+    }
+
+    #[test]
+    fn test_get_mime_type_case_insensitive_extension() {
+        // Test MIME type resolution is case-insensitive for extensions
+        let doc = HwpDocument {
+            file_header: create_test_file_header(),
+            doc_info: DocInfo {
+                bin_data: vec![BinDataRecord::Embedding {
+                    attributes: BinDataAttributes {
+                        storage_type: BinDataStorageType::Link,
+                        compression: CompressionType::StorageDefault,
+                        access: AccessState::Never,
+                    },
+                    embedding: BinDataEmbedding {
+                        binary_data_id: 0x1003,
+                        extension: "PNG".to_string(), // Uppercase
+                    },
+                }],
+                ..Default::default()
+            },
+            body_text: Default::default(),
+            bin_data: Default::default(),
+            preview_text: None,
+            preview_image: None,
+            scripts: None,
+            xml_template: None,
+            summary_information: None,
+        };
+        assert_eq!(get_mime_type_from_bindata_id(&doc, 0x1003), "image/png");
+    }
 }
