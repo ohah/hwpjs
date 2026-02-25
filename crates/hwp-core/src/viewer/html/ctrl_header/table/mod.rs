@@ -3,6 +3,7 @@
 /// 이 모듈은 실제 구현을 `render`와 `process` 서브모듈에 위임하고,
 /// 외부에서는 동일한 API(`render_table`, `process_table`, `CaptionInfo`)만 노출합니다.
 pub mod cells;
+pub mod cells_test;
 pub mod constants;
 pub mod constants_test;
 pub mod geometry;
