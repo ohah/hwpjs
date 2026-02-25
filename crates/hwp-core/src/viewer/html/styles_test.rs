@@ -1,7 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     // Import the functions using the crate path
     use crate::viewer::html::styles::round_to_2dp;
     use crate::viewer::html::styles::int32_to_mm;
