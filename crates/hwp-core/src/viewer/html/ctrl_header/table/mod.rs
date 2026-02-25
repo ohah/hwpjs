@@ -4,6 +4,7 @@
 /// 외부에서는 동일한 API(`render_table`, `process_table`, `CaptionInfo`)만 노출합니다.
 pub mod cells;
 pub mod constants;
+pub mod constants_test;
 pub mod geometry;
 pub mod position;
 pub mod process;
