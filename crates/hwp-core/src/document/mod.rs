@@ -14,6 +14,7 @@ pub mod preview_text;
 pub mod preview_text_test;
 pub mod scripts;
 pub mod summary_information;
+pub mod summary_information_test;
 pub mod xml_template;
 
 pub use bindata::{BinData, BinaryDataFormat};
