@@ -27,6 +27,6 @@ Long-term memory and context for this workspace. Update this file with decisions
 
 ---
 
-(비어 있음)
+| 2026-02-25 | test/html-table-constants-unit-tests | test(html): add constants unit tests for table rendering module (PR #46) | 7 tests for SVG_PADDING_MM and BORDER_OFFSET_MM; value and unit checks |  
 
 ---
