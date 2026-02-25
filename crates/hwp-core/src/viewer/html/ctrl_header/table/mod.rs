@@ -14,6 +14,7 @@ pub mod process;
 pub mod render;
 pub mod render_test;
 pub mod size;
+pub mod size_test;
 pub mod svg;
 pub mod svg_test;
 
