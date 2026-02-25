@@ -16,6 +16,7 @@ Long-term memory and context for this workspace. Update this file with decisions
 | ---------- | ------------------ | ------------ | --------- |
 | 2026-02-24 | test/document-module-unit-tests | test(core): add document module unit tests (PR #21) | Document 모듈에 필드 접근성, 직렬화 가능성 등을 검증하는 단위 테스트 추가 |
 | 2026-02-26 | test/table-render-module-compilation-tests | test(core): add table render module compilation verification tests (PR #50) | viewer/html/ctrl_header/table/render module 구조 검증을 위한 6개 컴파일 확인 테스트 추가 |
+| 2026-02-26 | test/ctrl_header-unit-tests | test(core): add ctrl_header unit tests (column_def, section_def, shared) (PR #51) | Added 10 unit tests: 4 for column_def, 4 for section_def, 2 shared tests (CtrlHeaderResult operations, module verification)
 | 2025-02-24 | test/viewer-markdown-unit-tests | test(core): add viewer/markdown unit tests (PR #22) | Viewer Markdown 모듈에 MarkdownOptions 빌더 패턴, 생성자 체이닝, 주요 변환 함수 검증 테스트 추가 |
 | 2025-02-24 | test/viewer-core-unit-tests | test(core): add viewer/core bodytext and outline unit tests (PR #23) | viewer/core 모듈에 bodytext 프로세싱, OutLineNumberTracker 단위 테스트 추가 |
 | 2026-02-25 | test/viewer-html-image-unit-tests | test(core): add viewer/html image module unit tests (PR #26) | Image rendering functions (render_image, render_image_with_style)에 대한 9개 단위 테스트 추가 |
@@ -34,6 +35,7 @@ Long-term memory and context for this workspace. Update this file with decisions
 
 | 2026-02-25 | test/html-table-constants-unit-tests | test(html): add constants unit tests for table rendering module (PR #46) | 7 tests for SVG_PADDING_MM and BORDER_OFFSET_MM; value and unit checks |
 | 2026-02-26 | test/shape_object-unit-tests | test(core): add shape_object module unit tests (PR #52) | Added 3 unit tests: process_shape_object compilation, return type verification, and module validation
-| 2026-02-26 | test/cells-module-unit-tests | test(core): add cells module basic structure tests (PR #53) | Added 2 basic structure tests: compilation verification and module structure validation  
+| 2026-02-26 | test/cells-module-unit-tests | test(core): add cells module basic structure tests (PR #53) | Added 2 basic structure tests: compilation verification and module structure validation
+| 2026-02-26 | test/geometry-module-unit-tests | test(core): add geometry module basic structure tests (PR #54) | Added 3 unit tests: geometry module compilation, structure, and helpers validation |
 
 ---
