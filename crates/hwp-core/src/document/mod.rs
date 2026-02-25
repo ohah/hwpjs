@@ -9,6 +9,7 @@ pub mod docinfo;
 /// 스펙 문서 매핑: 표 2 - 전체 구조
 pub mod fileheader;
 pub mod preview_image;
+pub mod preview_image_test;
 pub mod preview_text;
 pub mod scripts;
 pub mod summary_information;
