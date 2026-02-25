@@ -5,6 +5,7 @@ Long-term memory and context for this workspace. Update this file with decisions
 ---
 
 ## 테스트 PR 기록
+| 2026-02-26 | test/ctrl_header-unit-tests | test(core): add ctrl_header unit tests (column_def, section_def, shared) (PR #51) | Added 10 unit tests: 4 for column_def, 4 for section_def, 2 shared tests (CtrlHeaderResult operations, module verification)
 | 2026-02-26 | test/fileheader-version-string-test | test(core): add FileHeader version string conversion test (PR #49) | Added version_string() test to verify 4-part dotted version (5.0.3.0) parsing
 | 2026-02-26 | test/common-mime-edge-cases | test(core): add edge case tests for MIME type resolution (PR #48) | Added GIF, case-insensitive extension handling tests |
 
