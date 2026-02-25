@@ -39,5 +39,6 @@ Long-term memory and context for this workspace. Update this file with decisions
 | 2026-02-26 | test/geometry-module-unit-tests | test(core): add geometry module basic structure tests (PR #54) | Added 3 unit tests: geometry module compilation, structure, and helpers validation
 | 2026-02-26 | test/position-module-unit-tests | test(core): add position module basic structure tests (PR #55) | Added 4 unit tests: position module structure, view_box, table_position, and helpers validation
 | 2026-02-26 | test/svg-module-unit-tests | test(core): add svg module basic structure tests (PR #56) | Added 3 unit tests: svg module compilation, render_svg structure, and module validation
+| 2026-02-26 | test/size-module-unit-tests | test(core): add size module basic structure tests (PR #57) | Added 4 unit tests: size module compilation, cell_margin_to_mm, find_max_shape_height, and module structure validation
 
 ---
