@@ -21,3 +21,6 @@ mod bodytext_test;
 
 #[cfg(test)]
 mod outline_test;
+
+#[cfg(test)]
+mod renderer_test;
