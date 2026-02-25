@@ -14,6 +14,7 @@
 /// - utils: 유틸리티 함수들 / Utility functions
 /// - collect: 텍스트/이미지 수집 함수들 / Text/image collection functions
 pub mod collect;
+mod collect_test;
 mod common;
 mod ctrl_header;
 pub mod document;
