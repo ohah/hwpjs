@@ -7,6 +7,7 @@ pub mod cells_test;
 pub mod constants;
 pub mod constants_test;
 pub mod geometry;
+pub mod geometry_test;
 pub mod position;
 pub mod process;
 pub mod render;
