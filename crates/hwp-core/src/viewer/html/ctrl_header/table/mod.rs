@@ -9,6 +9,7 @@ pub mod geometry;
 pub mod position;
 pub mod process;
 pub mod render;
+pub mod render_test;
 pub mod size;
 pub mod svg;
 

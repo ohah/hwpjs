@@ -5,6 +5,7 @@ Long-term memory and context for this workspace. Update this file with decisions
 ---
 
 ## 테스트 PR 기록
+| 2026-02-26 | test/fileheader-version-string-test | test(core): add FileHeader version string conversion test (PR #49) | Added version_string() test to verify 4-part dotted version (5.0.3.0) parsing
 | 2026-02-26 | test/common-mime-edge-cases | test(core): add edge case tests for MIME type resolution (PR #48) | Added GIF, case-insensitive extension handling tests |
 
 하트비트에서 테스트 코드 PR을 올릴 때마다 아래에 한 줄씩 추가. 같은 유형 작업이 겹치지 않도록 참고.
