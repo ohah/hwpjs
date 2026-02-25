@@ -23,7 +23,7 @@ Long-term memory and context for this workspace. Update this file with decisions
 | 2026-02-25 | test/styles-edge-case-tests | test(core): add styles module edge case tests and remove broken render_test (PR #40) | styles_test.rs에 11개의 엣지 케이스 테스트 추가; round_to_2dp 대형/초소수/경계값, int32_to_mm 최대/최소값/반단위/유리수 테스트; 컴파일 오류 있는 render_test.rs 삭제 |
 | 2026-02-25 | test/document-edge-cases | test(document): add edge case tests for FileHeader parsing (PR #42) | document 파일 헤더 빈 데이터, 최소 유효 |
 | 2026-02-25 | test/page-html-edge-case-tests | test(core): add page html edge case tests (PR #41) | page_test.rs에 5개의 엣지 케이스 테스트 추가; HtmlPageBreak 클론/복사, 여러 인스턴스 동등성, Display impl, 공백 문자 방지, 중첩 태그 방지 테스트 |
-| 2026-02-25 | test/viewer-core-renderer-unit-tests | test(core): add viewer/core renderer module unit tests (PR #43) | renderer_test.rs에 22개의 단위 테스트 추가; TextStyles/DocumentParts 기본값, 필드 변형, 클론 테스트 |
+| 2026-02-25 | test/viewer-core-renderer-simple-tests | test(core): add viewer/core renderer trait unit tests (PR #45) | renderer_test.rs에 8개 단위 테스트 추가; TextStyles/DocumentParts 구조체의 기본값, 값 할당, 클론, 디버그 출력 검증 |
 
 ---
 
