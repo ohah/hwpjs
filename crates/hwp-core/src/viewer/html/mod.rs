@@ -23,6 +23,7 @@ mod render_test;
 mod styles;
 mod styles_test;
 mod text;
+mod text_test;
 
 // Re-export public API
 pub use document::to_html;
