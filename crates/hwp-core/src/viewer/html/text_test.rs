@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::document::bodytext::{Paragraph, ParagraphRecord, ParaCharShape, ParaHeader};
+    use crate::document::bodytext::{Paragraph, ParagraphRecord, ParaHeader};
     use crate::viewer::html::text::extract_text_and_shapes;
 
     fn create_paragraph_with_text(text: &str) -> Paragraph {
@@ -127,7 +127,7 @@ mod tests {
     fn test_extract_text_and_shapes_text_with_special_chars() {
         let paragraph = create_paragraph_with_text("hello\nworld\ttest");
 
-        let (text, char_shapes) = extract_text_and_shapes(&paragraph);
+        let (text, _char_shapes) = extract_text_and_shapes(&paragraph);
 
         assert_eq!(text, "hello\nworld\ttest");
     }

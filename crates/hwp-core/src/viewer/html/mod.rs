@@ -15,6 +15,7 @@ mod line_segment;
 mod options;
 mod options_test;
 mod page;
+mod page_test;
 mod pagination;
 mod pagination_test;
 mod paragraph;
