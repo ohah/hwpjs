@@ -11,6 +11,7 @@ pub mod fileheader;
 pub mod preview_image;
 pub mod preview_image_test;
 pub mod preview_text;
+pub mod preview_text_test;
 pub mod scripts;
 pub mod summary_information;
 pub mod xml_template;
