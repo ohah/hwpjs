@@ -32,6 +32,8 @@ Long-term memory and context for this workspace. Update this file with decisions
 
 ---
 
-| 2026-02-25 | test/html-table-constants-unit-tests | test(html): add constants unit tests for table rendering module (PR #46) | 7 tests for SVG_PADDING_MM and BORDER_OFFSET_MM; value and unit checks |  
+| 2026-02-25 | test/html-table-constants-unit-tests | test(html): add constants unit tests for table rendering module (PR #46) | 7 tests for SVG_PADDING_MM and BORDER_OFFSET_MM; value and unit checks |
+| 2026-02-26 | test/shape_object-unit-tests | test(core): add shape_object module unit tests (PR #52) | Added 3 unit tests: process_shape_object compilation, return type verification, and module validation
+| 2026-02-26 | test/cells-module-unit-tests | test(core): add cells module basic structure tests (PR #53) | Added 2 basic structure tests: compilation verification and module structure validation  
 
 ---
