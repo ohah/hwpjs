@@ -50,6 +50,23 @@ fn test_fileheader_minimal_valid_data() {
     assert_eq!(header.version, 0x05000000);
 }
 
+#[test]
+fn test_fileheader_version_string_conversion() {
+    // Test version field as dotted string (5.0.3.0)
+    let mut data = vec![0u8; 256];
+    data[0..32].copy_from_slice(b"HWP Document File\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+    // Version: 0x05000300 = 5.0.3.0 (major=5, minor=0, patch=3,revision=0)
+    data[32..36].copy_from_slice(&0x05000300u32.to_le_bytes());
+    data[36..40].copy_from_slice(&0x01u32.to_le_bytes()); // Document flags
+
+    let header = FileHeader::parse(&data).expect("Failed to parse header");
+
+    let version_str = header.version_string();
+    // Expected: "5.0.3.0"
+    assert_eq!(version_str, "5.0.3.0");
+    assert_eq!(header.version, 0x05000300);
+}
+
 // ========== Edge Case Tests for HwpDocument ==========
 
 #[test]
