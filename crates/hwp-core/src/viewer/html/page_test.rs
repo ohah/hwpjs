@@ -1,5 +1,9 @@
 #[cfg(test)]
 mod tests {
+    use crate::document::bodytext::ctrl_header::{PageNumberPositionFlags};
+    use crate::document::bodytext::ctrl_header::{CtrlHeaderData, PageNumberPosition};
+    use crate::document::{FileHeader, HwpDocument};
+    use crate::viewer::html::page::render_page;
     use crate::viewer::html::page::HtmlPageBreak;
 
     #[test]
@@ -38,54 +42,201 @@ mod tests {
         assert!(html.ends_with("</span>"));
     }
 
-    // ========== Edge Case Tests ==========
-
+    // Page rendering tests
     #[test]
-    fn test_html_page_break_clone_copy() {
-        let marker1 = HtmlPageBreak::new();
-        let marker2 = marker1.clone();
-        let marker3 = marker1;
-        assert_eq!(format!("{}", marker2), format!("{}", marker3));
-    }
+    fn test_render_page_empty_content_no_tables() {
+        let mut file_header_data = vec![0u8; 256];
+        file_header_data[0..32].copy_from_slice(b"HWP Document File\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+        file_header_data[32..36].copy_from_slice(&0x05000300u32.to_le_bytes());
+        file_header_data[36..40].copy_from_slice(&0x01u32.to_le_bytes());
+        let file_header = FileHeader::parse(&file_header_data).unwrap_or_else(|_| unreachable!());
+        let document = HwpDocument::new(file_header);
 
-    #[test]
-    fn test_html_page_break_multiple_instantiations() {
-        let markers: Vec<HtmlPageBreak> = (0..10).map(|_| HtmlPageBreak::new()).collect();
-        let html_values: Vec<String> = markers.iter().map(|m| format!("{}", m)).collect();
-        // All should produce the same HTML
-        assert!(html_values.iter().all(|h| h == "<span></span>"));
-    }
-
-    #[test]
-    fn test_html_page_display_impl_equality() {
-        let marker = HtmlPageBreak {};
-        assert_eq!(
-            format!("{}", marker),
-            format!("{}", HtmlPageBreak::new())
+        let result = render_page(
+            1,
+            "",
+            &[],
+            None,
+            Some((100, 100)),
+            None,
+            Some(&CtrlHeaderData::PageNumberPosition {
+                flags: PageNumberPositionFlags { position: PageNumberPosition::None, shape: 0 },
+                prefix: String::from("페이지 "),
+                suffix: String::new(),
+                user_symbol: String::new(),
+            }),
+            1,
+            &document,
+            None,
+            None,
         );
+
+        assert!(result.contains("<div"));
+        assert!(result.contains("class=\"hpa\""));
     }
 
     #[test]
-    fn test_html_page_break_empty_string_never() {
-        // Display implementation should never return empty string
-        let markers = vec![
-            HtmlPageBreak::new(),
-            HtmlPageBreak {},
-            HtmlPageBreak::new(),
-            HtmlPageBreak {},
-        ];
-        for marker in markers {
-            let html = marker.to_string();
-            assert!(!html.is_empty(), "Empty HTML string returned");
-        }
+    fn test_render_page_with_tables() {
+        let mut file_header_data = vec![0u8; 256];
+        file_header_data[0..32].copy_from_slice(b"HWP Document File\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+        file_header_data[32..36].copy_from_slice(&0x05000300u32.to_le_bytes());
+        file_header_data[36..40].copy_from_slice(&0x01u32.to_le_bytes());
+        let file_header = FileHeader::parse(&file_header_data).unwrap_or_else(|_| unreachable!());
+        let document = HwpDocument::new(file_header);
+
+        let table_html = String::from("<table>content</table>");
+        let result = render_page(
+            1,
+            "content",
+            &[table_html.clone()],
+            None,
+            Some((50, 50)),
+            None,
+            None,
+            1,
+            &document,
+            Some("header"),
+            Some("footer"),
+        );
+
+        assert!(result.contains("header"));
+        assert!(result.contains("footer"));
+        assert!(result.contains(&table_html));
     }
 
     #[test]
-    fn test_html_page_break_single_tag() {
-        let marker = HtmlPageBreak::new();
-        let html = marker.to_string();
-        // Should not contain nested tags
-        assert!(!html.contains("<span><span>"));
-        assert!(!html.contains("</span></span></span>"));
+    fn test_render_page_a3_paper_size() {
+        let mut file_header_data = vec![0u8; 256];
+        file_header_data[0..32].copy_from_slice(b"HWP Document File\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+        file_header_data[32..36].copy_from_slice(&0x05000300u32.to_le_bytes());
+        file_header_data[36..40].copy_from_slice(&0x01u32.to_le_bytes());
+        let file_header = FileHeader::parse(&file_header_data).unwrap_or_else(|_| unreachable!());
+        let document = HwpDocument::new(file_header);
+
+        let page_def = crate::document::bodytext::PageDef {
+            paper_width: crate::types::HWPUNIT(2970), // A3 in mm (HWPUNIT is in 0.1mm)
+            paper_height: crate::types::HWPUNIT(4200),
+            left_margin: crate::types::HWPUNIT(0),
+            top_margin: crate::types::HWPUNIT(0),
+            right_margin: crate::types::HWPUNIT(0),
+            bottom_margin: crate::types::HWPUNIT(0),
+            header_margin: crate::types::HWPUNIT(0),
+            footer_margin: crate::types::HWPUNIT(0),
+            binding_margin: crate::types::HWPUNIT(0),
+            attributes: crate::document::bodytext::page_def::PageDefAttributes {
+                paper_direction: crate::document::bodytext::page_def::PaperDirection::Vertical,
+                binding_method: crate::document::bodytext::page_def::BindingMethod::SinglePage,
+            },
+        };
+
+        let result = render_page(
+            1,
+            "content",
+            &[],
+            Some(&page_def),
+            None,
+            None,
+            None,
+            1,
+            &document,
+            None,
+            None,
+        );
+
+        assert!(result.contains("class=\"hpa\""));
+    }
+
+    #[test]
+    fn test_render_page_page_number_bottom_center() {
+        let mut file_header_data = vec![0u8; 256];
+        file_header_data[0..32].copy_from_slice(b"HWP Document File\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+        file_header_data[32..36].copy_from_slice(&0x05000300u32.to_le_bytes());
+        file_header_data[36..40].copy_from_slice(&0x01u32.to_le_bytes());
+        let file_header = FileHeader::parse(&file_header_data).unwrap_or_else(|_| unreachable!());
+        let document = HwpDocument::new(file_header);
+
+        let result = render_page(
+            1,
+            "content",
+            &[],
+            None,
+            Some((50, 50)),
+            None,
+            Some(&CtrlHeaderData::PageNumberPosition {
+                flags: PageNumberPositionFlags { position: PageNumberPosition::BottomCenter, shape: 0 },
+                prefix: String::from(""),
+                suffix: String::from(""),
+                user_symbol: String::new(),
+            }),
+            1,
+            &document,
+            None,
+            None,
+        );
+
+        assert!(result.contains("<span"));
+        assert!(result.contains("</span>"));
+        assert!(result.contains("class=\"hpN\""));
+    }
+
+    #[test]
+    fn test_render_page_null_characters_in_prefix_suffix() {
+        let mut file_header_data = vec![0u8; 256];
+        file_header_data[0..32].copy_from_slice(b"HWP Document File\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+        file_header_data[32..36].copy_from_slice(&0x05000300u32.to_le_bytes());
+        file_header_data[36..40].copy_from_slice(&0x01u32.to_le_bytes());
+        let file_header = FileHeader::parse(&file_header_data).unwrap_or_else(|_| unreachable!());
+        let document = HwpDocument::new(file_header);
+
+        // Prefix with null characters
+        let prefix_with_null = String::from("ABC\0DEF");
+        let result = render_page(
+            1,
+            "content",
+            &[],
+            None,
+            Some((50, 50)),
+            None,
+            Some(&CtrlHeaderData::PageNumberPosition {
+                flags: PageNumberPositionFlags { position: PageNumberPosition::BottomCenter, shape: 0 },
+                prefix: prefix_with_null,
+                suffix: String::new(),
+                user_symbol: String::new(),
+            }),
+            1,
+            &document,
+            None,
+            None,
+        );
+
+        assert!(result.contains("<span"));
+        assert!(result.contains("</span>"));
+    }
+
+    #[test]
+    fn test_render_page_empty_header_fragment() {
+        let mut file_header_data = vec![0u8; 256];
+        file_header_data[0..32].copy_from_slice(b"HWP Document File\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+        file_header_data[32..36].copy_from_slice(&0x05000300u32.to_le_bytes());
+        file_header_data[36..40].copy_from_slice(&0x01u32.to_le_bytes());
+        let file_header = FileHeader::parse(&file_header_data).unwrap_or_else(|_| unreachable!());
+        let document = HwpDocument::new(file_header);
+
+        let result = render_page(
+            1,
+            "content",
+            &[],
+            None,
+            Some((50, 50)),
+            None,
+            None,
+            1,
+            &document,
+            Some(""),
+            Some("footer"),
+        );
+
+        assert!(result.contains("<div"));
+        assert!(result.contains("footer"));
     }
 }
