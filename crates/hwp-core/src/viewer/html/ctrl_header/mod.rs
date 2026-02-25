@@ -13,6 +13,13 @@ mod shape_object;
 // table 모듈은 폴더로 분리되어 있음 / table module is separated into a folder
 pub mod table;
 
+#[cfg(test)]
+mod column_def_test;
+#[cfg(test)]
+mod section_def_test;
+#[cfg(test)]
+mod other_ctrl_header_tests;
+
 use crate::document::{CtrlHeader, CtrlId, Paragraph, ParagraphRecord};
 use crate::viewer::html::line_segment::{ImageInfo, TableInfo};
 use crate::viewer::HtmlOptions;
