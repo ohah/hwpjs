@@ -19,6 +19,8 @@ mod column_def_test;
 mod section_def_test;
 #[cfg(test)]
 mod other_ctrl_header_tests;
+#[cfg(test)]
+mod shape_object_test;
 
 use crate::document::{CtrlHeader, CtrlId, Paragraph, ParagraphRecord};
 use crate::viewer::html::line_segment::{ImageInfo, TableInfo};
