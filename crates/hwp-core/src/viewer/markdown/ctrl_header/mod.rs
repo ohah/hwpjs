@@ -8,6 +8,7 @@ mod column_def_test;
 mod endnote;
 mod endnote_test;
 mod footer;
+mod footer_test;
 mod footnote;
 mod header;
 mod page_number;
