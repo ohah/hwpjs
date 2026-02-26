@@ -49,5 +49,6 @@ Long-term memory and context for this workspace. Update this file with decisions
 
 | 2026-02-26 | test/viewer-markdown-ctrl_header-shape_object-unit-tests | test(core): add viewer/markdown ctrl_header shape_object module basic structure tests (PR #74) | Added 3 unit tests: shape_object module compilation, markdown conversion structure, and module validation
 | 2026-02-26 | test/viewer-markdown-ctrl_header-table-unit-tests | test(core): add viewer/markdown ctrl_header table module basic structure tests (PR #75) | Added 3 unit tests: table module compilation, markdown conversion structure, and module validation
+| 2026-02-26 | test/viewer-markdown-renderer-structure-tests | test(core): add viewer/markdown renderer module basic structure tests (PR #77) | Added 2 unit tests: renderer module compilation and module structure
 
 ---
