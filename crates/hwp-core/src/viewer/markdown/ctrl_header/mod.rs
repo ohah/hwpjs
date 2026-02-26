@@ -4,6 +4,7 @@
 /// 스펙 문서 매핑: 표 57 - 본문의 데이터 레코드, CTRL_HEADER (HWPTAG_BEGIN + 55)
 /// Spec mapping: Table 57 - BodyText data records, CTRL_HEADER (HWPTAG_BEGIN + 55)
 mod column_def;
+mod column_def_test;
 mod endnote;
 mod footer;
 mod footnote;
