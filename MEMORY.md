@@ -43,6 +43,10 @@ Long-term memory and context for this workspace. Update this file with decisions
 | 2026-02-26 | test/viewer-markdown-ctrl_header-footnote-unit-tests | test(core): add viewer/markdown ctrl_header footnote module basic structure tests (PR #71) | Added 3 unit tests: footnote module compilation, markdown conversion structure, and module validation
 | 2026-02-26 | test/viewer-markdown-ctrl_header-page_number-basic-structure-tests | test(core): add viewer/markdown ctrl_header page_number module basic structure tests (PR #72) | Added 3 unit tests: page_number module compilation, markdown conversion structure, and module validation
 | 2026-02-26 | test/viewer-markdown-ctrl_header-header-unit-tests | test(core): add viewer/markdown ctrl_header header module basic structure tests (PR #73) | Added 3 unit tests: header module compilation, markdown conversion structure, and module validation
+| 2026-02-26 | test/viewer-markdown-utils-unit-tests | test(core): add viewer/markdown utils module basic structure tests (PR #76) | Added 3 unit tests: utils module compilation, markdown conversion utility structure, and module structure; fixed duplicate module declaration in viewer/core/mod.rs
+
+---
+
 | 2026-02-26 | test/viewer-markdown-ctrl_header-shape_object-unit-tests | test(core): add viewer/markdown ctrl_header shape_object module basic structure tests (PR #74) | Added 3 unit tests: shape_object module compilation, markdown conversion structure, and module validation
 | 2026-02-26 | test/viewer-markdown-ctrl_header-table-unit-tests | test(core): add viewer/markdown ctrl_header table module basic structure tests (PR #75) | Added 3 unit tests: table module compilation, markdown conversion structure, and module validation
 
