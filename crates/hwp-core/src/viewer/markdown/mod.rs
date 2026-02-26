@@ -16,10 +16,12 @@
 pub mod collect;
 mod collect_test;
 mod common;
+mod common_test;
 mod ctrl_header;
 pub mod document;
 mod renderer;
-pub mod utils;
+mod utils;
+mod utils_test;
 
 #[cfg(test)]
 mod markdown_unit_test;
