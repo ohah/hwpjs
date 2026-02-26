@@ -10,6 +10,7 @@ mod endnote_test;
 mod footer;
 mod footer_test;
 mod footnote;
+mod footnote_test;
 mod header;
 mod page_number;
 mod page_number_test;
