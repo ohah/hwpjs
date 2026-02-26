@@ -18,6 +18,7 @@ mod header_test;
 mod shape_object;
 mod shape_object_test;
 mod table;
+mod table_test;
 
 use crate::document::{CtrlHeader, CtrlId};
 
