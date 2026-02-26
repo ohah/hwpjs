@@ -6,6 +6,7 @@
 mod column_def;
 mod column_def_test;
 mod endnote;
+mod endnote_test;
 mod footer;
 mod footnote;
 mod header;
