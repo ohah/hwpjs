@@ -10,6 +10,7 @@ mod footer;
 mod footnote;
 mod header;
 mod page_number;
+mod page_number_test;
 mod shape_object;
 mod table;
 
