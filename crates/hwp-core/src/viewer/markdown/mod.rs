@@ -25,6 +25,8 @@ mod utils_test;
 
 #[cfg(test)]
 mod markdown_unit_test;
+#[cfg(test)]
+mod renderer_test;
 
 use crate::document::HwpDocument;
 
