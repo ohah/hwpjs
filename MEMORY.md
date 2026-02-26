@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MEMORY.md
 
 Long-term memory and context for this workspace. Update this file with decisions, lessons learned, and things to remember across sessions.
@@ -31,13 +32,11 @@ Long-term memory and context for this workspace. Update this file with decisions
 
 ---
 
-| 2026-02-26 | test/viewer-markdown-ctrl_header-footer-unit-tests | test(core): add viewer/markdown ctrl_header footer module basic structure tests (PR #70) | Added 3 unit tests: footer module compilation, markdown conversion structure, and module validation
-
----
-
 | 2026-02-26 | test/viewer-markdown-ctrl_header-column_def-unit-tests | test(core): add viewer/markdown ctrl_header column_def module basic structure tests (PR #67) | Added 3 unit tests: column_def module compilation, Markdown conversion function, and module structure
 | 2026-02-26 | test/viewer-markdown-ctrl_header-page_number-unit-tests | test(core): add viewer/markdown ctrl_header page_number module basic structure tests (PR #68) | Added 3 unit tests: page_number module compilation, Markdown conversion function, and module structure
 | 2026-02-26 | test/viewer-markdown-ctrl_header-endnote-unit-tests | test(core): add viewer/markdown ctrl_header endnote module basic structure tests (PR #69) | Added 3 unit tests: endnote module compilation, markdown conversion structure, and module validation
+| 2026-02-26 | test/viewer-markdown-ctrl_header-footer-unit-tests | test(core): add viewer/markdown ctrl_header footer module basic structure tests (PR #70) | Added 3 unit tests: footer module compilation, markdown conversion structure, and module validation
+| 2026-02-26 | test/viewer-markdown-ctrl_header-footnote-unit-tests | test(core): add viewer/markdown ctrl_header footnote module basic structure tests (PR #71) | Added 3 unit tests: footnote module compilation, markdown conversion structure, and module validation
 | 2026-02-26 | test/viewer-markdown-ctrl_header-header-unit-tests | test(core): add viewer/markdown ctrl_header header module basic structure tests (PR #73) | Added 3 unit tests: header module compilation, markdown conversion structure, and module validation
 | 2026-02-26 | test/viewer-markdown-ctrl_header-shape_object-unit-tests | test(core): add viewer/markdown ctrl_header shape_object module basic structure tests (PR #74) | Added 3 unit tests: shape_object module compilation, markdown conversion structure, and module validation
 | 2026-02-26 | test/viewer-markdown-ctrl_header-table-unit-tests | test(core): add viewer/markdown ctrl_header table module basic structure tests (PR #75) | Added 3 unit tests: table module compilation, markdown conversion structure, and module validation
