@@ -14,6 +14,7 @@ mod footnote_test;
 mod page_number;
 mod page_number_test;
 mod header;
+mod header_test;
 mod shape_object;
 mod table;
 
