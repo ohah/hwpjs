@@ -18,68 +18,82 @@ pub fn process_shape_object<'a>(
     let mut result = CtrlHeaderResult::new();
 
     // object_common 속성 추출 / Extract object_common attributes
-    let (like_letters, vert_rel_to) = match &header.data {
-        CtrlHeaderData::ObjectCommon { attribute, .. } => {
-            (attribute.like_letters, Some(attribute.vert_rel_to))
-        }
-        _ => (false, None),
+    // CtrlHeader(ObjectCommon)의 width/height를 우선 사용 (ShapeComponent와 1 unit 차이 날 수 있음)
+    // Prefer CtrlHeader(ObjectCommon)'s width/height (may differ by 1 unit from ShapeComponent)
+    let (like_letters, vert_rel_to, initial_width, initial_height) = match &header.data {
+        CtrlHeaderData::ObjectCommon {
+            attribute,
+            width,
+            height,
+            ..
+        } => (
+            attribute.like_letters,
+            Some(attribute.vert_rel_to),
+            Some(u32::from(*width)),
+            Some(u32::from(*height)),
+        ),
+        _ => (false, None, None, None),
     };
 
-    // children과 paragraphs에서 첫 번째 ShapeComponent 찾기 (크기 정보 추출용) / Find first ShapeComponent in children and paragraphs (for size extraction)
-    let mut initial_width = None;
-    let mut initial_height = None;
+    // ObjectCommon에 크기가 없으면 ShapeComponent에서 찾기 / If no size in ObjectCommon, find from ShapeComponent
+    let (initial_width, initial_height) = if initial_width.is_some() && initial_height.is_some() {
+        (initial_width, initial_height)
+    } else {
+        let mut w = None;
+        let mut h = None;
 
-    // children에서 찾기 / Search in children
-    for record in children {
-        if let ParagraphRecord::ShapeComponent {
-            shape_component, ..
-        } = record
-        {
-            initial_width = Some(shape_component.width);
-            initial_height = Some(shape_component.height);
-            break;
-        }
-    }
-
-    // children에서 찾지 못했으면 paragraphs에서 찾기 / If not found in children, search in paragraphs
-    if initial_width.is_none() {
-        for para in paragraphs {
-            for record in &para.records {
-                match record {
-                    ParagraphRecord::ShapeComponent {
-                        shape_component, ..
-                    } => {
-                        initial_width = Some(shape_component.width);
-                        initial_height = Some(shape_component.height);
-                        break;
-                    }
-                    ParagraphRecord::CtrlHeader {
-                        children: nested_children,
-                        ..
-                    } => {
-                        // 중첩된 CtrlHeader의 children에서도 찾기 / Also search in nested CtrlHeader's children
-                        for nested_record in nested_children {
-                            if let ParagraphRecord::ShapeComponent {
-                                shape_component, ..
-                            } = nested_record
-                            {
-                                initial_width = Some(shape_component.width);
-                                initial_height = Some(shape_component.height);
-                                break;
-                            }
-                        }
-                        if initial_width.is_some() {
-                            break;
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            if initial_width.is_some() {
+        // children에서 찾기 / Search in children
+        for record in children {
+            if let ParagraphRecord::ShapeComponent {
+                shape_component, ..
+            } = record
+            {
+                w = Some(shape_component.width);
+                h = Some(shape_component.height);
                 break;
             }
         }
-    }
+
+        // children에서 찾지 못했으면 paragraphs에서 찾기 / If not found in children, search in paragraphs
+        if w.is_none() {
+            for para in paragraphs {
+                for record in &para.records {
+                    match record {
+                        ParagraphRecord::ShapeComponent {
+                            shape_component, ..
+                        } => {
+                            w = Some(shape_component.width);
+                            h = Some(shape_component.height);
+                            break;
+                        }
+                        ParagraphRecord::CtrlHeader {
+                            children: nested_children,
+                            ..
+                        } => {
+                            for nested_record in nested_children {
+                                if let ParagraphRecord::ShapeComponent {
+                                    shape_component, ..
+                                } = nested_record
+                                {
+                                    w = Some(shape_component.width);
+                                    h = Some(shape_component.height);
+                                    break;
+                                }
+                            }
+                            if w.is_some() {
+                                break;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                if w.is_some() {
+                    break;
+                }
+            }
+        }
+        (w, h)
+    };
 
     // children과 paragraphs에서 재귀적으로 이미지 수집 / Recursively collect images from children and paragraphs
     // JSON 구조: CtrlHeader의 children에 ShapeComponent가 있고, 그 children에 ShapeComponentPicture가 있음
@@ -144,9 +158,21 @@ fn collect_images_from_records(
                     options.html_output_dir.as_deref(),
                 );
                 if !image_url.is_empty() {
-                    // shape_component.width/height를 우선 사용 / Prioritize shape_component.width/height
-                    let width = parent_shape_component_width.unwrap_or(0);
-                    let height = parent_shape_component_height.unwrap_or(0);
+                    // border_rectangle가 유효하면 사용, 아니면 shape_component 사용
+                    let br_width = (shape_component_picture.border_rectangle_x.right
+                        - shape_component_picture.border_rectangle_x.left)
+                        .max(0) as u32;
+                    let br_height = (shape_component_picture.border_rectangle_y.bottom
+                        - shape_component_picture.border_rectangle_y.top)
+                        .max(0) as u32;
+                    let (width, height) = if br_width > 0 && br_height > 0 {
+                        (br_width, br_height)
+                    } else {
+                        (
+                            parent_shape_component_width.unwrap_or(0),
+                            parent_shape_component_height.unwrap_or(0),
+                        )
+                    };
 
                     if width > 0 && height > 0 {
                         images.push(ImageInfo {

@@ -30,7 +30,7 @@ mod tests {
         assert!(result.contains("hsR"));
         assert!(result.contains("background-image:url('img.png')"));
         assert!(result.contains("background-repeat:no-repeat"));
-        assert!(result.contains("background-size:contain"));
+        assert!(!result.contains("background-size:contain"));
     }
 
     #[test]
@@ -63,7 +63,7 @@ mod tests {
         assert!(result.contains("vertical-align:middle"));
         assert!(result.contains("background-image:url('"));
         assert!(result.contains("background-repeat:no-repeat"));
-        assert!(result.contains("background-size:contain"));
+        assert!(!result.contains("background-size:contain"));
     }
 
     #[test]
@@ -123,6 +123,6 @@ mod tests {
 
         assert!(result.contains("background-image:url('bg.jpg')"));
         assert!(result.contains("background-repeat:no-repeat"));
-        assert!(result.contains("background-size:contain"));
+        assert!(!result.contains("background-size:contain"));
     }
 }

@@ -1,6 +1,5 @@
 ---
 source: crates/hwp-core/tests/snapshot_tests.rs
-assertion_line: 628
 expression: html
 ---
 <!DOCTYPE html>
@@ -31,7 +30,7 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .hdu {margin:0;padding:0;position:relative;}
 .hdS {margin:0;padding:0;position:absolute;}
 .hsC {margin:0;padding:0;position:absolute;}
-.hsR {margin:0;padding:0;position:absolute;}
+.hsR {margin:0;padding:0;position:absolute;background-size:100% 100%;}
 .hsG {margin:0;padding:0;position:absolute;}
 .hsL {margin:0;padding:0;position:absolute;}
 .hsT {margin:0;padding:0;position:absolute;overflow:hidden;}
