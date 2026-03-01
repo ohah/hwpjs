@@ -35,6 +35,20 @@ pub(crate) fn render_cells(
         let row_idx = cell.cell_attributes.row_address as usize;
         let _col_idx = cell.cell_attributes.col_address as usize;
 
+        // 셀 다단 감지 / Detect multi-column in cell
+        let mut cell_mc_count = 1u8;
+        for para in &cell.paragraphs {
+            for record in &para.records {
+                if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                    if let CtrlHeaderData::ColumnDefinition { attribute, .. } = &header.data {
+                        if attribute.column_count > 1 {
+                            cell_mc_count = attribute.column_count;
+                        }
+                    }
+                }
+            }
+        }
+
         // 실제 셀 높이 가져오기 / Get actual cell height
         let mut cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
 
@@ -154,9 +168,17 @@ pub(crate) fn render_cells(
                     }
                     // ParaLineSeg가 paragraph records에 직접 있는 경우도 처리 / Also handle ParaLineSeg directly in paragraph records
                     ParagraphRecord::ParaLineSeg { segments } => {
-                        let total_height_hwpunit: i32 =
-                            segments.iter().map(|seg| seg.line_height).sum();
-                        let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
+                        let height_mm = if cell_mc_count > 1 && segments.len() >= cell_mc_count as usize {
+                            // 다단: 한 단의 높이만 사용 / Multi-column: use only one column's height
+                            let segs_per_col = segments.len() / cell_mc_count as usize;
+                            let col_segs = &segments[..segs_per_col];
+                            let last = col_segs.last().unwrap();
+                            round_to_2dp(int32_to_mm(last.vertical_position + last.line_height))
+                        } else {
+                            let total_height_hwpunit: i32 =
+                                segments.iter().map(|seg| seg.line_height).sum();
+                            round_to_2dp(int32_to_mm(total_height_hwpunit))
+                        };
                         if max_shape_height_mm.is_none() || height_mm > max_shape_height_mm.unwrap()
                         {
                             max_shape_height_mm = Some(height_mm);
@@ -220,6 +242,23 @@ pub(crate) fn render_cells(
         let mut image_only_max_height_mm: Option<f64> = None;
         // hcI의 top 위치 계산을 위한 첫 번째 LineSegment 정보 저장 / Store first LineSegment info for hcI top position calculation
         let mut first_line_segment: Option<&LineSegmentInfo> = None;
+
+        // 다단 감지 / Detect multi-column
+        let mut multicolumn_info: Option<(u8, i16, u8, u32)> = None;
+        for para in &cell.paragraphs {
+            for record in &para.records {
+                if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                    if let CtrlHeaderData::ColumnDefinition {
+                        attribute, column_spacing, divider_line_type, divider_line_color, ..
+                    } = &header.data {
+                        if attribute.column_count > 1 {
+                            multicolumn_info = Some((attribute.column_count, *column_spacing, *divider_line_type, *divider_line_color));
+                        }
+                    }
+                }
+            }
+        }
+        let mut multicolumn_html: Option<String> = None;
 
         for para in &cell.paragraphs {
             // ParaShape 클래스 가져오기 / Get ParaShape class
@@ -531,36 +570,130 @@ pub(crate) fn render_cells(
                             break;
                         }
                     }
-                    let content = LineSegmentContent {
-                        segments: &line_segments,
-                        text: &text,
-                        char_shapes: &char_shapes,
-                        control_char_positions: &control_char_positions,
-                        original_text_len: para.para_header.text_char_count as usize,
-                        images: &images,
-                        tables: &[], // 셀 내부에서는 테이블 없음 / No tables inside cells
-                    };
 
-                    let context = LineSegmentRenderContext {
-                        document,
-                        para_shape_class: &para_shape_class,
-                        options,
-                        para_shape_indent,
-                        hcd_position: None, // hcd_position 없음 / No hcd_position
-                        page_def: None,     // page_def 없음 / No page_def
-                    };
+                    if let Some((col_count, col_spacing, div_line_type, div_line_color)) = multicolumn_info {
+                        // 다단 렌더링 / Multi-column rendering
+                        let col_count = col_count as usize;
+                        if line_segments.len() >= col_count {
+                            let segs_per_col = line_segments.len() / col_count;
+                            let seg_width_mm_raw = int32_to_mm(line_segments[0].segment_width);
+                            let col_spacing_mm_raw = int32_to_mm(col_spacing as i32);
+                            let mut mc_html = String::new();
 
-                    let mut state = DocumentRenderState {
-                        table_counter_start: 0, // 셀 내부에서는 테이블 번호 사용 안 함 / table numbers not used inside cells
-                        pattern_counter,
-                        color_to_pattern,
-                    };
+                            // hcS 구분선 / hcS separator
+                            if div_line_type > 0 {
+                                let sep_left = round_to_2dp(seg_width_mm_raw + (col_spacing_mm_raw - 0.11) / 2.0);
+                                let content_height_mm = {
+                                    let col_segs = &line_segments[..segs_per_col];
+                                    let last = col_segs.last().unwrap();
+                                    round_to_2dp(int32_to_mm(last.vertical_position + last.line_height))
+                                };
+                                let stroke_color = format!("#{:06x}", div_line_color & 0x00FFFFFF);
+                                mc_html.push_str(&format!(
+                                    r#"<div class="hcS" style="left:{:.2}mm;top:0mm;width:0.11mm;height:{:.2}mm;"><svg class="hs" viewBox="-0.12 -0.12 0.35 {:.2}" style="left:-0.12mm;top:-0.12mm;width:0.35mm;height:{:.2}mm;left:0;top:0;"><path d="M0.06,0 L0.06,{:.2}" style="stroke:{};stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
+                                    sep_left,
+                                    content_height_mm,
+                                    content_height_mm + 0.23,
+                                    content_height_mm + 0.23,
+                                    content_height_mm,
+                                    stroke_color
+                                ));
+                            }
 
-                    cell_content.push_str(&render_line_segments_with_content(
-                        &content, &context, &mut state,
-                    ));
-                    if !text.is_empty() {
-                        cell_has_text = true;
+                            // 각 단 렌더링 / Render each column
+                            for col_idx in 0..col_count {
+                                let col_start_seg = col_idx * segs_per_col;
+                                let col_end_seg = (col_idx + 1) * segs_per_col;
+                                let col_segs = &line_segments[col_start_seg..col_end_seg];
+                                let col_original_text_len = if col_idx + 1 < col_count {
+                                    line_segments[(col_idx + 1) * segs_per_col].text_start_position as usize
+                                } else {
+                                    para.para_header.text_char_count as usize
+                                };
+
+                                let col_text_start = col_segs[0].text_start_position as usize;
+                                let col_ccp: Vec<_> = control_char_positions
+                                    .iter()
+                                    .filter(|cp| {
+                                        cp.position >= col_text_start && cp.position < col_original_text_len
+                                    })
+                                    .cloned()
+                                    .collect();
+
+                                let content = LineSegmentContent {
+                                    segments: col_segs,
+                                    text: &text,
+                                    char_shapes: &char_shapes,
+                                    control_char_positions: &col_ccp,
+                                    original_text_len: col_original_text_len,
+                                    images: &[],
+                                    tables: &[],
+                                };
+                                let context = LineSegmentRenderContext {
+                                    document,
+                                    para_shape_class: &para_shape_class,
+                                    options,
+                                    para_shape_indent,
+                                    hcd_position: None,
+                                    page_def: None,
+                                };
+                                let mut state = DocumentRenderState {
+                                    table_counter_start: 0,
+                                    pattern_counter,
+                                    color_to_pattern,
+                                };
+
+                                let col_content = render_line_segments_with_content(
+                                    &content, &context, &mut state,
+                                );
+                                if col_idx == 0 {
+                                    mc_html.push_str(&format!(
+                                        r#"<div class="hcI">{}</div>"#,
+                                        col_content
+                                    ));
+                                } else {
+                                    let col_left = round_to_2dp(seg_width_mm_raw + col_spacing_mm_raw * col_idx as f64);
+                                    mc_html.push_str(&format!(
+                                        r#"<div class="hcI" style="left:{:.2}mm;">{}</div>"#,
+                                        col_left,
+                                        col_content
+                                    ));
+                                }
+                            }
+                            multicolumn_html = Some(mc_html);
+                        }
+                    }
+
+                    if multicolumn_html.is_none() {
+                        // 일반 단일 단 렌더링 / Normal single-column rendering
+                        let content = LineSegmentContent {
+                            segments: &line_segments,
+                            text: &text,
+                            char_shapes: &char_shapes,
+                            control_char_positions: &control_char_positions,
+                            original_text_len: para.para_header.text_char_count as usize,
+                            images: &images,
+                            tables: &[],
+                        };
+                        let context = LineSegmentRenderContext {
+                            document,
+                            para_shape_class: &para_shape_class,
+                            options,
+                            para_shape_indent,
+                            hcd_position: None,
+                            page_def: None,
+                        };
+                        let mut state = DocumentRenderState {
+                            table_counter_start: 0,
+                            pattern_counter,
+                            color_to_pattern,
+                        };
+                        cell_content.push_str(&render_line_segments_with_content(
+                            &content, &context, &mut state,
+                        ));
+                        if !text.is_empty() {
+                            cell_has_text = true;
+                        }
                     }
                 }
             } else if !text.is_empty() {
@@ -678,18 +811,32 @@ pub(crate) fn render_cells(
             String::new()
         };
 
-        cells_html.push_str(&format!(
-            r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI"{}>{}</div></div>{}</div>"#,
-            round_to_2dp(cell_left),
-            round_to_2dp(cell_top),
-            round_to_2dp(cell_width),
-            round_to_2dp(cell_height),
-            round_to_2dp(left_margin_mm),
-            round_to_2dp(top_margin_mm),
-            hci_style,
-            cell_content,
-            cell_outside_html
-        ));
+        if let Some(ref mc_html) = multicolumn_html {
+            cells_html.push_str(&format!(
+                r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;">{}</div>{}</div>"#,
+                round_to_2dp(cell_left),
+                round_to_2dp(cell_top),
+                round_to_2dp(cell_width),
+                round_to_2dp(cell_height),
+                round_to_2dp(left_margin_mm),
+                round_to_2dp(top_margin_mm),
+                mc_html,
+                cell_outside_html
+            ));
+        } else {
+            cells_html.push_str(&format!(
+                r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI"{}>{}</div></div>{}</div>"#,
+                round_to_2dp(cell_left),
+                round_to_2dp(cell_top),
+                round_to_2dp(cell_width),
+                round_to_2dp(cell_height),
+                round_to_2dp(left_margin_mm),
+                round_to_2dp(top_margin_mm),
+                hci_style,
+                cell_content,
+                cell_outside_html
+            ));
+        }
     }
     cells_html
 }

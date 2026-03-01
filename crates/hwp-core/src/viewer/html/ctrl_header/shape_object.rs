@@ -4,6 +4,8 @@ use crate::document::bodytext::ParagraphRecord;
 use crate::document::{CtrlHeader, CtrlHeaderData, Paragraph};
 use crate::viewer::html::common;
 use crate::viewer::html::line_segment::ImageInfo;
+use crate::viewer::html::paragraph::render_paragraphs_fragment;
+use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
 
@@ -18,8 +20,6 @@ pub fn process_shape_object<'a>(
     let mut result = CtrlHeaderResult::new();
 
     // object_common 속성 추출 / Extract object_common attributes
-    // CtrlHeader(ObjectCommon)의 width/height를 우선 사용 (ShapeComponent와 1 unit 차이 날 수 있음)
-    // Prefer CtrlHeader(ObjectCommon)'s width/height (may differ by 1 unit from ShapeComponent)
     let (like_letters, vert_rel_to, initial_width, initial_height) = match &header.data {
         CtrlHeaderData::ObjectCommon {
             attribute,
@@ -35,14 +35,12 @@ pub fn process_shape_object<'a>(
         _ => (false, None, None, None),
     };
 
-    // ObjectCommon에 크기가 없으면 ShapeComponent에서 찾기 / If no size in ObjectCommon, find from ShapeComponent
+    // ObjectCommon에 크기가 없으면 ShapeComponent에서 찾기
     let (initial_width, initial_height) = if initial_width.is_some() && initial_height.is_some() {
         (initial_width, initial_height)
     } else {
         let mut w = None;
         let mut h = None;
-
-        // children에서 찾기 / Search in children
         for record in children {
             if let ParagraphRecord::ShapeComponent {
                 shape_component, ..
@@ -53,8 +51,6 @@ pub fn process_shape_object<'a>(
                 break;
             }
         }
-
-        // children에서 찾지 못했으면 paragraphs에서 찾기 / If not found in children, search in paragraphs
         if w.is_none() {
             for para in paragraphs {
                 for record in &para.records {
@@ -95,11 +91,25 @@ pub fn process_shape_object<'a>(
         (w, h)
     };
 
-    // children과 paragraphs에서 재귀적으로 이미지 수집 / Recursively collect images from children and paragraphs
-    // JSON 구조: CtrlHeader의 children에 ShapeComponent가 있고, 그 children에 ShapeComponentPicture가 있음
-    // JSON structure: CtrlHeader's children contains ShapeComponent, and its children contains ShapeComponentPicture
+    // 텍스트 도형(ShapeComponentRectangle) 감지
+    let has_rectangle_shape = children.iter().any(|r| {
+        if let ParagraphRecord::ShapeComponent { children, .. } = r {
+            children
+                .iter()
+                .any(|c| matches!(c, ParagraphRecord::ShapeComponentRectangle { .. }))
+        } else {
+            false
+        }
+    });
 
-    // 1. children이 있으면 children을 먼저 처리 (가장 일반적인 경우) / If children exists, process children first (most common case)
+    if has_rectangle_shape {
+        if let Some(html) = render_rectangle_shape(header, children, document, options) {
+            result.shape_html = Some(html);
+            return result;
+        }
+    }
+
+    // 이미지 수집 (기존 로직)
     if !children.is_empty() {
         collect_images_from_records(
             children,
@@ -107,16 +117,12 @@ pub fn process_shape_object<'a>(
             options,
             like_letters,
             vert_rel_to,
-            initial_width,  // parent_shape_component_width
-            initial_height, // parent_shape_component_height
+            initial_width,
+            initial_height,
             &mut result.images,
         );
     } else if initial_width.is_some() && initial_height.is_some() {
-        // 2. children이 비어있고 paragraphs에 ShapeComponent가 있으면, paragraphs의 records에서 ShapeComponent를 찾아서 처리
-        // If children is empty and paragraphs has ShapeComponent, find ShapeComponent in paragraphs' records and process
         for para in paragraphs {
-            // paragraphs의 records를 재귀적으로 탐색하여 이미지 수집
-            // Recursively search paragraphs' records to collect images
             collect_images_from_records(
                 &para.records,
                 document,
@@ -131,6 +137,404 @@ pub fn process_shape_object<'a>(
     }
 
     result
+}
+
+/// ShapeComponentRectangle을 hsG HTML로 렌더링
+fn render_rectangle_shape(
+    header: &CtrlHeader,
+    children: &[ParagraphRecord],
+    document: &HwpDocument,
+    options: &HtmlOptions,
+) -> Option<String> {
+    let (offset_x, offset_y, _obj_width, _obj_height, caption) = match &header.data {
+        CtrlHeaderData::ObjectCommon {
+            offset_x,
+            offset_y,
+            width,
+            height,
+            caption,
+            ..
+        } => (
+            offset_x.0,
+            offset_y.0,
+            u32::from(*width),
+            u32::from(*height),
+            caption.as_ref(),
+        ),
+        _ => return None,
+    };
+
+    let top_mm = round_to_2dp(int32_to_mm(offset_y));
+    let left_mm = round_to_2dp(int32_to_mm(offset_x));
+    let stroke_width = 0.12;
+    let half_stroke = 0.06;
+
+    let mut shape_width_hu: u32 = 0;
+    let mut shape_height_hu: u32 = 0;
+    let mut shape_content_paragraphs: Option<&[Paragraph]> = None;
+
+    for record in children {
+        if let ParagraphRecord::ShapeComponent {
+            shape_component,
+            children: sc_children,
+        } = record
+        {
+            shape_width_hu = shape_component.width;
+            shape_height_hu = shape_component.height;
+            for child in sc_children {
+                if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
+                    shape_content_paragraphs = Some(paragraphs);
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    if shape_width_hu == 0 || shape_height_hu == 0 {
+        return None;
+    }
+
+    let shape_w_mm = round_to_2dp(int32_to_mm(shape_width_hu as i32));
+    let shape_h_mm = round_to_2dp(int32_to_mm(shape_height_hu as i32));
+    let hsr_w_mm = round_to_2dp(shape_w_mm + stroke_width);
+    let hsr_h_mm = round_to_2dp(shape_h_mm + stroke_width);
+
+    let svg_vb_w = round_to_2dp(shape_w_mm + stroke_width + 2.0 * 0.15);
+    let svg_vb_h = round_to_2dp(shape_h_mm + stroke_width + 2.0 * 0.15);
+    let svg_style_w = round_to_2dp(shape_w_mm + 2.0 * 0.15 + half_stroke);
+    let svg_style_h = round_to_2dp(shape_h_mm + 2.0 * 0.15 + half_stroke);
+    let path_end_x = round_to_2dp(shape_w_mm + half_stroke);
+    let path_end_y = round_to_2dp(shape_h_mm + half_stroke);
+
+    let svg_html = format!(
+        r#"<svg class="hs" viewBox="-0.30 -0.30 {vbw} {vbh}" style="left:-0.15mm;top:-0.15mm;width:{sw}mm;height:{sh}mm;"><path fill="none" d="M{hs},{hs}L{ex},{hs}L{ex},{ey}L{hs},{ey}L{hs},{hs}Z " style="stroke:#000000;stroke-linecap:butt;stroke-width:{st};"></path></svg>"#,
+        vbw = svg_vb_w,
+        vbh = svg_vb_h,
+        sw = svg_style_w,
+        sh = svg_style_h,
+        hs = half_stroke,
+        ex = path_end_x,
+        ey = path_end_y,
+        st = stroke_width,
+    );
+
+    let content_html = if let Some(paras) = shape_content_paragraphs {
+        render_shape_content(paras, document, options)
+    } else {
+        String::new()
+    };
+
+    let prefix = &options.css_class_prefix;
+
+    let hst_html = format!(
+        r#"<div class="{p}hsT" style="left:-{hs}mm;top:-{hs}mm;width:{w}mm;height:{h}mm;">{svg}{content}</div>"#,
+        p = prefix,
+        hs = half_stroke,
+        w = hsr_w_mm,
+        h = hsr_h_mm,
+        svg = svg_html,
+        content = content_html,
+    );
+
+    let hsr_html = format!(
+        r#"<div class="{p}hsR" style="top:0mm;left:0mm;width:{w}mm;height:{h}mm;">{hst}</div>"#,
+        p = prefix,
+        w = hsr_w_mm,
+        h = hsr_h_mm,
+        hst = hst_html,
+    );
+
+    // 캡션 처리: ObjectCommon.caption이 있으면 gap 사용, 없으면 children의 첫 ListHeader를 캡션으로 감지
+    let mut caption_html = String::new();
+    let mut caption_height_hu: i32 = 0;
+    let mut caption_gap_hu: i32 = if let Some(cap) = caption {
+        i32::from(cap.gap)
+    } else {
+        850 // 기본 캡션 간격 / Default caption gap
+    };
+
+    // children에서 첫 번째 ListHeader를 캡션으로 사용 (ShapeComponent 내부의 ListHeader와 구분)
+    for record in children {
+        if let ParagraphRecord::ListHeader { paragraphs, .. } = record {
+            if !paragraphs.is_empty() {
+                for para in paragraphs {
+                    for rec in &para.records {
+                        if let ParagraphRecord::ParaLineSeg { segments } = rec {
+                            if let Some(seg) = segments.last() {
+                                caption_height_hu =
+                                    seg.vertical_position + seg.line_height;
+                            }
+                        }
+                    }
+                }
+                if caption_height_hu == 0 {
+                    caption_height_hu = 1000;
+                }
+
+                let caption_top_mm = round_to_2dp(int32_to_mm(
+                    shape_height_hu as i32 + caption_gap_hu,
+                ));
+                let caption_w_mm = round_to_2dp(shape_w_mm - 0.12);
+                let caption_h_mm = round_to_2dp(int32_to_mm(caption_height_hu));
+
+                let body = render_paragraphs_fragment(paragraphs, document, options);
+
+                caption_html = format!(
+                    r#"<div class="{p}hcD" style="left:0mm;top:{t}mm;width:{w}mm;height:{h}mm;overflow:hidden;"><div class="{p}hcI" >{body}</div></div>"#,
+                    p = prefix,
+                    t = caption_top_mm,
+                    w = caption_w_mm,
+                    h = caption_h_mm,
+                );
+            }
+            break;
+        }
+    }
+
+    let hsg_w_mm = round_to_2dp(2.0 * (shape_w_mm + half_stroke));
+    let hsg_h_mm = if caption_height_hu > 0 {
+        round_to_2dp(
+            int32_to_mm(shape_height_hu as i32 + caption_gap_hu + caption_height_hu)
+                + stroke_width,
+        )
+    } else {
+        hsr_h_mm
+    };
+
+    let html = format!(
+        r#"<div class="{p}hsG" style="top:{t}mm;left:{l}mm;width:{w}mm;height:{h}mm;">{hsr}{caption}</div>"#,
+        p = prefix,
+        t = top_mm,
+        l = left_mm,
+        w = hsg_w_mm,
+        h = hsg_h_mm,
+        hsr = hsr_html,
+        caption = caption_html,
+    );
+
+    Some(html)
+}
+
+/// 도형 내부 콘텐츠 렌더링 (다단 지원)
+fn render_shape_content(
+    paragraphs: &[Paragraph],
+    document: &HwpDocument,
+    options: &HtmlOptions,
+) -> String {
+    use crate::document::bodytext::control_char::ControlChar;
+    use crate::document::bodytext::LineSegmentInfo;
+    use crate::viewer::html::line_segment::{
+        render_line_segments_with_content, DocumentRenderState, LineSegmentContent,
+        LineSegmentRenderContext,
+    };
+    use crate::viewer::html::text;
+    use std::collections::HashMap;
+
+    let prefix = &options.css_class_prefix;
+
+    let mut col_count: u8 = 1;
+    let mut col_spacing_hu: i16 = 0;
+    let mut div_line_type: u8 = 0;
+
+    for para in paragraphs {
+        for record in &para.records {
+            if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                if let CtrlHeaderData::ColumnDefinition {
+                    attribute,
+                    column_spacing,
+                    divider_line_type,
+                    ..
+                } = &header.data
+                {
+                    if attribute.column_count > 1 {
+                        col_count = attribute.column_count;
+                        col_spacing_hu = *column_spacing;
+                        div_line_type = *divider_line_type;
+                    }
+                }
+            }
+        }
+    }
+
+    let margin_mm = round_to_2dp(int32_to_mm(298));
+
+    if col_count <= 1 {
+        let body = render_paragraphs_fragment(paragraphs, document, options);
+        return format!(
+            r#"<div class="{p}hcD" style="left:{m}mm;top:{m}mm;">{body}</div>"#,
+            p = prefix,
+            m = margin_mm,
+        );
+    }
+
+    let col_count_usize = col_count as usize;
+    let col_spacing_mm = round_to_2dp(int32_to_mm(col_spacing_hu as i32));
+
+    let mut col_contents: Vec<String> = vec![String::new(); col_count_usize];
+    let mut content_h_mm: f64 = 0.0;
+    let mut seg_width_mm: f64 = 0.0;
+
+    let mut pattern_counter = 0usize;
+    let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
+
+    let mut mc_rendered = false;
+    for para in paragraphs {
+        if para.para_header.column_divide_type.is_empty() {
+            continue;
+        }
+        if mc_rendered {
+            break; // 중복 다단 문단 건너뛰기 / Skip duplicate multi-column paragraphs
+        }
+        mc_rendered = true;
+
+        let para_shape_id = para.para_header.para_shape_id;
+        let para_shape_class = if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+            format!("ps{}", para_shape_id)
+        } else {
+            String::new()
+        };
+
+        let (para_text, char_shapes) = text::extract_text_and_shapes(para);
+
+        let mut line_segments: Vec<LineSegmentInfo> = Vec::new();
+        let mut control_char_positions = Vec::new();
+
+        for record in &para.records {
+            match record {
+                ParagraphRecord::ParaLineSeg { segments } => {
+                    line_segments = segments.clone();
+                }
+                ParagraphRecord::ParaText {
+                    control_char_positions: ccp,
+                    ..
+                } => {
+                    control_char_positions = ccp.clone();
+                }
+                _ => {}
+            }
+        }
+
+        if line_segments.len() < col_count_usize {
+            continue;
+        }
+
+        let segs_per_col = line_segments.len() / col_count_usize;
+        if segs_per_col == 0 {
+            continue;
+        }
+
+        if seg_width_mm == 0.0 {
+            seg_width_mm = round_to_2dp(int32_to_mm(line_segments[0].segment_width));
+        }
+
+        let col_segs = &line_segments[..segs_per_col];
+        if let Some(last) = col_segs.last() {
+            let h = round_to_2dp(int32_to_mm(last.vertical_position + last.line_height));
+            if h > content_h_mm {
+                content_h_mm = h;
+            }
+        }
+
+        let para_shape_indent =
+            if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+                Some(document.doc_info.para_shapes[para_shape_id as usize].indent)
+            } else {
+                None
+            };
+
+        let original_text_len = para.para_header.text_char_count as usize;
+
+        for col in 0..col_count_usize {
+            let col_start = col * segs_per_col;
+            let col_end = (col + 1) * segs_per_col;
+            let col_segs = &line_segments[col_start..col_end];
+
+            let col_original_text_len = if col + 1 < col_count_usize {
+                line_segments[(col + 1) * segs_per_col].text_start_position as usize
+            } else {
+                original_text_len
+            };
+
+            let col_control_chars: Vec<_> = control_char_positions
+                .iter()
+                .filter(|cp| {
+                    let size = ControlChar::get_size_by_code(cp.code);
+                    let cp_end = cp.position + size;
+                    cp_end > col_segs[0].text_start_position as usize
+                        && cp.position < col_original_text_len
+                })
+                .cloned()
+                .collect();
+
+            let content = LineSegmentContent {
+                segments: col_segs,
+                text: &para_text,
+                char_shapes: &char_shapes,
+                control_char_positions: &col_control_chars,
+                original_text_len: col_original_text_len,
+                images: &[],
+                tables: &[],
+            };
+
+            let context = LineSegmentRenderContext {
+                document,
+                para_shape_class: &para_shape_class,
+                options,
+                para_shape_indent,
+                hcd_position: None,
+                page_def: None,
+            };
+
+            let mut state = DocumentRenderState {
+                table_counter_start: 0,
+                pattern_counter: &mut pattern_counter,
+                color_to_pattern: &mut color_to_pattern,
+            };
+
+            col_contents[col]
+                .push_str(&render_line_segments_with_content(&content, &context, &mut state));
+        }
+    }
+
+    let mut hcd_inner = String::new();
+
+    if div_line_type > 0 && content_h_mm > 0.0 {
+        let sep_left_mm = round_to_2dp(seg_width_mm + (col_spacing_mm - 0.11) / 2.0);
+        let svg_h = round_to_2dp(content_h_mm + 0.23);
+        hcd_inner.push_str(&format!(
+            r#"<div class="{p}hcS" style="left:{sl}mm;top:0mm;width:0.11mm;height:{h}mm;"><svg class="hs" viewBox="-0.12 -0.12 0.35 {svgh}" style="left:-0.12mm;top:-0.12mm;width:0.35mm;height:{svgh}mm;left:0;top:0;"><path d="M0.06,0 L0.06,{h}" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
+            p = prefix,
+            sl = sep_left_mm,
+            h = content_h_mm,
+            svgh = svg_h,
+        ));
+    }
+
+    for (col, col_html) in col_contents.iter().enumerate() {
+        if col == 0 {
+            hcd_inner.push_str(&format!(
+                r#"<div class="{p}hcI">{c}</div>"#,
+                p = prefix,
+                c = col_html,
+            ));
+        } else {
+            let col_left_mm = round_to_2dp(seg_width_mm + col_spacing_mm);
+            hcd_inner.push_str(&format!(
+                r#"<div class="{p}hcI" style="left:{l}mm;">{c}</div>"#,
+                p = prefix,
+                l = col_left_mm,
+                c = col_html,
+            ));
+        }
+    }
+
+    format!(
+        r#"<div class="{p}hcD" style="left:{m}mm;top:{m}mm;">{inner}</div>"#,
+        p = prefix,
+        m = margin_mm,
+        inner = hcd_inner,
+    )
 }
 
 /// ParagraphRecord 배열에서 재귀적으로 이미지 수집 / Recursively collect images from ParagraphRecord array
@@ -158,7 +562,6 @@ fn collect_images_from_records(
                     options.html_output_dir.as_deref(),
                 );
                 if !image_url.is_empty() {
-                    // border_rectangle가 유효하면 사용, 아니면 shape_component 사용
                     let br_width = (shape_component_picture.border_rectangle_x.right
                         - shape_component_picture.border_rectangle_x.left)
                         .max(0) as u32;
@@ -189,7 +592,6 @@ fn collect_images_from_records(
                 shape_component,
                 children,
             } => {
-                // 재귀적으로 children에서 이미지 찾기 (shape_component.width/height 전달)
                 collect_images_from_records(
                     children,
                     document,
@@ -202,8 +604,6 @@ fn collect_images_from_records(
                 );
             }
             ParagraphRecord::CtrlHeader { children, .. } => {
-                // 중첩된 CtrlHeader도 처리 (속성은 상위에서 상속, shape_component 크기는 유지)
-                // Process nested CtrlHeader (attributes inherited from parent, shape_component size maintained)
                 collect_images_from_records(
                     children,
                     document,
