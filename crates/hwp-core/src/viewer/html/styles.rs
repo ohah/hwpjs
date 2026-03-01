@@ -34,7 +34,7 @@ pub fn generate_css_styles(document: &HwpDocument) -> String {
     css.push_str(".hdu {margin:0;padding:0;position:relative;}\n");
     css.push_str(".hdS {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hsC {margin:0;padding:0;position:absolute;}\n");
-    css.push_str(".hsR {margin:0;padding:0;position:absolute;}\n");
+    css.push_str(".hsR {margin:0;padding:0;position:absolute;background-size:100% 100%;}\n");
     css.push_str(".hsG {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hsL {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hsT {margin:0;padding:0;position:absolute;overflow:hidden;}\n");

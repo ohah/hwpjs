@@ -141,18 +141,15 @@ fn vertical_segment_borderline(
     is_left_edge: bool,
     is_right_edge: bool,
 ) -> Option<BorderLine> {
-    let eps = 0.01;
+    let eps = 0.02; // 부동소수점 누적 오차를 허용하기 위해 0.02mm 사용
 
-    // 바깥 테두리: table.border_fill_id가 있으면 그걸 우선, 없으면 셀 border_fill로 결정
+    // 바깥 테두리: table.border_fill_id 기본값을 먼저 수집하되, 셀 border와 비교 후 결정
+    let mut table_default_line: Option<BorderLine> = None;
     if is_left_edge {
-        if let Some(line) = default_borderline(table, document, 0) {
-            return Some(line);
-        }
+        table_default_line = default_borderline(table, document, 0);
     }
     if is_right_edge {
-        if let Some(line) = default_borderline(table, document, 1) {
-            return Some(line);
-        }
+        table_default_line = table_default_line.or(default_borderline(table, document, 1));
     }
 
     // 경계선 우선순위(원본 HTML과 일치시키기 위한 규칙):
@@ -186,7 +183,7 @@ fn vertical_segment_borderline(
         };
 
         // 왼쪽 셀의 Right: 여러 셀이 매칭되면 "첫 셀" 우선(원본/레거시 동작에 더 근접)
-        if (cell_right - col_x).abs() < eps {
+        if (cell_right - col_x).abs() <= eps {
             let cand = bf.borders[1].clone();
             if from_left_cell_right.is_none() {
                 from_left_cell_right = Some(cand);
@@ -194,7 +191,7 @@ fn vertical_segment_borderline(
         }
 
         // 오른쪽 셀의 Left: 여러 셀이 매칭되면 "첫 셀" 우선
-        if (cell_left - col_x).abs() < eps {
+        if (cell_left - col_x).abs() <= eps {
             let cand = bf.borders[0].clone();
             if from_right_cell_left.is_none() {
                 from_right_cell_left = Some(cand);
@@ -202,10 +199,36 @@ fn vertical_segment_borderline(
         }
     }
 
-    if is_left_edge {
+    let cell_border = if is_left_edge {
         from_right_cell_left.or(from_left_cell_right)
     } else {
         from_left_cell_right.or(from_right_cell_left)
+    };
+
+    // 외곽 테두리 선택 로직:
+    // 1) 셀 border가 line_type=0 (선 없음)이면 → 셀이 명시적으로 선 없음을 지정한 것이므로 그리지 않음
+    // 2) 셀 border가 다른 색상이고 더 두꺼우면 → 셀 border 우선
+    // 3) 그 외 → table default 사용
+    if is_left_edge || is_right_edge {
+        match &cell_border {
+            // 셀이 명시적으로 line_type=0 (선 없음)으로 설정한 경우: 테이블 default도 무시
+            Some(cb) if cb.line_type == 0 => None,
+            Some(cb) => {
+                match &table_default_line {
+                    Some(td) if td.line_type != 0 && td.width != 0 => {
+                        if cb.color != td.color && cb.width > td.width {
+                            cell_border
+                        } else {
+                            table_default_line
+                        }
+                    }
+                    _ => cell_border,
+                }
+            }
+            None => table_default_line,
+        }
+    } else {
+        cell_border
     }
 }
 
@@ -221,19 +244,16 @@ fn horizontal_segment_borderline(
     is_top_edge: bool,
     is_bottom_edge: bool,
 ) -> Option<BorderLine> {
-    let eps = 0.01;
+    let eps = 0.02; // 부동소수점 누적 오차를 허용하기 위해 0.02mm 사용
     let _ = ctrl_header_height_mm; // row_positions 기반 계산을 사용
 
-    // 바깥 테두리: table.border_fill_id가 있으면 그걸 우선, 없으면 셀 border_fill로 결정
+    // 바깥 테두리: table.border_fill_id 기본값을 먼저 수집하되, 셀 border와 비교 후 결정
+    let mut table_default_line: Option<BorderLine> = None;
     if is_top_edge {
-        if let Some(line) = default_borderline(table, document, 2) {
-            return Some(line);
-        }
+        table_default_line = default_borderline(table, document, 2);
     }
     if is_bottom_edge {
-        if let Some(line) = default_borderline(table, document, 3) {
-            return Some(line);
-        }
+        table_default_line = table_default_line.or(default_borderline(table, document, 3));
     }
 
     // 경계선 우선순위(원본 HTML과 일치시키기 위한 규칙):
@@ -275,7 +295,7 @@ fn horizontal_segment_borderline(
         };
 
         // 위쪽 셀의 Bottom: 여러 셀이 매칭되면 "첫 셀" 우선
-        if (cell_bottom - row_y).abs() < eps {
+        if (cell_bottom - row_y).abs() <= eps {
             let cand = bf.borders[3].clone();
             if from_upper_cell_bottom.is_none() {
                 from_upper_cell_bottom = Some(cand);
@@ -283,7 +303,7 @@ fn horizontal_segment_borderline(
         }
 
         // 아래쪽 셀의 Top: 여러 셀이 매칭되면 "첫 셀" 우선
-        if (cell_top - row_y).abs() < eps {
+        if (cell_top - row_y).abs() <= eps {
             let cand = bf.borders[2].clone();
             if from_lower_cell_top.is_none() {
                 from_lower_cell_top = Some(cand);
@@ -291,10 +311,35 @@ fn horizontal_segment_borderline(
         }
     }
 
-    if is_top_edge {
+    let cell_border = if is_top_edge {
         from_lower_cell_top.or(from_upper_cell_bottom)
     } else {
         from_upper_cell_bottom.or(from_lower_cell_top)
+    };
+
+    // 외곽 테두리 선택 로직:
+    // 1) 셀 border가 line_type=0 (선 없음)이면 → 셀이 명시적으로 선 없음을 지정한 것이므로 그리지 않음
+    // 2) 셀 border가 다른 색상이고 더 두꺼우면 → 셀 border 우선
+    // 3) 그 외 → table default 사용
+    if is_top_edge || is_bottom_edge {
+        match &cell_border {
+            Some(cb) if cb.line_type == 0 => None,
+            Some(cb) => {
+                match &table_default_line {
+                    Some(td) if td.line_type != 0 && td.width != 0 => {
+                        if cb.color != td.color && cb.width > td.width {
+                            cell_border
+                        } else {
+                            table_default_line
+                        }
+                    }
+                    _ => cell_border,
+                }
+            }
+            None => table_default_line,
+        }
+    } else {
+        cell_border
     }
 }
 

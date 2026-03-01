@@ -167,9 +167,21 @@ fn collect_images(
                             options.html_output_dir.as_deref(),
                         );
                         if !image_url.is_empty() {
+                            let br_width = (shape_component_picture.border_rectangle_x.right
+                                - shape_component_picture.border_rectangle_x.left)
+                                .max(0) as u32;
+                            let br_height = (shape_component_picture.border_rectangle_y.bottom
+                                - shape_component_picture.border_rectangle_y.top)
+                                .max(0) as u32;
+                            // border_rectangle가 유효하면 사용, 아니면 shape_component 사용
+                            let (w, h) = if br_width > 0 && br_height > 0 {
+                                (br_width, br_height)
+                            } else {
+                                (shape_component.width, shape_component.height)
+                            };
                             images.push(super::line_segment::ImageInfo {
-                                width: shape_component.width,
-                                height: shape_component.height,
+                                width: w,
+                                height: h,
                                 url: image_url,
                                 like_letters: false,
                                 vert_rel_to: None,
@@ -290,12 +302,23 @@ pub fn render_paragraph(
                             options.html_output_dir.as_deref(),
                         );
                         if !image_url.is_empty() {
-                            // shape_component.width/height를 직접 사용 / Use shape_component.width/height directly
+                            let br_width = (shape_component_picture.border_rectangle_x.right
+                                - shape_component_picture.border_rectangle_x.left)
+                                .max(0) as u32;
+                            let br_height = (shape_component_picture.border_rectangle_y.bottom
+                                - shape_component_picture.border_rectangle_y.top)
+                                .max(0) as u32;
+                            // border_rectangle가 유효하면 사용, 아니면 shape_component 사용
+                            let (w, h) = if br_width > 0 && br_height > 0 {
+                                (br_width, br_height)
+                            } else {
+                                (shape_component.width, shape_component.height)
+                            };
                             images.push(ImageInfo {
-                                width: shape_component.width,
-                                height: shape_component.height,
+                                width: w,
+                                height: h,
                                 url: image_url,
-                                like_letters: false, // ShapeComponent에서 직접 온 이미지는 ctrl_header 정보 없음 / Images from ShapeComponent directly have no ctrl_header info
+                                like_letters: false,
                                 vert_rel_to: None,
                             });
                         }

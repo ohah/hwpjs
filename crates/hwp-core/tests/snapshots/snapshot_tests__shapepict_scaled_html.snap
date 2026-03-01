@@ -30,7 +30,7 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
 .hdu {margin:0;padding:0;position:relative;}
 .hdS {margin:0;padding:0;position:absolute;}
 .hsC {margin:0;padding:0;position:absolute;}
-.hsR {margin:0;padding:0;position:absolute;}
+.hsR {margin:0;padding:0;position:absolute;background-size:100% 100%;}
 .hsG {margin:0;padding:0;position:absolute;}
 .hsL {margin:0;padding:0;position:absolute;}
 .hsT {margin:0;padding:0;position:absolute;overflow:hidden;}
@@ -127,6 +127,6 @@ body {padding:0;}
 
 
 <body>
-<div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps1" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:79.38mm;height:3.53mm;width:150.00mm;"></div><div class="hsR" style="top:35mm;left:30mm;width:132.29mm;height:79.38mm;background-repeat:no-repeat;background-size:contain;background-image:url('images/shapepict-scaled/BIN0001.jpg');"></div></div></div></div><div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps1" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:39.69mm;height:3.53mm;width:150.00mm;"></div><div class="hsR" style="top:35mm;left:30mm;width:66.15mm;height:39.69mm;background-repeat:no-repeat;background-size:contain;background-image:url('images/shapepict-scaled/BIN0001.jpg');"></div></div></div></div></body>
+<div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps1" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:79.38mm;height:3.53mm;width:150.00mm;"></div><div class="hsR" style="top:35mm;left:30mm;width:132.29mm;height:79.38mm;background-repeat:no-repeat;background-image:url('images/shapepict-scaled/BIN0001.jpg');"></div></div></div></div><div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps1" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:39.69mm;height:3.53mm;width:150.00mm;"></div><div class="hsR" style="top:35mm;left:30mm;width:66.15mm;height:39.69mm;background-repeat:no-repeat;background-image:url('images/shapepict-scaled/BIN0001.jpg');"></div></div></div></div></body>
 
 </html>
