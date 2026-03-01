@@ -20,6 +20,7 @@
     "test:rust-core": "cargo test --package hwp-core",
     "test:rust:snapshot": "cargo insta test --workspace",
     "test:rust:snapshot:review": "cargo insta review --workspace",
+    "serve:snapshots": "bash scripts/serve-snapshots.sh",
     "test:node": "bun run --filter=@ohah/hwpjs test",
     "test:mobile:e2e": "maestro test .maestro/app-launch.yaml",
     "test:mobile:e2e:android": "maestro test .maestro/app-launch.yaml",
