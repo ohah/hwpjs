@@ -50,15 +50,15 @@ impl HwpjsSpec for Hwpjs {
         ToMarkdownResult { markdown }
     }
 
-    fn to_pdf(&mut self, data: Vec<u8>, options: ToPdfOptions) -> Result<Vec<u8>, anyhow::Error> {
+    fn to_pdf(&mut self, data: Vec<u8>, options: ToPdfOptions) -> Vec<u8> {
         let parser = HwpParser::new();
-        let document = parser.parse(&data).map_err(|e| anyhow::anyhow!("{}", e))?;
+        let document = parser.parse(&data).unwrap_or_else(|e| throw!("{}", e));
         let font_dir: Nullable<String> = options.font_dir.into();
         let pdf_options = hwp_core::viewer::PdfOptions {
             font_dir: font_dir.into_value().map(std::path::PathBuf::from),
             embed_images: options.embed_images,
         };
-        Ok(document.to_pdf(&pdf_options))
+        document.to_pdf(&pdf_options)
     }
 
     fn file_header(&mut self, data: Vec<u8>) -> String {
