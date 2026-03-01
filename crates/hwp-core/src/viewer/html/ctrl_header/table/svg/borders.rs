@@ -213,18 +213,16 @@ fn vertical_segment_borderline(
         match &cell_border {
             // 셀이 명시적으로 line_type=0 (선 없음)으로 설정한 경우: 테이블 default도 무시
             Some(cb) if cb.line_type == 0 => None,
-            Some(cb) => {
-                match &table_default_line {
-                    Some(td) if td.line_type != 0 && td.width != 0 => {
-                        if cb.color != td.color && cb.width > td.width {
-                            cell_border
-                        } else {
-                            table_default_line
-                        }
+            Some(cb) => match &table_default_line {
+                Some(td) if td.line_type != 0 && td.width != 0 => {
+                    if cb.color != td.color && cb.width > td.width {
+                        cell_border
+                    } else {
+                        table_default_line
                     }
-                    _ => cell_border,
                 }
-            }
+                _ => cell_border,
+            },
             None => table_default_line,
         }
     } else {
@@ -324,18 +322,16 @@ fn horizontal_segment_borderline(
     if is_top_edge || is_bottom_edge {
         match &cell_border {
             Some(cb) if cb.line_type == 0 => None,
-            Some(cb) => {
-                match &table_default_line {
-                    Some(td) if td.line_type != 0 && td.width != 0 => {
-                        if cb.color != td.color && cb.width > td.width {
-                            cell_border
-                        } else {
-                            table_default_line
-                        }
+            Some(cb) => match &table_default_line {
+                Some(td) if td.line_type != 0 && td.width != 0 => {
+                    if cb.color != td.color && cb.width > td.width {
+                        cell_border
+                    } else {
+                        table_default_line
                     }
-                    _ => cell_border,
                 }
-            }
+                _ => cell_border,
+            },
             None => table_default_line,
         }
     } else {
