@@ -120,11 +120,7 @@ impl Renderer for HtmlRenderer {
         String::new()
     }
 
-    fn render_document_footer(
-        &self,
-        _parts: &DocumentParts,
-        _options: &Self::Options,
-    ) -> String {
+    fn render_document_footer(&self, _parts: &DocumentParts, _options: &Self::Options) -> String {
         String::new()
     }
 

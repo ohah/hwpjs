@@ -3484,7 +3484,7 @@
                           "top": 141,
                           "bottom": 141
                         },
-                        "row_sizes": [
+                        "row_cols": [
                           2,
                           2
                         ],
@@ -4423,7 +4423,7 @@
                           "top": 141,
                           "bottom": 141
                         },
-                        "row_sizes": [
+                        "row_cols": [
                           1
                         ],
                         "border_fill_id": 2,
@@ -4764,7 +4764,7 @@
                           "top": 141,
                           "bottom": 141
                         },
-                        "row_sizes": [
+                        "row_cols": [
                           2,
                           2
                         ],

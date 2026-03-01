@@ -62,19 +62,6 @@ pub(crate) fn get_row_height(
         }
     }
 
-    // row_sizes가 있으면 사용 (셀 height보다 우선순위 낮음) / Use row_sizes if available (lower priority than cell height)
-    if !table.attributes.row_sizes.is_empty() && row_index < table.attributes.row_sizes.len() {
-        if let Some(&row_size) = table.attributes.row_sizes.get(row_index) {
-            // row_size가 0이거나 매우 작은 값(< 100)일 때는 셀 height 사용
-            // When row_size is 0 or very small (< 100), use cell height
-            if row_size >= 100 {
-                let row_height = (row_size as f64 / 7200.0) * 25.4;
-                // row_size와 셀 height 중 더 큰 값 사용 / Use larger of row_size and cell height
-                return max_cell_height.max(row_height);
-            }
-        }
-    }
-
     // 셀 height가 있으면 사용 / Use cell height if available
     if max_cell_height > 0.0 {
         return max_cell_height;
@@ -364,8 +351,6 @@ pub(crate) fn row_positions(
             } else if base_row_height_mm > 0.0 {
                 // max_row_heights_with_shapes에 없으면 object_common.height를 행 개수로 나눈 값 사용 / If not in max_row_heights_with_shapes, use object_common.height divided by row count
                 current_y += base_row_height_mm;
-            } else if let Some(&row_size) = table.attributes.row_sizes.get(row_idx) {
-                current_y += (row_size as f64 / 7200.0) * 25.4;
             }
             positions.push(current_y);
         }

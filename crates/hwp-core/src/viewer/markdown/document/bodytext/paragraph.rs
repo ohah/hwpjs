@@ -490,7 +490,8 @@ mod tests {
     fn test_para_text_with_char_shapes() {
         let text = "Styled text";
         let char_shapes = vec![];
-        let result = convert_para_text_to_markdown_with_char_shapes(text, &vec![], &char_shapes, None);
+        let result =
+            convert_para_text_to_markdown_with_char_shapes(text, &vec![], &char_shapes, None);
         assert!(result.is_some());
     }
 }

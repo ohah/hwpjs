@@ -377,6 +377,7 @@ pub fn render_line_segments_with_content(
                     first_para_vertical_mm: None,
                     content_height_mm: None,
                     fragment_height_mm: None,
+                    table_height_for_overflow_mm: None,
                 };
 
                 let (table_html, _) = render_table(

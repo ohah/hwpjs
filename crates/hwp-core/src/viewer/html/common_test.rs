@@ -1,12 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::document::{
-        BinDataRecord, FileHeader, HwpDocument,
-    };
-    use crate::document::bindata::{BinaryDataItem};
-    use crate::document::docinfo::bin_data::{
-        BinDataEmbedding,
-    };
+    use crate::document::bindata::BinaryDataItem;
+    use crate::document::docinfo::bin_data::BinDataEmbedding;
+    use crate::document::{BinDataRecord, FileHeader, HwpDocument};
     use crate::viewer::html::common;
 
     // Test get_extension_from_bindata_id
@@ -307,7 +303,8 @@ mod tests {
             BinDataRecord::Embedding {
                 attributes: crate::document::docinfo::bin_data::BinDataAttributes {
                     storage_type: crate::document::docinfo::bin_data::BinDataStorageType::Embedding,
-                    compression: crate::document::docinfo::bin_data::CompressionType::StorageDefault,
+                    compression:
+                        crate::document::docinfo::bin_data::CompressionType::StorageDefault,
                     access: crate::document::docinfo::bin_data::AccessState::Never,
                 },
                 embedding: BinDataEmbedding {
@@ -318,7 +315,8 @@ mod tests {
             BinDataRecord::Embedding {
                 attributes: crate::document::docinfo::bin_data::BinDataAttributes {
                     storage_type: crate::document::docinfo::bin_data::BinDataStorageType::Embedding,
-                    compression: crate::document::docinfo::bin_data::CompressionType::StorageDefault,
+                    compression:
+                        crate::document::docinfo::bin_data::CompressionType::StorageDefault,
                     access: crate::document::docinfo::bin_data::AccessState::Never,
                 },
                 embedding: BinDataEmbedding {

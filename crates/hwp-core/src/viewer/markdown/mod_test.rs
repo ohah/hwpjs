@@ -11,10 +11,7 @@ fn test_markdown_options_builder() {
         include_page_info: Some(false),
     };
 
-    assert_eq!(
-        options.image_output_dir,
-        Some("/output".to_string())
-    );
+    assert_eq!(options.image_output_dir, Some("/output".to_string()));
     assert_eq!(options.use_html, Some(true));
     assert_eq!(options.include_version, Some(false));
     assert_eq!(options.include_page_info, Some(false));

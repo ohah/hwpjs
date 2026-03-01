@@ -13,7 +13,10 @@ mod paragraph_test;
 pub mod renderer;
 
 pub use bodytext::process_bodytext;
-pub use outline::{compute_outline_number, format_outline_number, OutlineNumberTracker, OutlineNumberTracker as OutlineTracker};
+pub use outline::{
+    compute_outline_number, format_outline_number, OutlineNumberTracker,
+    OutlineNumberTracker as OutlineTracker,
+};
 pub use paragraph::process_paragraph;
 pub use renderer::{DocumentParts, Renderer, TextStyles};
 

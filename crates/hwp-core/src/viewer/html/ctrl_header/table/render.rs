@@ -134,6 +134,8 @@ pub struct TablePosition {
     pub content_height_mm: Option<f64>,
     /// 이번 페이지에 그리는 테이블 조각 높이(mm). Some이면 htb height와 SVG viewBox를 이 값으로 사용.
     pub fragment_height_mm: Option<f64>,
+    /// overflow 판정에 사용할 전체 블록 높이(mm). 캡션·마진 포함. None이면 resolved_size.height 사용.
+    pub table_height_for_overflow_mm: Option<f64>,
 }
 
 /// 테이블을 HTML로 렌더링 / Render table to HTML
@@ -248,7 +250,9 @@ pub fn render_table(
         para_segment_width_mm,
         first_para_vertical_mm,
         position.content_height_mm,
-        Some(resolved_size.height),
+        position
+            .table_height_for_overflow_mm
+            .or(Some(resolved_size.height)),
     );
 
     // htG 래퍼 생성 (캡션이 있는 경우에만) / Create htG wrapper only when caption exists

@@ -3,9 +3,7 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::viewer::html::ctrl_header::table::constants::{
-        BORDER_OFFSET_MM, SVG_PADDING_MM,
-    };
+    use crate::viewer::html::ctrl_header::table::constants::{BORDER_OFFSET_MM, SVG_PADDING_MM};
 
     #[test]
     fn test_svg_padding_mm_valid_value() {

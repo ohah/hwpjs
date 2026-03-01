@@ -1,6 +1,5 @@
 /// HTML viewer module unit tests
 /// HTML 뷰어 모듈 단위 테스트
-
 use crate::viewer::core::renderer::{Renderer, TextStyles};
 use crate::viewer::html::{HtmlOptions, HtmlRenderer};
 
@@ -144,7 +143,10 @@ fn test_render_paragraph_with_complex_content() {
     let content = "Paragraph with <b>bold</b> and <i>italic</i> text.";
     let rendered = renderer.render_paragraph(content);
 
-    assert_eq!(rendered, "<p>Paragraph with <b>bold</b> and <i>italic</i> text.</p>");
+    assert_eq!(
+        rendered,
+        "<p>Paragraph with <b>bold</b> and <i>italic</i> text.</p>"
+    );
 }
 
 #[test]

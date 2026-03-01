@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::viewer::html::pagination::{PaginationContext, PaginationResult, PageBreakReason};
+    use crate::viewer::html::pagination::{PageBreakReason, PaginationContext, PaginationResult};
 
     #[test]
     fn test_pagination_context_default() {

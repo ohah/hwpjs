@@ -433,8 +433,8 @@ pub fn render_paragraph(
     let content_height_mm = context.position.content_height_mm; // 블록 내 테이블 위치 계산용 / For table position inside block
     let position_table_fragment_height_mm = context.position.table_fragment_height_mm;
     let position_table_fragment_apply_at_index = context.position.table_fragment_apply_at_index; // 재렌더 시 어느 테이블에 remainder 적용할지 (아래에서 context가 LineSegmentRenderContext로 섀도됨)
-                                                                // base_top(mm): hcD의 top 위치. like_letters=false 테이블(=hpa 레벨로 빠지는 객체)의 vert_rel_to=para 계산에
-                                                                // 페이지 기준(절대) y 좌표가 필요하므로, paragraph 기준 y(vertical_position)에 base_top을 더해 절대값으로 전달한다.
+                                                                                                 // base_top(mm): hcD의 top 위치. like_letters=false 테이블(=hpa 레벨로 빠지는 객체)의 vert_rel_to=para 계산에
+                                                                                                 // 페이지 기준(절대) y 좌표가 필요하므로, paragraph 기준 y(vertical_position)에 base_top을 더해 절대값으로 전달한다.
     let _base_top_mm = if let Some((_hcd_left, hcd_top)) = hcd_position {
         hcd_top
     } else if let Some(pd) = page_def {
@@ -597,10 +597,8 @@ pub fn render_paragraph(
         let mut next_para_vertical_mm = para_start_vertical_mm;
         let mut table_entries: Vec<(f64, String)> = Vec::new();
         let mut overflow_already_applied = false; // 문단 내 overflow 보정은 한 번만 (fixture 표7만 1페이지 하단, 표8은 2페이지 상단)
-        for (table_loop_index, table_info) in absolute_tables
-            .iter()
-            .skip(skip_tables_count)
-            .enumerate()
+        for (table_loop_index, table_info) in
+            absolute_tables.iter().skip(skip_tables_count).enumerate()
         {
             let ref_para_vertical_for_table = next_para_vertical_mm;
             let first_para_vertical_for_table = first_para_vertical_mm;
@@ -615,15 +613,63 @@ pub fn render_paragraph(
             let resolved_size = resolve_container_size(container_size, content_size);
             let height_mm = resolved_size.height;
 
+            // 캡션이 있을 때 전체 블록 높이(htG)를 사전 추정
+            // render.rs의 htG 계산식과 동일: resolved_height_with_margin + caption_height + caption_gap
+            // caption_height는 CaptionInfo.height_mm이 None인 경우가 많으므로,
+            // render.rs와 동일하게 LineSegment 데이터에서 계산함.
+            let block_height_for_overflow = {
+                use crate::document::bodytext::ctrl_header::CaptionAlign;
+                use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
+                let mut h = height_mm;
+                if let Some(ref caption) = table_info.caption {
+                    let is_horizontal =
+                        matches!(caption.info.align, CaptionAlign::Top | CaptionAlign::Bottom);
+                    if is_horizontal {
+                        // render.rs의 caption_height_mm 계산 로직과 동일:
+                        // LineSegment에서 마지막 vertical_position + line_height를 사용
+                        let caption_h = {
+                            let mut all_segments = Vec::new();
+                            for para in caption.paragraphs.iter() {
+                                for seg in para.line_segments.iter() {
+                                    all_segments.push(*seg);
+                                }
+                            }
+                            if all_segments.len() > 1 {
+                                if let Some(last_seg) = all_segments.last() {
+                                    let last_v =
+                                        round_to_2dp(int32_to_mm(last_seg.vertical_position));
+                                    let last_lh = round_to_2dp(int32_to_mm(last_seg.line_height));
+                                    round_to_2dp(last_v + last_lh)
+                                } else {
+                                    caption.info.height_mm.unwrap_or(3.53)
+                                }
+                            } else if let Some(first_seg) = all_segments.first() {
+                                round_to_2dp(int32_to_mm(first_seg.line_height))
+                            } else {
+                                caption.info.height_mm.unwrap_or(3.53)
+                            }
+                        };
+                        let caption_gap = caption
+                            .info
+                            .gap
+                            .map(|g| (g as f64 / 7200.0) * 25.4)
+                            .unwrap_or(3.0);
+                        h += caption_h + caption_gap;
+                    }
+                    // 세로 캡션(Left/Right)은 htG height = resolved_height이므로 추가 없음
+                }
+                h
+            };
+
             // overflow 보정(앵커 위로 올리기)은 이 문단에서 처음으로 콘텐츠를 넘치는 테이블에만 적용.
             // 두 번째 넘치는 테이블은 보정 없이 넘치게 해 페이지 브레이크 후 다음 페이지 상단에 배치 (fixture 표7·표8).
             let would_overflow = ref_para_vertical_for_table
                 .zip(content_height_mm)
-                .map(|(r, ch)| r + height_mm > ch)
+                .map(|(r, ch)| r + block_height_for_overflow > ch)
                 .unwrap_or(false);
             let overflow_check = (would_overflow && !overflow_already_applied).then(|| {
                 overflow_already_applied = true;
-                (content_height_mm, Some(height_mm))
+                (content_height_mm, Some(block_height_for_overflow))
             });
 
             // 테이블 위치 계산 (정확한 위치) / Calculate table position (exact position)
@@ -686,6 +732,13 @@ pub fn render_paragraph(
                 color_to_pattern: state.color_to_pattern,
             };
 
+            // overflow_check가 None이면 render.rs의 table_position에서도 overflow 보정이 발생하지 않도록
+            // content_height_mm을 None으로 전달한다.
+            let content_height_for_render = if overflow_check.is_some() {
+                content_height_mm
+            } else {
+                None
+            };
             let position = TablePosition {
                 hcd_position,
                 segment_position: None, // like_letters=false인 테이블은 segment_position 없음 / No segment_position for like_letters=false tables
@@ -693,8 +746,9 @@ pub fn render_paragraph(
                 para_start_column_mm,
                 para_segment_width_mm,
                 first_para_vertical_mm: first_para_vertical_for_table,
-                content_height_mm,
+                content_height_mm: content_height_for_render,
                 fragment_height_mm,
+                table_height_for_overflow_mm: overflow_check.map(|_| block_height_for_overflow),
             };
 
             let (table_html, htg_height_opt) = render_table(

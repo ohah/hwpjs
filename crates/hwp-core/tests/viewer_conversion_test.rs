@@ -1,8 +1,8 @@
 /// HWP 문서 viewer 변환 함수 통합 테스트
 /// HWP Document viewer conversion functions integration tests
 mod common;
-use hwp_core::{HwpDocument, FileHeader, HwpParser};
-use hwp_core::viewer::{MarkdownOptions, HtmlOptions, PdfOptions};
+use hwp_core::viewer::{HtmlOptions, MarkdownOptions, PdfOptions};
+use hwp_core::{FileHeader, HwpDocument, HwpParser};
 
 // Helper function to create default MarkdownOptions since it doesn't implement Default
 fn get_default_markdown_options() -> MarkdownOptions {
@@ -47,7 +47,10 @@ fn test_hwp_document_to_markdown_with_dir() {
 
             // Test markdown conversion with image directory option
             let markdown = document.to_markdown_with_dir(None);
-            assert!(!markdown.is_empty(), "Markdown output with dir option should not be empty");
+            assert!(
+                !markdown.is_empty(),
+                "Markdown output with dir option should not be empty"
+            );
         }
     }
 }
@@ -109,7 +112,10 @@ fn test_hwp_document_to_markdown_with_options() {
 
             let options = get_default_markdown_options();
             let markdown = document.to_markdown(&options);
-            assert!(!markdown.is_empty(), "Markdown output with options should not be empty");
+            assert!(
+                !markdown.is_empty(),
+                "Markdown output with options should not be empty"
+            );
         }
     }
 }
@@ -130,7 +136,10 @@ fn test_hwp_document_to_html_with_options() {
             // Don't modify options - test default behavior is sufficient
 
             let html = document.to_html(&html_options);
-            assert!(!html.is_empty(), "HTML output with options should not be empty");
+            assert!(
+                !html.is_empty(),
+                "HTML output with options should not be empty"
+            );
         }
     }
 }
@@ -166,7 +175,10 @@ fn test_hwp_document_resolve_display_texts() {
 fn test_hwp_document_empty() {
     // Test with minimal valid FileHeader
     // Create FileHeader with minimal valid bytes
-    let mut file_header_data = vec![b'H', b'W', b'P', b'D', b'o', b'c', b'u', b'm', b'e', b'n', b't', b'F', b'i', b'l', b'e', b'\r', b'\n'];
+    let mut file_header_data = vec![
+        b'H', b'W', b'P', b'D', b'o', b'c', b'u', b'm', b'e', b'n', b't', b'F', b'i', b'l', b'e',
+        b'\r', b'\n',
+    ];
     file_header_data.resize(256, 0); // Pad to minimum size
 
     if let Ok(file_header) = FileHeader::parse(&file_header_data) {
@@ -175,10 +187,16 @@ fn test_hwp_document_empty() {
         // Even an empty document should convert to non-empty output
         let markdown_options = get_default_markdown_options();
         let markdown = document.to_markdown(&markdown_options);
-        assert!(!markdown.is_empty(), "Empty document should produce markdown output");
+        assert!(
+            !markdown.is_empty(),
+            "Empty document should produce markdown output"
+        );
 
         let html_options = HtmlOptions::default();
         let html = document.to_html(&html_options);
-        assert!(!html.is_empty(), "Empty document should produce HTML output");
+        assert!(
+            !html.is_empty(),
+            "Empty document should produce HTML output"
+        );
     }
 }

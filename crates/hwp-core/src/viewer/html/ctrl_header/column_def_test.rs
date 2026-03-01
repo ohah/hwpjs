@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::viewer::html::ctrl_header::CtrlHeaderResult;
     use crate::document::CtrlHeader;
+    use crate::viewer::html::ctrl_header::CtrlHeaderResult;
 
     #[test]
     fn test_process_column_def_returns_ctrl_header_result() {
@@ -28,9 +28,7 @@ mod tests {
         use crate::viewer::HtmlOptions;
 
         // Just verify the types exist without creating full instances
-        let _ParagraphRecord: ParagraphRecord = ParagraphRecord::ParaLineSeg {
-            segments: vec![],
-        };
+        let _ParagraphRecord: ParagraphRecord = ParagraphRecord::ParaLineSeg { segments: vec![] };
         let _options = HtmlOptions::default();
         assert!(true);
     }

@@ -60,10 +60,7 @@ mod tests {
                 },
                 "".to_string(),
             ),
-            (
-                CtrlHeaderData::Other,
-                "".to_string(),
-            ),
+            (CtrlHeaderData::Other, "".to_string()),
             (
                 CtrlHeaderData::HeaderFooter {
                     attribute: Default::default(),
