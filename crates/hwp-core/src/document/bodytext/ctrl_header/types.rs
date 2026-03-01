@@ -153,7 +153,7 @@ pub enum CtrlHeaderData {
 }
 
 /// 개체 속성 / Object attribute
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ObjectAttribute {
     pub like_letters: bool,
     pub affect_line_spacing: bool,
@@ -171,26 +171,29 @@ pub struct ObjectAttribute {
     pub size_protect: bool,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum VertRelTo {
+    #[default]
     Paper,
     Page,
     Para,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum HorzRelTo {
+    #[default]
     Paper,
     Page,
     Column,
     Para,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ObjectWidthStandard {
+    #[default]
     Paper,
     Page,
     Column,
@@ -198,17 +201,19 @@ pub enum ObjectWidthStandard {
     Absolute,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ObjectHeightStandard {
+    #[default]
     Paper,
     Page,
     Absolute,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ObjectTextOption {
+    #[default]
     Square,
     Tight,
     Through,
@@ -217,18 +222,20 @@ pub enum ObjectTextOption {
     InFrontOfText,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ObjectTextPositionOption {
+    #[default]
     BothSides,
     LeftOnly,
     RightOnly,
     LargestOnly,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ObjectCategory {
+    #[default]
     None,
     Figure,
     Table,
@@ -301,9 +308,10 @@ pub struct HeaderFooterAttribute {
     pub apply_page: ApplyPage,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ApplyPage {
+    #[default]
     Both,
     EvenOnly,
     OddOnly,

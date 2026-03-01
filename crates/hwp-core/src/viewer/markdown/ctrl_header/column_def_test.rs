@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::convert_column_def_ctrl_to_markdown;
 
     #[test]
     fn test_column_def_module_compiles() {

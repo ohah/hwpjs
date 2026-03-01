@@ -193,6 +193,15 @@ impl From<serde_json::Error> for HwpError {
     }
 }
 
+/// Conversion from UTF-16 decode error to HwpError
+impl From<std::string::FromUtf16Error> for HwpError {
+    fn from(err: std::string::FromUtf16Error) -> Self {
+        HwpError::EncodingError {
+            reason: err.to_string(),
+        }
+    }
+}
+
 /// Conversion from HwpError to String for NAPI and other integrations
 /// This allows HwpError to be used with napi::Error::from_reason
 impl From<HwpError> for String {

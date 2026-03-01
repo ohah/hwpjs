@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::convert_footnote_ctrl_to_markdown;
 
     #[test]
     fn test_footnote_module_compiles() {

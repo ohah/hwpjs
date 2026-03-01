@@ -457,3 +457,40 @@ pub fn convert_paragraph_to_markdown(
 
     result
 }
+
+/// Unit tests for paragraph conversion helper functions
+/// 문단 변환 헬퍼 함수 단위 테스트
+#[cfg(test)]
+mod tests {
+    use super::convert_para_text_to_markdown;
+    use super::convert_para_text_to_markdown_with_char_shapes;
+
+    #[test]
+    fn test_para_text_conversion() {
+        let text = "Plain text";
+        let result = convert_para_text_to_markdown(text, &vec![]);
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_para_text_empty() {
+        let text = "";
+        let result = convert_para_text_to_markdown(text, &vec![]);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_para_text_whitespace() {
+        let text = "   ";
+        let result = convert_para_text_to_markdown(text, &vec![]);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_para_text_with_char_shapes() {
+        let text = "Styled text";
+        let char_shapes = vec![];
+        let result = convert_para_text_to_markdown_with_char_shapes(text, &vec![], &char_shapes, None);
+        assert!(result.is_some());
+    }
+}

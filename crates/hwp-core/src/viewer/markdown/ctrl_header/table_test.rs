@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::convert_table_ctrl_to_markdown;
     use crate::document::CtrlHeaderData;
 
     #[test]

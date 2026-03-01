@@ -1,6 +1,6 @@
 use crate::document::bodytext::ctrl_header::{CtrlHeaderData, HorzRelTo, VertRelTo};
 use crate::document::bodytext::PageDef;
-use crate::types::{RoundTo2dp, INT32};
+use crate::types::{INT32, SHWPUNIT};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 
 /// PageDef·hcd_position이 모두 없을 때만 사용하는 기준 위치 (스펙 기본 여백 대응).
@@ -63,10 +63,10 @@ pub(crate) fn table_position(
         };
 
     let (base_left, base_top) = if let Some((left, top)) = hcd_position {
-        (left.round_to_2dp(), top.round_to_2dp())
+        (round_to_2dp(left), round_to_2dp(top))
     } else if let Some(pd) = page_def {
-        let left = (pd.left_margin.to_mm() + pd.binding_margin.to_mm()).round_to_2dp();
-        let top = (pd.top_margin.to_mm() + pd.header_margin.to_mm()).round_to_2dp();
+        let left = round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm());
+        let top = round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm());
         (left, top)
     } else {
         (FALLBACK_BASE_LEFT_MM, FALLBACK_BASE_TOP_MM)
@@ -163,7 +163,7 @@ pub(crate) fn table_position(
                 offset_mm
             }
         } else {
-            offset_y.map(|y| y.to_mm()).unwrap_or(0.0)
+            offset_y.map(|y: SHWPUNIT| y.to_mm()).unwrap_or(0.0)
         };
 
         let mut final_top_mm = base_top_for_obj + offset_top_mm;

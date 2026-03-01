@@ -11,7 +11,6 @@ use super::HtmlOptions;
 use crate::document::bodytext::ctrl_header::{CtrlHeaderData, CtrlId};
 use crate::document::bodytext::{PageDef, ParagraphRecord};
 use crate::document::HwpDocument;
-use crate::types::RoundTo2dp;
 use crate::viewer::core::OutlineNumberTracker;
 use crate::INT32;
 
@@ -289,18 +288,17 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     }
                 }
                 // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
-                use crate::types::RoundTo2dp;
                 let hcd_pos = if let Some((left, top)) = hcd_position {
-                    Some((left.round_to_2dp(), top.round_to_2dp()))
+                    Some((round_to_2dp(left), round_to_2dp(top)))
                 } else {
                     // hcd_position이 없으면 PageDef 여백 사용 / Use PageDef margins if hcd_position not available
                     let left = page_def
                         .map(|pd| {
-                            (pd.left_margin.to_mm() + pd.binding_margin.to_mm()).round_to_2dp()
+                            round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm())
                         })
                         .unwrap_or(20.0);
                     let top = page_def
-                        .map(|pd| (pd.top_margin.to_mm() + pd.header_margin.to_mm()).round_to_2dp())
+                        .map(|pd| round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()))
                         .unwrap_or(24.99);
                     Some((left, top))
                 };
@@ -343,11 +341,11 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     // hcD position from PageDef only (no constants). Table position from hcd_position or segment_position only.
                     let left_margin_mm = page_def
                         .map(|pd| {
-                            (pd.left_margin.to_mm() + pd.binding_margin.to_mm()).round_to_2dp()
+                            round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm())
                         })
                         .unwrap_or(20.0);
                     let top_margin_mm = page_def
-                        .map(|pd| (pd.top_margin.to_mm() + pd.header_margin.to_mm()).round_to_2dp())
+                        .map(|pd| round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()))
                         .unwrap_or(24.99);
 
                     hcd_position = Some((left_margin_mm, top_margin_mm));
@@ -451,18 +449,16 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     {
                         // 페이지 출력 / Output page
                         let hcd_pos = if let Some((left, top)) = hcd_position {
-                            Some((left.round_to_2dp(), top.round_to_2dp()))
+                            Some((round_to_2dp(left), round_to_2dp(top)))
                         } else {
                             let left = page_def
                                 .map(|pd| {
-                                    (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
-                                        .round_to_2dp()
+                                    round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm())
                                 })
                                 .unwrap_or(20.0);
                             let top = page_def
                                 .map(|pd| {
-                                    (pd.top_margin.to_mm() + pd.header_margin.to_mm())
-                                        .round_to_2dp()
+                                    round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm())
                                 })
                                 .unwrap_or(24.99);
                             Some((left, top))
@@ -499,10 +495,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         let hcd_pos_next = current_page_def
                             .map(|pd| {
                                 (
-                                    (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
-                                        .round_to_2dp(),
-                                    (pd.top_margin.to_mm() + pd.header_margin.to_mm())
-                                        .round_to_2dp(),
+                                    round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()),
+                                    round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()),
                                 )
                             })
                             .unwrap_or((20.0, 24.99));
