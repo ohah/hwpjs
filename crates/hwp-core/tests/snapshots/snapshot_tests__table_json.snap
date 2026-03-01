@@ -1877,7 +1877,7 @@ expression: json
                           "top": 141,
                           "bottom": 141
                         },
-                        "row_sizes": [
+                        "row_cols": [
                           3,
                           1
                         ],

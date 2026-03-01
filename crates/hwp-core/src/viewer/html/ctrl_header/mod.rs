@@ -16,9 +16,9 @@ pub mod table;
 #[cfg(test)]
 mod column_def_test;
 #[cfg(test)]
-mod section_def_test;
-#[cfg(test)]
 mod other_ctrl_header_tests;
+#[cfg(test)]
+mod section_def_test;
 #[cfg(test)]
 mod shape_object_test;
 

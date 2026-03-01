@@ -44,7 +44,8 @@ fn test_fileheader_minimal_valid_data() {
     data[32..36].copy_from_slice(&0x05000000u32.to_le_bytes());
     data[36..40].copy_from_slice(&0xFFu32.to_le_bytes()); // Document flags
 
-    let header = FileHeader::parse(&data).unwrap_or_else(|e| panic!("Failed to parse header: {}", e));
+    let header =
+        FileHeader::parse(&data).unwrap_or_else(|e| panic!("Failed to parse header: {}", e));
 
     assert_eq!(header.signature, "HWP Document File");
     assert_eq!(header.version, 0x05000000);

@@ -6,10 +6,10 @@ mod tests {
     fn test_render_image_basic() {
         let result = render_image(
             "https://example.com/img.jpg",
-            1000,  // SHWPUNIT: ~3.53mm
-            2000,  // SHWPUNIT: ~7.06mm
-            3000,  // SHWPUNIT: ~10.58mm
-            4000,  // SHWPUNIT: ~14.11mm
+            1000, // SHWPUNIT: ~3.53mm
+            2000, // SHWPUNIT: ~7.06mm
+            3000, // SHWPUNIT: ~10.58mm
+            4000, // SHWPUNIT: ~14.11mm
         );
 
         assert!(result.contains("https://example.com/img.jpg"));
@@ -45,9 +45,12 @@ mod tests {
     fn test_render_image_with_style_basic() {
         let result = render_image_with_style(
             "https://example.com/avatar.png",
-            500, 100,
-            800, 600,
-            100, 50,
+            500,
+            100,
+            800,
+            600,
+            100,
+            50,
         );
 
         println!("Output: {}", result);

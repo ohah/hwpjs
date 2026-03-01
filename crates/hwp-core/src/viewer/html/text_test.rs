@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::document::bodytext::{Paragraph, ParagraphRecord, ParaHeader};
+    use crate::document::bodytext::{ParaHeader, Paragraph, ParagraphRecord};
     use crate::viewer::html::text::extract_text_and_shapes;
 
     fn create_paragraph_with_text(text: &str) -> Paragraph {

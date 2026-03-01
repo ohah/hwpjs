@@ -146,9 +146,7 @@ pub fn render_page(
                 PageNumberPosition::BottomLeft => {
                     // 하단 왼쪽 / Bottom left
                     let left = page_def
-                        .map(|pd| {
-                            round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm())
-                        })
+                        .map(|pd| round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()))
                         .unwrap_or(20.0);
                     let top = page_def
                         .map(|pd| round_to_2dp(page_height_mm - pd.bottom_margin.to_mm()))
@@ -159,7 +157,9 @@ pub fn render_page(
                     // 하단 오른쪽 / Bottom right
                     let left = page_def
                         .map(|pd| {
-                            round_to_2dp(page_width_mm - pd.right_margin.to_mm() - pd.binding_margin.to_mm())
+                            round_to_2dp(
+                                page_width_mm - pd.right_margin.to_mm() - pd.binding_margin.to_mm(),
+                            )
                         })
                         .unwrap_or(190.0);
                     let top = page_def
@@ -178,9 +178,7 @@ pub fn render_page(
                 PageNumberPosition::TopLeft => {
                     // 상단 왼쪽 / Top left
                     let left = page_def
-                        .map(|pd| {
-                            round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm())
-                        })
+                        .map(|pd| round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()))
                         .unwrap_or(20.0);
                     let top = page_def
                         .map(|pd| round_to_2dp(pd.top_margin.to_mm()))
@@ -191,7 +189,9 @@ pub fn render_page(
                     // 상단 오른쪽 / Top right
                     let left = page_def
                         .map(|pd| {
-                            round_to_2dp(page_width_mm - pd.right_margin.to_mm() - pd.binding_margin.to_mm())
+                            round_to_2dp(
+                                page_width_mm - pd.right_margin.to_mm() - pd.binding_margin.to_mm(),
+                            )
                         })
                         .unwrap_or(190.0);
                     let top = page_def

@@ -268,8 +268,7 @@ pub enum ColumnDirection {
 }
 
 /// 오브젝트의 바깥 4방향 여백 / Object outer margins (4 directions)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Margin {
     pub top: HWPUNIT16,
     pub right: HWPUNIT16,
@@ -302,8 +301,7 @@ pub enum PageNumberPosition {
 }
 
 /// 머리말/꼬리말 속성 (표 141) / Header/Footer attribute (Table 141)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub struct HeaderFooterAttribute {
     pub apply_page: ApplyPage,
 }

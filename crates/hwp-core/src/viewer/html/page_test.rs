@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::document::bodytext::ctrl_header::{PageNumberPositionFlags};
+    use crate::document::bodytext::ctrl_header::PageNumberPositionFlags;
     use crate::document::bodytext::ctrl_header::{CtrlHeaderData, PageNumberPosition};
     use crate::document::{FileHeader, HwpDocument};
     use crate::viewer::html::page::render_page;
@@ -60,7 +60,10 @@ mod tests {
             Some((100, 100)),
             None,
             Some(&CtrlHeaderData::PageNumberPosition {
-                flags: PageNumberPositionFlags { position: PageNumberPosition::None, shape: 0 },
+                flags: PageNumberPositionFlags {
+                    position: PageNumberPosition::None,
+                    shape: 0,
+                },
                 prefix: String::from("페이지 "),
                 suffix: String::new(),
                 user_symbol: String::new(),
@@ -163,7 +166,10 @@ mod tests {
             Some((50, 50)),
             None,
             Some(&CtrlHeaderData::PageNumberPosition {
-                flags: PageNumberPositionFlags { position: PageNumberPosition::BottomCenter, shape: 0 },
+                flags: PageNumberPositionFlags {
+                    position: PageNumberPosition::BottomCenter,
+                    shape: 0,
+                },
                 prefix: String::from(""),
                 suffix: String::from(""),
                 user_symbol: String::new(),
@@ -198,7 +204,10 @@ mod tests {
             Some((50, 50)),
             None,
             Some(&CtrlHeaderData::PageNumberPosition {
-                flags: PageNumberPositionFlags { position: PageNumberPosition::BottomCenter, shape: 0 },
+                flags: PageNumberPositionFlags {
+                    position: PageNumberPosition::BottomCenter,
+                    shape: 0,
+                },
                 prefix: prefix_with_null,
                 suffix: String::new(),
                 user_symbol: String::new(),

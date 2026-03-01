@@ -1,5 +1,7 @@
 /// Viewer core (outline) unit tests
-pub use crate::viewer::core::outline::{OutlineNumberTracker, format_outline_number, number_to_circled, number_to_hangul};
+pub use crate::viewer::core::outline::{
+    format_outline_number, number_to_circled, number_to_hangul, OutlineNumberTracker,
+};
 
 #[test]
 fn test_outline_tracker_new() {
@@ -130,17 +132,37 @@ fn test_format_outline_number_leading_zeros() {
 #[test]
 fn test_format_outline_number_korean_cycles() {
     // Test Korean character cycles (가나다라가...)
-    const HANGUL_SYLLABLES: [char; 14] = ['가', '나', '다', '라', '마', '바', '사', '아', '자', '차', '카', '타', '파', '하'];
+    const HANGUL_SYLLABLES: [char; 14] = [
+        '가', '나', '다', '라', '마', '바', '사', '아', '자', '차', '카', '타', '파', '하',
+    ];
 
     // Cycle through complete set
     for i in 0..14 {
-        assert_eq!(format_outline_number(2u8, i as u32 + 1u32).chars().next().unwrap(), HANGUL_SYLLABLES[i]);
-        assert_eq!(format_outline_number(4u8, i as u32 + 1u32).chars().next().unwrap(), HANGUL_SYLLABLES[i]);
+        assert_eq!(
+            format_outline_number(2u8, i as u32 + 1u32)
+                .chars()
+                .next()
+                .unwrap(),
+            HANGUL_SYLLABLES[i]
+        );
+        assert_eq!(
+            format_outline_number(4u8, i as u32 + 1u32)
+                .chars()
+                .next()
+                .unwrap(),
+            HANGUL_SYLLABLES[i]
+        );
     }
 
     // Test Korean cycle (15th = (15-1)%14 = 0 → 가)
-    assert_eq!(format_outline_number(2u8, 15u32).chars().next().unwrap(), '가');
-    assert_eq!(format_outline_number(4u8, 15u32).chars().next().unwrap(), '가');
+    assert_eq!(
+        format_outline_number(2u8, 15u32).chars().next().unwrap(),
+        '가'
+    );
+    assert_eq!(
+        format_outline_number(4u8, 15u32).chars().next().unwrap(),
+        '가'
+    );
 }
 
 #[test]

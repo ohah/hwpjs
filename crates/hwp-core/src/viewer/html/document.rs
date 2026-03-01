@@ -293,9 +293,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 } else {
                     // hcd_position이 없으면 PageDef 여백 사용 / Use PageDef margins if hcd_position not available
                     let left = page_def
-                        .map(|pd| {
-                            round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm())
-                        })
+                        .map(|pd| round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()))
                         .unwrap_or(20.0);
                     let top = page_def
                         .map(|pd| round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()))
@@ -340,9 +338,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     // hcd_position 또는 segment_position으로만 계산.
                     // hcD position from PageDef only (no constants). Table position from hcd_position or segment_position only.
                     let left_margin_mm = page_def
-                        .map(|pd| {
-                            round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm())
-                        })
+                        .map(|pd| round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()))
                         .unwrap_or(20.0);
                     let top_margin_mm = page_def
                         .map(|pd| round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()))
@@ -447,6 +443,18 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     if obj_result.has_page_break
                         && (!page_content.is_empty() || !page_tables.is_empty())
                     {
+                        // TableOverflow가 문단의 두 번째 이후 테이블에서 발생한 경우,
+                        // 오버플로우 이전 테이블들은 현재 페이지에 정상적으로 배치되어야 함.
+                        // When TableOverflow occurs at index > 0, tables before that index
+                        // were already correctly rendered and should stay on the current page.
+                        if obj_result.reason == Some(PageBreakReason::TableOverflow) {
+                            if let Some(overflow_idx) = obj_result.table_overflow_at_index {
+                                for i in 0..overflow_idx.min(table_htmls.len()) {
+                                    page_tables.push(table_htmls[i].clone());
+                                }
+                            }
+                        }
+
                         // 페이지 출력 / Output page
                         let hcd_pos = if let Some((left, top)) = hcd_position {
                             Some((round_to_2dp(left), round_to_2dp(top)))
@@ -495,7 +503,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         let hcd_pos_next = current_page_def
                             .map(|pd| {
                                 (
-                                    round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()),
+                                    round_to_2dp(
+                                        pd.left_margin.to_mm() + pd.binding_margin.to_mm(),
+                                    ),
                                     round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()),
                                 )
                             })
@@ -512,13 +522,24 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 };
                             let current_para_index_for_next = Some(0);
 
-                            // TableOverflow일 때만 remainder와 적용 인덱스를 넣고 재렌더 시 skip_tables_count=0으로 같은 테이블을 연속 조각으로 그림
+                            // TableOverflow: overflow_at_index > 0이면 오버플로우 이전 테이블은 이미 현재 페이지에 추가됨.
+                            // 오버플로우한 테이블은 다음 페이지에서 처음부터 렌더(fragment 없음).
+                            // overflow_at_index == 0이면 첫 테이블 자체가 페이지를 넘으므로 연속 조각 처리.
+                            // When overflow_at_index > 0, tables before it are already on current page.
+                            // The overflowing table renders fresh on next page (no fragment).
+                            // When overflow_at_index == 0, the first table itself overflows, so use fragment.
+                            let overflow_idx = obj_result.table_overflow_at_index.unwrap_or(0);
                             let (table_fragment_height_mm, table_fragment_apply_at_index) =
                                 if obj_result.reason == Some(PageBreakReason::TableOverflow) {
-                                    (
-                                        obj_result.table_overflow_remainder_mm,
-                                        obj_result.table_overflow_at_index,
-                                    )
+                                    if overflow_idx > 0 {
+                                        // 오버플로우 이전 테이블은 현재 페이지에 배치 완료; 오버플로우 테이블은 다음 페이지에서 전체 렌더
+                                        (None, None)
+                                    } else {
+                                        (
+                                            obj_result.table_overflow_remainder_mm,
+                                            obj_result.table_overflow_at_index,
+                                        )
+                                    }
                                 } else {
                                     (None, None)
                                 };
@@ -539,10 +560,11 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 position: position_next,
                             };
 
-                            // TableOverflow 시에만 0 (같은 테이블 연속 조각); 그 외는 이미 그린 테이블 수만큼 스킵
+                            // TableOverflow: overflow_idx > 0이면 이전 테이블은 현재 페이지에 이미 배치했으므로 그만큼 스킵.
+                            // overflow_idx == 0이면 첫 테이블 연속 조각이므로 처음부터 재렌더.
                             let skip_tables_count =
                                 if obj_result.reason == Some(PageBreakReason::TableOverflow) {
-                                    0
+                                    overflow_idx
                                 } else {
                                     table_htmls.len()
                                 };

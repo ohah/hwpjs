@@ -1,5 +1,4 @@
 /// Viewer core bodytext module unit tests
-
 pub use crate::viewer::core::bodytext::process_bodytext;
 pub use crate::HwpDocument;
 
@@ -21,8 +20,11 @@ fn test_process_bodytext_empty_document() {
     let document = HwpDocument::new(file_header);
 
     // Process with HTML renderer should not panic with empty document
-    let parts = process_bodytext(&document, &crate::viewer::html::HtmlRenderer,
-        &crate::viewer::html::HtmlOptions::default());
+    let parts = process_bodytext(
+        &document,
+        &crate::viewer::html::HtmlRenderer,
+        &crate::viewer::html::HtmlOptions::default(),
+    );
 
     // Should return some parts even for empty document
     assert_eq!(parts.body_lines.len(), 0);
@@ -42,11 +44,20 @@ fn test_process_bodytext_html_renderer_available() {
     let document = HwpDocument::new(file_header);
 
     // Should not panic - this tests the trait boundary and renderer integration
-    let parts = process_bodytext(&document, &crate::viewer::html::HtmlRenderer,
-        &crate::viewer::html::HtmlOptions::default());
+    let parts = process_bodytext(
+        &document,
+        &crate::viewer::html::HtmlRenderer,
+        &crate::viewer::html::HtmlOptions::default(),
+    );
 
     // Verify the function returns a valid result
-    for field in &[&parts.body_lines, &parts.headers, &parts.footers, &parts.footnotes, &parts.endnotes] {
+    for field in &[
+        &parts.body_lines,
+        &parts.headers,
+        &parts.footers,
+        &parts.footnotes,
+        &parts.endnotes,
+    ] {
         assert!(field.is_empty());
     }
 }

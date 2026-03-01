@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
     // Import the functions using the crate path
-    use crate::viewer::html::styles::round_to_2dp;
-    use crate::viewer::html::styles::int32_to_mm;
     use crate::types::INT32;
+    use crate::viewer::html::styles::int32_to_mm;
+    use crate::viewer::html::styles::round_to_2dp;
 
     #[test]
     fn test_round_to_2dp_integer() {

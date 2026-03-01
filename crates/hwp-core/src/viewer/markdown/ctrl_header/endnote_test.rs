@@ -42,7 +42,10 @@ mod tests {
         let result1 = convert_endnote_ctrl_to_markdown(&header);
         let result2 = convert_endnote_ctrl_to_markdown(&header);
 
-        assert_eq!(result1, result2, "Should return same result on consecutive calls");
+        assert_eq!(
+            result1, result2,
+            "Should return same result on consecutive calls"
+        );
         assert_eq!(result1, "## 미주", "Should return endnote header");
     }
 
