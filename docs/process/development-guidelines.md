@@ -25,6 +25,21 @@
 - `common::find_fixture_file()` 사용
 - **명령어**: `bun run test:rust`, `bun run test:rust-core`, `bun run test:rust:snapshot`, `bun run test:rust:snapshot:review`
 
+### 스냅샷 HTML 로컬에서 보기
+
+테스트로 생성된 HTML 스냅샷을 브라우저에서 보려면 로컬 웹서버를 띄웁니다.
+
+```bash
+# 기본 포트 11300
+bun run serve:snapshots
+
+# 또는 포트 지정
+bash scripts/serve-snapshots.sh 9876
+```
+
+접속 URL 형식: **http://localhost:11300/snapshots/파일명.html** (예: http://localhost:11300/snapshots/noori.html).  
+서버는 `crates/hwp-core/tests/` 를 루트로 제공하므로 목록은 http://localhost:11300/snapshots/ 에서 확인할 수 있습니다.
+
 ### HTML 뷰어 테스트 규칙
 
 - 원본 스냅샷: `fixtures/*.html` (기준). `<link>` → `<style>` 대체, 나머지 동일 유지
