@@ -281,6 +281,7 @@ pub fn render_paragraph(
     let mut endnote_refs: Vec<String> = Vec::new();
     // 구역/단 등 인라인 콘텐츠 (문단 끝에 붙임) / Section/column etc. inline content (append at end of paragraph)
     let mut extra_contents: Vec<String> = Vec::new();
+    let mut shape_htmls: Vec<String> = Vec::new();
 
     for record in &paragraph.records {
         match record {
@@ -393,6 +394,9 @@ pub fn render_paragraph(
                 }
                 if let Some(s) = ctrl_result.extra_content {
                     extra_contents.push(s);
+                }
+                if let Some(s) = ctrl_result.shape_html {
+                    shape_htmls.push(s);
                 }
                 // SHAPE_OBJECT(11)는 "표/그리기 개체" 공통 제어문자이므로, ctrl_id가 "tbl "인 경우에만
                 // ParaText의 SHAPE_OBJECT 위치를 순서대로 매칭하여 anchor를 부여합니다.
@@ -819,6 +823,9 @@ pub fn render_paragraph(
     // 구역/단 등 인라인 콘텐츠를 문단 끝에 붙임 / Append section/column etc. inline content at end of paragraph
     for s in &extra_contents {
         result.push_str(s);
+    }
+    for s in &shape_htmls {
+        table_htmls.push(s.clone());
     }
 
     // 개요 번호가 있으면 문단 앞에 span으로 추가 / Prepend outline number span when present

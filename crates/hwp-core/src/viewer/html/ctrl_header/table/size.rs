@@ -14,6 +14,17 @@ pub(crate) fn cell_margin_to_mm(margin_hwpunit: i16) -> f64 {
 /// CtrlHeader 자식(문단 내 그림 개체)도 재귀적으로 검사하여 형상 행 높이가 반영되도록 함.
 fn cell_max_shape_height_from_records(records: &[ParagraphRecord]) -> Option<f64> {
     let mut max_height_mm: Option<f64> = None;
+    // 다단 감지
+    let mut mc_column_count = 1u8;
+    for record in records {
+        if let ParagraphRecord::CtrlHeader { header, .. } = record {
+            if let CtrlHeaderData::ColumnDefinition { attribute, .. } = &header.data {
+                if attribute.column_count > 1 {
+                    mc_column_count = attribute.column_count;
+                }
+            }
+        }
+    }
     for record in records {
         match record {
             ParagraphRecord::ShapeComponent {
@@ -25,8 +36,15 @@ fn cell_max_shape_height_from_records(records: &[ParagraphRecord]) -> Option<f64
                 }
             }
             ParagraphRecord::ParaLineSeg { segments } => {
-                let total_height_hwpunit: i32 = segments.iter().map(|seg| seg.line_height).sum();
-                let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
+                let height_mm = if mc_column_count > 1 && segments.len() >= mc_column_count as usize {
+                    let segs_per_col = segments.len() / mc_column_count as usize;
+                    let col_segs = &segments[..segs_per_col];
+                    let last = col_segs.last().unwrap();
+                    round_to_2dp(int32_to_mm(last.vertical_position + last.line_height))
+                } else {
+                    let total: i32 = segments.iter().map(|seg| seg.line_height).sum();
+                    round_to_2dp(int32_to_mm(total))
+                };
                 max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
             }
             ParagraphRecord::CtrlHeader { children, .. } => {
