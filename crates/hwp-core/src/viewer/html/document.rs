@@ -192,7 +192,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut endnote_contents: Vec<String> = Vec::new();
 
     // 페이지 높이 계산 (mm 단위) / Calculate page height (in mm)
-    let page_height_mm = page_def.map(|pd| pd.paper_height.to_mm()).unwrap_or(297.0);
+    let page_height_mm = page_def.map(|pd| pd.effective_height_mm()).unwrap_or(297.0);
     let top_margin_mm = page_def.map(|pd| pd.top_margin.to_mm()).unwrap_or(24.99);
     let bottom_margin_mm = page_def.map(|pd| pd.bottom_margin.to_mm()).unwrap_or(10.0);
     let header_margin_mm = page_def.map(|pd| pd.header_margin.to_mm()).unwrap_or(0.0);
@@ -244,8 +244,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
     for section in &document.body_text.sections {
         for paragraph in &section.paragraphs {
-            // 페이지네이션 컨텍스트는 아래에서 업데이트됨 / Pagination context will be updated below
-
             // 1. 문단 페이지 나누기 확인 (렌더링 전) / Check paragraph page break (before rendering)
             let para_result = super::pagination::check_paragraph_page_break(
                 paragraph,
@@ -269,24 +267,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
             // 페이지 나누기가 있고 페이지 내용이 있으면 페이지 출력 (문단 렌더링 전) / Output page if page break and page content exists (before rendering paragraph)
             if has_page_break && (!page_content.is_empty() || !page_tables.is_empty()) {
-                // PageDef 업데이트 (PageDefChange인 경우) / Update PageDef (if PageDefChange)
-                if para_result.reason == Some(PageBreakReason::PageDefChange) {
-                    // 문단에서 PageDef 찾기 / Find PageDef in paragraph
-                    for record in &paragraph.records {
-                        if let ParagraphRecord::PageDef { page_def } = record {
-                            current_page_def = Some(page_def);
-                            break;
-                        }
-                        if let ParagraphRecord::CtrlHeader { children, .. } = record {
-                            for child in children {
-                                if let ParagraphRecord::PageDef { page_def } = child {
-                                    current_page_def = Some(page_def);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
                 // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
                 let hcd_pos = if let Some((left, top)) = hcd_position {
                     Some((round_to_2dp(left), round_to_2dp(top)))
@@ -300,6 +280,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         .unwrap_or(24.99);
                     Some((left, top))
                 };
+                // 이전 페이지를 현재(이전) PageDef로 렌더링 / Render previous page with current (old) PageDef
                 html.push_str(&page::render_page(
                     page_number,
                     &page_content,
@@ -313,6 +294,24 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     header_contents.first().map(String::as_str),
                     footer_contents.first().map(String::as_str),
                 ));
+                // PageDef 업데이트 — 이전 페이지 렌더링 후에 업데이트
+                // 페이지 나누기 이유와 관계없이, 새 문단에 PageDef가 있으면 항상 업데이트
+                // Update PageDef — update after rendering previous page
+                // Always update if new paragraph has PageDef, regardless of page break reason
+                for record in &paragraph.records {
+                    if let ParagraphRecord::PageDef { page_def } = record {
+                        current_page_def = Some(page_def);
+                        break;
+                    }
+                    if let ParagraphRecord::CtrlHeader { children, .. } = record {
+                        for child in children {
+                            if let ParagraphRecord::PageDef { page_def } = child {
+                                current_page_def = Some(page_def);
+                                break;
+                            }
+                        }
+                    }
+                }
                 page_number += 1;
                 page_content.clear();
                 page_tables.clear();

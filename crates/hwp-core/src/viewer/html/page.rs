@@ -39,10 +39,10 @@ pub fn render_page(
     footer_fragment: Option<&str>,
 ) -> String {
     let width_mm = page_def
-        .map(|pd| round_to_2dp(pd.paper_width.to_mm()))
+        .map(|pd| round_to_2dp(pd.effective_width_mm()))
         .unwrap_or(210.0); // A4 기본값 / A4 default
     let height_mm = page_def
-        .map(|pd| round_to_2dp(pd.paper_height.to_mm()))
+        .map(|pd| round_to_2dp(pd.effective_height_mm()))
         .unwrap_or(297.0); // A4 기본값 / A4 default
 
     // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
@@ -124,10 +124,10 @@ pub fn render_page(
 
             // 페이지 크기 계산 / Calculate page size
             let page_width_mm = page_def
-                .map(|pd| round_to_2dp(pd.paper_width.to_mm()))
+                .map(|pd| round_to_2dp(pd.effective_width_mm()))
                 .unwrap_or(210.0);
             let page_height_mm = page_def
-                .map(|pd| round_to_2dp(pd.paper_height.to_mm()))
+                .map(|pd| round_to_2dp(pd.effective_height_mm()))
                 .unwrap_or(297.0);
 
             // 쪽번호 위치 계산 (PageDef의 여백 정보 사용) / Calculate page number position (using PageDef margin information)
