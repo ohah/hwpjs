@@ -104,12 +104,12 @@ pub(crate) fn table_position(
         // - page/column: 본문(content) 폭
         // - para: 현재 LineSeg의 segment_width
         let mut ref_width_mm = match horz_rel_to {
-            Some(HorzRelTo::Paper) => page_def.map(|pd| pd.paper_width.to_mm()).unwrap_or(210.0),
+            Some(HorzRelTo::Paper) => page_def.map(|pd| pd.effective_width_mm()).unwrap_or(210.0),
             Some(HorzRelTo::Para) => para_segment_width_mm.unwrap_or(0.0),
             Some(HorzRelTo::Page) | Some(HorzRelTo::Column) | None => {
                 if let Some(pd) = page_def {
                     // content width = paper - (left+binding) - right
-                    pd.paper_width.to_mm()
+                    pd.effective_width_mm()
                         - (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
                         - pd.right_margin.to_mm()
                 } else {
@@ -121,7 +121,7 @@ pub(crate) fn table_position(
         // 이 경우에는 content width에서 para_left를 뺀 값으로 폴백한다.
         if matches!(horz_rel_to, Some(HorzRelTo::Para)) && ref_width_mm <= 0.0 {
             if let Some(pd) = page_def {
-                let content_w = pd.paper_width.to_mm()
+                let content_w = pd.effective_width_mm()
                     - (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
                     - pd.right_margin.to_mm();
                 // 문단 기준 폭은 "문단 시작(col_start)"을 좌우에서 모두 제외한 값으로 해석해야

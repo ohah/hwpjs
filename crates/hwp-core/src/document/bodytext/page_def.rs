@@ -62,6 +62,24 @@ pub enum BindingMethod {
 }
 
 impl PageDef {
+    /// landscape(horizontal)일 때 width/height를 swap한 실제 페이지 폭 (mm)
+    /// Effective page width in mm (swaps width/height for landscape)
+    pub fn effective_width_mm(&self) -> f64 {
+        match self.attributes.paper_direction {
+            PaperDirection::Horizontal => self.paper_height.to_mm(),
+            PaperDirection::Vertical => self.paper_width.to_mm(),
+        }
+    }
+
+    /// landscape(horizontal)일 때 width/height를 swap한 실제 페이지 높이 (mm)
+    /// Effective page height in mm (swaps width/height for landscape)
+    pub fn effective_height_mm(&self) -> f64 {
+        match self.attributes.paper_direction {
+            PaperDirection::Horizontal => self.paper_width.to_mm(),
+            PaperDirection::Vertical => self.paper_height.to_mm(),
+        }
+    }
+
     /// PageDef를 바이트 배열에서 파싱합니다. / Parse PageDef from byte array.
     ///
     /// # Arguments
