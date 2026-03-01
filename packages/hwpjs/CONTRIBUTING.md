@@ -64,16 +64,20 @@ bun run build:react-native
   ```
 
 - **Linux용 (맥 → linux)**  
-  `build:node:linux-x64`는 `--use-cross`를 사용하며, **Colima**(또는 Docker/Podman)와 **cross**가 필요합니다. macOS에서는 Colima를 권장합니다(Docker Desktop 없이 Docker 호환 환경 제공).
+  `build:node:linux-x64`는 `--use-cross`를 사용하며, **Colima**(또는 Docker/Podman)와 **cross**가 필요합니다. macOS(Intel·Apple Silicon 모두)에서는 Colima를 권장합니다(Docker Desktop 없이 Docker 호환 환경 제공). Apple Silicon에서도 Colima로 동일하게 사용 가능합니다.
   ```bash
-  # 1) Colima + Docker CLI 설치 (macOS 권장)
+  # 1) Colima + Docker CLI 설치 (macOS 권장, Apple Silicon 포함)
   brew install colima docker
   colima start   # VM 시작 후 docker 명령 사용 가능
 
   # 2) cross 설치
   cargo install cross
 
-  # 3) Linux x64 빌드 (Apple Silicon에서는 플랫폼 지정 권장)
+  # 3) Apple Silicon (M1/M2/M3)인 경우: cross가 Linux 툴체인을 쓰기 위해 타겟·툴체인 등록 필요
+  rustup target add x86_64-unknown-linux-gnu
+  rustup toolchain add stable-x86_64-unknown-linux-gnu --profile minimal --force-non-host
+
+  # 4) Linux x64 빌드 (Apple Silicon에서는 플랫폼 지정 권장)
   cd packages/hwpjs
   CROSS_BUILD_OPTS="--platform linux/amd64" bun run build:node:linux-x64
   ```
