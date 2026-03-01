@@ -74,18 +74,18 @@ fn test_format_outline_number_korean_levels() {
     assert!(format_outline_number(4u8, 1u32).contains('가'));
     assert!(format_outline_number(4u8, 2u32).contains('나'));
 
-    // Korean numbers cycles
-    assert!(format_outline_number(2u8, 15u32).contains('다')); // 15th = 15-1 = 14 → 다
-    assert!(format_outline_number(2u8, 16u32).contains('라')); // 16th = 16-1 = 15 → 라
+    // Korean cycle: 15th → (15-1)%14 = 0 → 가, 16th → 1 → 나
+    assert!(format_outline_number(2u8, 15u32).contains('가'));
+    assert!(format_outline_number(2u8, 16u32).contains('나'));
 }
 
 #[test]
 fn test_format_outline_number_brackets_levels() {
-    // Level 3 and 5 use parentheses
+    // Level 3: number), Level 5: (number)
     assert_eq!(format_outline_number(3u8, 1u32), "1)");
     assert_eq!(format_outline_number(3u8, 10u32), "10)");
-    assert_eq!(format_outline_number(5u8, 1u32), "1)");
-    assert_eq!(format_outline_number(5u8, 99u32), "99)");
+    assert_eq!(format_outline_number(5u8, 1u32), "(1)");
+    assert_eq!(format_outline_number(5u8, 99u32), "(99)");
 }
 
 #[test]
@@ -94,9 +94,9 @@ fn test_format_outline_number_circled_level() {
     let result = format_outline_number(7u8, 1u32);
     assert!(result.contains('\u{2460}'));
 
-    // Korean numbers also possible for level 7
+    // Level 7 number 2 = ② (U+2461)
     let result2 = format_outline_number(7u8, 2u32);
-    assert!(result2.contains('가') || result2.contains('나')); // 0x2461 또는 한글
+    assert!(result2.contains('\u{2461}'));
 
     // Large numbers beyond circled range
     assert!(format_outline_number(7u8, 21u32).contains('1')); // 21번 이상은 일반 숫자로 표시
@@ -138,9 +138,9 @@ fn test_format_outline_number_korean_cycles() {
         assert_eq!(format_outline_number(4u8, i as u32 + 1u32).chars().next().unwrap(), HANGUL_SYLLABLES[i]);
     }
 
-    // Test Korean overflow (15th should go to 다)
-    assert_eq!(format_outline_number(2u8, 15u32).chars().next().unwrap(), '다');
-    assert_eq!(format_outline_number(4u8, 15u32).chars().next().unwrap(), '다');
+    // Test Korean cycle (15th = (15-1)%14 = 0 → 가)
+    assert_eq!(format_outline_number(2u8, 15u32).chars().next().unwrap(), '가');
+    assert_eq!(format_outline_number(4u8, 15u32).chars().next().unwrap(), '가');
 }
 
 #[test]
@@ -171,6 +171,6 @@ fn test_format_outline_number_number_to_circled() {
     assert_eq!("②", crate::viewer::core::outline::number_to_circled(2u32));
     assert_eq!("⑩", crate::viewer::core::outline::number_to_circled(10u32));
     assert_eq!("⑪", crate::viewer::core::outline::number_to_circled(11u32));
-    assert_eq!("(20)", crate::viewer::core::outline::number_to_circled(21u32)); // out of range, uses parentheses
-    assert_eq!("", crate::viewer::core::outline::number_to_circled(0u32));
+    assert_eq!("21", crate::viewer::core::outline::number_to_circled(21u32)); // out of range, plain number
+    assert_eq!("0", crate::viewer::core::outline::number_to_circled(0u32)); // 0 is out of circled range
 }

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::convert_shape_object_ctrl_to_markdown;
     use crate::document::CtrlHeaderData;
 
     #[test]
@@ -58,11 +58,11 @@ mod tests {
                     description: Some("Shape with description".to_string()),
                     caption: None,
                 },
-                "",
+                "".to_string(),
             ),
             (
                 CtrlHeaderData::Other,
-                "",
+                "".to_string(),
             ),
             (
                 CtrlHeaderData::HeaderFooter {
@@ -72,7 +72,7 @@ mod tests {
                     text_ref: 1,
                     number_ref: 2,
                 },
-                "",
+                "".to_string(),
             ),
             (
                 CtrlHeaderData::SectionDefinition {
@@ -88,7 +88,7 @@ mod tests {
                     equation_number: Default::default(),
                     language: Default::default(),
                 },
-                "",
+                "".to_string(),
             ),
         ];
 

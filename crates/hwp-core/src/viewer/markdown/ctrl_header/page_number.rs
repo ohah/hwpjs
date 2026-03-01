@@ -13,7 +13,7 @@ use crate::document::CtrlHeader;
 ///
 /// # Returns / 반환값
 /// 마크다운 문자열 / Markdown string
-pub(crate) fn convert_page_number_ctrl_to_markdown(_header: &CtrlHeader) -> String {
+pub fn convert_page_number_ctrl_to_markdown(_header: &CtrlHeader) -> String {
     // 쪽 번호 위치는 마크다운으로 표현할 수 없으므로 빈 문자열 반환
     // Page number position cannot be expressed in markdown, so return empty string
     String::new()

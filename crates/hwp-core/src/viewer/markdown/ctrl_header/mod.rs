@@ -22,14 +22,14 @@ mod table_test;
 
 use crate::document::{CtrlHeader, CtrlId};
 
-use column_def::convert_column_def_ctrl_to_markdown;
-use endnote::convert_endnote_ctrl_to_markdown;
-use footer::convert_footer_ctrl_to_markdown;
-use footnote::convert_footnote_ctrl_to_markdown;
-use header::convert_header_ctrl_to_markdown;
-use page_number::convert_page_number_ctrl_to_markdown;
-use shape_object::convert_shape_object_ctrl_to_markdown;
-use table::convert_table_ctrl_to_markdown;
+pub use column_def::convert_column_def_ctrl_to_markdown;
+pub use endnote::convert_endnote_ctrl_to_markdown;
+pub use footer::convert_footer_ctrl_to_markdown;
+pub use footnote::convert_footnote_ctrl_to_markdown;
+pub use header::convert_header_ctrl_to_markdown;
+pub use page_number::convert_page_number_ctrl_to_markdown;
+pub use shape_object::convert_shape_object_ctrl_to_markdown;
+pub use table::convert_table_ctrl_to_markdown;
 
 /// Convert control header to markdown
 /// 컨트롤 헤더를 마크다운으로 변환

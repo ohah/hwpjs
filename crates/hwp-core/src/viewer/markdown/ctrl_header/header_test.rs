@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::convert_header_ctrl_to_markdown;
 
     #[test]
     fn test_header_module_compiles() {

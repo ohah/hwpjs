@@ -14,7 +14,7 @@ use crate::document::{CtrlHeader, CtrlHeaderData};
 ///
 /// # Returns / 반환값
 /// 마크다운 문자열 / Markdown string
-pub(crate) fn convert_table_ctrl_to_markdown(header: &CtrlHeader, has_table: bool) -> String {
+pub fn convert_table_ctrl_to_markdown(header: &CtrlHeader, has_table: bool) -> String {
     // 표 (Table) / Table
     // 표가 이미 추출되었다면 메시지를 출력하지 않음 / Don't output message if table was already extracted
     if has_table {

@@ -3,13 +3,20 @@
 pub use crate::viewer::core::bodytext::process_bodytext;
 pub use crate::HwpDocument;
 
+fn minimal_file_header_bytes() -> Vec<u8> {
+    let mut data = vec![0u8; 256];
+    data[0..32].copy_from_slice(b"HWP Document File\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+    data[32..36].copy_from_slice(&0x05000300u32.to_le_bytes());
+    data[36..40].copy_from_slice(&0x01u32.to_le_bytes());
+    data
+}
+
 #[test]
 fn test_process_bodytext_empty_document() {
-    // Test with minimal valid document structure
-    let file_header = crate::document::FileHeader::parse(&[0x48, 0x57, 0x50, 0x20, 0x44, 0x6f, 0x63, 0x75,
-        0x6d, 0x65, 0x6e, 0x74, 0x20, 0x46, 0x69, 0x6c, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x03, 0x00, 0x00,
-        0x00, 0x00, 0x00]).unwrap_or_else(|e| panic!("Failed to create FileHeader: {}", e));
+    // Test with minimal valid document structure (FileHeader requires 256 bytes)
+    let file_header_data = minimal_file_header_bytes();
+    let file_header = crate::document::FileHeader::parse(&file_header_data)
+        .unwrap_or_else(|e| panic!("Failed to create FileHeader: {}", e));
 
     let document = HwpDocument::new(file_header);
 
@@ -28,10 +35,9 @@ fn test_process_bodytext_empty_document() {
 #[test]
 fn test_process_bodytext_html_renderer_available() {
     // Verify HTML renderer can be used with process_bodytext
-    let file_header = crate::document::FileHeader::parse(&[0x48, 0x57, 0x50, 0x20, 0x44, 0x6f, 0x63, 0x75,
-        0x6d, 0x65, 0x6e, 0x74, 0x20, 0x46, 0x69, 0x6c, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x03, 0x00, 0x00,
-        0x00, 0x00, 0x00]).unwrap_or_else(|e| panic!("Failed to create FileHeader: {}", e));
+    let file_header_data = minimal_file_header_bytes();
+    let file_header = crate::document::FileHeader::parse(&file_header_data)
+        .unwrap_or_else(|e| panic!("Failed to create FileHeader: {}", e));
 
     let document = HwpDocument::new(file_header);
 

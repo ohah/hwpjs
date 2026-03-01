@@ -13,7 +13,7 @@ use crate::document::CtrlHeader;
 ///
 /// # Returns / 반환값
 /// 마크다운 문자열 / Markdown string
-pub(crate) fn convert_shape_object_ctrl_to_markdown(_header: &CtrlHeader) -> String {
+pub fn convert_shape_object_ctrl_to_markdown(_header: &CtrlHeader) -> String {
     // 그리기 개체 메타데이터는 마크다운 뷰어에서 불필요하므로 빈 문자열 반환
     // 실제 이미지나 내용은 자식 레코드에서 처리됨
     // Shape object metadata is not needed in markdown viewer, so return empty string

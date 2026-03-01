@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::convert_footer_ctrl_to_markdown;
 
     #[test]
     fn test_footer_module_compiles() {
