@@ -13,6 +13,8 @@ pub mod table;
 
 #[cfg(test)]
 mod para_text_unit_test;
+#[cfg(test)]
+mod table_test;
 
 use crate::document::{ColumnDivideType, HwpDocument, ParagraphRecord};
 use crate::viewer::markdown::MarkdownOptions;
