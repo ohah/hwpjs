@@ -52,5 +52,6 @@ Long-term memory and context for this workspace. Update this file with decisions
 | 2026-02-26 | test/viewer-markdown-ctrl_header-table-unit-tests | test(core): add viewer/markdown ctrl_header table module basic structure tests (PR #75) | Added 3 unit tests: table module compilation, markdown conversion structure, and module validation
 | 2026-02-26 | test/viewer-markdown-renderer-structure-tests | test(core): add viewer/markdown renderer module basic structure tests (PR #77) | Added 2 unit tests: renderer module compilation and module structure
 | 2026-03-02 | test/shape-component-children-unit-tests | test(core): add shape_component children convert unit tests (PR #92) | Added 3 unit tests: empty children handling, unsupported child types ignored, document and tracker parameter validation
+| 2026-03-02 | test/para-text-unit-tests-fix | test(core): add para_text unit tests and fix edge cases (PR #93) | Integrated 11 para_text unit tests (is_meaningful_text and char_index_to_byte_index edge cases), fixed UTF-8 bounds checks for emoji and mixed characters
 
 ---
