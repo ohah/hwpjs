@@ -1,10 +1,11 @@
 use super::CtrlHeaderResult;
 use crate::document::bodytext::ctrl_header::VertRelTo;
-use crate::document::bodytext::ParagraphRecord;
+use crate::document::bodytext::control_char::ControlChar;
+use crate::document::bodytext::{ParaTextRun, ParagraphRecord};
 use crate::document::{CtrlHeader, CtrlHeaderData, Paragraph};
 use crate::viewer::html::common;
 use crate::viewer::html::line_segment::ImageInfo;
-use crate::viewer::html::paragraph::{render_paragraphs_fragment, render_paragraphs_fragment_with_hls};
+use crate::viewer::html::paragraph::render_paragraphs_fragment;
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
@@ -276,16 +277,124 @@ fn render_rectangle_shape(
                     shape_height_hu as i32 + caption_gap_hu,
                 ));
                 let caption_w_mm = round_to_2dp(shape_w_mm - 0.12);
-                let caption_h_mm = round_to_2dp(int32_to_mm(caption_height_hu));
 
-                let body = render_paragraphs_fragment_with_hls(paragraphs, document, options, Some((2.79, -0.18)));
+                // 캡션 paragraph에서 AUTO_NUMBER 처리 / Handle AUTO_NUMBER in caption paragraph
+                // table caption과 동일하게 haN div 생성 / Generate haN div same as table caption
+                let caption_para = &paragraphs[0];
+
+                // CharShape 클래스 / CharShape class
+                let caption_char_shape_id = caption_para.records.iter().find_map(|rec| {
+                    if let ParagraphRecord::ParaCharShape { shapes } = rec {
+                        shapes.first().map(|s| s.shape_id as usize)
+                    } else {
+                        None
+                    }
+                });
+                let cs_class = caption_char_shape_id
+                    .map(|id| format!("cs{}", id))
+                    .unwrap_or_default();
+
+                // ParaShape 클래스 / ParaShape class
+                let ps_class = format!("ps{}", caption_para.para_header.para_shape_id);
+
+                // 텍스트와 AUTO_NUMBER 위치 찾기 / Find text and AUTO_NUMBER position
+                let mut caption_text = String::new();
+                let mut auto_number_pos: Option<usize> = None;
+                let mut auto_number_display: Option<String> = None;
+                for rec in &caption_para.records {
+                    if let ParagraphRecord::ParaText { text, runs, control_char_positions, .. } = rec {
+                        caption_text = text.clone();
+                        auto_number_pos = control_char_positions.iter()
+                            .find(|cp| cp.code == ControlChar::AUTO_NUMBER)
+                            .map(|cp| cp.position);
+                        auto_number_display = runs.iter().find_map(|run| {
+                            if let ParaTextRun::Control { code, display_text, .. } = run {
+                                if *code == ControlChar::AUTO_NUMBER {
+                                    return display_text.clone();
+                                }
+                            }
+                            None
+                        });
+                        break;
+                    }
+                }
+
+                // haN 너비 계산 / Calculate haN width
+                let num_text = auto_number_display.as_deref().unwrap_or("");
+                let han_width_style = if !num_text.is_empty() {
+                    let cs = caption_char_shape_id
+                        .and_then(|id| document.doc_info.char_shapes.get(id))
+                        .or_else(|| document.doc_info.char_shapes.first());
+                    if let Some(cs) = cs {
+                        let font_size_mm = (cs.base_size as f64 / 100.0) * 0.352778;
+                        let char_count = num_text.chars().count().max(1);
+                        let w = round_to_2dp(font_size_mm * 0.6 * char_count as f64);
+                        format!("width:{:.1}mm;", w)
+                    } else {
+                        String::new()
+                    }
+                } else {
+                    String::new()
+                };
+
+                // body_default_hls 값 / body_default_hls values
+                let lh = 2.79;
+                let top_off = -0.18;
+                let height_mm = round_to_2dp(int32_to_mm(caption_height_hu));
+
+                // 캡션 hls 너비: segment_width 사용 / Caption hls width: use segment_width
+                let caption_hls_width_mm = {
+                    let mut w = caption_w_mm;
+                    for rec in &caption_para.records {
+                        if let ParagraphRecord::ParaLineSeg { segments } = rec {
+                            if let Some(seg) = segments.first() {
+                                w = round_to_2dp(int32_to_mm(seg.segment_width));
+                            }
+                            break;
+                        }
+                    }
+                    w
+                };
+
+                let hls_content = if let Some(auto_pos) = auto_number_pos {
+                    // AUTO_NUMBER 앞뒤 텍스트 분리 / Split text before/after AUTO_NUMBER
+                    let before: String = caption_text.chars().take(auto_pos).collect::<String>().trim_end().to_string();
+                    let after: String = caption_text.chars().skip(auto_pos + 1).collect::<String>().trim().to_string();
+                    format!(
+                        r#"<span class="hrt {cs}">{before}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;{han_w}height:{h}mm;"><span class="hrt {cs}">{num}</span></div><span class="hrt {cs}">&nbsp;{after}</span>"#,
+                        cs = cs_class,
+                        before = before,
+                        han_w = han_width_style,
+                        h = height_mm,
+                        num = num_text,
+                        after = after,
+                    )
+                } else {
+                    // AUTO_NUMBER 없으면 일반 텍스트 / No AUTO_NUMBER, plain text
+                    let trimmed = caption_text.trim();
+                    format!(
+                        r#"<span class="hrt {cs}">{text}&nbsp;</span>"#,
+                        cs = cs_class,
+                        text = trimmed,
+                    )
+                };
+
+                let body = format!(
+                    r#"<div class="hls {ps}" style="line-height:{lh}mm;white-space:nowrap;left:0.00mm;top:{top}mm;height:{h}mm;width:{w}mm;">{content}</div>"#,
+                    ps = ps_class,
+                    lh = lh,
+                    top = top_off,
+                    h = height_mm,
+                    w = caption_hls_width_mm,
+                    content = hls_content,
+                );
 
                 caption_html = format!(
-                    r#"<div class="{p}hcD" style="left:0mm;top:{t}mm;width:{w}mm;height:{h}mm;overflow:hidden;"><div class="{p}hcI" >{body}</div></div>"#,
+                    r#"<div class="{p}hcD" style="left:0mm;top:{t}mm;width:{cw}mm;height:{ch}mm;overflow:hidden;"><div class="{p}hcI" >{body}</div></div>"#,
                     p = prefix,
                     t = caption_top_mm,
-                    w = caption_w_mm,
-                    h = caption_h_mm,
+                    cw = caption_w_mm,
+                    ch = height_mm,
                 );
             }
             break;
