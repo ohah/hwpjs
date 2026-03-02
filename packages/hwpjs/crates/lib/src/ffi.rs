@@ -103,6 +103,6 @@ fn hwpjs_to_markdown(
 #[allow(clippy::let_and_return)]
 fn hwpjs_to_pdf(it_: &mut Hwpjs, data: Vec<u8>, options: ToPdfOptions) -> Result<Vec<u8>, anyhow::Error> {
     craby::catch_panic!({
-        it_.to_pdf(data, options).unwrap_or_else(|e| throw!("{}", e))
+        it_.to_pdf(data, options)
     })
 }
