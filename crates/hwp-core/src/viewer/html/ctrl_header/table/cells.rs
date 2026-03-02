@@ -611,20 +611,11 @@ pub(crate) fn render_cells(
                                     para.para_header.text_char_count as usize
                                 };
 
-                                let col_text_start = col_segs[0].text_start_position as usize;
-                                let col_ccp: Vec<_> = control_char_positions
-                                    .iter()
-                                    .filter(|cp| {
-                                        cp.position >= col_text_start && cp.position < col_original_text_len
-                                    })
-                                    .cloned()
-                                    .collect();
-
                                 let content = LineSegmentContent {
                                     segments: col_segs,
                                     text: &text,
                                     char_shapes: &char_shapes,
-                                    control_char_positions: &col_ccp,
+                                    control_char_positions: &control_char_positions,
                                     original_text_len: col_original_text_len,
                                     images: &[],
                                     tables: &[],
@@ -636,6 +627,7 @@ pub(crate) fn render_cells(
                                     para_shape_indent,
                                     hcd_position: None,
                                     page_def: None,
+                                    body_default_hls: Some((2.79, -0.18)),
                                 };
                                 let mut state = DocumentRenderState {
                                     table_counter_start: 0,
@@ -682,6 +674,7 @@ pub(crate) fn render_cells(
                             para_shape_indent,
                             hcd_position: None,
                             page_def: None,
+                            body_default_hls: None,
                         };
                         let mut state = DocumentRenderState {
                             table_counter_start: 0,

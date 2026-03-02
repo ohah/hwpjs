@@ -322,7 +322,6 @@ fn render_shape_content(
     document: &HwpDocument,
     options: &HtmlOptions,
 ) -> String {
-    use crate::document::bodytext::control_char::ControlChar;
     use crate::document::bodytext::LineSegmentInfo;
     use crate::viewer::html::line_segment::{
         render_line_segments_with_content, DocumentRenderState, LineSegmentContent,
@@ -456,22 +455,11 @@ fn render_shape_content(
                 original_text_len
             };
 
-            let col_control_chars: Vec<_> = control_char_positions
-                .iter()
-                .filter(|cp| {
-                    let size = ControlChar::get_size_by_code(cp.code);
-                    let cp_end = cp.position + size;
-                    cp_end > col_segs[0].text_start_position as usize
-                        && cp.position < col_original_text_len
-                })
-                .cloned()
-                .collect();
-
             let content = LineSegmentContent {
                 segments: col_segs,
                 text: &para_text,
                 char_shapes: &char_shapes,
-                control_char_positions: &col_control_chars,
+                control_char_positions: &control_char_positions,
                 original_text_len: col_original_text_len,
                 images: &[],
                 tables: &[],
@@ -484,6 +472,7 @@ fn render_shape_content(
                 para_shape_indent,
                 hcd_position: None,
                 page_def: None,
+                body_default_hls: Some((2.79, -0.18)),
             };
 
             let mut state = DocumentRenderState {

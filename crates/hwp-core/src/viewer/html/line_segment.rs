@@ -30,6 +30,8 @@ pub struct LineSegmentRenderContext<'a> {
     pub para_shape_indent: Option<i32>,
     pub hcd_position: Option<(f64, f64)>,
     pub page_def: Option<&'a PageDef>,
+    /// 컨텍스트 레벨 body_default_hls 오버라이드
+    pub body_default_hls: Option<(f64, f64)>,
 }
 
 /// 문서 레벨 렌더링 상태 / Document-level rendering state
@@ -226,8 +228,10 @@ pub fn render_line_segments_with_content(
         cleaned_chars[s..e].iter().collect()
     }
 
-    // 본문이 모두 빈 세그먼트(줄 격자만, 테이블/이미지 없음)일 때 fixture와 동일하게 (2.79, -0.18) 사용
-    let body_default_hls = if tables.is_empty()
+    // body_default_hls: 컨텍스트 오버라이드 우선, 없으면 빈 세그먼트 감지
+    let body_default_hls = if let Some(override_hls) = context.body_default_hls {
+        Some(override_hls)
+    } else if tables.is_empty()
         && images.is_empty()
         && segments.iter().all(|seg| {
             let start = seg.text_start_position as usize;
