@@ -112,8 +112,9 @@ pub fn render_paragraphs_fragment_with_hls(
     out
 }
 
-// Private helper functions to reduce render_paragraph complexity
-fn collect_control_char_positions(
+// Helper functions to reduce render_paragraph complexity
+// pub(super) for reuse in document.rs multicolumn rendering
+pub(super) fn collect_control_char_positions(
     paragraph: &Paragraph,
 ) -> (
     Vec<crate::document::bodytext::control_char::ControlCharPosition>,
@@ -141,7 +142,7 @@ fn collect_control_char_positions(
     (control_char_positions, shape_object_anchor_positions)
 }
 
-fn collect_line_segments(paragraph: &Paragraph) -> Vec<LineSegmentInfo> {
+pub(super) fn collect_line_segments(paragraph: &Paragraph) -> Vec<LineSegmentInfo> {
     let mut line_segments = Vec::new();
     for record in &paragraph.records {
         if let ParagraphRecord::ParaLineSeg { segments } = record {

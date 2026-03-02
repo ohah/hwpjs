@@ -4,7 +4,19 @@ mod tests {
     use crate::document::bodytext::ctrl_header::{CtrlHeaderData, PageNumberPosition};
     use crate::document::{FileHeader, HwpDocument};
     use crate::viewer::html::page::render_page;
-    use crate::viewer::html::page::HtmlPageBreak;
+    use crate::viewer::html::page::{HcIBlock, HtmlPageBreak};
+
+    fn blocks_from_str(s: &str) -> Vec<HcIBlock> {
+        if s.is_empty() {
+            vec![]
+        } else {
+            vec![HcIBlock {
+                html: s.to_string(),
+                left_mm: None,
+                top_mm: None,
+            }]
+        }
+    }
 
     #[test]
     fn test_html_page_break_new() {
@@ -54,7 +66,7 @@ mod tests {
 
         let result = render_page(
             1,
-            "",
+            &blocks_from_str(""),
             &[],
             None,
             Some((100, 100)),
@@ -90,7 +102,7 @@ mod tests {
         let table_html = String::from("<table>content</table>");
         let result = render_page(
             1,
-            "content",
+            &blocks_from_str("content"),
             &[table_html.clone()],
             None,
             Some((50, 50)),
@@ -134,7 +146,7 @@ mod tests {
 
         let result = render_page(
             1,
-            "content",
+            &blocks_from_str("content"),
             &[],
             Some(&page_def),
             None,
@@ -160,7 +172,7 @@ mod tests {
 
         let result = render_page(
             1,
-            "content",
+            &blocks_from_str("content"),
             &[],
             None,
             Some((50, 50)),
@@ -198,7 +210,7 @@ mod tests {
         let prefix_with_null = String::from("ABC\0DEF");
         let result = render_page(
             1,
-            "content",
+            &blocks_from_str("content"),
             &[],
             None,
             Some((50, 50)),
@@ -233,7 +245,7 @@ mod tests {
 
         let result = render_page(
             1,
-            "content",
+            &blocks_from_str("content"),
             &[],
             None,
             Some((50, 50)),
