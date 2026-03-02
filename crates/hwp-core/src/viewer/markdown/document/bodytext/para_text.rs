@@ -23,7 +23,7 @@ use crate::document::CharShape;
 /// 텍스트가 비어있지 않은지만 확인합니다.
 /// Control characters are already removed from text during parsing,
 /// so we only check if text is not empty.
-pub(crate) fn is_meaningful_text(text: &str, _control_positions: &[ControlCharPosition]) -> bool {
+pub fn is_meaningful_text(text: &str, _control_positions: &[ControlCharPosition]) -> bool {
     !text.trim().is_empty()
 }
 
@@ -38,7 +38,7 @@ pub(crate) fn is_meaningful_text(text: &str, _control_positions: &[ControlCharPo
 /// 마크다운 문자열 / Markdown string
 /// Convert character index to byte index in UTF-8 string
 /// UTF-8 문자열에서 문자 인덱스를 바이트 인덱스로 변환
-fn char_index_to_byte_index(text: &str, char_idx: usize) -> Option<usize> {
+pub fn char_index_to_byte_index(text: &str, char_idx: usize) -> Option<usize> {
     text.char_indices()
         .nth(char_idx)
         .map(|(byte_idx, _)| byte_idx)

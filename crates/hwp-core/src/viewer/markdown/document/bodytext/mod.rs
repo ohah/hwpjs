@@ -10,6 +10,9 @@ mod shape_component;
 pub mod shape_component_picture;
 pub mod table;
 
+#[cfg(test)]
+mod para_text_unit_test;
+
 use crate::document::{ColumnDivideType, HwpDocument, ParagraphRecord};
 use crate::viewer::markdown::MarkdownOptions;
 
