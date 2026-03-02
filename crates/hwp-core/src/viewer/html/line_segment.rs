@@ -114,11 +114,7 @@ pub fn render_line_segment(
 
     // CSS top: 표 62 "줄의 세로 위치" (vertical_position) → mm. 줄 높이 안에서 텍스트 세로 정렬 시 오프셋 추가.
     let top_mm = if let Some((_, top_off)) = body_default_hls {
-        if vertical_pos_mm == 0.0 {
-            top_off
-        } else {
-            round_to_2dp(vertical_pos_mm)
-        }
+        round_to_2dp(vertical_pos_mm + top_off)
     } else if is_text_segment {
         let offset_mm = (line_height_value - text_height_mm) / 2.0;
         round_to_2dp(vertical_pos_mm + offset_mm)
