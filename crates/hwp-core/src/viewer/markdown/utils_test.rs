@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::viewer::markdown::utils::{is_block_element, is_text_part, should_process_control_header};
+    use crate::viewer::markdown::utils::{is_block_element, is_text_part};
 
     #[test]
     fn test_is_block_element_empty_string() {
