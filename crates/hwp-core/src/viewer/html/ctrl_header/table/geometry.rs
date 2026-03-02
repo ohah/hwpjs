@@ -1,3 +1,4 @@
+use crate::document::bodytext::ctrl_header::CtrlHeaderData;
 use crate::document::bodytext::{ParagraphRecord, Table, TableCell};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::HwpDocument;
@@ -288,6 +289,19 @@ pub(crate) fn row_positions(
                 let mut max_shape_height_mm: Option<f64> = None;
 
                 for para in &cell.paragraphs {
+                    // 다단 감지 / Detect multi-column in cell paragraph
+                    let mut cell_mc_count = 1u8;
+                    for record in &para.records {
+                        if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                            if let CtrlHeaderData::ColumnDefinition { attribute, .. } = &header.data
+                            {
+                                if attribute.column_count > 1 {
+                                    cell_mc_count = attribute.column_count;
+                                }
+                            }
+                        }
+                    }
+
                     // ShapeComponent의 children에서 모든 shape 높이 찾기 (재귀적으로) / Find all shape heights in ShapeComponent's children (recursively)
                     for record in &para.records {
                         match record {
@@ -308,9 +322,22 @@ pub(crate) fn row_positions(
                             }
                             // ParaLineSeg가 paragraph records에 직접 있는 경우도 처리 / Also handle ParaLineSeg directly in paragraph records
                             ParagraphRecord::ParaLineSeg { segments } => {
-                                let total_height_hwpunit: i32 =
-                                    segments.iter().map(|seg| seg.line_height).sum();
-                                let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
+                                let height_mm =
+                                    if cell_mc_count > 1 && segments.len() >= cell_mc_count as usize
+                                    {
+                                        // 다단: 한 단의 높이만 사용 / Multi-column: use only one column's height
+                                        let segs_per_col =
+                                            segments.len() / cell_mc_count as usize;
+                                        let col_segs = &segments[..segs_per_col];
+                                        let last = col_segs.last().unwrap();
+                                        round_to_2dp(int32_to_mm(
+                                            last.vertical_position + last.line_height,
+                                        ))
+                                    } else {
+                                        let total_height_hwpunit: i32 =
+                                            segments.iter().map(|seg| seg.line_height).sum();
+                                        round_to_2dp(int32_to_mm(total_height_hwpunit))
+                                    };
                                 if max_shape_height_mm.is_none()
                                     || height_mm > max_shape_height_mm.unwrap()
                                 {

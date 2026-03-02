@@ -6,6 +6,7 @@
 mod list_header;
 mod para_text;
 pub mod paragraph;
+mod paragraph_test;
 mod shape_component;
 pub mod shape_component_picture;
 pub mod table;

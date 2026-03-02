@@ -657,10 +657,11 @@ pub fn render_table(
                     for (global_idx, (segment, para_idx, para, _para_cumulative_len)) in
                         all_segments_with_info.iter().enumerate()
                     {
-                        // fixture 일치: line_height·top은 LineSegment.line_height/text_height에서 유도 (문서 파싱값만 사용)
-                        let lh = round_to_2dp(int32_to_mm(segment.line_height));
-                        let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
-                        let top_off = round_to_2dp((lh - text_height_mm) / 2.0);
+                        // fixture 일치: body_default_hls 적용 (2.79mm, -0.18mm)
+                        // 캡션도 본문과 동일한 line-height/top 사용
+                        let body_hls: (f64, f64) = (2.79, -0.18);
+                        let lh = body_hls.0;
+                        let top_off = body_hls.1;
                         let left_mm = round_to_2dp(int32_to_mm(segment.column_start_position));
                         let width_mm = round_to_2dp(int32_to_mm(segment.segment_width));
 
@@ -673,14 +674,10 @@ pub fn render_table(
                             };
 
                         // vertical_position을 mm로 변환 / Convert vertical_position to mm
-                        // 첫 번째 LineSegment는 top_off만 사용, 이후는 vertical_position을 직접 사용
-                        // First LineSegment uses only top_off, others use vertical_position directly
-                        let segment_top_mm = if global_idx == 0 {
-                            round_to_2dp(top_off)
-                        } else {
-                            // 이후 LineSegment는 vertical_position을 mm로 변환하여 사용
-                            // Subsequent LineSegments use vertical_position converted to mm
-                            round_to_2dp(int32_to_mm(segment.vertical_position))
+                        // 첫 번째 LineSegment는 top_off만 사용, 이후는 vertical_position + top_off 사용
+                        let segment_top_mm = {
+                            let vertical_pos_mm = int32_to_mm(segment.vertical_position);
+                            round_to_2dp(vertical_pos_mm + top_off)
                         };
 
                         // 원본 텍스트 인덱스를 cleaned 텍스트 인덱스로 변환 / Convert original text index to cleaned text index
