@@ -405,6 +405,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     document,
                     options,
                     position,
+                    body_default_hls: None,
                 };
 
                 let mut note_state = FootnoteEndnoteState {
@@ -557,6 +558,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 document,
                                 options,
                                 position: position_next,
+                                body_default_hls: None,
                             };
 
                             // TableOverflow: overflow_idx > 0이면 이전 테이블은 현재 페이지에 이미 배치했으므로 그만큼 스킵.

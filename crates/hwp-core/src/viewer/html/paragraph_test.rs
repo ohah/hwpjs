@@ -53,6 +53,7 @@ mod tests {
             document: &doc,
             options: &HtmlOptions::default(),
             position,
+            body_default_hls: None,
         };
 
         assert_eq!(context.document, &doc);

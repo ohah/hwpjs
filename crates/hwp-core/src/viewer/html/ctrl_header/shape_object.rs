@@ -4,7 +4,7 @@ use crate::document::bodytext::ParagraphRecord;
 use crate::document::{CtrlHeader, CtrlHeaderData, Paragraph};
 use crate::viewer::html::common;
 use crate::viewer::html::line_segment::ImageInfo;
-use crate::viewer::html::paragraph::render_paragraphs_fragment;
+use crate::viewer::html::paragraph::{render_paragraphs_fragment, render_paragraphs_fragment_with_hls};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
@@ -278,7 +278,7 @@ fn render_rectangle_shape(
                 let caption_w_mm = round_to_2dp(shape_w_mm - 0.12);
                 let caption_h_mm = round_to_2dp(int32_to_mm(caption_height_hu));
 
-                let body = render_paragraphs_fragment(paragraphs, document, options);
+                let body = render_paragraphs_fragment_with_hls(paragraphs, document, options, Some((2.79, -0.18)));
 
                 caption_html = format!(
                     r#"<div class="{p}hcD" style="left:0mm;top:{t}mm;width:{w}mm;height:{h}mm;overflow:hidden;"><div class="{p}hcI" >{body}</div></div>"#,

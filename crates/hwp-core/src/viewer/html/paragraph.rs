@@ -39,6 +39,7 @@ pub struct ParagraphRenderContext<'a> {
     pub document: &'a HwpDocument,
     pub options: &'a HtmlOptions,
     pub position: ParagraphPosition<'a>,
+    pub body_default_hls: Option<(f64, f64)>,
 }
 
 /// 문단 렌더링 상태 / Paragraph rendering state
@@ -59,6 +60,15 @@ pub fn render_paragraphs_fragment(
     document: &HwpDocument,
     options: &HtmlOptions,
 ) -> String {
+    render_paragraphs_fragment_with_hls(paragraphs, document, options, None)
+}
+
+pub fn render_paragraphs_fragment_with_hls(
+    paragraphs: &[Paragraph],
+    document: &HwpDocument,
+    options: &HtmlOptions,
+    body_default_hls: Option<(f64, f64)>,
+) -> String {
     use std::collections::HashMap;
     let mut out = String::new();
     let mut table_counter = 1u32;
@@ -78,6 +88,7 @@ pub fn render_paragraphs_fragment(
         document,
         options,
         position,
+        body_default_hls,
     };
     let mut state = ParagraphRenderState {
         table_counter: &mut table_counter,
@@ -549,7 +560,7 @@ pub fn render_paragraph(
             para_shape_indent,
             hcd_position,
             page_def,
-            body_default_hls: None,
+            body_default_hls: context.body_default_hls,
         };
 
         let mut line_segment_state = DocumentRenderState {
