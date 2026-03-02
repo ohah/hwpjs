@@ -1,5 +1,7 @@
 # Heartbeat — hwp-core 테스트 코드 작성 머신 (5분 주기)
 
+**현재 일시중지.** (OpenClaw `agents.defaults.heartbeat` 설정이 꺼져 있으면 주기 실행되지 않음.)
+
 이 파일을 읽고 아래 지시대로 **한 턴**에 수행하세요.  
 할 일이 없으면 `HEARTBEAT_OK` 만 답하세요.
 
