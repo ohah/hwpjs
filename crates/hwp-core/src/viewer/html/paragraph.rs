@@ -39,6 +39,7 @@ pub struct ParagraphRenderContext<'a> {
     pub document: &'a HwpDocument,
     pub options: &'a HtmlOptions,
     pub position: ParagraphPosition<'a>,
+    pub body_default_hls: Option<(f64, f64)>,
 }
 
 /// 문단 렌더링 상태 / Paragraph rendering state
@@ -59,6 +60,15 @@ pub fn render_paragraphs_fragment(
     document: &HwpDocument,
     options: &HtmlOptions,
 ) -> String {
+    render_paragraphs_fragment_with_hls(paragraphs, document, options, None)
+}
+
+pub fn render_paragraphs_fragment_with_hls(
+    paragraphs: &[Paragraph],
+    document: &HwpDocument,
+    options: &HtmlOptions,
+    body_default_hls: Option<(f64, f64)>,
+) -> String {
     use std::collections::HashMap;
     let mut out = String::new();
     let mut table_counter = 1u32;
@@ -78,6 +88,7 @@ pub fn render_paragraphs_fragment(
         document,
         options,
         position,
+        body_default_hls,
     };
     let mut state = ParagraphRenderState {
         table_counter: &mut table_counter,
@@ -281,6 +292,7 @@ pub fn render_paragraph(
     let mut endnote_refs: Vec<String> = Vec::new();
     // 구역/단 등 인라인 콘텐츠 (문단 끝에 붙임) / Section/column etc. inline content (append at end of paragraph)
     let mut extra_contents: Vec<String> = Vec::new();
+    let mut shape_htmls: Vec<String> = Vec::new();
 
     for record in &paragraph.records {
         match record {
@@ -393,6 +405,9 @@ pub fn render_paragraph(
                 }
                 if let Some(s) = ctrl_result.extra_content {
                     extra_contents.push(s);
+                }
+                if let Some(s) = ctrl_result.shape_html {
+                    shape_htmls.push(s);
                 }
                 // SHAPE_OBJECT(11)는 "표/그리기 개체" 공통 제어문자이므로, ctrl_id가 "tbl "인 경우에만
                 // ParaText의 SHAPE_OBJECT 위치를 순서대로 매칭하여 anchor를 부여합니다.
@@ -545,6 +560,7 @@ pub fn render_paragraph(
             para_shape_indent,
             hcd_position,
             page_def,
+            body_default_hls: context.body_default_hls,
         };
 
         let mut line_segment_state = DocumentRenderState {
@@ -819,6 +835,9 @@ pub fn render_paragraph(
     // 구역/단 등 인라인 콘텐츠를 문단 끝에 붙임 / Append section/column etc. inline content at end of paragraph
     for s in &extra_contents {
         result.push_str(s);
+    }
+    for s in &shape_htmls {
+        table_htmls.push(s.clone());
     }
 
     // 개요 번호가 있으면 문단 앞에 span으로 추가 / Prepend outline number span when present

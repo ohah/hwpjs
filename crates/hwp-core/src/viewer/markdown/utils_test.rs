@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::viewer::markdown::utils::{is_block_element, is_text_part, should_process_control_header};
 
     #[test]
@@ -27,6 +28,35 @@ mod tests {
     }
 
     #[test]
+    fn test_is_block_element_whitespace_only() {
+        assert!(!is_block_element("   "));
+        assert!(!is_block_element("\t\n "));
+    }
+
+    #[test]
+    fn test_is_block_element_special_chars() {
+        assert!(is_block_element("![이미지](path/to/image.png)"));
+        assert!(is_block_element("\n\n---\n\n"));
+    }
+
+    #[test]
+    fn test_is_text_part_empty_string() {
+        assert!(!is_text_part(""));
+    }
+
+    #[test]
+    fn test_is_text_part_text_only() {
+        assert!(is_text_part("Plain text"));
+        assert!(is_text_part("This is a paragraph"));
+    }
+
+    #[test]
+    fn test_is_text_part_inline_image() {
+        assert!(!is_text_part("![이미지]"));
+        assert!(!is_text_part("![이미지](path/to/image.png)"));
+    }
+
+    #[test]
     fn test_is_block_element_table_with_text() {
         assert!(is_block_element("| Cell1 | Cell2 |"));
         assert!(is_block_element("|---|"));
@@ -40,14 +70,8 @@ mod tests {
 
     #[test]
     fn test_is_block_element_extra_dashes() {
-        // Markdown page break is exactly "---" or longer
         assert!(is_block_element("----"));
         assert!(is_block_element("-----"));
-    }
-
-    #[test]
-    fn test_is_text_part_empty_string() {
-        assert!(is_text_part(""));
     }
 
     #[test]
@@ -81,8 +105,4 @@ mod tests {
         assert!(!is_text_part("| Cell |"));
         assert!(!is_text_part("---"));
     }
-
-    // Note: should_process_control_header needs proper CtrlHeader setup
-    // Skipping for now as we don't have a simple way to create CtrlHeader instances
-    // This module is reserved for future expansion as noted in utils.rs
 }
