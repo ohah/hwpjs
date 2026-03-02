@@ -549,6 +549,7 @@ pub fn render_paragraph(
             para_shape_indent,
             hcd_position,
             page_def,
+            body_default_hls: None,
         };
 
         let mut line_segment_state = DocumentRenderState {
