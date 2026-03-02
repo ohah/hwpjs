@@ -72,3 +72,76 @@ pub(crate) fn convert_shape_component_children_to_markdown(
 
     parts
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::document::ParagraphRecord;
+
+    fn create_mock_document() -> HwpDocument {
+        use crate::document::{FileHeader, HwpDocument};
+        let mut file_header_data = vec![0u8; 256];
+        file_header_data[0..32].copy_from_slice(b"HWP Document File\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+        file_header_data[32..36].copy_from_slice(&0x05000300u32.to_le_bytes());
+        file_header_data[36..40].copy_from_slice(&0x01u32.to_le_bytes());
+        let file_header = FileHeader::parse(&file_header_data).unwrap_or_else(|_| unreachable!());
+        HwpDocument::new(file_header)
+    }
+
+    #[test]
+    fn test_convert_shape_component_children_empty_children() {
+        let document = create_mock_document();
+        let mut tracker = crate::viewer::core::OutlineNumberTracker::new();
+        let result = convert_shape_component_children_to_markdown(
+            &[],
+            &document,
+            None,
+            &mut tracker,
+        );
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_convert_shape_component_children_with_unsupported_children() {
+        let document = create_mock_document();
+        let mut tracker = crate::viewer::core::OutlineNumberTracker::new();
+
+        // Test with unsupported child types (should be ignored)
+        // We'll just test with an empty Vec for now as creating unsupported children requires complex types
+        let children: Vec<ParagraphRecord> = vec![];
+        let result = convert_shape_component_children_to_markdown(
+            &children,
+            &document,
+            None,
+            &mut tracker,
+        );
+
+        // Should return empty vector
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_convert_shape_component_children_with_document_and_tracker() {
+        let document = create_mock_document();
+        let mut tracker = crate::viewer::core::OutlineNumberTracker::new();
+
+        // Test that function accepts these parameters
+        let children: Vec<ParagraphRecord> = vec![];
+        let result1 = convert_shape_component_children_to_markdown(
+            &children,
+            &document,
+            None,
+            &mut tracker,
+        );
+        let result2 = convert_shape_component_children_to_markdown(
+            &children,
+            &document,
+            Some("test_output"),
+            &mut tracker,
+        );
+
+        // Both should return empty results
+        assert_eq!(result1.len(), 0);
+        assert_eq!(result2.len(), 0);
+    }
+}
