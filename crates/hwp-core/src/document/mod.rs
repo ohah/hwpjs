@@ -611,6 +611,47 @@ impl HwpDocument {
                         }
                     }
 
+                    // Shape object ("gso "): assign image number to the first AUTO_NUMBER in caption (children ListHeader).
+                    if header.ctrl_id == "gso " {
+                        let mut assigned_for_this_shape = false;
+                        for c in children.iter_mut() {
+                            if let ParagraphRecord::ListHeader { paragraphs: cap_paras, .. } = c {
+                                for p in cap_paras.iter_mut() {
+                                    for r in p.records.iter_mut() {
+                                        if let ParagraphRecord::ParaText { runs, .. } = r {
+                                            for run in runs.iter_mut() {
+                                                if let ParaTextRun::Control {
+                                                    code, display_text, ..
+                                                } = run
+                                                {
+                                                    if *code == ControlChar::AUTO_NUMBER
+                                                        && display_text.is_none()
+                                                    {
+                                                        *display_text = Some(_image_no.to_string());
+                                                        assigned_for_this_shape = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if assigned_for_this_shape {
+                                            break;
+                                        }
+                                    }
+                                    if assigned_for_this_shape {
+                                        break;
+                                    }
+                                }
+                                if assigned_for_this_shape {
+                                    break;
+                                }
+                            }
+                        }
+                        if assigned_for_this_shape {
+                            *_image_no += 1;
+                        }
+                    }
+
                     // Recurse into nested structures for completeness.
                     for c in children.iter_mut() {
                         resolve_paragraph_record(

@@ -2485,7 +2485,8 @@
                                 "position": 3,
                                 "code": 18,
                                 "name": "AUTO_NUMBER",
-                                "size_wchars": 8
+                                "size_wchars": 8,
+                                "display_text": "1"
                               },
                               {
                                 "kind": "text",
