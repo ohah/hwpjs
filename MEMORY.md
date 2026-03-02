@@ -8,6 +8,7 @@ Long-term memory and context for this workspace. Update this file with decisions
 | 2026-02-26 | test/ctrl_header-unit-tests | test(core): add ctrl_header unit tests (column_def, section_def, shared) (PR #51) | Added 10 unit tests: 4 for column_def, 4 for section_def, 2 shared tests (CtrlHeaderResult operations, module verification)
 | 2026-02-26 | test/fileheader-version-string-test | test(core): add FileHeader version string conversion test (PR #49) | Added version_string() test to verify 4-part dotted version (5.0.3.0) parsing
 | 2026-02-26 | test/common-mime-edge-cases | test(core): add edge case tests for MIME type resolution (PR #48) | Added GIF, case-insensitive extension handling tests |
+| 2026-03-02 | test/viewer-markdown-utils-edge-cases | test(core): add viewer/markdown utils edge case tests (PR #78) | Added 13 unit tests: 8 for is_block_element (empty string, text, image inline table separator page break extra dashes) and 7 for is_text_part (empty string whitespace numbers special chars block elements filtering) |
 
 하트비트에서 테스트 코드 PR을 올릴 때마다 아래에 한 줄씩 추가. 같은 유형 작업이 겹치지 않도록 참고.
 
