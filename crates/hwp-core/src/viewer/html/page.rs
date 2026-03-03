@@ -28,6 +28,9 @@ pub struct HcIBlock {
     pub html: String,
     pub left_mm: Option<f64>,
     pub top_mm: Option<f64>,
+    /// true이면 hcI 래핑 없이 html을 그대로 출력 (hcS 구분선 등)
+    /// When true, output html directly without hcI wrapping (e.g. hcS separators)
+    pub is_raw: bool,
 }
 
 /// 페이지 렌더링 모듈 / Page rendering module
@@ -108,6 +111,11 @@ pub fn render_page(
         ));
         for block in blocks {
             if block.html.is_empty() {
+                continue;
+            }
+            if block.is_raw {
+                // hcS 구분선 등: hcI 래핑 없이 그대로 출력 / Raw block (e.g. hcS separator): output directly
+                html.push_str(&block.html);
                 continue;
             }
             let mut style = String::new();

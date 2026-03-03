@@ -91,22 +91,6 @@ pub fn render_text(
             // CharShape 클래스 적용 / Apply CharShape class (0-based indexing to match XSL/XML format)
             let class_name = format!("cs{}", char_shape_id_opt.unwrap());
 
-            // 인라인 스타일 추가 / Add inline styles
-            let mut inline_style = String::new();
-
-            // 폰트 크기 / Font size
-            let size_pt = char_shape.base_size as f64 / 100.0;
-            inline_style.push_str(&format!("font-size:{}pt;", size_pt));
-
-            // 텍스트 색상 / Text color
-            let color = &char_shape.text_color;
-            inline_style.push_str(&format!(
-                "color:rgb({},{},{});",
-                color.r(),
-                color.g(),
-                color.b()
-            ));
-
             // 속성 / Attributes
             // bold는 CSS의 font-weight:bold로 처리되므로 <strong> 태그 사용하지 않음
             // Bold is handled by CSS font-weight:bold, so don't use <strong> tag
@@ -132,18 +116,11 @@ pub fn render_text(
                 styled_text = format!("<sub>{}</sub>", styled_text);
             }
 
-            // .hrt span으로 래핑 / Wrap with .hrt span
-            if !inline_style.is_empty() {
-                result.push_str(&format!(
-                    r#"<span class="hrt {}" style="{}">{}</span>"#,
-                    class_name, inline_style, styled_text
-                ));
-            } else {
-                result.push_str(&format!(
-                    r#"<span class="hrt {}">{}</span>"#,
-                    class_name, styled_text
-                ));
-            }
+            // .hrt span으로 래핑 (스타일은 CSS 클래스에서 처리) / Wrap with .hrt span (styles handled by CSS class)
+            result.push_str(&format!(
+                r#"<span class="hrt {}">{}</span>"#,
+                class_name, styled_text
+            ));
         } else {
             // CharShape가 없는 경우 기본 스타일 / Default style when no CharShape
             result.push_str(&format!(r#"<span class="hrt">{}</span>"#, text_for_styling));
