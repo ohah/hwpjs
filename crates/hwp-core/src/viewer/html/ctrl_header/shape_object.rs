@@ -486,114 +486,159 @@ fn render_shape_content(
     let mut pattern_counter = 0usize;
     let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
 
-    let mut mc_rendered = false;
+    // cold 문단(column_divide_type 비어있지 않은)부터 다음 cold 또는 끝까지 모든 문단의
+    // line segments, text, char_shapes를 집계 / Aggregate all paragraphs from cold (non-empty
+    // column_divide_type) to next cold or end
+    let mut all_line_segments: Vec<LineSegmentInfo> = Vec::new();
+    let mut all_text = String::new();
+    let mut all_char_shapes: Vec<crate::document::bodytext::CharShapeInfo> = Vec::new();
+    let mut all_control_char_positions = Vec::new();
+    let mut collecting = false;
+    let mut para_shape_id: u16 = 0;
+    let mut wchar_offset: usize = 0; // 원본 WCHAR 단위 오프셋 / Original WCHAR unit offset
+
     for para in paragraphs {
-        if para.para_header.column_divide_type.is_empty() {
+        if !para.para_header.column_divide_type.is_empty() {
+            if collecting {
+                break; // 다음 cold 문단 도달 시 중단 / Stop at next cold paragraph
+            }
+            collecting = true;
+        }
+        if !collecting {
             continue;
         }
-        if mc_rendered {
-            break; // 중복 다단 문단 건너뛰기 / Skip duplicate multi-column paragraphs
-        }
-        mc_rendered = true;
 
-        let para_shape_id = para.para_header.para_shape_id;
-        let para_shape_class = if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
-            format!("ps{}", para_shape_id)
-        } else {
-            String::new()
-        };
+        para_shape_id = para.para_header.para_shape_id;
 
         let (para_text, char_shapes) = text::extract_text_and_shapes(para);
 
-        let mut line_segments: Vec<LineSegmentInfo> = Vec::new();
-        let mut control_char_positions = Vec::new();
+        // text_start_position 보정: 원본 WCHAR 단위 오프셋 사용
+        // Adjust text_start_position: use original WCHAR unit offset
+        let text_offset = wchar_offset;
 
         for record in &para.records {
             match record {
                 ParagraphRecord::ParaLineSeg { segments } => {
-                    line_segments = segments.clone();
+                    for seg in segments {
+                        let mut adjusted = seg.clone();
+                        adjusted.text_start_position += text_offset as u32;
+                        all_line_segments.push(adjusted);
+                    }
                 }
                 ParagraphRecord::ParaText {
                     control_char_positions: ccp,
                     ..
                 } => {
-                    control_char_positions = ccp.clone();
+                    for cp in ccp {
+                        let mut adjusted = cp.clone();
+                        adjusted.position += text_offset;
+                        all_control_char_positions.push(adjusted);
+                    }
                 }
                 _ => {}
             }
         }
 
-        if line_segments.len() < col_count_usize {
+        wchar_offset += para.para_header.text_char_count as usize;
+        all_text.push_str(&para_text);
+        // char_shapes 위치도 WCHAR 오프셋으로 보정 / Adjust char_shapes positions by WCHAR offset
+        for mut cs in char_shapes {
+            cs.position += text_offset as u32;
+            all_char_shapes.push(cs);
+        }
+    }
+
+    if all_line_segments.len() < col_count_usize {
+        let body = render_paragraphs_fragment(paragraphs, document, options);
+        return format!(
+            r#"<div class="{p}hcD" style="left:{m}mm;top:{m}mm;">{body}</div>"#,
+            p = prefix,
+            m = margin_mm,
+        );
+    }
+
+    // split_into_column_groups로 컬럼 경계 감지 / Detect column boundaries with split_into_column_groups
+    let col_groups = crate::viewer::html::document::split_into_column_groups(&all_line_segments);
+    if col_groups.len() < col_count_usize {
+        let body = render_paragraphs_fragment(paragraphs, document, options);
+        return format!(
+            r#"<div class="{p}hcD" style="left:{m}mm;top:{m}mm;">{body}</div>"#,
+            p = prefix,
+            m = margin_mm,
+        );
+    }
+
+    let para_shape_class = if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+        format!("ps{}", para_shape_id)
+    } else {
+        String::new()
+    };
+
+    let para_shape_indent =
+        if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+            Some(document.doc_info.para_shapes[para_shape_id as usize].indent)
+        } else {
+            None
+        };
+
+    if seg_width_mm == 0.0 {
+        seg_width_mm = round_to_2dp(int32_to_mm(all_line_segments[0].segment_width));
+    }
+
+    // 첫 번째 컬럼 그룹의 높이를 content_h_mm으로 사용
+    // Use first column group's height as content_h_mm
+    let (first_start, first_end) = col_groups[0];
+    let first_col_segs = &all_line_segments[first_start..first_end];
+    if let Some(last) = first_col_segs.last() {
+        let h = round_to_2dp(int32_to_mm(last.vertical_position + last.line_height));
+        if h > content_h_mm {
+            content_h_mm = h;
+        }
+    }
+
+    let original_text_len = wchar_offset;
+
+    for (col, &(start, end)) in col_groups.iter().enumerate().take(col_count_usize) {
+        let col_segs = &all_line_segments[start..end];
+        if col_segs.is_empty() {
             continue;
         }
 
-        let segs_per_col = line_segments.len() / col_count_usize;
-        if segs_per_col == 0 {
-            continue;
-        }
+        let col_original_text_len = if end < all_line_segments.len() {
+            all_line_segments[end].text_start_position as usize
+        } else {
+            original_text_len
+        };
 
-        if seg_width_mm == 0.0 {
-            seg_width_mm = round_to_2dp(int32_to_mm(line_segments[0].segment_width));
-        }
+        let content = LineSegmentContent {
+            segments: col_segs,
+            text: &all_text,
+            char_shapes: &all_char_shapes,
+            control_char_positions: &all_control_char_positions,
+            original_text_len: col_original_text_len,
+            images: &[],
+            tables: &[],
+            shape_htmls: &[],
+        };
 
-        let col_segs = &line_segments[..segs_per_col];
-        if let Some(last) = col_segs.last() {
-            let h = round_to_2dp(int32_to_mm(last.vertical_position + last.line_height));
-            if h > content_h_mm {
-                content_h_mm = h;
-            }
-        }
+        let context = LineSegmentRenderContext {
+            document,
+            para_shape_class: &para_shape_class,
+            options,
+            para_shape_indent,
+            hcd_position: None,
+            page_def: None,
+            body_default_hls: Some((2.79, -0.18)),
+        };
 
-        let para_shape_indent =
-            if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
-                Some(document.doc_info.para_shapes[para_shape_id as usize].indent)
-            } else {
-                None
-            };
+        let mut state = DocumentRenderState {
+            table_counter_start: 0,
+            pattern_counter: &mut pattern_counter,
+            color_to_pattern: &mut color_to_pattern,
+        };
 
-        let original_text_len = para.para_header.text_char_count as usize;
-
-        for col in 0..col_count_usize {
-            let col_start = col * segs_per_col;
-            let col_end = (col + 1) * segs_per_col;
-            let col_segs = &line_segments[col_start..col_end];
-
-            let col_original_text_len = if col + 1 < col_count_usize {
-                line_segments[(col + 1) * segs_per_col].text_start_position as usize
-            } else {
-                original_text_len
-            };
-
-            let content = LineSegmentContent {
-                segments: col_segs,
-                text: &para_text,
-                char_shapes: &char_shapes,
-                control_char_positions: &control_char_positions,
-                original_text_len: col_original_text_len,
-                images: &[],
-                tables: &[],
-                shape_htmls: &[],
-            };
-
-            let context = LineSegmentRenderContext {
-                document,
-                para_shape_class: &para_shape_class,
-                options,
-                para_shape_indent,
-                hcd_position: None,
-                page_def: None,
-                body_default_hls: Some((2.79, -0.18)),
-            };
-
-            let mut state = DocumentRenderState {
-                table_counter_start: 0,
-                pattern_counter: &mut pattern_counter,
-                color_to_pattern: &mut color_to_pattern,
-            };
-
-            col_contents[col]
-                .push_str(&render_line_segments_with_content(&content, &context, &mut state));
-        }
+        col_contents[col]
+            .push_str(&render_line_segments_with_content(&content, &context, &mut state));
     }
 
     let mut hcd_inner = String::new();
