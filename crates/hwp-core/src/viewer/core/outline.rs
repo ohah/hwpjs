@@ -1,6 +1,7 @@
 /// Shared outline number logic for HTML and Markdown viewers
 /// HTML·마크다운 뷰어 공통 개요 번호 로직
 use crate::document::bodytext::ParaHeader;
+use crate::document::docinfo::bullet::BulletAlignType;
 use crate::document::docinfo::numbering::NumberType;
 use crate::document::{HeaderShapeType, HwpDocument};
 
@@ -377,16 +378,33 @@ pub fn format_numbering_string(format_string: &str, number: u32, number_type: Nu
 /// Returns (bullet_char, font_size_pt)
 pub fn pua_to_bullet_info(pua_char: u16) -> (char, f64) {
     match pua_char {
-        // Wingdings bullet mappings (hex only, decimal is same value)
-        0xF06C => ('●', 6.67), // Bullet[0] - large circle
-        0xF09F => ('●', 3.33), // Bullet[1] - small circle
-        0xF06E => ('◆', 6.67), // Diamond
-        0xF075 => ('■', 6.67), // Square
-        0xF076 => ('□', 6.67), // Open square
-        0xF0A7 => ('◈', 6.67), // Diamond bullet
-        0xF0A8 => ('○', 6.67), // Open circle
-        0xF0B7 => ('●', 6.67), // Standard bullet
-        _ => ('●', 6.67),      // default
+        // PUA Wingdings 매핑 (large variants: 6.67pt)
+        0xF06C => ('●', 6.67), // large filled circle
+        0xF06E => ('■', 6.67), // large filled square
+        0xF075 => ('◆', 6.67), // large filled diamond
+        0xF0B7 => ('●', 6.67), // standard bullet
+        // PUA Wingdings 매핑 (small variants: 3.33pt)
+        0xF09F => ('●', 3.33), // small filled circle
+        0xF077 => ('◆', 3.33), // small filled diamond
+        0xF0A7 => ('■', 3.33), // small filled square
+        0xF0A8 => ('◆', 3.33), // small filled diamond (alternate)
+        // PUA Wingdings 매핑 (10pt — 장식 심볼)
+        0xF046 => ('☞', 10.0), // pointing hand
+        0xF06F => ('□', 10.0), // open square
+        0xF076 => ('❖', 10.0), // four-pointed star
+        0xF0A1 => ('◯', 10.0), // large circle
+        0xF0A4 => ('⊙', 10.0), // circled dot
+        0xF0AB => ('★', 10.0), // black star
+        0xF0FC => ('✓', 10.0), // check mark
+        0xF0FE => ('☑', 10.0), // ballot box with check
+        // 비PUA 유니코드: 직접 사용 + 10pt
+        _ => {
+            if let Some(ch) = char::from_u32(pua_char as u32) {
+                (ch, 10.0)
+            } else {
+                ('●', 6.67) // fallback
+            }
+        }
     }
 }
 
@@ -485,17 +503,43 @@ fn compute_bullet_marker(
     let (bullet_char, font_size) = pua_to_bullet_info(bullet.bullet_char);
     let marker_text = bullet_char.to_string();
 
-    let char_shape_id = bullet.char_shape_id as usize;
-    let char_shape_class = if char_shape_id < document.doc_info.char_shapes.len() {
-        format!("cs{}", char_shape_id)
+    let char_shape_class = if bullet.char_shape_id >= 0 {
+        let cs_id = bullet.char_shape_id as usize;
+        if cs_id < document.doc_info.char_shapes.len() {
+            format!("cs{}", cs_id)
+        } else {
+            "cs0".to_string()
+        }
     } else {
-        "cs1".to_string()
+        "cs0".to_string() // char_shape_id == -1 → default
+    };
+
+    // Bullet.width (HWPUNIT16) → hhe div 너비 (mm)
+    // width=0이면 DEFAULT_BULLET_WIDTH_MM, >0이면 w_mm + min(w_mm, DEFAULT_BULLET_WIDTH_MM)
+    // Right 정렬은 항상 DEFAULT_BULLET_WIDTH_MM
+    let width_mm = if bullet.width > 0 {
+        match bullet.attributes.align_type {
+            BulletAlignType::Right => DEFAULT_BULLET_WIDTH_MM,
+            _ => {
+                let w_mm = bullet.width as f64 * 25.4 / 7200.0;
+                let total = w_mm + w_mm.min(DEFAULT_BULLET_WIDTH_MM);
+                (total * 100.0).round() / 100.0
+            }
+        }
+    } else {
+        DEFAULT_BULLET_WIDTH_MM
+    };
+
+    let margin_left_mm = match bullet.attributes.align_type {
+        BulletAlignType::Left => 0.0,
+        BulletAlignType::Center => DEFAULT_MARKER_HEIGHT_MM / 2.0,
+        BulletAlignType::Right => DEFAULT_MARKER_HEIGHT_MM,
     };
 
     Some(MarkerInfo {
-        width_mm: DEFAULT_BULLET_WIDTH_MM,
+        width_mm,
         height_mm: DEFAULT_MARKER_HEIGHT_MM,
-        margin_left_mm: 0.0,
+        margin_left_mm,
         font_size_pt: Some(font_size),
         char_shape_class,
         marker_text,
