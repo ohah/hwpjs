@@ -14,8 +14,8 @@ pub mod renderer;
 
 pub use bodytext::process_bodytext;
 pub use outline::{
-    compute_outline_number, format_outline_number, OutlineNumberTracker,
-    OutlineNumberTracker as OutlineTracker,
+    compute_outline_number, compute_paragraph_marker, format_outline_number, MarkerInfo,
+    NumberTracker, OutlineNumberTracker, OutlineNumberTracker as OutlineTracker,
 };
 pub use paragraph::process_paragraph;
 pub use renderer::{DocumentParts, Renderer, TextStyles};

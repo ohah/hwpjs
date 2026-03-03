@@ -8,6 +8,7 @@ use crate::document::CtrlHeaderData;
 use crate::viewer::html::ctrl_header::table::{CaptionData, TablePosition, TableRenderContext};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
+use crate::viewer::core::outline::{MarkerInfo, DEFAULT_MARKER_FONT_SIZE_PT};
 use crate::{HwpDocument, ParaShape};
 use std::collections::HashMap;
 
@@ -22,6 +23,8 @@ pub struct LineSegmentContent<'a> {
     pub tables: &'a [TableInfo<'a>],
     /// 인라인 도형 HTML (앵커 위치, HTML) / Inline shape HTMLs (anchor position, HTML)
     pub shape_htmls: &'a [(usize, String)],
+    /// 문단 머리 마커 정보 (Bullet/Number/Outline)
+    pub marker_info: Option<&'a MarkerInfo>,
 }
 
 /// 라인 세그먼트 렌더링 컨텍스트 / Line segment rendering context
@@ -168,6 +171,7 @@ pub fn render_line_segments_with_content(
     let images = content.images;
     let tables = content.tables;
     let shape_htmls = content.shape_htmls;
+    let content_marker_info = content.marker_info;
 
     let document = context.document;
     let para_shape_class = context.para_shape_class;
@@ -435,6 +439,32 @@ pub fn render_line_segments_with_content(
             use crate::viewer::html::text::render_text;
             let rendered_text = render_text(&segment_text, &segment_char_shapes, document, "");
             content.push_str(&rendered_text);
+        }
+
+        // 첫 번째 세그먼트에 마커(hhe) 삽입 / Insert marker (hhe) in first segment
+        if segment_index == 0 {
+            if let Some(marker) = content_marker_info {
+                let font_size = marker
+                    .font_size_pt
+                    .map(|s| {
+                        if (s - s.round()).abs() < 0.001 {
+                            format!("font-size:{}pt;", s as i32)
+                        } else {
+                            format!("font-size:{:.2}pt;", s)
+                        }
+                    })
+                    .unwrap_or_else(|| format!("font-size:{}pt;", DEFAULT_MARKER_FONT_SIZE_PT as i32));
+                let hhe = format!(
+                    r#"<div class="hhe" style="display:inline-block;margin-left:{:.2}mm;width:{:.2}mm;height:{:.2}mm;"><span class="hrt {}" style="{}">{}</span></div>"#,
+                    marker.margin_left_mm,
+                    marker.width_mm,
+                    marker.height_mm,
+                    marker.char_shape_class,
+                    font_size,
+                    marker.marker_text
+                );
+                content = format!("{}{}", hhe, content);
+            }
         }
 
         // 라인 세그먼트 렌더링 / Render line segment

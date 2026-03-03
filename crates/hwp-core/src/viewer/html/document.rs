@@ -16,6 +16,7 @@ use crate::document::bodytext::ctrl_header::{CtrlHeaderData, CtrlId};
 use crate::document::bodytext::para_header::ColumnDivideType;
 use crate::document::bodytext::{LineSegmentInfo, PageDef, ParagraphRecord};
 use crate::document::HwpDocument;
+use crate::viewer::core::outline::NumberTracker;
 use crate::viewer::core::OutlineNumberTracker;
 use crate::INT32;
 
@@ -359,6 +360,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut pattern_counter = 0;
     let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
     let mut outline_tracker = OutlineNumberTracker::new();
+    let mut number_tracker = NumberTracker::new();
 
     // 각주/미주 수집 (문서 끝에 블록으로 출력) / Footnote/endnote collection (output as blocks at document end)
     let mut footnote_counter = 0u32;
@@ -418,6 +420,26 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut para_index = 0;
 
     for section in &document.body_text.sections {
+        // 섹션 전환 시 개요 번호 카운터 리셋 / Reset outline counter on section change
+        outline_tracker = OutlineNumberTracker::new();
+
+        // 섹션의 개요 번호 정의 ID 추출 (SectionDefinition의 number_para_shape_id)
+        // Extract outline numbering definition ID from SectionDefinition
+        let mut section_outline_numbering_id: u16 = 0;
+        for paragraph in &section.paragraphs {
+            for record in &paragraph.records {
+                if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                    if let CtrlHeaderData::SectionDefinition { number_para_shape_id, .. } = &header.data {
+                        section_outline_numbering_id = *number_para_shape_id;
+                        break;
+                    }
+                }
+            }
+            if section_outline_numbering_id > 0 {
+                break;
+            }
+        }
+
         for paragraph in &section.paragraphs {
             // 1. 문단 페이지 나누기 확인 (렌더링 전) / Check paragraph page break (before rendering)
             let para_result = super::pagination::check_paragraph_page_break(
@@ -781,6 +803,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             images: &[],
                             tables: &mc_inline_tables,
                             shape_htmls: &mc_shape_htmls,
+                            marker_info: None,
                         };
 
                         let ls_context = LineSegmentRenderContext {
@@ -907,6 +930,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     color_to_pattern: &mut color_to_pattern,
                     note_state: Some(&mut note_state),
                     outline_tracker: Some(&mut outline_tracker),
+                    number_tracker: Some(&mut number_tracker),
+                    section_outline_numbering_id,
                 };
 
                 let (para_html, table_htmls, obj_pagination_result) =

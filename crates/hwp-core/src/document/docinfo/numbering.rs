@@ -7,6 +7,44 @@ use crate::error::HwpError;
 use crate::types::{decode_utf16le, HWPUNIT16, UINT16, UINT32, WORD};
 use serde::{Deserialize, Serialize};
 
+/// 번호 종류 (표 41) / Number type (Table 41)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum NumberType {
+    /// 아라비아 숫자 (1, 2, 3, ...) / Arabic numerals
+    Arabic = 0,
+    /// 동그라미 숫자 (①, ②, ③, ...) / Circled digits
+    CircledDigits = 1,
+    /// 대문자 로마 숫자 (I, II, III, ...) / Upper roman numerals
+    UpperRoman = 2,
+    /// 소문자 로마 숫자 (i, ii, iii, ...) / Lower roman numerals
+    LowerRoman = 3,
+    /// 대문자 알파벳 (A, B, C, ...) / Upper alpha
+    UpperAlpha = 4,
+    /// 소문자 알파벳 (a, b, c, ...) / Lower alpha
+    LowerAlpha = 5,
+    /// 한글 가나다 (가, 나, 다, ...) / Hangul ga-na-da
+    HangulGa = 8,
+    /// 한글 가나다 순환 / Hangul ga-na-da cycle
+    HangulGaCycle = 9,
+}
+
+impl NumberType {
+    fn from_bits(bits: u32) -> Self {
+        match (bits >> 5) & 0x0F {
+            0 => NumberType::Arabic,
+            1 => NumberType::CircledDigits,
+            2 => NumberType::UpperRoman,
+            3 => NumberType::LowerRoman,
+            4 => NumberType::UpperAlpha,
+            5 => NumberType::LowerAlpha,
+            8 => NumberType::HangulGa,
+            9 => NumberType::HangulGaCycle,
+            _ => NumberType::Arabic,
+        }
+    }
+}
+
 /// 문단 머리 정보 속성 / Paragraph header information attributes
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NumberingHeaderAttributes {
@@ -18,6 +56,8 @@ pub struct NumberingHeaderAttributes {
     pub auto_outdent: bool,
     /// 수준별 본문과의 거리 종류 / Distance type from body text by level
     pub distance_type: DistanceType,
+    /// 번호 종류 / Number type
+    pub number_type: NumberType,
 }
 
 /// 문단 정렬 종류 / Paragraph alignment type
@@ -104,114 +144,142 @@ pub struct ExtendedNumberingLevel {
 impl Numbering {
     /// Numbering을 바이트 배열에서 파싱합니다. / Parse Numbering from byte array.
     ///
+    /// HWP 스펙 표 38 준수: 레벨별 인터리브 + 후미 그룹 레이아웃
+    /// Per-level (7회 반복):
+    ///   attr(UINT32, 4) + width(HWPUNIT16, 2) + dist(HWPUNIT16, 2)
+    ///   + char_shape_id(UINT32, 4) + format_length(WORD, 2) + format_string(WCHAR[], var)
+    /// 후미 그룹:
+    ///   start_numbers[0..6] → 7 × UINT16 = 14 bytes
+    ///   level_start_numbers[0..6] → 7 × UINT32 = 28 bytes (v5.0.2.5+, optional)
+    ///   extended_levels[0..2] → 3 × (WORD + WCHAR[])
+    ///
     /// # Arguments
     /// * `data` - Numbering 레코드 데이터 / Numbering record data
-    /// * `version` - HWP 파일 버전 (5.0.2.5 이상에서 수준별 시작번호 지원) / HWP file version (level-specific start numbers supported in 5.0.2.5+)
+    /// * `version` - HWP 파일 버전 (5.0.2.5 이상에서 수준별 시작번호 지원)
     ///
     /// # Returns
     /// 파싱된 Numbering 구조체 / Parsed Numbering structure
     pub fn parse(data: &[u8], version: u32) -> Result<Self, HwpError> {
         let mut offset = 0;
-        let mut levels = Vec::new();
+        const NUM_LEVELS: usize = 7;
 
-        // 7개 수준 파싱 (1~7) / Parse 7 levels (1~7)
-        for _ in 0..7 {
-            // 데이터가 부족하면 기본값으로 채우고 종료 / Fill with defaults and exit if insufficient data
-            if offset + 12 > data.len() {
-                // 최소 12바이트 (속성 4 + 너비 2 + 거리 2 + 글자모양ID 4) 필요 / Need at least 12 bytes
-                break;
-            }
+        // 레벨별 인터리브 파싱 (7개 수준)
+        // 각 레벨: attr(4) + width(2) + dist(2) + char_shape_id(4) + format_length(2) + format_string(var)
+        let mut attrs = [0u32; NUM_LEVELS];
+        let mut widths = [0i16; NUM_LEVELS];
+        let mut distances = [0i16; NUM_LEVELS];
+        let mut char_shape_ids = [0u32; NUM_LEVELS];
+        let mut format_lengths = [0u16; NUM_LEVELS];
+        let mut format_strings: Vec<String> = Vec::with_capacity(NUM_LEVELS);
 
-            // UINT 속성 (표 40) / UINT attributes (Table 40)
-            let attr_value = UINT32::from_le_bytes([
-                data[offset],
-                data[offset + 1],
-                data[offset + 2],
-                data[offset + 3],
-            ]);
-            offset += 4;
-
-            let attributes = NumberingHeaderAttributes {
-                align_type: ParagraphAlignType::from_bits(attr_value),
-                instance_like: (attr_value & 0x00000004) != 0,
-                auto_outdent: (attr_value & 0x00000008) != 0,
-                distance_type: DistanceType::from_bit((attr_value & 0x00000010) != 0),
-            };
-
-            // HWPUNIT16 너비 보정값 / HWPUNIT16 width correction value
-            let width = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
-            offset += 2;
-
-            // HWPUNIT16 본문과의 거리 / HWPUNIT16 distance from body text
-            let distance = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
-            offset += 2;
-
-            // UINT 글자 모양 아이디 참조 / UINT character shape ID reference
-            let char_shape_id = UINT32::from_le_bytes([
-                data[offset],
-                data[offset + 1],
-                data[offset + 2],
-                data[offset + 3],
-            ]);
-            offset += 4;
-
-            // WORD 번호 형식 길이 / WORD number format length
-            let (format_length, format_string) = if offset + 2 <= data.len() {
-                let len = WORD::from_le_bytes([data[offset], data[offset + 1]]);
-                offset += 2;
-
-                // WCHAR array[format_length] 번호 형식 문자열 / WCHAR array[format_length] number format string
-                let format_bytes = len as usize * 2;
-                if offset + format_bytes <= data.len() {
-                    let str =
-                        decode_utf16le(&data[offset..offset + format_bytes]).map_err(|e| {
-                            HwpError::EncodingError {
-                                reason: format!("Failed to decode numbering format: {}", e),
-                            }
-                        })?;
-                    offset += format_bytes;
-                    (len, str)
-                } else {
-                    // 데이터가 부족하면 빈 문자열 / Empty string if insufficient data
-                    (0, String::new())
-                }
-            } else {
-                // 데이터가 부족하면 기본값 사용 / Use default if insufficient data
-                (0, String::new())
-            };
-
-            // UINT16 시작 번호 / UINT16 start number
-            let start_number = if offset + 2 <= data.len() {
-                let value = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
-                offset += 2;
-                value
-            } else {
-                0
-            };
-
-            // UINT 수준별 시작번호 (5.0.2.5 이상, 옵션) / UINT level-specific start number (5.0.2.5+, optional)
-            let level_start_number = if version >= 0x00020500 && offset + 4 <= data.len() {
-                let value = UINT32::from_le_bytes([
+        for i in 0..NUM_LEVELS {
+            // attr (UINT32, 4 bytes)
+            if offset + 4 <= data.len() {
+                attrs[i] = UINT32::from_le_bytes([
                     data[offset],
                     data[offset + 1],
                     data[offset + 2],
                     data[offset + 3],
                 ]);
                 offset += 4;
-                Some(value)
-            } else {
-                None
-            };
+            }
 
+            // width (HWPUNIT16, 2 bytes)
+            if offset + 2 <= data.len() {
+                widths[i] = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
+                offset += 2;
+            }
+
+            // distance (HWPUNIT16, 2 bytes)
+            if offset + 2 <= data.len() {
+                distances[i] = HWPUNIT16::from_le_bytes([data[offset], data[offset + 1]]);
+                offset += 2;
+            }
+
+            // char_shape_id (UINT32, 4 bytes)
+            if offset + 4 <= data.len() {
+                char_shape_ids[i] = UINT32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]);
+                offset += 4;
+            }
+
+            // format_length (WORD, 2 bytes) + format_string (WCHAR[], var bytes)
+            if offset + 2 <= data.len() {
+                let len = WORD::from_le_bytes([data[offset], data[offset + 1]]);
+                offset += 2;
+                format_lengths[i] = len;
+
+                let format_bytes = len as usize * 2;
+                if format_bytes > 0 && offset + format_bytes <= data.len() {
+                    let s =
+                        decode_utf16le(&data[offset..offset + format_bytes]).map_err(|e| {
+                            HwpError::EncodingError {
+                                reason: format!("Failed to decode numbering format: {}", e),
+                            }
+                        })?;
+                    offset += format_bytes;
+                    format_strings.push(s);
+                } else {
+                    if format_bytes > 0 {
+                        offset = data.len().min(offset + format_bytes);
+                    }
+                    format_strings.push(String::new());
+                }
+            } else {
+                format_strings.push(String::new());
+            }
+        }
+
+        // 후미 그룹: start_numbers[0..6] → 7 × UINT16 = 14 bytes
+        let mut start_numbers = [0u16; NUM_LEVELS];
+        for i in 0..NUM_LEVELS {
+            if offset + 2 > data.len() {
+                break;
+            }
+            start_numbers[i] = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
+            offset += 2;
+        }
+
+        // 후미 그룹: level_start_numbers[0..6] → 7 × UINT32 = 28 bytes (v5.0.2.5+, optional)
+        let mut level_start_numbers = [None; NUM_LEVELS];
+        if version >= 0x00020500 {
+            for i in 0..NUM_LEVELS {
+                if offset + 4 > data.len() {
+                    break;
+                }
+                level_start_numbers[i] = Some(UINT32::from_le_bytes([
+                    data[offset],
+                    data[offset + 1],
+                    data[offset + 2],
+                    data[offset + 3],
+                ]));
+                offset += 4;
+            }
+        }
+
+        // 7개 수준 조립 / Assemble 7 levels
+        let mut levels = Vec::with_capacity(NUM_LEVELS);
+        for i in 0..NUM_LEVELS {
+            let attributes = NumberingHeaderAttributes {
+                align_type: ParagraphAlignType::from_bits(attrs[i]),
+                instance_like: (attrs[i] & 0x00000004) != 0,
+                auto_outdent: (attrs[i] & 0x00000008) != 0,
+                distance_type: DistanceType::from_bit((attrs[i] & 0x00000010) != 0),
+                number_type: NumberType::from_bits(attrs[i]),
+            };
             levels.push(NumberingLevelInfo {
                 attributes,
-                width,
-                distance,
-                char_shape_id,
-                format_length,
-                format_string,
-                start_number,
-                level_start_number,
+                width: widths[i],
+                distance: distances[i],
+                char_shape_id: char_shape_ids[i],
+                format_length: format_lengths[i],
+                format_string: format_strings[i].clone(),
+                start_number: start_numbers[i],
+                level_start_number: level_start_numbers[i],
             });
         }
 
@@ -219,18 +287,14 @@ impl Numbering {
         let mut extended_levels = Vec::new();
         for _ in 0..3 {
             if offset + 2 > data.len() {
-                // 확장 레벨이 없을 수 있음 / Extended levels may not exist
                 break;
             }
 
-            // WORD 확장 번호 형식 길이 / WORD extended number format length
             let format_length = WORD::from_le_bytes([data[offset], data[offset + 1]]);
             offset += 2;
 
-            // WCHAR array[format_length] 확장 번호 형식 문자열 / WCHAR array[format_length] extended number format string
             let format_bytes = format_length as usize * 2;
             if offset + format_bytes > data.len() {
-                // 확장 레벨 데이터가 불완전할 수 있음 / Extended level data may be incomplete
                 break;
             }
             let format_string =

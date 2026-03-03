@@ -13,7 +13,7 @@ use crate::document::bodytext::{
 };
 use crate::document::{HwpDocument, Paragraph};
 use crate::viewer::core::outline::{
-    compute_outline_number, format_outline_number, OutlineNumberTracker,
+    compute_paragraph_marker, MarkerInfo, NumberTracker, OutlineNumberTracker,
 };
 use crate::viewer::html::ctrl_header::table::{render_table, TablePosition, TableRenderContext};
 use crate::INT32;
@@ -53,6 +53,10 @@ pub struct ParagraphRenderState<'a> {
     pub note_state: Option<&'a mut FootnoteEndnoteState<'a>>,
     /// 개요 번호 추적기 (본문 렌더 시에만 사용, fragment는 None)
     pub outline_tracker: Option<&'a mut OutlineNumberTracker>,
+    /// 문단번호(Number/Bullet) 추적기 (본문 렌더 시에만 사용, fragment는 None)
+    pub number_tracker: Option<&'a mut NumberTracker>,
+    /// 현재 섹션의 개요 번호 정의 ID (1-based, from SectionDefinition)
+    pub section_outline_numbering_id: u16,
 }
 
 /// 각주/미주 내용용 문단 목록을 HTML 조각으로 렌더링 (페이지/테이블 컨텍스트 없음)
@@ -99,6 +103,8 @@ pub fn render_paragraphs_fragment_with_hls(
         color_to_pattern: &mut color_to_pattern,
         note_state: None,
         outline_tracker: None,
+        number_tracker: None,
+        section_outline_numbering_id: 0,
     };
     let mut pagination_context = PaginationContext {
         prev_vertical_mm: None,
@@ -553,6 +559,21 @@ pub fn render_paragraph(
         // 테이블 번호 시작값: 현재 table_counter 사용 (문서 레벨에서 관리) / Table number start value: use current table_counter (managed at document level)
         let table_counter_start = *state.table_counter;
 
+        // 마커 정보 계산 (Bullet/Number/Outline)
+        let marker_info: Option<MarkerInfo> = if let (Some(outline_tracker), Some(number_tracker)) =
+            (state.outline_tracker.as_deref_mut(), state.number_tracker.as_deref_mut())
+        {
+            compute_paragraph_marker(
+                &paragraph.para_header,
+                document,
+                outline_tracker,
+                number_tracker,
+                state.section_outline_numbering_id,
+            )
+        } else {
+            None
+        };
+
         let content = LineSegmentContent {
             segments: &line_segments,
             text: &text,
@@ -562,6 +583,7 @@ pub fn render_paragraph(
             images: &inline_images, // like_letters=true인 이미지만 line_segment에 포함 / Include only images with like_letters=true in line_segment
             tables: inline_table_infos.as_slice(), // like_letters=true인 테이블 포함 / Include tables with like_letters=true
             shape_htmls: &[],
+            marker_info: marker_info.as_ref(),
         };
 
         let context = LineSegmentRenderContext {
@@ -849,18 +871,6 @@ pub fn render_paragraph(
     }
     for s in &shape_htmls {
         table_htmls.push(s.clone());
-    }
-
-    // 개요 번호가 있으면 문단 앞에 span으로 추가 / Prepend outline number span when present
-    if let Some(ref mut tracker) = state.outline_tracker {
-        if let Some((level, number)) =
-            compute_outline_number(&paragraph.para_header, document, tracker)
-        {
-            let num_str = format_outline_number(level, number);
-            let class_name = format!("{}outline-number", options.css_class_prefix);
-            let span = format!(r#"<span class="{}">{}</span>"#, class_name, num_str);
-            result.insert_str(0, &span);
-        }
     }
 
     (result, table_htmls, None)
