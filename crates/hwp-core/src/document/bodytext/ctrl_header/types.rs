@@ -85,6 +85,7 @@ pub enum CtrlHeaderData {
     },
     PageNumberPosition {
         flags: PageNumberPositionFlags,
+        number: UINT16,
         user_symbol: String,
         prefix: String,
         suffix: String,
