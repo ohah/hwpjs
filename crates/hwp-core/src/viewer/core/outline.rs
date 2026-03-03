@@ -133,6 +133,14 @@ fn is_format_string_empty_or_null(format_string: &str) -> bool {
     false
 }
 
+/// format_string이 유효한 번호 형식인지 검증
+/// ^N 플레이스홀더를 포함하고 제어 문자가 없어야 유효
+fn is_format_string_valid(s: &str) -> bool {
+    !s.is_empty()
+        && s.contains('^')
+        && !s.chars().any(|c| c.is_control() && c != '\t')
+}
+
 /// 문단이 개요 번호를 가질 경우 (level, number) 반환, 아니면 None
 /// ParaShape·Numbering·format_string 검사 후 트래커로 번호 부여
 pub fn compute_outline_number(
@@ -335,6 +343,7 @@ pub fn number_to_lower_alpha(n: u32) -> String {
 pub fn format_number_by_type(number: u32, number_type: NumberType) -> String {
     match number_type {
         NumberType::Arabic => number.to_string(),
+        NumberType::CircledDigits => number_to_circled(number),
         NumberType::UpperRoman => number_to_upper_roman(number),
         NumberType::LowerRoman => number_to_lower_roman(number),
         NumberType::UpperAlpha => number_to_upper_alpha(number),
@@ -401,6 +410,7 @@ pub struct MarkerInfo {
 }
 
 /// 마커 텍스트 너비 근사값 계산 (mm)
+/// fixture에서 역산한 개별 문자 너비 사용
 pub(crate) fn estimate_marker_width(text: &str, font_size_pt: Option<f64>) -> f64 {
     let pt = font_size_pt.unwrap_or(DEFAULT_MARKER_FONT_SIZE_PT);
     let mut width = 0.0;
@@ -409,16 +419,18 @@ pub(crate) fn estimate_marker_width(text: &str, font_size_pt: Option<f64>) -> f6
             // bullet char width ~ 5.29mm at 10pt, 2.65mm at 6.67pt
             width += DEFAULT_BULLET_WIDTH_MM * pt / DEFAULT_MARKER_FONT_SIZE_PT;
         } else if ch.is_ascii() {
-            // ASCII 문자 너비 근사값 (fixture 분석 기반)
+            // ASCII 문자 너비 근사값 (fixture 역산 기반)
             match ch {
                 'I' => width += 1.74,  // narrow
-                '.' | ')' | '(' => width += 1.46,
+                '.' => width += 1.46,
+                ')' | '(' => width += 1.75, // fixture: 1) = 5.19, 1 = 3.44, ) = 1.75
                 'V' | 'X' | 'A' | 'B' | 'C' | 'D' => width += 3.46,
-                _ => width += 2.43, // default ASCII width
+                '0'..='9' => width += 3.44, // fixture: 1. = 4.90, . = 1.46, 1 = 3.44
+                _ => width += 3.44, // default ASCII width
             }
         } else {
-            // 한글 등 wide 문자 ~ 3.53mm at 10pt
-            width += DEFAULT_MARKER_HEIGHT_MM;
+            // 한글 등 wide 문자 (fixture 역산: 가. = 6.32, . = 1.46, 가 = 4.86)
+            width += 4.86;
         }
     }
     // 소수점 2자리 반올림
@@ -510,10 +522,10 @@ fn compute_number_marker(
         if let Some(level_info) = numbering.levels.get(level_index) {
             let fs = &level_info.format_string;
             let nt = level_info.attributes.number_type;
-            if !fs.is_empty() && fs.contains('^') {
-                format_numbering_string(fs, number, nt)
-            } else if is_format_string_empty_or_null(fs) {
+            if is_format_string_empty_or_null(fs) {
                 return None;
+            } else if is_format_string_valid(fs) {
+                format_numbering_string(fs, number, nt)
             } else {
                 format_outline_number(level, number)
             }
@@ -648,7 +660,7 @@ fn compute_outline_marker(
             if let Some(level_info) = numbering.levels.get(level_index) {
                 let fs = &level_info.format_string;
                 let nt = level_info.attributes.number_type;
-                if !fs.is_empty() && fs.contains('^') {
+                if is_format_string_valid(fs) {
                     format_numbering_string(fs, number, nt)
                 } else {
                     format_outline_number(level, number)

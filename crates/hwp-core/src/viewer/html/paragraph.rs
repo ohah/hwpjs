@@ -13,8 +13,7 @@ use crate::document::bodytext::{
 };
 use crate::document::{HwpDocument, Paragraph};
 use crate::viewer::core::outline::{
-    compute_outline_number, compute_paragraph_marker, format_outline_number, MarkerInfo,
-    NumberTracker, OutlineNumberTracker,
+    compute_paragraph_marker, MarkerInfo, NumberTracker, OutlineNumberTracker,
 };
 use crate::viewer::html::ctrl_header::table::{render_table, TablePosition, TableRenderContext};
 use crate::INT32;
@@ -872,18 +871,6 @@ pub fn render_paragraph(
     }
     for s in &shape_htmls {
         table_htmls.push(s.clone());
-    }
-
-    // 개요 번호가 있으면 문단 앞에 span으로 추가 / Prepend outline number span when present
-    if let Some(ref mut tracker) = state.outline_tracker {
-        if let Some((level, number)) =
-            compute_outline_number(&paragraph.para_header, document, tracker)
-        {
-            let num_str = format_outline_number(level, number);
-            let class_name = format!("{}outline-number", options.css_class_prefix);
-            let span = format!(r#"<span class="{}">{}</span>"#, class_name, num_str);
-            result.insert_str(0, &span);
-        }
     }
 
     (result, table_htmls, None)

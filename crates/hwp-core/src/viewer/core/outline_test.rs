@@ -377,16 +377,16 @@ fn test_estimate_marker_width_ascii() {
 
 #[test]
 fn test_estimate_marker_width_hangul() {
-    // "가." → 3.53 + 1.46 = 4.99
+    // "가." → 4.86 + 1.46 = 6.32
     let width = estimate_marker_width("가.", Some(10.0));
-    assert!((width - 4.99).abs() < 0.01);
+    assert!((width - 6.32).abs() < 0.01);
 }
 
 #[test]
 fn test_estimate_marker_width_complex() {
-    // "제1장" → 3.53 + 2.43 + 3.53 = 9.49
+    // "제1장" → 4.86 + 3.44 + 4.86 = 13.16
     let width = estimate_marker_width("제1장", Some(10.0));
-    assert!((width - 9.49).abs() < 0.01);
+    assert!((width - 13.16).abs() < 0.01);
 }
 
 // ─── MarkerInfo 구조체 테스트 ───

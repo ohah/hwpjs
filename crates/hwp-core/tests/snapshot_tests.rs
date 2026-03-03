@@ -690,9 +690,10 @@ fn test_outline_number_in_html_when_document_has_outline() {
             css_class_prefix: "ohah-hwpjs-".to_string(),
         };
         let html = document.to_html(&options);
+        // hhe div 메커니즘으로 개요 마커가 렌더링됨 (구 방식 outline-number span 대신)
         assert!(
-            html.contains("ohah-hwpjs-outline-number"),
-            "When document has outline paragraph in body, HTML should contain class ohah-hwpjs-outline-number; file: {}",
+            html.contains(r#"class="hhe""#),
+            "When document has outline paragraph in body, HTML should contain hhe marker div; file: {}",
             file_path
         );
     }

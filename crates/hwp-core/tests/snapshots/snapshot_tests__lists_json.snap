@@ -943,98 +943,122 @@ expression: json
               "instance_like": true,
               "auto_outdent": true,
               "distance_type": "ratio",
-              "number_type": "lowerroman"
+              "number_type": "upperroman"
             },
             "width": 0,
             "distance": 50,
             "char_shape_id": 4294967295,
             "format_length": 3,
             "format_string": "^1.",
-            "start_number": 140,
-            "level_start_number": 0
-          },
-          {
-            "attributes": {
-              "align_type": "right",
-              "instance_like": false,
-              "auto_outdent": false,
-              "distance_type": "value",
-              "number_type": "upperroman"
-            },
-            "width": -1,
-            "distance": 3,
-            "char_shape_id": 3276894,
-            "format_length": 46,
-            "format_string": "\f\u0000\u00002￿￿\u0003^3.l\u0000\u00002￿￿\u0003^4)¬\u0000\u00002￿￿\u0003^5)\f\u0000\u00002￿￿\u0003^6),\u0000\u00002￿￿",
-            "start_number": 2,
-            "level_start_number": 3604574
+            "start_number": 0,
+            "level_start_number": 1
           },
           {
             "attributes": {
               "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
+              "instance_like": true,
+              "auto_outdent": true,
               "distance_type": "ratio",
-              "number_type": "arabic"
+              "number_type": "upperalpha"
             },
             "width": 0,
-            "distance": 1,
-            "char_shape_id": 65536,
-            "format_length": 0,
-            "format_string": "",
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^2.",
             "start_number": 1,
-            "level_start_number": 65536
+            "level_start_number": 1
           },
           {
             "attributes": {
               "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
+              "instance_like": true,
+              "auto_outdent": true,
               "distance_type": "ratio",
               "number_type": "arabic"
             },
             "width": 0,
-            "distance": 1,
-            "char_shape_id": 0,
-            "format_length": 0,
-            "format_string": "",
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^3.",
+            "start_number": 0,
+            "level_start_number": 1
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "lowerroman"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^4)",
+            "start_number": 1,
+            "level_start_number": 1
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "loweralpha"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^5)",
             "start_number": 0,
             "level_start_number": 0
           },
           {
             "attributes": {
               "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
+              "instance_like": true,
+              "auto_outdent": true,
               "distance_type": "ratio",
               "number_type": "arabic"
             },
             "width": 0,
-            "distance": 0,
-            "char_shape_id": 0,
-            "format_length": 0,
-            "format_string": "",
-            "start_number": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^6)",
+            "start_number": 1,
             "level_start_number": 0
           },
           {
             "attributes": {
               "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
+              "instance_like": true,
+              "auto_outdent": true,
               "distance_type": "ratio",
-              "number_type": "arabic"
+              "number_type": "circleddigits"
             },
             "width": 0,
-            "distance": 0,
-            "char_shape_id": 0,
-            "format_length": 1,
-            "format_string": "\u0000",
-            "start_number": 1,
-            "level_start_number": 65536
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 2,
+            "format_string": "^7",
+            "start_number": 0,
+            "level_start_number": 0
           }
         ],
         "extended_levels": [
+          {
+            "format_length": 0,
+            "format_string": ""
+          },
+          {
+            "format_length": 0,
+            "format_string": ""
+          },
           {
             "format_length": 0,
             "format_string": ""
@@ -1056,98 +1080,118 @@ expression: json
             "char_shape_id": 4294967295,
             "format_length": 3,
             "format_string": "^1.",
-            "start_number": 268,
-            "level_start_number": 0
+            "start_number": 1,
+            "level_start_number": 1
           },
           {
             "attributes": {
-              "align_type": "right",
-              "instance_like": false,
-              "auto_outdent": false,
-              "distance_type": "value",
-              "number_type": "upperroman"
-            },
-            "width": -1,
-            "distance": 3,
-            "char_shape_id": 3276894,
-            "format_length": 46,
-            "format_string": "\f\u0000\u00002￿￿\u0003^3)Č\u0000\u00002￿￿\u0003^4)\f\u0000\u00002￿￿\u0004(^5)Č\u0000\u00002￿￿\u0004(^6),\u0000\u00002",
-            "start_number": 65535,
-            "level_start_number": 196607
-          },
-          {
-            "attributes": {
-              "align_type": "right",
+              "align_type": "left",
               "instance_like": true,
               "auto_outdent": true,
-              "distance_type": "value",
-              "number_type": "lowerroman"
+              "distance_type": "ratio",
+              "number_type": "hangulga"
             },
-            "width": 1,
-            "distance": 1,
-            "char_shape_id": 65536,
-            "format_length": 0,
-            "format_string": "",
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^2.",
             "start_number": 1,
-            "level_start_number": 65536
+            "level_start_number": 1
           },
           {
             "attributes": {
               "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
+              "instance_like": true,
+              "auto_outdent": true,
               "distance_type": "ratio",
               "number_type": "arabic"
             },
             "width": 0,
-            "distance": 1,
-            "char_shape_id": 65536,
-            "format_length": 0,
-            "format_string": "",
-            "start_number": 0,
-            "level_start_number": 0
-          },
-          {
-            "attributes": {
-              "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
-              "distance_type": "ratio",
-              "number_type": "arabic"
-            },
-            "width": 0,
-            "distance": 0,
-            "char_shape_id": 0,
-            "format_length": 0,
-            "format_string": "",
-            "start_number": 0,
-            "level_start_number": 0
-          },
-          {
-            "attributes": {
-              "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
-              "distance_type": "ratio",
-              "number_type": "arabic"
-            },
-            "width": 0,
-            "distance": 0,
-            "char_shape_id": 0,
-            "format_length": 0,
-            "format_string": "",
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^3)",
             "start_number": 0,
             "level_start_number": 1
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "hangulga"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^4)",
+            "start_number": 1,
+            "level_start_number": 1
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "arabic"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 4,
+            "format_string": "(^5)",
+            "start_number": 0,
+            "level_start_number": 0
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "hangulga"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 4,
+            "format_string": "(^6)",
+            "start_number": 1,
+            "level_start_number": 0
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "circleddigits"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 2,
+            "format_string": "^7",
+            "start_number": 0,
+            "level_start_number": 0
           }
         ],
         "extended_levels": [
           {
-            "format_length": 1,
-            "format_string": "\u0000"
+            "format_length": 0,
+            "format_string": ""
           },
           {
-            "format_length": 1,
-            "format_string": "\u0000"
+            "format_length": 0,
+            "format_string": ""
+          },
+          {
+            "format_length": 0,
+            "format_string": ""
           }
         ]
       },
@@ -1166,98 +1210,118 @@ expression: json
             "char_shape_id": 4294967295,
             "format_length": 3,
             "format_string": "^1.",
-            "start_number": 268,
-            "level_start_number": 0
+            "start_number": 1,
+            "level_start_number": 1
           },
           {
             "attributes": {
-              "align_type": "right",
-              "instance_like": false,
-              "auto_outdent": false,
-              "distance_type": "value",
-              "number_type": "upperroman"
-            },
-            "width": -1,
-            "distance": 3,
-            "char_shape_id": 3276894,
-            "format_length": 46,
-            "format_string": "\f\u0000\u00002￿￿\u0003^3)Č\u0000\u00002￿￿\u0003^4)\f\u0000\u00002￿￿\u0004(^5)Č\u0000\u00002￿￿\u0004(^6),\u0000\u00002",
-            "start_number": 65535,
-            "level_start_number": 196607
-          },
-          {
-            "attributes": {
-              "align_type": "right",
+              "align_type": "left",
               "instance_like": true,
               "auto_outdent": true,
-              "distance_type": "value",
-              "number_type": "lowerroman"
+              "distance_type": "ratio",
+              "number_type": "hangulga"
             },
-            "width": 1,
-            "distance": 1,
-            "char_shape_id": 65536,
-            "format_length": 0,
-            "format_string": "",
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^2.",
             "start_number": 1,
-            "level_start_number": 65536
+            "level_start_number": 1
           },
           {
             "attributes": {
               "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
+              "instance_like": true,
+              "auto_outdent": true,
               "distance_type": "ratio",
               "number_type": "arabic"
             },
             "width": 0,
-            "distance": 1,
-            "char_shape_id": 65536,
-            "format_length": 0,
-            "format_string": "",
-            "start_number": 0,
-            "level_start_number": 0
-          },
-          {
-            "attributes": {
-              "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
-              "distance_type": "ratio",
-              "number_type": "arabic"
-            },
-            "width": 0,
-            "distance": 0,
-            "char_shape_id": 0,
-            "format_length": 0,
-            "format_string": "",
-            "start_number": 0,
-            "level_start_number": 0
-          },
-          {
-            "attributes": {
-              "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
-              "distance_type": "ratio",
-              "number_type": "arabic"
-            },
-            "width": 0,
-            "distance": 0,
-            "char_shape_id": 0,
-            "format_length": 0,
-            "format_string": "",
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^3)",
             "start_number": 0,
             "level_start_number": 1
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "hangulga"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 3,
+            "format_string": "^4)",
+            "start_number": 1,
+            "level_start_number": 1
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "arabic"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 4,
+            "format_string": "(^5)",
+            "start_number": 0,
+            "level_start_number": 0
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "hangulga"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 4,
+            "format_string": "(^6)",
+            "start_number": 1,
+            "level_start_number": 0
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "circleddigits"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 2,
+            "format_string": "^7",
+            "start_number": 0,
+            "level_start_number": 0
           }
         ],
         "extended_levels": [
           {
-            "format_length": 1,
-            "format_string": "\u0000"
+            "format_length": 0,
+            "format_string": ""
           },
           {
-            "format_length": 1,
-            "format_string": "\u0000"
+            "format_length": 0,
+            "format_string": ""
+          },
+          {
+            "format_length": 0,
+            "format_string": ""
           }
         ]
       },
@@ -1276,75 +1340,115 @@ expression: json
             "char_shape_id": 4294967295,
             "format_length": 4,
             "format_string": "제^1장",
-            "start_number": 12,
-            "level_start_number": 0
-          },
-          {
-            "attributes": {
-              "align_type": "right",
-              "instance_like": false,
-              "auto_outdent": false,
-              "distance_type": "value",
-              "number_type": "upperroman"
-            },
-            "width": -1,
-            "distance": 4,
-            "char_shape_id": 6211612,
-            "format_length": 50,
-            "format_string": "절\f\u0000\u00002￿￿\u0004제^3항\f\u0000\u00002￿￿\u0001-\f\u0000\u00002￿￿\u0000\f\u0000\u00002￿￿\u0000\f\u0000\u00002￿￿\u0000\u0001\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000",
             "start_number": 1,
-            "level_start_number": 65536
+            "level_start_number": 1
           },
           {
             "attributes": {
               "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
+              "instance_like": true,
+              "auto_outdent": true,
               "distance_type": "ratio",
               "number_type": "arabic"
             },
             "width": 0,
-            "distance": 0,
-            "char_shape_id": 0,
-            "format_length": 0,
-            "format_string": "",
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 4,
+            "format_string": "제^2절",
+            "start_number": 1,
+            "level_start_number": 1
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "arabic"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 4,
+            "format_string": "제^3항",
             "start_number": 0,
-            "level_start_number": 0
+            "level_start_number": 1
           },
           {
             "attributes": {
               "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
+              "instance_like": true,
+              "auto_outdent": true,
               "distance_type": "ratio",
               "number_type": "arabic"
             },
             "width": 0,
-            "distance": 0,
-            "char_shape_id": 0,
-            "format_length": 0,
-            "format_string": "",
-            "start_number": 0,
-            "level_start_number": 0
-          },
-          {
-            "attributes": {
-              "align_type": "left",
-              "instance_like": false,
-              "auto_outdent": false,
-              "distance_type": "ratio",
-              "number_type": "arabic"
-            },
-            "width": 0,
-            "distance": 0,
-            "char_shape_id": 1,
+            "distance": 50,
+            "char_shape_id": 4294967295,
             "format_length": 1,
-            "format_string": "\u0000",
+            "format_string": "-",
             "start_number": 1,
-            "level_start_number": null
+            "level_start_number": 1
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "arabic"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 0,
+            "format_string": "",
+            "start_number": 0,
+            "level_start_number": 0
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "arabic"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 0,
+            "format_string": "",
+            "start_number": 1,
+            "level_start_number": 0
+          },
+          {
+            "attributes": {
+              "align_type": "left",
+              "instance_like": true,
+              "auto_outdent": true,
+              "distance_type": "ratio",
+              "number_type": "arabic"
+            },
+            "width": 0,
+            "distance": 50,
+            "char_shape_id": 4294967295,
+            "format_length": 0,
+            "format_string": "",
+            "start_number": 0,
+            "level_start_number": 0
           }
         ],
         "extended_levels": [
+          {
+            "format_length": 0,
+            "format_string": ""
+          },
+          {
+            "format_length": 0,
+            "format_string": ""
+          },
           {
             "format_length": 0,
             "format_string": ""

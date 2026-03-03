@@ -446,8 +446,14 @@ pub fn render_line_segments_with_content(
             if let Some(marker) = content_marker_info {
                 let font_size = marker
                     .font_size_pt
-                    .map(|s| format!("font-size:{:.2}pt;", s))
-                    .unwrap_or_else(|| format!("font-size:{:.0}pt;", DEFAULT_MARKER_FONT_SIZE_PT));
+                    .map(|s| {
+                        if (s - s.round()).abs() < 0.001 {
+                            format!("font-size:{}pt;", s as i32)
+                        } else {
+                            format!("font-size:{:.2}pt;", s)
+                        }
+                    })
+                    .unwrap_or_else(|| format!("font-size:{}pt;", DEFAULT_MARKER_FONT_SIZE_PT as i32));
                 let hhe = format!(
                     r#"<div class="hhe" style="display:inline-block;margin-left:{:.2}mm;width:{:.2}mm;height:{:.2}mm;"><span class="hrt {}" style="{}">{}</span></div>"#,
                     marker.margin_left_mm,

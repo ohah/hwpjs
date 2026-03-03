@@ -420,6 +420,26 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut para_index = 0;
 
     for section in &document.body_text.sections {
+        // 섹션 전환 시 개요 번호 카운터 리셋 / Reset outline counter on section change
+        outline_tracker = OutlineNumberTracker::new();
+
+        // 섹션의 개요 번호 정의 ID 추출 (SectionDefinition의 number_para_shape_id)
+        // Extract outline numbering definition ID from SectionDefinition
+        let mut section_outline_numbering_id: u16 = 0;
+        for paragraph in &section.paragraphs {
+            for record in &paragraph.records {
+                if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                    if let CtrlHeaderData::SectionDefinition { number_para_shape_id, .. } = &header.data {
+                        section_outline_numbering_id = *number_para_shape_id;
+                        break;
+                    }
+                }
+            }
+            if section_outline_numbering_id > 0 {
+                break;
+            }
+        }
+
         for paragraph in &section.paragraphs {
             // 1. 문단 페이지 나누기 확인 (렌더링 전) / Check paragraph page break (before rendering)
             let para_result = super::pagination::check_paragraph_page_break(
@@ -911,7 +931,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     note_state: Some(&mut note_state),
                     outline_tracker: Some(&mut outline_tracker),
                     number_tracker: Some(&mut number_tracker),
-                    section_outline_numbering_id: 0,
+                    section_outline_numbering_id,
                 };
 
                 let (para_html, table_htmls, obj_pagination_result) =
