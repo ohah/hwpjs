@@ -12,10 +12,16 @@ pub(crate) fn cell_margin_to_mm(margin_hwpunit: i16) -> f64 {
 
 /// 단일 record/children 리스트에서 셀 내 최대 shape 높이(mm) 찾기.
 /// CtrlHeader 자식(문단 내 그림 개체)도 재귀적으로 검사하여 형상 행 높이가 반영되도록 함.
-fn cell_max_shape_height_from_records(records: &[ParagraphRecord]) -> Option<f64> {
+/// cell_mc_column_count: 셀 레벨에서 감지한 다단 수 (ColumnDefinition이 다른 문단에 있을 수 있음)
+/// cell_mc_column_count: cell-level multicolumn count (ColumnDefinition may be in a different paragraph)
+fn cell_max_shape_height_from_records(
+    records: &[ParagraphRecord],
+    cell_mc_column_count: u8,
+) -> Option<f64> {
     let mut max_height_mm: Option<f64> = None;
-    // 다단 감지
-    let mut mc_column_count = 1u8;
+    // 다단 감지: 레코드 내 ColumnDefinition 우선, 없으면 셀 레벨 값 사용
+    // Multicolumn detection: prefer ColumnDefinition within records, fallback to cell-level value
+    let mut mc_column_count = cell_mc_column_count;
     for record in records {
         if let ParagraphRecord::CtrlHeader { header, .. } = record {
             if let CtrlHeaderData::ColumnDefinition { attribute, .. } = &header.data {
@@ -49,7 +55,7 @@ fn cell_max_shape_height_from_records(records: &[ParagraphRecord]) -> Option<f64
                 max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
             }
             ParagraphRecord::CtrlHeader { children, .. } => {
-                if let Some(h) = cell_max_shape_height_from_records(children) {
+                if let Some(h) = cell_max_shape_height_from_records(children, mc_column_count) {
                     max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(h));
                 }
             }
@@ -165,8 +171,23 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
                     let mut cell_height = cell.cell_attributes.height.to_mm();
                     let mut max_shape_height_mm: Option<f64> = None;
 
+                    // 셀 전체 문단에서 ColumnDefinition 검색하여 다단 수 감지
+                    // Detect multicolumn count by scanning ColumnDefinition across all paragraphs in the cell
+                    let mut cell_mc_column_count: u8 = 1;
                     for para in &cell.paragraphs {
-                        if let Some(h) = cell_max_shape_height_from_records(&para.records) {
+                        for record in &para.records {
+                            if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                                if let CtrlHeaderData::ColumnDefinition { attribute, .. } = &header.data {
+                                    if attribute.column_count > 1 {
+                                        cell_mc_column_count = attribute.column_count;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    for para in &cell.paragraphs {
+                        if let Some(h) = cell_max_shape_height_from_records(&para.records, cell_mc_column_count) {
                             max_shape_height_mm = Some(max_shape_height_mm.unwrap_or(0.0).max(h));
                         }
                     }

@@ -401,6 +401,8 @@ pub fn render_line_segments_with_content(
                     content_height_mm: None,
                     fragment_height_mm: None,
                     table_height_for_overflow_mm: None,
+                    segment_line_height_mm: Some(round_to_2dp(int32_to_mm(segment.line_height))),
+                    segment_baseline_distance_mm: Some(round_to_2dp(int32_to_mm(segment.baseline_distance))),
                 };
 
                 let (table_html, _) = render_table(
