@@ -129,6 +129,32 @@ fn assign_column(first_vpos: f64, col_max_bottoms: &[f64]) -> (usize, bool) {
     (0, true)
 }
 
+/// hsG 형태의 도형 HTML을 인라인 hsR 형태로 변환
+/// Convert hsG-wrapped shape HTML to inline hsR format
+fn convert_shape_to_inline(shape_html: &str) -> String {
+    // hsG 내부의 hsR을 찾아서 인라인 스타일 추가
+    // Find hsR inside hsG and add inline styles
+    // 구조: <div class="hsG" ...><div class="hsR" style="...">...</div></div>
+    // 목표: <div class="hsR" style="...;display:inline-block;position:relative;vertical-align:middle;">...</div>
+    if let Some(hsr_start) = shape_html.find(r#"<div class=""#) {
+        // hsG 전체에서 첫 번째 hsR div 찾기
+        if let Some(hsr_pos) = shape_html[hsr_start..].find("hsR") {
+            let hsr_abs_pos = hsr_start + hsr_pos - 12; // div class=" 이전으로
+            // hsG의 마지막 </div> 제거
+            if let Some(last_div_end) = shape_html.rfind("</div>") {
+                let inner = &shape_html[hsr_abs_pos..last_div_end];
+                // hsR의 style에 인라인 속성 추가
+                return inner.replacen(
+                    "style=\"",
+                    "style=\"margin-bottom:0mm;margin-right:0mm;display:inline-block;position:relative;vertical-align:middle;",
+                    1,
+                );
+            }
+        }
+    }
+    shape_html.to_string()
+}
+
 /// 라인 세그먼트를 컬럼 그룹으로 분할 / Split line segments into column groups
 /// vertical_position이 이전 세그먼트 이하면 새 그룹 시작 / New group when vertical_position <= previous
 pub(crate) fn split_into_column_groups(segments: &[LineSegmentInfo]) -> Vec<(usize, usize)> {
@@ -655,13 +681,14 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
                 // 다단 per-column 렌더링 (2패스: 렌더링 → 라운드 기반 플러시)
                 // Multicolumn per-column rendering (2-pass: render → round-based flush)
+                let mut mc_has_inline_content = false;
                 if multi_col_state.is_some() {
                     // 1패스: 모든 컬럼 그룹 렌더링 (pattern_counter/color_to_pattern 사용)
                     // Pass 1: render all column groups (uses pattern_counter/color_to_pattern)
                     let line_segments =
                         super::paragraph::collect_line_segments(paragraph);
                     let (text, char_shapes) = extract_text_and_shapes(paragraph);
-                    let (control_char_positions, _shape_positions) =
+                    let (control_char_positions, shape_positions) =
                         super::paragraph::collect_control_char_positions(paragraph);
 
                     let para_shape_class =
@@ -673,6 +700,59 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         .and_then(|ps| {
                             if ps.indent != 0 { Some(ps.indent) } else { None }
                         });
+
+                    // 인라인 콘텐츠(테이블/도형) 수집 / Collect inline content (tables/shapes)
+                    use super::line_segment::TableInfo;
+                    let mut mc_inline_tables: Vec<TableInfo> = Vec::new();
+                    let mut mc_shape_htmls: Vec<(usize, String)> = Vec::new();
+                    let mut shape_anchor_cursor: usize = 0;
+
+                    for record in &paragraph.records {
+                        if let ParagraphRecord::CtrlHeader {
+                            header, children, paragraphs: ctrl_paragraphs, ..
+                        } = record {
+                            let anchor = shape_positions.get(shape_anchor_cursor).copied();
+                            shape_anchor_cursor += 1;
+
+                            if header.ctrl_id == "tbl " {
+                                // 테이블 수집 / Collect table
+                                let ctrl_result = super::ctrl_header::process_ctrl_header(
+                                    header, children, ctrl_paragraphs, document, options, None,
+                                );
+                                let like_letters = match &header.data {
+                                    CtrlHeaderData::ObjectCommon { attribute, .. } => attribute.like_letters,
+                                    _ => false,
+                                };
+                                if like_letters {
+                                    for t in ctrl_result.tables.iter() {
+                                        let mut tt = t.clone();
+                                        tt.anchor_char_pos = anchor;
+                                        mc_inline_tables.push(tt);
+                                    }
+                                    mc_has_inline_content = true;
+                                }
+                            } else if header.ctrl_id == "gso " {
+                                // 도형(글상자) 수집 — 인라인 렌더링 / Collect shape (text box) — inline rendering
+                                let like_letters = match &header.data {
+                                    CtrlHeaderData::ObjectCommon { attribute, .. } => attribute.like_letters,
+                                    _ => false,
+                                };
+                                if like_letters {
+                                    let ctrl_result = super::ctrl_header::process_ctrl_header(
+                                        header, children, ctrl_paragraphs, document, options, None,
+                                    );
+                                    if let Some(shape_html) = ctrl_result.shape_html {
+                                        // hsG 래핑을 hsR 인라인으로 변환 / Convert hsG wrapping to inline hsR
+                                        let inline_html = convert_shape_to_inline(&shape_html);
+                                        if let Some(anchor_pos) = anchor {
+                                            mc_shape_htmls.push((anchor_pos, inline_html));
+                                            mc_has_inline_content = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     let col_groups = split_into_column_groups(&line_segments);
                     let mut rendered_groups: Vec<(String, f64, f64)> = Vec::new(); // (html, seg_bottom, first_vpos)
@@ -697,8 +777,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             control_char_positions: &control_char_positions,
                             original_text_len,
                             images: &[],
-                            tables: &[],
-                            shape_htmls: &[],
+                            tables: &mc_inline_tables,
+                            shape_htmls: &mc_shape_htmls,
                         };
 
                         let ls_context = LineSegmentRenderContext {
@@ -796,7 +876,6 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             // Reset for new page (keep multicolumn settings)
                             mc.top_mm = None;
                             mc.col_max_bottoms.iter_mut().for_each(|b| *b = 0.0);
-                            last_content_bottom_mm = 0.0;
                         }
 
                         // 컬럼에 콘텐츠 추가 / Add content to column
@@ -831,6 +910,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 let (para_html, table_htmls, obj_pagination_result) =
                     if multi_col_state.is_some() {
                         // 다단: 테이블/페이지네이션만, para_html 무시
+                        // 인라인 콘텐츠가 이미 컬럼에 렌더링된 경우 table_htmls에서 제외
+                        // Skip table_htmls when inline content already rendered in columns
                         let (_, table_htmls, obj_result) = render_paragraph(
                             paragraph,
                             &context,
@@ -838,7 +919,12 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             &mut pagination_context,
                             0,
                         );
-                        (String::new(), table_htmls, obj_result)
+                        let filtered_table_htmls = if mc_has_inline_content {
+                            Vec::new() // 인라인 콘텐츠는 이미 컬럼에 렌더링됨
+                        } else {
+                            table_htmls
+                        };
+                        (String::new(), filtered_table_htmls, obj_result)
                     } else {
                         // 단일 컬럼 (기존 로직)
                         render_paragraph(
