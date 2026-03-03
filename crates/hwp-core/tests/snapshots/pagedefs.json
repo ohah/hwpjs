@@ -855,7 +855,8 @@
               "align_type": "left",
               "instance_like": true,
               "auto_outdent": true,
-              "distance_type": "ratio"
+              "distance_type": "ratio",
+              "number_type": "arabic"
             },
             "width": 0,
             "distance": 50,
@@ -870,7 +871,8 @@
               "align_type": "right",
               "instance_like": false,
               "auto_outdent": false,
-              "distance_type": "value"
+              "distance_type": "value",
+              "number_type": "upperroman"
             },
             "width": -1,
             "distance": 3,
@@ -890,7 +892,8 @@
               "align_type": "left",
               "instance_like": true,
               "auto_outdent": true,
-              "distance_type": "ratio"
+              "distance_type": "ratio",
+              "number_type": "arabic"
             },
             "width": 0,
             "distance": 50,
@@ -905,7 +908,8 @@
               "align_type": "right",
               "instance_like": false,
               "auto_outdent": false,
-              "distance_type": "value"
+              "distance_type": "value",
+              "number_type": "upperroman"
             },
             "width": -1,
             "distance": 3,

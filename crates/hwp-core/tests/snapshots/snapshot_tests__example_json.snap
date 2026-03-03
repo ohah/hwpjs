@@ -1919,7 +1919,8 @@ expression: json
               "align_type": "left",
               "instance_like": true,
               "auto_outdent": true,
-              "distance_type": "ratio"
+              "distance_type": "ratio",
+              "number_type": "arabic"
             },
             "width": 0,
             "distance": 50,
@@ -1934,7 +1935,8 @@ expression: json
               "align_type": "right",
               "instance_like": false,
               "auto_outdent": false,
-              "distance_type": "value"
+              "distance_type": "value",
+              "number_type": "upperroman"
             },
             "width": -1,
             "distance": 3,
@@ -1949,7 +1951,8 @@ expression: json
               "align_type": "right",
               "instance_like": true,
               "auto_outdent": true,
-              "distance_type": "value"
+              "distance_type": "value",
+              "number_type": "lowerroman"
             },
             "width": 0,
             "distance": 1,
@@ -1964,7 +1967,8 @@ expression: json
               "align_type": "left",
               "instance_like": false,
               "auto_outdent": false,
-              "distance_type": "ratio"
+              "distance_type": "ratio",
+              "number_type": "arabic"
             },
             "width": 0,
             "distance": 1,
@@ -1979,7 +1983,8 @@ expression: json
               "align_type": "left",
               "instance_like": false,
               "auto_outdent": false,
-              "distance_type": "ratio"
+              "distance_type": "ratio",
+              "number_type": "arabic"
             },
             "width": 0,
             "distance": 0,
@@ -1994,7 +1999,8 @@ expression: json
               "align_type": "left",
               "instance_like": false,
               "auto_outdent": false,
-              "distance_type": "ratio"
+              "distance_type": "ratio",
+              "number_type": "arabic"
             },
             "width": 0,
             "distance": 0,
