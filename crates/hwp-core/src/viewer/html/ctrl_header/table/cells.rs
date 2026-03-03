@@ -456,6 +456,7 @@ pub(crate) fn render_cells(
                             document,
                             options,
                             None,
+                            None,
                         );
                         images.extend(ctrl_result.images);
                     }
