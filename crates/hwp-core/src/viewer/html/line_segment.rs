@@ -454,9 +454,14 @@ pub fn render_line_segments_with_content(
                         }
                     })
                     .unwrap_or_else(|| format!("font-size:{}pt;", DEFAULT_MARKER_FONT_SIZE_PT as i32));
+                let margin_left_str = if marker.margin_left_mm == 0.0 {
+                    "margin-left:0mm".to_string()
+                } else {
+                    format!("margin-left:{:.2}mm", marker.margin_left_mm)
+                };
                 let hhe = format!(
-                    r#"<div class="hhe" style="display:inline-block;margin-left:{:.2}mm;width:{:.2}mm;height:{:.2}mm;"><span class="hrt {}" style="{}">{}</span></div>"#,
-                    marker.margin_left_mm,
+                    r#"<div class="hhe" style="display:inline-block;{};width:{:.2}mm;height:{:.2}mm;"><span class="hrt {}" style="{}">{}</span></div>"#,
+                    margin_left_str,
                     marker.width_mm,
                     marker.height_mm,
                     marker.char_shape_class,
