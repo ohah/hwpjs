@@ -1,6 +1,7 @@
 /// Shared outline number logic for HTML and Markdown viewers
 /// HTML·마크다운 뷰어 공통 개요 번호 로직
 use crate::document::bodytext::ParaHeader;
+use crate::document::docinfo::bullet::BulletAlignType;
 use crate::document::docinfo::numbering::NumberType;
 use crate::document::{HeaderShapeType, HwpDocument};
 
@@ -513,10 +514,32 @@ fn compute_bullet_marker(
         "cs0".to_string() // char_shape_id == -1 → default
     };
 
+    // Bullet.width (HWPUNIT16) → hhe div 너비 (mm)
+    // width=0이면 DEFAULT_BULLET_WIDTH_MM, >0이면 w_mm + min(w_mm, DEFAULT_BULLET_WIDTH_MM)
+    // Right 정렬은 항상 DEFAULT_BULLET_WIDTH_MM
+    let width_mm = if bullet.width > 0 {
+        match bullet.attributes.align_type {
+            BulletAlignType::Right => DEFAULT_BULLET_WIDTH_MM,
+            _ => {
+                let w_mm = bullet.width as f64 * 25.4 / 7200.0;
+                let total = w_mm + w_mm.min(DEFAULT_BULLET_WIDTH_MM);
+                (total * 100.0).round() / 100.0
+            }
+        }
+    } else {
+        DEFAULT_BULLET_WIDTH_MM
+    };
+
+    let margin_left_mm = match bullet.attributes.align_type {
+        BulletAlignType::Left => 0.0,
+        BulletAlignType::Center => DEFAULT_MARKER_HEIGHT_MM / 2.0,
+        BulletAlignType::Right => DEFAULT_MARKER_HEIGHT_MM,
+    };
+
     Some(MarkerInfo {
-        width_mm: DEFAULT_BULLET_WIDTH_MM,
+        width_mm,
         height_mm: DEFAULT_MARKER_HEIGHT_MM,
-        margin_left_mm: 0.0,
+        margin_left_mm,
         font_size_pt: Some(font_size),
         char_shape_class,
         marker_text,
