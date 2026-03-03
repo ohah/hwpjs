@@ -289,9 +289,10 @@ pub(crate) fn row_positions(
                 // shape component가 있는 셀의 경우 shape 높이 + 마진을 고려 / For cells with shape components, consider shape height + margin
                 let mut max_shape_height_mm: Option<f64> = None;
 
+                // 셀 전체 문단에서 ColumnDefinition 검색하여 다단 수 감지
+                // Detect multicolumn count by scanning ColumnDefinition across all paragraphs in the cell
+                let mut cell_mc_count = 1u8;
                 for para in &cell.paragraphs {
-                    // 다단 감지 / Detect multi-column in cell paragraph
-                    let mut cell_mc_count = 1u8;
                     for record in &para.records {
                         if let ParagraphRecord::CtrlHeader { header, .. } = record {
                             if let CtrlHeaderData::ColumnDefinition { attribute, .. } = &header.data
@@ -302,7 +303,9 @@ pub(crate) fn row_positions(
                             }
                         }
                     }
+                }
 
+                for para in &cell.paragraphs {
                     // ShapeComponent의 children에서 모든 shape 높이 찾기 (재귀적으로) / Find all shape heights in ShapeComponent's children (recursively)
                     for record in &para.records {
                         match record {

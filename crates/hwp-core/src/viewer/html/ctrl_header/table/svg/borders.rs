@@ -582,29 +582,5 @@ pub(crate) fn render_horizontal_borders(
         }
     }
 
-    // 테이블 하단 테두리 추가 / Add table bottom border
-    // row_positions는 행의 시작 위치만 포함하므로, 항상 content.height 위치에 하단 테두리를 그려야 함
-    // row_positions only contains row start positions, so we must always draw bottom border at content.height
-    if let Some(line) = horizontal_segment_borderline(
-        table,
-        document,
-        row_positions,
-        content.height,
-        0.0,
-        content.width,
-        ctrl_header_height_mm,
-        false,
-        true,
-    ) {
-        svg_paths.push_str(&render_border_paths(
-            -border_offset,
-            content.height,
-            content.width + border_offset,
-            content.height,
-            false,
-            &line,
-        ));
-    }
-
     svg_paths
 }
