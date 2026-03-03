@@ -637,12 +637,169 @@ fn render_shape_content(
 
     let margin_mm = round_to_2dp(int32_to_mm(298));
 
+    let mut pattern_counter = 0usize;
+    let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
+
     if col_count <= 1 {
-        let body = render_paragraphs_fragment(paragraphs, document, options);
+        // cold 문단(column_divide_type 비어있지 않은)부터 수집, 그 이전 문단은 skip
+        // Collect from cold paragraph (non-empty column_divide_type), skip earlier paragraphs
+        // column_divide_type가 없으면 첫 문단(ghost)을 skip하고 나머지 수집
+        // If no column_divide_type markers exist, skip the first (ghost) paragraph
+        let has_cold_marker = paragraphs
+            .iter()
+            .any(|p| !p.para_header.column_divide_type.is_empty());
+
+        let mut single_col_line_segments: Vec<LineSegmentInfo> = Vec::new();
+        let mut single_col_text = String::new();
+        let mut single_col_char_shapes: Vec<crate::document::bodytext::CharShapeInfo> = Vec::new();
+        let mut single_col_control_char_positions = Vec::new();
+        let mut single_col_collecting = false;
+        let mut single_col_para_shape_id: u16 = 0;
+        let mut single_col_wchar_offset: usize = 0;
+
+        for (i, para) in paragraphs.iter().enumerate() {
+            if has_cold_marker {
+                if !para.para_header.column_divide_type.is_empty() {
+                    single_col_collecting = true;
+                }
+            } else {
+                // No cold markers: skip first paragraph (ghost) if multiple exist
+                if i > 0 || paragraphs.len() == 1 {
+                    single_col_collecting = true;
+                }
+            }
+            if !single_col_collecting {
+                continue;
+            }
+
+            single_col_para_shape_id = para.para_header.para_shape_id;
+
+            let (para_text, char_shapes_vec) = text::extract_text_and_shapes(para);
+            let text_offset = single_col_wchar_offset;
+
+            for record in &para.records {
+                match record {
+                    ParagraphRecord::ParaLineSeg { segments } => {
+                        for seg in segments {
+                            let mut adjusted = seg.clone();
+                            adjusted.text_start_position += text_offset as u32;
+                            single_col_line_segments.push(adjusted);
+                        }
+                    }
+                    ParagraphRecord::ParaText {
+                        control_char_positions: ccp,
+                        ..
+                    } => {
+                        for cp in ccp {
+                            let mut adjusted = cp.clone();
+                            adjusted.position += text_offset;
+                            single_col_control_char_positions.push(adjusted);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            single_col_wchar_offset += para.para_header.text_char_count as usize;
+            single_col_text.push_str(&para_text);
+            for mut cs in char_shapes_vec {
+                cs.position += text_offset as u32;
+                single_col_char_shapes.push(cs);
+            }
+        }
+
+        if single_col_line_segments.is_empty() {
+            let body = render_paragraphs_fragment(paragraphs, document, options);
+            return format!(
+                r#"<div class="{p}hcD" style="left:{m}mm;top:{m}mm;">{body}</div>"#,
+                p = prefix,
+                m = margin_mm,
+            );
+        }
+
+        let para_shape_class =
+            if (single_col_para_shape_id as usize) < document.doc_info.para_shapes.len() {
+                format!("ps{}", single_col_para_shape_id)
+            } else {
+                String::new()
+            };
+        let para_shape_indent =
+            if (single_col_para_shape_id as usize) < document.doc_info.para_shapes.len() {
+                Some(document.doc_info.para_shapes[single_col_para_shape_id as usize].indent)
+            } else {
+                None
+            };
+
+        let content = LineSegmentContent {
+            segments: &single_col_line_segments,
+            text: &single_col_text,
+            char_shapes: &single_col_char_shapes,
+            control_char_positions: &single_col_control_char_positions,
+            original_text_len: single_col_wchar_offset,
+            images: &[],
+            tables: &[],
+            shape_htmls: &[],
+        };
+
+        let ls_context = LineSegmentRenderContext {
+            document,
+            para_shape_class: &para_shape_class,
+            options,
+            para_shape_indent,
+            hcd_position: None,
+            page_def: None,
+            body_default_hls: Some((2.79, -0.18)),
+        };
+
+        let mut ls_state = DocumentRenderState {
+            table_counter_start: 0,
+            pattern_counter: &mut pattern_counter,
+            color_to_pattern: &mut color_to_pattern,
+        };
+
+        let body = render_line_segments_with_content(&content, &ls_context, &mut ls_state);
+
+        // 수직 정렬 오프셋 계산 / Compute vertical alignment offset
+        let top_mm_val = if let Some((shape_h_hu, stroke_w)) = container_dims {
+            use crate::document::bodytext::list_header::VerticalAlign;
+            let margin_hu = 298;
+            let raw_available = int32_to_mm(shape_h_hu as i32) + stroke_w
+                - 2.0 * int32_to_mm(margin_hu);
+            let raw_content = if let Some(last) = single_col_line_segments.last() {
+                int32_to_mm(last.vertical_position + last.line_height)
+            } else {
+                0.0
+            };
+            let offset = match vertical_align {
+                VerticalAlign::Center if raw_available > raw_content => {
+                    round_to_2dp((raw_available - raw_content) / 2.0)
+                }
+                VerticalAlign::Bottom if raw_available > raw_content => {
+                    round_to_2dp(raw_available - raw_content)
+                }
+                _ => 0.0,
+            };
+            if offset.abs() >= 0.1 {
+                offset
+            } else {
+                0.0
+            }
+        } else {
+            0.0
+        };
+
+        let top_style = if top_mm_val.abs() > 0.001 {
+            format!(" style=\"top:{}mm;\"", top_mm_val)
+        } else {
+            String::new()
+        };
+
         return format!(
-            r#"<div class="{p}hcD" style="left:{m}mm;top:{m}mm;">{body}</div>"#,
+            r#"<div class="{p}hcD" style="left:{m}mm;top:{m}mm;"><div class="{p}hcI"{ts}>{body}</div></div>"#,
             p = prefix,
             m = margin_mm,
+            ts = top_style,
+            body = body,
         );
     }
 
@@ -653,9 +810,6 @@ fn render_shape_content(
     let mut content_h_mm: f64 = 0.0;
     let mut seg_width_mm: f64 = 0.0;
     let first_vpos: i32;
-
-    let mut pattern_counter = 0usize;
-    let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
 
     // cold 문단(column_divide_type 비어있지 않은)부터 다음 cold 또는 끝까지 모든 문단의
     // line segments, text, char_shapes를 집계 / Aggregate all paragraphs from cold (non-empty
