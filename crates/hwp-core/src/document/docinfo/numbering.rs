@@ -7,6 +7,40 @@ use crate::error::HwpError;
 use crate::types::{decode_utf16le, HWPUNIT16, UINT16, UINT32, WORD};
 use serde::{Deserialize, Serialize};
 
+/// 번호 종류 / Number type
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum NumberType {
+    /// 아라비아 숫자 (1, 2, 3, ...) / Arabic numerals
+    Arabic = 0,
+    /// 대문자 로마 숫자 (I, II, III, ...) / Upper roman numerals
+    UpperRoman = 1,
+    /// 소문자 로마 숫자 (i, ii, iii, ...) / Lower roman numerals
+    LowerRoman = 2,
+    /// 대문자 알파벳 (A, B, C, ...) / Upper alpha
+    UpperAlpha = 3,
+    /// 소문자 알파벳 (a, b, c, ...) / Lower alpha
+    LowerAlpha = 4,
+    /// 한글 가나다 (가, 나, 다, ...) / Hangul ga-na-da
+    HangulGa = 5,
+    /// 한글 가나다 순환 / Hangul ga-na-da cycle
+    HangulGaCycle = 6,
+}
+
+impl NumberType {
+    fn from_bits(bits: u32) -> Self {
+        match (bits >> 5) & 0x0F {
+            1 => NumberType::UpperRoman,
+            2 => NumberType::LowerRoman,
+            3 => NumberType::UpperAlpha,
+            4 => NumberType::LowerAlpha,
+            5 => NumberType::HangulGa,
+            6 => NumberType::HangulGaCycle,
+            _ => NumberType::Arabic,
+        }
+    }
+}
+
 /// 문단 머리 정보 속성 / Paragraph header information attributes
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NumberingHeaderAttributes {
@@ -18,6 +52,8 @@ pub struct NumberingHeaderAttributes {
     pub auto_outdent: bool,
     /// 수준별 본문과의 거리 종류 / Distance type from body text by level
     pub distance_type: DistanceType,
+    /// 번호 종류 / Number type
+    pub number_type: NumberType,
 }
 
 /// 문단 정렬 종류 / Paragraph alignment type
@@ -136,6 +172,7 @@ impl Numbering {
                 instance_like: (attr_value & 0x00000004) != 0,
                 auto_outdent: (attr_value & 0x00000008) != 0,
                 distance_type: DistanceType::from_bit((attr_value & 0x00000010) != 0),
+                number_type: NumberType::from_bits(attr_value),
             };
 
             // HWPUNIT16 너비 보정값 / HWPUNIT16 width correction value
