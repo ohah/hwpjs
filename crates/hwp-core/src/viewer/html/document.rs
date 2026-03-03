@@ -131,7 +131,7 @@ fn assign_column(first_vpos: f64, col_max_bottoms: &[f64]) -> (usize, bool) {
 
 /// 라인 세그먼트를 컬럼 그룹으로 분할 / Split line segments into column groups
 /// vertical_position이 이전 세그먼트 이하면 새 그룹 시작 / New group when vertical_position <= previous
-fn split_into_column_groups(segments: &[LineSegmentInfo]) -> Vec<(usize, usize)> {
+pub(crate) fn split_into_column_groups(segments: &[LineSegmentInfo]) -> Vec<(usize, usize)> {
     let mut groups = Vec::new();
     if segments.is_empty() {
         return groups;
@@ -698,6 +698,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             original_text_len,
                             images: &[],
                             tables: &[],
+                            shape_htmls: &[],
                         };
 
                         let ls_context = LineSegmentRenderContext {

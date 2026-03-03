@@ -619,6 +619,7 @@ pub(crate) fn render_cells(
                                     original_text_len: col_original_text_len,
                                     images: &[],
                                     tables: &[],
+                                    shape_htmls: &[],
                                 };
                                 let context = LineSegmentRenderContext {
                                     document,
@@ -666,6 +667,7 @@ pub(crate) fn render_cells(
                             original_text_len: para.para_header.text_char_count as usize,
                             images: &images,
                             tables: &[],
+                            shape_htmls: &[],
                         };
                         let context = LineSegmentRenderContext {
                             document,

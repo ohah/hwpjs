@@ -572,6 +572,7 @@ fn render_shape_content(
                 original_text_len: col_original_text_len,
                 images: &[],
                 tables: &[],
+                shape_htmls: &[],
             };
 
             let context = LineSegmentRenderContext {

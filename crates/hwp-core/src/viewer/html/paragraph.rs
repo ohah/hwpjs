@@ -552,6 +552,7 @@ pub fn render_paragraph(
             original_text_len: paragraph.para_header.text_char_count as usize,
             images: &inline_images, // like_letters=true인 이미지만 line_segment에 포함 / Include only images with like_letters=true in line_segment
             tables: inline_table_infos.as_slice(), // like_letters=true인 테이블 포함 / Include tables with like_letters=true
+            shape_htmls: &[],
         };
 
         let context = LineSegmentRenderContext {

@@ -20,6 +20,8 @@ pub struct LineSegmentContent<'a> {
     pub original_text_len: usize,
     pub images: &'a [ImageInfo],
     pub tables: &'a [TableInfo<'a>],
+    /// 인라인 도형 HTML (앵커 위치, HTML) / Inline shape HTMLs (anchor position, HTML)
+    pub shape_htmls: &'a [(usize, String)],
 }
 
 /// 라인 세그먼트 렌더링 컨텍스트 / Line segment rendering context
@@ -165,6 +167,7 @@ pub fn render_line_segments_with_content(
     let original_text_len = content.original_text_len;
     let images = content.images;
     let tables = content.tables;
+    let shape_htmls = content.shape_htmls;
 
     let document = context.document;
     let para_shape_class = context.para_shape_class;
@@ -350,6 +353,15 @@ pub fn render_line_segments_with_content(
             }
         }
 
+        // 이 세그먼트 범위에 속하는 인라인 도형 찾기 (앵커 기반) / Find inline shapes for this segment (anchor-based)
+        let mut shapes_for_segment: Vec<&str> = Vec::new();
+        for (anchor, html) in shape_htmls.iter() {
+            if *anchor >= start_pos && *anchor < end_pos {
+                shapes_for_segment.push(html);
+            }
+        }
+        let has_shapes_for_segment = !shapes_for_segment.is_empty();
+
         if !tables_for_segment.is_empty() {
             // 테이블 렌더링 (앵커 기반) / Render tables (anchor-based)
             use crate::viewer::html::ctrl_header::table::render_table;
@@ -387,6 +399,11 @@ pub fn render_line_segments_with_content(
                     table_info.caption.as_ref(),
                 );
                 content.push_str(&table_html);
+            }
+        } else if has_shapes_for_segment {
+            // 인라인 도형 렌더링 (앵커 기반) / Render inline shapes (anchor-based)
+            for shape_html in shapes_for_segment {
+                content.push_str(shape_html);
             }
         } else if (is_empty_segment || is_text_empty)
             && !images.is_empty()
@@ -444,8 +461,9 @@ pub fn render_line_segments_with_content(
             para_shape_class,
             para_shape_indent,
             para_shape,
-            // 텍스트 렌더링 경로일 때만 true. (이미지/테이블 like_letters를 배치한 세그먼트는 false)
+            // 텍스트 렌더링 경로일 때만 true. (이미지/테이블/도형 like_letters를 배치한 세그먼트는 false)
             !(!tables_for_segment.is_empty()
+                || has_shapes_for_segment
                 || ((is_empty_segment || is_text_empty) && !images.is_empty())),
             override_size_mm,
             body_default_hls,
