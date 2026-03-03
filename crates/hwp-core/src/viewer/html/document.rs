@@ -537,6 +537,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             }
         }
 
+        let mut prev_has_page_divide = false;
         for paragraph in &section.paragraphs {
             // 1. 문단 페이지 나누기 확인 (렌더링 전) / Check paragraph page break (before rendering)
             let para_result = super::pagination::check_paragraph_page_break(
@@ -567,9 +568,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             let has_page_break = if has_page_break
                 && para_result.reason == Some(PageBreakReason::VerticalReset)
             {
-                let new_col_info = detect_column_definition(paragraph);
-                let is_entering_multicol = new_col_info
-                    .as_ref()
+                let is_entering_multicol = detect_column_definition(paragraph)
                     .map(|info| info.column_count > 1)
                     .unwrap_or(false);
                 let is_multicol_para = paragraph
@@ -577,24 +576,10 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     .column_divide_type
                     .contains(&ColumnDivideType::MultiColumn);
 
-                // 다단 섹션 전환 (col_count 변경) 시에는 페이지 브레이크 허용
-                // Allow page break when transitioning between different multicolumn sections
-                let is_col_count_change = if is_entering_multicol {
-                    multi_col_state
-                        .as_ref()
-                        .map(|mc| {
-                            new_col_info
-                                .as_ref()
-                                .map(|info| info.column_count as usize != mc.col_count)
-                                .unwrap_or(false)
-                        })
-                        .unwrap_or(false)
-                } else {
-                    false
-                };
-
-                if is_col_count_change {
-                    true // 다단 전환 → 새 페이지 / Column count change → new page
+                // 이전 문단에 Page 경계가 있었으면 VerticalReset을 실제 페이지 브레이크로 처리
+                // If previous paragraph had a Page divide, treat VerticalReset as a real page break
+                if prev_has_page_divide {
+                    true
                 } else if is_entering_multicol || is_multicol_para || multi_col_state.is_some() {
                     false
                 } else {
@@ -1320,6 +1305,12 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 pagination_context.current_max_vertical_mm = current_max_vertical_mm;
                 pagination_context.prev_vertical_mm = prev_vertical_mm;
             }
+
+            // 이전 문단의 Page 경계 정보 갱신 / Update previous paragraph's Page divide info
+            prev_has_page_divide = paragraph
+                .para_header
+                .column_divide_type
+                .contains(&ColumnDivideType::Page);
         }
     }
 
