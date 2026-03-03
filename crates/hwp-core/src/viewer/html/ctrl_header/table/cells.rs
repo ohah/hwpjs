@@ -572,22 +572,78 @@ pub(crate) fn render_cells(
                     }
 
                     if let Some((col_count, col_spacing, div_line_type, div_line_color)) = multicolumn_info {
-                        // 다단 렌더링 / Multi-column rendering
-                        let col_count = col_count as usize;
-                        if line_segments.len() >= col_count {
-                            let segs_per_col = line_segments.len() / col_count;
-                            let seg_width_mm_raw = int32_to_mm(line_segments[0].segment_width);
+                        // 다단 렌더링: cold 문단부터 연속 문단까지 집계 / Multi-column rendering: aggregate from cold paragraph to continuation
+                        let col_count_usize = col_count as usize;
+
+                        // cold 문단(column_divide_type 비어있지 않은)부터 끝까지 모든 문단의
+                        // line segments, text, char_shapes를 집계
+                        // Aggregate all paragraphs from cold to end
+                        use crate::document::bodytext::LineSegmentInfo as CellLineSegInfo;
+                        let mut all_segs: Vec<CellLineSegInfo> = Vec::new();
+                        let mut all_mc_text = String::new();
+                        let mut all_mc_char_shapes: Vec<crate::document::bodytext::CharShapeInfo> = Vec::new();
+                        let mut all_mc_ccp = Vec::new();
+                        let mut mc_collecting = false;
+                        let mut mc_wchar_offset: usize = 0; // 원본 WCHAR 단위 오프셋
+
+                        for mc_para in &cell.paragraphs {
+                            if !mc_para.para_header.column_divide_type.is_empty() {
+                                if mc_collecting {
+                                    break;
+                                }
+                                mc_collecting = true;
+                            }
+                            if !mc_collecting {
+                                continue;
+                            }
+
+                            let (mc_text, mc_cs) = text::extract_text_and_shapes(mc_para);
+                            let text_offset = mc_wchar_offset;
+
+                            for rec in &mc_para.records {
+                                match rec {
+                                    ParagraphRecord::ParaLineSeg { segments } => {
+                                        for seg in segments {
+                                            let mut adjusted = seg.clone();
+                                            adjusted.text_start_position += text_offset as u32;
+                                            all_segs.push(adjusted);
+                                        }
+                                    }
+                                    ParagraphRecord::ParaText { control_char_positions: ccp, .. } => {
+                                        for cp in ccp {
+                                            let mut adjusted = cp.clone();
+                                            adjusted.position += text_offset;
+                                            all_mc_ccp.push(adjusted);
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            mc_wchar_offset += mc_para.para_header.text_char_count as usize;
+                            all_mc_text.push_str(&mc_text);
+                            // char_shapes 위치도 WCHAR 오프셋으로 보정
+                            for mut cs in mc_cs {
+                                cs.position += text_offset as u32;
+                                all_mc_char_shapes.push(cs);
+                            }
+                        }
+
+                        // split_into_column_groups로 컬럼 경계 감지
+                        let col_groups = crate::viewer::html::document::split_into_column_groups(&all_segs);
+
+                        if col_groups.len() >= col_count_usize && !all_segs.is_empty() {
+                            let seg_width_mm_raw = int32_to_mm(all_segs[0].segment_width);
                             let col_spacing_mm_raw = int32_to_mm(col_spacing as i32);
                             let mut mc_html = String::new();
 
                             // hcS 구분선 / hcS separator
                             if div_line_type > 0 {
                                 let sep_left = round_to_2dp(seg_width_mm_raw + (col_spacing_mm_raw - 0.11) / 2.0);
-                                let content_height_mm = {
-                                    let col_segs = &line_segments[..segs_per_col];
-                                    let last = col_segs.last().unwrap();
+                                let (first_start, first_end) = col_groups[0];
+                                let first_col_segs = &all_segs[first_start..first_end];
+                                let content_height_mm = first_col_segs.last().map(|last| {
                                     round_to_2dp(int32_to_mm(last.vertical_position + last.line_height))
-                                };
+                                }).unwrap_or(0.0);
                                 let stroke_color = format!("#{:06x}", div_line_color & 0x00FFFFFF);
                                 mc_html.push_str(&format!(
                                     r#"<div class="hcS" style="left:{:.2}mm;top:0mm;width:0.11mm;height:{:.2}mm;"><svg class="hs" viewBox="-0.12 -0.12 0.35 {:.2}" style="left:-0.12mm;top:-0.12mm;width:0.35mm;height:{:.2}mm;left:0;top:0;"><path d="M0.06,0 L0.06,{:.2}" style="stroke:{};stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
@@ -600,25 +656,29 @@ pub(crate) fn render_cells(
                                 ));
                             }
 
+                            let all_mc_text_len = mc_wchar_offset;
+
                             // 각 단 렌더링 / Render each column
-                            for col_idx in 0..col_count {
-                                let col_start_seg = col_idx * segs_per_col;
-                                let col_end_seg = (col_idx + 1) * segs_per_col;
-                                let col_segs = &line_segments[col_start_seg..col_end_seg];
-                                let col_original_text_len = if col_idx + 1 < col_count {
-                                    line_segments[(col_idx + 1) * segs_per_col].text_start_position as usize
+                            for (col_idx, &(start, end)) in col_groups.iter().enumerate().take(col_count_usize) {
+                                let col_segs = &all_segs[start..end];
+                                if col_segs.is_empty() {
+                                    continue;
+                                }
+                                let col_original_text_len = if end < all_segs.len() {
+                                    all_segs[end].text_start_position as usize
                                 } else {
-                                    para.para_header.text_char_count as usize
+                                    all_mc_text_len
                                 };
 
                                 let content = LineSegmentContent {
                                     segments: col_segs,
-                                    text: &text,
-                                    char_shapes: &char_shapes,
-                                    control_char_positions: &control_char_positions,
+                                    text: &all_mc_text,
+                                    char_shapes: &all_mc_char_shapes,
+                                    control_char_positions: &all_mc_ccp,
                                     original_text_len: col_original_text_len,
                                     images: &[],
                                     tables: &[],
+                                    shape_htmls: &[],
                                 };
                                 let context = LineSegmentRenderContext {
                                     document,
@@ -666,6 +726,7 @@ pub(crate) fn render_cells(
                             original_text_len: para.para_header.text_char_count as usize,
                             images: &images,
                             tables: &[],
+                            shape_htmls: &[],
                         };
                         let context = LineSegmentRenderContext {
                             document,

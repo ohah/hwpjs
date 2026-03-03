@@ -22,12 +22,20 @@ impl std::fmt::Display for HtmlPageBreak {
         write!(f, "<span></span>")
     }
 }
+/// 페이지 내 hcI 블록 (컬럼 또는 단일 콘텐츠 영역)
+/// hcI block within a page (column or single content area)
+pub struct HcIBlock {
+    pub html: String,
+    pub left_mm: Option<f64>,
+    pub top_mm: Option<f64>,
+}
+
 /// 페이지 렌더링 모듈 / Page rendering module
 /// 페이지를 HTML로 렌더링 / Render page to HTML
 #[allow(clippy::too_many_arguments)]
 pub fn render_page(
     page_number: usize,
-    content: &str,
+    blocks: &[HcIBlock],
     tables: &[String],
     page_def: Option<&PageDef>,
     _first_segment_pos: Option<(INT32, INT32)>,
@@ -92,11 +100,33 @@ pub fn render_page(
         }
     }
 
-    if !content.is_empty() {
+    let has_block_content = blocks.iter().any(|b| !b.html.is_empty());
+    if has_block_content {
         html.push_str(&format!(
-            r#"<div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI">{}</div></div>"#,
-            left_mm, top_mm, content
+            r#"<div class="hcD" style="left:{}mm;top:{}mm;">"#,
+            left_mm, top_mm
         ));
+        for block in blocks {
+            if block.html.is_empty() {
+                continue;
+            }
+            let mut style = String::new();
+            if let Some(left) = block.left_mm {
+                style.push_str(&format!("left:{:.2}mm;", left));
+            }
+            if let Some(top) = block.top_mm {
+                style.push_str(&format!("top:{:.2}mm;", top));
+            }
+            if style.is_empty() {
+                html.push_str(&format!(r#"<div class="hcI">{}</div>"#, block.html));
+            } else {
+                html.push_str(&format!(
+                    r#"<div class="hcI" style="{}">{}</div>"#,
+                    style, block.html
+                ));
+            }
+        }
+        html.push_str("</div>");
     }
 
     // 테이블은 hpa 레벨에 직접 배치 / Place tables directly at hpa level

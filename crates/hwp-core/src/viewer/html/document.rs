@@ -1,15 +1,20 @@
 use super::ctrl_header::process_ctrl_header;
 use super::ctrl_header::FootnoteEndnoteState;
-use super::page;
+use super::line_segment::{
+    DocumentRenderState, LineSegmentContent, LineSegmentRenderContext,
+};
+use super::page::{self, HcIBlock};
 use super::pagination::{PageBreakReason, PaginationContext};
 use super::paragraph::{
     render_paragraph, ParagraphPosition, ParagraphRenderContext, ParagraphRenderState,
 };
 use super::styles;
-use super::styles::round_to_2dp;
+use super::styles::{int32_to_mm, round_to_2dp};
+use super::text::extract_text_and_shapes;
 use super::HtmlOptions;
 use crate::document::bodytext::ctrl_header::{CtrlHeaderData, CtrlId};
-use crate::document::bodytext::{PageDef, ParagraphRecord};
+use crate::document::bodytext::para_header::ColumnDivideType;
+use crate::document::bodytext::{LineSegmentInfo, PageDef, ParagraphRecord};
 use crate::document::HwpDocument;
 use crate::viewer::core::OutlineNumberTracker;
 use crate::INT32;
@@ -66,6 +71,172 @@ fn find_page_number_position(document: &HwpDocument) -> Option<&CtrlHeaderData> 
                         }
                     }
                 }
+            }
+        }
+    }
+    None
+}
+
+/// 다단 상태 추적 / Multicolumn state tracking
+struct MultiColumnState {
+    col_count: usize,
+    col_spacing_hu: i16,
+    seg_width_mm: f64,
+    /// 컬럼별 HTML 버퍼 / Per-column HTML buffers
+    col_buffers: Vec<String>,
+    /// 다단 시작 시점의 수직 위치 (mm, hcI top) / Vertical position where multicolumn starts (mm, hcI top)
+    top_mm: Option<f64>,
+    /// 각 컬럼의 최대 하단 위치 (mm) / Max bottom position per column (mm)
+    col_max_bottoms: Vec<f64>,
+}
+
+/// 위치 기반 컬럼 할당 / Position-based column assignment
+/// 각 그룹의 first_vpos와 컬럼별 max_bottom을 비교하여 올바른 컬럼에 배치
+/// Compares each group's first_vpos with per-column max_bottom to assign to correct column
+/// Returns (col_idx, is_page_break)
+fn assign_column(first_vpos: f64, col_max_bottoms: &[f64]) -> (usize, bool) {
+    let col_count = col_max_bottoms.len();
+
+    // Priority 1: 연속(continuation) — 콘텐츠가 있는 컬럼 중 first_vpos가 max_bottom에서 이어지는 컬럼
+    // Continuation: column with content where first_vpos continues from max_bottom
+    // max_bottom이 가장 높은(가장 가까운) 컬럼 선택 / Pick column with closest (highest) max_bottom
+    let mut best_col: Option<(usize, f64)> = None;
+    for i in 0..col_count {
+        if col_max_bottoms[i] > 0.01 && first_vpos >= col_max_bottoms[i] - 1.0 {
+            match best_col {
+                None => best_col = Some((i, col_max_bottoms[i])),
+                Some((_, best_bottom)) => {
+                    if col_max_bottoms[i] > best_bottom {
+                        best_col = Some((i, col_max_bottoms[i]));
+                    }
+                }
+            }
+        }
+    }
+    if let Some((col_idx, _)) = best_col {
+        return (col_idx, false);
+    }
+
+    // Priority 2: 빈 컬럼 (max_bottom ≈ 0) / First empty column
+    for i in 0..col_count {
+        if col_max_bottoms[i] < 0.01 {
+            return (i, false);
+        }
+    }
+
+    // Priority 3: 모든 컬럼에 콘텐츠 있고 연속이 아님 → 페이지 나누기
+    // All columns have content, none continuing → page break
+    (0, true)
+}
+
+/// hsG 형태의 도형 HTML을 인라인 hsR 형태로 변환
+/// Convert hsG-wrapped shape HTML to inline hsR format
+fn convert_shape_to_inline(shape_html: &str) -> String {
+    // hsG 내부의 hsR을 찾아서 인라인 스타일 추가
+    // Find hsR inside hsG and add inline styles
+    // 구조: <div class="hsG" ...><div class="hsR" style="...">...</div></div>
+    // 목표: <div class="hsR" style="...;display:inline-block;position:relative;vertical-align:middle;">...</div>
+    if let Some(hsr_start) = shape_html.find(r#"<div class=""#) {
+        // hsG 전체에서 첫 번째 hsR div 찾기
+        if let Some(hsr_pos) = shape_html[hsr_start..].find("hsR") {
+            let hsr_abs_pos = hsr_start + hsr_pos - 12; // div class=" 이전으로
+            // hsG의 마지막 </div> 제거
+            if let Some(last_div_end) = shape_html.rfind("</div>") {
+                let inner = &shape_html[hsr_abs_pos..last_div_end];
+                // hsR의 style에 인라인 속성 추가
+                return inner.replacen(
+                    "style=\"",
+                    "style=\"margin-bottom:0mm;margin-right:0mm;display:inline-block;position:relative;vertical-align:middle;",
+                    1,
+                );
+            }
+        }
+    }
+    shape_html.to_string()
+}
+
+/// 라인 세그먼트를 컬럼 그룹으로 분할 / Split line segments into column groups
+/// vertical_position이 이전 세그먼트 이하면 새 그룹 시작 / New group when vertical_position <= previous
+pub(crate) fn split_into_column_groups(segments: &[LineSegmentInfo]) -> Vec<(usize, usize)> {
+    let mut groups = Vec::new();
+    if segments.is_empty() {
+        return groups;
+    }
+    let mut group_start = 0;
+    for i in 1..segments.len() {
+        if segments[i].vertical_position <= segments[i - 1].vertical_position {
+            groups.push((group_start, i));
+            group_start = i;
+        }
+    }
+    groups.push((group_start, segments.len()));
+    groups
+}
+
+/// 다단 컬럼 버퍼를 HcIBlock으로 플러시 / Flush multicolumn column buffers to HcIBlocks
+fn flush_multicol_to_blocks(
+    mc_state: &mut Option<MultiColumnState>,
+    page_blocks: &mut Vec<HcIBlock>,
+) {
+    if let Some(mc) = mc_state.take() {
+        let col_spacing_mm = round_to_2dp(int32_to_mm(mc.col_spacing_hu as i32));
+        for (col_idx, buffer) in mc.col_buffers.into_iter().enumerate() {
+            if buffer.is_empty() {
+                continue;
+            }
+            let left_mm = if col_idx == 0 {
+                None
+            } else {
+                Some(round_to_2dp(
+                    col_idx as f64 * (mc.seg_width_mm + col_spacing_mm),
+                ))
+            };
+            page_blocks.push(HcIBlock {
+                html: buffer,
+                left_mm,
+                top_mm: mc.top_mm,
+            });
+        }
+    }
+}
+
+/// col_buffers의 누적 콘텐츠를 HcIBlock으로 플러시 (상태 유지, 페이지 오버플로우 시 사용)
+/// Flush accumulated col_buffers content to HcIBlocks (keep state alive, used on page overflow)
+fn flush_col_buffers_to_blocks(mc: &mut MultiColumnState, page_blocks: &mut Vec<HcIBlock>) {
+    let col_spacing_mm = round_to_2dp(int32_to_mm(mc.col_spacing_hu as i32));
+    for (col_idx, buffer) in mc.col_buffers.iter_mut().enumerate() {
+        if buffer.is_empty() {
+            continue;
+        }
+        let left_mm = if col_idx == 0 {
+            None
+        } else {
+            Some(round_to_2dp(
+                col_idx as f64 * (mc.seg_width_mm + col_spacing_mm),
+            ))
+        };
+        page_blocks.push(HcIBlock {
+            html: std::mem::take(buffer),
+            left_mm,
+            top_mm: mc.top_mm,
+        });
+    }
+    mc.col_max_bottoms.iter_mut().for_each(|b| *b = 0.0);
+}
+
+/// 문단에서 ColumnDefinition을 찾아 (column_count, column_spacing) 반환 / Find ColumnDefinition in paragraph, return (column_count, column_spacing)
+fn detect_column_definition(
+    paragraph: &crate::document::Paragraph,
+) -> Option<(u8, i16)> {
+    for record in &paragraph.records {
+        if let ParagraphRecord::CtrlHeader { header, .. } = record {
+            if let CtrlHeaderData::ColumnDefinition {
+                attribute,
+                column_spacing,
+                ..
+            } = &header.data
+            {
+                return Some((attribute.column_count, *column_spacing));
             }
         }
     }
@@ -166,10 +337,13 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
     // 페이지별로 렌더링 / Render by page
     let mut page_number = 1;
-    let mut page_content = String::new();
+    let mut page_blocks: Vec<HcIBlock> = Vec::new();
+    let mut page_content = String::new(); // 현재 단일 컬럼 콘텐츠 누적 / Accumulate current single-column content
     let mut page_tables = Vec::new(); // 테이블을 별도로 저장 / Store tables separately
     let mut first_segment_pos: Option<(INT32, INT32)> = None; // 첫 번째 LineSegment 위치 저장 / Store first LineSegment position
     let mut hcd_position: Option<(f64, f64)> = None; // hcD 위치 저장 (mm 단위) / Store hcD position (in mm)
+    let mut multi_col_state: Option<MultiColumnState> = None; // 다단 상태 / Multicolumn state
+    let mut last_content_bottom_mm: f64 = 0.0; // 마지막 콘텐츠 하단 위치 (mm) / Last content bottom position (mm)
 
     // 문서 레벨에서 table_counter 관리 (문서 전체에서 테이블 번호 연속 유지) / Manage table_counter at document level (maintain sequential table numbers across document)
     let mut table_counter = document
@@ -265,8 +439,52 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
             let has_page_break = para_result.has_page_break;
 
+            // 다단 진행 중 VerticalReset 억제 / Suppress VerticalReset during multicolumn
+            // 다단 문단의 vertical_position은 컬럼 상대적이므로 0으로 리셋되는 것은 정상
+            // 페이지 경계는 2패스 코드 내 위치 리셋 감지로 처리
+            // Multicolumn paragraph vertical_position is column-relative, so reset to 0 is normal
+            // Page boundaries handled by position-reset detection in 2-pass code
+            let has_page_break = if has_page_break
+                && para_result.reason == Some(PageBreakReason::VerticalReset)
+            {
+                let is_entering_multicol = detect_column_definition(paragraph)
+                    .map(|(count, _)| count > 1)
+                    .unwrap_or(false);
+                let is_multicol_para = paragraph
+                    .para_header
+                    .column_divide_type
+                    .contains(&ColumnDivideType::MultiColumn);
+                if is_entering_multicol || is_multicol_para || multi_col_state.is_some() {
+                    false
+                } else {
+                    true
+                }
+            } else {
+                has_page_break
+            };
+
             // 페이지 나누기가 있고 페이지 내용이 있으면 페이지 출력 (문단 렌더링 전) / Output page if page break and page content exists (before rendering paragraph)
-            if has_page_break && (!page_content.is_empty() || !page_tables.is_empty()) {
+            if has_page_break
+                && (!page_content.is_empty()
+                    || !page_blocks.is_empty()
+                    || multi_col_state.is_some()
+                    || !page_tables.is_empty())
+            {
+                // 다단 버퍼 플러시 (상태 유지: 같은 다단 구간 내 페이지 나누기 시 상태 보존)
+                // Flush multicolumn buffers (preserve state for page break within same multicolumn section)
+                if let Some(mc) = multi_col_state.as_mut() {
+                    flush_col_buffers_to_blocks(mc, &mut page_blocks);
+                    // 새 페이지 상태 리셋 (다단 설정은 유지) / Reset for new page (keep multicolumn settings)
+                    mc.top_mm = None;
+                }
+                // 남은 단일 컬럼 콘텐츠를 블록으로 플러시 / Flush remaining single-column content to block
+                if !page_content.is_empty() {
+                    page_blocks.push(HcIBlock {
+                        html: std::mem::take(&mut page_content),
+                        left_mm: None,
+                        top_mm: None,
+                    });
+                }
                 // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
                 let hcd_pos = if let Some((left, top)) = hcd_position {
                     Some((round_to_2dp(left), round_to_2dp(top)))
@@ -283,7 +501,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 // 이전 페이지를 현재(이전) PageDef로 렌더링 / Render previous page with current (old) PageDef
                 html.push_str(&page::render_page(
                     page_number,
-                    &page_content,
+                    &page_blocks,
                     &page_tables,
                     current_page_def,
                     first_segment_pos,
@@ -314,6 +532,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 }
                 page_number += 1;
                 page_content.clear();
+                page_blocks.clear();
                 page_tables.clear();
                 current_max_vertical_mm = 0.0;
                 pagination_context.current_max_vertical_mm = 0.0;
@@ -323,6 +542,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 // 페이지네이션 발생 시 para_index 리셋 / Reset para_index on pagination
                 para_index = 0;
                 first_para_vertical_mm = None; // 새 페이지의 첫 번째 문단 추적을 위해 리셋 / Reset to track first paragraph of new page
+                last_content_bottom_mm = 0.0; // 새 페이지에서는 콘텐츠 하단 위치 리셋 / Reset content bottom on new page
             }
 
             // 문단 렌더링 (머리말/꼬리말 제외; 각주/미주 포함하여 본문 참조 출력) / Render paragraph (exclude header/footer; include footnote/endnote for in-body refs)
@@ -408,6 +628,271 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     body_default_hls: None,
                 };
 
+                // 2. 다단 감지 및 렌더링 / Multicolumn detection and rendering
+                let is_multicol_para = paragraph
+                    .para_header
+                    .column_divide_type
+                    .contains(&ColumnDivideType::MultiColumn);
+
+                // ColumnDefinition 감지 / Detect ColumnDefinition
+                if let Some((col_count, col_spacing)) = detect_column_definition(paragraph) {
+                    if col_count > 1 && is_multicol_para {
+                        // 다단 모드 진입/변경 / Enter/change multicolumn mode
+                        flush_multicol_to_blocks(&mut multi_col_state, &mut page_blocks);
+                        if !page_content.is_empty() {
+                            page_blocks.push(HcIBlock {
+                                html: std::mem::take(&mut page_content),
+                                left_mm: None,
+                                top_mm: None,
+                            });
+                        }
+
+                        let line_segs =
+                            super::paragraph::collect_line_segments(paragraph);
+                        let seg_width_mm = line_segs
+                            .first()
+                            .map(|seg| round_to_2dp(int32_to_mm(seg.segment_width)))
+                            .unwrap_or(70.99);
+
+                        // 다단 시작 위치: 이전 콘텐츠 하단 + 컬럼 간격 기반 갭
+                        // Multicolumn start position: previous content bottom + column-spacing-based gap
+                        // gap = column_spacing × (col_count - 1) / 2 (HWP units)
+                        let mc_top_mm = if page_blocks.is_empty() && page_content.is_empty() {
+                            None
+                        } else {
+                            let gap_hu =
+                                col_spacing as f64 * (col_count as f64 - 1.0) / 2.0;
+                            let gap_mm = round_to_2dp(gap_hu * 25.4 / 7200.0);
+                            Some(round_to_2dp(last_content_bottom_mm + gap_mm))
+                        };
+
+                        multi_col_state = Some(MultiColumnState {
+                            col_count: col_count as usize,
+                            col_spacing_hu: col_spacing,
+                            seg_width_mm,
+                            col_buffers: vec![String::new(); col_count as usize],
+                            top_mm: mc_top_mm,
+                            col_max_bottoms: vec![0.0; col_count as usize],
+                        });
+                    } else if col_count <= 1 {
+                        flush_multicol_to_blocks(&mut multi_col_state, &mut page_blocks);
+                    }
+                }
+
+                // 다단 per-column 렌더링 (2패스: 렌더링 → 라운드 기반 플러시)
+                // Multicolumn per-column rendering (2-pass: render → round-based flush)
+                let mut mc_has_inline_content = false;
+                if multi_col_state.is_some() {
+                    // 1패스: 모든 컬럼 그룹 렌더링 (pattern_counter/color_to_pattern 사용)
+                    // Pass 1: render all column groups (uses pattern_counter/color_to_pattern)
+                    let line_segments =
+                        super::paragraph::collect_line_segments(paragraph);
+                    let (text, char_shapes) = extract_text_and_shapes(paragraph);
+                    let (control_char_positions, shape_positions) =
+                        super::paragraph::collect_control_char_positions(paragraph);
+
+                    let para_shape_class =
+                        format!("ps{}", paragraph.para_header.para_shape_id);
+                    let para_shape_indent = document
+                        .doc_info
+                        .para_shapes
+                        .get(paragraph.para_header.para_shape_id as usize)
+                        .and_then(|ps| {
+                            if ps.indent != 0 { Some(ps.indent) } else { None }
+                        });
+
+                    // 인라인 콘텐츠(테이블/도형) 수집 / Collect inline content (tables/shapes)
+                    use super::line_segment::TableInfo;
+                    let mut mc_inline_tables: Vec<TableInfo> = Vec::new();
+                    let mut mc_shape_htmls: Vec<(usize, String)> = Vec::new();
+                    let mut shape_anchor_cursor: usize = 0;
+
+                    for record in &paragraph.records {
+                        if let ParagraphRecord::CtrlHeader {
+                            header, children, paragraphs: ctrl_paragraphs, ..
+                        } = record {
+                            let anchor = shape_positions.get(shape_anchor_cursor).copied();
+                            shape_anchor_cursor += 1;
+
+                            if header.ctrl_id == "tbl " {
+                                // 테이블 수집 / Collect table
+                                let ctrl_result = super::ctrl_header::process_ctrl_header(
+                                    header, children, ctrl_paragraphs, document, options, None,
+                                );
+                                let like_letters = match &header.data {
+                                    CtrlHeaderData::ObjectCommon { attribute, .. } => attribute.like_letters,
+                                    _ => false,
+                                };
+                                if like_letters {
+                                    for t in ctrl_result.tables.iter() {
+                                        let mut tt = t.clone();
+                                        tt.anchor_char_pos = anchor;
+                                        mc_inline_tables.push(tt);
+                                    }
+                                    mc_has_inline_content = true;
+                                }
+                            } else if header.ctrl_id == "gso " {
+                                // 도형(글상자) 수집 — 인라인 렌더링 / Collect shape (text box) — inline rendering
+                                let like_letters = match &header.data {
+                                    CtrlHeaderData::ObjectCommon { attribute, .. } => attribute.like_letters,
+                                    _ => false,
+                                };
+                                if like_letters {
+                                    let ctrl_result = super::ctrl_header::process_ctrl_header(
+                                        header, children, ctrl_paragraphs, document, options, None,
+                                    );
+                                    if let Some(shape_html) = ctrl_result.shape_html {
+                                        // hsG 래핑을 hsR 인라인으로 변환 / Convert hsG wrapping to inline hsR
+                                        let inline_html = convert_shape_to_inline(&shape_html);
+                                        if let Some(anchor_pos) = anchor {
+                                            mc_shape_htmls.push((anchor_pos, inline_html));
+                                            mc_has_inline_content = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    let col_groups = split_into_column_groups(&line_segments);
+                    let mut rendered_groups: Vec<(String, f64, f64)> = Vec::new(); // (html, seg_bottom, first_vpos)
+
+                    for (_group_idx, (start, end)) in col_groups.iter().enumerate() {
+                        let col_segs = &line_segments[*start..*end];
+                        if col_segs.is_empty() {
+                            rendered_groups.push((String::new(), 0.0, 0.0));
+                            continue;
+                        }
+
+                        let original_text_len = if *end < line_segments.len() {
+                            line_segments[*end].text_start_position as usize
+                        } else {
+                            paragraph.para_header.text_char_count as usize
+                        };
+
+                        let content = LineSegmentContent {
+                            segments: col_segs,
+                            text: &text,
+                            char_shapes: &char_shapes,
+                            control_char_positions: &control_char_positions,
+                            original_text_len,
+                            images: &[],
+                            tables: &mc_inline_tables,
+                            shape_htmls: &mc_shape_htmls,
+                        };
+
+                        let ls_context = LineSegmentRenderContext {
+                            document,
+                            para_shape_class: &para_shape_class,
+                            options,
+                            para_shape_indent,
+                            hcd_position: None,
+                            page_def: current_page_def,
+                            body_default_hls: None,
+                        };
+
+                        let col_html = {
+                            let mut ls_state = DocumentRenderState {
+                                table_counter_start: 0,
+                                pattern_counter: &mut pattern_counter,
+                                color_to_pattern: &mut color_to_pattern,
+                            };
+                            super::line_segment::render_line_segments_with_content(
+                                &content,
+                                &ls_context,
+                                &mut ls_state,
+                            )
+                        };
+
+                        let seg_bottom = col_segs.last().map(|seg| {
+                            round_to_2dp(int32_to_mm(seg.vertical_position) + int32_to_mm(seg.line_height))
+                        }).unwrap_or(0.0);
+
+                        let first_vpos = col_segs.first().map(|seg| {
+                            round_to_2dp(int32_to_mm(seg.vertical_position))
+                        }).unwrap_or(0.0);
+
+                        rendered_groups.push((col_html, seg_bottom, first_vpos));
+                    }
+
+                    // 2패스: 위치 기반 컬럼 할당 및 페이지 나누기 판정
+                    // Pass 2: position-based column assignment and page break detection
+                    for (col_html, seg_bottom, first_vpos) in rendered_groups {
+                        if col_html.is_empty() {
+                            continue;
+                        }
+                        let mc = multi_col_state.as_mut().unwrap();
+                        let (col_idx, is_page_break) =
+                            assign_column(first_vpos, &mc.col_max_bottoms);
+
+                        if is_page_break {
+                            // 현재 페이지 출력 / Output current page
+                            flush_col_buffers_to_blocks(mc, &mut page_blocks);
+
+                            if !page_content.is_empty() {
+                                page_blocks.push(HcIBlock {
+                                    html: std::mem::take(&mut page_content),
+                                    left_mm: None,
+                                    top_mm: None,
+                                });
+                            }
+                            let hcd_pos = if let Some((left, top)) = hcd_position {
+                                Some((round_to_2dp(left), round_to_2dp(top)))
+                            } else {
+                                let left = page_def
+                                    .map(|pd| round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()))
+                                    .unwrap_or(20.0);
+                                let top = page_def
+                                    .map(|pd| round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()))
+                                    .unwrap_or(24.99);
+                                Some((left, top))
+                            };
+                            html.push_str(&page::render_page(
+                                page_number,
+                                &page_blocks,
+                                &page_tables,
+                                current_page_def,
+                                first_segment_pos,
+                                hcd_pos,
+                                page_number_position,
+                                page_start_number,
+                                document,
+                                header_contents.first().map(String::as_str),
+                                footer_contents.first().map(String::as_str),
+                            ));
+                            page_number += 1;
+                            page_content.clear();
+                            page_blocks.clear();
+                            page_tables.clear();
+                            current_max_vertical_mm = 0.0;
+                            pagination_context.current_max_vertical_mm = 0.0;
+                            pagination_context.prev_vertical_mm = None;
+                            first_segment_pos = None;
+                            hcd_position = None;
+                            para_index = 0;
+                            first_para_vertical_mm = None;
+
+                            // 새 페이지 리셋 (다단 설정 유지)
+                            // Reset for new page (keep multicolumn settings)
+                            mc.top_mm = None;
+                            mc.col_max_bottoms.iter_mut().for_each(|b| *b = 0.0);
+                        }
+
+                        // 컬럼에 콘텐츠 추가 / Add content to column
+                        mc.col_buffers[col_idx].push_str(&col_html);
+                        if seg_bottom > mc.col_max_bottoms[col_idx] {
+                            mc.col_max_bottoms[col_idx] = seg_bottom;
+                        }
+
+                        // last_content_bottom_mm 업데이트 / Update last_content_bottom_mm
+                        let round_top = mc.top_mm.unwrap_or(0.0);
+                        let max_col_bottom =
+                            mc.col_max_bottoms.iter().cloned().fold(0.0f64, f64::max);
+                        last_content_bottom_mm = round_top + max_col_bottom;
+                    }
+                }
+
+                // render_paragraph 호출 / Call render_paragraph
                 let mut note_state = FootnoteEndnoteState {
                     footnote_counter: &mut footnote_counter,
                     endnote_counter: &mut endnote_counter,
@@ -422,26 +907,51 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     outline_tracker: Some(&mut outline_tracker),
                 };
 
-                // 2. 문단 렌더링 (내부에서 테이블/이미지 페이지네이션 체크) / Render paragraph (check table/image pagination inside)
-                let (para_html, table_htmls, obj_pagination_result) = render_paragraph(
-                    paragraph,
-                    &context,
-                    &mut state,
-                    &mut pagination_context, // 페이지네이션 컨텍스트 전달 / Pass pagination context
-                    0, // 처음 렌더링이므로 건너뛸 테이블 없음 / No tables to skip on first render
-                );
+                let (para_html, table_htmls, obj_pagination_result) =
+                    if multi_col_state.is_some() {
+                        // 다단: 테이블/페이지네이션만, para_html 무시
+                        // 인라인 콘텐츠가 이미 컬럼에 렌더링된 경우 table_htmls에서 제외
+                        // Skip table_htmls when inline content already rendered in columns
+                        let (_, table_htmls, obj_result) = render_paragraph(
+                            paragraph,
+                            &context,
+                            &mut state,
+                            &mut pagination_context,
+                            0,
+                        );
+                        let filtered_table_htmls = if mc_has_inline_content {
+                            Vec::new() // 인라인 콘텐츠는 이미 컬럼에 렌더링됨
+                        } else {
+                            table_htmls
+                        };
+                        (String::new(), filtered_table_htmls, obj_result)
+                    } else {
+                        // 단일 컬럼 (기존 로직)
+                        render_paragraph(
+                            paragraph,
+                            &context,
+                            &mut state,
+                            &mut pagination_context,
+                            0,
+                        )
+                    };
 
                 // 3. 객체 페이지네이션 결과 처리 / Handle object pagination result
                 let has_obj_page_break = obj_pagination_result
                     .as_ref()
                     .map(|r| {
-                        r.has_page_break && (!page_content.is_empty() || !page_tables.is_empty())
+                        r.has_page_break
+                            && (!page_content.is_empty()
+                                || !page_blocks.is_empty()
+                                || !page_tables.is_empty())
                     })
                     .unwrap_or(false);
 
                 if let Some(ref obj_result) = obj_pagination_result {
                     if obj_result.has_page_break
-                        && (!page_content.is_empty() || !page_tables.is_empty())
+                        && (!page_content.is_empty()
+                            || !page_blocks.is_empty()
+                            || !page_tables.is_empty())
                     {
                         // TableOverflow가 문단의 두 번째 이후 테이블에서 발생한 경우,
                         // 오버플로우 이전 테이블들은 현재 페이지에 정상적으로 배치되어야 함.
@@ -471,9 +981,17 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 .unwrap_or(24.99);
                             Some((left, top))
                         };
+                        // 남은 단일 컬럼 콘텐츠를 블록으로 플러시 / Flush remaining single-column content to block
+                        if !page_content.is_empty() {
+                            page_blocks.push(HcIBlock {
+                                html: std::mem::take(&mut page_content),
+                                left_mm: None,
+                                top_mm: None,
+                            });
+                        }
                         html.push_str(&page::render_page(
                             page_number,
-                            &page_content,
+                            &page_blocks,
                             &page_tables,
                             page_def,
                             first_segment_pos,
@@ -486,6 +1004,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         ));
                         page_number += 1;
                         page_content.clear();
+                        page_blocks.clear();
                         page_tables.clear();
                         current_max_vertical_mm = 0.0;
                         pagination_context.current_max_vertical_mm = 0.0;
@@ -623,6 +1142,19 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 current_max_vertical_mm = vertical_mm;
                             }
                         }
+                        // 단일 컬럼 문단의 콘텐츠 하단 위치 추적 (다단 top_mm 계산용)
+                        // Track single-column paragraph content bottom (for multicolumn top_mm calculation)
+                        if multi_col_state.is_none() {
+                            if let Some(last_seg) = segments.last() {
+                                let seg_bottom = round_to_2dp(
+                                    int32_to_mm(last_seg.vertical_position)
+                                        + int32_to_mm(last_seg.line_height),
+                                );
+                                if seg_bottom > last_content_bottom_mm {
+                                    last_content_bottom_mm = seg_bottom;
+                                }
+                            }
+                        }
                         break;
                     }
                 }
@@ -638,7 +1170,17 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     }
 
     // 마지막 페이지 출력 / Output last page
-    if !page_content.is_empty() || !page_tables.is_empty() {
+    // 남은 다단 버퍼 플러시 / Flush remaining multicolumn buffers
+    flush_multicol_to_blocks(&mut multi_col_state, &mut page_blocks);
+    // 남은 단일 컬럼 콘텐츠를 블록으로 플러시 / Flush remaining single-column content to block
+    if !page_content.is_empty() {
+        page_blocks.push(HcIBlock {
+            html: std::mem::take(&mut page_content),
+            left_mm: None,
+            top_mm: None,
+        });
+    }
+    if !page_blocks.is_empty() || !page_tables.is_empty() {
         // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
         let hcd_pos = if let Some((left, top)) = hcd_position {
             Some((round_to_2dp(left), round_to_2dp(top)))
@@ -654,7 +1196,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         };
         html.push_str(&page::render_page(
             page_number,
-            &page_content,
+            &page_blocks,
             &page_tables,
             current_page_def,
             first_segment_pos,
