@@ -849,10 +849,10 @@ pub fn render_table(
             round_to_2dp(content_size.height),
         )
     } else {
-        // Fixture noori.html: 인라인 테이블(캡션 없음)은 htb가 hls 내부이므로 left/top 0 (hls가 이미 절대 위치 보유)
-        // Absolute table: htb uses table_position() absolute left/top
+        // 인라인 테이블(hls 내부): margin 오프셋 사용 / Inline table (inside hls): use margin offsets
+        // Absolute table: table_position() 절대 위치 사용 / Absolute table: use table_position() absolute position
         let (l, t) = if is_inline_table {
-            (0.0, 0.0)
+            (margin_left_mm, margin_top_mm)
         } else {
             (left_mm, top_mm)
         };

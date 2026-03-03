@@ -141,15 +141,28 @@ fn assign_column(first_vpos: f64, col_max_bottoms: &[f64]) -> (usize, bool) {
 fn convert_shape_to_inline(shape_html: &str) -> String {
     // hsG 내부의 hsR을 찾아서 인라인 스타일 추가
     // Find hsR inside hsG and add inline styles
-    // 구조: <div class="hsG" ...><div class="hsR" style="...">...</div></div>
-    // 목표: <div class="hsR" style="...;display:inline-block;position:relative;vertical-align:middle;">...</div>
+    // 구조: <div class="hsG" ...><div class="hsR" style="top:Xmm;left:Ymm;...">...</div></div>
+    // 목표: <div class="hsR" style="margin-bottom:0mm;margin-right:0mm;display:inline-block;position:relative;vertical-align:middle;top:0mm;left:0mm;...">...</div>
     if let Some(hsr_start) = shape_html.find(r#"<div class=""#) {
         // hsG 전체에서 첫 번째 hsR div 찾기
         if let Some(hsr_pos) = shape_html[hsr_start..].find("hsR") {
             let hsr_abs_pos = hsr_start + hsr_pos - 12; // div class=" 이전으로
             // hsG의 마지막 </div> 제거
             if let Some(last_div_end) = shape_html.rfind("</div>") {
-                let inner = &shape_html[hsr_abs_pos..last_div_end];
+                let mut inner = shape_html[hsr_abs_pos..last_div_end].to_string();
+                // 인라인 도형은 절대 위치가 아닌 상대 위치(0mm)를 사용
+                // Inline shapes use relative position (0mm) instead of absolute
+                // top:Xmm → top:0mm, left:Xmm → left:0mm
+                if let Some(top_start) = inner.find("top:") {
+                    if let Some(mm_end) = inner[top_start..].find("mm;") {
+                        inner.replace_range(top_start..top_start + mm_end + 3, "top:0mm;");
+                    }
+                }
+                if let Some(left_start) = inner.find("left:") {
+                    if let Some(mm_end) = inner[left_start..].find("mm;") {
+                        inner.replace_range(left_start..left_start + mm_end + 3, "left:0mm;");
+                    }
+                }
                 // hsR의 style에 인라인 속성 추가
                 return inner.replacen(
                     "style=\"",
