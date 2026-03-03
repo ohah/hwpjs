@@ -173,6 +173,7 @@ fn render_rectangle_shape(
     let mut shape_width_hu: u32 = 0;
     let mut shape_height_hu: u32 = 0;
     let mut shape_content_paragraphs: Option<&[Paragraph]> = None;
+    let mut shape_vertical_align = crate::document::bodytext::list_header::VerticalAlign::Top;
 
     for record in children {
         if let ParagraphRecord::ShapeComponent {
@@ -183,8 +184,13 @@ fn render_rectangle_shape(
             shape_width_hu = shape_component.width;
             shape_height_hu = shape_component.height;
             for child in sc_children {
-                if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
+                if let ParagraphRecord::ListHeader {
+                    header,
+                    paragraphs,
+                } = child
+                {
                     shape_content_paragraphs = Some(paragraphs);
+                    shape_vertical_align = header.attribute.vertical_align;
                     break;
                 }
             }
@@ -221,7 +227,13 @@ fn render_rectangle_shape(
     );
 
     let content_html = if let Some(paras) = shape_content_paragraphs {
-        render_shape_content(paras, document, options)
+        render_shape_content(
+            paras,
+            document,
+            options,
+            Some((shape_height_hu, stroke_width)),
+            shape_vertical_align,
+        )
     } else {
         String::new()
     };
@@ -430,6 +442,8 @@ fn render_shape_content(
     paragraphs: &[Paragraph],
     document: &HwpDocument,
     options: &HtmlOptions,
+    container_dims: Option<(u32, f64)>, // (shape_height_hu, stroke_width)
+    vertical_align: crate::document::bodytext::list_header::VerticalAlign,
 ) -> String {
     use crate::document::bodytext::LineSegmentInfo;
     use crate::viewer::html::line_segment::{
@@ -482,6 +496,7 @@ fn render_shape_content(
     let mut col_contents: Vec<String> = vec![String::new(); col_count_usize];
     let mut content_h_mm: f64 = 0.0;
     let mut seg_width_mm: f64 = 0.0;
+    let first_vpos: i32;
 
     let mut pattern_counter = 0usize;
     let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
@@ -585,6 +600,10 @@ fn render_shape_content(
         seg_width_mm = round_to_2dp(int32_to_mm(all_line_segments[0].segment_width));
     }
 
+    // 첫 번째 line segment의 vertical_position을 top 오프셋으로 사용
+    // Use first line segment's vertical_position as top offset
+    first_vpos = all_line_segments[0].vertical_position;
+
     // 첫 번째 컬럼 그룹의 높이를 content_h_mm으로 사용
     // Use first column group's height as content_h_mm
     let (first_start, first_end) = col_groups[0];
@@ -655,19 +674,72 @@ fn render_shape_content(
         ));
     }
 
+    // 수직 정렬 오프셋 계산 / Compute vertical alignment offset
+    // 컨테이너 높이에서 마진을 뺀 가용 높이와 컨텐츠 높이의 차이로 정렬 오프셋을 계산
+    // Compute alignment offset from difference between available height (container minus margins)
+    // and content height. Skip negligible offsets (< 0.1mm).
+    let top_mm = if let Some((shape_h_hu, stroke_w)) = container_dims {
+        use crate::document::bodytext::list_header::VerticalAlign;
+        // 라운딩 오차 방지를 위해 원본 HWP 단위에서 직접 계산
+        // Compute from raw HWP units to avoid rounding error accumulation
+        let margin_hu = 298;
+        let raw_available = int32_to_mm(shape_h_hu as i32) + stroke_w
+            - 2.0 * int32_to_mm(margin_hu);
+        let raw_content = if let Some(last) = all_line_segments
+            .get(col_groups[0].0..col_groups[0].1)
+            .and_then(|s| s.last())
+        {
+            int32_to_mm(last.vertical_position + last.line_height)
+        } else {
+            0.0
+        };
+        let offset = match vertical_align {
+            VerticalAlign::Center if raw_available > raw_content => {
+                round_to_2dp((raw_available - raw_content) / 2.0)
+            }
+            VerticalAlign::Bottom if raw_available > raw_content => {
+                round_to_2dp(raw_available - raw_content)
+            }
+            _ => 0.0,
+        };
+        if offset.abs() >= 0.1 {
+            offset
+        } else {
+            round_to_2dp(int32_to_mm(first_vpos))
+        }
+    } else {
+        round_to_2dp(int32_to_mm(first_vpos))
+    };
+
     for (col, col_html) in col_contents.iter().enumerate() {
+        let top_style = if top_mm.abs() > 0.001 {
+            format!("top:{}mm;", top_mm)
+        } else {
+            String::new()
+        };
+
         if col == 0 {
-            hcd_inner.push_str(&format!(
-                r#"<div class="{p}hcI">{c}</div>"#,
-                p = prefix,
-                c = col_html,
-            ));
+            if top_style.is_empty() {
+                hcd_inner.push_str(&format!(
+                    r#"<div class="{p}hcI">{c}</div>"#,
+                    p = prefix,
+                    c = col_html,
+                ));
+            } else {
+                hcd_inner.push_str(&format!(
+                    r#"<div class="{p}hcI" style="{t}">{c}</div>"#,
+                    p = prefix,
+                    t = top_style,
+                    c = col_html,
+                ));
+            }
         } else {
             let col_left_mm = round_to_2dp(seg_width_mm + col_spacing_mm);
             hcd_inner.push_str(&format!(
-                r#"<div class="{p}hcI" style="left:{l}mm;">{c}</div>"#,
+                r#"<div class="{p}hcI" style="left:{l}mm;{t}">{c}</div>"#,
                 p = prefix,
                 l = col_left_mm,
+                t = top_style,
                 c = col_html,
             ));
         }
