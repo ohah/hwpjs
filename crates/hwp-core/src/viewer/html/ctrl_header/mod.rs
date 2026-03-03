@@ -22,10 +22,19 @@ mod section_def_test;
 #[cfg(test)]
 mod shape_object_test;
 
+use crate::document::bodytext::PageDef;
 use crate::document::{CtrlHeader, CtrlId, Paragraph, ParagraphRecord};
 use crate::viewer::html::line_segment::{ImageInfo, TableInfo};
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
+
+/// 그리기 개체 위치 계산에 필요한 컨텍스트
+/// Context needed for computing shape object absolute position
+pub struct ShapePositionContext<'a> {
+    pub hcd_position: Option<(f64, f64)>,
+    pub page_def: Option<&'a PageDef>,
+    pub page_number: usize,
+}
 
 /// children에서 ListHeader의 paragraphs 반환, 없으면 ctrl_paragraphs 사용.
 /// Return paragraphs from ListHeader in children, or ctrl_paragraphs if not found.
@@ -99,6 +108,7 @@ pub fn process_ctrl_header<'a>(
     document: &'a HwpDocument,
     options: &'a HtmlOptions,
     note_state: Option<&mut FootnoteEndnoteState<'_>>,
+    shape_pos: Option<&ShapePositionContext<'_>>,
 ) -> CtrlHeaderResult<'a> {
     match header.ctrl_id.as_str() {
         CtrlId::TABLE => {
@@ -107,7 +117,9 @@ pub fn process_ctrl_header<'a>(
         }
         CtrlId::SHAPE_OBJECT => {
             // 그리기 개체 처리 / Process shape object
-            shape_object::process_shape_object(header, children, paragraphs, document, options)
+            shape_object::process_shape_object(
+                header, children, paragraphs, document, options, shape_pos,
+            )
         }
         CtrlId::SECTION_DEF => {
             // 구역 정의 처리 / Process section definition

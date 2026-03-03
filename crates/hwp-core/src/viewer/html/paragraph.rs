@@ -1,5 +1,5 @@
 use super::common;
-use super::ctrl_header::{self, FootnoteEndnoteState};
+use super::ctrl_header::{self, FootnoteEndnoteState, ShapePositionContext};
 use super::line_segment::{
     DocumentRenderState, ImageInfo, LineSegmentContent, LineSegmentRenderContext, TableInfo,
 };
@@ -32,6 +32,8 @@ pub struct ParagraphPosition<'a> {
     pub table_fragment_height_mm: Option<f64>,
     /// 재렌더 시 table_fragment_height_mm을 적용할 테이블의 루프 인덱스(0-based). None이면 첫 테이블(0)에만 적용.
     pub table_fragment_apply_at_index: Option<usize>,
+    /// 현재 페이지 번호 (1-based, inside/outside 정렬에 사용)
+    pub page_number: usize,
 }
 
 /// 문단 렌더링 컨텍스트 / Paragraph rendering context
@@ -83,6 +85,7 @@ pub fn render_paragraphs_fragment_with_hls(
         content_height_mm: None,
         table_fragment_height_mm: None,
         table_fragment_apply_at_index: None,
+        page_number: 1,
     };
     let context = ParagraphRenderContext {
         document,
@@ -390,6 +393,11 @@ pub fn render_paragraph(
                 ..
             } => {
                 // CtrlHeader 처리 / Process CtrlHeader
+                let shape_pos_ctx = ShapePositionContext {
+                    hcd_position: context.position.hcd_position,
+                    page_def: context.position.page_def,
+                    page_number: context.position.page_number,
+                };
                 let ctrl_result = ctrl_header::process_ctrl_header(
                     header,
                     children,
@@ -397,6 +405,7 @@ pub fn render_paragraph(
                     document,
                     options,
                     state.note_state.as_deref_mut(),
+                    Some(&shape_pos_ctx),
                 );
                 if let Some(ref s) = ctrl_result.footnote_ref_html {
                     footnote_refs.push(s.clone());

@@ -1,4 +1,4 @@
-use super::CtrlHeaderResult;
+use super::{CtrlHeaderResult, ShapePositionContext};
 use crate::document::bodytext::ctrl_header::VertRelTo;
 use crate::document::bodytext::control_char::ControlChar;
 use crate::document::bodytext::{ParaTextRun, ParagraphRecord};
@@ -17,6 +17,7 @@ pub fn process_shape_object<'a>(
     paragraphs: &'a [Paragraph],
     document: &'a HwpDocument,
     options: &'a HtmlOptions,
+    shape_pos: Option<&ShapePositionContext<'_>>,
 ) -> CtrlHeaderResult<'a> {
     let mut result = CtrlHeaderResult::new();
 
@@ -104,7 +105,9 @@ pub fn process_shape_object<'a>(
     });
 
     if has_rectangle_shape {
-        if let Some(html) = render_rectangle_shape(header, children, document, options) {
+        if let Some(html) =
+            render_rectangle_shape(header, children, document, options, shape_pos)
+        {
             result.shape_html = Some(html);
             return result;
         }
@@ -146,6 +149,7 @@ fn render_rectangle_shape(
     children: &[ParagraphRecord],
     document: &HwpDocument,
     options: &HtmlOptions,
+    _shape_pos: Option<&ShapePositionContext<'_>>,
 ) -> Option<String> {
     let (offset_x, offset_y, _obj_width, _obj_height, caption) = match &header.data {
         CtrlHeaderData::ObjectCommon {
