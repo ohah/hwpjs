@@ -174,6 +174,7 @@ fn collect_images(
             ParagraphRecord::ShapeComponent {
                 shape_component,
                 children,
+                ..
             } => {
                 for child in children {
                     if let ParagraphRecord::ShapeComponentPicture {
@@ -309,6 +310,7 @@ pub fn render_paragraph(
             ParagraphRecord::ShapeComponent {
                 shape_component,
                 children,
+                ..
             } => {
                 // ShapeComponent의 children에서 이미지 찾기 / Find images in ShapeComponent's children
                 for child in children {

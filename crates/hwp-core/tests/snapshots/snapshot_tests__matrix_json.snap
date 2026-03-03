@@ -2138,6 +2138,28 @@ expression: json
                         ]
                       }
                     },
+                    "drawing_object_common": {
+                      "line_info": {
+                        "color": {
+                          "r": 0,
+                          "g": 0,
+                          "b": 0
+                        },
+                        "thickness": 33,
+                        "line_type": "solid",
+                        "line_end_shape": 1,
+                        "start_arrow_shape": 0,
+                        "end_arrow_shape": 0,
+                        "start_arrow_size": 4,
+                        "end_arrow_size": 4,
+                        "fill_start_arrow": true,
+                        "fill_end_arrow": true,
+                        "outline_style": 0
+                      },
+                      "fill_info": {
+                        "type": "none"
+                      }
+                    },
                     "children": [
                       {
                         "type": "list_header",
@@ -2376,6 +2398,28 @@ expression: json
                         ]
                       }
                     },
+                    "drawing_object_common": {
+                      "line_info": {
+                        "color": {
+                          "r": 0,
+                          "g": 0,
+                          "b": 0
+                        },
+                        "thickness": 33,
+                        "line_type": "solid",
+                        "line_end_shape": 1,
+                        "start_arrow_shape": 0,
+                        "end_arrow_shape": 0,
+                        "start_arrow_size": 4,
+                        "end_arrow_size": 4,
+                        "fill_start_arrow": true,
+                        "fill_end_arrow": true,
+                        "outline_style": 0
+                      },
+                      "fill_info": {
+                        "type": "none"
+                      }
+                    },
                     "children": [
                       {
                         "type": "list_header",
@@ -2612,6 +2656,28 @@ expression: json
                             }
                           }
                         ]
+                      }
+                    },
+                    "drawing_object_common": {
+                      "line_info": {
+                        "color": {
+                          "r": 0,
+                          "g": 0,
+                          "b": 0
+                        },
+                        "thickness": 33,
+                        "line_type": "solid",
+                        "line_end_shape": 1,
+                        "start_arrow_shape": 0,
+                        "end_arrow_shape": 0,
+                        "start_arrow_size": 4,
+                        "end_arrow_size": 4,
+                        "fill_start_arrow": true,
+                        "fill_end_arrow": true,
+                        "outline_style": 0
+                      },
+                      "fill_info": {
+                        "type": "none"
                       }
                     },
                     "children": [

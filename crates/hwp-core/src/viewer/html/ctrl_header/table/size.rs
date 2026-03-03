@@ -30,6 +30,7 @@ fn cell_max_shape_height_from_records(records: &[ParagraphRecord]) -> Option<f64
             ParagraphRecord::ShapeComponent {
                 shape_component,
                 children,
+                ..
             } => {
                 if let Some(h) = find_max_shape_height(children, shape_component.height) {
                     max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(h));
@@ -81,6 +82,7 @@ pub(crate) fn find_max_shape_height(
             ParagraphRecord::ShapeComponent {
                 shape_component,
                 children: nested_children,
+                ..
             } => {
                 if let Some(height) = find_max_shape_height(nested_children, shape_component.height)
                 {

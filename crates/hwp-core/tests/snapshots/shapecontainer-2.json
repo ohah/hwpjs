@@ -2460,6 +2460,28 @@
                         ]
                       }
                     },
+                    "drawing_object_common": {
+                      "line_info": {
+                        "color": {
+                          "r": 3,
+                          "g": 0,
+                          "b": 99
+                        },
+                        "thickness": 1768105074,
+                        "line_type": "solid",
+                        "line_end_shape": 1,
+                        "start_arrow_shape": 9,
+                        "end_arrow_shape": 46,
+                        "start_arrow_size": 13,
+                        "end_arrow_size": 11,
+                        "fill_start_arrow": true,
+                        "fill_end_arrow": false,
+                        "outline_style": 99
+                      },
+                      "fill_info": {
+                        "type": "none"
+                      }
+                    },
                     "children": [
                       {
                         "type": "shape_component",
@@ -2495,6 +2517,28 @@
                               ]
                             },
                             "matrix_sequence": []
+                          }
+                        },
+                        "drawing_object_common": {
+                          "line_info": {
+                            "color": {
+                              "r": 0,
+                              "g": 0,
+                              "b": 240
+                            },
+                            "thickness": 0,
+                            "line_type": "none",
+                            "line_end_shape": 0,
+                            "start_arrow_shape": 0,
+                            "end_arrow_shape": 0,
+                            "start_arrow_size": 0,
+                            "end_arrow_size": 0,
+                            "fill_start_arrow": false,
+                            "fill_end_arrow": false,
+                            "outline_style": 0
+                          },
+                          "fill_info": {
+                            "type": "none"
                           }
                         },
                         "children": [
@@ -2552,6 +2596,28 @@
                               ]
                             },
                             "matrix_sequence": []
+                          }
+                        },
+                        "drawing_object_common": {
+                          "line_info": {
+                            "color": {
+                              "r": 0,
+                              "g": 0,
+                              "b": 240
+                            },
+                            "thickness": 0,
+                            "line_type": "none",
+                            "line_end_shape": 0,
+                            "start_arrow_shape": 0,
+                            "end_arrow_shape": 0,
+                            "start_arrow_size": 0,
+                            "end_arrow_size": 0,
+                            "fill_start_arrow": false,
+                            "fill_end_arrow": false,
+                            "outline_style": 0
+                          },
+                          "fill_info": {
+                            "type": "none"
                           }
                         },
                         "children": [
@@ -2652,6 +2718,28 @@
                             "matrix_sequence": []
                           }
                         },
+                        "drawing_object_common": {
+                          "line_info": {
+                            "color": {
+                              "r": 0,
+                              "g": 0,
+                              "b": 240
+                            },
+                            "thickness": 0,
+                            "line_type": "none",
+                            "line_end_shape": 0,
+                            "start_arrow_shape": 0,
+                            "end_arrow_shape": 0,
+                            "start_arrow_size": 0,
+                            "end_arrow_size": 0,
+                            "fill_start_arrow": false,
+                            "fill_end_arrow": false,
+                            "outline_style": 0
+                          },
+                          "fill_info": {
+                            "type": "none"
+                          }
+                        },
                         "children": [
                           {
                             "type": "shape_component",
@@ -2687,6 +2775,28 @@
                                   ]
                                 },
                                 "matrix_sequence": []
+                              }
+                            },
+                            "drawing_object_common": {
+                              "line_info": {
+                                "color": {
+                                  "r": 0,
+                                  "g": 0,
+                                  "b": 240
+                                },
+                                "thickness": 0,
+                                "line_type": "none",
+                                "line_end_shape": 0,
+                                "start_arrow_shape": 0,
+                                "end_arrow_shape": 0,
+                                "start_arrow_size": 0,
+                                "end_arrow_size": 0,
+                                "fill_start_arrow": false,
+                                "fill_end_arrow": false,
+                                "outline_style": 0
+                              },
+                              "fill_info": {
+                                "type": "none"
                               }
                             },
                             "children": [
@@ -2911,6 +3021,28 @@
                                   ]
                                 },
                                 "matrix_sequence": []
+                              }
+                            },
+                            "drawing_object_common": {
+                              "line_info": {
+                                "color": {
+                                  "r": 0,
+                                  "g": 0,
+                                  "b": 240
+                                },
+                                "thickness": 0,
+                                "line_type": "none",
+                                "line_end_shape": 0,
+                                "start_arrow_shape": 0,
+                                "end_arrow_shape": 0,
+                                "start_arrow_size": 0,
+                                "end_arrow_size": 0,
+                                "fill_start_arrow": false,
+                                "fill_end_arrow": false,
+                                "outline_style": 0
+                              },
+                              "fill_info": {
+                                "type": "none"
                               }
                             },
                             "children": [

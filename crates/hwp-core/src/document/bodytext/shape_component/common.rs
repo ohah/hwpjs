@@ -101,8 +101,8 @@ impl ShapeComponent {
     /// * `data` - ShapeComponent 데이터 / ShapeComponent data
     ///
     /// # Returns
-    /// 파싱된 ShapeComponent 구조체 / Parsed ShapeComponent structure
-    pub fn parse(data: &[u8]) -> Result<Self, HwpError> {
+    /// (파싱된 ShapeComponent 구조체, consumed byte count) / (Parsed ShapeComponent structure, consumed byte count)
+    pub fn parse(data: &[u8]) -> Result<(Self, usize), HwpError> {
         if data.len() < 4 {
             return Err(HwpError::insufficient_data("ShapeComponent", 4, data.len()));
         }
@@ -301,9 +301,9 @@ impl ShapeComponent {
                 rotation: rotation_matrix,
             });
         }
-        let _ = offset + matrix_sequence_size; // offset은 더 이상 사용되지 않음 / offset is no longer used
+        let consumed = offset + matrix_sequence_size;
 
-        Ok(ShapeComponent {
+        Ok((ShapeComponent {
             object_control_id,
             object_control_id2,
             group_offset: GroupOffset {
@@ -327,7 +327,7 @@ impl ShapeComponent {
                 translation_matrix,
                 matrix_sequence,
             },
-        })
+        }, consumed))
     }
 }
 

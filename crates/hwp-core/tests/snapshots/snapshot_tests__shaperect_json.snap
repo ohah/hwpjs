@@ -2194,6 +2194,39 @@ expression: json
                         ]
                       }
                     },
+                    "drawing_object_common": {
+                      "line_info": {
+                        "color": {
+                          "r": 0,
+                          "g": 0,
+                          "b": 0
+                        },
+                        "thickness": 33,
+                        "line_type": "none",
+                        "line_end_shape": 1,
+                        "start_arrow_shape": 0,
+                        "end_arrow_shape": 0,
+                        "start_arrow_size": 4,
+                        "end_arrow_size": 4,
+                        "fill_start_arrow": true,
+                        "fill_end_arrow": true,
+                        "outline_style": 0
+                      },
+                      "fill_info": {
+                        "type": "solid",
+                        "background_color": {
+                          "r": 102,
+                          "g": 204,
+                          "b": 255
+                        },
+                        "pattern_color": {
+                          "r": 0,
+                          "g": 0,
+                          "b": 0
+                        },
+                        "pattern_type": -1
+                      }
+                    },
                     "children": [
                       {
                         "type": "shape_component_rectangle",
@@ -2309,6 +2342,47 @@ expression: json
                                 0.0
                               ]
                             }
+                          }
+                        ]
+                      }
+                    },
+                    "drawing_object_common": {
+                      "line_info": {
+                        "color": {
+                          "r": 0,
+                          "g": 0,
+                          "b": 0
+                        },
+                        "thickness": 33,
+                        "line_type": "dash",
+                        "line_end_shape": 1,
+                        "start_arrow_shape": 0,
+                        "end_arrow_shape": 0,
+                        "start_arrow_size": 4,
+                        "end_arrow_size": 4,
+                        "fill_start_arrow": true,
+                        "fill_end_arrow": true,
+                        "outline_style": 0
+                      },
+                      "fill_info": {
+                        "type": "gradient",
+                        "gradient_type": 1,
+                        "angle": 90,
+                        "horizontal_center": 1,
+                        "vertical_center": 2,
+                        "spread": 51,
+                        "color_count": 2,
+                        "positions": null,
+                        "colors": [
+                          {
+                            "r": 255,
+                            "g": 255,
+                            "b": 255
+                          },
+                          {
+                            "r": 17,
+                            "g": 17,
+                            "b": 17
                           }
                         ]
                       }
@@ -2599,6 +2673,28 @@ expression: json
                         ]
                       }
                     },
+                    "drawing_object_common": {
+                      "line_info": {
+                        "color": {
+                          "r": 0,
+                          "g": 0,
+                          "b": 0
+                        },
+                        "thickness": 33,
+                        "line_type": "dot",
+                        "line_end_shape": 1,
+                        "start_arrow_shape": 0,
+                        "end_arrow_shape": 0,
+                        "start_arrow_size": 4,
+                        "end_arrow_size": 4,
+                        "fill_start_arrow": true,
+                        "fill_end_arrow": true,
+                        "outline_style": 0
+                      },
+                      "fill_info": {
+                        "type": "none"
+                      }
+                    },
                     "children": [
                       {
                         "type": "shape_component_rectangle",
@@ -2716,6 +2812,39 @@ expression: json
                             }
                           }
                         ]
+                      }
+                    },
+                    "drawing_object_common": {
+                      "line_info": {
+                        "color": {
+                          "r": 255,
+                          "g": 0,
+                          "b": 51
+                        },
+                        "thickness": 33,
+                        "line_type": "dash_dot",
+                        "line_end_shape": 1,
+                        "start_arrow_shape": 0,
+                        "end_arrow_shape": 0,
+                        "start_arrow_size": 4,
+                        "end_arrow_size": 4,
+                        "fill_start_arrow": true,
+                        "fill_end_arrow": true,
+                        "outline_style": 0
+                      },
+                      "fill_info": {
+                        "type": "solid",
+                        "background_color": {
+                          "r": 255,
+                          "g": 255,
+                          "b": 255
+                        },
+                        "pattern_color": {
+                          "r": 0,
+                          "g": 0,
+                          "b": 0
+                        },
+                        "pattern_type": 5
                       }
                     },
                     "children": [

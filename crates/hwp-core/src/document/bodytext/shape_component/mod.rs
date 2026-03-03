@@ -1,4 +1,5 @@
 mod common;
+pub mod drawing_object_common;
 
 mod arc;
 mod container;
@@ -16,6 +17,7 @@ pub use arc::ShapeComponentArc;
 pub use common::ShapeComponent;
 pub use container::ShapeComponentContainer;
 pub use curve::ShapeComponentCurve;
+pub use drawing_object_common::DrawingObjectCommon;
 pub use ellipse::ShapeComponentEllipse;
 pub use line::ShapeComponentLine;
 pub use ole::ShapeComponentOle;

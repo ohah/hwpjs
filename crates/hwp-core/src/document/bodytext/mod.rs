@@ -42,6 +42,7 @@ pub use page_border_fill::PageBorderFill;
 pub use page_def::{PageDef, PaperDirection};
 pub use para_header::{ColumnDivideType, ControlMask, ParaHeader};
 pub use range_tag::{ParaRangeTag, RangeTagInfo};
+pub use shape_component::DrawingObjectCommon;
 pub use shape_component::ShapeComponent;
 pub use shape_component::ShapeComponentArc;
 pub use shape_component::ShapeComponentContainer;
@@ -184,6 +185,9 @@ pub enum ParagraphRecord {
     ShapeComponent {
         /// 개체 요소 정보 / Shape component information
         shape_component: ShapeComponent,
+        /// 그리기 개체 공통 속성 (표 81) / Drawing object common properties (Table 81)
+        #[serde(skip_serializing_if = "Option::is_none", default)]
+        drawing_object_common: Option<DrawingObjectCommon>,
         /// 개체 요소의 자식 레코드 (레벨 3, 예: SHAPE_COMPONENT_PICTURE) / Child records of shape component (level 3, e.g., SHAPE_COMPONENT_PICTURE)
         #[serde(skip_serializing_if = "Vec::is_empty", default)]
         children: Vec<ParagraphRecord>,
@@ -1396,7 +1400,14 @@ impl Section {
             HwpTag::SHAPE_COMPONENT => {
                 // 개체 요소 파싱 / Parse shape component
                 // 스펙 문서 매핑: 표 82, 83 - 개체 요소 속성 / Spec mapping: Table 82, 83 - Shape component attributes
-                let shape_component = ShapeComponent::parse(node.data())?;
+                let (shape_component, consumed) = ShapeComponent::parse(node.data())?;
+
+                // 표 81: 그리기 개체 공통 속성 파싱 / Table 81: Parse drawing object common properties
+                let drawing_object_common = if consumed < node.data().len() {
+                    DrawingObjectCommon::parse(&node.data()[consumed..]).ok()
+                } else {
+                    None
+                };
 
                 // SHAPE_COMPONENT의 children을 재귀적으로 처리
                 // Recursively process SHAPE_COMPONENT's children
@@ -1480,6 +1491,7 @@ impl Section {
 
                 Ok(ParagraphRecord::ShapeComponent {
                     shape_component,
+                    drawing_object_common,
                     children,
                 })
             }
