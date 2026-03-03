@@ -139,20 +139,18 @@ pub fn render_line_segment(
         line_height_value, left_mm, top_mm, height_mm, width_mm
     );
 
-    // padding-left 처리 (들여쓰기) / Handle padding-left (indentation)
+    // padding-left 처리 (들여쓰기/내어쓰기) / Handle padding-left (indentation)
     if segment.tag.has_indentation {
-        // NOTE:
-        // HWP ParaShape의 `indent`는 첫 줄 들여쓰기(음수 가능; 내어쓰기/행잉 인덴트 표현)이고,
-        // `outdent`는 다음 줄(들여쓰기 적용 라인)의 오프셋으로 사용하는 값입니다.
-        // fixture(noori.html)에서 line_segment.tag.has_indentation=true인 라인은
-        // padding-left가 양수로 적용되는데, 이는 `indent`가 아니라 `outdent`에 해당합니다.
-        //
-        // 우선순위: ParaShape.outdent → (fallback) 전달받은 para_shape_indent
+        // HWP ParaShape.indent:
+        //   양수 → 들여쓰기 (첫 줄 들여쓰기, has_indentation이 첫 줄에 설정)
+        //   음수 → 내어쓰기 (둘째 줄 이후 들여쓰기, has_indentation이 둘째 줄 이후에 설정)
+        // padding-left = int32_to_mm(abs(indent)) / 2.0
+        // NOTE: /2.0 보정은 fixture 역산으로 도출 (정확한 스펙 근거 미확인)
         if let Some(ps) = para_shape {
-            let outdent_mm = round_to_2dp(int32_to_mm(ps.outdent));
-            style.push_str(&format!("padding-left:{:.2}mm;", outdent_mm));
+            let indent_mm = round_to_2dp(int32_to_mm(ps.indent.abs()) / 2.0);
+            style.push_str(&format!("padding-left:{:.2}mm;", indent_mm));
         } else if let Some(indent) = para_shape_indent {
-            let indent_mm = round_to_2dp(int32_to_mm(indent));
+            let indent_mm = round_to_2dp(int32_to_mm(indent.abs()) / 2.0);
             style.push_str(&format!("padding-left:{:.2}mm;", indent_mm));
         }
     }
