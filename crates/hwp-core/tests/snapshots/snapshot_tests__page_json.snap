@@ -2031,9 +2031,10 @@ expression: json
                   "shape": 0,
                   "position": "bottom_center"
                 },
+                "number": 0,
                 "user_symbol": "\u0000",
                 "prefix": "\u0000",
-                "suffix": "\u0000"
+                "suffix": "-"
               }
             ]
           },

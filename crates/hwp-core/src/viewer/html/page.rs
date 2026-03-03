@@ -149,8 +149,24 @@ pub fn render_page(
             let prefix_clean: String = prefix.chars().filter(|c| *c != '\0').collect();
             let suffix_clean: String = suffix.chars().filter(|c| *c != '\0').collect();
 
-            let page_number_text =
-                format!("{}{}{}", prefix_clean, actual_page_number, suffix_clean);
+            // 장식 문자 포맷팅 / Decoration character formatting
+            // prefix가 비어있고 suffix가 있으면 suffix를 대칭 장식으로 사용 (예: suffix="-" → "- 1 -")
+            // If prefix is empty and suffix exists, use suffix as symmetric decoration (e.g. suffix="-" → "- 1 -")
+            let page_number_text = if prefix_clean.is_empty() && !suffix_clean.is_empty() {
+                format!(
+                    "{} {} {}",
+                    suffix_clean, actual_page_number, suffix_clean
+                )
+            } else if !prefix_clean.is_empty() || !suffix_clean.is_empty() {
+                format!(
+                    "{} {} {}",
+                    prefix_clean, actual_page_number, suffix_clean
+                )
+                .trim()
+                .to_string()
+            } else {
+                actual_page_number.clone()
+            };
 
             // 페이지 크기 계산 / Calculate page size
             let page_width_mm = page_def
@@ -240,8 +256,8 @@ pub fn render_page(
             };
 
             // CharShape 정보로 텍스트 크기 계산 / Calculate text size from CharShape
-            // 원본 HTML에서 cs1 클래스를 사용하므로 shape_id 1 (0-based) 사용 / Use shape_id 1 (0-based) since original HTML uses cs1 class
-            let char_shape_id = 1;
+            // 쪽번호는 기본 char_shape (shape_id 0)을 사용 / Page numbers use the default char_shape (shape_id 0)
+            let char_shape_id = 0;
             let (width_mm, height_mm) = if char_shape_id < document.doc_info.char_shapes.len() {
                 if let Some(char_shape) = document.doc_info.char_shapes.get(char_shape_id) {
                     // 폰트 크기 계산 (base_size는 1/100 pt 단위) / Calculate font size (base_size is in 1/100 pt units)
@@ -266,8 +282,8 @@ pub fn render_page(
             };
 
             html.push_str(&format!(
-                r#"<div class="hpN" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><span class="hrt cs1">{}</span></div>"#,
-                left_mm, top_mm, width_mm, height_mm, page_number_text
+                r#"<div class="hpN" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;"><span class="hrt cs{}">{}</span></div>"#,
+                left_mm, top_mm, width_mm, height_mm, char_shape_id, page_number_text
             ));
         }
     }
