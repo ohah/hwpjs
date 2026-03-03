@@ -377,16 +377,33 @@ pub fn format_numbering_string(format_string: &str, number: u32, number_type: Nu
 /// Returns (bullet_char, font_size_pt)
 pub fn pua_to_bullet_info(pua_char: u16) -> (char, f64) {
     match pua_char {
-        // Wingdings bullet mappings (hex only, decimal is same value)
-        0xF06C => ('●', 6.67), // Bullet[0] - large circle
-        0xF09F => ('●', 3.33), // Bullet[1] - small circle
-        0xF06E => ('◆', 6.67), // Diamond
-        0xF075 => ('■', 6.67), // Square
-        0xF076 => ('□', 6.67), // Open square
-        0xF0A7 => ('◈', 6.67), // Diamond bullet
-        0xF0A8 => ('○', 6.67), // Open circle
-        0xF0B7 => ('●', 6.67), // Standard bullet
-        _ => ('●', 6.67),      // default
+        // PUA Wingdings 매핑 (large variants: 6.67pt)
+        0xF06C => ('●', 6.67), // large filled circle
+        0xF06E => ('■', 6.67), // large filled square
+        0xF075 => ('◆', 6.67), // large filled diamond
+        0xF0B7 => ('●', 6.67), // standard bullet
+        // PUA Wingdings 매핑 (small variants: 3.33pt)
+        0xF09F => ('●', 3.33), // small filled circle
+        0xF077 => ('◆', 3.33), // small filled diamond
+        0xF0A7 => ('■', 3.33), // small filled square
+        0xF0A8 => ('◆', 3.33), // small filled diamond (alternate)
+        // PUA Wingdings 매핑 (10pt — 장식 심볼)
+        0xF046 => ('☞', 10.0), // pointing hand
+        0xF06F => ('□', 10.0), // open square
+        0xF076 => ('❖', 10.0), // four-pointed star
+        0xF0A1 => ('◯', 10.0), // large circle
+        0xF0A4 => ('⊙', 10.0), // circled dot
+        0xF0AB => ('★', 10.0), // black star
+        0xF0FC => ('✓', 10.0), // check mark
+        0xF0FE => ('☑', 10.0), // ballot box with check
+        // 비PUA 유니코드: 직접 사용 + 10pt
+        _ => {
+            if let Some(ch) = char::from_u32(pua_char as u32) {
+                (ch, 10.0)
+            } else {
+                ('●', 6.67) // fallback
+            }
+        }
     }
 }
 

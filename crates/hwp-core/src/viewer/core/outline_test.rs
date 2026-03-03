@@ -347,17 +347,18 @@ fn test_pua_to_bullet_info_known_chars() {
     assert!((size - 3.33).abs() < 0.01);
 
     let (ch, _) = pua_to_bullet_info(0xF06E);
-    assert_eq!(ch, '◆');
+    assert_eq!(ch, '■');
 
     let (ch, _) = pua_to_bullet_info(0xF075);
-    assert_eq!(ch, '■');
+    assert_eq!(ch, '◆');
 }
 
 #[test]
 fn test_pua_to_bullet_info_default() {
+    // 비PUA 유니코드: 직접 전달 + 10pt
     let (ch, size) = pua_to_bullet_info(0x0000);
-    assert_eq!(ch, '●');
-    assert!((size - 6.67).abs() < 0.01);
+    assert_eq!(ch, '\0');
+    assert!((size - 10.0).abs() < 0.01);
 }
 
 // ─── estimate_marker_width 테스트 ───
