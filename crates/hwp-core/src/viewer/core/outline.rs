@@ -502,11 +502,15 @@ fn compute_bullet_marker(
     let (bullet_char, font_size) = pua_to_bullet_info(bullet.bullet_char);
     let marker_text = bullet_char.to_string();
 
-    let char_shape_id = bullet.char_shape_id as usize;
-    let char_shape_class = if char_shape_id < document.doc_info.char_shapes.len() {
-        format!("cs{}", char_shape_id)
+    let char_shape_class = if bullet.char_shape_id >= 0 {
+        let cs_id = bullet.char_shape_id as usize;
+        if cs_id < document.doc_info.char_shapes.len() {
+            format!("cs{}", cs_id)
+        } else {
+            "cs0".to_string()
+        }
     } else {
-        "cs1".to_string()
+        "cs0".to_string() // char_shape_id == -1 → default
     };
 
     Some(MarkerInfo {
