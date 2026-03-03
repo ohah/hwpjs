@@ -1,8 +1,9 @@
 use super::{CtrlHeaderResult, ShapePositionContext};
 use crate::document::bodytext::ctrl_header::VertRelTo;
 use crate::document::bodytext::control_char::ControlChar;
+use crate::document::bodytext::shape_component::drawing_object_common::{DrawingObjectCommon, LineType};
 use crate::document::bodytext::{ParaTextRun, ParagraphRecord};
-use crate::document::{CtrlHeader, CtrlHeaderData, Paragraph};
+use crate::document::{CtrlHeader, CtrlHeaderData, FillInfo, Paragraph};
 use crate::viewer::html::common;
 use crate::viewer::html::line_segment::ImageInfo;
 use crate::viewer::html::paragraph::render_paragraphs_fragment;
@@ -173,22 +174,22 @@ fn render_rectangle_shape(
         _ => return None,
     };
 
-    let stroke_width = 0.12;
-    let half_stroke = 0.06;
-
     let mut shape_width_hu: u32 = 0;
     let mut shape_height_hu: u32 = 0;
     let mut shape_content_paragraphs: Option<&[Paragraph]> = None;
     let mut shape_vertical_align = crate::document::bodytext::list_header::VerticalAlign::Top;
+    let mut drawing_obj: Option<&DrawingObjectCommon> = None;
 
     for record in children {
         if let ParagraphRecord::ShapeComponent {
             shape_component,
+            drawing_object_common,
             children: sc_children,
         } = record
         {
             shape_width_hu = shape_component.width;
             shape_height_hu = shape_component.height;
+            drawing_obj = drawing_object_common.as_ref();
             for child in sc_children {
                 if let ParagraphRecord::ListHeader {
                     header,
@@ -204,6 +205,13 @@ fn render_rectangle_shape(
         }
     }
 
+    let line_type = drawing_obj
+        .map(|d| d.line_info.line_type)
+        .unwrap_or(LineType::Solid);
+    let _has_stroke = !matches!(line_type, LineType::None);
+    let stroke_width = 0.12;
+    let half_stroke = 0.06;
+
     if shape_width_hu == 0 || shape_height_hu == 0 {
         return None;
     }
@@ -215,23 +223,55 @@ fn render_rectangle_shape(
     let hsr_w_mm = round_to_2dp(shape_w_mm + stroke_width);
     let hsr_h_mm = round_to_2dp(shape_h_mm + stroke_width);
 
-    let svg_vb_w = round_to_2dp(hsr_w_mm + 2.0 * 0.30);
-    let svg_vb_h = round_to_2dp(hsr_h_mm + 2.0 * 0.30);
+    let has_content = shape_content_paragraphs.is_some();
+
+    // SVG fill 생성 / Generate SVG fill
+    let fill_info = drawing_obj.map(|d| &d.fill_info);
+    let (svg_defs, fill_attr) = build_svg_fill(fill_info, shape_w_raw, shape_h_raw);
+
+    // SVG stroke 스타일 생성 / Generate SVG stroke style
+    let stroke_style = build_svg_stroke(drawing_obj, stroke_width);
+
+    // 도형에 텍스트 콘텐츠가 있는 경우: hsT 래퍼 사용 / Shapes with text content: use hsT wrapper
+    // 콘텐츠가 없는 경우: SVG를 hsR에 직접 배치 / Shapes without content: place SVG directly in hsR
+    let (path_start_x, path_start_y, vb_margin) = if has_content {
+        (half_stroke, half_stroke, 0.30)
+    } else {
+        (0.0, 0.0, 0.15)
+    };
+
+    let path_end_x = round_to_2dp(shape_w_raw + path_start_x);
+    let path_end_y = round_to_2dp(shape_h_raw + path_start_y);
+    let svg_vb_w = round_to_2dp(hsr_w_mm + 2.0 * vb_margin);
+    let svg_vb_h = round_to_2dp(hsr_h_mm + 2.0 * vb_margin);
     let svg_style_w = round_to_2dp(hsr_w_mm + 2.0 * 0.15);
     let svg_style_h = round_to_2dp(hsr_h_mm + 2.0 * 0.15);
-    let path_end_x = round_to_2dp(shape_w_raw + half_stroke);
-    let path_end_y = round_to_2dp(shape_h_raw + half_stroke);
+
+    let path_d = format!(
+        "M{sx},{sy}L{ex},{sy}L{ex},{ey}L{sx},{ey}L{sx},{sy}Z ",
+        sx = path_start_x,
+        sy = path_start_y,
+        ex = path_end_x,
+        ey = path_end_y,
+    );
+
+    let path_style_attr = if stroke_style.is_empty() {
+        String::new()
+    } else {
+        format!(r#" style="{}""#, stroke_style)
+    };
 
     let svg_html = format!(
-        r#"<svg class="hs" viewBox="-0.30 -0.30 {vbw} {vbh}" style="left:-0.15mm;top:-0.15mm;width:{sw}mm;height:{sh}mm;"><path fill="none" d="M{hs},{hs}L{ex},{hs}L{ex},{ey}L{hs},{ey}L{hs},{hs}Z " style="stroke:#000000;stroke-linecap:butt;stroke-width:{st};"></path></svg>"#,
+        r#"<svg class="hs" viewBox="-{vm} -{vm} {vbw} {vbh}" style="left:-0.15mm;top:-0.15mm;width:{sw}mm;height:{sh}mm;">{defs}<path fill="{fill}" d="{d}"{ps}></path></svg>"#,
+        vm = vb_margin,
         vbw = svg_vb_w,
         vbh = svg_vb_h,
         sw = svg_style_w,
         sh = svg_style_h,
-        hs = half_stroke,
-        ex = path_end_x,
-        ey = path_end_y,
-        st = stroke_width,
+        defs = svg_defs,
+        fill = fill_attr,
+        d = path_d,
+        ps = path_style_attr,
     );
 
     let content_html = if let Some(paras) = shape_content_paragraphs {
@@ -248,15 +288,22 @@ fn render_rectangle_shape(
 
     let prefix = &options.css_class_prefix;
 
-    let hst_html = format!(
-        r#"<div class="{p}hsT" style="left:-{hs}mm;top:-{hs}mm;width:{w}mm;height:{h}mm;">{svg}{content}</div>"#,
-        p = prefix,
-        hs = half_stroke,
-        w = hsr_w_mm,
-        h = hsr_h_mm,
-        svg = svg_html,
-        content = content_html,
-    );
+    // 콘텐츠가 있는 경우: hsT 래퍼 / Content shapes: hsT wrapper
+    // 콘텐츠가 없는 경우: SVG를 직접 배치 / No-content shapes: place SVG directly
+    let hst_html = if has_content {
+        format!(
+            r#"<div class="{p}hsT" style="left:-{hs}mm;top:-{hs}mm;width:{w}mm;height:{h}mm;">{svg}{content}</div>"#,
+            p = prefix,
+            hs = half_stroke,
+            w = hsr_w_mm,
+            h = hsr_h_mm,
+            svg = svg_html,
+            content = content_html,
+        )
+    } else {
+        // 콘텐츠 없음: SVG를 직접 출력 / No content: output SVG directly
+        svg_html.clone()
+    };
 
     // 절대 위치 계산 / Compute absolute position
     let offset_x_mm = int32_to_mm(offset_x);
@@ -304,26 +351,32 @@ fn render_rectangle_shape(
 
     let binding_margin_mm = page_def.map(|pd| pd.binding_margin.to_mm()).unwrap_or(0.0);
 
+    let base_left_for_horz = if matches!(attribute.horz_rel_to, HorzRelTo::Paper) {
+        0.0
+    } else {
+        base_left
+    };
+
     // horz_relative: 0=left, 1=center, 2=right, 3=inside, 4=outside
     let abs_left = match attribute.horz_relative {
         1 => {
             // center
-            round_to_2dp(base_left + (ref_width - shape_w_mm) / 2.0 + offset_x_mm)
+            round_to_2dp(base_left_for_horz + (ref_width - shape_w_mm) / 2.0 + offset_x_mm)
         }
         2 => {
             // right
-            round_to_2dp(base_left + ref_width - shape_w_mm - offset_x_mm)
+            round_to_2dp(base_left_for_horz + ref_width - shape_w_mm - offset_x_mm)
         }
         3 => {
             // inside: odd→left, even→right (ref_width - binding_margin)
             let is_odd = page_number % 2 == 1;
             if is_odd {
                 // left alignment
-                round_to_2dp(base_left + offset_x_mm)
+                round_to_2dp(base_left_for_horz + offset_x_mm)
             } else {
                 // right alignment with binding_margin adjustment
                 let adj_width = ref_width - binding_margin_mm;
-                round_to_2dp(base_left + adj_width - shape_w_mm - offset_x_mm)
+                round_to_2dp(base_left_for_horz + adj_width - shape_w_mm - offset_x_mm)
             }
         }
         4 => {
@@ -331,15 +384,15 @@ fn render_rectangle_shape(
             let is_odd = page_number % 2 == 1;
             if is_odd {
                 // right alignment
-                round_to_2dp(base_left + ref_width - shape_w_mm - offset_x_mm)
+                round_to_2dp(base_left_for_horz + ref_width - shape_w_mm - offset_x_mm)
             } else {
                 // left alignment
-                round_to_2dp(base_left + offset_x_mm)
+                round_to_2dp(base_left_for_horz + offset_x_mm)
             }
         }
         _ => {
             // left (0) or unknown
-            round_to_2dp(base_left + offset_x_mm)
+            round_to_2dp(base_left_for_horz + offset_x_mm)
         }
     };
 
@@ -548,7 +601,7 @@ fn render_rectangle_shape(
                 };
 
                 let body = format!(
-                    r#"<div class="hls {ps}" style="line-height:{lh}mm;white-space:nowrap;left:0.00mm;top:{top}mm;height:{h}mm;width:{w}mm;">{content}</div>"#,
+                    r#"<div class="hls {ps}" style="line-height:{lh}mm;white-space:nowrap;left:0mm;top:{top}mm;height:{h}mm;width:{w}mm;">{content}</div>"#,
                     ps = ps_class,
                     lh = lh,
                     top = top_off,
@@ -591,6 +644,189 @@ fn render_rectangle_shape(
     );
 
     Some(html)
+}
+
+/// COLORREF를 #RRGGBB 문자열로 변환 / Convert COLORREF to #RRGGBB string
+fn colorref_to_hex(c: &crate::types::COLORREF) -> String {
+    format!("#{:02X}{:02X}{:02X}", c.r(), c.g(), c.b())
+}
+
+/// SVG fill 생성 (defs + fill attribute) / Build SVG fill (defs + fill attribute)
+/// Returns (defs_html, fill_attr) — e.g. ("<defs>...</defs>", "url(#w_00)") or ("", "none")
+fn build_svg_fill(
+    fill_info: Option<&FillInfo>,
+    shape_w: f64,
+    shape_h: f64,
+) -> (String, String) {
+    let fill = match fill_info {
+        Some(fi) => fi,
+        None => return (String::new(), "none".to_string()),
+    };
+
+    match fill {
+        FillInfo::None => (String::new(), "none".to_string()),
+        FillInfo::Solid(solid) => {
+            let bg_color = &solid.background_color;
+            let pattern_type = solid.pattern_type;
+
+            if pattern_type > 0 {
+                // 패턴 채우기 (크로스해치 등) / Pattern fill (crosshatch etc.)
+                let bg_r = bg_color.r();
+                let bg_g = bg_color.g();
+                let bg_b = bg_color.b();
+                let fg_r = solid.pattern_color.r();
+                let fg_g = solid.pattern_color.g();
+                let fg_b = solid.pattern_color.b();
+
+                let pattern_path = match pattern_type {
+                    // 가로줄 / Horizontal
+                    1 => r#"M0,1.5 l3,0"#.to_string(),
+                    // 세로줄 / Vertical
+                    2 => r#"M1.5,0 l0,3"#.to_string(),
+                    // \\\ (backslash)
+                    3 => r#"M0,0 l3,3 M-1,3 l1,1 M3,-1 l1,1"#.to_string(),
+                    // /// (forward slash)
+                    4 => r#"M-1,1 l1,-1 M0,3 l3,-3 M3,3 l1,-1"#.to_string(),
+                    // 크로스해치 X: \ and / lines
+                    5 => r#"M3,-1 l1,1 M0,0 l3,3 M-1,3 l1,1 M-1,1 l1,-1 M0,3 l3,-3 M3,3 l1,-1"#.to_string(),
+                    // + 격자 / Grid
+                    6 => r#"M0,1.5 l3,0 M1.5,0 l0,3"#.to_string(),
+                    _ => r#"M3,-1 l1,1 M0,0 l3,3 M-1,3 l1,1 M-1,1 l1,-1 M0,3 l3,-3 M3,3 l1,-1"#.to_string(),
+                };
+
+                let defs = format!(
+                    r#"<defs><pattern id="w_00" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="3" height="3" fill="rgb({},{},{})"/><path d='{}' stroke="rgb({},{},{})" stroke-width='0.2'/></pattern></defs>"#,
+                    bg_r, bg_g, bg_b, pattern_path, fg_r, fg_g, fg_b,
+                );
+                (defs, "url(#w_00)".to_string())
+            } else {
+                // 단색 채우기 / Solid fill
+                let r = bg_color.r();
+                let g = bg_color.g();
+                let b = bg_color.b();
+                let defs = format!(
+                    r#"<defs><pattern id="w_01" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="rgb({},{},{})"/></pattern></defs>"#,
+                    r, g, b,
+                );
+                (defs, "url(#w_01)".to_string())
+            }
+        }
+        FillInfo::Gradient(grad) => {
+            // 그러데이션 채우기 / Gradient fill
+            if grad.colors.len() < 2 {
+                return (String::new(), "none".to_string());
+            }
+
+            let color_start = &grad.colors[0];
+            let color_end = &grad.colors[grad.colors.len() - 1];
+
+            let r_start = color_start.r() as f64;
+            let g_start = color_start.g() as f64;
+            let b_start = color_start.b() as f64;
+            let r_end = color_end.r() as f64;
+            let g_end = color_end.g() as f64;
+            let b_end = color_end.b() as f64;
+
+            // 수평 그라디언트: 세로 stripe 패턴 생성 / Horizontal gradient: vertical stripe pattern
+            // spread 값에 1을 더한 수만큼의 쌍으로 분할 (기본 52쌍 = 104 paths)
+            let num_pairs = std::cmp::max(grad.spread as usize + 1, 2);
+            let path_end_x = round_to_2dp(shape_w - half_stroke_for_gradient());
+            let path_end_y = round_to_2dp(shape_h - half_stroke_for_gradient());
+            // 각 쪽(left/right)에서 shape_w 전체를 커버하는 stripe 폭
+            let stripe_width_raw = shape_w / num_pairs as f64;
+
+            let mut paths = String::new();
+            for i in 0..num_pairs {
+                // 외곽(i=0) → 중앙(i=num_pairs-1): end 색상에서 start 색상으로 보간
+                let t = if num_pairs > 1 {
+                    i as f64 / (num_pairs - 1) as f64
+                } else {
+                    0.0
+                };
+                let r = (r_end + (r_start - r_end) * t) as u8;
+                let g = (g_end + (g_start - g_end) * t) as u8;
+                let b = (b_end + (b_start - b_end) * t) as u8;
+                let hex = format!("#{:02X}{:02X}{:02X}", r, g, b);
+
+                // 왼쪽 (네거티브 x) + 오른쪽 (포지티브 x) 대칭 배치
+                let left_x1 = round_to_2dp(-shape_w + half_stroke_for_gradient() + stripe_width_raw * i as f64);
+                let left_x2 = round_to_2dp(-shape_w + half_stroke_for_gradient() + stripe_width_raw * (i + 1) as f64);
+                let right_x1 = round_to_2dp(path_end_x - stripe_width_raw * i as f64);
+                let right_x2 = round_to_2dp(path_end_x - stripe_width_raw * (i + 1) as f64);
+
+                paths.push_str(&format!(
+                    r#"<path d="M{},{py}L{},{ny}L{},{ny}L{},{py}Z " style="fill:{c};stroke:{c};stroke-width:1;"></path>"#,
+                    left_x1,
+                    left_x1,
+                    left_x2,
+                    left_x2,
+                    py = path_end_y,
+                    ny = round_to_2dp(-shape_h + half_stroke_for_gradient()),
+                    c = hex,
+                ));
+                paths.push_str(&format!(
+                    r#"<path d="M{},{py}L{},{ny}L{},{ny}L{},{py}Z " style="fill:{c};stroke:{c};stroke-width:1;"></path>"#,
+                    right_x1,
+                    right_x1,
+                    right_x2,
+                    right_x2,
+                    py = path_end_y,
+                    ny = round_to_2dp(-shape_h + half_stroke_for_gradient()),
+                    c = hex,
+                ));
+            }
+
+            let defs = format!(
+                r#"<defs><pattern id="g_0" width="100%" height="100%" patternUnits="userSpaceOnUse">{}</pattern></defs>"#,
+                paths,
+            );
+            (defs, "url(#g_0)".to_string())
+        }
+        FillInfo::Image(_) => (String::new(), "none".to_string()),
+    }
+}
+
+fn half_stroke_for_gradient() -> f64 {
+    0.06
+}
+
+/// SVG stroke 스타일 생성 / Build SVG stroke style
+/// Returns style content string, e.g. "stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"
+fn build_svg_stroke(drawing_obj: Option<&DrawingObjectCommon>, stroke_width: f64) -> String {
+    let (line_type, line_color) = match drawing_obj {
+        Some(d) => (d.line_info.line_type, &d.line_info.color),
+        None => {
+            // 폴백: 기본 검정 실선 / Fallback: default black solid
+            return format!(
+                "stroke:#000000;stroke-linecap:butt;stroke-width:{};",
+                stroke_width
+            );
+        }
+    };
+
+    if matches!(line_type, LineType::None) {
+        return String::new();
+    }
+
+    let color_hex = colorref_to_hex(line_color);
+
+    let dasharray = match line_type {
+        LineType::Solid => String::new(),
+        LineType::Dot => "stroke-dasharray:0.17,0.26;".to_string(),
+        LineType::Dash => "stroke-dasharray:0.47,0.47,0.47,0,0.47,0.47,0.47,0;".to_string(),
+        LineType::DashDot => "stroke-dasharray:1.86,0.52,0.17,0.52;".to_string(),
+        LineType::DashDotDot => "stroke-dasharray:0.47,0.47,0.47,0,0.47,0.47,0.47,0;".to_string(),
+        LineType::LongDash => "stroke-dasharray:1.86,0.26;".to_string(),
+        LineType::CircleDot => "stroke-dasharray:0.12,0.26;".to_string(),
+        _ => String::new(),
+    };
+
+    format!(
+        "stroke:{};stroke-linecap:butt;{dasharray}stroke-width:{};",
+        color_hex,
+        stroke_width,
+        dasharray = dasharray,
+    )
 }
 
 /// 도형 내부 콘텐츠 렌더링 (다단 지원)
@@ -1119,6 +1355,7 @@ fn collect_images_from_records(
             ParagraphRecord::ShapeComponent {
                 shape_component,
                 children,
+                ..
             } => {
                 collect_images_from_records(
                     children,

@@ -304,6 +304,7 @@ fn fill_cell_content(
                     ParagraphRecord::ShapeComponent {
                         shape_component: _,
                         children,
+                        ..
                     } => {
                         // SHAPE_COMPONENT의 children을 재귀적으로 처리 / Recursively process SHAPE_COMPONENT's children
                         let shape_parts =

@@ -212,6 +212,7 @@ pub(crate) fn row_positions(
                     ParagraphRecord::ShapeComponent {
                         shape_component,
                         children: nested_children,
+                        ..
                     } => {
                         if let Some(height) =
                             find_shape_component_height(nested_children, shape_component.height)
@@ -308,6 +309,7 @@ pub(crate) fn row_positions(
                             ParagraphRecord::ShapeComponent {
                                 shape_component,
                                 children,
+                                ..
                             } => {
                                 if let Some(shape_height_mm) =
                                     find_shape_component_height(children, shape_component.height)

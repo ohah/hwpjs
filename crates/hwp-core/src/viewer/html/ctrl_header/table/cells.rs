@@ -80,6 +80,7 @@ pub(crate) fn render_cells(
                     ParagraphRecord::ShapeComponent {
                         shape_component,
                         children: nested_children,
+                        ..
                     } => {
                         if let Some(height) =
                             find_shape_component_height(nested_children, shape_component.height)
@@ -154,6 +155,7 @@ pub(crate) fn render_cells(
                     ParagraphRecord::ShapeComponent {
                         shape_component,
                         children,
+                        ..
                     } => {
                         if let Some(shape_height_mm) =
                             find_shape_component_height(children, shape_component.height)
@@ -391,6 +393,7 @@ pub(crate) fn render_cells(
                         ParagraphRecord::ShapeComponent {
                             shape_component,
                             children: nested_children,
+                            ..
                         } => {
                             // 중첩된 ShapeComponent 재귀적으로 탐색 / Recursively search nested ShapeComponent
                             collect_images_from_shape_component(
@@ -423,6 +426,7 @@ pub(crate) fn render_cells(
                     ParagraphRecord::ShapeComponent {
                         shape_component,
                         children,
+                        ..
                     } => {
                         // ShapeComponent의 children에서 이미지 찾기 (재귀적으로) / Find images in ShapeComponent's children (recursively)
                         collect_images_from_shape_component(

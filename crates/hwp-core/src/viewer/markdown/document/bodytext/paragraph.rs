@@ -78,6 +78,7 @@ pub fn convert_paragraph_to_markdown(
             ParagraphRecord::ShapeComponent {
                 shape_component: _,
                 children,
+                ..
             } => {
                 // SHAPE_COMPONENT의 children을 재귀적으로 처리 / Recursively process SHAPE_COMPONENT's children
                 let shape_parts = convert_shape_component_children_to_markdown(
@@ -251,6 +252,7 @@ pub fn convert_paragraph_to_markdown(
                         ParagraphRecord::ShapeComponent {
                             shape_component: _,
                             children: shape_children,
+                            ..
                         } => {
                             // SHAPE_COMPONENT의 children 처리 (SHAPE_COMPONENT_PICTURE 등) / Process SHAPE_COMPONENT's children (SHAPE_COMPONENT_PICTURE, etc.)
                             // 먼저 표 셀 내부의 이미지인지 확인 / First check if images are inside table cells
