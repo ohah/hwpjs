@@ -1,4 +1,4 @@
-use super::CtrlHeaderResult;
+use super::{CtrlHeaderResult, ShapePositionContext};
 use crate::document::bodytext::ctrl_header::VertRelTo;
 use crate::document::bodytext::control_char::ControlChar;
 use crate::document::bodytext::{ParaTextRun, ParagraphRecord};
@@ -17,6 +17,7 @@ pub fn process_shape_object<'a>(
     paragraphs: &'a [Paragraph],
     document: &'a HwpDocument,
     options: &'a HtmlOptions,
+    shape_pos: Option<&ShapePositionContext<'_>>,
 ) -> CtrlHeaderResult<'a> {
     let mut result = CtrlHeaderResult::new();
 
@@ -104,7 +105,9 @@ pub fn process_shape_object<'a>(
     });
 
     if has_rectangle_shape {
-        if let Some(html) = render_rectangle_shape(header, children, document, options) {
+        if let Some(html) =
+            render_rectangle_shape(header, children, document, options, shape_pos)
+        {
             result.shape_html = Some(html);
             return result;
         }
@@ -140,15 +143,19 @@ pub fn process_shape_object<'a>(
     result
 }
 
-/// ShapeComponentRectangle을 hsG HTML로 렌더링
+/// ShapeComponentRectangle을 hsR HTML로 렌더링 (절대 위치)
 fn render_rectangle_shape(
     header: &CtrlHeader,
     children: &[ParagraphRecord],
     document: &HwpDocument,
     options: &HtmlOptions,
+    shape_pos: Option<&ShapePositionContext<'_>>,
 ) -> Option<String> {
-    let (offset_x, offset_y, _obj_width, _obj_height, caption) = match &header.data {
+    use crate::document::bodytext::ctrl_header::{HorzRelTo, VertRelTo};
+
+    let (offset_x, offset_y, _obj_width, _obj_height, caption, attribute) = match &header.data {
         CtrlHeaderData::ObjectCommon {
+            attribute,
             offset_x,
             offset_y,
             width,
@@ -161,12 +168,11 @@ fn render_rectangle_shape(
             u32::from(*width),
             u32::from(*height),
             caption.as_ref(),
+            attribute,
         ),
         _ => return None,
     };
 
-    let top_mm = round_to_2dp(int32_to_mm(offset_y));
-    let left_mm = round_to_2dp(int32_to_mm(offset_x));
     let stroke_width = 0.12;
     let half_stroke = 0.06;
 
@@ -202,17 +208,19 @@ fn render_rectangle_shape(
         return None;
     }
 
-    let shape_w_mm = round_to_2dp(int32_to_mm(shape_width_hu as i32));
-    let shape_h_mm = round_to_2dp(int32_to_mm(shape_height_hu as i32));
+    let shape_w_raw = int32_to_mm(shape_width_hu as i32);
+    let shape_h_raw = int32_to_mm(shape_height_hu as i32);
+    let shape_w_mm = round_to_2dp(shape_w_raw);
+    let shape_h_mm = round_to_2dp(shape_h_raw);
     let hsr_w_mm = round_to_2dp(shape_w_mm + stroke_width);
     let hsr_h_mm = round_to_2dp(shape_h_mm + stroke_width);
 
-    let svg_vb_w = round_to_2dp(shape_w_mm + stroke_width + 2.0 * 0.15);
-    let svg_vb_h = round_to_2dp(shape_h_mm + stroke_width + 2.0 * 0.15);
-    let svg_style_w = round_to_2dp(shape_w_mm + 2.0 * 0.15 + half_stroke);
-    let svg_style_h = round_to_2dp(shape_h_mm + 2.0 * 0.15 + half_stroke);
-    let path_end_x = round_to_2dp(shape_w_mm + half_stroke);
-    let path_end_y = round_to_2dp(shape_h_mm + half_stroke);
+    let svg_vb_w = round_to_2dp(hsr_w_mm + 2.0 * 0.30);
+    let svg_vb_h = round_to_2dp(hsr_h_mm + 2.0 * 0.30);
+    let svg_style_w = round_to_2dp(hsr_w_mm + 2.0 * 0.15);
+    let svg_style_h = round_to_2dp(hsr_h_mm + 2.0 * 0.15);
+    let path_end_x = round_to_2dp(shape_w_raw + half_stroke);
+    let path_end_y = round_to_2dp(shape_h_raw + half_stroke);
 
     let svg_html = format!(
         r#"<svg class="hs" viewBox="-0.30 -0.30 {vbw} {vbh}" style="left:-0.15mm;top:-0.15mm;width:{sw}mm;height:{sh}mm;"><path fill="none" d="M{hs},{hs}L{ex},{hs}L{ex},{ey}L{hs},{ey}L{hs},{hs}Z " style="stroke:#000000;stroke-linecap:butt;stroke-width:{st};"></path></svg>"#,
@@ -250,6 +258,157 @@ fn render_rectangle_shape(
         content = content_html,
     );
 
+    // 절대 위치 계산 / Compute absolute position
+    let offset_x_mm = int32_to_mm(offset_x);
+    let offset_y_mm = int32_to_mm(offset_y);
+
+    let (base_left, base_top) = if let Some(ctx) = shape_pos {
+        if let Some((left, top)) = ctx.hcd_position {
+            (round_to_2dp(left), round_to_2dp(top))
+        } else if let Some(pd) = ctx.page_def {
+            let left = round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm());
+            let top = round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm());
+            (left, top)
+        } else {
+            (20.0, 24.99)
+        }
+    } else {
+        (20.0, 24.99)
+    };
+
+    let page_number = shape_pos.map(|ctx| ctx.page_number).unwrap_or(1);
+    let page_def = shape_pos.and_then(|ctx| ctx.page_def);
+
+    // 수평 기준 폭 계산 / Compute horizontal reference width
+    let ref_width = match attribute.horz_rel_to {
+        HorzRelTo::Paper => page_def.map(|pd| pd.effective_width_mm()).unwrap_or(210.0),
+        HorzRelTo::Page | HorzRelTo::Column => {
+            if let Some(pd) = page_def {
+                pd.effective_width_mm()
+                    - (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
+                    - pd.right_margin.to_mm()
+            } else {
+                150.0
+            }
+        }
+        HorzRelTo::Para => {
+            if let Some(pd) = page_def {
+                pd.effective_width_mm()
+                    - (pd.left_margin.to_mm() + pd.binding_margin.to_mm())
+                    - pd.right_margin.to_mm()
+            } else {
+                150.0
+            }
+        }
+    };
+
+    let binding_margin_mm = page_def.map(|pd| pd.binding_margin.to_mm()).unwrap_or(0.0);
+
+    // horz_relative: 0=left, 1=center, 2=right, 3=inside, 4=outside
+    let abs_left = match attribute.horz_relative {
+        1 => {
+            // center
+            round_to_2dp(base_left + (ref_width - shape_w_mm) / 2.0 + offset_x_mm)
+        }
+        2 => {
+            // right
+            round_to_2dp(base_left + ref_width - shape_w_mm - offset_x_mm)
+        }
+        3 => {
+            // inside: odd→left, even→right (ref_width - binding_margin)
+            let is_odd = page_number % 2 == 1;
+            if is_odd {
+                // left alignment
+                round_to_2dp(base_left + offset_x_mm)
+            } else {
+                // right alignment with binding_margin adjustment
+                let adj_width = ref_width - binding_margin_mm;
+                round_to_2dp(base_left + adj_width - shape_w_mm - offset_x_mm)
+            }
+        }
+        4 => {
+            // outside: odd→right, even→left
+            let is_odd = page_number % 2 == 1;
+            if is_odd {
+                // right alignment
+                round_to_2dp(base_left + ref_width - shape_w_mm - offset_x_mm)
+            } else {
+                // left alignment
+                round_to_2dp(base_left + offset_x_mm)
+            }
+        }
+        _ => {
+            // left (0) or unknown
+            round_to_2dp(base_left + offset_x_mm)
+        }
+    };
+
+    // 수직 기준 높이 계산 / Compute vertical reference height
+    let ref_height = match attribute.vert_rel_to {
+        VertRelTo::Paper => page_def.map(|pd| pd.effective_height_mm()).unwrap_or(297.0),
+        VertRelTo::Page => {
+            if let Some(pd) = page_def {
+                pd.effective_height_mm()
+                    - (pd.top_margin.to_mm() + pd.header_margin.to_mm())
+                    - (pd.bottom_margin.to_mm() + pd.footer_margin.to_mm())
+            } else {
+                232.0
+            }
+        }
+        VertRelTo::Para => {
+            if let Some(pd) = page_def {
+                pd.effective_height_mm()
+                    - (pd.top_margin.to_mm() + pd.header_margin.to_mm())
+                    - (pd.bottom_margin.to_mm() + pd.footer_margin.to_mm())
+            } else {
+                232.0
+            }
+        }
+    };
+
+    let base_top_for_vert = if matches!(attribute.vert_rel_to, VertRelTo::Paper) {
+        0.0
+    } else {
+        base_top
+    };
+
+    // vert_relative: 0=top, 1=center, 2=bottom
+    let abs_top = match attribute.vert_relative {
+        1 => {
+            // center
+            round_to_2dp(base_top_for_vert + (ref_height - shape_h_mm) / 2.0 + offset_y_mm)
+        }
+        2 => {
+            // bottom
+            round_to_2dp(base_top_for_vert + ref_height - shape_h_mm - offset_y_mm)
+        }
+        _ => {
+            // top (0) or unknown
+            round_to_2dp(base_top_for_vert + offset_y_mm)
+        }
+    };
+
+    // 캡션이 없으면 hsR 직접 출력, 있으면 hsG 래퍼 사용
+    // Output hsR directly when no caption, use hsG wrapper when caption exists
+    let has_caption = caption.is_some()
+        && children
+            .iter()
+            .any(|r| matches!(r, ParagraphRecord::ListHeader { .. }));
+
+    if !has_caption {
+        let html = format!(
+            r#"<div class="{p}hsR" style="top:{t}mm;left:{l}mm;width:{w}mm;height:{h}mm;">{hst}</div>"#,
+            p = prefix,
+            t = abs_top,
+            l = abs_left,
+            w = hsr_w_mm,
+            h = hsr_h_mm,
+            hst = hst_html,
+        );
+        return Some(html);
+    }
+
+    // 캡션 있는 경우: 기존 hsG 래퍼 로직 / Caption present: use existing hsG wrapper logic
     let hsr_html = format!(
         r#"<div class="{p}hsR" style="top:0mm;left:0mm;width:{w}mm;height:{h}mm;">{hst}</div>"#,
         p = prefix,
@@ -258,16 +417,13 @@ fn render_rectangle_shape(
         hst = hst_html,
     );
 
-    // 캡션 처리: ObjectCommon.caption이 있으면 gap 사용, 없으면 children의 첫 ListHeader를 캡션으로 감지
     let mut caption_html = String::new();
     let mut caption_height_hu: i32 = 0;
-    let mut caption_gap_hu: i32 = if let Some(cap) = caption {
+    let caption_gap_hu: i32 = if let Some(cap) = caption {
         i32::from(cap.gap)
     } else {
-        850 // 기본 캡션 간격 / Default caption gap
+        850
     };
-
-    // children에서 첫 번째 ListHeader를 캡션으로 사용 (ShapeComponent 내부의 ListHeader와 구분)
     for record in children {
         if let ParagraphRecord::ListHeader { paragraphs, .. } = record {
             if !paragraphs.is_empty() {
@@ -426,8 +582,8 @@ fn render_rectangle_shape(
     let html = format!(
         r#"<div class="{p}hsG" style="top:{t}mm;left:{l}mm;width:{w}mm;height:{h}mm;">{hsr}{caption}</div>"#,
         p = prefix,
-        t = top_mm,
-        l = left_mm,
+        t = abs_top,
+        l = abs_left,
         w = hsg_w_mm,
         h = hsg_h_mm,
         hsr = hsr_html,
@@ -481,12 +637,169 @@ fn render_shape_content(
 
     let margin_mm = round_to_2dp(int32_to_mm(298));
 
+    let mut pattern_counter = 0usize;
+    let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
+
     if col_count <= 1 {
-        let body = render_paragraphs_fragment(paragraphs, document, options);
+        // cold 문단(column_divide_type 비어있지 않은)부터 수집, 그 이전 문단은 skip
+        // Collect from cold paragraph (non-empty column_divide_type), skip earlier paragraphs
+        // column_divide_type가 없으면 첫 문단(ghost)을 skip하고 나머지 수집
+        // If no column_divide_type markers exist, skip the first (ghost) paragraph
+        let has_cold_marker = paragraphs
+            .iter()
+            .any(|p| !p.para_header.column_divide_type.is_empty());
+
+        let mut single_col_line_segments: Vec<LineSegmentInfo> = Vec::new();
+        let mut single_col_text = String::new();
+        let mut single_col_char_shapes: Vec<crate::document::bodytext::CharShapeInfo> = Vec::new();
+        let mut single_col_control_char_positions = Vec::new();
+        let mut single_col_collecting = false;
+        let mut single_col_para_shape_id: u16 = 0;
+        let mut single_col_wchar_offset: usize = 0;
+
+        for (i, para) in paragraphs.iter().enumerate() {
+            if has_cold_marker {
+                if !para.para_header.column_divide_type.is_empty() {
+                    single_col_collecting = true;
+                }
+            } else {
+                // No cold markers: skip first paragraph (ghost) if multiple exist
+                if i > 0 || paragraphs.len() == 1 {
+                    single_col_collecting = true;
+                }
+            }
+            if !single_col_collecting {
+                continue;
+            }
+
+            single_col_para_shape_id = para.para_header.para_shape_id;
+
+            let (para_text, char_shapes_vec) = text::extract_text_and_shapes(para);
+            let text_offset = single_col_wchar_offset;
+
+            for record in &para.records {
+                match record {
+                    ParagraphRecord::ParaLineSeg { segments } => {
+                        for seg in segments {
+                            let mut adjusted = seg.clone();
+                            adjusted.text_start_position += text_offset as u32;
+                            single_col_line_segments.push(adjusted);
+                        }
+                    }
+                    ParagraphRecord::ParaText {
+                        control_char_positions: ccp,
+                        ..
+                    } => {
+                        for cp in ccp {
+                            let mut adjusted = cp.clone();
+                            adjusted.position += text_offset;
+                            single_col_control_char_positions.push(adjusted);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            single_col_wchar_offset += para.para_header.text_char_count as usize;
+            single_col_text.push_str(&para_text);
+            for mut cs in char_shapes_vec {
+                cs.position += text_offset as u32;
+                single_col_char_shapes.push(cs);
+            }
+        }
+
+        if single_col_line_segments.is_empty() {
+            let body = render_paragraphs_fragment(paragraphs, document, options);
+            return format!(
+                r#"<div class="{p}hcD" style="left:{m}mm;top:{m}mm;">{body}</div>"#,
+                p = prefix,
+                m = margin_mm,
+            );
+        }
+
+        let para_shape_class =
+            if (single_col_para_shape_id as usize) < document.doc_info.para_shapes.len() {
+                format!("ps{}", single_col_para_shape_id)
+            } else {
+                String::new()
+            };
+        let para_shape_indent =
+            if (single_col_para_shape_id as usize) < document.doc_info.para_shapes.len() {
+                Some(document.doc_info.para_shapes[single_col_para_shape_id as usize].indent)
+            } else {
+                None
+            };
+
+        let content = LineSegmentContent {
+            segments: &single_col_line_segments,
+            text: &single_col_text,
+            char_shapes: &single_col_char_shapes,
+            control_char_positions: &single_col_control_char_positions,
+            original_text_len: single_col_wchar_offset,
+            images: &[],
+            tables: &[],
+            shape_htmls: &[],
+        };
+
+        let ls_context = LineSegmentRenderContext {
+            document,
+            para_shape_class: &para_shape_class,
+            options,
+            para_shape_indent,
+            hcd_position: None,
+            page_def: None,
+            body_default_hls: Some((2.79, -0.18)),
+        };
+
+        let mut ls_state = DocumentRenderState {
+            table_counter_start: 0,
+            pattern_counter: &mut pattern_counter,
+            color_to_pattern: &mut color_to_pattern,
+        };
+
+        let body = render_line_segments_with_content(&content, &ls_context, &mut ls_state);
+
+        // 수직 정렬 오프셋 계산 / Compute vertical alignment offset
+        let top_mm_val = if let Some((shape_h_hu, stroke_w)) = container_dims {
+            use crate::document::bodytext::list_header::VerticalAlign;
+            let margin_hu = 298;
+            let raw_available = int32_to_mm(shape_h_hu as i32) + stroke_w
+                - 2.0 * int32_to_mm(margin_hu);
+            let raw_content = if let Some(last) = single_col_line_segments.last() {
+                int32_to_mm(last.vertical_position + last.line_height)
+            } else {
+                0.0
+            };
+            let offset = match vertical_align {
+                VerticalAlign::Center if raw_available > raw_content => {
+                    round_to_2dp((raw_available - raw_content) / 2.0)
+                }
+                VerticalAlign::Bottom if raw_available > raw_content => {
+                    round_to_2dp(raw_available - raw_content)
+                }
+                _ => 0.0,
+            };
+            if offset.abs() >= 0.1 {
+                offset
+            } else {
+                0.0
+            }
+        } else {
+            0.0
+        };
+
+        let top_style = if top_mm_val.abs() > 0.001 {
+            format!(" style=\"top:{}mm;\"", top_mm_val)
+        } else {
+            String::new()
+        };
+
         return format!(
-            r#"<div class="{p}hcD" style="left:{m}mm;top:{m}mm;">{body}</div>"#,
+            r#"<div class="{p}hcD" style="left:{m}mm;top:{m}mm;"><div class="{p}hcI"{ts}>{body}</div></div>"#,
             p = prefix,
             m = margin_mm,
+            ts = top_style,
+            body = body,
         );
     }
 
@@ -497,9 +810,6 @@ fn render_shape_content(
     let mut content_h_mm: f64 = 0.0;
     let mut seg_width_mm: f64 = 0.0;
     let first_vpos: i32;
-
-    let mut pattern_counter = 0usize;
-    let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
 
     // cold 문단(column_divide_type 비어있지 않은)부터 다음 cold 또는 끝까지 모든 문단의
     // line segments, text, char_shapes를 집계 / Aggregate all paragraphs from cold (non-empty

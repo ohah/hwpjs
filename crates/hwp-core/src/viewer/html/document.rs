@@ -304,6 +304,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             document,
                             options,
                             None,
+                            None,
                         );
                         if let Some(h) = r.header_html {
                             header_contents.push(h);
@@ -619,6 +620,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     content_height_mm: Some(content_height_mm),
                     table_fragment_height_mm: None,
                     table_fragment_apply_at_index: None,
+                    page_number,
                 };
 
                 let context = ParagraphRenderContext {
@@ -717,7 +719,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             if header.ctrl_id == "tbl " {
                                 // 테이블 수집 / Collect table
                                 let ctrl_result = super::ctrl_header::process_ctrl_header(
-                                    header, children, ctrl_paragraphs, document, options, None,
+                                    header, children, ctrl_paragraphs, document, options, None, None,
                                 );
                                 let like_letters = match &header.data {
                                     CtrlHeaderData::ObjectCommon { attribute, .. } => attribute.like_letters,
@@ -739,7 +741,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 };
                                 if like_letters {
                                     let ctrl_result = super::ctrl_header::process_ctrl_header(
-                                        header, children, ctrl_paragraphs, document, options, None,
+                                        header, children, ctrl_paragraphs, document, options, None, None,
                                     );
                                     if let Some(shape_html) = ctrl_result.shape_html {
                                         // hsG 래핑을 hsR 인라인으로 변환 / Convert hsG wrapping to inline hsR
@@ -1071,6 +1073,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 content_height_mm: Some(content_height_mm),
                                 table_fragment_height_mm,
                                 table_fragment_apply_at_index,
+                                page_number: page_number + 1, // 다음 페이지 / Next page
                             };
 
                             let context_next = ParagraphRenderContext {
