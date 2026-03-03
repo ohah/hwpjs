@@ -136,6 +136,12 @@ pub struct TablePosition {
     pub fragment_height_mm: Option<f64>,
     /// overflow 판정에 사용할 전체 블록 높이(mm). 캡션·마진 포함. None이면 resolved_size.height 사용.
     pub table_height_for_overflow_mm: Option<f64>,
+    /// 인라인 테이블이 속한 세그먼트의 line_height (mm). htb top 계산에 사용.
+    /// Line height (mm) of the segment containing the inline table. Used for htb top calculation.
+    pub segment_line_height_mm: Option<f64>,
+    /// 인라인 테이블이 속한 세그먼트의 baseline_distance (mm). htb top 계산에 사용.
+    /// Baseline distance (mm) of the segment containing the inline table. Used for htb top calculation.
+    pub segment_baseline_distance_mm: Option<f64>,
 }
 
 /// 테이블을 HTML로 렌더링 / Render table to HTML
@@ -213,13 +219,51 @@ pub fn render_table(
         0.0
     };
     let margin_right_mm = round_to_2dp(margin_right_mm);
+    let margin_top_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
+        margin.top.to_mm()
+    } else {
+        0.0
+    };
+    let margin_top_mm = round_to_2dp(margin_top_mm);
+    let margin_bottom_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
+        margin.bottom.to_mm()
+    } else {
+        0.0
+    };
+    let margin_bottom_mm = round_to_2dp(margin_bottom_mm);
 
-    // SVG viewBox는 실제 테이블 콘텐츠 크기를 기준으로 계산 (margin 제외). fragment_height_mm이 있으면 조각 높이 사용 (0 이하는 방지).
-    let svg_width = resolved_size.width - margin_left_mm - margin_right_mm;
+    // htG 여부 판단 (캡션 있으면 htG 래퍼 사용) / Determine htG usage (use htG wrapper when caption exists)
+    let has_caption = caption_info.is_some();
+    let needs_htg = has_caption;
+
+    // resolved_height_with_margin 미리 계산 / Pre-calculate resolved_height_with_margin
+    let resolved_height_with_margin = if container_size.height == 0.0 {
+        content_size.height + margin_top_mm + margin_bottom_mm
+    } else {
+        resolved_size.height
+    };
+
+    // SVG viewBox는 htb 크기와 일치해야 함 / SVG viewBox should match htb dimensions
+    // htG(캡션) 있으면 htb width = content width (margin 제외), 없으면 htb width = resolved_size.width (margin 포함)
+    // With htG (caption): htb width = content width (excluding margins), without htG: htb width = resolved_size.width (including margins)
+    let svg_width = if needs_htg {
+        resolved_size.width - margin_left_mm - margin_right_mm
+    } else {
+        resolved_size.width
+    };
+    // htG(캡션 있음): htb height = content_size.height, SVG도 동일
+    // non-htG: htb height = resolved_height_with_margin, SVG도 동일
+    // htG (with caption): htb height = content_size.height, SVG matches
+    // non-htG: htb height = resolved_height_with_margin, SVG matches
+    let default_svg_height = if needs_htg {
+        content_size.height
+    } else {
+        resolved_height_with_margin
+    };
     let svg_height = position
         .fragment_height_mm
         .map(|h| h.max(0.0))
-        .unwrap_or(content_size.height);
+        .unwrap_or(default_svg_height);
     let view_box = view_box(svg_width, svg_height, SVG_PADDING_MM);
 
     let svg = svg::render_svg(
@@ -255,12 +299,8 @@ pub fn render_table(
             .or(Some(resolved_size.height)),
     );
 
-    // htG 래퍼 생성 (캡션이 있는 경우에만) / Create htG wrapper only when caption exists
-    // Fixture table.html: 캡션 없음 → htG 없이 htb만 (left:31mm, top:35.99mm 등)
-    // table-caption / table-position: 캡션 있음 → htG 래퍼 사용
-    let has_caption = caption_info.is_some();
+    // is_inline_table은 위에서 이미 계산되지 않았으므로 여기서 계산 / Calculate is_inline_table here
     let is_inline_table = segment_position.is_some();
-    let needs_htg = has_caption;
 
     // 인라인 테이블은 문단(line segment) 내부에서 상대 위치로 렌더링되므로,
     // htG의 left/top은 0으로 고정해야 fixture와 일치한다.
@@ -268,32 +308,6 @@ pub fn render_table(
         left_mm = 0.0;
         top_mm = 0.0;
     }
-
-    // margin 값 미리 계산 (margin_left_mm, margin_right_mm은 이미 위에서 계산됨) / Pre-calculate margin values (margin_left_mm, margin_right_mm already calculated above)
-    let margin_top_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
-        margin.top.to_mm()
-    } else {
-        0.0
-    };
-    let margin_top_mm = round_to_2dp(margin_top_mm);
-    let margin_bottom_mm = if let Some(CtrlHeaderData::ObjectCommon { margin, .. }) = ctrl_header {
-        margin.bottom.to_mm()
-    } else {
-        0.0
-    };
-    let margin_bottom_mm = round_to_2dp(margin_bottom_mm);
-
-    // resolved_size.height가 margin을 포함하지 않는 경우를 대비하여 명시적으로 계산
-    // Calculate explicitly in case resolved_size.height doesn't include margin
-    let resolved_height_with_margin = if container_size.height == 0.0 {
-        // container가 없으면 content.height + margin.top + margin.bottom
-        // If no container, use content.height + margin.top + margin.bottom
-        content_size.height + margin_top_mm + margin_bottom_mm
-    } else {
-        // container가 있으면 이미 margin이 포함되어 있음
-        // If container exists, margin is already included
-        resolved_size.height
-    };
 
     // 캡션 정보 미리 계산 / Pre-calculate caption information
     let is_caption_above = caption_info.map(|info| info.is_above).unwrap_or(false);
@@ -849,10 +863,20 @@ pub fn render_table(
             round_to_2dp(content_size.height),
         )
     } else {
-        // 인라인 테이블(hls 내부): margin 오프셋 사용 / Inline table (inside hls): use margin offsets
+        // 인라인 테이블(hls 내부): margin + baseline 가중 센터링 / Inline table (inside hls): margin + baseline-weighted centering
         // Absolute table: table_position() 절대 위치 사용 / Absolute table: use table_position() absolute position
         let (l, t) = if is_inline_table {
-            (margin_left_mm, margin_top_mm)
+            // htb top = margin_top + (line_height - table_height) * (baseline_distance / line_height)
+            // baseline 가중치로 수직 센터링하여 텍스트와 시각적으로 정렬
+            // Baseline-weighted vertical centering to visually align with text
+            let baseline_top = match (position.segment_line_height_mm, position.segment_baseline_distance_mm) {
+                (Some(lh), Some(bd)) if lh > 0.0 && resolved_height_with_margin < lh => {
+                    let offset = (lh - resolved_height_with_margin) * (bd / lh);
+                    round_to_2dp(margin_top_mm + offset)
+                }
+                _ => margin_top_mm,
+            };
+            (margin_left_mm, baseline_top)
         } else {
             (left_mm, top_mm)
         };

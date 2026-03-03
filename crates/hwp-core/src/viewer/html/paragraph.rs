@@ -823,6 +823,8 @@ pub fn render_paragraph(
                 content_height_mm: content_height_for_render,
                 fragment_height_mm,
                 table_height_for_overflow_mm: overflow_check.map(|_| block_height_for_overflow),
+                segment_line_height_mm: None,
+                segment_baseline_distance_mm: None,
             };
 
             let (table_html, htg_height_opt) = render_table(
