@@ -104,6 +104,13 @@ pub fn render_line_segment(
     };
     let text_height_mm = round_to_2dp(int32_to_mm(segment.text_height));
     let _line_spacing_mm = round_to_2dp(int32_to_mm(segment.line_spacing));
+    // TEMP DEBUG
+    if segment.line_height > 900 && segment.line_height < 1100 && is_text_segment {
+        eprintln!("DEBUG_LINESEG: is_text={} vpos={} line_height_hu={} text_height_hu={} baseline_hu={} line_spacing_hu={} lh_mm={:.4} th_mm={:.4} h_mm={:.2} w={:.2}",
+            is_text_segment, segment.vertical_position, segment.line_height, segment.text_height, segment.baseline_distance,
+            segment.line_spacing,
+            int32_to_mm(segment.line_height), int32_to_mm(segment.text_height), height_mm, width_mm);
+    }
 
     // HWP 5.0 표 62(문단의 레이아웃) 기준: 줄의 세로 위치, 줄의 높이, 텍스트 부분의 높이를 그대로 사용.
     // 보정 계수 없이 스펙 필드 → mm 변환만 적용. (1 HWPUNIT = 1/7200 inch, 25.4 mm/inch)

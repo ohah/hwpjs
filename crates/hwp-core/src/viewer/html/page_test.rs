@@ -14,6 +14,7 @@ mod tests {
                 html: s.to_string(),
                 left_mm: None,
                 top_mm: None,
+                is_raw: false,
             }]
         }
     }

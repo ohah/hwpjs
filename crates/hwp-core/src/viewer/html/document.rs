@@ -83,12 +83,18 @@ struct MultiColumnState {
     col_count: usize,
     col_spacing_hu: i16,
     seg_width_mm: f64,
+    /// 반올림 전 세그먼트 너비 (구분선 위치 계산용) / Raw segment width before rounding (for separator position calculation)
+    seg_width_mm_raw: f64,
     /// 컬럼별 HTML 버퍼 / Per-column HTML buffers
     col_buffers: Vec<String>,
     /// 다단 시작 시점의 수직 위치 (mm, hcI top) / Vertical position where multicolumn starts (mm, hcI top)
     top_mm: Option<f64>,
     /// 각 컬럼의 최대 하단 위치 (mm) / Max bottom position per column (mm)
     col_max_bottoms: Vec<f64>,
+    /// 구분선 종류 (0=없음, 1=실선 등) / Divider line type (0=none, 1=solid, etc.)
+    div_line_type: u8,
+    /// 구분선 색상 (BGR 형식) / Divider line color (BGR format)
+    div_line_color: u32,
 }
 
 /// 위치 기반 컬럼 할당 / Position-based column assignment
@@ -174,13 +180,63 @@ pub(crate) fn split_into_column_groups(segments: &[LineSegmentInfo]) -> Vec<(usi
     groups
 }
 
+/// 다단 구분선(hcS) SVG HTML 생성 / Generate multicolumn separator (hcS) SVG HTML
+/// sep_idx: 0-based separator index, content_height_mm: column content height
+fn generate_separator_html(
+    sep_idx: usize,
+    seg_width_mm: f64,
+    col_spacing_mm: f64,
+    content_height_mm: f64,
+    div_line_color: u32,
+) -> String {
+    // 구분선 좌측 위치: (i+1)*seg_width + i*col_spacing + (col_spacing - 0.11) / 2
+    // Separator left: (i+1)*seg_width + i*col_spacing + (col_spacing - 0.11) / 2
+    let sep_left = round_to_2dp(
+        (sep_idx as f64 + 1.0) * seg_width_mm
+            + sep_idx as f64 * col_spacing_mm
+            + (col_spacing_mm - 0.11) / 2.0,
+    );
+    let stroke_color = format!("#{:06X}", div_line_color & 0x00FFFFFF);
+    let view_h = round_to_2dp(content_height_mm + 0.23);
+    format!(
+        r#"<div class="hcS" style="left:{:.2}mm;top:0mm;width:0.11mm;height:{:.2}mm;"><svg class="hs" viewBox="-0.12 -0.12 0.35 {:.2}" style="left:-0.12mm;top:-0.12mm;width:0.35mm;height:{:.2}mm;left:0;top:0;"><path d="M0.06,0 L0.06,{:.2}" style="stroke:{};stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
+        sep_left, content_height_mm, view_h, view_h, content_height_mm, stroke_color
+    )
+}
+
 /// 다단 컬럼 버퍼를 HcIBlock으로 플러시 / Flush multicolumn column buffers to HcIBlocks
 fn flush_multicol_to_blocks(
     mc_state: &mut Option<MultiColumnState>,
     page_blocks: &mut Vec<HcIBlock>,
 ) {
     if let Some(mc) = mc_state.take() {
-        let col_spacing_mm = round_to_2dp(int32_to_mm(mc.col_spacing_hu as i32));
+        let col_spacing_mm_raw = int32_to_mm(mc.col_spacing_hu as i32);
+        let col_spacing_mm = round_to_2dp(col_spacing_mm_raw);
+
+        // 구분선 생성 (div_line_type > 0일 때) / Generate separators (when div_line_type > 0)
+        if mc.div_line_type > 0 && mc.col_count > 1 {
+            // 컬럼 콘텐츠 높이: 모든 컬럼의 max_bottom 중 최대값
+            // Content height: max of all column max_bottoms
+            let content_height_mm = mc.col_max_bottoms.iter().cloned().fold(0.0f64, f64::max);
+            if content_height_mm > 0.01 {
+                for sep_idx in 0..(mc.col_count - 1) {
+                    let sep_html = generate_separator_html(
+                        sep_idx,
+                        mc.seg_width_mm_raw,
+                        col_spacing_mm_raw,
+                        content_height_mm,
+                        mc.div_line_color,
+                    );
+                    page_blocks.push(HcIBlock {
+                        html: sep_html,
+                        left_mm: None,
+                        top_mm: None,
+                        is_raw: true,
+                    });
+                }
+            }
+        }
+
         for (col_idx, buffer) in mc.col_buffers.into_iter().enumerate() {
             if buffer.is_empty() {
                 continue;
@@ -196,6 +252,7 @@ fn flush_multicol_to_blocks(
                 html: buffer,
                 left_mm,
                 top_mm: mc.top_mm,
+                is_raw: false,
             });
         }
     }
@@ -204,7 +261,31 @@ fn flush_multicol_to_blocks(
 /// col_buffers의 누적 콘텐츠를 HcIBlock으로 플러시 (상태 유지, 페이지 오버플로우 시 사용)
 /// Flush accumulated col_buffers content to HcIBlocks (keep state alive, used on page overflow)
 fn flush_col_buffers_to_blocks(mc: &mut MultiColumnState, page_blocks: &mut Vec<HcIBlock>) {
-    let col_spacing_mm = round_to_2dp(int32_to_mm(mc.col_spacing_hu as i32));
+    let col_spacing_mm_raw = int32_to_mm(mc.col_spacing_hu as i32);
+    let col_spacing_mm = round_to_2dp(col_spacing_mm_raw);
+
+    // 구분선 생성 / Generate separators
+    if mc.div_line_type > 0 && mc.col_count > 1 {
+        let content_height_mm = mc.col_max_bottoms.iter().cloned().fold(0.0f64, f64::max);
+        if content_height_mm > 0.01 {
+            for sep_idx in 0..(mc.col_count - 1) {
+                let sep_html = generate_separator_html(
+                    sep_idx,
+                    mc.seg_width_mm_raw,
+                    col_spacing_mm_raw,
+                    content_height_mm,
+                    mc.div_line_color,
+                );
+                page_blocks.push(HcIBlock {
+                    html: sep_html,
+                    left_mm: None,
+                    top_mm: None,
+                    is_raw: true,
+                });
+            }
+        }
+    }
+
     for (col_idx, buffer) in mc.col_buffers.iter_mut().enumerate() {
         if buffer.is_empty() {
             continue;
@@ -220,24 +301,40 @@ fn flush_col_buffers_to_blocks(mc: &mut MultiColumnState, page_blocks: &mut Vec<
             html: std::mem::take(buffer),
             left_mm,
             top_mm: mc.top_mm,
+            is_raw: false,
         });
     }
     mc.col_max_bottoms.iter_mut().for_each(|b| *b = 0.0);
 }
 
-/// 문단에서 ColumnDefinition을 찾아 (column_count, column_spacing) 반환 / Find ColumnDefinition in paragraph, return (column_count, column_spacing)
+/// 다단 컬럼 정의 정보 / Multicolumn definition info
+struct ColumnDefInfo {
+    column_count: u8,
+    column_spacing: i16,
+    div_line_type: u8,
+    div_line_color: u32,
+}
+
+/// 문단에서 ColumnDefinition을 찾아 반환 / Find ColumnDefinition in paragraph
 fn detect_column_definition(
     paragraph: &crate::document::Paragraph,
-) -> Option<(u8, i16)> {
+) -> Option<ColumnDefInfo> {
     for record in &paragraph.records {
         if let ParagraphRecord::CtrlHeader { header, .. } = record {
             if let CtrlHeaderData::ColumnDefinition {
                 attribute,
                 column_spacing,
+                divider_line_type,
+                divider_line_color,
                 ..
             } = &header.data
             {
-                return Some((attribute.column_count, *column_spacing));
+                return Some(ColumnDefInfo {
+                    column_count: attribute.column_count,
+                    column_spacing: *column_spacing,
+                    div_line_type: *divider_line_type,
+                    div_line_color: *divider_line_color,
+                });
             }
         }
     }
@@ -470,14 +567,35 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             let has_page_break = if has_page_break
                 && para_result.reason == Some(PageBreakReason::VerticalReset)
             {
-                let is_entering_multicol = detect_column_definition(paragraph)
-                    .map(|(count, _)| count > 1)
+                let new_col_info = detect_column_definition(paragraph);
+                let is_entering_multicol = new_col_info
+                    .as_ref()
+                    .map(|info| info.column_count > 1)
                     .unwrap_or(false);
                 let is_multicol_para = paragraph
                     .para_header
                     .column_divide_type
                     .contains(&ColumnDivideType::MultiColumn);
-                if is_entering_multicol || is_multicol_para || multi_col_state.is_some() {
+
+                // 다단 섹션 전환 (col_count 변경) 시에는 페이지 브레이크 허용
+                // Allow page break when transitioning between different multicolumn sections
+                let is_col_count_change = if is_entering_multicol {
+                    multi_col_state
+                        .as_ref()
+                        .map(|mc| {
+                            new_col_info
+                                .as_ref()
+                                .map(|info| info.column_count as usize != mc.col_count)
+                                .unwrap_or(false)
+                        })
+                        .unwrap_or(false)
+                } else {
+                    false
+                };
+
+                if is_col_count_change {
+                    true // 다단 전환 → 새 페이지 / Column count change → new page
+                } else if is_entering_multicol || is_multicol_para || multi_col_state.is_some() {
                     false
                 } else {
                     true
@@ -506,6 +624,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         html: std::mem::take(&mut page_content),
                         left_mm: None,
                         top_mm: None,
+                        is_raw: false,
                     });
                 }
                 // hcD 위치: PageDef 여백을 직접 사용 / hcD position: use PageDef margins directly
@@ -659,8 +778,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     .contains(&ColumnDivideType::MultiColumn);
 
                 // ColumnDefinition 감지 / Detect ColumnDefinition
-                if let Some((col_count, col_spacing)) = detect_column_definition(paragraph) {
-                    if col_count > 1 && is_multicol_para {
+                if let Some(col_def) = detect_column_definition(paragraph) {
+                    if col_def.column_count > 1 && is_multicol_para {
                         // 다단 모드 진입/변경 / Enter/change multicolumn mode
                         flush_multicol_to_blocks(&mut multi_col_state, &mut page_blocks);
                         if !page_content.is_empty() {
@@ -668,15 +787,17 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 html: std::mem::take(&mut page_content),
                                 left_mm: None,
                                 top_mm: None,
+                                is_raw: false,
                             });
                         }
 
                         let line_segs =
                             super::paragraph::collect_line_segments(paragraph);
-                        let seg_width_mm = line_segs
+                        let seg_width_mm_raw = line_segs
                             .first()
-                            .map(|seg| round_to_2dp(int32_to_mm(seg.segment_width)))
+                            .map(|seg| int32_to_mm(seg.segment_width))
                             .unwrap_or(70.99);
+                        let seg_width_mm = round_to_2dp(seg_width_mm_raw);
 
                         // 다단 시작 위치: 이전 콘텐츠 하단 + 컬럼 간격 기반 갭
                         // Multicolumn start position: previous content bottom + column-spacing-based gap
@@ -685,20 +806,23 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             None
                         } else {
                             let gap_hu =
-                                col_spacing as f64 * (col_count as f64 - 1.0) / 2.0;
+                                col_def.column_spacing as f64 * (col_def.column_count as f64 - 1.0) / 2.0;
                             let gap_mm = round_to_2dp(gap_hu * 25.4 / 7200.0);
                             Some(round_to_2dp(last_content_bottom_mm + gap_mm))
                         };
 
                         multi_col_state = Some(MultiColumnState {
-                            col_count: col_count as usize,
-                            col_spacing_hu: col_spacing,
+                            col_count: col_def.column_count as usize,
+                            col_spacing_hu: col_def.column_spacing,
                             seg_width_mm,
-                            col_buffers: vec![String::new(); col_count as usize],
+                            seg_width_mm_raw,
+                            col_buffers: vec![String::new(); col_def.column_count as usize],
                             top_mm: mc_top_mm,
-                            col_max_bottoms: vec![0.0; col_count as usize],
+                            col_max_bottoms: vec![0.0; col_def.column_count as usize],
+                            div_line_type: col_def.div_line_type,
+                            div_line_color: col_def.div_line_color,
                         });
-                    } else if col_count <= 1 {
+                    } else if col_def.column_count <= 1 {
                         flush_multicol_to_blocks(&mut multi_col_state, &mut page_blocks);
                     }
                 }
@@ -859,6 +983,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                     html: std::mem::take(&mut page_content),
                                     left_mm: None,
                                     top_mm: None,
+                                    is_raw: false,
                                 });
                             }
                             let hcd_pos = if let Some((left, top)) = hcd_position {
@@ -1014,6 +1139,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 html: std::mem::take(&mut page_content),
                                 left_mm: None,
                                 top_mm: None,
+                                is_raw: false,
                             });
                         }
                         html.push_str(&page::render_page(
@@ -1206,6 +1332,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             html: std::mem::take(&mut page_content),
             left_mm: None,
             top_mm: None,
+            is_raw: false,
         });
     }
     if !page_blocks.is_empty() || !page_tables.is_empty() {
