@@ -16,6 +16,7 @@ use crate::document::bodytext::ctrl_header::{CtrlHeaderData, CtrlId};
 use crate::document::bodytext::para_header::ColumnDivideType;
 use crate::document::bodytext::{LineSegmentInfo, PageDef, ParagraphRecord};
 use crate::document::HwpDocument;
+use crate::viewer::core::outline::NumberTracker;
 use crate::viewer::core::OutlineNumberTracker;
 use crate::INT32;
 
@@ -359,6 +360,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut pattern_counter = 0;
     let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
     let mut outline_tracker = OutlineNumberTracker::new();
+    let mut number_tracker = NumberTracker::new();
 
     // 각주/미주 수집 (문서 끝에 블록으로 출력) / Footnote/endnote collection (output as blocks at document end)
     let mut footnote_counter = 0u32;
@@ -781,6 +783,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             images: &[],
                             tables: &mc_inline_tables,
                             shape_htmls: &mc_shape_htmls,
+                            marker_info: None,
                         };
 
                         let ls_context = LineSegmentRenderContext {
@@ -907,6 +910,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     color_to_pattern: &mut color_to_pattern,
                     note_state: Some(&mut note_state),
                     outline_tracker: Some(&mut outline_tracker),
+                    number_tracker: Some(&mut number_tracker),
+                    section_outline_numbering_id: 0,
                 };
 
                 let (para_html, table_htmls, obj_pagination_result) =

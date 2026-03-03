@@ -739,6 +739,7 @@ fn render_shape_content(
             images: &[],
             tables: &[],
             shape_htmls: &[],
+            marker_info: None,
         };
 
         let ls_context = LineSegmentRenderContext {
@@ -948,6 +949,7 @@ fn render_shape_content(
             images: &[],
             tables: &[],
             shape_htmls: &[],
+            marker_info: None,
         };
 
         let context = LineSegmentRenderContext {

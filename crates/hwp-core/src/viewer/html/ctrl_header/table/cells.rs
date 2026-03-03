@@ -680,6 +680,7 @@ pub(crate) fn render_cells(
                                     images: &[],
                                     tables: &[],
                                     shape_htmls: &[],
+                                    marker_info: None,
                                 };
                                 let context = LineSegmentRenderContext {
                                     document,
@@ -728,6 +729,7 @@ pub(crate) fn render_cells(
                             images: &images,
                             tables: &[],
                             shape_htmls: &[],
+                            marker_info: None,
                         };
                         let context = LineSegmentRenderContext {
                             document,
