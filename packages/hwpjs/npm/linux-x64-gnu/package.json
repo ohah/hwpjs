@@ -1,6 +1,6 @@
 {
   "name": "@ohah/hwpjs-linux-x64-gnu",
-  "version": "0.1.0-rc.6",
+  "version": "0.1.0-rc.7",
   "cpu": [
     "x64"
   ],

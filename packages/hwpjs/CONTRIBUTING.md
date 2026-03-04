@@ -177,10 +177,27 @@ cd packages/hwpjs
 
 | 순서 | 명령 | 설명 |
 |------|------|------|
-| 0 | (선택) 버전 수정 | `package.json`의 `version` 수정 후 커밋 |
+| 0 | (선택) 버전 수정 | 아래 **버전 수정 대상 파일** 참고. 수정 후 커밋 |
 | 1 | `bun run build:release` | Windows/macOS/Linux/WASM 전 플랫폼 빌드, `npm/` 디렉터리·아티팩트 준비 (실패한 플랫폼은 건너뜀) |
 | 2 | `bun run release` | 현재 버전으로 Git 태그 생성·푸시, GitHub Release 생성, `npm/*.zip`·`dist.zip` 등 업로드 (내부: `scripts/releash.sh`) |
 | 3 | `bun run publish:npm:next` 또는 `bun run publish:npm:latest` | npm 배포 (내부: `scripts/publish.sh`). rc/beta/alpha면 `next`, 아니면 `latest` 태그 사용 |
+
+**버전 수정 대상 파일** (순서 0):
+
+버전을 변경할 때는 다음 파일들을 **모두** 수정해야 합니다:
+
+| 파일 | 수정 항목 |
+|------|-----------|
+| `packages/hwpjs/package.json` | `version` 필드 + `optionalDependencies`의 플랫폼별 패키지 버전 7개 |
+| `packages/hwpjs/npm/darwin-arm64/package.json` | `version` 필드 |
+| `packages/hwpjs/npm/darwin-x64/package.json` | `version` 필드 |
+| `packages/hwpjs/npm/linux-x64-gnu/package.json` | `version` 필드 |
+| `packages/hwpjs/npm/win32-x64-msvc/package.json` | `version` 필드 |
+| `packages/hwpjs/npm/win32-ia32-msvc/package.json` | `version` 필드 |
+| `packages/hwpjs/npm/win32-arm64-msvc/package.json` | `version` 필드 |
+| `packages/hwpjs/npm/wasm32-wasi/package.json` | `version` 필드 |
+
+> `dist/index.js`의 버전 체크 코드는 `build:release` 시 napi-rs가 자동 재생성하므로 수동 수정 불필요.
 
 **한 줄 요약** (pre-release 예시):
 
