@@ -587,6 +587,8 @@ pub fn render_paragraph(
             shape_htmls: &[],
             marker_info: marker_info.as_ref(),
             paragraph_markers: &[],
+            footnote_refs: &footnote_refs,
+            endnote_refs: &endnote_refs,
         };
 
         let context = LineSegmentRenderContext {
@@ -867,9 +869,6 @@ pub fn render_paragraph(
         ));
     }
 
-    // 각주/미주 본문 참조를 문단 끝에 붙임 / Append footnote/endnote in-body refs at end of paragraph
-    result.push_str(&footnote_refs.join(""));
-    result.push_str(&endnote_refs.join(""));
     // 구역/단 등 인라인 콘텐츠를 문단 끝에 붙임 / Append section/column etc. inline content at end of paragraph
     for s in &extra_contents {
         result.push_str(s);

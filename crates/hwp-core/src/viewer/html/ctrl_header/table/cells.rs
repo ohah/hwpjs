@@ -703,6 +703,8 @@ pub(crate) fn render_cells(
                                     shape_htmls: &[],
                                     marker_info: None,
                                     paragraph_markers: &[],
+                                    footnote_refs: &[],
+                                    endnote_refs: &[],
                                 };
                                 let context = LineSegmentRenderContext {
                                     document,
@@ -753,6 +755,8 @@ pub(crate) fn render_cells(
                             shape_htmls: &[],
                             marker_info: cell_marker_info.as_ref(),
                             paragraph_markers: &[],
+                            footnote_refs: &[],
+                            endnote_refs: &[],
                         };
                         let context = LineSegmentRenderContext {
                             document,
