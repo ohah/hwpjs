@@ -152,6 +152,17 @@ pub fn generate_css_styles(document: &HwpDocument) -> String {
             css.push_str(&format!("letter-spacing:{:.2}em;", letter_spacing_em));
         }
 
+        // 음영 색 (background-color) / Shading color
+        let shading = &char_shape.shading_color;
+        if !(shading.r() == 255 && shading.g() == 255 && shading.b() == 255) {
+            css.push_str(&format!(
+                "background-color:#{:02X}{:02X}{:02X};",
+                shading.r(),
+                shading.g(),
+                shading.b()
+            ));
+        }
+
         css.push_str("\n}\n");
     }
 
