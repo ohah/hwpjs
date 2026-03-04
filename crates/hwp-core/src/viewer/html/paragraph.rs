@@ -240,23 +240,30 @@ fn hlk_command_to_onclick(command: &str) -> Option<String> {
 
 /// 문단에서 하이퍼링크 범위와 onclick 정보를 수집
 /// code 3 (EXTENDED, field start)과 code 4 (FIELD_END) 위치를 매칭하여 텍스트 범위 결정
+/// 필드 CtrlHeader의 순서 인덱스로 %hlk에 해당하는 code 3/4 쌍만 사용
 fn collect_hyperlink_ranges(
     paragraph: &Paragraph,
     control_char_positions: &[crate::document::bodytext::control_char::ControlCharPosition],
 ) -> Vec<HyperlinkRange> {
-    // %hlk CtrlHeader에서 command 추출 (순서대로)
-    let mut hlk_commands: Vec<String> = Vec::new();
+    // 모든 필드 CtrlHeader를 순회하면서 %hlk인 것의 (순서 인덱스, command) 수집
+    // code 3은 %hlk 외에도 %bmk, %pgn 등 모든 필드 타입에서 공용으로 사용되므로
+    // 필드 순서 인덱스로 정확히 대응시켜야 함
+    let mut field_index = 0usize;
+    let mut hlk_entries: Vec<(usize, String)> = Vec::new(); // (field_index, command)
     for record in &paragraph.records {
         if let ParagraphRecord::CtrlHeader { header, .. } = record {
-            if header.ctrl_id == "%hlk" {
-                if let CtrlHeaderData::Field { command, .. } = &header.data {
-                    hlk_commands.push(command.clone());
+            if matches!(header.data, CtrlHeaderData::Field { .. }) {
+                if header.ctrl_id == "%hlk" {
+                    if let CtrlHeaderData::Field { ref command, .. } = header.data {
+                        hlk_entries.push((field_index, command.clone()));
+                    }
                 }
+                field_index += 1; // 모든 필드 타입 카운트
             }
         }
     }
 
-    if hlk_commands.is_empty() {
+    if hlk_entries.is_empty() {
         return Vec::new();
     }
 
@@ -271,17 +278,15 @@ fn collect_hyperlink_ranges(
         }
     }
 
-    // code3과 code4를 순서대로 매칭
+    // hlk_entries의 field_index로 code3/4_positions를 참조
     let mut ranges = Vec::new();
-    let pair_count = code3_positions
-        .len()
-        .min(code4_positions.len())
-        .min(hlk_commands.len());
-
-    for i in 0..pair_count {
-        let start = code3_positions[i] + 8; // EXTENDED 제어 문자는 8 WCHAR 크기
-        let end = code4_positions[i];
-        if let Some(onclick) = hlk_command_to_onclick(&hlk_commands[i]) {
+    for (idx, command) in &hlk_entries {
+        if *idx >= code3_positions.len() || *idx >= code4_positions.len() {
+            continue;
+        }
+        let start = code3_positions[*idx] + 8; // EXTENDED 제어 문자는 8 WCHAR 크기
+        let end = code4_positions[*idx];
+        if let Some(onclick) = hlk_command_to_onclick(command) {
             ranges.push(HyperlinkRange {
                 start_original: start,
                 end_original: end,

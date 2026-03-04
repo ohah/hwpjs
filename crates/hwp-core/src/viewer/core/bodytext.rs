@@ -7,6 +7,7 @@
 /// Provides common bodytext processing logic used by all viewers.
 /// Output format is handled through the Renderer trait.
 use crate::document::{ColumnDivideType, CtrlHeader, HwpDocument, Paragraph, ParagraphRecord};
+use crate::viewer::core::outline::NumberTracker;
 use crate::viewer::core::renderer::{DocumentParts, Renderer};
 use crate::viewer::core::OutlineNumberTracker;
 use crate::viewer::{html, html::HtmlOptions, MarkdownOptions};
@@ -46,8 +47,14 @@ where
         unsafe {
             let md_options =
                 &*(options as *const R::Options as *const crate::viewer::markdown::MarkdownOptions);
-            let md_tracker = tracker.as_markdown_tracker_mut();
-            return convert_paragraph_to_markdown(paragraph, document, md_options, md_tracker);
+            let (md_tracker, md_number_tracker) = tracker.as_markdown_trackers_mut();
+            return convert_paragraph_to_markdown(
+                paragraph,
+                document,
+                md_options,
+                md_tracker,
+                md_number_tracker,
+            );
         }
     }
 
@@ -60,8 +67,10 @@ where
 /// Trait for outline number tracker reference
 /// 개요 번호 추적기 참조를 위한 트레이트
 trait TrackerRef {
-    /// Get mutable reference to Markdown tracker (for convert_paragraph_to_markdown)
-    unsafe fn as_markdown_tracker_mut(&mut self) -> &mut OutlineNumberTracker;
+    /// Get mutable references to Markdown trackers (for convert_paragraph_to_markdown)
+    unsafe fn as_markdown_trackers_mut(
+        &mut self,
+    ) -> (&mut OutlineNumberTracker, &mut NumberTracker);
     /// Get mutable reference to outline tracker (for process_paragraph outline numbering)
     fn as_outline_tracker_mut(&mut self) -> Option<&mut OutlineNumberTracker>;
 }
@@ -70,19 +79,21 @@ trait TrackerRef {
 /// 렌더러 타입별 추적기를 보관하는 열거형
 enum Tracker {
     Html(OutlineNumberTracker),
-    Markdown(OutlineNumberTracker),
+    Markdown(OutlineNumberTracker, NumberTracker),
 }
 
 impl TrackerRef for Tracker {
-    unsafe fn as_markdown_tracker_mut(&mut self) -> &mut OutlineNumberTracker {
+    unsafe fn as_markdown_trackers_mut(
+        &mut self,
+    ) -> (&mut OutlineNumberTracker, &mut NumberTracker) {
         match self {
-            Tracker::Markdown(tracker) => tracker,
+            Tracker::Markdown(outline, number) => (outline, number),
             _ => std::hint::unreachable_unchecked(),
         }
     }
     fn as_outline_tracker_mut(&mut self) -> Option<&mut OutlineNumberTracker> {
         match self {
-            Tracker::Html(tracker) | Tracker::Markdown(tracker) => Some(tracker),
+            Tracker::Html(tracker) | Tracker::Markdown(tracker, _) => Some(tracker),
         }
     }
 }
@@ -108,7 +119,7 @@ where
         if std::any::TypeId::of::<R::Options>() == std::any::TypeId::of::<HtmlOptions>() {
             Tracker::Html(OutlineNumberTracker::new())
         } else {
-            Tracker::Markdown(OutlineNumberTracker::new())
+            Tracker::Markdown(OutlineNumberTracker::new(), NumberTracker::new())
         };
 
     // Convert body text / 본문 텍스트를 변환

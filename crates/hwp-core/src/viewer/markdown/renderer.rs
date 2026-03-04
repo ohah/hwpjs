@@ -3,6 +3,7 @@
 use crate::document::{bodytext::Table, HwpDocument};
 use crate::viewer::core::outline::format_outline_number;
 use crate::viewer::core::renderer::{DocumentParts, Renderer, TextStyles};
+use crate::viewer::markdown::utils::format_outline_heading;
 
 /// Markdown Renderer
 pub struct MarkdownRenderer;
@@ -200,6 +201,6 @@ impl Renderer for MarkdownRenderer {
 
     fn render_outline_number(&self, level: u8, number: u32, content: &str) -> String {
         let num_str = format_outline_number(level, number);
-        format!("{} {}", num_str, content)
+        format_outline_heading(level, &num_str, content)
     }
 }

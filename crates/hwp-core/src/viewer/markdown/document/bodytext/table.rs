@@ -307,12 +307,14 @@ fn fill_cell_content(
                         ..
                     } => {
                         // SHAPE_COMPONENT의 children을 재귀적으로 처리 / Recursively process SHAPE_COMPONENT's children
+                        let mut number_tracker = crate::viewer::core::outline::NumberTracker::new();
                         let shape_parts =
                             crate::viewer::markdown::document::bodytext::shape_component::convert_shape_component_children_to_markdown(
                                 children,
                                 document,
                                 options.image_output_dir.as_deref(),
                                 tracker,
+                                &mut number_tracker,
                             );
                         for shape_part in shape_parts {
                             shape_part.contains("![이미지]");

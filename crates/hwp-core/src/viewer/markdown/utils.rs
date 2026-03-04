@@ -39,6 +39,17 @@ pub(crate) fn should_process_control_header(header: &crate::document::CtrlHeader
     }
 }
 
+/// 개요 번호와 텍스트를 마크다운 heading으로 포맷
+/// Format outline number and text as markdown heading
+pub(crate) fn format_outline_heading(level: u8, outline_number: &str, text: &str) -> String {
+    if level >= 1 && level <= 6 {
+        let heading = "#".repeat(level as usize);
+        format!("{} {} {}", heading, outline_number, text)
+    } else {
+        format!("{} {}", outline_number, text)
+    }
+}
+
 /// 개요 레벨이면 텍스트 앞에 개요 번호를 추가
 /// Add outline number prefix to text if it's an outline level
 pub(crate) fn convert_to_outline_with_number(
@@ -49,7 +60,7 @@ pub(crate) fn convert_to_outline_with_number(
 ) -> String {
     if let Some((level, number)) = compute_outline_number(para_header, document, tracker) {
         let outline_number = format_outline_number(level, number);
-        return format!("{} {}", outline_number, text);
+        return format_outline_heading(level, &outline_number, text);
     }
     text.to_string()
 }

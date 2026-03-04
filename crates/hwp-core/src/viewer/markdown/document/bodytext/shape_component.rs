@@ -4,6 +4,7 @@
 /// 스펙 문서 매핑: 표 57 - 본문의 데이터 레코드, SHAPE_COMPONENT (HWPTAG_BEGIN + 60)
 /// Spec mapping: Table 57 - BodyText data records, SHAPE_COMPONENT (HWPTAG_BEGIN + 60)
 use crate::document::{HwpDocument, ParagraphRecord};
+use crate::viewer::core::outline::NumberTracker;
 use crate::viewer::markdown::document::bodytext::shape_component_picture::convert_shape_component_picture_to_markdown;
 
 /// Convert ShapeComponent children to markdown
@@ -14,6 +15,7 @@ use crate::viewer::markdown::document::bodytext::shape_component_picture::conver
 /// * `document` - HWP 문서 / HWP document
 /// * `image_output_dir` - 이미지 출력 디렉토리 (선택) / Image output directory (optional)
 /// * `tracker` - 개요 번호 추적기 / Outline number tracker
+/// * `number_tracker` - 번호매기기 추적기 / Number tracker
 ///
 /// # Returns / 반환값
 /// 마크다운 문자열 리스트 / List of markdown strings
@@ -22,6 +24,7 @@ pub(crate) fn convert_shape_component_children_to_markdown(
     document: &HwpDocument,
     image_output_dir: Option<&str>,
     tracker: &mut crate::viewer::core::OutlineNumberTracker,
+    number_tracker: &mut NumberTracker,
 ) -> Vec<String> {
     use crate::viewer::markdown::document::bodytext::paragraph::convert_paragraph_to_markdown;
     use crate::viewer::markdown::MarkdownOptions;
@@ -58,7 +61,13 @@ pub(crate) fn convert_shape_component_children_to_markdown(
                 // SHAPE_COMPONENT 내부의 LIST_HEADER는 글상자 텍스트를 포함할 수 있음
                 // LIST_HEADER inside SHAPE_COMPONENT can contain textbox text
                 for para in paragraphs {
-                    let para_md = convert_paragraph_to_markdown(para, document, &options, tracker);
+                    let para_md = convert_paragraph_to_markdown(
+                        para,
+                        document,
+                        &options,
+                        tracker,
+                        number_tracker,
+                    );
                     if !para_md.is_empty() {
                         parts.push(para_md);
                     }
@@ -92,11 +101,13 @@ mod tests {
     fn test_convert_shape_component_children_empty_children() {
         let document = create_mock_document();
         let mut tracker = crate::viewer::core::OutlineNumberTracker::new();
+        let mut number_tracker = NumberTracker::new();
         let result = convert_shape_component_children_to_markdown(
             &[],
             &document,
             None,
             &mut tracker,
+            &mut number_tracker,
         );
         assert!(result.is_empty());
     }
@@ -109,11 +120,13 @@ mod tests {
         // Test with unsupported child types (should be ignored)
         // We'll just test with an empty Vec for now as creating unsupported children requires complex types
         let children: Vec<ParagraphRecord> = vec![];
+        let mut number_tracker = NumberTracker::new();
         let result = convert_shape_component_children_to_markdown(
             &children,
             &document,
             None,
             &mut tracker,
+            &mut number_tracker,
         );
 
         // Should return empty vector
@@ -127,17 +140,20 @@ mod tests {
 
         // Test that function accepts these parameters
         let children: Vec<ParagraphRecord> = vec![];
+        let mut number_tracker = NumberTracker::new();
         let result1 = convert_shape_component_children_to_markdown(
             &children,
             &document,
             None,
             &mut tracker,
+            &mut number_tracker,
         );
         let result2 = convert_shape_component_children_to_markdown(
             &children,
             &document,
             Some("test_output"),
             &mut tracker,
+            &mut number_tracker,
         );
 
         // Both should return empty results
