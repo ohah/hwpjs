@@ -6,6 +6,17 @@
 use crate::document::bodytext::{CharShapeInfo, ControlChar, ControlCharPosition};
 use crate::document::CharShape;
 
+/// 하이퍼링크 정보 (clean text 기준 위치) / Hyperlink info (clean text positions)
+#[derive(Debug, Clone)]
+pub struct HyperlinkInfo {
+    /// Clean text 시작 위치 / Clean text start position
+    pub start: usize,
+    /// Clean text 끝 위치 (exclusive) / Clean text end position (exclusive)
+    pub end: usize,
+    /// URL
+    pub url: String,
+}
+
 /// 의미 있는 텍스트인지 확인합니다. / Check if text is meaningful.
 ///
 /// 공백만 있는 텍스트는 의미 없다고 판단합니다.
@@ -51,6 +62,7 @@ fn convert_text_with_char_shapes<'a>(
     control_positions: &[ControlCharPosition],
     char_shapes: &[CharShapeInfo],
     get_char_shape: &'a dyn Fn(u32) -> Option<&'a CharShape>,
+    hyperlinks: &[HyperlinkInfo],
 ) -> Option<String> {
     if text.trim().is_empty() {
         return None;
@@ -72,6 +84,15 @@ fn convert_text_with_char_shapes<'a>(
         let pos = shape_info.position as usize;
         if pos <= text_len {
             positions.push(pos);
+        }
+    }
+    // 하이퍼링크 경계도 구간 분할점에 추가 / Add hyperlink boundaries as segment split points
+    for hlk in hyperlinks {
+        if hlk.start <= text_len {
+            positions.push(hlk.start);
+        }
+        if hlk.end <= text_len {
+            positions.push(hlk.end);
         }
     }
     positions.push(text_len);
@@ -112,6 +133,12 @@ fn convert_text_with_char_shapes<'a>(
     // 각 구간에 스타일 적용하여 결과 생성 / Generate result by applying styles to each segment
     for (start, end, char_shape) in &segments {
         if *start < *end && *end <= text_len {
+            // 하이퍼링크 시작 확인 / Check if hyperlink starts at this segment
+            let hlk_starting = hyperlinks.iter().find(|h| h.start == *start);
+            if hlk_starting.is_some() {
+                result.push('[');
+            }
+
             // 이 구간 내에 PARA_BREAK/LINE_BREAK가 있는지 확인 / Check if there are breaks in this segment
             let mut segment_breaks: Vec<usize> = break_positions
                 .iter()
@@ -172,6 +199,11 @@ fn convert_text_with_char_shapes<'a>(
                     }
                 }
             }
+
+            // 하이퍼링크 끝 확인 / Check if hyperlink ends at this segment
+            if let Some(hlk) = hyperlinks.iter().find(|h| h.end == *end) {
+                result.push_str(&format!("]({})", hlk.url));
+            }
         }
     }
 
@@ -181,6 +213,44 @@ fn convert_text_with_char_shapes<'a>(
     } else {
         None
     }
+}
+
+/// 하이퍼링크를 텍스트에 적용 / Apply hyperlinks to plain text
+fn apply_hyperlinks_to_text(text: &str, hyperlinks: &[HyperlinkInfo]) -> String {
+    if hyperlinks.is_empty() {
+        return text.to_string();
+    }
+
+    let chars: Vec<char> = text.chars().collect();
+    let mut result = String::new();
+    let mut pos = 0;
+
+    for hlk in hyperlinks {
+        let start = hlk.start.min(chars.len());
+        let end = hlk.end.min(chars.len());
+        if start >= end {
+            continue;
+        }
+
+        // 하이퍼링크 이전 텍스트 추가 / Add text before hyperlink
+        if start > pos {
+            let before: String = chars[pos..start].iter().collect();
+            result.push_str(&before);
+        }
+
+        // 하이퍼링크 텍스트를 마크다운 링크로 래핑 / Wrap hyperlink text as markdown link
+        let link_text: String = chars[start..end].iter().collect();
+        result.push_str(&format!("[{}]({})", link_text, hlk.url));
+        pos = end;
+    }
+
+    // 나머지 텍스트 추가 / Add remaining text
+    if pos < chars.len() {
+        let remaining: String = chars[pos..].iter().collect();
+        result.push_str(&remaining);
+    }
+
+    result
 }
 
 /// 텍스트에 마크다운 스타일을 적용합니다. / Apply markdown styles to text.
@@ -224,8 +294,9 @@ fn apply_markdown_styles(text: &str, bold: bool, italic: bool, strikethrough: bo
 pub fn convert_para_text_to_markdown(
     text: &str,
     control_positions: &[ControlCharPosition],
+    hyperlinks: &[HyperlinkInfo],
 ) -> Option<String> {
-    convert_para_text_to_markdown_with_char_shapes(text, control_positions, &[], None)
+    convert_para_text_to_markdown_with_char_shapes(text, control_positions, &[], None, hyperlinks)
 }
 
 /// CharShape 정보를 사용하여 ParaText를 마크다운으로 변환
@@ -244,11 +315,18 @@ pub fn convert_para_text_to_markdown_with_char_shapes<'a>(
     control_positions: &[ControlCharPosition],
     char_shapes: &[CharShapeInfo],
     get_char_shape: Option<&'a dyn Fn(u32) -> Option<&'a CharShape>>,
+    hyperlinks: &[HyperlinkInfo],
 ) -> Option<String> {
     // CharShape 정보가 있으면 텍스트를 구간별로 나누어 스타일 적용 / If CharShape info exists, divide text into segments and apply styles
     if !char_shapes.is_empty() {
         return get_char_shape.and_then(|fn_char_shape| {
-            convert_text_with_char_shapes(text, control_positions, char_shapes, fn_char_shape)
+            convert_text_with_char_shapes(
+                text,
+                control_positions,
+                char_shapes,
+                fn_char_shape,
+                hyperlinks,
+            )
         });
     }
 
@@ -262,6 +340,9 @@ pub fn convert_para_text_to_markdown_with_char_shapes<'a>(
         if is_meaningful_text(text, control_positions) {
             let trimmed = text.trim();
             if !trimmed.is_empty() {
+                if !hyperlinks.is_empty() {
+                    return Some(apply_hyperlinks_to_text(trimmed, hyperlinks));
+                }
                 return Some(trimmed.to_string());
             }
         }

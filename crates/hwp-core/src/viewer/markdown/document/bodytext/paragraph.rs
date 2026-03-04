@@ -3,19 +3,145 @@
 ///
 /// 스펙 문서 매핑: 표 57 - 본문의 데이터 레코드
 /// Spec mapping: Table 57 - BodyText data records
+use crate::document::bodytext::control_char::{ControlChar, ControlCharPosition};
+use crate::document::bodytext::ctrl_header::CtrlHeaderData;
 use crate::document::bodytext::CharShapeInfo;
 use crate::document::CharShape;
-use crate::document::{HwpDocument, Paragraph, ParagraphRecord};
+use crate::document::{HeaderShapeType, HwpDocument, Paragraph, ParagraphRecord};
+use crate::viewer::core::outline::NumberTracker;
 use crate::viewer::core::OutlineNumberTracker;
 use crate::viewer::markdown::collect::collect_text_and_images_from_paragraph;
 use crate::viewer::markdown::document::bodytext::para_text::{
-    convert_para_text_to_markdown, convert_para_text_to_markdown_with_char_shapes,
+    convert_para_text_to_markdown, convert_para_text_to_markdown_with_char_shapes, HyperlinkInfo,
 };
 use crate::viewer::markdown::document::bodytext::shape_component::convert_shape_component_children_to_markdown;
 use crate::viewer::markdown::document::bodytext::shape_component_picture::convert_shape_component_picture_to_markdown;
 use crate::viewer::markdown::document::bodytext::table::convert_table_to_markdown;
 use crate::viewer::markdown::utils::{convert_to_outline_with_number, is_text_part};
 use crate::viewer::markdown::MarkdownOptions;
+
+/// 원본 WCHAR 위치를 clean text 위치로 변환
+/// Convert original WCHAR position to cleaned text position
+fn original_to_cleaned_index(pos: usize, control_chars: &[ControlCharPosition]) -> usize {
+    let mut delta: isize = 0;
+    for cc in control_chars.iter() {
+        if cc.position >= pos {
+            break;
+        }
+        let size = ControlChar::get_size_by_code(cc.code) as isize;
+        let contributes = if ControlChar::is_convertible(cc.code)
+            && cc.code != ControlChar::PARA_BREAK
+            && cc.code != ControlChar::LINE_BREAK
+        {
+            1
+        } else {
+            0
+        } as isize;
+        delta += contributes - size;
+    }
+    (pos as isize + delta).max(0) as usize
+}
+
+/// %hlk command 문자열에서 URL 추출
+/// Extract URL from %hlk command string
+fn hlk_command_to_url(command: &str) -> Option<String> {
+    let parts: Vec<&str> = command.split(';').collect();
+    if parts.len() < 2 {
+        return None;
+    }
+    let url_part = parts[0];
+    let link_type = parts[1];
+    let target = url_part.split('|').next().unwrap_or("");
+
+    let unescape = |s: &str| -> String {
+        s.replace("\\:", ":")
+            .replace("\\?", "?")
+            .replace("\\\\", "\\")
+    };
+
+    match link_type {
+        "1" => Some(unescape(target)),
+        "2" => {
+            let email = unescape(target);
+            if email.starts_with("mailto:") {
+                Some(email)
+            } else {
+                Some(format!("mailto:{}", email))
+            }
+        }
+        "0" => {
+            let name = unescape(target);
+            if name.is_empty() {
+                Some("#".to_string())
+            } else {
+                Some(format!("#{}", name))
+            }
+        }
+        _ => None, // file (type 3) 등은 마크다운에서 무시
+    }
+}
+
+/// 문단에서 하이퍼링크 범위와 URL 정보를 수집
+/// Collect hyperlink ranges and URL info from paragraph
+fn collect_hyperlink_info(
+    paragraph: &Paragraph,
+    control_char_positions: &[ControlCharPosition],
+) -> Vec<HyperlinkInfo> {
+    // 모든 필드 CtrlHeader를 순회하면서 %hlk인 것의 (순서 인덱스, command) 수집
+    // code 3은 %hlk 외에도 %bmk, %pgn 등 모든 필드 타입에서 공용으로 사용되므로
+    // 필드 순서 인덱스로 정확히 대응시켜야 함
+    let mut field_index = 0usize;
+    let mut hlk_entries: Vec<(usize, String)> = Vec::new(); // (field_index, command)
+    for record in &paragraph.records {
+        if let ParagraphRecord::CtrlHeader { header, .. } = record {
+            if matches!(header.data, CtrlHeaderData::Field { .. }) {
+                if header.ctrl_id == "%hlk" {
+                    if let CtrlHeaderData::Field { ref command, .. } = header.data {
+                        hlk_entries.push((field_index, command.clone()));
+                    }
+                }
+                field_index += 1; // 모든 필드 타입 카운트
+            }
+        }
+    }
+
+    if hlk_entries.is_empty() {
+        return Vec::new();
+    }
+
+    // code 3/4 위치 수집 (모든 필드의 시작/끝 위치)
+    let mut code3_positions: Vec<usize> = Vec::new();
+    let mut code4_positions: Vec<usize> = Vec::new();
+    for cc in control_char_positions {
+        if cc.code == 3 {
+            code3_positions.push(cc.position);
+        } else if cc.code == ControlChar::FIELD_END {
+            code4_positions.push(cc.position);
+        }
+    }
+
+    let mut ranges = Vec::new();
+
+    // hlk_entries의 field_index로 code3/4_positions를 참조
+    for (idx, command) in &hlk_entries {
+        if *idx >= code3_positions.len() || *idx >= code4_positions.len() {
+            continue;
+        }
+        let start_original = code3_positions[*idx] + 8; // EXTENDED 제어 문자는 8 WCHAR
+        let end_original = code4_positions[*idx];
+
+        if let Some(url) = hlk_command_to_url(command) {
+            let start = original_to_cleaned_index(start_original, control_char_positions);
+            let end = original_to_cleaned_index(end_original, control_char_positions);
+
+            if start < end {
+                ranges.push(HyperlinkInfo { start, end, url });
+            }
+        }
+    }
+
+    ranges
+}
 
 /// Convert a paragraph to markdown
 /// 문단을 마크다운으로 변환
@@ -24,6 +150,7 @@ pub fn convert_paragraph_to_markdown(
     document: &HwpDocument,
     options: &MarkdownOptions,
     tracker: &mut OutlineNumberTracker,
+    number_tracker: &mut NumberTracker,
 ) -> String {
     if paragraph.records.is_empty() {
         return String::new();
@@ -54,20 +181,20 @@ pub fn convert_paragraph_to_markdown(
                 inline_control_params: _,
                 ..
             } => {
+                // 하이퍼링크 범위 수집 / Collect hyperlink ranges
+                let hyperlinks = collect_hyperlink_info(paragraph, control_char_positions);
+
                 // ParaText 변환 / Convert ParaText
-                // 표 셀 내부의 텍스트는 이미 Table.cells에 포함되어 convert_table_to_markdown에서 처리되므로
-                // 여기서는 표 앞뒤의 일반 텍스트도 정상적으로 처리됨
-                // Text inside table cells is already included in Table.cells and processed in convert_table_to_markdown,
-                // so regular text before/after tables is also processed normally here
                 let text_md = if !char_shapes.is_empty() {
                     convert_para_text_to_markdown_with_char_shapes(
                         text,
                         control_char_positions,
                         &char_shapes,
                         Some(&get_char_shape),
+                        &hyperlinks,
                     )
                 } else {
-                    convert_para_text_to_markdown(text, control_char_positions)
+                    convert_para_text_to_markdown(text, control_char_positions, &hyperlinks)
                 };
 
                 if let Some(text_md) = text_md {
@@ -86,6 +213,7 @@ pub fn convert_paragraph_to_markdown(
                     document,
                     options.image_output_dir.as_deref(),
                     tracker,
+                    number_tracker,
                 );
                 parts.extend(shape_parts);
             }
@@ -110,10 +238,21 @@ pub fn convert_paragraph_to_markdown(
                 // 마크다운으로 표현할 수 없는 컨트롤 헤더는 건너뜀 / Skip control headers that cannot be expressed in markdown
                 use crate::viewer::markdown::utils::should_process_control_header;
                 if !should_process_control_header(header) {
+                    // %hlk는 이미 ParaText에서 인라인 링크로 처리됨 → children/paragraphs 건너뜀
+                    // %hlk is already processed as inline link in ParaText → skip children/paragraphs
+                    if header.ctrl_id == "%hlk" {
+                        continue;
+                    }
+
                     // CTRL_HEADER 내부의 직접 문단 처리 / Process direct paragraphs inside CTRL_HEADER
                     for para in ctrl_paragraphs {
-                        let para_md =
-                            convert_paragraph_to_markdown(para, document, options, tracker);
+                        let para_md = convert_paragraph_to_markdown(
+                            para,
+                            document,
+                            options,
+                            tracker,
+                            number_tracker,
+                        );
                         if !para_md.is_empty() {
                             parts.push(para_md);
                         }
@@ -229,7 +368,11 @@ pub fn convert_paragraph_to_markdown(
                                     // 표가 없거나 표 셀 내부가 아닌 경우 일반 처리 / General processing if no table or not inside table cell
                                     for para in paragraphs {
                                         let para_md = convert_paragraph_to_markdown(
-                                            para, document, options, tracker,
+                                            para,
+                                            document,
+                                            options,
+                                            tracker,
+                                            number_tracker,
                                         );
                                         if !para_md.is_empty() {
                                             parts.push(para_md);
@@ -240,7 +383,11 @@ pub fn convert_paragraph_to_markdown(
                                 // 표가 없는 경우 일반 처리 / General processing if no table
                                 for para in paragraphs {
                                     let para_md = convert_paragraph_to_markdown(
-                                        para, document, options, tracker,
+                                        para,
+                                        document,
+                                        options,
+                                        tracker,
+                                        number_tracker,
                                     );
                                     if !para_md.is_empty() {
                                         parts.push(para_md);
@@ -291,7 +438,11 @@ pub fn convert_paragraph_to_markdown(
                                         // LIST_HEADER의 paragraphs 처리 (글상자 텍스트) / Process LIST_HEADER's paragraphs (textbox text)
                                         for para in paragraphs {
                                             let para_md = convert_paragraph_to_markdown(
-                                                para, document, options, tracker,
+                                                para,
+                                                document,
+                                                options,
+                                                tracker,
+                                                number_tracker,
                                             );
                                             if !para_md.is_empty() {
                                                 shape_parts_to_output.push(para_md);
@@ -402,8 +553,13 @@ pub fn convert_paragraph_to_markdown(
 
                     // 표 셀 내부가 아닌 경우에만 처리 / Only process if not inside table cell
                     if !is_table_cell {
-                        let para_md =
-                            convert_paragraph_to_markdown(para, document, options, tracker);
+                        let para_md = convert_paragraph_to_markdown(
+                            para,
+                            document,
+                            options,
+                            tracker,
+                            number_tracker,
+                        );
                         if !para_md.is_empty() {
                             parts.push(para_md);
                         }
@@ -419,14 +575,52 @@ pub fn convert_paragraph_to_markdown(
     // 같은 문단 내의 텍스트를 합침 / Combine text in the same paragraph
     if !text_parts.is_empty() {
         let combined_text = text_parts.join("");
-        // 개요 레벨 확인 및 개요 번호 추가 / Check outline level and add outline number
-        let outline_md = convert_to_outline_with_number(
-            &combined_text,
-            &paragraph.para_header,
-            document,
-            tracker,
-        );
-        parts.push(outline_md);
+
+        // 문단 마커(글머리표/번호/개요) 확인 / Check paragraph marker (bullet/number/outline)
+        let para_shape_id = paragraph.para_header.para_shape_id as usize;
+        let header_shape_type = document
+            .doc_info
+            .para_shapes
+            .get(para_shape_id)
+            .map(|ps| ps.attributes1.header_shape_type)
+            .unwrap_or(HeaderShapeType::None);
+
+        let final_text = match header_shape_type {
+            HeaderShapeType::Bullet => {
+                format!("- {}", combined_text)
+            }
+            HeaderShapeType::Number => {
+                use crate::viewer::core::outline::compute_paragraph_marker;
+                if let Some(marker) = compute_paragraph_marker(
+                    &paragraph.para_header,
+                    document,
+                    tracker,
+                    number_tracker,
+                    0,
+                ) {
+                    let level = document
+                        .doc_info
+                        .para_shapes
+                        .get(para_shape_id)
+                        .map(|ps| ps.attributes1.paragraph_level)
+                        .unwrap_or(0);
+                    let indent = "  ".repeat(level as usize);
+                    format!("{}{} {}", indent, marker.marker_text, combined_text)
+                } else {
+                    combined_text
+                }
+            }
+            _ => {
+                // 개요 레벨 확인 및 개요 번호 추가 / Check outline level and add outline number
+                convert_to_outline_with_number(
+                    &combined_text,
+                    &paragraph.para_header,
+                    document,
+                    tracker,
+                )
+            }
+        };
+        parts.push(final_text);
     }
 
     // 마크다운 문법에 맞게 개행 처리 / Handle line breaks according to markdown syntax
@@ -470,21 +664,21 @@ mod tests {
     #[test]
     fn test_para_text_conversion() {
         let text = "Plain text";
-        let result = convert_para_text_to_markdown(text, &vec![]);
+        let result = convert_para_text_to_markdown(text, &vec![], &[]);
         assert!(result.is_some());
     }
 
     #[test]
     fn test_para_text_empty() {
         let text = "";
-        let result = convert_para_text_to_markdown(text, &vec![]);
+        let result = convert_para_text_to_markdown(text, &vec![], &[]);
         assert!(result.is_none());
     }
 
     #[test]
     fn test_para_text_whitespace() {
         let text = "   ";
-        let result = convert_para_text_to_markdown(text, &vec![]);
+        let result = convert_para_text_to_markdown(text, &vec![], &[]);
         assert!(result.is_none());
     }
 
@@ -493,7 +687,7 @@ mod tests {
         let text = "Styled text";
         let char_shapes = vec![];
         let result =
-            convert_para_text_to_markdown_with_char_shapes(text, &vec![], &char_shapes, None);
+            convert_para_text_to_markdown_with_char_shapes(text, &vec![], &char_shapes, None, &[]);
         assert!(result.is_some());
     }
 }

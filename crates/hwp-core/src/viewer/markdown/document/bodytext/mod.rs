@@ -52,6 +52,8 @@ pub fn convert_bodytext_to_markdown(
 
     // 개요 번호 추적기 생성 / Create outline number tracker
     let mut outline_tracker = crate::viewer::core::OutlineNumberTracker::new();
+    // 문단번호 추적기 생성 / Create number tracker
+    let mut number_tracker = crate::viewer::core::outline::NumberTracker::new();
 
     // Convert body text to markdown / 본문 텍스트를 마크다운으로 변환
     for section in &document.body_text.sections {
@@ -96,6 +98,7 @@ pub fn convert_bodytext_to_markdown(
                                             document,
                                             options,
                                             &mut outline_tracker,
+                                            &mut number_tracker,
                                         );
                                         if !para_md.is_empty() {
                                             headers.push(para_md);
@@ -112,6 +115,7 @@ pub fn convert_bodytext_to_markdown(
                                         document,
                                         options,
                                         &mut outline_tracker,
+                                        &mut number_tracker,
                                     );
                                     if !para_md.is_empty() {
                                         headers.push(para_md);
@@ -136,6 +140,7 @@ pub fn convert_bodytext_to_markdown(
                                             document,
                                             options,
                                             &mut outline_tracker,
+                                            &mut number_tracker,
                                         );
                                         if !para_md.is_empty() {
                                             footers.push(para_md);
@@ -152,6 +157,7 @@ pub fn convert_bodytext_to_markdown(
                                         document,
                                         options,
                                         &mut outline_tracker,
+                                        &mut number_tracker,
                                     );
                                     if !para_md.is_empty() {
                                         footers.push(para_md);
@@ -170,6 +176,7 @@ pub fn convert_bodytext_to_markdown(
                                     document,
                                     options,
                                     &mut outline_tracker,
+                                    &mut number_tracker,
                                 );
                                 if !para_md.is_empty() {
                                     footnotes.push(para_md);
@@ -189,6 +196,7 @@ pub fn convert_bodytext_to_markdown(
                                     document,
                                     options,
                                     &mut outline_tracker,
+                                    &mut number_tracker,
                                 );
                                 if !para_md.is_empty() {
                                     endnotes.push(para_md);
@@ -227,6 +235,7 @@ pub fn convert_bodytext_to_markdown(
                     document,
                     options,
                     &mut outline_tracker,
+                    &mut number_tracker,
                 );
                 if !markdown.is_empty() {
                     body_lines.push(markdown);

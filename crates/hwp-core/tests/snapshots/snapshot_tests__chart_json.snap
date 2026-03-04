@@ -8237,7 +8237,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 22,
+                                  "command": "=SUM(B?:E?)??%g,;;67.5",
+                                  "id": 1356994927
                                 }
                               ]
                             }
@@ -8888,7 +8894,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 22,
+                                  "command": "=SUM(B?:E?)??%g,;;73.9",
+                                  "id": 1356994928
                                 }
                               ]
                             }
@@ -9539,7 +9551,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 22,
+                                  "command": "=SUM(B?:E?)??%g,;;93.4",
+                                  "id": 1356994929
                                 }
                               ]
                             }
@@ -11174,7 +11192,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 22,
+                        "command": "=SUM(B?:E?)??%g,;;67.5",
+                        "id": 1356994927
                       }
                     ]
                   },
@@ -11675,7 +11699,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 22,
+                        "command": "=SUM(B?:E?)??%g,;;73.9",
+                        "id": 1356994928
                       }
                     ]
                   },
@@ -12176,7 +12206,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 22,
+                        "command": "=SUM(B?:E?)??%g,;;93.4",
+                        "id": 1356994929
                       }
                     ]
                   },
@@ -14681,7 +14717,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 25,
+                                  "command": "=SUM(B?:E?)??%g,;;659,100",
+                                  "id": 1356994935
                                 }
                               ]
                             }
@@ -15332,7 +15374,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 25,
+                                  "command": "=SUM(B?:E?)??%g,;;731,000",
+                                  "id": 1356994936
                                 }
                               ]
                             }
@@ -15983,7 +16031,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 25,
+                                  "command": "=SUM(B?:E?)??%g,;;523,500",
+                                  "id": 1356994937
                                 }
                               ]
                             }
@@ -17618,7 +17672,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 25,
+                        "command": "=SUM(B?:E?)??%g,;;659,100",
+                        "id": 1356994935
                       }
                     ]
                   },
@@ -18119,7 +18179,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 25,
+                        "command": "=SUM(B?:E?)??%g,;;731,000",
+                        "id": 1356994936
                       }
                     ]
                   },
@@ -18620,7 +18686,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 25,
+                        "command": "=SUM(B?:E?)??%g,;;523,500",
+                        "id": 1356994937
                       }
                     ]
                   },
@@ -21655,7 +21727,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 25,
+                                  "command": "=SUM(B?:E?)??%g,;;659,100",
+                                  "id": 1356994935
                                 }
                               ]
                             }
@@ -22306,7 +22384,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 25,
+                                  "command": "=SUM(B?:E?)??%g,;;731,000",
+                                  "id": 1356994936
                                 }
                               ]
                             }
@@ -22957,7 +23041,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 25,
+                                  "command": "=SUM(B?:E?)??%g,;;523,500",
+                                  "id": 1356994937
                                 }
                               ]
                             }
@@ -25670,7 +25760,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 21,
+                        "command": "=SUM(?2:?4)??%g,;;245",
+                        "id": 1356994944
                       }
                     ]
                   },
@@ -25786,7 +25882,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 21,
+                        "command": "=SUM(?2:?4)??%g,;;136",
+                        "id": 1356994945
                       }
                     ]
                   },
@@ -25902,7 +26004,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 21,
+                        "command": "=SUM(?2:?4)??%g,;;152",
+                        "id": 1356994946
                       }
                     ]
                   },
@@ -26018,7 +26126,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 21,
+                        "command": "=SUM(?2:?4)??%g,;;464",
+                        "id": 1356994947
                       }
                     ]
                   },
@@ -28138,7 +28252,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 26,
+                                  "command": "=AVG(B?:E?)??%.2f,;;266.00",
+                                  "id": 1356994953
                                 }
                               ]
                             }
@@ -28789,7 +28909,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 26,
+                                  "command": "=AVG(B?:E?)??%.2f,;;287.75",
+                                  "id": 1356994954
                                 }
                               ]
                             }
@@ -29440,7 +29566,13 @@ expression: json
                                   "type": "ctrl_header",
                                   "ctrl_id": "%fmu",
                                   "ctrl_id_value": 627469685,
-                                  "data_type": "other"
+                                  "data_type": "field",
+                                  "field_type": "%fmu",
+                                  "attribute": 0,
+                                  "other_attr": 8,
+                                  "command_len": 26,
+                                  "command": "=AVG(B?:E?)??%.2f,;;224.00",
+                                  "id": 1356994955
                                 }
                               ]
                             }
@@ -31075,7 +31207,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 26,
+                        "command": "=AVG(B?:E?)??%.2f,;;266.00",
+                        "id": 1356994953
                       }
                     ]
                   },
@@ -31576,7 +31714,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 26,
+                        "command": "=AVG(B?:E?)??%.2f,;;287.75",
+                        "id": 1356994954
                       }
                     ]
                   },
@@ -32077,7 +32221,13 @@ expression: json
                         "type": "ctrl_header",
                         "ctrl_id": "%fmu",
                         "ctrl_id_value": 627469685,
-                        "data_type": "other"
+                        "data_type": "field",
+                        "field_type": "%fmu",
+                        "attribute": 0,
+                        "other_attr": 8,
+                        "command_len": 26,
+                        "command": "=AVG(B?:E?)??%.2f,;;224.00",
+                        "id": 1356994955
                       }
                     ]
                   },
