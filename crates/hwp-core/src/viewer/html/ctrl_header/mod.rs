@@ -50,13 +50,32 @@ pub(super) fn paragraphs_from_children_or_param<'a>(
     ctrl_paragraphs
 }
 
+/// 각주/미주 블록 데이터 (페이지 flush 시점에 HTML 생성)
+/// Footnote/endnote block data (HTML generated at page flush time)
+pub struct FootnoteBlock {
+    /// 각주/미주 번호 (1-based)
+    pub number: u32,
+    /// 본문 HTML (hls 내부 텍스트)
+    pub body_html: String,
+    /// 블록 높이 (mm)
+    pub height_mm: f64,
+    /// 줄 높이 (mm)
+    pub line_height_mm: f64,
+    /// 세그먼트 너비 (mm)
+    pub width_mm: f64,
+    /// ParaShape 클래스 (예: "ps10")
+    pub para_shape_class: String,
+    /// CharShape 클래스 (예: "cs4")
+    pub char_shape_class: String,
+}
+
 /// 문서 레벨 각주/미주 수집 상태 (HTML 뷰어에서 본문 반복 시 전달)
 /// Document-level footnote/endnote collection state (passed during body iteration in HTML viewer)
 pub struct FootnoteEndnoteState<'a> {
     pub footnote_counter: &'a mut u32,
     pub endnote_counter: &'a mut u32,
-    pub footnote_contents: &'a mut Vec<String>,
-    pub endnote_contents: &'a mut Vec<String>,
+    pub footnote_contents: &'a mut Vec<FootnoteBlock>,
+    pub endnote_contents: &'a mut Vec<FootnoteBlock>,
 }
 
 /// CtrlHeader 처리 결과 / CtrlHeader processing result
