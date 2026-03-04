@@ -706,6 +706,7 @@ pub(crate) fn render_cells(
                                     footnote_refs: &[],
                                     endnote_refs: &[],
                                     auto_numbers: &[],
+                                    hyperlinks: &[],
                                 };
                                 let context = LineSegmentRenderContext {
                                     document,
@@ -759,6 +760,7 @@ pub(crate) fn render_cells(
                             footnote_refs: &[],
                             endnote_refs: &[],
                             auto_numbers: &[],
+                            hyperlinks: &[],
                         };
                         let context = LineSegmentRenderContext {
                             document,

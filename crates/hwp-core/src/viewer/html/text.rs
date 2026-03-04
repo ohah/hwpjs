@@ -130,6 +130,116 @@ pub fn render_text(
     result
 }
 
+/// onclick 속성이 포함된 텍스트를 HTML로 렌더링 / Render text to HTML with onclick attribute
+pub fn render_text_with_onclick(
+    text: &str,
+    char_shapes: &[CharShapeInfo],
+    document: &HwpDocument,
+    _css_prefix: &str,
+    onclick: &str,
+) -> String {
+    if text.is_empty() {
+        return String::new();
+    }
+
+    let text_chars: Vec<char> = text.chars().collect();
+    let text_len = text_chars.len();
+
+    let mut segments: Vec<(usize, usize, Option<usize>)> = Vec::new();
+
+    let mut sorted_shapes: Vec<_> = char_shapes.iter().collect();
+    sorted_shapes.sort_by_key(|shape| shape.position);
+
+    let mut positions = vec![0];
+    for shape_info in &sorted_shapes {
+        let pos = shape_info.position as usize;
+        if pos <= text_len {
+            positions.push(pos);
+        }
+    }
+    positions.push(text_len);
+    positions.sort();
+    positions.dedup();
+
+    for i in 0..positions.len() - 1 {
+        let start = positions[i];
+        let end = positions[i + 1];
+
+        let char_shape_id = sorted_shapes
+            .iter()
+            .rev()
+            .find(|shape| (shape.position as usize) <= start)
+            .map(|shape| shape.shape_id as usize);
+
+        segments.push((start, end, char_shape_id));
+    }
+
+    let mut result = String::new();
+    for (start, end, char_shape_id_opt) in segments {
+        if start >= end {
+            continue;
+        }
+
+        let segment_text: String = text_chars[start..end].iter().collect();
+        if segment_text.is_empty() {
+            continue;
+        }
+
+        let char_shape_opt = char_shape_id_opt.and_then(|id| {
+            if id < document.doc_info.char_shapes.len() {
+                document.doc_info.char_shapes.get(id)
+            } else {
+                None
+            }
+        });
+
+        let mut text_for_styling = segment_text.to_string();
+        if text_for_styling.starts_with(' ') {
+            text_for_styling = text_for_styling.replacen(' ', "&nbsp;", 1);
+        }
+        if text_for_styling.ends_with(' ') {
+            text_for_styling.pop();
+            text_for_styling.push_str("&nbsp;");
+        }
+
+        if let Some(char_shape) = char_shape_opt {
+            let class_name = format!("cs{}", char_shape_id_opt.unwrap());
+
+            let effective_strikethrough = char_shape.attributes.strikethrough > 0
+                || (char_shape.attributes.underline_type == 2);
+            let effective_underline = char_shape.attributes.underline_type == 1;
+            let mut styled_text = text_for_styling;
+            if char_shape.attributes.italic {
+                styled_text = format!("<em>{}</em>", styled_text);
+            }
+            if effective_underline {
+                styled_text = format!("<u>{}</u>", styled_text);
+            }
+            if effective_strikethrough {
+                styled_text = format!("<s>{}</s>", styled_text);
+            }
+            if char_shape.attributes.superscript {
+                styled_text = format!("<sup>{}</sup>", styled_text);
+            }
+            if char_shape.attributes.subscript {
+                styled_text = format!("<sub>{}</sub>", styled_text);
+            }
+
+            result.push_str(&format!(
+                r#"<span class="hrt {}" onclick="{}">{}</span>"#,
+                class_name, onclick, styled_text
+            ));
+        } else {
+            result.push_str(&format!(
+                r#"<span class="hrt" onclick="{}">{}</span>"#,
+                onclick, text_for_styling
+            ));
+        }
+    }
+
+    result
+}
+
 /// 문단에서 텍스트와 CharShape 추출 / Extract text and CharShape from paragraph
 pub fn extract_text_and_shapes(
     paragraph: &crate::document::bodytext::Paragraph,

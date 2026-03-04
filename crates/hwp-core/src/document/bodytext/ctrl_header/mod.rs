@@ -67,6 +67,7 @@ impl CtrlHeader {
             CtrlId::OVERLAP => overlap::parse_overlap(remaining_data)?,
             CtrlId::COMMENT => comment::parse_comment(remaining_data)?,
             CtrlId::HIDDEN_DESC => CtrlHeaderData::HiddenDescription,
+            _ if ctrl_id.starts_with('%') => field::parse_field_by_ctrl_id(remaining_data, &ctrl_id)?,
             _ => CtrlHeaderData::Other,
         };
 

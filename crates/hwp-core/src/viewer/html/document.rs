@@ -1033,6 +1033,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             footnote_refs: &[],
                             endnote_refs: &[],
                             auto_numbers: &[],
+                            hyperlinks: &[],
                         };
 
                         let ls_context = LineSegmentRenderContext {

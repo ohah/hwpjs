@@ -997,6 +997,7 @@ fn render_shape_content(
             footnote_refs: &[],
             endnote_refs: &[],
             auto_numbers: &[],
+            hyperlinks: &[],
         };
 
         let ls_context = LineSegmentRenderContext {
@@ -1225,6 +1226,7 @@ fn render_shape_content(
             footnote_refs: &[],
             endnote_refs: &[],
             auto_numbers: &[],
+            hyperlinks: &[],
         };
 
         let context = LineSegmentRenderContext {

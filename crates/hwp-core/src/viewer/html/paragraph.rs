@@ -1,7 +1,8 @@
 use super::common;
 use super::ctrl_header::{self, FootnoteEndnoteState, ShapePositionContext};
 use super::line_segment::{
-    DocumentRenderState, ImageInfo, LineSegmentContent, LineSegmentRenderContext, TableInfo,
+    DocumentRenderState, HyperlinkRange, ImageInfo, LineSegmentContent, LineSegmentRenderContext,
+    TableInfo,
 };
 use super::pagination::{self, PageBreakReason, PaginationContext, PaginationResult};
 use super::text::{self, extract_text_and_shapes};
@@ -188,6 +189,110 @@ fn collect_auto_numbers(paragraph: &Paragraph) -> Vec<(usize, Option<String>)> {
     auto_numbers
 }
 
+/// %hlk command 문자열을 onclick 속성값으로 변환
+/// Format: `url_or_path|display;type;flag1;flag2;`
+/// type: 0=bookmark, 1=URL, 2=email, 3=file
+fn hlk_command_to_onclick(command: &str) -> Option<String> {
+    // 세미콜론으로 분리: [url_part, type, ...]
+    let parts: Vec<&str> = command.split(';').collect();
+    if parts.len() < 2 {
+        return None;
+    }
+    let url_part = parts[0];
+    let link_type = parts[1];
+
+    // url_part에서 `|` 이전이 실제 URL/경로
+    let target = url_part.split('|').next().unwrap_or("");
+
+    // 이스케이프 해제: \: → :, \? → ?, \\ → \
+    let unescape = |s: &str| -> String {
+        s.replace("\\:", ":").replace("\\?", "?").replace("\\\\", "\\")
+    };
+
+    match link_type {
+        "1" => {
+            // URL
+            let url = unescape(target);
+            Some(format!("window.open('{}', '_newtab')", url))
+        }
+        "3" => {
+            // 파일
+            Some("location.href='file://'".to_string())
+        }
+        "0" => {
+            // 북마크
+            let name = unescape(target);
+            if name.is_empty() {
+                // target이 비어있어도 onclick 생성 (앵커 # 만 사용)
+                Some("location.href='#'".to_string())
+            } else {
+                Some(format!("location.href='#{}'", name))
+            }
+        }
+        "2" => {
+            // 이메일
+            let email = unescape(target);
+            Some(format!("location.href='{}'", email))
+        }
+        _ => None,
+    }
+}
+
+/// 문단에서 하이퍼링크 범위와 onclick 정보를 수집
+/// code 3 (EXTENDED, field start)과 code 4 (FIELD_END) 위치를 매칭하여 텍스트 범위 결정
+fn collect_hyperlink_ranges(
+    paragraph: &Paragraph,
+    control_char_positions: &[crate::document::bodytext::control_char::ControlCharPosition],
+) -> Vec<HyperlinkRange> {
+    // %hlk CtrlHeader에서 command 추출 (순서대로)
+    let mut hlk_commands: Vec<String> = Vec::new();
+    for record in &paragraph.records {
+        if let ParagraphRecord::CtrlHeader { header, .. } = record {
+            if header.ctrl_id == "%hlk" {
+                if let CtrlHeaderData::Field { command, .. } = &header.data {
+                    hlk_commands.push(command.clone());
+                }
+            }
+        }
+    }
+
+    if hlk_commands.is_empty() {
+        return Vec::new();
+    }
+
+    // code 3 (field start extended) 위치와 code 4 (FIELD_END) 위치 수집
+    let mut code3_positions: Vec<usize> = Vec::new();
+    let mut code4_positions: Vec<usize> = Vec::new();
+    for cc in control_char_positions {
+        if cc.code == 3 {
+            code3_positions.push(cc.position);
+        } else if cc.code == ControlChar::FIELD_END {
+            code4_positions.push(cc.position);
+        }
+    }
+
+    // code3과 code4를 순서대로 매칭
+    let mut ranges = Vec::new();
+    let pair_count = code3_positions
+        .len()
+        .min(code4_positions.len())
+        .min(hlk_commands.len());
+
+    for i in 0..pair_count {
+        let start = code3_positions[i] + 8; // EXTENDED 제어 문자는 8 WCHAR 크기
+        let end = code4_positions[i];
+        if let Some(onclick) = hlk_command_to_onclick(&hlk_commands[i]) {
+            ranges.push(HyperlinkRange {
+                start_original: start,
+                end_original: end,
+                onclick,
+            });
+        }
+    }
+
+    ranges
+}
+
 pub(super) fn collect_line_segments(paragraph: &Paragraph) -> Vec<LineSegmentInfo> {
     let mut line_segments = Vec::new();
     for record in &paragraph.records {
@@ -329,6 +434,9 @@ pub fn render_paragraph(
 
     // AUTO_NUMBER 위치와 display_text 수집
     let auto_numbers = collect_auto_numbers(paragraph);
+
+    // 하이퍼링크 범위 수집
+    let hyperlink_ranges = collect_hyperlink_ranges(paragraph, &control_char_positions);
 
     // LineSegment 수집 / Collect line segments
     let line_segments = collect_line_segments(paragraph);
@@ -630,6 +738,7 @@ pub fn render_paragraph(
             footnote_refs: &footnote_refs,
             endnote_refs: &endnote_refs,
             auto_numbers: &auto_numbers,
+            hyperlinks: &hyperlink_ranges,
         };
 
         let context = LineSegmentRenderContext {

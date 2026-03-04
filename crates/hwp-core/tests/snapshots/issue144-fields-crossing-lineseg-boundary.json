@@ -2248,7 +2248,13 @@
                 "type": "ctrl_header",
                 "ctrl_id": "%hlk",
                 "ctrl_id_value": 627600491,
-                "data_type": "other"
+                "data_type": "field",
+                "field_type": "%hlk",
+                "attribute": 43008,
+                "other_attr": 0,
+                "command_len": 25,
+                "command": "http\\://google.com;1;0;0;",
+                "id": 1528818375
               }
             ]
           },
@@ -2373,7 +2379,13 @@
                 "type": "ctrl_header",
                 "ctrl_id": "%hlk",
                 "ctrl_id_value": 627600491,
-                "data_type": "other"
+                "data_type": "field",
+                "field_type": "%hlk",
+                "attribute": 43008,
+                "other_attr": 0,
+                "command_len": 24,
+                "command": "http\\://gmail.com;1;0;0;",
+                "id": 1528818376
               }
             ]
           },

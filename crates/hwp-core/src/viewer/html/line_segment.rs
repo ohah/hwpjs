@@ -34,6 +34,8 @@ pub struct LineSegmentContent<'a> {
     /// AUTO_NUMBER 위치와 표시 텍스트 (원본 WCHAR 위치, display_text)
     /// 페이지 번호 등 display_text=None인 경우 플레이스홀더 사용
     pub auto_numbers: &'a [(usize, Option<String>)],
+    /// 하이퍼링크 범위 목록 / Hyperlink ranges
+    pub hyperlinks: &'a [HyperlinkRange],
 }
 
 /// 라인 세그먼트 렌더링 컨텍스트 / Line segment rendering context
@@ -64,6 +66,17 @@ pub struct TableInfo<'a> {
     /// Anchor position of the control char in paragraph text (UTF-16 WCHAR index)
     pub anchor_char_pos: Option<usize>,
     pub caption: Option<CaptionData<'a>>, // 캡션 데이터 / Caption data
+}
+
+/// 하이퍼링크 범위 정보 / Hyperlink range information
+#[derive(Debug, Clone)]
+pub struct HyperlinkRange {
+    /// 원본 WCHAR 시작 위치 / Original WCHAR start position
+    pub start_original: usize,
+    /// 원본 WCHAR 끝 위치 (exclusive) / Original WCHAR end position (exclusive)
+    pub end_original: usize,
+    /// onclick 속성값 / onclick attribute value
+    pub onclick: String,
 }
 
 /// 이미지 정보 구조체 / Image info struct
@@ -190,6 +203,7 @@ pub fn render_line_segments_with_content(
     let footnote_refs = content.footnote_refs;
     let endnote_refs = content.endnote_refs;
     let auto_numbers = content.auto_numbers;
+    let hyperlinks = content.hyperlinks;
 
     let document = context.document;
     let para_shape_class = context.para_shape_class;
@@ -538,11 +552,180 @@ pub fn render_line_segments_with_content(
                     content.push_str(&rendered_after);
                 }
             } else {
-                // 일반 텍스트 렌더링 / Normal text rendering
-                use crate::viewer::html::text::render_text;
-                let rendered_text =
-                    render_text(&segment_text, &segment_char_shapes, document, "");
-                content.push_str(&rendered_text);
+                // 이 세그먼트에 하이퍼링크 범위가 있는지 확인
+                // Check if hyperlink ranges overlap this segment
+                let segment_hyperlinks: Vec<&HyperlinkRange> = hyperlinks
+                    .iter()
+                    .filter(|h| h.start_original < end_pos && h.end_original > start_pos)
+                    .collect();
+
+                if segment_hyperlinks.is_empty() {
+                    // 일반 텍스트 렌더링 / Normal text rendering
+                    use crate::viewer::html::text::render_text;
+                    let rendered_text =
+                        render_text(&segment_text, &segment_char_shapes, document, "");
+                    content.push_str(&rendered_text);
+                } else {
+                    // 하이퍼링크 범위별로 텍스트 분할 렌더링
+                    use crate::viewer::html::text::{render_text, render_text_with_onclick};
+
+                    let start_delta =
+                        original_to_cleaned_index(start_pos, control_char_positions);
+                    let segment_start_cleaned =
+                        (start_pos as isize + start_delta).max(0) as usize;
+                    let seg_chars: Vec<char> = segment_text.chars().collect();
+
+                    // 분할 포인트 수집 (세그먼트 로컬 cleaned 인덱스 기준)
+                    struct TextSlice<'a> {
+                        text: String,
+                        local_start: usize, // seg_chars 내 시작 인덱스
+                        onclick: Option<&'a str>,
+                    }
+                    let mut slices: Vec<TextSlice> = Vec::new();
+                    let mut cursor = 0usize; // 세그먼트 내 cleaned 인덱스
+
+                    for hl in &segment_hyperlinks {
+                        let hl_start_delta =
+                            original_to_cleaned_index(hl.start_original, control_char_positions);
+                        let hl_start_cleaned =
+                            (hl.start_original as isize + hl_start_delta).max(0) as usize;
+                        let hl_end_delta =
+                            original_to_cleaned_index(hl.end_original, control_char_positions);
+                        let hl_end_cleaned =
+                            (hl.end_original as isize + hl_end_delta).max(0) as usize;
+
+                        // 세그먼트 로컬 인덱스로 변환
+                        let local_start =
+                            hl_start_cleaned.saturating_sub(segment_start_cleaned);
+                        let local_end =
+                            hl_end_cleaned.saturating_sub(segment_start_cleaned);
+                        let local_start = local_start.min(seg_chars.len());
+                        let local_end = local_end.min(seg_chars.len());
+
+                        // 하이퍼링크 이전 텍스트
+                        if cursor < local_start {
+                            let t: String =
+                                seg_chars[cursor..local_start].iter().collect();
+                            if !t.is_empty() {
+                                slices.push(TextSlice {
+                                    text: t,
+                                    local_start: cursor,
+                                    onclick: None,
+                                });
+                            }
+                        }
+                        // 하이퍼링크 텍스트
+                        if local_start < local_end {
+                            let t: String =
+                                seg_chars[local_start..local_end].iter().collect();
+                            if !t.is_empty() {
+                                slices.push(TextSlice {
+                                    text: t,
+                                    local_start,
+                                    onclick: Some(&hl.onclick),
+                                });
+                            }
+                        }
+                        cursor = local_end;
+                    }
+                    // 남은 텍스트
+                    if cursor < seg_chars.len() {
+                        let t: String = seg_chars[cursor..].iter().collect();
+                        if !t.is_empty() {
+                            slices.push(TextSlice {
+                                text: t,
+                                local_start: cursor,
+                                onclick: None,
+                            });
+                        }
+                    }
+
+                    // segment_char_shapes는 이미 세그먼트 시작(start_pos) 기준으로 보정됨.
+                    // 그러나 position은 "원본 WCHAR 기준 - start_pos"이고,
+                    // 슬라이스는 "cleaned text" 기준이므로 CharShape position을 cleaned 기준으로 변환 필요.
+                    // cleaned_segment_char_shapes: position을 cleaned text 인덱스로 변환
+                    let cleaned_seg_shapes: Vec<CharShapeInfo> = {
+                        use crate::document::bodytext::CharShapeInfo;
+                        segment_char_shapes
+                            .iter()
+                            .map(|s| {
+                                // segment_char_shapes의 position은 (원본pos - start_pos)
+                                // → 원본pos = position + start_pos로 되돌려서 cleaned 변환
+                                let orig_pos = s.position as usize + start_pos;
+                                let delta = original_to_cleaned_index(orig_pos, control_char_positions);
+                                let cleaned_pos = (orig_pos as isize + delta).max(0) as usize;
+                                let local_cleaned = cleaned_pos.saturating_sub(segment_start_cleaned);
+                                CharShapeInfo {
+                                    position: local_cleaned as u32,
+                                    shape_id: s.shape_id,
+                                }
+                            })
+                            .collect()
+                    };
+
+                    for slice in &slices {
+                        // 슬라이스 시작 위치 기준으로 CharShape 위치 재조정
+                        let slice_char_shapes: Vec<CharShapeInfo> = {
+                            use crate::document::bodytext::CharShapeInfo;
+                            let offset = slice.local_start as u32;
+                            let slice_len = slice.text.chars().count() as u32;
+
+                            let mut shapes: Vec<CharShapeInfo> = Vec::new();
+                            let has_shape_at_start = cleaned_seg_shapes
+                                .iter()
+                                .any(|s| s.position == offset);
+                            if !has_shape_at_start {
+                                if let Some(prev) = cleaned_seg_shapes
+                                    .iter()
+                                    .filter(|s| s.position < offset)
+                                    .max_by_key(|s| s.position)
+                                {
+                                    shapes.push(CharShapeInfo {
+                                        position: 0,
+                                        shape_id: prev.shape_id,
+                                    });
+                                }
+                            }
+                            for s in cleaned_seg_shapes.iter() {
+                                if s.position >= offset && s.position < offset + slice_len {
+                                    shapes.push(CharShapeInfo {
+                                        position: s.position - offset,
+                                        shape_id: s.shape_id,
+                                    });
+                                }
+                            }
+                            if shapes.is_empty() {
+                                if let Some(first) = cleaned_seg_shapes.first() {
+                                    shapes.push(CharShapeInfo {
+                                        position: 0,
+                                        shape_id: first.shape_id,
+                                    });
+                                }
+                            }
+                            shapes.sort_by_key(|s| s.position);
+                            shapes
+                        };
+
+                        if let Some(onclick) = slice.onclick {
+                            let rendered = render_text_with_onclick(
+                                &slice.text,
+                                &slice_char_shapes,
+                                document,
+                                "",
+                                onclick,
+                            );
+                            content.push_str(&rendered);
+                        } else {
+                            let rendered = render_text(
+                                &slice.text,
+                                &slice_char_shapes,
+                                document,
+                                "",
+                            );
+                            content.push_str(&rendered);
+                        }
+                    }
+                }
             }
         }
 
