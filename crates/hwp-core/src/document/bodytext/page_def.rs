@@ -71,6 +71,15 @@ impl PageDef {
         }
     }
 
+    /// 콘텐츠 영역 너비 (mm): 페이지 폭 - 좌우 여백 - 제본 여백
+    /// Content area width (mm): page width - left/right margins - binding margin
+    pub fn content_width_mm(&self) -> f64 {
+        self.effective_width_mm()
+            - self.left_margin.to_mm()
+            - self.right_margin.to_mm()
+            - self.binding_margin.to_mm()
+    }
+
     /// landscape(horizontal)일 때 width/height를 swap한 실제 페이지 높이 (mm)
     /// Effective page height in mm (swaps width/height for landscape)
     pub fn effective_height_mm(&self) -> f64 {
