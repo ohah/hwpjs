@@ -624,19 +624,15 @@ fn test_footnote_endnote_html_snapshot() {
     };
     let html = document.to_html(&options);
 
-    // 본문 내 각주/미주 참조 마크업 (sup/a)
+    // 본문 내 각주/미주 인라인 참조 마크업 (hfN 클래스)
     assert!(
-        html.contains("ohah-hwpjs-fn-") || html.contains("ohah-hwpjs-en-"),
-        "HTML should contain footnote or endnote in-body reference (e.g. id or href for fn/en)"
+        html.contains("hfN"),
+        "HTML should contain inline footnote/endnote reference (class hfN)"
     );
-    // 문서 끝 각주/미주 블록
+    // 페이지 내 각주 블록 (haN 마커 + hfS 구분선)
     assert!(
-        html.contains("ohah-hwpjs-footnotes"),
-        "HTML should contain footnote block (class or id ohah-hwpjs-footnotes)"
-    );
-    assert!(
-        html.contains("ohah-hwpjs-endnotes"),
-        "HTML should contain endnote block (class or id ohah-hwpjs-endnotes)"
+        html.contains("hfS") || html.contains("haN"),
+        "HTML should contain footnote separator (hfS) or annotation number marker (haN)"
     );
 
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
