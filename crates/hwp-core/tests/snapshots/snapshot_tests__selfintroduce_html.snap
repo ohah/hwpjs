@@ -86,7 +86,7 @@ body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
   font-size:16pt;color:rgb(0,0,0);font-family:"맑은 고딕";
 }
 .cs6 {
-  font-size:16pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+  font-size:16pt;color:rgb(0,0,0);font-family:"맑은 고딕";background-color:#FFD700;
 }
 .cs7 {
   font-size:16pt;color:rgb(0,0,0);font-family:"맑은 고딕";letter-spacing:-0.04em;
