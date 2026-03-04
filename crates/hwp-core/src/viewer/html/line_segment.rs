@@ -31,6 +31,9 @@ pub struct LineSegmentContent<'a> {
     pub footnote_refs: &'a [String],
     /// 인라인 미주 참조 HTML (마지막 세그먼트 내부에 배치)
     pub endnote_refs: &'a [String],
+    /// AUTO_NUMBER 위치와 표시 텍스트 (원본 WCHAR 위치, display_text)
+    /// 페이지 번호 등 display_text=None인 경우 플레이스홀더 사용
+    pub auto_numbers: &'a [(usize, Option<String>)],
 }
 
 /// 라인 세그먼트 렌더링 컨텍스트 / Line segment rendering context
@@ -186,6 +189,7 @@ pub fn render_line_segments_with_content(
     let paragraph_markers = content.paragraph_markers;
     let footnote_refs = content.footnote_refs;
     let endnote_refs = content.endnote_refs;
+    let auto_numbers = content.auto_numbers;
 
     let document = context.document;
     let para_shape_class = context.para_shape_class;
@@ -451,10 +455,95 @@ pub fn render_line_segments_with_content(
                 round_to_2dp(int32_to_mm(image.height as crate::types::INT32)),
             ));
         } else if !is_text_empty {
-            // 텍스트 렌더링 / Render text
-            use crate::viewer::html::text::render_text;
-            let rendered_text = render_text(&segment_text, &segment_char_shapes, document, "");
-            content.push_str(&rendered_text);
+            // 이 세그먼트 범위에 AUTO_NUMBER가 있는지 확인
+            // Check if AUTO_NUMBER falls within this segment range
+            let auto_number_in_segment = auto_numbers.iter().find(|(pos, _)| {
+                *pos >= start_pos && *pos < end_pos
+            });
+
+            if let Some((auto_pos, display_text)) = auto_number_in_segment {
+                // AUTO_NUMBER 위치에서 텍스트 분리 후 haN div 삽입
+                // Split text at AUTO_NUMBER position and insert haN div
+                use crate::viewer::html::text::render_text;
+
+                let split_delta =
+                    original_to_cleaned_index(*auto_pos, control_char_positions);
+                let split_cleaned =
+                    (*auto_pos as isize + split_delta).max(0) as usize;
+                let start_delta =
+                    original_to_cleaned_index(start_pos, control_char_positions);
+                let segment_start_cleaned =
+                    (start_pos as isize + start_delta).max(0) as usize;
+                let local_split = split_cleaned - segment_start_cleaned;
+
+                let chars: Vec<char> = segment_text.chars().collect();
+                let before: String =
+                    chars[..local_split.min(chars.len())].iter().collect();
+                let after: String =
+                    chars[local_split.min(chars.len())..].iter().collect();
+
+                // CharShape 클래스 결정
+                let cs_class = segment_char_shapes
+                    .first()
+                    .and_then(|s| {
+                        if (s.shape_id as usize) < document.doc_info.char_shapes.len() {
+                            Some(format!("cs{}", s.shape_id))
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or_else(|| "cs0".to_string());
+
+                // haN 크기 계산: CharShape base_size 기반
+                // height: font_size를 floor로 2dp 절삭 (3.175 → 3.17)
+                // width: 글꼴 메트릭 근사치 (ASCII 반각 비율)
+                let (han_w_mm, han_h_mm) = {
+                    let cs = segment_char_shapes
+                        .first()
+                        .and_then(|s| document.doc_info.char_shapes.get(s.shape_id as usize))
+                        .or_else(|| document.doc_info.char_shapes.first());
+                    if let Some(cs) = cs {
+                        let font_size_mm = (cs.base_size as f64 / 100.0) * (25.4 / 72.0);
+                        let h = (font_size_mm * 100.0).floor() / 100.0;
+                        let num_text = display_text.as_deref().unwrap_or("0");
+                        let char_count = num_text.chars().count().max(1);
+                        let w = round_to_2dp(h * 0.5732 * char_count as f64);
+                        (w, h)
+                    } else {
+                        (1.82, 3.17)
+                    }
+                };
+
+                // 페이지 번호 플레이스홀더 (display_text=None → 페이지 번호)
+                let page_num_placeholder = "<!--PN-->";
+                let num_text = display_text
+                    .as_deref()
+                    .unwrap_or(page_num_placeholder);
+
+                // before 텍스트
+                if !before.is_empty() {
+                    let rendered_before =
+                        render_text(&before, &segment_char_shapes, document, "");
+                    content.push_str(&rendered_before);
+                }
+                // haN div
+                content.push_str(&format!(
+                    r#"<div class="haN" style="left:0mm;top:0mm;width:{}mm;height:{}mm;"><span class="hrt {}">{}</span></div>"#,
+                    han_w_mm, han_h_mm, cs_class, num_text
+                ));
+                // after 텍스트
+                if !after.is_empty() {
+                    let rendered_after =
+                        render_text(&after, &segment_char_shapes, document, "");
+                    content.push_str(&rendered_after);
+                }
+            } else {
+                // 일반 텍스트 렌더링 / Normal text rendering
+                use crate::viewer::html::text::render_text;
+                let rendered_text =
+                    render_text(&segment_text, &segment_char_shapes, document, "");
+                content.push_str(&rendered_text);
+            }
         }
 
         // 첫 번째 세그먼트에 마커(hhe) 삽입 / Insert marker (hhe) in first segment

@@ -86,6 +86,7 @@ mod tests {
             &document,
             None,
             None,
+            None,
         );
 
         assert!(result.contains("<div"));
@@ -114,6 +115,7 @@ mod tests {
             &document,
             Some("header"),
             Some("footer"),
+            None,
         );
 
         assert!(result.contains("header"));
@@ -158,6 +160,7 @@ mod tests {
             &document,
             None,
             None,
+            None,
         );
 
         assert!(result.contains("class=\"hpa\""));
@@ -191,6 +194,7 @@ mod tests {
             }),
             1,
             &document,
+            None,
             None,
             None,
         );
@@ -232,6 +236,7 @@ mod tests {
             &document,
             None,
             None,
+            None,
         );
 
         assert!(result.contains("<span"));
@@ -259,6 +264,7 @@ mod tests {
             &document,
             Some(""),
             Some("footer"),
+            None,
         );
 
         assert!(result.contains("<div"));

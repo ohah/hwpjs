@@ -48,6 +48,7 @@ pub fn render_page(
     document: &HwpDocument,
     header_fragment: Option<&str>,
     footer_fragment: Option<&str>,
+    footer_content_height_mm: Option<f64>,
 ) -> String {
     let width_mm = page_def
         .map(|pd| round_to_2dp(pd.effective_width_mm()))
@@ -87,18 +88,38 @@ pub fn render_page(
     // 머리말 hcD (fixture 순서: header → footer → body) / Header hcD (fixture order: header → footer → body)
     if let Some(s) = header_fragment {
         if !s.is_empty() {
+            // 페이지 번호 플레이스홀더(<!--PN-->) 교체
+            // Replace page number placeholder with actual page number
+            let actual_page = (page_start_number as usize + page_number - 1).to_string();
+            let header_html = s.replace("<!--PN-->", &actual_page);
             html.push_str(&format!(
                 r#"<div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI">{}</div></div>"#,
-                left_mm, header_top_mm, s
+                left_mm, header_top_mm, header_html
             ));
         }
     }
     // 꼬리말 hcD / Footer hcD
     if let Some(s) = footer_fragment {
         if !s.is_empty() {
+            // vertical_align: bottom인 경우 hcI에 top 오프셋 적용
+            // Apply top offset to hcI when vertical_align is bottom
+            let hci_style = if let (Some(content_h), Some(pd)) =
+                (footer_content_height_mm, page_def)
+            {
+                // 중간값 반올림 없이 최종 결과만 반올림
+                // Only round the final result, not intermediate values
+                let hci_top = round_to_2dp(pd.bottom_margin.to_mm() - content_h);
+                if hci_top > 0.0 {
+                    format!(r#" style="top:{}mm;""#, hci_top)
+                } else {
+                    String::new()
+                }
+            } else {
+                String::new()
+            };
             html.push_str(&format!(
-                r#"<div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI">{}</div></div>"#,
-                left_mm, footer_top_mm, s
+                r#"<div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI"{}>{}</div></div>"#,
+                left_mm, footer_top_mm, hci_style, s
             ));
         }
     }
