@@ -935,6 +935,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             tables: &mc_inline_tables,
                             shape_htmls: &mc_shape_htmls,
                             marker_info: None,
+                            paragraph_markers: &[],
                         };
 
                         let ls_context = LineSegmentRenderContext {

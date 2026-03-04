@@ -8,6 +8,9 @@ use crate::viewer::html::common;
 use crate::viewer::html::line_segment::ImageInfo;
 use crate::viewer::html::paragraph::render_paragraphs_fragment;
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
+use crate::viewer::core::outline::{
+    compute_paragraph_marker_with_char_shape, MarkerInfo, NumberTracker, OutlineNumberTracker,
+};
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
 
@@ -892,6 +895,9 @@ fn render_shape_content(
         let mut single_col_collecting = false;
         let mut single_col_para_shape_id: u16 = 0;
         let mut single_col_wchar_offset: usize = 0;
+        let mut paragraph_markers: Vec<(u32, MarkerInfo)> = Vec::new();
+        let mut outline_tracker = OutlineNumberTracker::new();
+        let mut number_tracker = NumberTracker::new();
 
         for (i, para) in paragraphs.iter().enumerate() {
             if has_cold_marker {
@@ -911,6 +917,17 @@ fn render_shape_content(
             single_col_para_shape_id = para.para_header.para_shape_id;
 
             let (para_text, char_shapes_vec) = text::extract_text_and_shapes(para);
+            let fallback_cs_id = char_shapes_vec.first().map(|cs| cs.shape_id);
+            if let Some(marker) = compute_paragraph_marker_with_char_shape(
+                &para.para_header,
+                document,
+                &mut outline_tracker,
+                &mut number_tracker,
+                0,
+                fallback_cs_id,
+            ) {
+                paragraph_markers.push((single_col_wchar_offset as u32, marker));
+            }
             let text_offset = single_col_wchar_offset;
 
             for record in &para.records {
@@ -976,6 +993,7 @@ fn render_shape_content(
             tables: &[],
             shape_htmls: &[],
             marker_info: None,
+            paragraph_markers: &paragraph_markers,
         };
 
         let ls_context = LineSegmentRenderContext {
@@ -1058,6 +1076,9 @@ fn render_shape_content(
     let mut collecting = false;
     let mut para_shape_id: u16 = 0;
     let mut wchar_offset: usize = 0; // 원본 WCHAR 단위 오프셋 / Original WCHAR unit offset
+    let mut mc_paragraph_markers: Vec<(u32, MarkerInfo)> = Vec::new();
+    let mut mc_outline_tracker = OutlineNumberTracker::new();
+    let mut mc_number_tracker = NumberTracker::new();
 
     for para in paragraphs {
         if !para.para_header.column_divide_type.is_empty() {
@@ -1073,6 +1094,17 @@ fn render_shape_content(
         para_shape_id = para.para_header.para_shape_id;
 
         let (para_text, char_shapes) = text::extract_text_and_shapes(para);
+        let fallback_cs_id = char_shapes.first().map(|cs| cs.shape_id);
+        if let Some(marker) = compute_paragraph_marker_with_char_shape(
+            &para.para_header,
+            document,
+            &mut mc_outline_tracker,
+            &mut mc_number_tracker,
+            0,
+            fallback_cs_id,
+        ) {
+            mc_paragraph_markers.push((wchar_offset as u32, marker));
+        }
 
         // text_start_position 보정: 원본 WCHAR 단위 오프셋 사용
         // Adjust text_start_position: use original WCHAR unit offset
@@ -1186,6 +1218,7 @@ fn render_shape_content(
             tables: &[],
             shape_htmls: &[],
             marker_info: None,
+            paragraph_markers: &mc_paragraph_markers,
         };
 
         let context = LineSegmentRenderContext {

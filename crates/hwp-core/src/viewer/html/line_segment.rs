@@ -25,6 +25,8 @@ pub struct LineSegmentContent<'a> {
     pub shape_htmls: &'a [(usize, String)],
     /// 문단 머리 마커 정보 (Bullet/Number/Outline)
     pub marker_info: Option<&'a MarkerInfo>,
+    /// 텍스트 박스 내 다중 문단 마커 (text_start_position, MarkerInfo)
+    pub paragraph_markers: &'a [(u32, MarkerInfo)],
 }
 
 /// 라인 세그먼트 렌더링 컨텍스트 / Line segment rendering context
@@ -177,6 +179,7 @@ pub fn render_line_segments_with_content(
     let tables = content.tables;
     let shape_htmls = content.shape_htmls;
     let content_marker_info = content.marker_info;
+    let paragraph_markers = content.paragraph_markers;
 
     let document = context.document;
     let para_shape_class = context.para_shape_class;
@@ -451,32 +454,15 @@ pub fn render_line_segments_with_content(
         // 첫 번째 세그먼트에 마커(hhe) 삽입 / Insert marker (hhe) in first segment
         if segment_index == 0 {
             if let Some(marker) = content_marker_info {
-                let font_size = marker
-                    .font_size_pt
-                    .map(|s| {
-                        if (s - s.round()).abs() < 0.001 {
-                            format!("font-size:{}pt;", s as i32)
-                        } else {
-                            format!("font-size:{:.2}pt;", s)
-                        }
-                    })
-                    .unwrap_or_else(|| format!("font-size:{}pt;", DEFAULT_MARKER_FONT_SIZE_PT as i32));
-                let margin_left_str = if marker.margin_left_mm == 0.0 {
-                    "margin-left:0mm".to_string()
-                } else {
-                    format!("margin-left:{:.2}mm", marker.margin_left_mm)
-                };
-                let hhe = format!(
-                    r#"<div class="hhe" style="display:inline-block;{};width:{:.2}mm;height:{:.2}mm;"><span class="hrt {}" style="{}">{}</span></div>"#,
-                    margin_left_str,
-                    marker.width_mm,
-                    marker.height_mm,
-                    marker.char_shape_class,
-                    font_size,
-                    marker.marker_text
-                );
-                content = format!("{}{}", hhe, content);
+                content = format!("{}{}", render_marker_hhe(marker), content);
             }
+        }
+        // 텍스트 박스 다중 문단 마커 처리 / Text box multi-paragraph marker
+        if let Some((_pos, marker)) = paragraph_markers
+            .iter()
+            .find(|(pos, _)| *pos == segment.text_start_position)
+        {
+            content = format!("{}{}", render_marker_hhe(marker), content);
         }
 
         // 라인 세그먼트 렌더링 / Render line segment
@@ -513,4 +499,34 @@ pub fn render_line_segments_with_content(
     }
 
     result
+}
+
+/// 마커(hhe) HTML 렌더링 헬퍼 / Marker (hhe) HTML rendering helper
+fn render_marker_hhe(marker: &MarkerInfo) -> String {
+    let font_size = marker
+        .font_size_pt
+        .map(|s| {
+            if (s - s.round()).abs() < 0.001 {
+                format!("font-size:{}pt;", s as i32)
+            } else {
+                format!("font-size:{:.2}pt;", s)
+            }
+        })
+        .unwrap_or_else(|| {
+            format!("font-size:{}pt;", DEFAULT_MARKER_FONT_SIZE_PT as i32)
+        });
+    let margin_left_str = if marker.margin_left_mm == 0.0 {
+        "margin-left:0mm".to_string()
+    } else {
+        format!("margin-left:{:.2}mm", marker.margin_left_mm)
+    };
+    format!(
+        r#"<div class="hhe" style="display:inline-block;{};width:{:.2}mm;height:{:.2}mm;"><span class="hrt {}" style="{}">{}</span></div>"#,
+        margin_left_str,
+        marker.width_mm,
+        marker.height_mm,
+        marker.char_shape_class,
+        font_size,
+        marker.marker_text
+    )
 }

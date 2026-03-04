@@ -10,6 +10,9 @@ use crate::viewer::html::line_segment::{
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::html::{common, ctrl_header};
 use crate::viewer::html::{image, text};
+use crate::viewer::core::outline::{
+    compute_paragraph_marker_with_char_shape, MarkerInfo, NumberTracker, OutlineNumberTracker,
+};
 use crate::viewer::HtmlOptions;
 use crate::{HwpDocument, INT32};
 
@@ -261,6 +264,8 @@ pub(crate) fn render_cells(
             }
         }
         let mut multicolumn_html: Option<String> = None;
+        let mut cell_outline_tracker = OutlineNumberTracker::new();
+        let mut cell_number_tracker = NumberTracker::new();
 
         for para in &cell.paragraphs {
             // ParaShape 클래스 가져오기 / Get ParaShape class
@@ -274,6 +279,18 @@ pub(crate) fn render_cells(
 
             // 텍스트와 CharShape 추출 / Extract text and CharShape
             let (text, char_shapes) = text::extract_text_and_shapes(para);
+
+            // 마커 정보 계산 (Bullet/Number/Outline)
+            // char_shape_id == -1인 bullet은 문단의 첫 번째 CharShape를 fallback으로 사용
+            let fallback_cs_id = char_shapes.first().map(|cs| cs.shape_id);
+            let cell_marker_info: Option<MarkerInfo> = compute_paragraph_marker_with_char_shape(
+                &para.para_header,
+                document,
+                &mut cell_outline_tracker,
+                &mut cell_number_tracker,
+                0,
+                fallback_cs_id,
+            );
 
             // LineSegment 찾기 / Find LineSegment
             let mut line_segments = Vec::new();
@@ -685,6 +702,7 @@ pub(crate) fn render_cells(
                                     tables: &[],
                                     shape_htmls: &[],
                                     marker_info: None,
+                                    paragraph_markers: &[],
                                 };
                                 let context = LineSegmentRenderContext {
                                     document,
@@ -733,7 +751,8 @@ pub(crate) fn render_cells(
                             images: &images,
                             tables: &[],
                             shape_htmls: &[],
-                            marker_info: None,
+                            marker_info: cell_marker_info.as_ref(),
+                            paragraph_markers: &[],
                         };
                         let context = LineSegmentRenderContext {
                             document,
