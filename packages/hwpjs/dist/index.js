@@ -576,4 +576,3 @@ module.exports.fileHeader = nativeBinding.fileHeader
 module.exports.toHtml = nativeBinding.toHtml
 module.exports.toJson = nativeBinding.toJson
 module.exports.toMarkdown = nativeBinding.toMarkdown
-module.exports.toPdf = nativeBinding.toPdf

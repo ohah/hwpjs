@@ -75,8 +75,10 @@ struct Bridging<rust::Vec<uint8_t>> {
     auto arrayBuffer = value.asObject(rt).getArrayBuffer(rt);
     uint8_t* data = arrayBuffer.data(rt);
     size_t size = arrayBuffer.size(rt);
-    rust::Slice<const uint8_t> slice{data, size};
-    rust::Vec<uint8_t> vec = craby::hwpjs::bridging::createVecFromSlice(slice);
+    rust::Vec<uint8_t> vec;
+    vec.reserve(size);
+
+    std::memcpy(vec.data(), data, size);
 
     return vec;
   }

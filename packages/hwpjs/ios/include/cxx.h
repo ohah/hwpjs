@@ -247,7 +247,6 @@ public:
   using pointer = typename std::add_pointer<T>::type;
   using reference = typename std::add_lvalue_reference<T>::type;
   using element_type = T;
-  using element_type = T;
 
   reference operator*() const noexcept;
   pointer operator->() const noexcept;

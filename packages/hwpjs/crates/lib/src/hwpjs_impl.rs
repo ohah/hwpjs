@@ -50,16 +50,10 @@ impl HwpjsSpec for Hwpjs {
         ToMarkdownResult { markdown }
     }
 
-    fn to_pdf(&mut self, data: Vec<u8>, options: ToPdfOptions) -> Vec<u8> {
-        let parser = HwpParser::new();
-        let document = parser.parse(&data).unwrap_or_else(|e| throw!("{}", e));
-        let font_dir: Nullable<String> = options.font_dir.into();
-        let pdf_options = hwp_core::viewer::PdfOptions {
-            font_dir: font_dir.into_value().map(std::path::PathBuf::from),
-            embed_images: options.embed_images,
-        };
-        document.to_pdf(&pdf_options)
-    }
+    // NOTE: toPdf 비활성화 (추후 활성화 예정)
+    // fn to_pdf(&mut self, data: Vec<u8>, options: ToPdfOptions) -> Vec<u8> {
+    //     ...
+    // }
 
     fn file_header(&mut self, data: Vec<u8>) -> String {
         let parser = HwpParser::new();
