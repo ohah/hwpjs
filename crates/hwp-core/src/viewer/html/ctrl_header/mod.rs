@@ -93,6 +93,8 @@ pub struct CtrlHeaderResult<'a> {
     pub header_html: Option<String>,
     /// 꼬리말 영역 HTML (본문 하단에 출력) / Footer area HTML (output at bottom of body)
     pub footer_html: Option<String>,
+    /// 꼬리말 콘텐츠 높이 (mm, vertical_align: bottom인 경우 hcI top 계산용) / Footer content height (mm, for hcI top calculation when vertical_align: bottom)
+    pub footer_content_height_mm: Option<f64>,
     /// 구역/단 등 인라인 콘텐츠 HTML (해당 컨트롤 위치에 출력) / Section/column etc. inline content HTML (output at control position)
     pub extra_content: Option<String>,
     /// 그리기 개체 HTML (hpa 레벨에 배치) / Shape object HTML (placed at hpa level)
@@ -108,6 +110,7 @@ impl<'a> CtrlHeaderResult<'a> {
             endnote_ref_html: None,
             header_html: None,
             footer_html: None,
+            footer_content_height_mm: None,
             extra_content: None,
             shape_html: None,
         }

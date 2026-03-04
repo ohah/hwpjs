@@ -151,6 +151,43 @@ pub(super) fn collect_control_char_positions(
     (control_char_positions, shape_object_anchor_positions)
 }
 
+/// AUTO_NUMBER 위치와 display_text를 수집
+/// Collect AUTO_NUMBER positions and display texts from paragraph
+fn collect_auto_numbers(paragraph: &Paragraph) -> Vec<(usize, Option<String>)> {
+    let mut auto_numbers: Vec<(usize, Option<String>)> = Vec::new();
+    for record in &paragraph.records {
+        if let ParagraphRecord::ParaText {
+            control_char_positions,
+            runs,
+            ..
+        } = record
+        {
+            for cc in control_char_positions {
+                if cc.code == ControlChar::AUTO_NUMBER {
+                    // runs에서 같은 위치의 Control run을 찾아 display_text 가져오기
+                    let display_text = runs.iter().find_map(|run| {
+                        if let crate::document::bodytext::ParaTextRun::Control {
+                            code,
+                            position,
+                            display_text,
+                            ..
+                        } = run
+                        {
+                            if *code == ControlChar::AUTO_NUMBER && *position == cc.position {
+                                return display_text.clone();
+                            }
+                        }
+                        None
+                    });
+                    auto_numbers.push((cc.position, display_text));
+                }
+            }
+            break;
+        }
+    }
+    auto_numbers
+}
+
 pub(super) fn collect_line_segments(paragraph: &Paragraph) -> Vec<LineSegmentInfo> {
     let mut line_segments = Vec::new();
     for record in &paragraph.records {
@@ -289,6 +326,9 @@ pub fn render_paragraph(
     let (control_char_positions, shape_object_anchor_positions) =
         collect_control_char_positions(paragraph);
     let mut shape_object_anchor_cursor: usize = 0;
+
+    // AUTO_NUMBER 위치와 display_text 수집
+    let auto_numbers = collect_auto_numbers(paragraph);
 
     // LineSegment 수집 / Collect line segments
     let line_segments = collect_line_segments(paragraph);
@@ -589,6 +629,7 @@ pub fn render_paragraph(
             paragraph_markers: &[],
             footnote_refs: &footnote_refs,
             endnote_refs: &endnote_refs,
+            auto_numbers: &auto_numbers,
         };
 
         let context = LineSegmentRenderContext {

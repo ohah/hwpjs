@@ -482,6 +482,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     // 머리말/꼬리말 수집 (본문 상단/하단에 출력) / Collect header/footer (output at top/bottom of body)
     let mut header_contents: Vec<String> = Vec::new();
     let mut footer_contents: Vec<String> = Vec::new();
+    let mut footer_content_height_mm: Option<f64> = None;
     for section in &document.body_text.sections {
         for paragraph in &section.paragraphs {
             let control_mask = &paragraph.para_header.control_mask;
@@ -512,6 +513,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         }
                         if let Some(h) = r.footer_html {
                             footer_contents.push(h);
+                        }
+                        if r.footer_content_height_mm.is_some() {
+                            footer_content_height_mm = r.footer_content_height_mm;
                         }
                     }
                 }
@@ -750,6 +754,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     document,
                     header_contents.first().map(String::as_str),
                     footer_contents.first().map(String::as_str),
+                    footer_content_height_mm,
                 ));
                 // PageDef 업데이트 — 이전 페이지 렌더링 후에 업데이트
                 // 페이지 나누기 이유와 관계없이, 새 문단에 PageDef가 있으면 항상 업데이트
@@ -784,11 +789,10 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 last_content_bottom_mm = 0.0; // 새 페이지에서는 콘텐츠 하단 위치 리셋 / Reset content bottom on new page
             }
 
-            // 문단 렌더링 (머리말/꼬리말 제외; 각주/미주 포함하여 본문 참조 출력) / Render paragraph (exclude header/footer; include footnote/endnote for in-body refs)
-            let control_mask = &paragraph.para_header.control_mask;
-            let has_header_footer = control_mask.has_header_footer();
-
-            if !has_header_footer {
+            // 문단 렌더링 (각주/미주 포함하여 본문 참조 출력) / Render paragraph (include footnote/endnote for in-body refs)
+            // 머리말/꼬리말 문단도 본문 콘텐츠(빈 줄 등)는 렌더링 (header_html/footer_html은 별도 수집)
+            // Header/footer paragraphs also render body content (empty lines); header_html/footer_html collected separately
+            {
                 // 첫 번째 LineSegment 위치 저장 / Store first LineSegment position
                 // PageDef 여백을 직접 사용 / Use PageDef margins directly
                 if first_segment_pos.is_none() {
@@ -1028,6 +1032,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             paragraph_markers: &[],
                             footnote_refs: &[],
                             endnote_refs: &[],
+                            auto_numbers: &[],
                         };
 
                         let ls_context = LineSegmentRenderContext {
@@ -1118,6 +1123,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 document,
                                 header_contents.first().map(String::as_str),
                                 footer_contents.first().map(String::as_str),
+                                footer_content_height_mm,
                             ));
                             page_number += 1;
                             page_content.clear();
@@ -1274,6 +1280,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             document,
                             header_contents.first().map(String::as_str),
                             footer_contents.first().map(String::as_str),
+                            footer_content_height_mm,
                         ));
                         page_number += 1;
                         page_content.clear();
@@ -1507,6 +1514,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             document,
             header_contents.first().map(String::as_str),
             footer_contents.first().map(String::as_str),
+            footer_content_height_mm,
         ));
     }
 
