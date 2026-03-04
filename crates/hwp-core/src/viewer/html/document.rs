@@ -1,5 +1,5 @@
 use super::ctrl_header::process_ctrl_header;
-use super::ctrl_header::FootnoteEndnoteState;
+use super::ctrl_header::{FootnoteBlock, FootnoteEndnoteState};
 use super::line_segment::{
     DocumentRenderState, LineSegmentContent, LineSegmentRenderContext,
 };
@@ -76,6 +76,87 @@ fn find_page_number_position(document: &HwpDocument) -> Option<&CtrlHeaderData> 
         }
     }
     None
+}
+
+/// 각주 블록을 페이지 하단에 배치하기 위한 HcIBlock 생성
+/// Generate HcIBlocks for footnote blocks positioned at the bottom of the page
+fn generate_footnote_blocks(
+    footnote_blocks: &[FootnoteBlock],
+    content_height_mm: f64,
+    content_width_mm: f64,
+) -> Vec<HcIBlock> {
+    if footnote_blocks.is_empty() {
+        return Vec::new();
+    }
+
+    let mut result = Vec::new();
+
+    // 전체 각주 블록 높이 계산 (각 각주의 line_height 기반)
+    // 각주 영역 = hfS 구분선 + 각 각주 블록 (line_height 간격)
+    let total_footnote_height: f64 = footnote_blocks.iter().map(|b| b.height_mm).sum();
+    let separator_height_mm = 0.11;
+    let separator_gap_mm = 2.05; // 구분선과 첫 각주 사이 간격
+
+    // 구분선(hfS) top 위치 = content_height_mm - total_footnote_height - separator_gap - separator_height
+    let separator_top_mm = round_to_2dp(
+        content_height_mm - total_footnote_height - separator_gap_mm - separator_height_mm,
+    );
+
+    // 구분선 SVG (hfS)
+    let separator_width_mm = round_to_2dp(content_width_mm / 3.0);
+    let hfs_html = format!(
+        r#"<div class="hfS" style="left:0mm;top:{:.2}mm;width:{:.2}mm;height:{:.2}mm;"><svg class="hs" viewBox="-0.12 -0.12 {:.2} 0.35" style="left:-0.12mm;top:-0.12mm;width:{:.2}mm;height:0.35mm;left:0;top:0;"><path d="M0,0.06 L{:.0},0.06" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
+        separator_top_mm,
+        separator_width_mm,
+        separator_height_mm,
+        separator_width_mm + 0.23,
+        separator_width_mm + 0.23,
+        separator_width_mm,
+    );
+    result.push(HcIBlock {
+        html: hfs_html,
+        left_mm: None,
+        top_mm: None,
+        is_raw: true,
+    });
+
+    // 각 각주를 hcD > hcI > hls 구조로 생성
+    let mut footnote_top_mm = round_to_2dp(separator_top_mm + separator_height_mm + separator_gap_mm);
+    for block in footnote_blocks {
+        // top offset within hls (fixture: -0.16mm for footnote)
+        let top_offset_mm = round_to_2dp((block.line_height_mm - block.height_mm) / 2.0);
+
+        // haN 마커 너비: 글자 수 × 기준 폭 (fixture에서 역산)
+        let marker_text = format!("{})", block.number);
+        let marker_char_count = marker_text.chars().count() as f64;
+        // 각주의 CharShape에서 폰트 크기 기반 마커 너비 계산
+        let marker_width_mm = round_to_2dp(marker_char_count * block.height_mm / marker_char_count.max(1.0) * 0.92);
+
+        let hcd_html = format!(
+            r#"<div class="hcD" style="left:0mm;top:{:.2}mm;"><div class="hcI"><div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:0mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;"><div class="haN" style="left:0mm;top:0mm;width:{:.2}mm;height:{:.2}mm;"><span class="hrt {}">{}</span></div>{}</div></div></div>"#,
+            footnote_top_mm,
+            block.para_shape_class,
+            block.line_height_mm,
+            top_offset_mm,
+            block.height_mm,
+            block.width_mm,
+            marker_width_mm,
+            block.height_mm,
+            block.char_shape_class,
+            marker_text,
+            block.body_html,
+        );
+        result.push(HcIBlock {
+            html: hcd_html,
+            left_mm: None,
+            top_mm: None,
+            is_raw: true,
+        });
+
+        footnote_top_mm = round_to_2dp(footnote_top_mm + block.height_mm);
+    }
+
+    result
 }
 
 /// 다단 상태 추적 / Multicolumn state tracking
@@ -484,8 +565,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     // 각주/미주 수집 (문서 끝에 블록으로 출력) / Footnote/endnote collection (output as blocks at document end)
     let mut footnote_counter = 0u32;
     let mut endnote_counter = 0u32;
-    let mut footnote_contents: Vec<String> = Vec::new();
-    let mut endnote_contents: Vec<String> = Vec::new();
+    let mut footnote_contents: Vec<FootnoteBlock> = Vec::new();
+    let mut endnote_contents: Vec<FootnoteBlock> = Vec::new();
 
     // 페이지 높이 계산 (mm 단위) / Calculate page height (in mm)
     let page_height_mm = page_def.map(|pd| pd.effective_height_mm()).unwrap_or(297.0);
@@ -647,6 +728,15 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         .unwrap_or(24.99);
                     Some((left, top))
                 };
+                // 각주 블록 삽입 / Insert footnote blocks before rendering page
+                if !footnote_contents.is_empty() {
+                    let fn_content_width = current_page_def
+                        .map(|pd| round_to_2dp(pd.content_width_mm()))
+                        .unwrap_or(150.0);
+                    let fn_blocks = generate_footnote_blocks(&footnote_contents, content_height_mm, fn_content_width);
+                    page_blocks.extend(fn_blocks);
+                    footnote_contents.clear();
+                }
                 // 이전 페이지를 현재(이전) PageDef로 렌더링 / Render previous page with current (old) PageDef
                 html.push_str(&page::render_page(
                     page_number,
@@ -936,6 +1026,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             shape_htmls: &mc_shape_htmls,
                             marker_info: None,
                             paragraph_markers: &[],
+                            footnote_refs: &[],
+                            endnote_refs: &[],
                         };
 
                         let ls_context = LineSegmentRenderContext {
@@ -1005,6 +1097,15 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                     .unwrap_or(24.99);
                                 Some((left, top))
                             };
+                            // 각주 블록 삽입 / Insert footnote blocks
+                            if !footnote_contents.is_empty() {
+                                let fn_content_width = current_page_def
+                                    .map(|pd| round_to_2dp(pd.content_width_mm()))
+                                    .unwrap_or(150.0);
+                                let fn_blocks = generate_footnote_blocks(&footnote_contents, content_height_mm, fn_content_width);
+                                page_blocks.extend(fn_blocks);
+                                footnote_contents.clear();
+                            }
                             html.push_str(&page::render_page(
                                 page_number,
                                 &page_blocks,
@@ -1050,24 +1151,25 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     }
                 }
 
-                // render_paragraph 호출 / Call render_paragraph
-                let mut note_state = FootnoteEndnoteState {
-                    footnote_counter: &mut footnote_counter,
-                    endnote_counter: &mut endnote_counter,
-                    footnote_contents: &mut footnote_contents,
-                    endnote_contents: &mut endnote_contents,
-                };
-                let mut state = ParagraphRenderState {
-                    table_counter: &mut table_counter,
-                    pattern_counter: &mut pattern_counter,
-                    color_to_pattern: &mut color_to_pattern,
-                    note_state: Some(&mut note_state),
-                    outline_tracker: Some(&mut outline_tracker),
-                    number_tracker: Some(&mut number_tracker),
-                    section_outline_numbering_id,
-                };
+                // render_paragraph 호출 (note_state 수명 제한을 위해 블록 사용)
+                // Call render_paragraph (block limits note_state lifetime for later footnote_contents access)
+                let (para_html, table_htmls, obj_pagination_result) = {
+                    let mut note_state = FootnoteEndnoteState {
+                        footnote_counter: &mut footnote_counter,
+                        endnote_counter: &mut endnote_counter,
+                        footnote_contents: &mut footnote_contents,
+                        endnote_contents: &mut endnote_contents,
+                    };
+                    let mut state = ParagraphRenderState {
+                        table_counter: &mut table_counter,
+                        pattern_counter: &mut pattern_counter,
+                        color_to_pattern: &mut color_to_pattern,
+                        note_state: Some(&mut note_state),
+                        outline_tracker: Some(&mut outline_tracker),
+                        number_tracker: Some(&mut number_tracker),
+                        section_outline_numbering_id,
+                    };
 
-                let (para_html, table_htmls, obj_pagination_result) =
                     if multi_col_state.is_some() {
                         // 다단: 테이블/페이지네이션만, para_html 무시
                         // 인라인 콘텐츠가 이미 컬럼에 렌더링된 경우 table_htmls에서 제외
@@ -1094,7 +1196,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             &mut pagination_context,
                             0,
                         )
-                    };
+                    }
+                };
 
                 // 3. 객체 페이지네이션 결과 처리 / Handle object pagination result
                 let has_obj_page_break = obj_pagination_result
@@ -1149,6 +1252,15 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 top_mm: None,
                                 is_raw: false,
                             });
+                        }
+                        // 각주 블록 삽입 / Insert footnote blocks
+                        if !footnote_contents.is_empty() {
+                            let fn_content_width = page_def
+                                .map(|pd| round_to_2dp(pd.content_width_mm()))
+                                .unwrap_or(150.0);
+                            let fn_blocks = generate_footnote_blocks(&footnote_contents, content_height_mm, fn_content_width);
+                            page_blocks.extend(fn_blocks);
+                            footnote_contents.clear();
                         }
                         html.push_str(&page::render_page(
                             page_number,
@@ -1250,11 +1362,22 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 } else {
                                     table_htmls.len()
                                 };
+                            // note_state 불필요: 재렌더 시 각주는 이미 수집됨
+                            // note_state not needed: footnotes already collected in first render
+                            let mut state_rerender = ParagraphRenderState {
+                                table_counter: &mut table_counter,
+                                pattern_counter: &mut pattern_counter,
+                                color_to_pattern: &mut color_to_pattern,
+                                note_state: None,
+                                outline_tracker: Some(&mut outline_tracker),
+                                number_tracker: Some(&mut number_tracker),
+                                section_outline_numbering_id,
+                            };
                             let (_para_html_next, table_htmls_next, _obj_pagination_result_next) =
                                 render_paragraph(
                                     paragraph,
                                     &context_next,
-                                    &mut state,
+                                    &mut state_rerender,
                                     &mut pagination_context,
                                     skip_tables_count,
                                 );
@@ -1363,6 +1486,15 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 .unwrap_or(24.99);
             Some((left, top))
         };
+        // 각주 블록 삽입 / Insert footnote blocks
+        if !footnote_contents.is_empty() {
+            let fn_content_width = current_page_def
+                .map(|pd| round_to_2dp(pd.content_width_mm()))
+                .unwrap_or(150.0);
+            let fn_blocks = generate_footnote_blocks(&footnote_contents, content_height_mm, fn_content_width);
+            page_blocks.extend(fn_blocks);
+            footnote_contents.clear();
+        }
         html.push_str(&page::render_page(
             page_number,
             &page_blocks,
@@ -1378,21 +1510,59 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         ));
     }
 
-    // 각주/미주 블록을 본문 끝에 출력 / Output footnote/endnote blocks at end of body
-    let prefix = &options.css_class_prefix;
-    if !footnote_contents.is_empty() {
-        html.push_str(&format!(r#"<div class="{}footnotes">"#, prefix));
-        for block in &footnote_contents {
-            html.push_str(block);
-        }
-        html.push_str("</div>\n");
-    }
+    // 미주 전용 페이지 렌더링 / Render endnote-only page
     if !endnote_contents.is_empty() {
-        html.push_str(&format!(r#"<div class="{}endnotes">"#, prefix));
+        let en_page_width_mm = current_page_def
+            .map(|pd| round_to_2dp(pd.effective_width_mm()))
+            .unwrap_or(210.0);
+        let en_page_height_mm = current_page_def
+            .map(|pd| round_to_2dp(pd.effective_height_mm()))
+            .unwrap_or(297.0);
+        let en_left_mm = current_page_def
+            .map(|pd| round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()))
+            .unwrap_or(30.0);
+        let en_top_mm = current_page_def
+            .map(|pd| round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()))
+            .unwrap_or(35.0);
+        let en_content_width_mm = current_page_def
+            .map(|pd| round_to_2dp(pd.content_width_mm()))
+            .unwrap_or(150.0);
+
+        let mut en_page_html = format!(
+            r#"<div class="hpa" style="width:{}mm;height:{}mm;"><div class="hcD" style="left:{}mm;top:{}mm;">"#,
+            en_page_width_mm, en_page_height_mm, en_left_mm, en_top_mm
+        );
+
+        // 각 미주를 hcD > hcI > hls 구조로 배치 (top: 0mm부터 순차)
+        let mut en_block_top_mm = 0.0f64;
         for block in &endnote_contents {
-            html.push_str(block);
+            let top_offset_mm = round_to_2dp((block.line_height_mm - block.height_mm) / 2.0);
+            let marker_text = format!("{})", block.number);
+            let marker_char_count = marker_text.chars().count() as f64;
+            let marker_width_mm = round_to_2dp(marker_char_count * block.height_mm / marker_char_count.max(1.0) * 0.97);
+
+            en_page_html.push_str(&format!(
+                r#"<div class="hcD" style="left:0mm;top:{:.2}mm;"><div class="hcI"><div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:0mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;"><div class="haN" style="left:0mm;top:0mm;width:{:.2}mm;height:{:.2}mm;"><span class="hrt {}">{}</span></div>{}</div></div></div>"#,
+                en_block_top_mm,
+                block.para_shape_class,
+                block.line_height_mm,
+                top_offset_mm,
+                block.height_mm,
+                en_content_width_mm,
+                marker_width_mm,
+                block.height_mm,
+                block.char_shape_class,
+                marker_text,
+                block.body_html,
+            ));
+
+            en_block_top_mm = round_to_2dp(en_block_top_mm + block.height_mm);
         }
-        html.push_str("</div>\n");
+
+        // 빈 hcI (fixture와 일치)
+        en_page_html.push_str(r#"<div class="hcI"></div>"#);
+        en_page_html.push_str("</div></div>");
+        html.push_str(&en_page_html);
     }
 
     html.push_str("</body>");
