@@ -2709,7 +2709,13 @@ expression: json
                 "type": "ctrl_header",
                 "ctrl_id": "%hlk",
                 "ctrl_id_value": 627600491,
-                "data_type": "other"
+                "data_type": "field",
+                "field_type": "%hlk",
+                "attribute": 43008,
+                "other_attr": 0,
+                "command_len": 24,
+                "command": "http\\://naver.com;1;0;0;",
+                "id": 2100945676
               }
             ]
           },
@@ -2888,7 +2894,13 @@ expression: json
                 "type": "ctrl_header",
                 "ctrl_id": "%hlk",
                 "ctrl_id_value": 627600491,
-                "data_type": "other"
+                "data_type": "field",
+                "field_type": "%hlk",
+                "attribute": 43008,
+                "other_attr": 0,
+                "command_len": 67,
+                "command": "D\\:\\ohah\\hwpjs\\crates\\hwp-core\\tests\\fixtures\\aligns.hml|얼라인;3;0;0;",
+                "id": 2100945677
               }
             ]
           },
@@ -3067,7 +3079,13 @@ expression: json
                 "type": "ctrl_header",
                 "ctrl_id": "%hlk",
                 "ctrl_id_value": 627600491,
-                "data_type": "other"
+                "data_type": "field",
+                "field_type": "%hlk",
+                "attribute": 43008,
+                "other_attr": 0,
+                "command_len": 11,
+                "command": "|얼라인;0;0;0;",
+                "id": 2100945681
               }
             ]
           },
@@ -3246,7 +3264,13 @@ expression: json
                 "type": "ctrl_header",
                 "ctrl_id": "%hlk",
                 "ctrl_id_value": 627600491,
-                "data_type": "other"
+                "data_type": "field",
+                "field_type": "%hlk",
+                "attribute": 43008,
+                "other_attr": 0,
+                "command_len": 59,
+                "command": "mailto\\:bookyoon173@gmail.com\\?subject=전자우편주소제목|전자우편;2;0;0;",
+                "id": 2100945682
               }
             ]
           },
