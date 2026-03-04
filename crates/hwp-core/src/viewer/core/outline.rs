@@ -475,12 +475,27 @@ pub fn compute_paragraph_marker(
     number_tracker: &mut NumberTracker,
     section_outline_numbering_id: u16,
 ) -> Option<MarkerInfo> {
+    compute_paragraph_marker_with_char_shape(
+        para_header, document, outline_tracker, number_tracker,
+        section_outline_numbering_id, None,
+    )
+}
+
+/// `fallback_char_shape_id`: bullet의 char_shape_id == -1일 때 문단의 첫 번째 CharShape ID를 사용
+pub fn compute_paragraph_marker_with_char_shape(
+    para_header: &ParaHeader,
+    document: &HwpDocument,
+    outline_tracker: &mut OutlineNumberTracker,
+    number_tracker: &mut NumberTracker,
+    section_outline_numbering_id: u16,
+    fallback_char_shape_id: Option<u32>,
+) -> Option<MarkerInfo> {
     let para_shape_id = para_header.para_shape_id as usize;
     let para_shape = document.doc_info.para_shapes.get(para_shape_id)?;
 
     match para_shape.attributes1.header_shape_type {
         HeaderShapeType::Bullet => {
-            compute_bullet_marker(para_shape, document)
+            compute_bullet_marker(para_shape, document, fallback_char_shape_id)
         }
         HeaderShapeType::Number => {
             compute_number_marker(para_shape, para_header, document, number_tracker)
@@ -495,6 +510,7 @@ pub fn compute_paragraph_marker(
 fn compute_bullet_marker(
     para_shape: &crate::document::docinfo::para_shape::ParaShape,
     document: &HwpDocument,
+    fallback_char_shape_id: Option<u32>,
 ) -> Option<MarkerInfo> {
     let actual_id = extract_numbering_id_from_line_spacing(para_shape);
     let bullet_id = if actual_id > 0 { actual_id - 1 } else { para_shape.number_bullet_id as usize };
@@ -503,42 +519,63 @@ fn compute_bullet_marker(
     let (bullet_char, font_size) = pua_to_bullet_info(bullet.bullet_char);
     let marker_text = bullet_char.to_string();
 
-    let char_shape_class = if bullet.char_shape_id >= 0 {
+    // char_shape_id == -1일 때 문단의 첫 번째 CharShape를 fallback으로 사용
+    let (char_shape_class, font_size, width_mm, height_mm) = if bullet.char_shape_id >= 0 {
         let cs_id = bullet.char_shape_id as usize;
-        if cs_id < document.doc_info.char_shapes.len() {
+        let class = if cs_id < document.doc_info.char_shapes.len() {
             format!("cs{}", cs_id)
         } else {
             "cs0".to_string()
-        }
-    } else {
-        "cs0".to_string() // char_shape_id == -1 → default
-    };
-
-    // Bullet.width (HWPUNIT16) → hhe div 너비 (mm)
-    // width=0이면 DEFAULT_BULLET_WIDTH_MM, >0이면 w_mm + min(w_mm, DEFAULT_BULLET_WIDTH_MM)
-    // Right 정렬은 항상 DEFAULT_BULLET_WIDTH_MM
-    let width_mm = if bullet.width > 0 {
-        match bullet.attributes.align_type {
-            BulletAlignType::Right => DEFAULT_BULLET_WIDTH_MM,
-            _ => {
-                let w_mm = bullet.width as f64 * 25.4 / 7200.0;
-                let total = w_mm + w_mm.min(DEFAULT_BULLET_WIDTH_MM);
-                (total * 100.0).round() / 100.0
+        };
+        let w = if bullet.width > 0 {
+            match bullet.attributes.align_type {
+                BulletAlignType::Right => DEFAULT_BULLET_WIDTH_MM,
+                _ => {
+                    let w_mm = bullet.width as f64 * 25.4 / 7200.0;
+                    let total = w_mm + w_mm.min(DEFAULT_BULLET_WIDTH_MM);
+                    (total * 100.0).round() / 100.0
+                }
             }
+        } else {
+            DEFAULT_BULLET_WIDTH_MM
+        };
+        (class, font_size, w, DEFAULT_MARKER_HEIGHT_MM)
+    } else if let Some(fb_id) = fallback_char_shape_id {
+        // char_shape_id == -1: 문단의 CharShape에서 폰트 크기와 클래스를 가져옴
+        let cs_id = fb_id as usize;
+        if cs_id < document.doc_info.char_shapes.len() {
+            let cs = &document.doc_info.char_shapes[cs_id];
+            let pt = cs.base_size as f64 / 100.0; // base_size is in 1/100 pt
+            let size_mm = (pt * 0.352778 * 100.0).round() / 100.0; // pt to mm
+            (format!("cs{}", cs_id), pt, size_mm, size_mm)
+        } else {
+            ("cs0".to_string(), font_size, DEFAULT_BULLET_WIDTH_MM, DEFAULT_MARKER_HEIGHT_MM)
         }
     } else {
-        DEFAULT_BULLET_WIDTH_MM
+        let w = if bullet.width > 0 {
+            match bullet.attributes.align_type {
+                BulletAlignType::Right => DEFAULT_BULLET_WIDTH_MM,
+                _ => {
+                    let w_mm = bullet.width as f64 * 25.4 / 7200.0;
+                    let total = w_mm + w_mm.min(DEFAULT_BULLET_WIDTH_MM);
+                    (total * 100.0).round() / 100.0
+                }
+            }
+        } else {
+            DEFAULT_BULLET_WIDTH_MM
+        };
+        ("cs0".to_string(), font_size, w, DEFAULT_MARKER_HEIGHT_MM)
     };
 
     let margin_left_mm = match bullet.attributes.align_type {
         BulletAlignType::Left => 0.0,
-        BulletAlignType::Center => DEFAULT_MARKER_HEIGHT_MM / 2.0,
-        BulletAlignType::Right => DEFAULT_MARKER_HEIGHT_MM,
+        BulletAlignType::Center => height_mm / 2.0,
+        BulletAlignType::Right => height_mm,
     };
 
     Some(MarkerInfo {
         width_mm,
-        height_mm: DEFAULT_MARKER_HEIGHT_MM,
+        height_mm,
         margin_left_mm,
         font_size_pt: Some(font_size),
         char_shape_class,

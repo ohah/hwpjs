@@ -586,6 +586,7 @@ pub fn render_paragraph(
             tables: inline_table_infos.as_slice(), // like_letters=true인 테이블 포함 / Include tables with like_letters=true
             shape_htmls: &[],
             marker_info: marker_info.as_ref(),
+            paragraph_markers: &[],
         };
 
         let context = LineSegmentRenderContext {
