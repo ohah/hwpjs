@@ -994,6 +994,8 @@ fn render_shape_content(
             shape_htmls: &[],
             marker_info: None,
             paragraph_markers: &paragraph_markers,
+            footnote_refs: &[],
+            endnote_refs: &[],
         };
 
         let ls_context = LineSegmentRenderContext {
@@ -1219,6 +1221,8 @@ fn render_shape_content(
             shape_htmls: &[],
             marker_info: None,
             paragraph_markers: &mc_paragraph_markers,
+            footnote_refs: &[],
+            endnote_refs: &[],
         };
 
         let context = LineSegmentRenderContext {

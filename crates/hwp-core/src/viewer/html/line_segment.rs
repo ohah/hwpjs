@@ -27,6 +27,10 @@ pub struct LineSegmentContent<'a> {
     pub marker_info: Option<&'a MarkerInfo>,
     /// 텍스트 박스 내 다중 문단 마커 (text_start_position, MarkerInfo)
     pub paragraph_markers: &'a [(u32, MarkerInfo)],
+    /// 인라인 각주 참조 HTML (마지막 세그먼트 내부에 배치)
+    pub footnote_refs: &'a [String],
+    /// 인라인 미주 참조 HTML (마지막 세그먼트 내부에 배치)
+    pub endnote_refs: &'a [String],
 }
 
 /// 라인 세그먼트 렌더링 컨텍스트 / Line segment rendering context
@@ -180,6 +184,8 @@ pub fn render_line_segments_with_content(
     let shape_htmls = content.shape_htmls;
     let content_marker_info = content.marker_info;
     let paragraph_markers = content.paragraph_markers;
+    let footnote_refs = content.footnote_refs;
+    let endnote_refs = content.endnote_refs;
 
     let document = context.document;
     let para_shape_class = context.para_shape_class;
@@ -463,6 +469,17 @@ pub fn render_line_segments_with_content(
             .find(|(pos, _)| *pos == segment.text_start_position)
         {
             content = format!("{}{}", render_marker_hhe(marker), content);
+        }
+
+        // 마지막 세그먼트에 각주/미주 인라인 참조 추가 / Append footnote/endnote inline refs in last segment
+        let is_last_segment = segment_index == segments.len() - 1;
+        if is_last_segment {
+            for r in footnote_refs {
+                content.push_str(r);
+            }
+            for r in endnote_refs {
+                content.push_str(r);
+            }
         }
 
         // 라인 세그먼트 렌더링 / Render line segment
