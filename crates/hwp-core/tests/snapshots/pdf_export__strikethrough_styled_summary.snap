@@ -1,0 +1,8 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs7 10pt rgb(0,0,0)] [ps: justify ls=160%] strikethrough
+paragraph: [cs8 10pt rgb(0,0,0)] [ps: justify ls=160%] 취소선
+paragraph: [cs10 10pt rgb(0,0,0)] [ps: justify ls=160%] 밑줄
+paragraph: [cs10 10pt rgb(0,0,0)] [ps: justify ls=160%] 밑줄취소선굵게

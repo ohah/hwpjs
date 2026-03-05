@@ -1,0 +1,15 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] 실선밑줄
+paragraph: [cs6 10pt rgb(0,0,0)] [ps: justify ls=160%] 대시밑줄
+paragraph: [cs7 10pt rgb(0,0,0)] [ps: justify ls=160%] 점선밑줄
+paragraph: [cs8 10pt rgb(0,0,0)] [ps: justify ls=160%] 대시일점밑줄
+paragraph: [cs9 10pt rgb(0,0,0)] [ps: justify ls=160%] 대시이점밑줄
+paragraph: [cs10 10pt rgb(0,0,0)] [ps: justify ls=160%] 긴대시밑줄
+paragraph: [cs11 10pt rgb(0,0,0)] [ps: justify ls=160%] 큰점선밑줄
+paragraph: [cs12 10pt rgb(0,0,0)] [ps: justify ls=160%] 이중실선밑줄
+paragraph: [cs13 10pt rgb(0,0,0)] [ps: justify ls=160%] 이중증가밑줄
+paragraph: [cs14 10pt rgb(0,0,0)] [ps: justify ls=160%] 이중감소밑줄
+paragraph: [cs15 10pt rgb(0,0,0)] [ps: justify ls=160%] 삼중밑줄

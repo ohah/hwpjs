@@ -1,0 +1,30 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 글자에 따라 150%
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 고정 값 15pt
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 여백만 지정 5pt
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 글자에 따라 100%
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 고정 값 10pt
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 여백만 지정 0pt
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 글자에 따라 200%
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 고정 값 20pt
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 여백만 지정 10pt
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 글자에 따라 100%
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 고정 값 0pt
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |H 여백만 지정 0pt
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] |HHHHHHHHHHHHHH

@@ -1,0 +1,13 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 첫페이지 첫 문단: 1단
+paragraph: [cs7 120pt rgb(0,51,102)] [ps: justify ls=160%] 2단 2단 2단 2단 2단 2단 2단 2단 2단
+paragraph: [cs8 120pt rgb(255,0,0)] [ps: justify ls=160%] 2단 2단 2단
+paragraph: [cs5 72pt rgb(0,0,0)] [ps: justify ls=160%] 3단 3단 3단 3단  3단  3단  3단 3단 3단 3단 3단 
+paragraph: [cs5 72pt rgb(0,0,0)] [ps: justify ls=160%] 3단 3단
+paragraph: [cs5 72pt rgb(0,0,0)] [ps: justify ls=160%] 3단 3단 3단
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 두 번 째 페이지: 새 쪽으로 2 단
+paragraph: [cs5 72pt rgb(0,0,0)] [ps: justify ls=160%] 다단다단다단다단다단다단다단
+table: 1x1 (cols: 74mm)

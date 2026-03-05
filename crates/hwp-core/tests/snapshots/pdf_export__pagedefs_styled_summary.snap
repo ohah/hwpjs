@@ -1,0 +1,7 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] Section 1: A4 portrait
+page_break: new_page (297x210mm margins: 30/30/35/30)
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] Section 2: A4 landscape

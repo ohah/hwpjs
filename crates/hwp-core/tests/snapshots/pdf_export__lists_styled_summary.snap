@@ -1,0 +1,63 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 글머리표
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 글머리표 두 번째
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 문단번호
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 2-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3-2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3-2-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3-2-2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3-2-3
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 4
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 문단번호 두 번째 (번호 이어짐)
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 5
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 5-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 문단번호 세 번째 (새 번호)
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 2-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3-2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3-2-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3-2-2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 3-2-3
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 4
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 개요
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=14.1mm ls=160%] 2-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 3
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=14.1mm ls=160%] 3-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=14.1mm ls=160%] 3-2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=21.2mm ls=160%] 3-2-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=21.2mm ls=160%] 3-2-2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=21.2mm ls=160%] 3-2-3
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 4
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 개요 두 번째 (번호 이어짐)
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 5
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=14.1mm ls=160%] 5-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 개요 세 번째 (새 번호)
+page_break: new_page (210x297mm margins: 30/30/35/30)
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=14.1mm ls=160%] 2-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 3
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=14.1mm ls=160%] 3-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=14.1mm ls=160%] 3-2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=21.2mm ls=160%] 3-2-1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=21.2mm ls=160%] 3-2-2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=21.2mm ls=160%] 3-2-3
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 4

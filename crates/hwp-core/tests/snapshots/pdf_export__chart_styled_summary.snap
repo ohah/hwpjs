@@ -1,0 +1,37 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs10 bold 13pt rgb(0,0,0)] [ps: center ls=160%] 차트를 조건에 따라 완성하여 제출해 주세요.
+paragraph: [cs9 bold 10pt rgb(0,0,0)] [ps: justify ls=160%] 유형 1.
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] <<차트조건>>
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 1) 차트 데이터는 표 내용에서 연령대별 2015년, 2014년, 2013년의 값만 이용할 것
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 2) 종류 - <묶은 세로 막대형>으로 작업할 것
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 3) 제목 – 굴림, 진하게, 12pt, 배경 – 선 모양(한줄로), 그림자(2pt)
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 4) 제목 이외의 전체 글꼴 – 굴림, 보통, 10pt
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 5) 축제목과 범례는 <<출력형태>>와 동일하게 처리할 것
+table: 5x6 (cols: 30mm,30mm,30mm,30mm,30mm,30mm)
+paragraph: [cs9 bold 10pt rgb(0,0,0)] [ps: justify ls=160%] 유형 2.
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] <<차트조건>>
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 1) 차트 데이터는 표 내용에서 연도별 초등학교, 중학교, 고등학교의 값만 이용할 것
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 2) 종류 - <묶은 세로 막대형>으로 작업할 것
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 3) 제목 – 궁서, 진하게, 12pt, 배경 – 선 모양(한줄로), 그림자(2pt)
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 4) 제목 이외의 전체 글꼴 – 궁서, 보통, 10pt
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 5) 축제목과 범례는 <<출력형태>>와 동일하게 처리할 것
+table: 5x6 (cols: 31mm,31mm,31mm,31mm,31mm,31mm)
+paragraph: [cs9 bold 10pt rgb(0,0,0)] [ps: justify ls=160%] 유형 3.
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] <<차트조건>>
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 1) 차트 데이터는 표 내용에서 구분별 일자마라톤, 8자마라톤, 스피드, 2단 뛰기의 값만 이용할 것
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 2) 종류 - <묶은 가로 막대형>으로 작업할 것
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 3) 제목 – 굴림, 진하게, 12pt, 배경 – 선 모양(한줄로), 그림자(2pt)
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 4) 제목 이외의 전체 글꼴 – 굴림, 보통, 10pt
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 5) 축제목과 범례는 <<출력형태>>와 동일하게 처리할 것
+table: 5x6 (cols: 31mm,31mm,31mm,31mm,31mm,31mm)
+paragraph: [cs9 bold 10pt rgb(0,0,0)] [ps: justify ls=160%] 유형 4.
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] <<차트조건>>
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 1) 차트 데이터는 표 내용에서 지역별 기술, 포스터, 논문의 값만 이용할 것
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 2) 종류 - <꺽은선형>으로 작업할 것
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 3) 제목 – 궁서, 진하게, 12pt, 배경 – 선 모양(한줄로), 그림자(2pt)
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 4) 제목 이외의 전체 글꼴 – 궁서, 보통, 10pt
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 5) 축제목과 범례는 <<출력형태>>와 동일하게 처리할 것
+table: 5x6 (cols: 29mm,29mm,29mm,29mm,29mm,29mm)

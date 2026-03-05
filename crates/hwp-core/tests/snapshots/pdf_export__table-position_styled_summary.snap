@@ -1,0 +1,18 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.1mm rm=7.1mm ls=160%] 전후
+table: 2x2 (cols: 74mm,74mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)
+table: 2x2 (cols: 37mm,37mm)

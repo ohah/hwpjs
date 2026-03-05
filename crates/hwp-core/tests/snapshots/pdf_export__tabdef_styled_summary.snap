@@ -1,0 +1,12 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 			
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 	L	L	L
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 	R	R	R
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 	C	C	C
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 	M	M	M
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 	L	L	L
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 	E	E
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 	I	I	I

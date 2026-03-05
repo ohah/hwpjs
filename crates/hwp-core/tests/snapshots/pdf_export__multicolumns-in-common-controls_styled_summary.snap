@@ -1,0 +1,6 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+table: 1x1 (cols: 148mm)
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 그림

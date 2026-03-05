@@ -1,0 +1,5 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+table: 2x3 (cols: 13mm,13mm,13mm)
