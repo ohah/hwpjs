@@ -95,14 +95,19 @@ impl PdfFonts {
         }
 
         let regular_bytes = std::fs::read(&regular_path).ok()?;
-        let bold_bytes = std::fs::read(dir.join(family.1)).unwrap_or_else(|_| regular_bytes.clone());
-        let italic_bytes = std::fs::read(dir.join(family.2)).unwrap_or_else(|_| regular_bytes.clone());
-        let bold_italic_bytes = std::fs::read(dir.join(family.3)).unwrap_or_else(|_| bold_bytes.clone());
+        let bold_bytes =
+            std::fs::read(dir.join(family.1)).unwrap_or_else(|_| regular_bytes.clone());
+        let italic_bytes =
+            std::fs::read(dir.join(family.2)).unwrap_or_else(|_| regular_bytes.clone());
+        let bold_italic_bytes =
+            std::fs::read(dir.join(family.3)).unwrap_or_else(|_| bold_bytes.clone());
 
         let regular = doc.add_external_font(Cursor::new(&regular_bytes)).ok()?;
         let bold = doc.add_external_font(Cursor::new(&bold_bytes)).ok()?;
         let italic = doc.add_external_font(Cursor::new(&italic_bytes)).ok()?;
-        let bold_italic = doc.add_external_font(Cursor::new(&bold_italic_bytes)).ok()?;
+        let bold_italic = doc
+            .add_external_font(Cursor::new(&bold_italic_bytes))
+            .ok()?;
 
         let rt_regular = rusttype::Font::try_from_vec(regular_bytes);
 

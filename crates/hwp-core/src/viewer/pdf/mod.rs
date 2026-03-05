@@ -5,8 +5,8 @@
 
 mod document;
 mod font;
-mod pdf_image;
 mod page;
+mod pdf_image;
 mod styles;
 mod table;
 mod text;

@@ -206,7 +206,9 @@ fn hlk_command_to_onclick(command: &str) -> Option<String> {
 
     // 이스케이프 해제: \: → :, \? → ?, \\ → \
     let unescape = |s: &str| -> String {
-        s.replace("\\:", ":").replace("\\?", "?").replace("\\\\", "\\")
+        s.replace("\\:", ":")
+            .replace("\\?", "?")
+            .replace("\\\\", "\\")
     };
 
     match link_type {
@@ -715,9 +717,10 @@ pub fn render_paragraph(
         let table_counter_start = *state.table_counter;
 
         // 마커 정보 계산 (Bullet/Number/Outline)
-        let marker_info: Option<MarkerInfo> = if let (Some(outline_tracker), Some(number_tracker)) =
-            (state.outline_tracker.as_deref_mut(), state.number_tracker.as_deref_mut())
-        {
+        let marker_info: Option<MarkerInfo> = if let (Some(outline_tracker), Some(number_tracker)) = (
+            state.outline_tracker.as_deref_mut(),
+            state.number_tracker.as_deref_mut(),
+        ) {
             compute_paragraph_marker(
                 &paragraph.para_header,
                 document,

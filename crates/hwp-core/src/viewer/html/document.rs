@@ -1,8 +1,6 @@
 use super::ctrl_header::process_ctrl_header;
 use super::ctrl_header::{FootnoteBlock, FootnoteEndnoteState};
-use super::line_segment::{
-    DocumentRenderState, LineSegmentContent, LineSegmentRenderContext,
-};
+use super::line_segment::{DocumentRenderState, LineSegmentContent, LineSegmentRenderContext};
 use super::page::{self, HcIBlock};
 use super::pagination::{PageBreakReason, PaginationContext};
 use super::paragraph::{
@@ -121,7 +119,8 @@ fn generate_footnote_blocks(
     });
 
     // 각 각주를 hcD > hcI > hls 구조로 생성
-    let mut footnote_top_mm = round_to_2dp(separator_top_mm + separator_height_mm + separator_gap_mm);
+    let mut footnote_top_mm =
+        round_to_2dp(separator_top_mm + separator_height_mm + separator_gap_mm);
     for block in footnote_blocks {
         // top offset within hls (fixture: -0.16mm for footnote)
         let top_offset_mm = round_to_2dp((block.line_height_mm - block.height_mm) / 2.0);
@@ -130,7 +129,8 @@ fn generate_footnote_blocks(
         let marker_text = format!("{})", block.number);
         let marker_char_count = marker_text.chars().count() as f64;
         // 각주의 CharShape에서 폰트 크기 기반 마커 너비 계산
-        let marker_width_mm = round_to_2dp(marker_char_count * block.height_mm / marker_char_count.max(1.0) * 0.92);
+        let marker_width_mm =
+            round_to_2dp(marker_char_count * block.height_mm / marker_char_count.max(1.0) * 0.92);
 
         let hcd_html = format!(
             r#"<div class="hcD" style="left:0mm;top:{:.2}mm;"><div class="hcI"><div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:0mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;"><div class="haN" style="left:0mm;top:0mm;width:{:.2}mm;height:{:.2}mm;"><span class="hrt {}">{}</span></div>{}</div></div></div>"#,
@@ -419,9 +419,7 @@ struct ColumnDefInfo {
 }
 
 /// 문단에서 ColumnDefinition을 찾아 반환 / Find ColumnDefinition in paragraph
-fn detect_column_definition(
-    paragraph: &crate::document::Paragraph,
-) -> Option<ColumnDefInfo> {
+fn detect_column_definition(paragraph: &crate::document::Paragraph) -> Option<ColumnDefInfo> {
     for record in &paragraph.records {
         if let ParagraphRecord::CtrlHeader { header, .. } = record {
             if let CtrlHeaderData::ColumnDefinition {
@@ -633,7 +631,11 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         for paragraph in &section.paragraphs {
             for record in &paragraph.records {
                 if let ParagraphRecord::CtrlHeader { header, .. } = record {
-                    if let CtrlHeaderData::SectionDefinition { number_para_shape_id, .. } = &header.data {
+                    if let CtrlHeaderData::SectionDefinition {
+                        number_para_shape_id,
+                        ..
+                    } = &header.data
+                    {
                         section_outline_numbering_id = *number_para_shape_id;
                         break;
                     }
@@ -737,7 +739,11 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     let fn_content_width = current_page_def
                         .map(|pd| round_to_2dp(pd.content_width_mm()))
                         .unwrap_or(150.0);
-                    let fn_blocks = generate_footnote_blocks(&footnote_contents, content_height_mm, fn_content_width);
+                    let fn_blocks = generate_footnote_blocks(
+                        &footnote_contents,
+                        content_height_mm,
+                        fn_content_width,
+                    );
                     page_blocks.extend(fn_blocks);
                     footnote_contents.clear();
                 }
@@ -892,8 +898,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             });
                         }
 
-                        let line_segs =
-                            super::paragraph::collect_line_segments(paragraph);
+                        let line_segs = super::paragraph::collect_line_segments(paragraph);
                         let seg_width_mm_raw = line_segs
                             .first()
                             .map(|seg| int32_to_mm(seg.segment_width))
@@ -906,8 +911,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         let mc_top_mm = if page_blocks.is_empty() && page_content.is_empty() {
                             None
                         } else {
-                            let gap_hu =
-                                col_def.column_spacing as f64 * (col_def.column_count as f64 - 1.0) / 2.0;
+                            let gap_hu = col_def.column_spacing as f64
+                                * (col_def.column_count as f64 - 1.0)
+                                / 2.0;
                             let gap_mm = round_to_2dp(gap_hu * 25.4 / 7200.0);
                             Some(round_to_2dp(last_content_bottom_mm + gap_mm))
                         };
@@ -934,20 +940,22 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 if multi_col_state.is_some() {
                     // 1패스: 모든 컬럼 그룹 렌더링 (pattern_counter/color_to_pattern 사용)
                     // Pass 1: render all column groups (uses pattern_counter/color_to_pattern)
-                    let line_segments =
-                        super::paragraph::collect_line_segments(paragraph);
+                    let line_segments = super::paragraph::collect_line_segments(paragraph);
                     let (text, char_shapes) = extract_text_and_shapes(paragraph);
                     let (control_char_positions, shape_positions) =
                         super::paragraph::collect_control_char_positions(paragraph);
 
-                    let para_shape_class =
-                        format!("ps{}", paragraph.para_header.para_shape_id);
+                    let para_shape_class = format!("ps{}", paragraph.para_header.para_shape_id);
                     let para_shape_indent = document
                         .doc_info
                         .para_shapes
                         .get(paragraph.para_header.para_shape_id as usize)
                         .and_then(|ps| {
-                            if ps.indent != 0 { Some(ps.indent) } else { None }
+                            if ps.indent != 0 {
+                                Some(ps.indent)
+                            } else {
+                                None
+                            }
                         });
 
                     // 인라인 콘텐츠(테이블/도형) 수집 / Collect inline content (tables/shapes)
@@ -958,18 +966,30 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
                     for record in &paragraph.records {
                         if let ParagraphRecord::CtrlHeader {
-                            header, children, paragraphs: ctrl_paragraphs, ..
-                        } = record {
+                            header,
+                            children,
+                            paragraphs: ctrl_paragraphs,
+                            ..
+                        } = record
+                        {
                             let anchor = shape_positions.get(shape_anchor_cursor).copied();
                             shape_anchor_cursor += 1;
 
                             if header.ctrl_id == "tbl " {
                                 // 테이블 수집 / Collect table
                                 let ctrl_result = super::ctrl_header::process_ctrl_header(
-                                    header, children, ctrl_paragraphs, document, options, None, None,
+                                    header,
+                                    children,
+                                    ctrl_paragraphs,
+                                    document,
+                                    options,
+                                    None,
+                                    None,
                                 );
                                 let like_letters = match &header.data {
-                                    CtrlHeaderData::ObjectCommon { attribute, .. } => attribute.like_letters,
+                                    CtrlHeaderData::ObjectCommon { attribute, .. } => {
+                                        attribute.like_letters
+                                    }
                                     _ => false,
                                 };
                                 if like_letters {
@@ -983,12 +1003,20 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             } else if header.ctrl_id == "gso " {
                                 // 도형(글상자) 수집 — 인라인 렌더링 / Collect shape (text box) — inline rendering
                                 let like_letters = match &header.data {
-                                    CtrlHeaderData::ObjectCommon { attribute, .. } => attribute.like_letters,
+                                    CtrlHeaderData::ObjectCommon { attribute, .. } => {
+                                        attribute.like_letters
+                                    }
                                     _ => false,
                                 };
                                 if like_letters {
                                     let ctrl_result = super::ctrl_header::process_ctrl_header(
-                                        header, children, ctrl_paragraphs, document, options, None, None,
+                                        header,
+                                        children,
+                                        ctrl_paragraphs,
+                                        document,
+                                        options,
+                                        None,
+                                        None,
                                     );
                                     if let Some(shape_html) = ctrl_result.shape_html {
                                         // hsG 래핑을 hsR 인라인으로 변환 / Convert hsG wrapping to inline hsR
@@ -1059,13 +1087,20 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             )
                         };
 
-                        let seg_bottom = col_segs.last().map(|seg| {
-                            round_to_2dp(int32_to_mm(seg.vertical_position) + int32_to_mm(seg.line_height))
-                        }).unwrap_or(0.0);
+                        let seg_bottom = col_segs
+                            .last()
+                            .map(|seg| {
+                                round_to_2dp(
+                                    int32_to_mm(seg.vertical_position)
+                                        + int32_to_mm(seg.line_height),
+                                )
+                            })
+                            .unwrap_or(0.0);
 
-                        let first_vpos = col_segs.first().map(|seg| {
-                            round_to_2dp(int32_to_mm(seg.vertical_position))
-                        }).unwrap_or(0.0);
+                        let first_vpos = col_segs
+                            .first()
+                            .map(|seg| round_to_2dp(int32_to_mm(seg.vertical_position)))
+                            .unwrap_or(0.0);
 
                         rendered_groups.push((col_html, seg_bottom, first_vpos));
                     }
@@ -1096,10 +1131,18 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 Some((round_to_2dp(left), round_to_2dp(top)))
                             } else {
                                 let left = page_def
-                                    .map(|pd| round_to_2dp(pd.left_margin.to_mm() + pd.binding_margin.to_mm()))
+                                    .map(|pd| {
+                                        round_to_2dp(
+                                            pd.left_margin.to_mm() + pd.binding_margin.to_mm(),
+                                        )
+                                    })
                                     .unwrap_or(20.0);
                                 let top = page_def
-                                    .map(|pd| round_to_2dp(pd.top_margin.to_mm() + pd.header_margin.to_mm()))
+                                    .map(|pd| {
+                                        round_to_2dp(
+                                            pd.top_margin.to_mm() + pd.header_margin.to_mm(),
+                                        )
+                                    })
                                     .unwrap_or(24.99);
                                 Some((left, top))
                             };
@@ -1108,7 +1151,11 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 let fn_content_width = current_page_def
                                     .map(|pd| round_to_2dp(pd.content_width_mm()))
                                     .unwrap_or(150.0);
-                                let fn_blocks = generate_footnote_blocks(&footnote_contents, content_height_mm, fn_content_width);
+                                let fn_blocks = generate_footnote_blocks(
+                                    &footnote_contents,
+                                    content_height_mm,
+                                    fn_content_width,
+                                );
                                 page_blocks.extend(fn_blocks);
                                 footnote_contents.clear();
                             }
@@ -1265,7 +1312,11 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             let fn_content_width = page_def
                                 .map(|pd| round_to_2dp(pd.content_width_mm()))
                                 .unwrap_or(150.0);
-                            let fn_blocks = generate_footnote_blocks(&footnote_contents, content_height_mm, fn_content_width);
+                            let fn_blocks = generate_footnote_blocks(
+                                &footnote_contents,
+                                content_height_mm,
+                                fn_content_width,
+                            );
                             page_blocks.extend(fn_blocks);
                             footnote_contents.clear();
                         }
@@ -1499,7 +1550,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             let fn_content_width = current_page_def
                 .map(|pd| round_to_2dp(pd.content_width_mm()))
                 .unwrap_or(150.0);
-            let fn_blocks = generate_footnote_blocks(&footnote_contents, content_height_mm, fn_content_width);
+            let fn_blocks =
+                generate_footnote_blocks(&footnote_contents, content_height_mm, fn_content_width);
             page_blocks.extend(fn_blocks);
             footnote_contents.clear();
         }
@@ -1548,7 +1600,9 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             let top_offset_mm = round_to_2dp((block.line_height_mm - block.height_mm) / 2.0);
             let marker_text = format!("{})", block.number);
             let marker_char_count = marker_text.chars().count() as f64;
-            let marker_width_mm = round_to_2dp(marker_char_count * block.height_mm / marker_char_count.max(1.0) * 0.97);
+            let marker_width_mm = round_to_2dp(
+                marker_char_count * block.height_mm / marker_char_count.max(1.0) * 0.97,
+            );
 
             en_page_html.push_str(&format!(
                 r#"<div class="hcD" style="left:0mm;top:{:.2}mm;"><div class="hcI"><div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:0mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;"><div class="haN" style="left:0mm;top:0mm;width:{:.2}mm;height:{:.2}mm;"><span class="hrt {}">{}</span></div>{}</div></div></div>"#,

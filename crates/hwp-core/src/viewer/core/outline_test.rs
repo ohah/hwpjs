@@ -1,12 +1,12 @@
 /// Viewer core (outline) unit tests
 use crate::document::docinfo::numbering::NumberType;
+use crate::viewer::core::outline::{
+    estimate_marker_width, format_number_by_type, format_numbering_string, number_to_lower_alpha,
+    number_to_lower_roman, number_to_upper_alpha, number_to_upper_roman, pua_to_bullet_info,
+    MarkerInfo, NumberTracker,
+};
 pub use crate::viewer::core::outline::{
     format_outline_number, number_to_circled, number_to_hangul, OutlineNumberTracker,
-};
-use crate::viewer::core::outline::{
-    estimate_marker_width, format_number_by_type, format_numbering_string,
-    number_to_lower_alpha, number_to_lower_roman, number_to_upper_alpha,
-    number_to_upper_roman, pua_to_bullet_info, MarkerInfo, NumberTracker,
 };
 
 #[test]
@@ -295,24 +295,42 @@ fn test_number_to_alpha_zero() {
 #[test]
 fn test_format_numbering_string_arabic() {
     assert_eq!(format_numbering_string("^1.", 1, NumberType::Arabic), "1.");
-    assert_eq!(format_numbering_string("^1.", 42, NumberType::Arabic), "42.");
+    assert_eq!(
+        format_numbering_string("^1.", 42, NumberType::Arabic),
+        "42."
+    );
 }
 
 #[test]
 fn test_format_numbering_string_roman() {
-    assert_eq!(format_numbering_string("^1.", 1, NumberType::UpperRoman), "I.");
-    assert_eq!(format_numbering_string("^1.", 4, NumberType::UpperRoman), "IV.");
+    assert_eq!(
+        format_numbering_string("^1.", 1, NumberType::UpperRoman),
+        "I."
+    );
+    assert_eq!(
+        format_numbering_string("^1.", 4, NumberType::UpperRoman),
+        "IV."
+    );
 }
 
 #[test]
 fn test_format_numbering_string_hangul() {
-    assert_eq!(format_numbering_string("^1.", 1, NumberType::HangulGa), "가.");
+    assert_eq!(
+        format_numbering_string("^1.", 1, NumberType::HangulGa),
+        "가."
+    );
 }
 
 #[test]
 fn test_format_numbering_string_complex() {
-    assert_eq!(format_numbering_string("제^1장", 1, NumberType::Arabic), "제1장");
-    assert_eq!(format_numbering_string("제^1장", 3, NumberType::Arabic), "제3장");
+    assert_eq!(
+        format_numbering_string("제^1장", 1, NumberType::Arabic),
+        "제1장"
+    );
+    assert_eq!(
+        format_numbering_string("제^1장", 3, NumberType::Arabic),
+        "제3장"
+    );
 }
 
 #[test]

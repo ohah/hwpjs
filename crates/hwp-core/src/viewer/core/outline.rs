@@ -51,7 +51,9 @@ pub struct OutlineNumberTracker {
 impl OutlineNumberTracker {
     /// 새로운 추적기 생성 / Create new tracker
     pub fn new() -> Self {
-        Self { counters: [0; MAX_OUTLINE_LEVELS] }
+        Self {
+            counters: [0; MAX_OUTLINE_LEVELS],
+        }
     }
 
     /// 개요 레벨의 번호를 증가시키고 반환 / Increment and return number for outline level
@@ -137,9 +139,7 @@ fn is_format_string_empty_or_null(format_string: &str) -> bool {
 /// format_string이 유효한 번호 형식인지 검증
 /// ^N 플레이스홀더를 포함하고 제어 문자가 없어야 유효
 fn is_format_string_valid(s: &str) -> bool {
-    !s.is_empty()
-        && s.contains('^')
-        && !s.chars().any(|c| c.is_control() && c != '\t')
+    !s.is_empty() && s.contains('^') && !s.chars().any(|c| c.is_control() && c != '\t')
 }
 
 /// 문단이 개요 번호를 가질 경우 (level, number) 반환, 아니면 None
@@ -250,10 +250,7 @@ impl NumberTracker {
         let level_index = (level - 1) as usize;
 
         // 해당 numbering_id의 엔트리 찾기
-        let entry = self
-            .entries
-            .iter_mut()
-            .find(|(id, _)| *id == numbering_id);
+        let entry = self.entries.iter_mut().find(|(id, _)| *id == numbering_id);
 
         if let Some((_, counters)) = entry {
             let is_same_level = counters[level_index] > 0;
@@ -355,7 +352,11 @@ pub fn format_number_by_type(number: u32, number_type: NumberType) -> String {
 
 /// format_string의 ^N 플레이스홀더를 실제 번호로 치환
 /// format_string: "^1.", "제^1장" 등
-pub fn format_numbering_string(format_string: &str, number: u32, number_type: NumberType) -> String {
+pub fn format_numbering_string(
+    format_string: &str,
+    number: u32,
+    number_type: NumberType,
+) -> String {
     let formatted_number = format_number_by_type(number, number_type);
     // ^1, ^2, ... ^7 플레이스홀더를 치환 (일반적으로 ^1만 사용)
     let mut result = format_string.to_string();
@@ -439,12 +440,12 @@ pub(crate) fn estimate_marker_width(text: &str, font_size_pt: Option<f64>) -> f6
         } else if ch.is_ascii() {
             // ASCII 문자 너비 근사값 (fixture 역산 기반)
             match ch {
-                'I' => width += 1.74,  // narrow
+                'I' => width += 1.74, // narrow
                 '.' => width += 1.46,
                 ')' | '(' => width += 1.75, // fixture: 1) = 5.19, 1 = 3.44, ) = 1.75
                 'V' | 'X' | 'A' | 'B' | 'C' | 'D' => width += 3.46,
                 '0'..='9' => width += 3.44, // fixture: 1. = 4.90, . = 1.46, 1 = 3.44
-                _ => width += 3.44, // default ASCII width
+                _ => width += 3.44,         // default ASCII width
             }
         } else {
             // 한글 등 wide 문자 (fixture 역산: 가. = 6.32, . = 1.46, 가 = 4.86)
@@ -476,8 +477,12 @@ pub fn compute_paragraph_marker(
     section_outline_numbering_id: u16,
 ) -> Option<MarkerInfo> {
     compute_paragraph_marker_with_char_shape(
-        para_header, document, outline_tracker, number_tracker,
-        section_outline_numbering_id, None,
+        para_header,
+        document,
+        outline_tracker,
+        number_tracker,
+        section_outline_numbering_id,
+        None,
     )
 }
 
@@ -500,9 +505,13 @@ pub fn compute_paragraph_marker_with_char_shape(
         HeaderShapeType::Number => {
             compute_number_marker(para_shape, para_header, document, number_tracker)
         }
-        HeaderShapeType::Outline => {
-            compute_outline_marker(para_shape, para_header, document, outline_tracker, section_outline_numbering_id)
-        }
+        HeaderShapeType::Outline => compute_outline_marker(
+            para_shape,
+            para_header,
+            document,
+            outline_tracker,
+            section_outline_numbering_id,
+        ),
         HeaderShapeType::None => None,
     }
 }
@@ -513,7 +522,11 @@ fn compute_bullet_marker(
     fallback_char_shape_id: Option<u32>,
 ) -> Option<MarkerInfo> {
     let actual_id = extract_numbering_id_from_line_spacing(para_shape);
-    let bullet_id = if actual_id > 0 { actual_id - 1 } else { para_shape.number_bullet_id as usize };
+    let bullet_id = if actual_id > 0 {
+        actual_id - 1
+    } else {
+        para_shape.number_bullet_id as usize
+    };
     let bullet = document.doc_info.bullets.get(bullet_id)?;
 
     let (bullet_char, font_size) = pua_to_bullet_info(bullet.bullet_char);
@@ -549,7 +562,12 @@ fn compute_bullet_marker(
             let size_mm = (pt * 0.352778 * 100.0).round() / 100.0; // pt to mm
             (format!("cs{}", cs_id), pt, size_mm, size_mm)
         } else {
-            ("cs0".to_string(), font_size, DEFAULT_BULLET_WIDTH_MM, DEFAULT_MARKER_HEIGHT_MM)
+            (
+                "cs0".to_string(),
+                font_size,
+                DEFAULT_BULLET_WIDTH_MM,
+                DEFAULT_MARKER_HEIGHT_MM,
+            )
         }
     } else {
         let w = if bullet.width > 0 {
@@ -590,7 +608,11 @@ fn compute_number_marker(
     tracker: &mut NumberTracker,
 ) -> Option<MarkerInfo> {
     let actual_id = extract_numbering_id_from_line_spacing(para_shape);
-    let numbering_id = if actual_id > 0 { actual_id - 1 } else { para_shape.number_bullet_id as usize };
+    let numbering_id = if actual_id > 0 {
+        actual_id - 1
+    } else {
+        para_shape.number_bullet_id as usize
+    };
 
     let level = para_shape.attributes1.paragraph_level + 1;
     let level_index = (level - 1) as usize;

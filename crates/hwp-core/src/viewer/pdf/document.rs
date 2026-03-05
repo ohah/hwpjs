@@ -5,8 +5,8 @@ use crate::document::{HwpDocument, Paragraph};
 use printpdf::*;
 
 use super::font::PdfFonts;
-use super::pdf_image::{decode_bindata_image, render_image};
 use super::page::PdfPageConfig;
+use super::pdf_image::{decode_bindata_image, render_image};
 use super::styles::PdfParaStyle;
 use super::table::{estimate_table_height, render_table};
 use super::text::{render_text_segments, split_text_segments};
@@ -255,21 +255,16 @@ fn render_paragraph(
                         *has_content = true;
                     } else {
                         // ===== 폴백: 추정 기반 렌더링 =====
-                        let segments =
-                            split_text_segments(text, &char_shapes, document);
+                        let segments = split_text_segments(text, &char_shapes, document);
                         if !segments.is_empty() {
                             let para_style = ctx
                                 .para_shape
                                 .map(PdfParaStyle::from_para_shape)
                                 .unwrap_or_default();
-                            let font_height_mm =
-                                segments[0].style.font_size_pt * 0.3528;
-                            let line_height = super::styles::compute_line_height(
-                                &para_style,
-                                font_height_mm,
-                            );
-                            let effective_left =
-                                left_x + para_style.left_margin_mm;
+                            let font_height_mm = segments[0].style.font_size_pt * 0.3528;
+                            let line_height =
+                                super::styles::compute_line_height(&para_style, font_height_mm);
+                            let effective_left = left_x + para_style.left_margin_mm;
                             let effective_width = page_config.content_width_mm
                                 - para_style.left_margin_mm
                                 - para_style.right_margin_mm;
@@ -323,8 +318,7 @@ fn render_paragraph(
                 // pagination은 부모 문단 루프에서 line_segments로 갱신됨
                 // LineSegmentInfo 없는 폴백 경우만 여기서 갱신
                 if ctx.line_segments.is_empty() {
-                    pagination.current_max_vertical_mm =
-                        table_vpos_mm + table_height + 2.0;
+                    pagination.current_max_vertical_mm = table_vpos_mm + table_height + 2.0;
                 }
                 *has_content = true;
             }
@@ -336,13 +330,11 @@ fn render_paragraph(
                     decode_bindata_image(document, bindata_id, options.embed_images)
                 {
                     let scp = shape_component_picture;
-                    let hwp_w =
-                        (scp.border_rectangle_x.right - scp.border_rectangle_x.left).abs();
+                    let hwp_w = (scp.border_rectangle_x.right - scp.border_rectangle_x.left).abs();
                     let mut hwp_h =
                         (scp.border_rectangle_y.bottom - scp.border_rectangle_y.top).abs();
                     if hwp_h == 0 {
-                        hwp_h =
-                            (scp.crop_rectangle.bottom - scp.crop_rectangle.top).abs();
+                        hwp_h = (scp.crop_rectangle.bottom - scp.crop_rectangle.top).abs();
                     }
 
                     let (mut img_w, mut img_h) = if hwp_w > 0 && hwp_h > 0 {
@@ -375,17 +367,9 @@ fn render_paragraph(
                         .map(|seg| hu_to_mm(seg.vertical_position))
                         .unwrap_or(pagination.current_max_vertical_mm);
                     let cursor_y = page_top_y - img_vpos_mm;
-                    render_image(
-                        current_layer,
-                        &img,
-                        left_x,
-                        cursor_y - img_h,
-                        img_w,
-                        img_h,
-                    );
+                    render_image(current_layer, &img, left_x, cursor_y - img_h, img_w, img_h);
                     if ctx.line_segments.is_empty() {
-                        pagination.current_max_vertical_mm =
-                            img_vpos_mm + img_h + 2.0;
+                        pagination.current_max_vertical_mm = img_vpos_mm + img_h + 2.0;
                     }
                     *has_content = true;
                 } else {
@@ -474,8 +458,7 @@ fn render_paragraph(
                             .doc_info
                             .para_shapes
                             .get(para.para_header.para_shape_id as usize);
-                        let sub_line_segs =
-                            find_line_segments_in_records(&para.records);
+                        let sub_line_segs = find_line_segments_in_records(&para.records);
                         let sub_ctx = PdfParaContext {
                             para_shape: sub_para_shape,
                             line_segments: &sub_line_segs,
@@ -658,10 +641,7 @@ fn find_line_segments_in_records(records: &[ParagraphRecord]) -> Vec<LineSegment
 }
 
 /// styled_summary용: 문서 순회하며 스타일 포함 요약 수집
-pub fn collect_styled_summary(
-    document: &HwpDocument,
-    options: &PdfOptions,
-) -> Vec<String> {
+pub fn collect_styled_summary(document: &HwpDocument, options: &PdfOptions) -> Vec<String> {
     let mut lines = Vec::new();
 
     for (section_idx, section) in document.body_text.sections.iter().enumerate() {
@@ -708,14 +688,12 @@ fn collect_styled_records(
         match record {
             ParagraphRecord::ParaText { text, .. } => {
                 if !text.is_empty() {
-                    let segments =
-                        super::text::split_text_segments(text, &char_shapes, document);
+                    let segments = super::text::split_text_segments(text, &char_shapes, document);
                     let para_style = ctx
                         .para_shape
                         .map(PdfParaStyle::from_para_shape)
                         .unwrap_or_default();
-                    let style_summary =
-                        super::text::segments_style_summary(&segments);
+                    let style_summary = super::text::segments_style_summary(&segments);
                     let ps_summary = para_style.summary();
                     if !style_summary.is_empty() {
                         lines.push(format!(
@@ -742,10 +720,7 @@ fn collect_styled_records(
                 }
             }
             ParagraphRecord::Table { table } => {
-                lines.push(format!(
-                    "table: {}",
-                    super::table::table_summary(table)
-                ));
+                lines.push(format!("table: {}", super::table::table_summary(table)));
             }
             ParagraphRecord::ShapeComponentPicture {
                 shape_component_picture,
@@ -779,19 +754,12 @@ fn collect_styled_records(
                             .doc_info
                             .para_shapes
                             .get(para.para_header.para_shape_id as usize);
-                        let sub_line_segs =
-                            find_line_segments_in_records(&para.records);
+                        let sub_line_segs = find_line_segments_in_records(&para.records);
                         let sub_ctx = PdfParaContext {
                             para_shape: sub_para_shape,
                             line_segments: &sub_line_segs,
                         };
-                        collect_styled_records(
-                            &para.records,
-                            document,
-                            options,
-                            lines,
-                            &sub_ctx,
-                        );
+                        collect_styled_records(&para.records, document, options, lines, &sub_ctx);
                     }
                 }
             }

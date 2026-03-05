@@ -3,6 +3,9 @@ use std::collections::HashMap;
 use crate::document::bodytext::list_header::VerticalAlign;
 use crate::document::bodytext::{LineSegmentInfo, ParagraphRecord, Table};
 use crate::document::CtrlHeaderData;
+use crate::viewer::core::outline::{
+    compute_paragraph_marker_with_char_shape, MarkerInfo, NumberTracker, OutlineNumberTracker,
+};
 use crate::viewer::html::line_segment::{
     render_line_segments_with_content, DocumentRenderState, ImageInfo, LineSegmentContent,
     LineSegmentRenderContext,
@@ -10,9 +13,6 @@ use crate::viewer::html::line_segment::{
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::html::{common, ctrl_header};
 use crate::viewer::html::{image, text};
-use crate::viewer::core::outline::{
-    compute_paragraph_marker_with_char_shape, MarkerInfo, NumberTracker, OutlineNumberTracker,
-};
 use crate::viewer::HtmlOptions;
 use crate::{HwpDocument, INT32};
 
@@ -173,17 +173,18 @@ pub(crate) fn render_cells(
                     }
                     // ParaLineSeg가 paragraph records에 직접 있는 경우도 처리 / Also handle ParaLineSeg directly in paragraph records
                     ParagraphRecord::ParaLineSeg { segments } => {
-                        let height_mm = if cell_mc_count > 1 && segments.len() >= cell_mc_count as usize {
-                            // 다단: 한 단의 높이만 사용 / Multi-column: use only one column's height
-                            let segs_per_col = segments.len() / cell_mc_count as usize;
-                            let col_segs = &segments[..segs_per_col];
-                            let last = col_segs.last().unwrap();
-                            round_to_2dp(int32_to_mm(last.vertical_position + last.line_height))
-                        } else {
-                            let total_height_hwpunit: i32 =
-                                segments.iter().map(|seg| seg.line_height).sum();
-                            round_to_2dp(int32_to_mm(total_height_hwpunit))
-                        };
+                        let height_mm =
+                            if cell_mc_count > 1 && segments.len() >= cell_mc_count as usize {
+                                // 다단: 한 단의 높이만 사용 / Multi-column: use only one column's height
+                                let segs_per_col = segments.len() / cell_mc_count as usize;
+                                let col_segs = &segments[..segs_per_col];
+                                let last = col_segs.last().unwrap();
+                                round_to_2dp(int32_to_mm(last.vertical_position + last.line_height))
+                            } else {
+                                let total_height_hwpunit: i32 =
+                                    segments.iter().map(|seg| seg.line_height).sum();
+                                round_to_2dp(int32_to_mm(total_height_hwpunit))
+                            };
                         if max_shape_height_mm.is_none() || height_mm > max_shape_height_mm.unwrap()
                         {
                             max_shape_height_mm = Some(height_mm);
@@ -254,10 +255,20 @@ pub(crate) fn render_cells(
             for record in &para.records {
                 if let ParagraphRecord::CtrlHeader { header, .. } = record {
                     if let CtrlHeaderData::ColumnDefinition {
-                        attribute, column_spacing, divider_line_type, divider_line_color, ..
-                    } = &header.data {
+                        attribute,
+                        column_spacing,
+                        divider_line_type,
+                        divider_line_color,
+                        ..
+                    } = &header.data
+                    {
                         if attribute.column_count > 1 {
-                            multicolumn_info = Some((attribute.column_count, *column_spacing, *divider_line_type, *divider_line_color));
+                            multicolumn_info = Some((
+                                attribute.column_count,
+                                *column_spacing,
+                                *divider_line_type,
+                                *divider_line_color,
+                            ));
                         }
                     }
                 }
@@ -593,7 +604,9 @@ pub(crate) fn render_cells(
                         }
                     }
 
-                    if let Some((col_count, col_spacing, div_line_type, div_line_color)) = multicolumn_info {
+                    if let Some((col_count, col_spacing, div_line_type, div_line_color)) =
+                        multicolumn_info
+                    {
                         // 다단 렌더링: cold 문단부터 연속 문단까지 집계 / Multi-column rendering: aggregate from cold paragraph to continuation
                         let col_count_usize = col_count as usize;
 
@@ -603,7 +616,8 @@ pub(crate) fn render_cells(
                         use crate::document::bodytext::LineSegmentInfo as CellLineSegInfo;
                         let mut all_segs: Vec<CellLineSegInfo> = Vec::new();
                         let mut all_mc_text = String::new();
-                        let mut all_mc_char_shapes: Vec<crate::document::bodytext::CharShapeInfo> = Vec::new();
+                        let mut all_mc_char_shapes: Vec<crate::document::bodytext::CharShapeInfo> =
+                            Vec::new();
                         let mut all_mc_ccp = Vec::new();
                         let mut mc_collecting = false;
                         let mut mc_wchar_offset: usize = 0; // 원본 WCHAR 단위 오프셋
@@ -631,7 +645,10 @@ pub(crate) fn render_cells(
                                             all_segs.push(adjusted);
                                         }
                                     }
-                                    ParagraphRecord::ParaText { control_char_positions: ccp, .. } => {
+                                    ParagraphRecord::ParaText {
+                                        control_char_positions: ccp,
+                                        ..
+                                    } => {
                                         for cp in ccp {
                                             let mut adjusted = cp.clone();
                                             adjusted.position += text_offset;
@@ -651,7 +668,8 @@ pub(crate) fn render_cells(
                         }
 
                         // split_into_column_groups로 컬럼 경계 감지
-                        let col_groups = crate::viewer::html::document::split_into_column_groups(&all_segs);
+                        let col_groups =
+                            crate::viewer::html::document::split_into_column_groups(&all_segs);
 
                         if col_groups.len() >= col_count_usize && !all_segs.is_empty() {
                             let seg_width_mm_raw = int32_to_mm(all_segs[0].segment_width);
@@ -660,12 +678,19 @@ pub(crate) fn render_cells(
 
                             // hcS 구분선 / hcS separator
                             if div_line_type > 0 {
-                                let sep_left = round_to_2dp(seg_width_mm_raw + (col_spacing_mm_raw - 0.11) / 2.0);
+                                let sep_left = round_to_2dp(
+                                    seg_width_mm_raw + (col_spacing_mm_raw - 0.11) / 2.0,
+                                );
                                 let (first_start, first_end) = col_groups[0];
                                 let first_col_segs = &all_segs[first_start..first_end];
-                                let content_height_mm = first_col_segs.last().map(|last| {
-                                    round_to_2dp(int32_to_mm(last.vertical_position + last.line_height))
-                                }).unwrap_or(0.0);
+                                let content_height_mm = first_col_segs
+                                    .last()
+                                    .map(|last| {
+                                        round_to_2dp(int32_to_mm(
+                                            last.vertical_position + last.line_height,
+                                        ))
+                                    })
+                                    .unwrap_or(0.0);
                                 let stroke_color = format!("#{:06x}", div_line_color & 0x00FFFFFF);
                                 mc_html.push_str(&format!(
                                     r#"<div class="hcS" style="left:{:.2}mm;top:0mm;width:0.11mm;height:{:.2}mm;"><svg class="hs" viewBox="-0.12 -0.12 0.35 {:.2}" style="left:-0.12mm;top:-0.12mm;width:0.35mm;height:{:.2}mm;left:0;top:0;"><path d="M0.06,0 L0.06,{:.2}" style="stroke:{};stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
@@ -681,7 +706,9 @@ pub(crate) fn render_cells(
                             let all_mc_text_len = mc_wchar_offset;
 
                             // 각 단 렌더링 / Render each column
-                            for (col_idx, &(start, end)) in col_groups.iter().enumerate().take(col_count_usize) {
+                            for (col_idx, &(start, end)) in
+                                col_groups.iter().enumerate().take(col_count_usize)
+                            {
                                 let col_segs = &all_segs[start..end];
                                 if col_segs.is_empty() {
                                     continue;
@@ -732,11 +759,12 @@ pub(crate) fn render_cells(
                                         col_content
                                     ));
                                 } else {
-                                    let col_left = round_to_2dp(seg_width_mm_raw + col_spacing_mm_raw * col_idx as f64);
+                                    let col_left = round_to_2dp(
+                                        seg_width_mm_raw + col_spacing_mm_raw * col_idx as f64,
+                                    );
                                     mc_html.push_str(&format!(
                                         r#"<div class="hcI" style="left:{:.2}mm;">{}</div>"#,
-                                        col_left,
-                                        col_content
+                                        col_left, col_content
                                     ));
                                 }
                             }

@@ -215,12 +215,11 @@ impl Numbering {
 
                 let format_bytes = len as usize * 2;
                 if format_bytes > 0 && offset + format_bytes <= data.len() {
-                    let s =
-                        decode_utf16le(&data[offset..offset + format_bytes]).map_err(|e| {
-                            HwpError::EncodingError {
-                                reason: format!("Failed to decode numbering format: {}", e),
-                            }
-                        })?;
+                    let s = decode_utf16le(&data[offset..offset + format_bytes]).map_err(|e| {
+                        HwpError::EncodingError {
+                            reason: format!("Failed to decode numbering format: {}", e),
+                        }
+                    })?;
                     offset += format_bytes;
                     format_strings.push(s);
                 } else {

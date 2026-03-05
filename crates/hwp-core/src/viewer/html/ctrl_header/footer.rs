@@ -54,8 +54,8 @@ fn calculate_content_height(paragraphs: &[Paragraph]) -> f64 {
         for record in &para.records {
             if let ParagraphRecord::ParaLineSeg { segments } = record {
                 if let Some(last_seg) = segments.last() {
-                    let h = int32_to_mm(last_seg.vertical_position)
-                        + int32_to_mm(last_seg.line_height);
+                    let h =
+                        int32_to_mm(last_seg.vertical_position) + int32_to_mm(last_seg.line_height);
                     if h > max_height {
                         max_height = h;
                     }

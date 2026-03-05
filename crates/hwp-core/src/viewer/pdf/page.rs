@@ -77,9 +77,7 @@ impl PdfPageConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::bodytext::page_def::{
-        BindingMethod, PageDefAttributes, PaperDirection,
-    };
+    use crate::document::bodytext::page_def::{BindingMethod, PageDefAttributes, PaperDirection};
     use crate::types::HWPUNIT;
 
     #[test]

@@ -55,8 +55,8 @@ impl PdfTextStyle {
 
         // underline_type=1: 글자 아래, underline_type=2: 글자 위(취소선으로 표시)
         let effective_underline = char_shape.attributes.underline_type == 1;
-        let effective_strikethrough = char_shape.attributes.strikethrough > 0
-            || (char_shape.attributes.underline_type == 2);
+        let effective_strikethrough =
+            char_shape.attributes.strikethrough > 0 || (char_shape.attributes.underline_type == 2);
 
         // 자간: 한글 우선, 기타 언어 중 0이 아닌 첫 값
         let letter_spacing = if char_shape.letter_spacing.korean != 0 {
@@ -115,7 +115,7 @@ impl PdfTextStyle {
 // PdfParaStyle: ParaShape 기반 문단 스타일
 // ============================================================
 
-use crate::document::docinfo::para_shape::{LineSpacingType, ParagraphAlignment, ParaShape};
+use crate::document::docinfo::para_shape::{LineSpacingType, ParaShape, ParagraphAlignment};
 
 /// PDF 문단 스타일 (ParaShape에서 변환)
 #[derive(Debug, Clone)]
@@ -237,9 +237,7 @@ pub fn compute_line_height(para: &PdfParaStyle, font_height_mm: f64) -> f64 {
             let h = para.line_spacing_value / 7200.0 * 25.4;
             h.max(font_height_mm)
         }
-        LineSpacingType::MarginOnly => {
-            font_height_mm + para.line_spacing_value / 7200.0 * 25.4
-        }
+        LineSpacingType::MarginOnly => font_height_mm + para.line_spacing_value / 7200.0 * 25.4,
     }
 }
 
