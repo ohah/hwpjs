@@ -28,3 +28,6 @@ rusttype = "0.9"
 insta = "1.43.2"
 lopdf = "0.33"
 
+[lints]
+workspace = true
+

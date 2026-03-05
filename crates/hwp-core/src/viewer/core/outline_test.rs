@@ -5,9 +5,7 @@ use crate::viewer::core::outline::{
     number_to_lower_roman, number_to_upper_alpha, number_to_upper_roman, pua_to_bullet_info,
     MarkerInfo, NumberTracker,
 };
-pub use crate::viewer::core::outline::{
-    format_outline_number, number_to_circled, number_to_hangul, OutlineNumberTracker,
-};
+pub use crate::viewer::core::outline::{format_outline_number, OutlineNumberTracker};
 
 #[test]
 fn test_outline_tracker_new() {

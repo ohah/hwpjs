@@ -256,14 +256,10 @@ impl NumberTracker {
             let is_same_level = counters[level_index] > 0;
             if is_same_level {
                 // 하위 레벨 리셋
-                for i in (level_index + 1)..MAX_OUTLINE_LEVELS {
-                    counters[i] = 0;
-                }
+                counters[(level_index + 1)..MAX_OUTLINE_LEVELS].fill(0);
                 counters[level_index] += 1;
             } else {
-                for i in level_index..MAX_OUTLINE_LEVELS {
-                    counters[i] = 0;
-                }
+                counters[level_index..MAX_OUTLINE_LEVELS].fill(0);
                 counters[level_index] = 1;
             }
             counters[level_index]

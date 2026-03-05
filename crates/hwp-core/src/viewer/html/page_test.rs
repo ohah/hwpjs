@@ -103,10 +103,11 @@ mod tests {
         let document = HwpDocument::new(file_header);
 
         let table_html = String::from("<table>content</table>");
+        let table_htmls = vec![table_html.clone()];
         let result = render_page(
             1,
             &blocks_from_str("content"),
-            &[table_html.clone()],
+            &table_htmls,
             None,
             Some((50, 50)),
             None,

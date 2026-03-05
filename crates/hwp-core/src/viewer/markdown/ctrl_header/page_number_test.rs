@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_page_number_module_compiles() {

@@ -1,13 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::document::CtrlHeader;
-    use crate::viewer::html::ctrl_header::CtrlHeaderResult;
 
     #[test]
     fn test_process_column_def_returns_ctrl_header_result() {
         // Verify column_def module structure exists
-        use crate::viewer::html::ctrl_header::column_def::process_column_def;
+
         assert!(true);
     }
 
@@ -17,18 +14,18 @@ mod tests {
         let prefix = "test-";
         let html = format!(r#"<div class="{}column-def">{}</div>"#, prefix, "");
         assert!(html.contains("column-def"));
-        assert_eq!(html.starts_with(r#"<div class="test-"#), true);
+        assert!(html.starts_with(r#"<div class="test-"#));
     }
 
     #[test]
     fn test_process_column_def_empty_results_in_empty_html() {
         // Verify that empty paragraphs result in minimal HTML
         use crate::document::bodytext::ParagraphRecord;
-        use crate::document::HwpDocument;
+
         use crate::viewer::HtmlOptions;
 
         // Just verify the types exist without creating full instances
-        let _ParagraphRecord: ParagraphRecord = ParagraphRecord::ParaLineSeg { segments: vec![] };
+        let _paragraph_record: ParagraphRecord = ParagraphRecord::ParaLineSeg { segments: vec![] };
         let _options = HtmlOptions::default();
         assert!(true);
     }

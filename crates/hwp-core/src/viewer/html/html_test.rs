@@ -1,5 +1,3 @@
-/// HTML viewer module unit tests
-/// HTML 뷰어 모듈 단위 테스트
 use crate::viewer::core::renderer::{Renderer, TextStyles};
 use crate::viewer::html::{HtmlOptions, HtmlRenderer};
 

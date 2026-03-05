@@ -8,7 +8,7 @@ use super::font::PdfFonts;
 use super::page::PdfPageConfig;
 use super::pdf_image::{decode_bindata_image, render_image};
 use super::styles::PdfParaStyle;
-use super::table::{estimate_table_height, render_table};
+use super::table::render_table;
 use super::text::{render_text_segments, split_text_segments};
 use super::PdfOptions;
 
@@ -121,7 +121,7 @@ pub fn render_document(document: &HwpDocument, options: &PdfOptions) -> Vec<u8> 
         .body_text
         .sections
         .first()
-        .map(|s| find_page_config(s))
+        .map(find_page_config)
         .unwrap_or_else(PdfPageConfig::default_a4);
 
     let (doc, first_page, first_layer) = PdfDocument::new(
@@ -214,7 +214,7 @@ pub fn render_document(document: &HwpDocument, options: &PdfOptions) -> Vec<u8> 
 
 /// 문단 레코드 렌더링
 /// LineSegmentInfo가 있으면 절대좌표 기반, 없으면 폴백
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::only_used_in_recursion)]
 fn render_paragraph(
     records: &[ParagraphRecord],
     document: &HwpDocument,

@@ -128,7 +128,7 @@ mod tests {
     fn test_int32_to_mm_boundary_maximum() {
         // INT32_MAX = 2,147,483,647 / 7200 * 25.4 ≈ 7,580.00 mm
         let max_val = i32::MAX as INT32;
-        let expected = ((max_val as f64 / 7200.0) * 25.4);
+        let expected = (max_val as f64 / 7200.0) * 25.4;
         let result = int32_to_mm(max_val);
         assert!((result - expected).abs() < 0.001);
     }
@@ -137,7 +137,7 @@ mod tests {
     fn test_int32_to_mm_boundary_minimum() {
         // INT32_MIN = -2,147,483,648 / 7200 * 25.4 ≈ -7,580.00 mm
         let min_val = i32::MIN as INT32;
-        let expected = ((min_val as f64 / 7200.0) * 25.4);
+        let expected = (min_val as f64 / 7200.0) * 25.4;
         let result = int32_to_mm(min_val);
         assert!((result - expected).abs() < 0.001);
     }

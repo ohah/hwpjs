@@ -11,6 +11,7 @@ mod ctrl_header;
 mod document;
 mod document_test;
 mod float_utils;
+#[cfg(test)]
 mod html_test;
 mod image;
 mod image_test;

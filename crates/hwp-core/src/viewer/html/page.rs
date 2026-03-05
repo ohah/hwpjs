@@ -9,6 +9,12 @@ use super::styles::round_to_2dp;
 #[derive(Debug, Clone)]
 pub struct HtmlPageBreak;
 
+impl Default for HtmlPageBreak {
+    fn default() -> Self {
+        Self
+    }
+}
+
 impl HtmlPageBreak {
     /// Create a new page break marker
     /// 새 페이지 나눔 표시자 생성

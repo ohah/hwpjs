@@ -33,7 +33,7 @@ impl From<Nullable<String>> for NullableString {
         let val = val.into_value();
         let null = val.is_none();
         NullableString {
-            val: val.unwrap_or(String::default()),
+            val: val.unwrap_or_default(),
             null,
         }
     }

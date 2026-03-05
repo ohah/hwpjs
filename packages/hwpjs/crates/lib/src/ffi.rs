@@ -53,22 +53,22 @@ fn create_hwpjs(id: usize, data_path: &str) -> Box<Hwpjs> {
 
 fn hwpjs_file_header(it_: &mut Hwpjs, data: Vec<u8>) -> Result<String, anyhow::Error> {
     craby::catch_panic!({
-        let ret = it_.file_header(data);
-        ret
+        
+        it_.file_header(data)
     })
 }
 
 fn hwpjs_to_json(it_: &mut Hwpjs, data: Vec<u8>) -> Result<String, anyhow::Error> {
     craby::catch_panic!({
-        let ret = it_.to_json(data);
-        ret
+        
+        it_.to_json(data)
     })
 }
 
 fn hwpjs_to_markdown(it_: &mut Hwpjs, data: Vec<u8>, options: ToMarkdownOptions) -> Result<ToMarkdownResult, anyhow::Error> {
     craby::catch_panic!({
-        let ret = it_.to_markdown(data, options);
-        ret
+        
+        it_.to_markdown(data, options)
     })
 }
 

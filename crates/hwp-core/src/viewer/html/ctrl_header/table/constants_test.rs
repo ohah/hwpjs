@@ -1,6 +1,5 @@
 /// Table constants unit tests
 /// 테이블 렌더링 상수 테스트
-
 #[cfg(test)]
 mod tests {
     use crate::viewer::html::ctrl_header::table::constants::{BORDER_OFFSET_MM, SVG_PADDING_MM};

@@ -42,7 +42,7 @@ pub(crate) fn should_process_control_header(header: &crate::document::CtrlHeader
 /// 개요 번호와 텍스트를 마크다운 heading으로 포맷
 /// Format outline number and text as markdown heading
 pub(crate) fn format_outline_heading(level: u8, outline_number: &str, text: &str) -> String {
-    if level >= 1 && level <= 6 {
+    if (1..=6).contains(&level) {
         let heading = "#".repeat(level as usize);
         format!("{} {} {}", heading, outline_number, text)
     } else {

@@ -19,6 +19,9 @@ base64 = "0.22.1"
 [build-dependencies]
 napi-build = "2"
 
+[lints]
+workspace = true
+
 [profile.release]
 lto = true
 strip = "symbols"

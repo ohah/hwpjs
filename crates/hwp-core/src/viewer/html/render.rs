@@ -54,7 +54,7 @@ impl Renderer for HtmlRenderer {
         _document: &HwpDocument,
         _options: &Self::Options,
     ) -> String {
-        format!("<table></table>")
+        "<table></table>".to_string()
     }
 
     fn render_image(
