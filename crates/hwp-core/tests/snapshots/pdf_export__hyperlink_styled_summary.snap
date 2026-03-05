@@ -1,0 +1,8 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 하이퍼링크 테스트 naver.com
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] align.hwp
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 문서의처음
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] 전자우편

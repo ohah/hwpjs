@@ -1,0 +1,29 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 글자취급
+image: bindata_id=2
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 어울림 (양쪽 본문)
+image: bindata_id=2
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 ...
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 어울림 (왼쪽 본문)
+image: bindata_id=2
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 ...
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 어울림 (오른쪽 본문)
+image: bindata_id=2
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 어울림 ...
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 자리차지 (왼쪽정렬)
+image: bindata_id=2
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 자리차지 (오른쪽정렬)
+image: bindata_id=2
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 자리차지 (가운데정렬)
+image: bindata_id=2
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 자리차지 (안쪽정렬)
+image: bindata_id=1
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 자리차지 (바깥쪽정렬)
+image: bindata_id=1
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 글뒤로
+image: bindata_id=2
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] 글 앞으로
+image: bindata_id=2

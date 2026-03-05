@@ -1,0 +1,19 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 개요 1
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=14.1mm ls=160%] 개요2
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=21.2mm ls=160%] 개요3
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=28.2mm ls=160%] 개요4
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=35.3mm ls=160%] 개요 5
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=35.3mm ls=160%] 개요 5-2
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=14.1mm ls=160%] 개요2-2
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=42.3mm ls=160%] 개요 6 
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=42.3mm ls=160%] 개요 6-2
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=49.4mm ls=160%] 개요7
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=49.4mm ls=160%] 개요7-2
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=56.4mm ls=160%] 개요8
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=63.5mm ls=160%] 개요9
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=70.6mm ls=160%] 개요10
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify lm=7.1mm ls=160%] 개요 1-2

@@ -1,0 +1,6 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단...
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단...

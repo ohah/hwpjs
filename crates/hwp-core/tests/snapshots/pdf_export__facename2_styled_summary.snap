@@ -1,0 +1,12 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs0 10pt rgb(0,0,0)] [ps: justify ls=160%] ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕
+paragraph: [cs3 10pt rgb(0,0,0)] [ps: justify ls=160%] ko한컴돋움 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕
+paragraph: [cs4 10pt rgb(0,0,0)] [ps: justify ls=160%] ko바탕 enTimesNewRoman cn바탕 jp바탕 other바탕 symbol바탕 user바탕
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] ko바탕 enArial cn바탕 jp바탕 other바탕 symbol바탕 user바탕
+paragraph: [cs5 10pt rgb(0,0,0)] [ps: justify ls=160%] ko바탕 en바탕 cn약자漢字 jp바탕 other바탕 symbol바탕 user바탕
+paragraph: [cs6 10pt rgb(0,0,0)] [ps: justify ls=160%] ko바탕 en바탕 cn간자漢字 jp바탕 other바탕 symbol바탕 user바탕
+paragraph: [cs7 10pt rgb(0,0,0)] [ps: justify ls=160%] ko바탕 en바탕 cn바탕 jp명조あ other바탕 symbol바탕 user바탕
+paragraph: [cs2 10pt rgb(0,0,0)] [ps: justify ls=160%] ko바탕 en바탕 cn바탕 jp고딕あ other바탕 symbol바탕 user바탕

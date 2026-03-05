@@ -1,0 +1,13 @@
+---
+source: crates/hwp-core/tests/pdf_export.rs
+expression: text
+---
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify lm=7.8mm rm=8.5mm ls=160%] 문단1
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ls=160%] 문단2
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ind=7.1mm ls=160%] 문단3 - 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: justify ind=-7.1mm ls=160%] 문단4 - 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: left ind=-7.1mm ls=160%] 문단 5
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: right ind=-7.1mm ls=160%] 문단 6
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: center ind=-7.1mm ls=160%] 문단 7
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: distribute ind=-7.1mm ls=160%] 문단 8
+paragraph: [cs1 10pt rgb(0,0,0)] [ps: divide ind=-7.1mm ls=160%] 문단 9
