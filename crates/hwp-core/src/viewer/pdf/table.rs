@@ -124,6 +124,7 @@ fn estimate_records_image_height(records: &[ParagraphRecord]) -> f64 {
 }
 
 /// 테이블 렌더링 (테두리 + 셀 텍스트 + 이미지). 반환값: 테이블 전체 높이(mm)
+#[allow(clippy::too_many_arguments)]
 pub fn render_table(
     layer: &PdfLayerReference,
     table: &Table,
@@ -345,6 +346,7 @@ fn render_cell_images(
 }
 
 /// 테이블 예상 높이(mm) 사전 계산 (페이지 넘김 판단용)
+#[allow(dead_code)]
 pub fn estimate_table_height(table: &Table, document: &HwpDocument, embed_images: bool) -> f64 {
     let row_hs = row_heights_mm(table, document, embed_images);
     row_hs.iter().sum()

@@ -9,6 +9,7 @@ pub struct PdfFonts {
     pub italic: IndirectFontRef,
     pub bold_italic: IndirectFontRef,
     /// rusttype 메트릭스용 (텍스트 너비 계산)
+    #[allow(dead_code)]
     pub rt_regular: Option<rusttype::Font<'static>>,
 }
 
@@ -171,6 +172,7 @@ impl PdfFonts {
     }
 
     /// 텍스트 너비 계산 (mm 단위). rusttype 폰트가 없으면 근사값 사용.
+    #[allow(dead_code)]
     pub fn text_width_mm(&self, text: &str, font_size_pt: f64) -> f64 {
         if let Some(ref rt_font) = self.rt_regular {
             let scale = rusttype::Scale::uniform(font_size_pt as f32);

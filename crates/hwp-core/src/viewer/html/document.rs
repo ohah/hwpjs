@@ -183,19 +183,17 @@ struct MultiColumnState {
 /// Compares each group's first_vpos with per-column max_bottom to assign to correct column
 /// Returns (col_idx, is_page_break)
 fn assign_column(first_vpos: f64, col_max_bottoms: &[f64]) -> (usize, bool) {
-    let col_count = col_max_bottoms.len();
-
     // Priority 1: 연속(continuation) — 콘텐츠가 있는 컬럼 중 first_vpos가 max_bottom에서 이어지는 컬럼
     // Continuation: column with content where first_vpos continues from max_bottom
     // max_bottom이 가장 높은(가장 가까운) 컬럼 선택 / Pick column with closest (highest) max_bottom
     let mut best_col: Option<(usize, f64)> = None;
-    for i in 0..col_count {
-        if col_max_bottoms[i] > 0.01 && first_vpos >= col_max_bottoms[i] - 1.0 {
+    for (i, &bottom) in col_max_bottoms.iter().enumerate() {
+        if bottom > 0.01 && first_vpos >= bottom - 1.0 {
             match best_col {
-                None => best_col = Some((i, col_max_bottoms[i])),
+                None => best_col = Some((i, bottom)),
                 Some((_, best_bottom)) => {
-                    if col_max_bottoms[i] > best_bottom {
-                        best_col = Some((i, col_max_bottoms[i]));
+                    if bottom > best_bottom {
+                        best_col = Some((i, bottom));
                     }
                 }
             }
@@ -206,8 +204,8 @@ fn assign_column(first_vpos: f64, col_max_bottoms: &[f64]) -> (usize, bool) {
     }
 
     // Priority 2: 빈 컬럼 (max_bottom ≈ 0) / First empty column
-    for i in 0..col_count {
-        if col_max_bottoms[i] < 0.01 {
+    for (i, &bottom) in col_max_bottoms.iter().enumerate() {
+        if bottom < 0.01 {
             return (i, false);
         }
     }
@@ -561,6 +559,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     use std::collections::HashMap;
     let mut pattern_counter = 0;
     let mut color_to_pattern: HashMap<u32, String> = HashMap::new();
+    #[allow(unused_assignments)]
     let mut outline_tracker = OutlineNumberTracker::new();
     let mut number_tracker = NumberTracker::new();
 
@@ -674,29 +673,26 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
             // 페이지 경계는 2패스 코드 내 위치 리셋 감지로 처리
             // Multicolumn paragraph vertical_position is column-relative, so reset to 0 is normal
             // Page boundaries handled by position-reset detection in 2-pass code
-            let has_page_break = if has_page_break
-                && para_result.reason == Some(PageBreakReason::VerticalReset)
-            {
-                let is_entering_multicol = detect_column_definition(paragraph)
-                    .map(|info| info.column_count > 1)
-                    .unwrap_or(false);
-                let is_multicol_para = paragraph
-                    .para_header
-                    .column_divide_type
-                    .contains(&ColumnDivideType::MultiColumn);
+            let has_page_break =
+                if has_page_break && para_result.reason == Some(PageBreakReason::VerticalReset) {
+                    let is_entering_multicol = detect_column_definition(paragraph)
+                        .map(|info| info.column_count > 1)
+                        .unwrap_or(false);
+                    let is_multicol_para = paragraph
+                        .para_header
+                        .column_divide_type
+                        .contains(&ColumnDivideType::MultiColumn);
 
-                // 이전 문단에 Page 경계가 있었으면 VerticalReset을 실제 페이지 브레이크로 처리
-                // If previous paragraph had a Page divide, treat VerticalReset as a real page break
-                if prev_has_page_divide {
-                    true
-                } else if is_entering_multicol || is_multicol_para || multi_col_state.is_some() {
-                    false
+                    // 이전 문단에 Page 경계가 있었으면 VerticalReset을 실제 페이지 브레이크로 처리
+                    // If previous paragraph had a Page divide, treat VerticalReset as a real page break
+                    if prev_has_page_divide {
+                        true
+                    } else {
+                        !(is_entering_multicol || is_multicol_para || multi_col_state.is_some())
+                    }
                 } else {
-                    true
-                }
-            } else {
-                has_page_break
-            };
+                    has_page_break
+                };
 
             // 페이지 나누기가 있고 페이지 내용이 있으면 페이지 출력 (문단 렌더링 전) / Output page if page break and page content exists (before rendering paragraph)
             if has_page_break
@@ -937,6 +933,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 // 다단 per-column 렌더링 (2패스: 렌더링 → 라운드 기반 플러시)
                 // Multicolumn per-column rendering (2-pass: render → round-based flush)
                 let mut mc_has_inline_content = false;
+                #[allow(clippy::unnecessary_unwrap)]
                 if multi_col_state.is_some() {
                     // 1패스: 모든 컬럼 그룹 렌더링 (pattern_counter/color_to_pattern 사용)
                     // Pass 1: render all column groups (uses pattern_counter/color_to_pattern)
@@ -1034,7 +1031,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                     let col_groups = split_into_column_groups(&line_segments);
                     let mut rendered_groups: Vec<(String, f64, f64)> = Vec::new(); // (html, seg_bottom, first_vpos)
 
-                    for (_group_idx, (start, end)) in col_groups.iter().enumerate() {
+                    for (start, end) in col_groups.iter() {
                         let col_segs = &line_segments[*start..*end];
                         if col_segs.is_empty() {
                             rendered_groups.push((String::new(), 0.0, 0.0));
@@ -1111,6 +1108,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         if col_html.is_empty() {
                             continue;
                         }
+                        #[allow(clippy::unnecessary_unwrap)]
                         let mc = multi_col_state.as_mut().unwrap();
                         let (col_idx, is_page_break) =
                             assign_column(first_vpos, &mc.col_max_bottoms);
@@ -1276,8 +1274,10 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         // were already correctly rendered and should stay on the current page.
                         if obj_result.reason == Some(PageBreakReason::TableOverflow) {
                             if let Some(overflow_idx) = obj_result.table_overflow_at_index {
-                                for i in 0..overflow_idx.min(table_htmls.len()) {
-                                    page_tables.push(table_htmls[i].clone());
+                                for table_html in
+                                    table_htmls.iter().take(overflow_idx.min(table_htmls.len()))
+                                {
+                                    page_tables.push(table_html.clone());
                                 }
                             }
                         }

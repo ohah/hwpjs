@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod other_ctrl_header_tests {
-    use super::*;
+
     use crate::viewer::html::ctrl_header::CtrlHeaderResult;
 
     #[test]
     fn test_ctrl_header_result_operations() {
         // Test CtrlHeaderResult basic operations
-        let mut result = CtrlHeaderResult::new();
+        let result = CtrlHeaderResult::new();
 
         assert_eq!(result.tables.len(), 0);
         assert_eq!(result.images.len(), 0);

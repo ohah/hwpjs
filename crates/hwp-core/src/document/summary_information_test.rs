@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_summary_information_module_compiles() {

@@ -1,19 +1,18 @@
 /// Renderer trait unit tests
 /// Renderer trait 및 관련 구조체 테스트
-
 #[cfg(test)]
 mod tests {
-    use super::super::renderer::{DocumentParts, Renderer, TextStyles};
+    use super::super::renderer::{DocumentParts, TextStyles};
 
     #[test]
     fn test_text_styles_default() {
         let styles = TextStyles::default();
-        assert_eq!(styles.bold, false);
-        assert_eq!(styles.italic, false);
-        assert_eq!(styles.underline, false);
-        assert_eq!(styles.strikethrough, false);
-        assert_eq!(styles.superscript, false);
-        assert_eq!(styles.subscript, false);
+        assert!(!styles.bold);
+        assert!(!styles.italic);
+        assert!(!styles.underline);
+        assert!(!styles.strikethrough);
+        assert!(!styles.superscript);
+        assert!(!styles.subscript);
         assert!(styles.font_family.is_none());
         assert!(styles.font_size.is_none());
         assert!(styles.color.is_none());
@@ -29,8 +28,8 @@ mod tests {
         styles.font_size = Some(14.0);
         styles.color = Some("#FF0000".to_string());
 
-        assert_eq!(styles.bold, true);
-        assert_eq!(styles.italic, true);
+        assert!(styles.bold);
+        assert!(styles.italic);
         assert_eq!(styles.font_family, Some("Arial".to_string()));
         assert_eq!(styles.font_size, Some(14.0));
         assert_eq!(styles.color, Some("#FF0000".to_string()));

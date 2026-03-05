@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use crate::document::bodytext::{BodyText, ControlMask};
-    use crate::document::HwpDocument;
 
     // ===== BodyText tests =====
 
@@ -34,7 +33,7 @@ mod tests {
 
         assert_eq!(mask.value(), 127);
         let flags = mask.active_flags();
-        assert!(flags.len() > 0);
+        assert!(!flags.is_empty());
     }
 
     #[test]
@@ -87,7 +86,7 @@ mod tests {
 
     #[test]
     fn test_bodytext_to_records_no_para_text() {
-        let bodytext = BodyText::default();
+        let _bodytext = BodyText::default();
 
         let records: Vec<crate::document::bodytext::ParagraphRecord> = Vec::new();
 

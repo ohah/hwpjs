@@ -144,7 +144,7 @@ mod markdown_unit_tests {
     fn test_markdown_heading() {
         let line = "# Heading";
         assert_eq!(line, "# Heading");
-        assert!(line.len() > 0);
+        assert!(!line.is_empty());
     }
 
     #[test]

@@ -175,7 +175,7 @@ mod tests {
         );
 
         // Should return a file path
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
         // Path should not start with data: (that would be base64 fallback)
         assert!(!result.starts_with("data:"));
         assert!(result.contains("BIN0E00") || result.contains("0E00"));

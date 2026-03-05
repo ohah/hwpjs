@@ -1083,7 +1083,6 @@ fn render_shape_content(
     let mut col_contents: Vec<String> = vec![String::new(); col_count_usize];
     let mut content_h_mm: f64 = 0.0;
     let mut seg_width_mm: f64 = 0.0;
-    let first_vpos: i32;
 
     // cold 문단(column_divide_type 비어있지 않은)부터 다음 cold 또는 끝까지 모든 문단의
     // line segments, text, char_shapes를 집계 / Aggregate all paragraphs from cold (non-empty
@@ -1199,7 +1198,7 @@ fn render_shape_content(
 
     // 첫 번째 line segment의 vertical_position을 top 오프셋으로 사용
     // Use first line segment's vertical_position as top offset
-    first_vpos = all_line_segments[0].vertical_position;
+    let first_vpos: i32 = all_line_segments[0].vertical_position;
 
     // 첫 번째 컬럼 그룹의 높이를 content_h_mm으로 사용
     // Use first column group's height as content_h_mm

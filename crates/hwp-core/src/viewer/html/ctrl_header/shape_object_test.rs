@@ -1,11 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_process_shape_object_module_compiles() {
         // Verify shape_object module structure exists
-        use crate::viewer::html::ctrl_header::shape_object::process_shape_object;
+
         assert!(true);
     }
 

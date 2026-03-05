@@ -145,13 +145,15 @@ impl Numbering {
     /// Numbering을 바이트 배열에서 파싱합니다. / Parse Numbering from byte array.
     ///
     /// HWP 스펙 표 38 준수: 레벨별 인터리브 + 후미 그룹 레이아웃
+    ///
     /// Per-level (7회 반복):
     ///   attr(UINT32, 4) + width(HWPUNIT16, 2) + dist(HWPUNIT16, 2)
     ///   + char_shape_id(UINT32, 4) + format_length(WORD, 2) + format_string(WCHAR[], var)
+    ///
     /// 후미 그룹:
-    ///   start_numbers[0..6] → 7 × UINT16 = 14 bytes
-    ///   level_start_numbers[0..6] → 7 × UINT32 = 28 bytes (v5.0.2.5+, optional)
-    ///   extended_levels[0..2] → 3 × (WORD + WCHAR[])
+    ///   start_numbers\[0..6\] → 7 × UINT16 = 14 bytes
+    ///   level_start_numbers\[0..6\] → 7 × UINT32 = 28 bytes (v5.0.2.5+, optional)
+    ///   extended_levels\[0..2\] → 3 × (WORD + WCHAR\[\])
     ///
     /// # Arguments
     /// * `data` - Numbering 레코드 데이터 / Numbering record data
@@ -235,22 +237,22 @@ impl Numbering {
 
         // 후미 그룹: start_numbers[0..6] → 7 × UINT16 = 14 bytes
         let mut start_numbers = [0u16; NUM_LEVELS];
-        for i in 0..NUM_LEVELS {
+        for sn in &mut start_numbers {
             if offset + 2 > data.len() {
                 break;
             }
-            start_numbers[i] = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
+            *sn = UINT16::from_le_bytes([data[offset], data[offset + 1]]);
             offset += 2;
         }
 
         // 후미 그룹: level_start_numbers[0..6] → 7 × UINT32 = 28 bytes (v5.0.2.5+, optional)
         let mut level_start_numbers = [None; NUM_LEVELS];
         if version >= 0x00020500 {
-            for i in 0..NUM_LEVELS {
+            for lsn in &mut level_start_numbers {
                 if offset + 4 > data.len() {
                     break;
                 }
-                level_start_numbers[i] = Some(UINT32::from_le_bytes([
+                *lsn = Some(UINT32::from_le_bytes([
                     data[offset],
                     data[offset + 1],
                     data[offset + 2],

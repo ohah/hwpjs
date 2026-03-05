@@ -109,6 +109,7 @@ fn estimate_chars_per_line(content_width_mm: f64, font_size_pt: f64) -> usize {
 
 /// 텍스트 세그먼트들을 PDF 레이어에 렌더링 (줄바꿈 지원)
 /// 반환값: 사용한 총 높이(mm)
+#[allow(clippy::too_many_arguments)]
 pub fn render_text_segments(
     layer: &PdfLayerReference,
     segments: &[TextSegment],
