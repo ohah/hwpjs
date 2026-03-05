@@ -2,351 +2,130 @@
 
 현재 진행 중이거나 곧 시작할 작업 항목들입니다.
 
+## 완료된 작업
+
+### toJson ✅
+- HWP 파일을 JSON 형식으로 변환
+- NAPI/CLI/WASM 모두 지원
+- 0.1.0-rc.1부터 지원
+
+### toMarkdown ✅
+- HWP 파일을 Markdown 형식으로 변환
+- base64/blob 이미지 옵션, HTML 태그 옵션
+- 하이퍼링크, 개요, 번호매기기 지원
+- 0.1.0-rc.1부터 지원
+
+### toHtml ✅
+- HWP 파일을 HTML 형식으로 변환
+- CSS 클래스 기반 스타일링, CharShape/ParaShape 적용
+- 테이블(SVG 테두리), 이미지, 머리글/바닥글, 각주/미주
+- 0.1.0-rc.5부터 지원
+
+### fileHeader ✅
+- HWP 파일의 FileHeader만 빠르게 추출
+- 0.1.0-rc.1부터 지원
+
+### CLI ✅
+- to-json, to-markdown, to-html, info, extract-images, batch 명령어
+- 0.1.0-rc.1부터 지원 (to-html, extract-images는 이후 추가)
+
+### React Native 지원 ✅
+- Craby 기반 iOS/Android 네이티브 바인딩
+- ArrayBuffer 지원 (코드젠 버그 커스텀 수정 포함)
+- 0.1.0-rc.1부터 지원
+
 ## 지원 예정 함수
 
-### 이미지 추출 함수
+### 이미지 추출 NAPI 함수
 
 - **함수명**: `extract_images`
-- **NAPI 함수명**: `extract_images` (node/web/react-native 공통)
-- **기능**: HWP 문서에서 이미지를 추출
-- **반환 타입**: 옵션으로 파일 경로 리스트 또는 이미지 데이터(바이트) 배열 지원
-- **TypeScript 선언**: `extractImages(data: Array<number>, options?: ExtractImagesOptions): ExtractImagesResult`
-- **관련 함수**: `extract_images_to_dir` (디렉토리에 저장하는 버전)
-- **버전**: 0.1.0-rc.7 이후 지원 예정
+- **현재 상태**: CLI에서는 `extract-images` 명령어로 지원 중이나, NAPI 함수로는 미공개
+- **목표**: Node.js/Web에서 프로그래밍 방식으로 이미지 추출 가능하게 함
+- **우선순위**: 중간
 - **상태**: 계획됨
-- **구현 위치**:
-  - Rust: `crates/hwp-core/src/viewer/image.rs` (새 파일)
-  - NAPI 바인딩: `packages/hwpjs/src/lib.rs`
-  - TypeScript: `packages/hwpjs/index.d.ts`
-
-**반환 형식**:
-```typescript
-interface ExtractImagesResult {
-  images: Array<{
-    id: string;
-    data: Uint8Array;
-    format: string; // "jpg", "bmp", "png" 등
-  }>;
-  paths?: string[]; // output_dir 옵션 사용 시
-}
-```
 
 ## 개선 작업
 
 ### 배포 패키지 용량 최적화
 
-- **현재 상태**: npm 패키지 크기가 **131.67 MB** (이전 205.10 MB에서 약 36% 감소)
-  - 주요 원인: React Native용 `.a` 정적 라이브러리 파일들이 여러 아키텍처에 대해 포함됨
-  - Android: `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64` (4개 아키텍처)
-  - iOS: `ios-arm64`, `ios-arm64_x86_64-simulator` (2개 아키텍처)
-- **목표**: 패키지 크기를 100MB 이하로 줄이기
+- **현재 상태**: npm 패키지 크기 **131.67 MB** (이전 205.10 MB에서 약 36% 감소)
+  - 주요 원인: React Native용 `.a` 정적 라이브러리 파일 (Android 4 아키텍처, iOS 2 아키텍처)
+- **목표**: 100MB 이하
 - **완료된 최적화**:
-  1. **Rust 빌드 최적화** ✅:
-     - 루트 `Cargo.toml`에 `[profile.release]` 추가 (workspace 전체 적용)
-       - `lto = "fat"` (Link Time Optimization - 공격적 최적화)
-       - `strip = true` (모든 디버그 정보 제거)
-       - `codegen-units = 1` (단일 코드 생성 단위)
-       - `opt-level = "z"` (최대 크기 최적화)
-       - `panic = "abort"` (unwind보다 작음)
-     - `crates/hwp-core/Cargo.toml`에도 동일한 최적화 적용
-  2. **빌드 산출물 제외 강화** ✅:
-     - `package.json`의 `files` 필드에 추가 제외 항목:
-       - `!android/build/**`
-       - `!android/.cxx/**`
-       - `!android/.gradle/**`
-       - `!android/.idea/**`
-       - `!ios/build/**`
-       - `!ios/Pods/**`
-       - `!ios/*.xcworkspace`
-       - `!**/*.log`
-  3. **Android CMake 빌드 최적화** ✅:
-     - `packages/hwpjs/android/build.gradle`의 release 빌드에 최적화 플래그 추가:
-       - `cppFlags "-O3 -flto -ffunction-sections -fdata-sections"`
-- **최적화 결과**:
-  - 이전 크기: 205.10 MB
-  - 현재 크기: 131.67 MB
-  - 감소량: 약 73.43 MB (36% 감소)
-  - 총 파일 수: 237개
+  1. Rust 빌드 최적화 ✅ (lto, strip, codegen-units=1, opt-level="z", panic="abort")
+  2. 빌드 산출물 제외 강화 ✅
+  3. Android CMake 빌드 최적화 ✅
 - **추가 최적화 가능 방법**:
-  4. **선택적 아키텍처 제외** (트레이드오프):
-     - Android `x86`, `x86_64` 제외 시 약 37MB 추가 감소 가능
-     - 하지만 에뮬레이터 사용 불가능해짐
-     - 대안: postinstall 스크립트로 GitHub Releases에서 선택적 다운로드
-  5. **의존성 최적화**:
-     - `default-features = false` 적용으로 추가 3-7% 감소 가능
-  6. **링커 플래그 추가**:
-     - `--gc-sections`, `--as-needed` 플래그로 추가 2-5% 감소 가능
-- **영향 범위**:
-  - `Cargo.toml` (workspace 루트)
-  - `crates/hwp-core/Cargo.toml`
-  - `packages/hwpjs/package.json` (files 필드)
-  - `packages/hwpjs/android/build.gradle`
-  - `packages/hwpjs/scripts/check-package-size.sh`
-- **참고사항**:
-  - `.a` 파일 크기는 최종 앱 번들 크기에 직접적으로 영향을 줌
-  - React Native 앱 빌드 시 `.a` 파일이 앱 번들에 포함됨
-  - 따라서 패키지 크기 최적화는 앱 번들 크기 최적화로도 이어짐
+  - 선택적 아키텍처 제외 (Android x86/x86_64)
+  - 의존성 `default-features = false` 적용
+  - 링커 플래그 (`--gc-sections`, `--as-needed`)
 - **우선순위**: 높음
-- **상태**: 진행 중 (131.67 MB → 목표 100MB 이하)
+- **상태**: 진행 중
 
 ### 이미지 렌더링 크기 정보 추가
 
-- **현재 상태**: `toMarkdown`과 `extract_images` 함수가 이미지 데이터만 반환하고, 실제 HWP 문서에서 렌더링되는 크기 정보는 포함하지 않음
-- **변경 필요**: 이미지의 실제 렌더링 크기 정보를 반환하도록 개선
-  - HWP 문서에서 이미지가 표시되는 실제 크기 (너비, 높이)
-  - HWPUNIT 단위로 저장된 크기 정보를 픽셀 또는 밀리미터로 변환
-- **영향 범위**:
-  - `ImageData` 구조체에 `width`, `height` 필드 추가 (옵션)
-  - Rust: `crates/hwp-core/src/document/bodytext/shape_component_picture.rs`에서 크기 정보 추출
-  - NAPI 바인딩: `packages/hwpjs/src/lib.rs`의 `ImageData` 구조체
-  - TypeScript 타입 정의: `packages/hwpjs/dist/index.d.ts`
-- **구현 방법**:
-  - `ShapeComponentPicture`에서 `border_rectangle_x`, `border_rectangle_y`의 크기 정보 추출
-  - HWPUNIT을 픽셀 또는 밀리미터로 변환 (DPI 정보 필요할 수 있음)
-  - `ImageData`에 `width?: number`, `height?: number` 필드 추가 (옵션)
-  - 크기 정보가 없는 경우 `undefined` 반환
-- **고려사항**:
-  - HWP 문서의 DPI 설정에 따라 실제 픽셀 크기가 달라질 수 있음
-  - 기본 DPI 값 (예: 96 DPI 또는 72 DPI) 사용 여부 결정 필요
-  - 이미지 원본 크기와 렌더링 크기가 다를 수 있음
-  - `border_rectangle_x`와 `border_rectangle_y`의 차이로 인한 크기 계산 방법 결정 필요
+- **현재 상태**: 이미지 데이터만 반환, 렌더링 크기 정보 미포함
+- **목표**: `ImageData`에 `width`, `height` 필드 추가
 - **우선순위**: 중간
 - **상태**: 계획됨
 
-### ArrayBuffer 지원 구현 (코드젠 버그로 인한 커스텀 수정)
+### Craby 객체 배열(Object[]) 지원
 
-- **문제 상황**: Craby 코드젠이 생성한 `bridging-generated.hpp`에서 `ArrayBuffer`를 `rust::Vec<uint8_t>`로 변환하는 코드가 크래시 발생
-  - 생성된 코드: `vec.reserve(size); std::memcpy(vec.data(), data, size);`
-  - 문제: CXX 브릿지의 `rust::Vec`는 `set_len`이 private이어서 `reserve`만으로는 크기가 설정되지 않음
-  - 결과: `memcpy`가 유효하지 않은 메모리에 접근하여 크래시 발생
-- **커스텀 수정 내용**:
-  - `packages/hwpjs/crates/lib/src/ffi.rs`에 `create_vec_from_slice` 함수 추가
-    - `ArrayBuffer`를 `rust::Vec<uint8_t>`로 안전하게 변환하는 Rust 함수
-    - `data.to_vec()`를 사용하여 최적화된 메모리 복사 수행
-  - `packages/hwpjs/cpp/bridging-generated.hpp`에서 `createVecFromSlice` 사용하도록 수정
-    - 코드젠이 생성한 `memcpy` 방식 대신 Rust 함수 호출로 변경
-    - C++에서 `ArrayBuffer`를 받아 `rust::Slice<const uint8_t>`로 변환
-    - Rust 함수를 호출하여 안전하게 `rust::Vec<uint8_t>` 생성
-  - iOS/Android 모두 동일한 커스텀 수정 적용
-- **수정 이유**:
-  - CXX 브릿지의 `rust::Vec`는 `set_len`이 private이어서 직접 `memcpy` 사용 불가
-  - Rust 함수를 통해 벡터 생성하여 메모리 안전성 보장
-  - 성능: Rust의 `to_vec()`이 SIMD 최적화 가능하여 충분히 빠름
-- **영향 범위**:
-  - `packages/hwpjs/crates/lib/src/ffi.rs`: `create_vec_from_slice` 함수 추가 (커스텀)
-  - `packages/hwpjs/cpp/bridging-generated.hpp`: `Bridging<rust::Vec<uint8_t>>` 수정 (커스텀)
-  - `packages/hwpjs/src-reactnative/NativeReactNative.ts`: `ArrayBuffer` 타입 사용
-  - `examples/react-native/src/App.tsx`: `ArrayBuffer` 변환 로직 수정
-- **상태**: 코드젠 버그로 인해 커스텀 수정 완료 ⚠️
-
-### Craby에 객체 배열(Object[]) 지원 추가
-
-- **현재 상태**: Craby가 객체 배열을 지원하지 않음. 예: `Array<ImageData>` 형태의 타입을 인식하지 못함
-- **문제 상황**: 
-  - `ToMarkdownResult` 인터페이스에서 `images: ImageData[]` 형태를 사용할 수 없음
-  - 중첩된 타입 참조(`ToMarkdownResult` 내부의 `ImageData[]`)를 인식하지 못함
-  - 에러: `ERROR [as_rs_type] Unsupported type annotation: Ref(RefTypeAnnotation { ref_id: ReferenceId(0), name: "ImageData" })`
-- **임시 해결책**: 
-  - `ToMarkdownResult`에서 `images` 필드를 제거하고 마크다운만 반환
-- **변경 필요**: Craby에 객체 배열 타입 지원 추가
-- **목적**: React Native 바인딩에서 복잡한 객체 구조를 반환할 수 있도록 개선
-- **영향 범위**:
-  - Craby 라이브러리 자체 수정 필요
-  - React Native 바인딩: `to_markdown` 함수의 반환 타입 수정 가능
+- **현재 상태**: Craby가 `ImageData[]` 같은 객체 배열 타입을 인식하지 못함
+- **임시 해결**: React Native `ToMarkdownResult`에서 `images` 필드 제거
 - **우선순위**: 중간
-- **상태**: 계획됨
-
-### Example 예시 및 E2E 환경 설정
-
-- **현재 상태**: 예제 코드가 기본적인 수준이며, E2E 테스트 환경이 완전히 구축되지 않음
-- **변경 필요**: 
-  - 각 플랫폼별 예제 코드 보완 및 개선
-  - E2E 테스트 환경 설정 및 테스트 케이스 작성
-- **구현 범위**:
-  - **예제 코드 개선**:
-    - `examples/node/`: 다양한 사용 시나리오 예제 추가
-    - `examples/web/`: 인터랙티브 데모 기능 강화
-    - `examples/react-native/`: 실제 앱에서 사용할 수 있는 완성도 높은 예제
-    - 각 예제에 에러 처리, 로딩 상태, 다양한 옵션 사용 예시 포함
-  - **E2E 테스트 환경 설정**:
-    - **Node.js E2E 테스트**:
-      - Vitest 설정 및 테스트 스크립트 작성
-      - 실제 HWP 파일을 읽어서 파싱하는 테스트
-      - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
-      - 다양한 HWP 파일 형식에 대한 테스트
-    - **Web E2E 테스트**:
-      - Playwright 또는 Puppeteer 설정
-      - 브라우저 환경에서 WASM 빌드 동작 확인
-      - 파일 업로드 및 변환 결과 확인 테스트
-      - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
-    - **React Native E2E 테스트**:
-      - Maestro 설정 및 테스트 플로우 작성
-      - iOS/Android 실제 디바이스/에뮬레이터에서 테스트
-      - 파일 읽기 및 파싱 결과 확인 테스트
-      - `toJson()`, `toMarkdown()`, `fileHeader()` 함수 테스트
-- **테스트 도구**:
-  - Node.js: Vitest
-  - Web: Playwright 또는 Puppeteer
-  - React Native: Maestro
-- **영향 범위**:
-  - 예제 코드: `examples/` 디렉토리
-  - 테스트 스크립트 추가: `package.json`
-  - CI/CD 파이프라인 업데이트: `.github/workflows/`
-  - 테스트 파일: `tests/e2e/` 또는 각 예제 프로젝트 내
-  - 문서: `documents/docs/guide/examples.md` 업데이트
-- **우선순위**: 중간
-- **상태**: 계획됨
+- **상태**: 계획됨 (Craby 라이브러리 수정 필요)
 
 ## 보류된 작업
 
+### PDF 뷰어 공개
+
+- **현재 상태**: 코어 레벨에서 printpdf 기반 PDF 변환 완전 구현됨
+- **보류 이유**: 한글 폰트 지원, 레이아웃 정밀도 등 추가 검증 필요
+- **구현 범위**: document, font, page, styles, table, text, pdf_image 모듈
+- **CLI/NAPI**: 코드는 존재하나 비활성화 상태
+- **테스트**: 스냅샷 테스트 작성됨 (블록 주석 처리)
+- **우선순위**: 중간
+- **상태**: 보류됨
+
 ### ShapeComponent의 group_offset 렌더링 지원
 
-- **작업 내용**: 스펙 문서 표 83에 따라 `group_offset`을 렌더링에 사용
-  - `group_offset`은 "개체가 속한 그룹 내에서의 offset" (표 83)
-  - `offset_y`는 "기준점에서의 오프셋" (표 69)
-  - 테이블 셀 내부 이미지에서 `ShapeComponent`가 있으면 `group_offset` 우선 사용
-  - `group_offset`이 없으면 `ObjectCommon`의 `offset_x`, `offset_y` 사용
-- **구현 위치**:
-  - `crates/hwp-core/src/viewer/html/line_segment.rs`: `ImageInfo` 구조체에 `group_offset` 필드 추가
-  - `crates/hwp-core/src/viewer/html/ctrl_header/table/cells.rs`: 테이블 셀 내부 이미지 렌더링 시 `group_offset` 사용
-  - `crates/hwp-core/src/viewer/html/paragraph.rs`: 일반 문단 내 이미지 렌더링 시 `group_offset` 사용
-- **보류 이유**: ShapeComponent는 아직 테스트를 덜 해서 작업 취소
+- **보류 이유**: ShapeComponent 테스트 부족
 - **우선순위**: 중간
-- **상태**: 보류됨 (테스트 완료 후 재개 예정)
+- **상태**: 보류됨
 
 ## 알 수 없는 요소 (미지원 기능)
 
 ### 알 수 없는 Ctrl ID
-
-- **요소**: `CtrlHeaderData::Other`
-- **설명**: 표 127, 128의 알 수 없는 컨트롤 ID들
-- **현재 상태**: 파서에서 "Other"로 처리되는 미지원 컨트롤들
-- **위치**: `crates/hwp-core/src/document/bodytext/ctrl_header.rs:580`
-- **우선순위**: 낮음
+- `CtrlHeaderData::Other` — 표 127, 128의 알 수 없는 컨트롤 ID들
 - **상태**: 조사 필요
 
 ### 알 수 없는 Shape Component
-
-- **요소**: `ShapeComponentUnknown`
-- **설명**: 알 수 없는 개체 타입
-- **현재 상태**: 현재 테스트되지 않은 상태
-- **위치**: `crates/hwp-core/src/document/bodytext/shape_component_unknown.rs`
-- **우선순위**: 낮음
+- `ShapeComponentUnknown` — 알 수 없는 개체 타입
 - **상태**: 조사 필요
 
 ### 알 수 없는 필드 타입
-
-- **요소**: `FIELD_UNKNOWN` ("%unk")
-- **설명**: 알 수 없는 필드 타입
-- **위치**: `crates/hwp-core/src/document/bodytext/ctrl_header.rs:91`
-- **우선순위**: 낮음
+- `FIELD_UNKNOWN` ("%unk") — 알 수 없는 필드 타입
 - **상태**: 조사 필요
-
 
 ## 명세서 문서화 작업 예정
 
-### 차트 형식 명세서 작성
-
-- **파일**: `documents/docs/spec/chart.md`
-- **현재 상태**: 내용 준비 중
-- **작업 내용**: HWP 파일 형식의 차트 개체에 대한 명세서 작성
-- **참고**: HWP 5.0 명세서의 "4.3.9.6. 차트 개체" 섹션 참조
-- **우선순위**: 중간
-- **상태**: 작업 예정
-
-### 배포용 문서 형식 명세서 작성
-
-- **파일**: `documents/docs/spec/distribution.md`
-- **현재 상태**: 내용 준비 중
-- **작업 내용**: HWP 파일 형식의 배포용 문서 데이터에 대한 명세서 작성
-- **참고**: HWP 5.0 명세서의 "4.2.13. 배포용 문서 데이터" 섹션 참조
-- **우선순위**: 중간
-- **상태**: 작업 예정
-
-### HWP 3.0 / HWPML 형식 명세서 작성
-
-- **파일**: `documents/docs/spec/hwp-3.0-hwpml.md`
-- **현재 상태**: 내용 준비 중
-- **작업 내용**: HWP 3.0 및 HWPML 형식에 대한 명세서 작성
-- **참고**: HWP 5.0 명세서의 "본 문서에 대하여" 섹션에서 언급
-- **우선순위**: 낮음
-- **상태**: 작업 예정
+- **차트 형식 명세서** (`documents/docs/spec/chart.md`): 작업 예정
+- **배포용 문서 형식 명세서** (`documents/docs/spec/distribution.md`): 작업 예정
+- **HWP 3.0 / HWPML 형식 명세서** (`documents/docs/spec/hwp-3.0-hwpml.md`): 작업 예정
 
 ## 알려진 버그
 
 ### ParaLineSeg 스타일 적용 제한사항
-
-- **문제**: ParaLineSeg의 `width`, `height`, `padding` 값들이 span 태그에 적용되지 않음
-- **원인**: 
-  - HTML의 `span` 태그는 inline 요소이므로 `width`, `height`, `padding-top`, `padding-bottom` 속성이 적용되지 않음
-  - CSS에서 inline 요소는 width/height를 무시하고, padding은 좌우만 적용됨
-- **현재 구현**:
-  - ParaLineSeg의 `line_spacing`은 `line-height`로 적용됨 (정상 작동)
-  - ParaLineSeg의 `line_height`, `text_height`, `baseline_distance`, `segment_width`는 인라인 스타일로 추가되지만 span 태그 특성상 일부는 적용되지 않음
-- **영향 범위**:
-  - `crates/hwp-core/src/viewer/html/document/bodytext/para_text.rs`의 `apply_html_styles` 함수
-  - 각 span에 ParaLineSeg 값들을 인라인 스타일로 적용하는 로직
-- **해결 방안 고려사항**:
-  - `display: inline-block` 또는 `display: block`으로 변경 시 레이아웃이 깨질 수 있음
-  - 절대 위치(`position: absolute`) 사용 시 복잡도 증가
-  - 레거시 코드에서도 절대 위치 방식은 보류했었음 (참고: `legacy/work/working.md`)
-- **우선순위**: 중간
+- HTML `span` 태그(inline 요소)에 width/height/padding이 적용되지 않는 문제
 - **상태**: 알려진 제한사항
 
-### 렌더러별 파싱/처리 기능 미구현 (TODO 주석 정리 중)
-
-- **문제**: `crates/hwp-core/src/viewer/core/paragraph.rs`에 여러 TODO 주석이 남아 있음
-  - 글자 모양 정보 수집 및 적용 (렌더러별로 다름)
-  - 글자 모양 적용 로직 구현 (렌더러별로 다름)
-  - 개요 번호 처리 (렌더러별로 다름)
-- **현재 상태**:
-  - 위 TODO들이 현재 코멘트로 남아 있음 (코드 작성 직후 여유를 위해 표시됨)
-  - 렌더러 트레이트(HTML, Markdown)에서 이러한 기능들이 필요로 함
-  - HTML 렌더러에서는 이 정보가 span 태그 등에 반영되어야 함
-  - Markdown 렌더러에서는 이 정보가 마크다운 형식(굵게, 기울임, 밑줄 등)에 반영되어야 함
-- **영향 범위**:
-  - `crates/hwp-core/src/viewer/core/paragraph.rs`: 3개의 TODO 주석
-  - `crates/hwp-core/src/document/bodytext/para_text.rs`: ParaText 레코드에서 글자 모양 정보가 추출되면 이를 렌더러에 전달
-  - `crates/hwp-core/src/viewer/html/`: 글자 모양 정보를 HTML span 태그의 style에 적용
-  - `crates/hwp-core/src/viewer/markdown/`: 글자 모양 정보를 Markdown 특수문자(**, *, ~~ 등)에 적용
-- **구현 방법**:
-  - ParaText 레코드에서 CharShape 정보를 추출하고 ParaText 구조체에 추가
-  - Renderer 트레이트에 글자 모양 적용 관련 메서드 추가 (예: `render_paragraph_with_style`)
-  - `process_paragraph` 함수를 수정하여 글자 모양 정보를 렌더러에 전달
-  - HTML 렌더러: span 태그의 style에 color, font-weight, font-style, text-decoration 등 적용
-  - Markdown 렌더러: 텍스트에 `**`, `*`, `~~` 등의 마크다운 구문 적용
-- **고려사항**:
-  - 글자 모양 정보(CharShape)가 ParaText와 분리되어 있어 데이터 구조 변경 필요
-  - HWP 스펙 문서 표 34, 35: CharShape 필드 중 사용할 필드들 선별
-  - 이스케이프 문자 처리: 마크다운에서 특수문자가 이스케이프되지 않도록 처리
-  - 문단 렌더링 시 글자 모양 정보와 텍스트 순서 유지
-- **우선순위**: 높음
-- **상태**: TODO 주석 문서화 완료, 백로그 연결 ✅
-
-### 취소선 속성 파싱 문제
-
-- **문제**: 취소선 속성을 제대로 가져오지 못함
-- **증상**: 
-  - HWP 문서에서 취소선이 설정된 텍스트의 `strikethrough` 속성이 0으로 파싱됨
-  - 예: "가운데줄" 텍스트에 취소선이 설정되어 있지만 `strikethrough: 0`으로 파싱됨
-- **원인**: 
-  - 스펙 문서 표 35에 따르면 bit 18-20이 취소선 여부를 나타냄
-  - 일부 HWP 파일에서는 취소선이 `underline_type=2` (글자 위)로 표현될 수 있음
-  - 실제 HWP 파일에서 bits 18-20이 0으로 설정되어 있어 취소선이 감지되지 않음
-- **영향 범위**:
-  - `crates/hwp-core/src/document/docinfo/char_shape.rs`의 `strikethrough` 파싱 로직
-  - `crates/hwp-core/src/viewer/markdown/document/bodytext/para_text.rs`의 마크다운 변환 로직
-- **참고**: 
-  - 스펙 문서 표 35: bit 18-20이 취소선 여부
-  - 현재 구현: bits 18-20을 읽어서 0이 아니면 취소선이 있다고 판단
-  - 레거시 라이브러리 비교:
-    - libhwp: bits 18, 19, 20을 각각 OR 연산
-    - hwplib: bit 18만 체크
-    - hwp-rs: bits 18-20 범위 값 읽기
-    - hwpjs.js: bits 18-20 읽기
-- **우선순위**: 높음
-- **상태**: 뷰어 폴백 적용 완료 (underline_type=2 → 취소선으로 렌더링, char_shape.rs bit 18–20 파싱 유지)
+### 취소선 속성 파싱
+- 일부 HWP 파일에서 `strikethrough` bits 18-20이 0으로 파싱되는 문제
+- **상태**: 뷰어 폴백 적용 완료 (underline_type=2 → 취소선 렌더링)
 
 ## 버전 관리
 
-- **0.1.0-rc.1**: 초기 배포 시작
+- **0.1.0-rc.1**: 초기 배포 (toJson, toMarkdown, fileHeader, CLI)
+- **0.1.0-rc.5**: HTML 뷰어 추가
+- **0.1.0-rc.7**: 하이퍼링크/개요/번호매기기 마크다운 렌더링, CharShape 음영 색 지원

@@ -2,8 +2,16 @@
 
 한글과컴퓨터의 한/글 문서 파일(.hwp)을 읽고 파싱하는 라이브러리입니다.
 
-본 제품은 한글과컴퓨터의 한/글 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.  
+본 제품은 한글과컴퓨터의 한/글 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.
 [공개 문서 다운로드](https://www.hancom.com/etc/hwpDownload.do)
+
+## 주요 기능
+
+- **JSON 변환**: HWP 문서 구조를 JSON으로 추출
+- **Markdown 변환**: 텍스트, 테이블, 이미지를 포함한 Markdown 변환
+- **HTML 변환**: CSS 스타일링이 적용된 완전한 HTML 문서 생성
+- **CLI 도구**: 단일 파일 변환, 배치 처리, 이미지 추출
+- **멀티 플랫폼**: Node.js, Web(WASM), React Native 지원
 
 ## 프로젝트 구조
 
@@ -17,35 +25,81 @@ hwpjs/
 │   └── hwpjs/             # 멀티 플랫폼 패키지 (Node.js, Web, React Native)
 ├── examples/              # 사용 예제
 │   ├── node/              # Node.js 예제
-│   ├── web/               # Web 예제
+│   ├── web/               # Web 예제 (React + Vite)
 │   ├── react-native/      # React Native 예제
 │   └── cli/               # CLI 사용 예제
 ├── documents/             # 문서 사이트 (Rspress)
-└── legacy/                # 기존 JavaScript 구현
+└── e2e/                   # E2E 테스트 (Playwright)
 ```
 
 ## 기술 스택
 
-### 현재 버전 (Rust 기반)
-
-- **Rust**: 핵심 로직 구현
-- **Craby**: React Native 바인딩
+- **Rust**: 핵심 파싱/변환 로직
 - **NAPI-RS**: Node.js 네이티브 모듈
+- **Craby**: React Native 바인딩
 - **Bun**: 워크스페이스 관리
 - **Rspress**: 문서 사이트
 
-### Legacy 버전 (JavaScript)
+## 사용법
 
-- [sheetjs - CFB](http://sheetjs.com) - Compound Binary File을 읽기 위한 플러그인
-- [pako](https://github.com/nodeca/pako) - Compound Binary File에서 일부 압축 된 코드를 읽기 위한 플러그인(zlib)
+### 설치
 
-## 참고한 프로젝트
+```bash
+npm install @ohah/hwpjs
+```
 
-- [pyhwp](https://github.com/mete0r/pyhwp)
-- [hwpjs](https://github.com/hahnlee/hwp.js)
-- [ruby-hwp](https://github.com/mete0r/ruby-hwp)
-- [libhwp](https://github.com/accforaus/libhwp)
-- [hwplib](https://github.com/neolord0/hwplib)
+### API 사용
+
+```typescript
+import { toJson, toMarkdown, toHtml, fileHeader } from '@ohah/hwpjs';
+import { readFileSync } from 'fs';
+
+const data = readFileSync('./document.hwp');
+
+// JSON 변환
+const json = toJson(data);
+
+// Markdown 변환
+const { markdown, images } = toMarkdown(data, {
+  image: 'base64',
+  useHtml: true,
+});
+
+// HTML 변환
+const html = toHtml(data, {
+  includeVersion: true,
+});
+
+// 파일 헤더 추출
+const header = fileHeader(data);
+```
+
+### CLI 사용
+
+```bash
+# 전역 설치
+npm install -g @ohah/hwpjs
+
+# JSON 변환
+hwpjs to-json document.hwp -o output.json --pretty
+
+# Markdown 변환
+hwpjs to-markdown document.hwp -o output.md --include-images
+
+# HTML 변환
+hwpjs to-html document.hwp -o output.html
+
+# 파일 정보 확인
+hwpjs info document.hwp
+
+# 이미지 추출
+hwpjs extract-images document.hwp -o ./images
+
+# 배치 변환
+hwpjs batch ./documents -o ./output --format json --recursive
+```
+
+더 자세한 내용은 [CLI 가이드](https://ohah.github.io/hwpjs/guide/cli)를 참고하세요.
 
 ## 개발 시작하기
 
@@ -61,40 +115,19 @@ mise install
 
 - `bun run test:rust` - Rust 테스트 실행
 - `bun run test:node` - Node.js 테스트 실행
-- `bun run test:e2e` - E2E 테스트 실행
+- `bun run dev:docs` - 문서 사이트 개발 서버
+- `bun run dev:web` - Web 예제 개발 서버
 - `bun run lint` - 린트 검사
 - `bun run format` - 코드 포맷팅
 - `bun run build` - 전체 빌드
 
-## 사용법
+## 참고한 프로젝트
 
-### CLI 사용
-
-명령줄에서 직접 HWP 파일을 변환할 수 있습니다:
-
-```bash
-# 전역 설치
-npm install -g @ohah/hwpjs
-
-# JSON 변환
-hwpjs to-json document.hwp -o output.json --pretty
-
-# Markdown 변환
-hwpjs to-markdown document.hwp -o output.md --include-images
-
-# 파일 정보 확인
-hwpjs info document.hwp
-
-# 이미지 추출
-hwpjs extract-images document.hwp -o ./images
-
-# 배치 변환
-hwpjs batch ./documents -o ./output --format json --recursive
-```
-
-더 자세한 내용은 [CLI 가이드](https://ohah.github.io/hwpjs/guide/cli)를 참고하세요.
-
-### 프로그래밍 방식 사용
+- [pyhwp](https://github.com/mete0r/pyhwp)
+- [hwpjs](https://github.com/hahnlee/hwp.js)
+- [ruby-hwp](https://github.com/mete0r/ruby-hwp)
+- [libhwp](https://github.com/accforaus/libhwp)
+- [hwplib](https://github.com/neolord0/hwplib)
 
 ## 이슈 제안 및 건의
 
