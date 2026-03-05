@@ -1,0 +1,117 @@
+import { PlatformTabs } from '../../components/PlatformTabs';
+
+# toHtml
+
+HWP 문서를 HTML 형식으로 변환하는 함수입니다.
+
+## 예제
+
+<PlatformTabs defaultPlatform="web">
+  <div data-platform="web">
+    ```typescript
+    import './buffer-polyfill';
+    import * as hwpjs from '@ohah/hwpjs';
+
+    const fileInput = document.querySelector('input[type="file"]');
+    fileInput.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+
+        // HTML로 변환 (이미지는 base64로 임베드)
+        const html = hwpjs.toHtml(data, {
+          includeVersion: true,
+          includePageInfo: false,
+        });
+
+        // HTML을 화면에 표시
+        const outputDiv = document.getElementById('output');
+        if (outputDiv) {
+          outputDiv.innerHTML = html;
+        }
+      } catch (error) {
+        console.error('변환 실패:', error);
+      }
+    });
+    ```
+  </div>
+
+  <div data-platform="node">
+    ```typescript
+    import { readFileSync, writeFileSync } from 'fs';
+    import { toHtml } from '@ohah/hwpjs';
+
+    try {
+      const fileBuffer = readFileSync('./document.hwp');
+
+      // HTML로 변환 (이미지는 base64로 임베드)
+      const html = toHtml(fileBuffer, {
+        includeVersion: true,
+        includePageInfo: false,
+      });
+
+      // HTML 파일로 저장
+      writeFileSync('./output.html', html, 'utf-8');
+      console.log('HTML 변환 성공: output.html');
+    } catch (error) {
+      console.error('변환 실패:', error);
+    }
+    ```
+  </div>
+</PlatformTabs>
+
+## 시그니처
+
+```typescript
+function toHtml(data: Buffer, options?: ToHtmlOptions): string
+```
+
+## 매개변수
+
+### `data: Buffer`
+
+변환할 HWP 파일의 바이트 배열입니다 (Buffer 또는 Uint8Array).
+
+### `options?: ToHtmlOptions`
+
+HTML 변환 옵션입니다 (선택 사항).
+
+```typescript
+interface ToHtmlOptions {
+  /** 이미지를 파일로 저장할 디렉토리 경로 (선택). None이면 base64 데이터 URI로 임베드 */
+  imageOutputDir?: string;
+  /** HTML 파일이 저장되는 디렉토리 경로 (이미지 상대 경로 계산에 사용) */
+  htmlOutputDir?: string;
+  /** 버전 정보 포함 여부 */
+  includeVersion?: boolean;
+  /** 페이지 정보 포함 여부 */
+  includePageInfo?: boolean;
+  /** CSS 클래스 접두사 (기본값: "") */
+  cssClassPrefix?: string;
+}
+```
+
+## 반환값
+
+### `string`
+
+완전한 HTML 문서 문자열입니다 (`<html>`, `<head>`, `<body>` 포함).
+
+## 특징
+
+- 기본적으로 이미지는 base64 데이터 URI로 HTML에 임베드됩니다
+- `imageOutputDir` 옵션을 사용하면 이미지를 별도 파일로 저장하고 상대 경로로 참조합니다
+- CSS 클래스 기반 스타일링을 사용합니다
+- CharShape 기반 글자 스타일(색상, 크기, 굵기 등)이 적용됩니다
+
+## 에러
+
+HWP 파일 형식이 올바르지 않거나 변환에 실패한 경우 에러가 발생합니다.
+
+## 참고
+
+- 이 함수는 Rust로 구현된 `hwp-core` 라이브러리를 사용하여 HWP 파일을 파싱하고 HTML로 변환합니다.
+- 마크다운 변환은 [toMarkdown](./toMarkdown) 함수를 참고하세요.

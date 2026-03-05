@@ -8,18 +8,21 @@
     "preview": "bun run rspress preview"
   },
   "dependencies": {
-    "@rspress/core": "^2.0.0-beta.34",
+    "@rspress/core": "latest",
     "@ohah/hwpjs": "workspace:*",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react": "latest",
+    "react-dom": "latest",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "buffer": "^6.0.3"
   },
   "devDependencies": {
+    "@rspress/plugin-twoslash": "^2.0.3",
     "@types/node": "^22.8.1",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3"
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "rspress-plugin-file-tree": "^1.0.4",
+    "rspress-plugin-mermaid": "^1.0.1"
   },
   "optionalDependencies": {
     "@ohah/hwpjs-wasm32-wasi": "workspace:*"
