@@ -15,7 +15,7 @@
 
 HWP(.hwp) 파일을 읽고 파싱하는 라이브러리. Rust 핵심 로직(`crates/hwp-core`) + Node.js/React Native 래퍼(`packages/hwpjs`).
 
-**HWP 파싱 시 필수 참조**: `documents/docs/spec/hwp-5.0.md`, `.cursor/skills/hwp-spec/` (구현·검증 시 해당 파트 번호의 .md 참조).
+**HWP 파싱 시 필수 참조**: `documents/docs/spec/hwp-5.0.md`, `.claude/skills/hwp-spec/` (구현·검증 시 해당 파트 번호의 .md 참조).
 
 ---
 
@@ -25,10 +25,8 @@ HWP(.hwp) 파일을 읽고 파싱하는 라이브러리. Rust 핵심 로직(`cra
 
 | 목적 | 경로 |
 |------|------|
-| **스펙/레퍼런스** | `documents/docs/spec/` (특히 `hwp-5.0.md`), `.cursor/skills/hwp-spec/` |
+| **스펙/레퍼런스** | `documents/docs/spec/` (특히 `hwp-5.0.md`), `.claude/skills/hwp-spec/` |
 | **설계/아키텍처** | `docs/design/` — [architecture.md](docs/design/architecture.md), [folder-structure.md](docs/design/folder-structure.md), [viewer-architecture.md](docs/design/viewer-architecture.md), [packages.md](docs/design/packages.md), [packages-hwpjs.md](docs/design/packages-hwpjs.md) |
-| **실행 계획** | `docs/plans/`, `documents/plans/` |
-| **로드맵·백로그** | `documents/docs/roadmap/`, `documents/docs/backlog/` (개요: `documents/docs/backlog/00_overview.md`, 현재 작업: `10_current_tasks.md`) |
 | **프로세스(커밋/린트/테스트)** | [commit-rules.md](commit-rules.md), [lint-rules.md](lint-rules.md), [docs/process/development-guidelines.md](docs/process/development-guidelines.md) |
 | **기술 스택 요약** | 루트 `tech-stack.md` (있으면 참고). 상세는 `docs/design/` 및 documents 가이드. |
 
