@@ -211,8 +211,7 @@ pub fn render_table(
 
         for para in &cell.paragraphs {
             // 텍스트 렌더링
-            let (text, char_shapes) =
-                crate::viewer::html::text::extract_text_and_shapes(para);
+            let (text, char_shapes) = crate::viewer::html::text::extract_text_and_shapes(para);
             if !text.is_empty() {
                 let segments = split_text_segments(&text, &char_shapes, document);
                 let cell_font_h = if segments.is_empty() {
@@ -254,9 +253,7 @@ pub fn render_table(
 
 /// ShapeComponentPicture에서 크기(HWPUNIT) 추출.
 /// border_rectangle가 유효하면 사용, 높이가 0이면 crop_rectangle 폴백.
-fn picture_size_hwpunit(
-    scp: &crate::document::bodytext::ShapeComponentPicture,
-) -> (i32, i32) {
+fn picture_size_hwpunit(scp: &crate::document::bodytext::ShapeComponentPicture) -> (i32, i32) {
     let w = (scp.border_rectangle_x.right - scp.border_rectangle_x.left).abs();
     let mut h = (scp.border_rectangle_y.bottom - scp.border_rectangle_y.top).abs();
     if h == 0 {
@@ -321,21 +318,24 @@ fn render_cell_images(
                 }
             }
             ParagraphRecord::ShapeComponent { children, .. } => {
-                render_cell_images(
-                    children, layer, document, options, x_mm, y_mm, max_w, max_h,
-                );
+                render_cell_images(children, layer, document, options, x_mm, y_mm, max_w, max_h);
             }
             ParagraphRecord::CtrlHeader {
                 children,
                 paragraphs,
                 ..
             } => {
-                render_cell_images(
-                    children, layer, document, options, x_mm, y_mm, max_w, max_h,
-                );
+                render_cell_images(children, layer, document, options, x_mm, y_mm, max_w, max_h);
                 for para in paragraphs {
                     render_cell_images(
-                        &para.records, layer, document, options, x_mm, y_mm, max_w, max_h,
+                        &para.records,
+                        layer,
+                        document,
+                        options,
+                        x_mm,
+                        y_mm,
+                        max_w,
+                        max_h,
                     );
                 }
             }

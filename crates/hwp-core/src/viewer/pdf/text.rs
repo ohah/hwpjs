@@ -187,9 +187,7 @@ pub fn render_text_segments(
             ParagraphAlignment::Center => {
                 (content_width_mm - indent - estimated_width).max(0.0) / 2.0
             }
-            ParagraphAlignment::Right => {
-                (content_width_mm - indent - estimated_width).max(0.0)
-            }
+            ParagraphAlignment::Right => (content_width_mm - indent - estimated_width).max(0.0),
             _ => 0.0, // Left, Justify, Distribute, Divide → 좌측 정렬
         };
         let line_x = x_mm + indent + align_offset;

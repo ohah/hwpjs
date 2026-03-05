@@ -5,10 +5,10 @@ use crate::document::bodytext::{
     CharShapeInfo, LineSegmentInfo, PageDef, Table,
 };
 use crate::document::CtrlHeaderData;
+use crate::viewer::core::outline::{MarkerInfo, DEFAULT_MARKER_FONT_SIZE_PT};
 use crate::viewer::html::ctrl_header::table::{CaptionData, TablePosition, TableRenderContext};
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
 use crate::viewer::HtmlOptions;
-use crate::viewer::core::outline::{MarkerInfo, DEFAULT_MARKER_FONT_SIZE_PT};
 use crate::{HwpDocument, ParaShape};
 use std::collections::HashMap;
 
@@ -278,7 +278,8 @@ pub fn render_line_segments_with_content(
             slice_cleaned_by_original_range(text, control_char_positions, start, end)
                 .trim()
                 .is_empty()
-        }) {
+        })
+    {
         Some((2.79, -0.18))
     } else {
         None
@@ -427,7 +428,9 @@ pub fn render_line_segments_with_content(
                     fragment_height_mm: None,
                     table_height_for_overflow_mm: None,
                     segment_line_height_mm: Some(round_to_2dp(int32_to_mm(segment.line_height))),
-                    segment_baseline_distance_mm: Some(round_to_2dp(int32_to_mm(segment.baseline_distance))),
+                    segment_baseline_distance_mm: Some(round_to_2dp(int32_to_mm(
+                        segment.baseline_distance,
+                    ))),
                 };
 
                 let (table_html, _) = render_table(
@@ -471,30 +474,24 @@ pub fn render_line_segments_with_content(
         } else if !is_text_empty {
             // 이 세그먼트 범위에 AUTO_NUMBER가 있는지 확인
             // Check if AUTO_NUMBER falls within this segment range
-            let auto_number_in_segment = auto_numbers.iter().find(|(pos, _)| {
-                *pos >= start_pos && *pos < end_pos
-            });
+            let auto_number_in_segment = auto_numbers
+                .iter()
+                .find(|(pos, _)| *pos >= start_pos && *pos < end_pos);
 
             if let Some((auto_pos, display_text)) = auto_number_in_segment {
                 // AUTO_NUMBER 위치에서 텍스트 분리 후 haN div 삽입
                 // Split text at AUTO_NUMBER position and insert haN div
                 use crate::viewer::html::text::render_text;
 
-                let split_delta =
-                    original_to_cleaned_index(*auto_pos, control_char_positions);
-                let split_cleaned =
-                    (*auto_pos as isize + split_delta).max(0) as usize;
-                let start_delta =
-                    original_to_cleaned_index(start_pos, control_char_positions);
-                let segment_start_cleaned =
-                    (start_pos as isize + start_delta).max(0) as usize;
+                let split_delta = original_to_cleaned_index(*auto_pos, control_char_positions);
+                let split_cleaned = (*auto_pos as isize + split_delta).max(0) as usize;
+                let start_delta = original_to_cleaned_index(start_pos, control_char_positions);
+                let segment_start_cleaned = (start_pos as isize + start_delta).max(0) as usize;
                 let local_split = split_cleaned - segment_start_cleaned;
 
                 let chars: Vec<char> = segment_text.chars().collect();
-                let before: String =
-                    chars[..local_split.min(chars.len())].iter().collect();
-                let after: String =
-                    chars[local_split.min(chars.len())..].iter().collect();
+                let before: String = chars[..local_split.min(chars.len())].iter().collect();
+                let after: String = chars[local_split.min(chars.len())..].iter().collect();
 
                 // CharShape 클래스 결정
                 let cs_class = segment_char_shapes
@@ -530,14 +527,11 @@ pub fn render_line_segments_with_content(
 
                 // 페이지 번호 플레이스홀더 (display_text=None → 페이지 번호)
                 let page_num_placeholder = "<!--PN-->";
-                let num_text = display_text
-                    .as_deref()
-                    .unwrap_or(page_num_placeholder);
+                let num_text = display_text.as_deref().unwrap_or(page_num_placeholder);
 
                 // before 텍스트
                 if !before.is_empty() {
-                    let rendered_before =
-                        render_text(&before, &segment_char_shapes, document, "");
+                    let rendered_before = render_text(&before, &segment_char_shapes, document, "");
                     content.push_str(&rendered_before);
                 }
                 // haN div
@@ -547,8 +541,7 @@ pub fn render_line_segments_with_content(
                 ));
                 // after 텍스트
                 if !after.is_empty() {
-                    let rendered_after =
-                        render_text(&after, &segment_char_shapes, document, "");
+                    let rendered_after = render_text(&after, &segment_char_shapes, document, "");
                     content.push_str(&rendered_after);
                 }
             } else {
@@ -569,10 +562,8 @@ pub fn render_line_segments_with_content(
                     // 하이퍼링크 범위별로 텍스트 분할 렌더링
                     use crate::viewer::html::text::{render_text, render_text_with_onclick};
 
-                    let start_delta =
-                        original_to_cleaned_index(start_pos, control_char_positions);
-                    let segment_start_cleaned =
-                        (start_pos as isize + start_delta).max(0) as usize;
+                    let start_delta = original_to_cleaned_index(start_pos, control_char_positions);
+                    let segment_start_cleaned = (start_pos as isize + start_delta).max(0) as usize;
                     let seg_chars: Vec<char> = segment_text.chars().collect();
 
                     // 분할 포인트 수집 (세그먼트 로컬 cleaned 인덱스 기준)
@@ -595,17 +586,14 @@ pub fn render_line_segments_with_content(
                             (hl.end_original as isize + hl_end_delta).max(0) as usize;
 
                         // 세그먼트 로컬 인덱스로 변환
-                        let local_start =
-                            hl_start_cleaned.saturating_sub(segment_start_cleaned);
-                        let local_end =
-                            hl_end_cleaned.saturating_sub(segment_start_cleaned);
+                        let local_start = hl_start_cleaned.saturating_sub(segment_start_cleaned);
+                        let local_end = hl_end_cleaned.saturating_sub(segment_start_cleaned);
                         let local_start = local_start.min(seg_chars.len());
                         let local_end = local_end.min(seg_chars.len());
 
                         // 하이퍼링크 이전 텍스트
                         if cursor < local_start {
-                            let t: String =
-                                seg_chars[cursor..local_start].iter().collect();
+                            let t: String = seg_chars[cursor..local_start].iter().collect();
                             if !t.is_empty() {
                                 slices.push(TextSlice {
                                     text: t,
@@ -616,8 +604,7 @@ pub fn render_line_segments_with_content(
                         }
                         // 하이퍼링크 텍스트
                         if local_start < local_end {
-                            let t: String =
-                                seg_chars[local_start..local_end].iter().collect();
+                            let t: String = seg_chars[local_start..local_end].iter().collect();
                             if !t.is_empty() {
                                 slices.push(TextSlice {
                                     text: t,
@@ -652,9 +639,11 @@ pub fn render_line_segments_with_content(
                                 // segment_char_shapes의 position은 (원본pos - start_pos)
                                 // → 원본pos = position + start_pos로 되돌려서 cleaned 변환
                                 let orig_pos = s.position as usize + start_pos;
-                                let delta = original_to_cleaned_index(orig_pos, control_char_positions);
+                                let delta =
+                                    original_to_cleaned_index(orig_pos, control_char_positions);
                                 let cleaned_pos = (orig_pos as isize + delta).max(0) as usize;
-                                let local_cleaned = cleaned_pos.saturating_sub(segment_start_cleaned);
+                                let local_cleaned =
+                                    cleaned_pos.saturating_sub(segment_start_cleaned);
                                 CharShapeInfo {
                                     position: local_cleaned as u32,
                                     shape_id: s.shape_id,
@@ -671,9 +660,8 @@ pub fn render_line_segments_with_content(
                             let slice_len = slice.text.chars().count() as u32;
 
                             let mut shapes: Vec<CharShapeInfo> = Vec::new();
-                            let has_shape_at_start = cleaned_seg_shapes
-                                .iter()
-                                .any(|s| s.position == offset);
+                            let has_shape_at_start =
+                                cleaned_seg_shapes.iter().any(|s| s.position == offset);
                             if !has_shape_at_start {
                                 if let Some(prev) = cleaned_seg_shapes
                                     .iter()
@@ -716,12 +704,8 @@ pub fn render_line_segments_with_content(
                             );
                             content.push_str(&rendered);
                         } else {
-                            let rendered = render_text(
-                                &slice.text,
-                                &slice_char_shapes,
-                                document,
-                                "",
-                            );
+                            let rendered =
+                                render_text(&slice.text, &slice_char_shapes, document, "");
                             content.push_str(&rendered);
                         }
                     }
@@ -801,9 +785,7 @@ fn render_marker_hhe(marker: &MarkerInfo) -> String {
                 format!("font-size:{:.2}pt;", s)
             }
         })
-        .unwrap_or_else(|| {
-            format!("font-size:{}pt;", DEFAULT_MARKER_FONT_SIZE_PT as i32)
-        });
+        .unwrap_or_else(|| format!("font-size:{}pt;", DEFAULT_MARKER_FONT_SIZE_PT as i32));
     let margin_left_str = if marker.margin_left_mm == 0.0 {
         "margin-left:0mm".to_string()
     } else {

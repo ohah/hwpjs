@@ -150,7 +150,9 @@ pub fn process_table<'a>(
     let mut current_para_group: Vec<CaptionParagraph> = Vec::new();
 
     for para in paragraphs {
-                    if !para.para_header.column_divide_type.is_empty() { continue; }
+        if !para.para_header.column_divide_type.is_empty() {
+            continue;
+        }
         let mut caption_text_opt: Option<String> = None;
         let mut caption_control_chars: Vec<ControlCharPosition> = Vec::new();
         let mut caption_auto_number_display_text_opt: Option<String> = None;
@@ -289,7 +291,9 @@ pub fn process_table<'a>(
             } else if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
                 // ListHeader의 paragraphs에서 텍스트 추출 / Extract text from ListHeader's paragraphs
                 for para in paragraphs {
-                    if !para.para_header.column_divide_type.is_empty() { continue; }
+                    if !para.para_header.column_divide_type.is_empty() {
+                        continue;
+                    }
                     for record in &para.records {
                         if let ParagraphRecord::ParaText {
                             text,
@@ -355,7 +359,9 @@ pub fn process_table<'a>(
             } else if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
                 // ListHeader의 paragraphs에서 텍스트 추출 / Extract text from ListHeader's paragraphs
                 for para in paragraphs {
-                    if !para.para_header.column_divide_type.is_empty() { continue; }
+                    if !para.para_header.column_divide_type.is_empty() {
+                        continue;
+                    }
                     for record in &para.records {
                         if let ParagraphRecord::ParaText {
                             text,

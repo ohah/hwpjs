@@ -1,16 +1,18 @@
 use super::{CtrlHeaderResult, ShapePositionContext};
-use crate::document::bodytext::ctrl_header::VertRelTo;
 use crate::document::bodytext::control_char::ControlChar;
-use crate::document::bodytext::shape_component::drawing_object_common::{DrawingObjectCommon, LineType};
+use crate::document::bodytext::ctrl_header::VertRelTo;
+use crate::document::bodytext::shape_component::drawing_object_common::{
+    DrawingObjectCommon, LineType,
+};
 use crate::document::bodytext::{ParaTextRun, ParagraphRecord};
 use crate::document::{CtrlHeader, CtrlHeaderData, FillInfo, Paragraph};
+use crate::viewer::core::outline::{
+    compute_paragraph_marker_with_char_shape, MarkerInfo, NumberTracker, OutlineNumberTracker,
+};
 use crate::viewer::html::common;
 use crate::viewer::html::line_segment::ImageInfo;
 use crate::viewer::html::paragraph::render_paragraphs_fragment;
 use crate::viewer::html::styles::{int32_to_mm, round_to_2dp};
-use crate::viewer::core::outline::{
-    compute_paragraph_marker_with_char_shape, MarkerInfo, NumberTracker, OutlineNumberTracker,
-};
 use crate::viewer::HtmlOptions;
 use crate::HwpDocument;
 
@@ -109,9 +111,7 @@ pub fn process_shape_object<'a>(
     });
 
     if has_rectangle_shape {
-        if let Some(html) =
-            render_rectangle_shape(header, children, document, options, shape_pos)
-        {
+        if let Some(html) = render_rectangle_shape(header, children, document, options, shape_pos) {
             result.shape_html = Some(html);
             return result;
         }
@@ -194,11 +194,7 @@ fn render_rectangle_shape(
             shape_height_hu = shape_component.height;
             drawing_obj = drawing_object_common.as_ref();
             for child in sc_children {
-                if let ParagraphRecord::ListHeader {
-                    header,
-                    paragraphs,
-                } = child
-                {
+                if let ParagraphRecord::ListHeader { header, paragraphs } = child {
                     shape_content_paragraphs = Some(paragraphs);
                     shape_vertical_align = header.attribute.vertical_align;
                     break;
@@ -487,8 +483,7 @@ fn render_rectangle_shape(
                     for rec in &para.records {
                         if let ParagraphRecord::ParaLineSeg { segments } = rec {
                             if let Some(seg) = segments.last() {
-                                caption_height_hu =
-                                    seg.vertical_position + seg.line_height;
+                                caption_height_hu = seg.vertical_position + seg.line_height;
                             }
                         }
                     }
@@ -497,9 +492,8 @@ fn render_rectangle_shape(
                     caption_height_hu = 1000;
                 }
 
-                let caption_top_mm = round_to_2dp(int32_to_mm(
-                    shape_height_hu as i32 + caption_gap_hu,
-                ));
+                let caption_top_mm =
+                    round_to_2dp(int32_to_mm(shape_height_hu as i32 + caption_gap_hu));
                 let caption_w_mm = round_to_2dp(shape_w_mm - 0.12);
 
                 // 캡션 paragraph에서 AUTO_NUMBER 처리 / Handle AUTO_NUMBER in caption paragraph
@@ -526,13 +520,23 @@ fn render_rectangle_shape(
                 let mut auto_number_pos: Option<usize> = None;
                 let mut auto_number_display: Option<String> = None;
                 for rec in &caption_para.records {
-                    if let ParagraphRecord::ParaText { text, runs, control_char_positions, .. } = rec {
+                    if let ParagraphRecord::ParaText {
+                        text,
+                        runs,
+                        control_char_positions,
+                        ..
+                    } = rec
+                    {
                         caption_text = text.clone();
-                        auto_number_pos = control_char_positions.iter()
+                        auto_number_pos = control_char_positions
+                            .iter()
                             .find(|cp| cp.code == ControlChar::AUTO_NUMBER)
                             .map(|cp| cp.position);
                         auto_number_display = runs.iter().find_map(|run| {
-                            if let ParaTextRun::Control { code, display_text, .. } = run {
+                            if let ParaTextRun::Control {
+                                code, display_text, ..
+                            } = run
+                            {
                                 if *code == ControlChar::AUTO_NUMBER {
                                     return display_text.clone();
                                 }
@@ -582,8 +586,18 @@ fn render_rectangle_shape(
 
                 let hls_content = if let Some(auto_pos) = auto_number_pos {
                     // AUTO_NUMBER 앞뒤 텍스트 분리 / Split text before/after AUTO_NUMBER
-                    let before: String = caption_text.chars().take(auto_pos).collect::<String>().trim_end().to_string();
-                    let after: String = caption_text.chars().skip(auto_pos + 1).collect::<String>().trim().to_string();
+                    let before: String = caption_text
+                        .chars()
+                        .take(auto_pos)
+                        .collect::<String>()
+                        .trim_end()
+                        .to_string();
+                    let after: String = caption_text
+                        .chars()
+                        .skip(auto_pos + 1)
+                        .collect::<String>()
+                        .trim()
+                        .to_string();
                     format!(
                         r#"<span class="hrt {cs}">{before}&nbsp;</span><div class="haN" style="left:0mm;top:0mm;{han_w}height:{h}mm;"><span class="hrt {cs}">{num}</span></div><span class="hrt {cs}">&nbsp;{after}</span>"#,
                         cs = cs_class,
@@ -628,8 +642,7 @@ fn render_rectangle_shape(
     let hsg_w_mm = round_to_2dp(2.0 * (shape_w_mm + half_stroke));
     let hsg_h_mm = if caption_height_hu > 0 {
         round_to_2dp(
-            int32_to_mm(shape_height_hu as i32 + caption_gap_hu + caption_height_hu)
-                + stroke_width,
+            int32_to_mm(shape_height_hu as i32 + caption_gap_hu + caption_height_hu) + stroke_width,
         )
     } else {
         hsr_h_mm
@@ -656,11 +669,7 @@ fn colorref_to_hex(c: &crate::types::COLORREF) -> String {
 
 /// SVG fill 생성 (defs + fill attribute) / Build SVG fill (defs + fill attribute)
 /// Returns (defs_html, fill_attr) — e.g. ("<defs>...</defs>", "url(#w_00)") or ("", "none")
-fn build_svg_fill(
-    fill_info: Option<&FillInfo>,
-    shape_w: f64,
-    shape_h: f64,
-) -> (String, String) {
+fn build_svg_fill(fill_info: Option<&FillInfo>, shape_w: f64, shape_h: f64) -> (String, String) {
     let fill = match fill_info {
         Some(fi) => fi,
         None => return (String::new(), "none".to_string()),
@@ -691,10 +700,12 @@ fn build_svg_fill(
                     // /// (forward slash)
                     4 => r#"M-1,1 l1,-1 M0,3 l3,-3 M3,3 l1,-1"#.to_string(),
                     // 크로스해치 X: \ and / lines
-                    5 => r#"M3,-1 l1,1 M0,0 l3,3 M-1,3 l1,1 M-1,1 l1,-1 M0,3 l3,-3 M3,3 l1,-1"#.to_string(),
+                    5 => r#"M3,-1 l1,1 M0,0 l3,3 M-1,3 l1,1 M-1,1 l1,-1 M0,3 l3,-3 M3,3 l1,-1"#
+                        .to_string(),
                     // + 격자 / Grid
                     6 => r#"M0,1.5 l3,0 M1.5,0 l0,3"#.to_string(),
-                    _ => r#"M3,-1 l1,1 M0,0 l3,3 M-1,3 l1,1 M-1,1 l1,-1 M0,3 l3,-3 M3,3 l1,-1"#.to_string(),
+                    _ => r#"M3,-1 l1,1 M0,0 l3,3 M-1,3 l1,1 M-1,1 l1,-1 M0,3 l3,-3 M3,3 l1,-1"#
+                        .to_string(),
                 };
 
                 let defs = format!(
@@ -752,8 +763,12 @@ fn build_svg_fill(
                 let hex = format!("#{:02X}{:02X}{:02X}", r, g, b);
 
                 // 왼쪽 (네거티브 x) + 오른쪽 (포지티브 x) 대칭 배치
-                let left_x1 = round_to_2dp(-shape_w + half_stroke_for_gradient() + stripe_width_raw * i as f64);
-                let left_x2 = round_to_2dp(-shape_w + half_stroke_for_gradient() + stripe_width_raw * (i + 1) as f64);
+                let left_x1 = round_to_2dp(
+                    -shape_w + half_stroke_for_gradient() + stripe_width_raw * i as f64,
+                );
+                let left_x2 = round_to_2dp(
+                    -shape_w + half_stroke_for_gradient() + stripe_width_raw * (i + 1) as f64,
+                );
                 let right_x1 = round_to_2dp(path_end_x - stripe_width_raw * i as f64);
                 let right_x2 = round_to_2dp(path_end_x - stripe_width_raw * (i + 1) as f64);
 
@@ -1022,8 +1037,8 @@ fn render_shape_content(
         let top_mm_val = if let Some((shape_h_hu, stroke_w)) = container_dims {
             use crate::document::bodytext::list_header::VerticalAlign;
             let margin_hu = 298;
-            let raw_available = int32_to_mm(shape_h_hu as i32) + stroke_w
-                - 2.0 * int32_to_mm(margin_hu);
+            let raw_available =
+                int32_to_mm(shape_h_hu as i32) + stroke_w - 2.0 * int32_to_mm(margin_hu);
             let raw_content = if let Some(last) = single_col_line_segments.last() {
                 int32_to_mm(last.vertical_position + last.line_height)
             } else {
@@ -1172,12 +1187,11 @@ fn render_shape_content(
         String::new()
     };
 
-    let para_shape_indent =
-        if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
-            Some(document.doc_info.para_shapes[para_shape_id as usize].indent)
-        } else {
-            None
-        };
+    let para_shape_indent = if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+        Some(document.doc_info.para_shapes[para_shape_id as usize].indent)
+    } else {
+        None
+    };
 
     if seg_width_mm == 0.0 {
         seg_width_mm = round_to_2dp(int32_to_mm(all_line_segments[0].segment_width));
@@ -1245,8 +1259,9 @@ fn render_shape_content(
             color_to_pattern: &mut color_to_pattern,
         };
 
-        col_contents[col]
-            .push_str(&render_line_segments_with_content(&content, &context, &mut state));
+        col_contents[col].push_str(&render_line_segments_with_content(
+            &content, &context, &mut state,
+        ));
     }
 
     let mut hcd_inner = String::new();
@@ -1272,8 +1287,8 @@ fn render_shape_content(
         // 라운딩 오차 방지를 위해 원본 HWP 단위에서 직접 계산
         // Compute from raw HWP units to avoid rounding error accumulation
         let margin_hu = 298;
-        let raw_available = int32_to_mm(shape_h_hu as i32) + stroke_w
-            - 2.0 * int32_to_mm(margin_hu);
+        let raw_available =
+            int32_to_mm(shape_h_hu as i32) + stroke_w - 2.0 * int32_to_mm(margin_hu);
         let raw_content = if let Some(last) = all_line_segments
             .get(col_groups[0].0..col_groups[0].1)
             .and_then(|s| s.last())

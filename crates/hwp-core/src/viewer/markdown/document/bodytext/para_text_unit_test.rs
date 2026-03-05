@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::viewer::markdown::document::bodytext::para_text::{is_meaningful_text, char_index_to_byte_index};
+    use crate::viewer::markdown::document::bodytext::para_text::{
+        char_index_to_byte_index, is_meaningful_text,
+    };
 
     #[test]
     fn test_is_meaningful_text_empty_string() {
@@ -25,7 +27,10 @@ mod tests {
     #[test]
     fn test_is_meaningful_text_special_chars() {
         assert!(is_meaningful_text("Hello, World!", &[]));
-        assert!(is_meaningful_text("Text with special chars: @#$%^&*()", &[]));
+        assert!(is_meaningful_text(
+            "Text with special chars: @#$%^&*()",
+            &[]
+        ));
         assert!(is_meaningful_text("Line1\nLine2", &[]));
     }
 

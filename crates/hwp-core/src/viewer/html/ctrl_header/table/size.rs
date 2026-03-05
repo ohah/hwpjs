@@ -43,7 +43,8 @@ fn cell_max_shape_height_from_records(
                 }
             }
             ParagraphRecord::ParaLineSeg { segments } => {
-                let height_mm = if mc_column_count > 1 && segments.len() >= mc_column_count as usize {
+                let height_mm = if mc_column_count > 1 && segments.len() >= mc_column_count as usize
+                {
                     let segs_per_col = segments.len() / mc_column_count as usize;
                     let col_segs = &segments[..segs_per_col];
                     let last = col_segs.last().unwrap();
@@ -177,7 +178,9 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
                     for para in &cell.paragraphs {
                         for record in &para.records {
                             if let ParagraphRecord::CtrlHeader { header, .. } = record {
-                                if let CtrlHeaderData::ColumnDefinition { attribute, .. } = &header.data {
+                                if let CtrlHeaderData::ColumnDefinition { attribute, .. } =
+                                    &header.data
+                                {
                                     if attribute.column_count > 1 {
                                         cell_mc_column_count = attribute.column_count;
                                     }
@@ -187,7 +190,9 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
                     }
 
                     for para in &cell.paragraphs {
-                        if let Some(h) = cell_max_shape_height_from_records(&para.records, cell_mc_column_count) {
+                        if let Some(h) =
+                            cell_max_shape_height_from_records(&para.records, cell_mc_column_count)
+                        {
                             max_shape_height_mm = Some(max_shape_height_mm.unwrap_or(0.0).max(h));
                         }
                     }

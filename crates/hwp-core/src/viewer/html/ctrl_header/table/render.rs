@@ -869,7 +869,10 @@ pub fn render_table(
             // htb top = margin_top + (line_height - table_height) * (baseline_distance / line_height)
             // baseline 가중치로 수직 센터링하여 텍스트와 시각적으로 정렬
             // Baseline-weighted vertical centering to visually align with text
-            let baseline_top = match (position.segment_line_height_mm, position.segment_baseline_distance_mm) {
+            let baseline_top = match (
+                position.segment_line_height_mm,
+                position.segment_baseline_distance_mm,
+            ) {
                 (Some(lh), Some(bd)) if lh > 0.0 && resolved_height_with_margin < lh => {
                     let offset = (lh - resolved_height_with_margin) * (bd / lh);
                     round_to_2dp(margin_top_mm + offset)

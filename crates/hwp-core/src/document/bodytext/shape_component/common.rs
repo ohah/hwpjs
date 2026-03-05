@@ -303,31 +303,34 @@ impl ShapeComponent {
         }
         let consumed = offset + matrix_sequence_size;
 
-        Ok((ShapeComponent {
-            object_control_id,
-            object_control_id2,
-            group_offset: GroupOffset {
-                x: group_x,
-                y: group_y,
+        Ok((
+            ShapeComponent {
+                object_control_id,
+                object_control_id2,
+                group_offset: GroupOffset {
+                    x: group_x,
+                    y: group_y,
+                },
+                group_count,
+                local_version,
+                initial_width,
+                initial_height,
+                width,
+                height,
+                attributes,
+                rotation_angle,
+                rotation_center: RotationCenter {
+                    x: rotation_center_x,
+                    y: rotation_center_y,
+                },
+                rendering: RenderingInfo {
+                    matrix_count,
+                    translation_matrix,
+                    matrix_sequence,
+                },
             },
-            group_count,
-            local_version,
-            initial_width,
-            initial_height,
-            width,
-            height,
-            attributes,
-            rotation_angle,
-            rotation_center: RotationCenter {
-                x: rotation_center_x,
-                y: rotation_center_y,
-            },
-            rendering: RenderingInfo {
-                matrix_count,
-                translation_matrix,
-                matrix_sequence,
-            },
-        }, consumed))
+            consumed,
+        ))
     }
 }
 

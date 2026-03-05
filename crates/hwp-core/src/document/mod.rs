@@ -615,13 +615,19 @@ impl HwpDocument {
                     if header.ctrl_id == "gso " {
                         let mut assigned_for_this_shape = false;
                         for c in children.iter_mut() {
-                            if let ParagraphRecord::ListHeader { paragraphs: cap_paras, .. } = c {
+                            if let ParagraphRecord::ListHeader {
+                                paragraphs: cap_paras,
+                                ..
+                            } = c
+                            {
                                 for p in cap_paras.iter_mut() {
                                     for r in p.records.iter_mut() {
                                         if let ParagraphRecord::ParaText { runs, .. } = r {
                                             for run in runs.iter_mut() {
                                                 if let ParaTextRun::Control {
-                                                    code, display_text, ..
+                                                    code,
+                                                    display_text,
+                                                    ..
                                                 } = run
                                                 {
                                                     if *code == ControlChar::AUTO_NUMBER
