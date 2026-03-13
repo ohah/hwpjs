@@ -744,17 +744,50 @@ fn test_all_fixtures_html_snapshots() {
                         if file_name == "table" {
                             eprintln!("DEBUG: Processing table.hwp file");
                         }
-                        let html = document.to_html(&options);
 
-                        // 스냅샷 생성 / Create snapshot
-                        assert_snapshot_with_path!(snapshot_name_html.as_str(), html);
+                        // table-bug는 페이지별 HTML로 분리 / Split table-bug into per-page HTML
+                        if file_name == "table-bug" {
+                            let css_filename = format!("{}_style.css", file_name);
+                            let html_pages = document.to_html_pages(&options, &css_filename);
 
-                        // 실제 HTML 파일로도 저장 / Also save as actual HTML file
-                        let html_file = snapshots_dir.join(format!("{}.html", file_name));
-                        std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
-                        std::fs::write(&html_file, &html).unwrap_or_else(|e| {
-                            eprintln!("Failed to write HTML file {}: {}", html_file.display(), e);
-                        });
+                            // CSS 파일 저장 / Save CSS file
+                            let css_file = snapshots_dir.join(&css_filename);
+                            std::fs::write(&css_file, &html_pages.css).unwrap_or(());
+
+                            for (i, page_html) in html_pages.pages.iter().enumerate() {
+                                let page_num = i + 1;
+                                // 페이지별 HTML 파일 저장 / Save per-page HTML file
+                                let page_file = snapshots_dir
+                                    .join(format!("{}_{:04}.html", file_name, page_num));
+                                std::fs::write(&page_file, page_html).unwrap_or_else(|e| {
+                                    eprintln!(
+                                        "Failed to write page HTML {}: {}",
+                                        page_file.display(),
+                                        e
+                                    );
+                                });
+
+                                // 페이지별 insta 스냅샷 / Per-page insta snapshot
+                                let snap_name = format!("{}_page_{:04}", snapshot_name, page_num);
+                                assert_snapshot_with_path!(snap_name.as_str(), page_html);
+                            }
+                        } else {
+                            let html = document.to_html(&options);
+
+                            // 스냅샷 생성 / Create snapshot
+                            assert_snapshot_with_path!(snapshot_name_html.as_str(), html);
+
+                            // 실제 HTML 파일로도 저장 / Also save as actual HTML file
+                            let html_file = snapshots_dir.join(format!("{}.html", file_name));
+                            std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
+                            std::fs::write(&html_file, &html).unwrap_or_else(|e| {
+                                eprintln!(
+                                    "Failed to write HTML file {}: {}",
+                                    html_file.display(),
+                                    e
+                                );
+                            });
+                        }
                     }
                     Err(e) => {
                         eprintln!("Skipping {} due to parse error: {}", file_name, e);
@@ -1618,68 +1651,4 @@ fn test_debug_charshape_strikethrough() {
     }
 }
 
-#[test]
-fn test_table_bug_per_page_html_snapshots() {
-    // table-bug.hwp에 대해 페이지별 HTML 스냅샷 생성 / Generate per-page HTML snapshots for table-bug.hwp
-    let file_path = match find_fixture_file("table-bug.hwp") {
-        Some(p) => p,
-        None => {
-            eprintln!("table-bug.hwp not found, skipping test");
-            return;
-        }
-    };
-
-    let parser = HwpParser::new();
-    let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    let fixtures_dir = std::path::Path::new(manifest_dir)
-        .join("tests")
-        .join("fixtures");
-    let snapshots_dir = std::path::Path::new(manifest_dir)
-        .join("tests")
-        .join("snapshots");
-
-    let file_name = "table-bug";
-    let css_filename = format!("{}_style.css", file_name);
-
-    let data = std::fs::read(&file_path).expect("read table-bug.hwp");
-    let document = parser.parse(&data).expect("parse table-bug.hwp");
-
-    let images_dir = snapshots_dir.join("images").join(file_name);
-    std::fs::create_dir_all(&images_dir).unwrap_or(());
-
-    let options = hwp_core::viewer::html::HtmlOptions {
-        image_output_dir: images_dir.to_str().map(|s| s.to_string()),
-        html_output_dir: fixtures_dir.to_str().map(|s| s.to_string()),
-        include_version: Some(true),
-        include_page_info: Some(true),
-        css_class_prefix: String::new(),
-    };
-
-    let html_pages = document.to_html_pages(&options, &css_filename);
-
-    // CSS 파일 저장 / Save CSS file
-    let css_file = fixtures_dir.join(&css_filename);
-    std::fs::write(&css_file, &html_pages.css).unwrap_or_else(|e| {
-        eprintln!("Failed to write CSS file {}: {}", css_file.display(), e);
-    });
-
-    // 페이지별 HTML 파일 저장 및 스냅샷 비교 / Save per-page HTML files and compare snapshots
-    for (i, page_html) in html_pages.pages.iter().enumerate() {
-        let page_num = i + 1;
-        let page_filename = format!("{}_{:04}.html", file_name, page_num);
-        let page_file = fixtures_dir.join(&page_filename);
-        std::fs::write(&page_file, page_html).unwrap_or_else(|e| {
-            eprintln!(
-                "Failed to write page HTML file {}: {}",
-                page_file.display(),
-                e
-            );
-        });
-
-        // insta 스냅샷도 생성 / Also generate insta snapshot
-        let snapshot_name_page = format!("table_bug_page_{:04}", page_num);
-        assert_snapshot_with_path!(snapshot_name_page.as_str(), page_html);
-    }
-
-    eprintln!("{}: {} pages generated", file_name, html_pages.pages.len());
-}
+// test_table_bug_per_page_html_snapshots는 test_all_fixtures_html_snapshots에 통합됨
