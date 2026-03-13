@@ -5,21 +5,28 @@ use crate::HwpDocument;
 
 /// 셀의 왼쪽 위치 계산 / Calculate cell left position
 pub(crate) fn calculate_cell_left(table: &Table, cell: &TableCell) -> f64 {
-    // 해당 행의 셀들을 사용하여 정확한 열 위치 계산 / Use cells from the same row to calculate accurate column positions
-    // 이렇게 하면 각 행의 실제 열 구조를 반영할 수 있음 / This way we can reflect the actual column structure of each row
     let row_address = cell.cell_attributes.row_address;
     let target_col = cell.cell_attributes.col_address;
 
-    // 같은 행의 셀들을 찾아서 정렬 / Find and sort cells from the same row
+    // 현재 행에 존재하거나 rowspan으로 현재 행까지 확장된 셀들을 수집
+    // Collect cells that exist in this row or span into it via rowspan
     let mut row_cells: Vec<_> = table
         .cells
         .iter()
-        .filter(|c| c.cell_attributes.row_address == row_address)
+        .filter(|c| {
+            let c_row = c.cell_attributes.row_address;
+            let c_row_span = if c.cell_attributes.row_span == 0 {
+                1
+            } else {
+                c.cell_attributes.row_span
+            };
+            // 셀이 현재 행을 커버하는지 확인 (직접 또는 rowspan으로)
+            c_row <= row_address && row_address < c_row + c_row_span
+        })
         .collect();
     row_cells.sort_by_key(|c| c.cell_attributes.col_address);
 
     let mut left = 0.0;
-    // target_col 이전의 모든 열 너비를 누적 / Accumulate width of all columns before target_col
     for row_cell in &row_cells {
         if row_cell.cell_attributes.col_address < target_col {
             left += row_cell.cell_attributes.width.to_mm();

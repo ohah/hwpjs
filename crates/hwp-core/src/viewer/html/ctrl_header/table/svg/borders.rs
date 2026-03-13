@@ -3,9 +3,7 @@ use crate::document::docinfo::border_fill::BorderLine;
 use crate::viewer::html::styles::round_to_2dp;
 use crate::{BorderFill, HwpDocument};
 
-use crate::viewer::html::ctrl_header::table::geometry::{
-    calculate_cell_left, calculate_cell_top, get_cell_height,
-};
+use crate::viewer::html::ctrl_header::table::geometry::calculate_cell_left;
 use crate::viewer::html::ctrl_header::table::size::Size;
 
 /// 테두리 선 두께 코드(0..15)를 mm로 변환. 스펙(한글 문서 파일 형식 5.0) 테두리/선 두께 표 기준.
@@ -134,16 +132,15 @@ fn default_borderline(
 fn vertical_segment_borderline(
     table: &Table,
     document: &HwpDocument,
+    row_positions: &[f64],
     col_x: f64,
     y0: f64,
     y1: f64,
-    ctrl_header_height_mm: Option<f64>,
     is_left_edge: bool,
     is_right_edge: bool,
 ) -> Option<BorderLine> {
-    let eps = 0.02; // 부동소수점 누적 오차를 허용하기 위해 0.02mm 사용
+    let eps = 0.02;
 
-    // 바깥 테두리: table.border_fill_id 기본값을 먼저 수집하되, 셀 border와 비교 후 결정
     let mut table_default_line: Option<BorderLine> = None;
     if is_left_edge {
         table_default_line = default_borderline(table, document, 0);
@@ -152,14 +149,9 @@ fn vertical_segment_borderline(
         table_default_line = table_default_line.or(default_borderline(table, document, 1));
     }
 
-    // 경계선 우선순위(원본 HTML과 일치시키기 위한 규칙):
-    // - 내부선: "왼쪽 셀의 Right"를 우선, 없으면 "오른쪽 셀의 Left"
-    // - 왼쪽 외곽: "첫 열 셀의 Left"
-    // - 오른쪽 외곽: "마지막 열 셀의 Right"
     let mut from_left_cell_right: Option<BorderLine> = None;
     let mut from_right_cell_left: Option<BorderLine> = None;
 
-    // 셀 순서를 고정(행,열 오름차순)해서 "첫 셀 우선" 규칙이 안정적으로 동작하도록 함
     let mut cells: Vec<&TableCell> = table.cells.iter().collect();
     cells.sort_by_key(|c| (c.cell_attributes.row_address, c.cell_attributes.col_address));
 
@@ -167,9 +159,18 @@ fn vertical_segment_borderline(
         let cell_left = calculate_cell_left(table, cell);
         let cell_width = cell.cell_attributes.width.to_mm();
         let cell_right = cell_left + cell_width;
-        let cell_top = calculate_cell_top(table, cell, ctrl_header_height_mm);
-        let cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
-        let cell_bottom = cell_top + cell_height;
+
+        let row = cell.cell_attributes.row_address as usize;
+        let row_span = if cell.cell_attributes.row_span == 0 {
+            1usize
+        } else {
+            cell.cell_attributes.row_span as usize
+        };
+        if row_positions.len() <= row || row_positions.len() <= row + row_span {
+            continue;
+        }
+        let cell_top = row_positions[row];
+        let cell_bottom = row_positions[row + row_span];
 
         let overlaps_y = !(y1 <= cell_top + eps || y0 >= cell_bottom - eps);
         if !overlaps_y {
@@ -205,17 +206,13 @@ fn vertical_segment_borderline(
         from_left_cell_right.or(from_right_cell_left)
     };
 
-    // 외곽 테두리 선택 로직:
-    // 1) 셀 border가 line_type=0 (선 없음)이면 → 셀이 명시적으로 선 없음을 지정한 것이므로 그리지 않음
-    // 2) 셀 border가 다른 색상이고 더 두꺼우면 → 셀 border 우선
-    // 3) 그 외 → table default 사용
+    // 외곽 테두리 선택 로직: 셀 border와 table default 중 더 두꺼운 것을 사용
     if is_left_edge || is_right_edge {
         match &cell_border {
-            // 셀이 명시적으로 line_type=0 (선 없음)으로 설정한 경우: 테이블 default도 무시
             Some(cb) if cb.line_type == 0 => None,
             Some(cb) => match &table_default_line {
                 Some(td) if td.line_type != 0 && td.width != 0 => {
-                    if cb.color != td.color && cb.width > td.width {
+                    if cb.width >= td.width {
                         cell_border
                     } else {
                         table_default_line
@@ -315,16 +312,13 @@ fn horizontal_segment_borderline(
         from_upper_cell_bottom.or(from_lower_cell_top)
     };
 
-    // 외곽 테두리 선택 로직:
-    // 1) 셀 border가 line_type=0 (선 없음)이면 → 셀이 명시적으로 선 없음을 지정한 것이므로 그리지 않음
-    // 2) 셀 border가 다른 색상이고 더 두꺼우면 → 셀 border 우선
-    // 3) 그 외 → table default 사용
+    // 외곽 테두리 선택 로직: 셀 border와 table default 중 더 두꺼운 것을 사용
     if is_top_edge || is_bottom_edge {
         match &cell_border {
             Some(cb) if cb.line_type == 0 => None,
             Some(cb) => match &table_default_line {
                 Some(td) if td.line_type != 0 && td.width != 0 => {
-                    if cb.color != td.color && cb.width > td.width {
+                    if cb.width >= td.width {
                         cell_border
                     } else {
                         table_default_line
@@ -344,30 +338,26 @@ pub(crate) fn render_vertical_borders(
     table: &Table,
     document: &HwpDocument,
     column_positions: &[f64],
+    row_positions: &[f64],
     content: Size,
-    ctrl_header_height_mm: Option<f64>,
+    _ctrl_header_height_mm: Option<f64>,
 ) -> String {
     let mut svg_paths = String::new();
-    let epsilon = 0.01; // 부동소수점 비교를 위한 작은 오차 / Small epsilon for floating point comparison
-    let _is_suspect_image_or_caption_table =
-        table.attributes.row_count as usize >= 6 && table.cells.len() >= 12;
-    let _h11_logged_count = 0usize;
+    let epsilon = 0.01;
 
     for &col_x in column_positions {
         let is_left_edge = (col_x - 0.0).abs() < epsilon;
         let is_right_edge = (col_x - content.width).abs() < epsilon;
-        // 레거시/fixture 정합:
-        // 좌/우 외곽선은 "항상 전체 높이"로 그려야 한다.
-        // (부동소수점 오차로 covered_ranges가 생기거나, 셀 병합/커버 계산 때문에
-        // 외곽선이 위/아래로 끊기는 현상이 발생할 수 있음)
+
+        // 좌/우 외곽선은 항상 전체 높이로 그림
         if is_left_edge || is_right_edge {
             if let Some(line) = vertical_segment_borderline(
                 table,
                 document,
+                row_positions,
                 col_x,
                 0.0,
                 content.height,
-                ctrl_header_height_mm,
                 is_left_edge,
                 is_right_edge,
             ) {
@@ -383,18 +373,29 @@ pub(crate) fn render_vertical_borders(
             continue;
         }
 
+        // row_positions를 사용하여 셀 top/height 계산 (content-aware)
         let mut covered_ranges = Vec::new();
         for cell in &table.cells {
             let cell_left = calculate_cell_left(table, cell);
             let cell_width = cell.cell_attributes.width.to_mm();
             let cell_right = cell_left + cell_width;
-            let cell_top = calculate_cell_top(table, cell, ctrl_header_height_mm);
-            let cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
 
-            // 셀이 해당 열 위치를 가로지르는 경우 (셀의 오른쪽 경계가 정확히 그 위치인 경우는 제외)
-            // Cell crosses the column position (excluding when cell's right boundary is exactly at that position)
-            if cell_left < col_x && cell_right > col_x {
-                covered_ranges.push((cell_top, cell_top + cell_height));
+            let row = cell.cell_attributes.row_address as usize;
+            let row_span = if cell.cell_attributes.row_span == 0 {
+                1usize
+            } else {
+                cell.cell_attributes.row_span as usize
+            };
+            if row_positions.len() <= row || row_positions.len() <= row + row_span {
+                continue;
+            }
+            let cell_top = row_positions[row];
+            let cell_bottom = row_positions[row + row_span];
+
+            // 셀이 열 위치를 가로지르는지 확인 (부동소수점 오차 고려)
+            // 셀의 경계가 열 위치와 일치하는 경우는 "가로지르는" 것이 아님
+            if cell_left + epsilon < col_x && cell_right - epsilon > col_x {
+                covered_ranges.push((cell_top, cell_bottom));
             }
         }
 
@@ -414,64 +415,21 @@ pub(crate) fn render_vertical_borders(
             segments.push((current_y, content.height));
         }
 
-        if segments.is_empty() {
-            // 덮인 범위가 없으면 전체 높이에 걸쳐 경계선을 그림
-            // If no covered ranges, draw border across full height
+        // 세그먼트별로 border 렌더링
+        for (y_start, y_end) in &segments {
             if let Some(line) = vertical_segment_borderline(
                 table,
                 document,
+                row_positions,
                 col_x,
-                0.0,
-                content.height,
-                ctrl_header_height_mm,
+                *y_start,
+                *y_end,
                 is_left_edge,
                 is_right_edge,
             ) {
                 svg_paths.push_str(&render_border_paths(
-                    col_x,
-                    0.0,
-                    col_x,
-                    content.height,
-                    true,
-                    &line,
+                    col_x, *y_start, col_x, *y_end, true, &line,
                 ));
-            }
-        } else if segments.len() == 1 && segments[0].0 == 0.0 && segments[0].1 == content.height {
-            if let Some(line) = vertical_segment_borderline(
-                table,
-                document,
-                col_x,
-                0.0,
-                content.height,
-                ctrl_header_height_mm,
-                is_left_edge,
-                is_right_edge,
-            ) {
-                svg_paths.push_str(&render_border_paths(
-                    col_x,
-                    0.0,
-                    col_x,
-                    content.height,
-                    true,
-                    &line,
-                ));
-            }
-        } else {
-            for (y_start, y_end) in segments {
-                if let Some(line) = vertical_segment_borderline(
-                    table,
-                    document,
-                    col_x,
-                    y_start,
-                    y_end,
-                    ctrl_header_height_mm,
-                    is_left_edge,
-                    is_right_edge,
-                ) {
-                    svg_paths.push_str(&render_border_paths(
-                        col_x, y_start, col_x, y_end, true, &line,
-                    ));
-                }
             }
         }
     }
