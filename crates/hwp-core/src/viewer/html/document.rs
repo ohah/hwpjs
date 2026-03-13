@@ -1636,3 +1636,86 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
     html
 }
+
+/// HTML 페이지별 분리 결과 / Per-page HTML split result
+pub struct HtmlPages {
+    /// CSS 스타일 문자열 / CSS style string
+    pub css: String,
+    /// 페이지별 HTML (완전한 HTML 문서, 외부 CSS 참조) / Per-page HTML (complete HTML document, referencing external CSS)
+    pub pages: Vec<String>,
+    /// 문서 제목 / Document title
+    pub title: String,
+}
+
+/// HWP 문서를 페이지별 HTML로 변환 / Convert HWP document to per-page HTML
+///
+/// 각 페이지가 독립적인 HTML 문서로 반환됩니다.
+/// CSS는 별도 문자열로 반환되어 외부 파일로 저장할 수 있습니다.
+///
+/// # Arguments / 매개변수
+/// * `document` - HWP 문서 / HWP document
+/// * `options` - HTML 변환 옵션 / HTML conversion options
+/// * `css_filename` - CSS 파일명 (예: "document_style.css") / CSS filename (e.g., "document_style.css")
+pub fn to_html_pages(
+    document: &HwpDocument,
+    options: &HtmlOptions,
+    css_filename: &str,
+) -> HtmlPages {
+    // 전체 HTML 생성 / Generate full HTML
+    let full_html = to_html(document, options);
+
+    // CSS 스타일 추출 / Extract CSS styles
+    let css = styles::generate_css_styles(document);
+
+    // 문서 제목 추출 / Extract document title
+    let title = document
+        .summary_information
+        .as_ref()
+        .and_then(|s| s.title.as_deref())
+        .unwrap_or("");
+    let title_escaped = escape_html_attribute(title);
+
+    // body 안의 내용에서 hpa div 추출 / Extract hpa divs from body content
+    let body_start = full_html.find("<body>").map(|i| i + "<body>".len());
+    let body_end = full_html.find("</body>");
+    let body_content = match (body_start, body_end) {
+        (Some(start), Some(end)) => &full_html[start..end],
+        _ => "",
+    };
+
+    // <div class="hpa" 를 기준으로 페이지 분리 / Split pages by <div class="hpa"
+    let hpa_marker = r#"<div class="hpa""#;
+    let mut pages = Vec::new();
+    let mut search_start = 0;
+
+    while let Some(pos) = body_content[search_start..].find(hpa_marker) {
+        let abs_pos = search_start + pos;
+        // 다음 hpa 시작점 찾기 / Find next hpa start
+        let next_hpa = body_content[(abs_pos + hpa_marker.len())..]
+            .find(hpa_marker)
+            .map(|p| abs_pos + hpa_marker.len() + p);
+
+        let page_content = match next_hpa {
+            Some(next) => &body_content[abs_pos..next],
+            None => {
+                // 마지막 페이지: body_content 끝까지
+                body_content[abs_pos..].trim_end_matches('\n')
+            }
+        };
+
+        // 완전한 HTML 문서로 감싸기 / Wrap as complete HTML document
+        let page_html = format!(
+            "<!DOCTYPE html>\n<html><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\"><head><title>{}</title><meta http_quiv=\"content-type\" content=\"text/html; charset=utf-8\"><link rel=\"stylesheet\" type=\"text/css\" href=\"{}\"></head><body>{}</body></html>",
+            title_escaped, css_filename, page_content
+        );
+        pages.push(page_html);
+
+        search_start = next_hpa.unwrap_or(body_content.len());
+    }
+
+    HtmlPages {
+        css,
+        pages,
+        title: title_escaped.to_string(),
+    }
+}

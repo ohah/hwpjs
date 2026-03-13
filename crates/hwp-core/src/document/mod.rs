@@ -121,6 +121,23 @@ impl HwpDocument {
         crate::viewer::to_html(self, options)
     }
 
+    /// Convert HWP document to per-page HTML
+    /// HWP 문서를 페이지별 HTML로 변환
+    ///
+    /// # Arguments / 매개변수
+    /// * `options` - HTML conversion options / HTML 변환 옵션
+    /// * `css_filename` - CSS filename for external stylesheet reference / 외부 CSS 파일명
+    ///
+    /// # Returns / 반환값
+    /// HtmlPages containing CSS string and per-page HTML documents / CSS 문자열과 페이지별 HTML 문서
+    pub fn to_html_pages(
+        &self,
+        options: &crate::viewer::html::HtmlOptions,
+        css_filename: &str,
+    ) -> crate::viewer::html::HtmlPages {
+        crate::viewer::html::to_html_pages(self, options, css_filename)
+    }
+
     /// Convert HWP document to PDF format
     /// HWP 문서를 PDF 형식으로 변환
     ///
