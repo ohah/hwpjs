@@ -33,6 +33,8 @@ mod text_test;
 
 // Re-export public API
 pub use document::to_html;
+pub use document::to_html_pages;
+pub use document::HtmlPages;
 pub use options::HtmlOptions;
 pub use page::HtmlPageBreak;
 pub use render::HtmlRenderer;

@@ -13,6 +13,6 @@ pub mod markdown;
 pub mod pdf;
 
 pub use core::renderer::{DocumentParts, Renderer, TextStyles};
-pub use html::{to_html, HtmlOptions};
+pub use html::{to_html, to_html_pages, HtmlOptions, HtmlPages};
 pub use markdown::{to_markdown, MarkdownOptions};
 pub use pdf::{to_pdf, PdfOptions};

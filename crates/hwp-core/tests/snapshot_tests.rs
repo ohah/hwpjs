@@ -1603,7 +1603,7 @@ fn test_debug_charshape_strikethrough() {
                                                 eprintln!("  NOTE: underline_type=2 might indicate strikethrough in some HWP versions");
                                             }
                                         } else {
-                                            eprintln!("    shape_id {} NOT FOUND in char_shapes array (len={})", 
+                                            eprintln!("    shape_id {} NOT FOUND in char_shapes array (len={})",
                                                 shape_info.shape_id,
                                                 document.doc_info.char_shapes.len());
                                         }
@@ -1616,4 +1616,74 @@ fn test_debug_charshape_strikethrough() {
             }
         }
     }
+}
+
+#[test]
+fn test_table_bug_per_page_html_snapshots() {
+    // table-bug.hwp에 대해 페이지별 HTML 스냅샷 생성 / Generate per-page HTML snapshots for table-bug.hwp
+    let file_path = match find_fixture_file("table-bug.hwp") {
+        Some(p) => p,
+        None => {
+            eprintln!("table-bug.hwp not found, skipping test");
+            return;
+        }
+    };
+
+    let parser = HwpParser::new();
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let fixtures_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("fixtures");
+    let snapshots_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("snapshots");
+
+    let file_name = "table-bug";
+    let css_filename = format!("{}_style.css", file_name);
+
+    let data = std::fs::read(&file_path).expect("read table-bug.hwp");
+    let document = parser.parse(&data).expect("parse table-bug.hwp");
+
+    let images_dir = snapshots_dir.join("images").join(file_name);
+    std::fs::create_dir_all(&images_dir).unwrap_or(());
+
+    let options = hwp_core::viewer::html::HtmlOptions {
+        image_output_dir: images_dir.to_str().map(|s| s.to_string()),
+        html_output_dir: fixtures_dir.to_str().map(|s| s.to_string()),
+        include_version: Some(true),
+        include_page_info: Some(true),
+        css_class_prefix: String::new(),
+    };
+
+    let html_pages = document.to_html_pages(&options, &css_filename);
+
+    // CSS 파일 저장 / Save CSS file
+    let css_file = fixtures_dir.join(&css_filename);
+    std::fs::write(&css_file, &html_pages.css).unwrap_or_else(|e| {
+        eprintln!("Failed to write CSS file {}: {}", css_file.display(), e);
+    });
+
+    // 페이지별 HTML 파일 저장 및 스냅샷 비교 / Save per-page HTML files and compare snapshots
+    for (i, page_html) in html_pages.pages.iter().enumerate() {
+        let page_num = i + 1;
+        let page_filename = format!("{}_{:04}.html", file_name, page_num);
+        let page_file = fixtures_dir.join(&page_filename);
+        std::fs::write(&page_file, page_html).unwrap_or_else(|e| {
+            eprintln!(
+                "Failed to write page HTML file {}: {}",
+                page_file.display(),
+                e
+            );
+        });
+
+        // insta 스냅샷도 생성 / Also generate insta snapshot
+        let snapshot_name_page = format!("table_bug_page_{:04}", page_num);
+        assert_snapshot_with_path!(snapshot_name_page.as_str(), page_html);
+    }
+
+    eprintln!(
+        "{}: {} pages generated",
+        file_name,
+        html_pages.pages.len()
+    );
 }
