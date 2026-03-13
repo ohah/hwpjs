@@ -1705,7 +1705,7 @@ pub fn to_html_pages(
 
         // 완전한 HTML 문서로 감싸기 / Wrap as complete HTML document
         let page_html = format!(
-            "<!DOCTYPE html>\n<html><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\"><head><title>{}</title><meta http_quiv=\"content-type\" content=\"text/html; charset=utf-8\"><link rel=\"stylesheet\" type=\"text/css\" href=\"{}\"></head><body>{}</body></html>",
+            "<!DOCTYPE html>\n<html><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\"><head><title>{}</title><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"><link rel=\"stylesheet\" type=\"text/css\" href=\"{}\"></head><body>{}</body></html>",
             title_escaped, css_filename, page_content
         );
         pages.push(page_html);
