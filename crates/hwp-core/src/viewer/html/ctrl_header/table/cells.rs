@@ -35,6 +35,13 @@ pub(crate) fn render_cells(
     let mut max_row_heights: HashMap<usize, f64> = HashMap::new();
 
     for cell in &table.cells {
+        // rowspan>1인 셀은 개별 행 높이에 포함하지 않음 (행 높이는 rowspan=1인 셀로만 결정)
+        // Skip cells with rowspan>1 for row height calculation (row height is determined by rowspan=1 cells only)
+        let row_span = cell.cell_attributes.row_span;
+        if row_span != 1 {
+            continue;
+        }
+
         let row_idx = cell.cell_attributes.row_address as usize;
         let _col_idx = cell.cell_attributes.col_address as usize;
 
@@ -112,17 +119,16 @@ pub(crate) fn render_cells(
                         }
                     }
 
-                    // ParaLineSeg: line_height 합산하여 높이 계산 (나중에 shape_component.height와 비교)
-                    // ParaLineSeg: calculate height by summing line_height (compare with shape_component.height later)
+                    // ParaLineSeg: 마지막 segment의 vertical_position + line_height로 높이 계산
+                    // ParaLineSeg: calculate height from last segment's vertical_position + line_height
                     ParagraphRecord::ParaLineSeg { segments } => {
                         has_paraline_seg = true;
-                        let total_height_hwpunit: i32 =
-                            segments.iter().map(|seg| seg.line_height).sum();
-                        let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
-                        if paraline_seg_height_mm.is_none()
-                            || height_mm > paraline_seg_height_mm.unwrap()
-                        {
-                            paraline_seg_height_mm = Some(height_mm);
+                        if let Some(last) = segments.last() {
+                            let height_mm = round_to_2dp(int32_to_mm(
+                                last.vertical_position + last.line_height,
+                            ));
+                            paraline_seg_height_mm =
+                                Some(paraline_seg_height_mm.unwrap_or(0.0).max(height_mm));
                         }
                     }
 
@@ -173,21 +179,22 @@ pub(crate) fn render_cells(
                     }
                     // ParaLineSeg가 paragraph records에 직접 있는 경우도 처리 / Also handle ParaLineSeg directly in paragraph records
                     ParagraphRecord::ParaLineSeg { segments } => {
-                        let height_mm =
+                        if let Some(last) =
                             if cell_mc_count > 1 && segments.len() >= cell_mc_count as usize {
-                                // 다단: 한 단의 높이만 사용 / Multi-column: use only one column's height
+                                // 다단: 한 단의 마지막 세그먼트 사용 / Multi-column: use last segment of one column
                                 let segs_per_col = segments.len() / cell_mc_count as usize;
-                                let col_segs = &segments[..segs_per_col];
-                                let last = col_segs.last().unwrap();
-                                round_to_2dp(int32_to_mm(last.vertical_position + last.line_height))
+                                segments[..segs_per_col].last()
                             } else {
-                                let total_height_hwpunit: i32 =
-                                    segments.iter().map(|seg| seg.line_height).sum();
-                                round_to_2dp(int32_to_mm(total_height_hwpunit))
-                            };
-                        if max_shape_height_mm.is_none() || height_mm > max_shape_height_mm.unwrap()
+                                segments.last()
+                            }
                         {
-                            max_shape_height_mm = Some(height_mm);
+                            // vertical_position + line_height가 콘텐츠 높이 (줄 간격/문단 간격 포함)
+                            // vertical_position + line_height is content height (includes line/paragraph spacing)
+                            let height_mm = round_to_2dp(int32_to_mm(
+                                last.vertical_position + last.line_height,
+                            ));
+                            max_shape_height_mm =
+                                Some(max_shape_height_mm.unwrap_or(0.0).max(height_mm));
                         }
                     }
                     _ => {}
@@ -224,15 +231,22 @@ pub(crate) fn render_cells(
             }
         }
         let cell_width = cell.cell_attributes.width.to_mm();
-        // 같은 행의 모든 셀은 같은 높이를 가져야 함 (행의 최대 높이 사용, shape component 높이 포함) / All cells in the same row should have the same height (use row's max height, including shape component height)
+        // rowspan을 고려하여 셀 높이 계산 (해당 행들의 높이 합산)
+        // Calculate cell height considering rowspan (sum of spanned row heights)
         let row_idx = cell.cell_attributes.row_address as usize;
-        let cell_height = if let Some(&row_max_height) = max_row_heights.get(&row_idx) {
-            // max_row_heights는 이미 shape component 높이를 포함하여 계산됨 / max_row_heights already includes shape component height
-            row_max_height
+        let row_span = if cell.cell_attributes.row_span == 0 {
+            1usize
         } else {
-            // max_row_heights가 없으면 실제 셀 높이 사용 (object_common.height는 fallback) / If max_row_heights not available, use actual cell height (object_common.height is fallback)
-            get_cell_height(table, cell, ctrl_header_height_mm)
+            cell.cell_attributes.row_span as usize
         };
+        let mut cell_height = 0.0;
+        for ri in row_idx..(row_idx + row_span) {
+            if let Some(&row_h) = max_row_heights.get(&ri) {
+                cell_height += row_h;
+            } else {
+                cell_height += get_row_height(table, ri, ctrl_header_height_mm);
+            }
+        }
 
         // 셀 마진(mm) 계산은 렌더링 전반(특히 special-case)에서 필요하므로 먼저 계산합니다.
         let left_margin_mm = cell_margin_to_mm(cell.cell_attributes.left_margin);

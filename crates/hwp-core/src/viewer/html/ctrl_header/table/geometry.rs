@@ -241,17 +241,16 @@ pub(crate) fn row_positions(
                         }
                     }
 
-                    // ParaLineSeg: line_height 합산하여 높이 계산 (나중에 shape_component.height와 비교)
-                    // ParaLineSeg: calculate height by summing line_height (compare with shape_component.height later)
+                    // ParaLineSeg: 마지막 segment의 vertical_position + line_height로 높이 계산
+                    // ParaLineSeg: calculate height from last segment's vertical_position + line_height
                     ParagraphRecord::ParaLineSeg { segments } => {
                         has_paraline_seg = true;
-                        let total_height_hwpunit: i32 =
-                            segments.iter().map(|seg| seg.line_height).sum();
-                        let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
-                        if paraline_seg_height_mm.is_none()
-                            || height_mm > paraline_seg_height_mm.unwrap()
-                        {
-                            paraline_seg_height_mm = Some(height_mm);
+                        if let Some(last) = segments.last() {
+                            let height_mm = round_to_2dp(int32_to_mm(
+                                last.vertical_position + last.line_height,
+                            ));
+                            paraline_seg_height_mm =
+                                Some(paraline_seg_height_mm.unwrap_or(0.0).max(height_mm));
                         }
                     }
 
@@ -327,25 +326,22 @@ pub(crate) fn row_positions(
                             }
                             // ParaLineSeg가 paragraph records에 직접 있는 경우도 처리 / Also handle ParaLineSeg directly in paragraph records
                             ParagraphRecord::ParaLineSeg { segments } => {
-                                let height_mm = if cell_mc_count > 1
+                                if let Some(last) = if cell_mc_count > 1
                                     && segments.len() >= cell_mc_count as usize
                                 {
-                                    // 다단: 한 단의 높이만 사용 / Multi-column: use only one column's height
+                                    // 다단: 한 단의 마지막 세그먼트 사용 / Multi-column: use last segment of one column
                                     let segs_per_col = segments.len() / cell_mc_count as usize;
-                                    let col_segs = &segments[..segs_per_col];
-                                    let last = col_segs.last().unwrap();
-                                    round_to_2dp(int32_to_mm(
-                                        last.vertical_position + last.line_height,
-                                    ))
+                                    segments[..segs_per_col].last()
                                 } else {
-                                    let total_height_hwpunit: i32 =
-                                        segments.iter().map(|seg| seg.line_height).sum();
-                                    round_to_2dp(int32_to_mm(total_height_hwpunit))
-                                };
-                                if max_shape_height_mm.is_none()
-                                    || height_mm > max_shape_height_mm.unwrap()
-                                {
-                                    max_shape_height_mm = Some(height_mm);
+                                    segments.last()
+                                } {
+                                    // vertical_position + line_height가 콘텐츠 높이 (줄 간격/문단 간격 포함)
+                                    // vertical_position + line_height is content height (includes line/paragraph spacing)
+                                    let height_mm = round_to_2dp(int32_to_mm(
+                                        last.vertical_position + last.line_height,
+                                    ));
+                                    max_shape_height_mm =
+                                        Some(max_shape_height_mm.unwrap_or(0.0).max(height_mm));
                                 }
                             }
                             _ => {}
