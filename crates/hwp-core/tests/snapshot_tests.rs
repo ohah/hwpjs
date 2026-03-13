@@ -766,17 +766,12 @@ fn test_all_fixtures_html_snapshots() {
                             let css_file = snapshots_dir.join(&css_filename);
                             std::fs::write(&css_file, &html_pages.css).unwrap_or(());
 
-                            let fixtures_dir = std::path::Path::new(manifest_dir)
-                                .join("tests")
-                                .join("fixtures");
-
                             for (i, page_html) in html_pages.pages.iter().enumerate() {
                                 let page_num = i + 1;
-                                let page_filename =
-                                    format!("{}_{:04}.html", file_name, page_num);
 
                                 // snapshots에 페이지별 HTML 파일 저장
-                                let page_file = snapshots_dir.join(&page_filename);
+                                let page_file = snapshots_dir
+                                    .join(format!("{}_{:04}.html", file_name, page_num));
                                 std::fs::write(&page_file, page_html).unwrap_or_else(|e| {
                                     eprintln!(
                                         "Failed to write page HTML {}: {}",
@@ -784,17 +779,6 @@ fn test_all_fixtures_html_snapshots() {
                                         e
                                     );
                                 });
-
-                                // fixtures에도 페이지별 HTML 파일 저장 (자동 갱신)
-                                let fixture_page_file = fixtures_dir.join(&page_filename);
-                                std::fs::write(&fixture_page_file, page_html)
-                                    .unwrap_or_else(|e| {
-                                        eprintln!(
-                                            "Failed to write fixture page HTML {}: {}",
-                                            fixture_page_file.display(),
-                                            e
-                                        );
-                                    });
 
                                 // 페이지별 insta 스냅샷 / Per-page insta snapshot
                                 let snap_name = format!("{}_page_{:04}", snapshot_name, page_num);
