@@ -1681,9 +1681,5 @@ fn test_table_bug_per_page_html_snapshots() {
         assert_snapshot_with_path!(snapshot_name_page.as_str(), page_html);
     }
 
-    eprintln!(
-        "{}: {} pages generated",
-        file_name,
-        html_pages.pages.len()
-    );
+    eprintln!("{}: {} pages generated", file_name, html_pages.pages.len());
 }
