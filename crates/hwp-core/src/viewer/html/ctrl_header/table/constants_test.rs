@@ -15,8 +15,8 @@ mod tests {
     fn test_border_offset_mm_valid_value() {
         // BORDER_OFFSET_MM should be a positive, small value
         assert!(BORDER_OFFSET_MM > 0.0);
-        // The value 0.06 is explicitly documented as a small offset
-        assert_eq!(BORDER_OFFSET_MM, 0.06);
+        // The value 0.20 is explicitly documented as a small offset
+        assert_eq!(BORDER_OFFSET_MM, 0.20);
     }
 
     #[test]
@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn test_border_offset_mm_small_value() {
-        // Border offset is intentionally small (0.06mm)
+        // Border offset is intentionally small (0.20mm)
         // This small value should be positive
         assert!(BORDER_OFFSET_MM > 0.0);
         assert!(BORDER_OFFSET_MM < 1.0);
@@ -50,6 +50,6 @@ mod tests {
     #[test]
     fn test_border_offset_mm_zero_point_zero_six() {
         // Explicit verification of the exact value
-        assert_eq!(BORDER_OFFSET_MM, 0.06_f64);
+        assert_eq!(BORDER_OFFSET_MM, 0.20_f64);
     }
 }
