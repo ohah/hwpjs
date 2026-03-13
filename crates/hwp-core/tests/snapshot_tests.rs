@@ -745,7 +745,19 @@ fn test_all_fixtures_html_snapshots() {
                             eprintln!("DEBUG: Processing table.hwp file");
                         }
 
-                        // table-bug는 페이지별 HTML로 분리 / Split table-bug into per-page HTML
+                        let html = document.to_html(&options);
+
+                        // 스냅샷 생성 / Create snapshot
+                        assert_snapshot_with_path!(snapshot_name_html.as_str(), html);
+
+                        // 실제 HTML 파일로도 저장 / Also save as actual HTML file
+                        let html_file = snapshots_dir.join(format!("{}.html", file_name));
+                        std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
+                        std::fs::write(&html_file, &html).unwrap_or_else(|e| {
+                            eprintln!("Failed to write HTML file {}: {}", html_file.display(), e);
+                        });
+
+                        // table-bug는 페이지별 HTML도 추가 생성 / Also generate per-page HTML for table-bug
                         if file_name == "table-bug" {
                             let css_filename = format!("{}_style.css", file_name);
                             let html_pages = document.to_html_pages(&options, &css_filename);
@@ -771,22 +783,6 @@ fn test_all_fixtures_html_snapshots() {
                                 let snap_name = format!("{}_page_{:04}", snapshot_name, page_num);
                                 assert_snapshot_with_path!(snap_name.as_str(), page_html);
                             }
-                        } else {
-                            let html = document.to_html(&options);
-
-                            // 스냅샷 생성 / Create snapshot
-                            assert_snapshot_with_path!(snapshot_name_html.as_str(), html);
-
-                            // 실제 HTML 파일로도 저장 / Also save as actual HTML file
-                            let html_file = snapshots_dir.join(format!("{}.html", file_name));
-                            std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
-                            std::fs::write(&html_file, &html).unwrap_or_else(|e| {
-                                eprintln!(
-                                    "Failed to write HTML file {}: {}",
-                                    html_file.display(),
-                                    e
-                                );
-                            });
                         }
                     }
                     Err(e) => {
