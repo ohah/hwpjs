@@ -27,6 +27,7 @@ rusttype = "0.9"
 [dev-dependencies]
 insta = "1.43.2"
 lopdf = "0.33"
+regex = "1"
 
 [lints]
 workspace = true

@@ -43,17 +43,20 @@ fn cell_max_shape_height_from_records(
                 }
             }
             ParagraphRecord::ParaLineSeg { segments } => {
-                let height_mm = if mc_column_count > 1 && segments.len() >= mc_column_count as usize
+                if let Some(last) =
+                    if mc_column_count > 1 && segments.len() >= mc_column_count as usize {
+                        let segs_per_col = segments.len() / mc_column_count as usize;
+                        segments[..segs_per_col].last()
+                    } else {
+                        segments.last()
+                    }
                 {
-                    let segs_per_col = segments.len() / mc_column_count as usize;
-                    let col_segs = &segments[..segs_per_col];
-                    let last = col_segs.last().unwrap();
-                    round_to_2dp(int32_to_mm(last.vertical_position + last.line_height))
-                } else {
-                    let total: i32 = segments.iter().map(|seg| seg.line_height).sum();
-                    round_to_2dp(int32_to_mm(total))
-                };
-                max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
+                    // vertical_position + line_height가 콘텐츠 높이 (줄 간격/문단 간격 포함)
+                    // vertical_position + line_height is content height (includes line/paragraph spacing)
+                    let height_mm =
+                        round_to_2dp(int32_to_mm(last.vertical_position + last.line_height));
+                    max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
+                }
             }
             ParagraphRecord::CtrlHeader { children, .. } => {
                 if let Some(h) = cell_max_shape_height_from_records(children, mc_column_count) {
@@ -112,9 +115,11 @@ pub(crate) fn find_max_shape_height(
             }
 
             ParagraphRecord::ParaLineSeg { segments } => {
-                let total_height_hwpunit: i32 = segments.iter().map(|seg| seg.line_height).sum();
-                let height_mm = round_to_2dp(int32_to_mm(total_height_hwpunit));
-                max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
+                if let Some(last) = segments.last() {
+                    let height_mm =
+                        round_to_2dp(int32_to_mm(last.vertical_position + last.line_height));
+                    max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
+                }
             }
 
             _ => {}

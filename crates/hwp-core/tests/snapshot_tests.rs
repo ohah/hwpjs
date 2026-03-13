@@ -861,6 +861,101 @@ fn test_table2_html_snapshot() {
     }
 }
 
+/// table-bug.hwp의 셀 위치가 한컴 원본 HTML과 일치하는지 검증
+/// Verify that table-bug.hwp cell positions match the original Hancom HTML
+#[test]
+fn test_table_bug_cell_positions_match_hancom() {
+    use regex::Regex;
+
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let fixtures_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("fixtures");
+    let snapshots_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("snapshots");
+
+    let hwp_path = fixtures_dir.join("table-bug.hwp");
+    let fixture_path = fixtures_dir.join("table-bug.HTML");
+    if !hwp_path.exists() || !fixture_path.exists() {
+        eprintln!("table-bug files not found, skipping test");
+        return;
+    }
+
+    // 우리 HTML 생성
+    let parser = HwpParser::new();
+    let data = std::fs::read(&hwp_path).unwrap();
+    let document = parser.parse(&data).unwrap();
+
+    let options = hwp_core::viewer::html::HtmlOptions {
+        image_output_dir: None,
+        html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
+        include_version: Some(true),
+        include_page_info: Some(true),
+        css_class_prefix: String::new(),
+    };
+    let css_filename = "table-bug_style.css";
+    let html_pages = document.to_html_pages(&options, css_filename);
+    let our_page1 = &html_pages.pages[0];
+
+    // 한컴 원본 HTML 읽기
+    let fixture_html = std::fs::read_to_string(&fixture_path).unwrap();
+
+    // 셀 위치 추출
+    let cell_re = Regex::new(r#"class="hce" style="([^"]+)""#).unwrap();
+    let top_re = Regex::new(r"top:([\d.]+)mm").unwrap();
+    let height_re = Regex::new(r"height:([\d.]+)mm").unwrap();
+
+    let fixture_cells: Vec<_> = cell_re.captures_iter(&fixture_html).collect();
+    let our_cells: Vec<_> = cell_re.captures_iter(our_page1).collect();
+
+    // 한컴 원본의 첫 번째 테이블 셀 수만큼 비교 (셀 수가 다를 수 있음)
+    let compare_count = fixture_cells.len().min(our_cells.len());
+    assert!(compare_count > 0, "Should have cells to compare");
+
+    for i in 0..compare_count {
+        let fix_style = &fixture_cells[i][1];
+        let our_style = &our_cells[i][1];
+
+        let fix_top: f64 = top_re
+            .captures(fix_style)
+            .map(|c| c[1].parse().unwrap())
+            .unwrap_or(0.0);
+        let our_top: f64 = top_re
+            .captures(our_style)
+            .map(|c| c[1].parse().unwrap())
+            .unwrap_or(0.0);
+        let fix_height: f64 = height_re
+            .captures(fix_style)
+            .map(|c| c[1].parse().unwrap())
+            .unwrap_or(0.0);
+        let our_height: f64 = height_re
+            .captures(our_style)
+            .map(|c| c[1].parse().unwrap())
+            .unwrap_or(0.0);
+
+        let top_diff = (fix_top - our_top).abs();
+        let height_diff = (fix_height - our_height).abs();
+
+        assert!(
+            top_diff < 0.1,
+            "Cell {} top mismatch: hancom={}, ours={}, diff={}",
+            i,
+            fix_top,
+            our_top,
+            top_diff
+        );
+        assert!(
+            height_diff < 0.1,
+            "Cell {} height mismatch: hancom={}, ours={}, diff={}",
+            i,
+            fix_height,
+            our_height,
+            height_diff
+        );
+    }
+}
+
 #[test]
 fn test_parse_all_fixtures() {
     // 모든 fixtures 파일을 파싱하여 에러가 없는지 확인 / Parse all fixtures files to check for errors
