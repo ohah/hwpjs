@@ -1021,6 +1021,12 @@ pub(crate) fn render_cells(
                 }
             }
 
+            // content_height에 셀 마진(top + bottom) 포함
+            // fixture 기준: hcI top 계산 시 content 영역에 마진이 포함되어야
+            // hcD가 이미 margin 오프셋을 적용하므로, content_height에 마진을 더해야 정확한 수직 정렬이 된다.
+            content_height_mm =
+                round_to_2dp(content_height_mm + top_margin_mm + _bottom_margin_mm);
+
             // 이미지-only 셀(특히 큰 이미지) 보정:
             // 텍스트가 없고 이미지가 셀 높이에 근접하면, fixture처럼 hcI를 아래로 밀지 않고 top=0으로 둡니다.
             if !cell_has_text {

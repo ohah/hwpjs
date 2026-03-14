@@ -231,10 +231,8 @@ pub struct ParaShape {
     pub left_margin: INT32,
     /// 오른쪽 여백 / Right margin
     pub right_margin: INT32,
-    /// 들여쓰기 / Indent
+    /// 들여쓰기/내어쓰기 (양수=들여쓰기, 음수=내어쓰기) / Indent (positive) / Outdent (negative)
     pub indent: INT32,
-    /// 내어쓰기 / Outdent
-    pub outdent: INT32,
     /// 문단 위 간격 / Paragraph top spacing
     pub top_spacing: INT32,
     /// 문단 아래 간격 / Paragraph bottom spacing
@@ -327,17 +325,12 @@ impl ParaShape {
         ]);
         offset += 4;
 
-        // INT32 들여쓰기 / INT32 indent
+        // INT32 들여쓰기/내어쓰기 (양수=들여쓰기, 음수=내어쓰기)
+        // ⚠️ 원본 스펙(표 43)에는 "들여쓰기"와 "내어쓰기"가 별도 INT32 필드(총 8바이트)로 기재되어 있으나,
+        // 실제 데이터는 단일 INT32 필드이다. 별도 필드로 파싱하면 이후 모든 오프셋이 4바이트 밀려
+        // line_spacing_old, tab_def_id 등이 잘못 읽힌다. 전체 길이 54바이트 기준으로도 단일 필드가 맞다.
+        // INT32 indent/outdent (positive = indent, negative = outdent)
         let indent = INT32::from_le_bytes([
-            data[offset],
-            data[offset + 1],
-            data[offset + 2],
-            data[offset + 3],
-        ]);
-        offset += 4;
-
-        // INT32 내어쓰기 / INT32 outdent
-        let outdent = INT32::from_le_bytes([
             data[offset],
             data[offset + 1],
             data[offset + 2],
@@ -452,7 +445,6 @@ impl ParaShape {
             left_margin,
             right_margin,
             indent,
-            outdent,
             top_spacing,
             bottom_spacing,
             line_spacing_old,

@@ -2308,13 +2308,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2327,7 +2326,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -2352,13 +2351,12 @@
         "left_margin": 4000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2371,7 +2369,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 1
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -2396,13 +2394,12 @@
         "left_margin": 6000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2415,7 +2412,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 2
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -2440,13 +2437,12 @@
         "left_margin": 8000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2459,7 +2455,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 3
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -2484,13 +2480,12 @@
         "left_margin": 10000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2503,7 +2498,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 4
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -2528,13 +2523,12 @@
         "left_margin": 12000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2547,7 +2541,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 5
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -2572,13 +2566,12 @@
         "left_margin": 14000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2591,7 +2584,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 6
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -2616,13 +2609,12 @@
         "left_margin": 3000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2635,7 +2627,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -2660,13 +2652,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 150,
-        "line_spacing_old": 2,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 150,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2679,7 +2670,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 150
       },
       {
         "attributes1": {
@@ -2704,13 +2695,12 @@
         "left_margin": 2000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2723,7 +2713,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -2748,13 +2738,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -2620,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2765,9 +2754,9 @@
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -2792,13 +2781,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -2811,7 +2799,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       }
     ],
     "styles": [

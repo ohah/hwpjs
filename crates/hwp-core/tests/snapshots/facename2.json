@@ -1350,13 +1350,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -1369,7 +1368,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -1394,13 +1393,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -1413,7 +1411,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       }
     ],
     "styles": [
