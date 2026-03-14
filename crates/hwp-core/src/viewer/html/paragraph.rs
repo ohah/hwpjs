@@ -459,6 +459,7 @@ pub fn render_paragraph(
     // 구역/단 등 인라인 콘텐츠 (문단 끝에 붙임) / Section/column etc. inline content (append at end of paragraph)
     let mut extra_contents: Vec<String> = Vec::new();
     let mut shape_htmls: Vec<String> = Vec::new();
+    let mut inline_shape_htmls: Vec<(usize, String)> = Vec::new();
 
     for record in &paragraph.records {
         match record {
@@ -582,12 +583,15 @@ pub fn render_paragraph(
                 if let Some(s) = ctrl_result.shape_html {
                     shape_htmls.push(s);
                 }
-                // SHAPE_OBJECT(11)는 "표/그리기 개체" 공통 제어문자이므로, ctrl_id가 "tbl "인 경우에만
-                // ParaText의 SHAPE_OBJECT 위치를 순서대로 매칭하여 anchor를 부여합니다.
-                if header.ctrl_id == "tbl " {
+                // SHAPE_OBJECT(11)는 "표/그리기 개체" 공통 제어문자이므로,
+                // tbl / gso 모두 anchor를 소비하며 cursor를 진행시킵니다.
+                if header.ctrl_id == "tbl " || header.ctrl_id == "gso " {
                     let anchor = shape_object_anchor_positions
                         .get(shape_object_anchor_cursor)
                         .copied();
+                    if let Some(s) = ctrl_result.inline_shape_html {
+                        inline_shape_htmls.push((anchor.unwrap_or(0), s));
+                    }
                     shape_object_anchor_cursor = shape_object_anchor_cursor.saturating_add(1);
                     for t in ctrl_result.tables.iter() {
                         let mut tt = t.clone();
@@ -740,7 +744,7 @@ pub fn render_paragraph(
             original_text_len: paragraph.para_header.text_char_count as usize,
             images: &inline_images, // like_letters=true인 이미지만 line_segment에 포함 / Include only images with like_letters=true in line_segment
             tables: inline_table_infos.as_slice(), // like_letters=true인 테이블 포함 / Include tables with like_letters=true
-            shape_htmls: &[],
+            shape_htmls: &inline_shape_htmls,
             marker_info: marker_info.as_ref(),
             paragraph_markers: &[],
             footnote_refs: &footnote_refs,

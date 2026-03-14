@@ -111,7 +111,14 @@ pub fn process_shape_object<'a>(
     });
 
     if has_rectangle_shape {
-        if let Some(html) = render_rectangle_shape(header, children, document, options, shape_pos) {
+        if like_letters {
+            if let Some(html) = render_rectangle_shape_inline(header, children, document, options) {
+                result.inline_shape_html = Some(html);
+                return result;
+            }
+        } else if let Some(html) =
+            render_rectangle_shape(header, children, document, options, shape_pos)
+        {
             result.shape_html = Some(html);
             return result;
         }
@@ -208,8 +215,8 @@ fn render_rectangle_shape(
         .map(|d| d.line_info.line_type)
         .unwrap_or(LineType::Solid);
     let _has_stroke = !matches!(line_type, LineType::None);
-    let stroke_width = 0.12;
-    let half_stroke = 0.06;
+    let stroke_width = compute_stroke_width(drawing_obj);
+    let half_stroke = round_to_2dp(stroke_width / 2.0);
 
     if shape_width_hu == 0 || shape_height_hu == 0 {
         return None;
@@ -657,6 +664,162 @@ fn render_rectangle_shape(
         h = hsg_h_mm,
         hsr = hsr_html,
         caption = caption_html,
+    );
+
+    Some(html)
+}
+
+/// DrawingObjectCommon의 thickness에서 stroke_width(mm) 계산
+/// Compute stroke width in mm from DrawingObjectCommon thickness
+fn compute_stroke_width(drawing_obj: Option<&DrawingObjectCommon>) -> f64 {
+    let thickness = drawing_obj.map(|d| d.line_info.thickness).unwrap_or(0);
+    if thickness <= 0 {
+        return 0.12; // 기본값 / default
+    }
+    let w = round_to_2dp(int32_to_mm(thickness));
+    if w < 0.01 {
+        0.12
+    } else {
+        w
+    }
+}
+
+/// like_letters=true인 ShapeComponentRectangle을 인라인 hsR HTML로 렌더링
+/// Render ShapeComponentRectangle as inline hsR HTML when like_letters=true
+fn render_rectangle_shape_inline(
+    header: &CtrlHeader,
+    children: &[ParagraphRecord],
+    document: &HwpDocument,
+    options: &HtmlOptions,
+) -> Option<String> {
+    let _attribute = match &header.data {
+        CtrlHeaderData::ObjectCommon { attribute, .. } => attribute,
+        _ => return None,
+    };
+
+    let mut shape_width_hu: u32 = 0;
+    let mut shape_height_hu: u32 = 0;
+    let mut shape_content_paragraphs: Option<&[Paragraph]> = None;
+    let mut shape_vertical_align = crate::document::bodytext::list_header::VerticalAlign::Top;
+    let mut drawing_obj: Option<&DrawingObjectCommon> = None;
+
+    for record in children {
+        if let ParagraphRecord::ShapeComponent {
+            shape_component,
+            drawing_object_common,
+            children: sc_children,
+        } = record
+        {
+            shape_width_hu = shape_component.width;
+            shape_height_hu = shape_component.height;
+            drawing_obj = drawing_object_common.as_ref();
+            for child in sc_children {
+                if let ParagraphRecord::ListHeader { header, paragraphs } = child {
+                    shape_content_paragraphs = Some(paragraphs);
+                    shape_vertical_align = header.attribute.vertical_align;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    if shape_width_hu == 0 || shape_height_hu == 0 {
+        return None;
+    }
+
+    let stroke_width = compute_stroke_width(drawing_obj);
+    let half_stroke = round_to_2dp(stroke_width / 2.0);
+
+    let shape_w_raw = int32_to_mm(shape_width_hu as i32);
+    let shape_h_raw = int32_to_mm(shape_height_hu as i32);
+    let shape_w_mm = round_to_2dp(shape_w_raw);
+    let shape_h_mm = round_to_2dp(shape_h_raw);
+    let hsr_w_mm = round_to_2dp(shape_w_mm + stroke_width);
+    let hsr_h_mm = round_to_2dp(shape_h_mm + stroke_width);
+
+    let has_content = shape_content_paragraphs.is_some();
+
+    // SVG fill / stroke
+    let fill_info = drawing_obj.map(|d| &d.fill_info);
+    let (svg_defs, fill_attr) = build_svg_fill(fill_info, shape_w_raw, shape_h_raw);
+    let stroke_style = build_svg_stroke(drawing_obj, stroke_width);
+
+    let (path_start_x, path_start_y, vb_margin) = if has_content {
+        (half_stroke, half_stroke, 0.30)
+    } else {
+        (0.0, 0.0, 0.15)
+    };
+
+    let path_end_x = round_to_2dp(shape_w_raw + path_start_x);
+    let path_end_y = round_to_2dp(shape_h_raw + path_start_y);
+    let svg_vb_w = round_to_2dp(hsr_w_mm + 2.0 * vb_margin);
+    let svg_vb_h = round_to_2dp(hsr_h_mm + 2.0 * vb_margin);
+    let svg_style_w = round_to_2dp(hsr_w_mm + 2.0 * 0.15);
+    let svg_style_h = round_to_2dp(hsr_h_mm + 2.0 * 0.15);
+
+    let path_d = format!(
+        "M{sx},{sy}L{ex},{sy}L{ex},{ey}L{sx},{ey}L{sx},{sy}Z ",
+        sx = path_start_x,
+        sy = path_start_y,
+        ex = path_end_x,
+        ey = path_end_y,
+    );
+
+    let path_style_attr = if stroke_style.is_empty() {
+        String::new()
+    } else {
+        format!(r#" style="{}""#, stroke_style)
+    };
+
+    let svg_html = format!(
+        r#"<svg class="hs" viewBox="-{vm} -{vm} {vbw} {vbh}" style="left:-0.15mm;top:-0.15mm;width:{sw}mm;height:{sh}mm;">{defs}<path fill="{fill}" d="{d}"{ps}></path></svg>"#,
+        vm = vb_margin,
+        vbw = svg_vb_w,
+        vbh = svg_vb_h,
+        sw = svg_style_w,
+        sh = svg_style_h,
+        defs = svg_defs,
+        fill = fill_attr,
+        d = path_d,
+        ps = path_style_attr,
+    );
+
+    let content_html = if let Some(paras) = shape_content_paragraphs {
+        render_shape_content(
+            paras,
+            document,
+            options,
+            Some((shape_height_hu, stroke_width)),
+            shape_vertical_align,
+        )
+    } else {
+        String::new()
+    };
+
+    let prefix = &options.css_class_prefix;
+
+    let hst_html = if has_content {
+        format!(
+            r#"<div class="{p}hsT" style="left:-{hs}mm;top:-{hs}mm;width:{w}mm;height:{h}mm;">{svg}{content}</div>"#,
+            p = prefix,
+            hs = half_stroke,
+            w = hsr_w_mm,
+            h = hsr_h_mm,
+            svg = svg_html,
+            content = content_html,
+        )
+    } else {
+        svg_html
+    };
+
+    // 인라인: display:inline-block;position:relative;vertical-align:middle
+    let html = format!(
+        r#"<div class="{p}hsR" style="top:0mm;margin-bottom:0mm;left:0mm;margin-right:0mm;width:{w}mm;height:{h}mm;display:inline-block;position:relative;vertical-align:middle;">{hst}</div>"#,
+        p = prefix,
+        w = hsr_w_mm,
+        h = hsr_h_mm,
+        hst = hst_html,
     );
 
     Some(html)

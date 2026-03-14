@@ -1015,7 +1015,13 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                         None,
                                         None,
                                     );
-                                    if let Some(shape_html) = ctrl_result.shape_html {
+                                    if let Some(ref inline_html) = ctrl_result.inline_shape_html {
+                                        // like_letters=true: 이미 인라인 형태
+                                        if let Some(anchor_pos) = anchor {
+                                            mc_shape_htmls.push((anchor_pos, inline_html.clone()));
+                                            mc_has_inline_content = true;
+                                        }
+                                    } else if let Some(shape_html) = ctrl_result.shape_html {
                                         // hsG 래핑을 hsR 인라인으로 변환 / Convert hsG wrapping to inline hsR
                                         let inline_html = convert_shape_to_inline(&shape_html);
                                         if let Some(anchor_pos) = anchor {
