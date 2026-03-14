@@ -200,10 +200,19 @@ fn vertical_segment_borderline(
         }
     }
 
+    // 인접 셀 경계에서 primary border가 line_type=0(선 없음)이면
+    // secondary border를 시도한다. 한쪽 셀이 "선 없음"이라도
+    // 반대쪽 셀이 유효한 border를 가지면 해당 border를 사용해야 한다.
     let cell_border = if is_left_edge {
-        from_right_cell_left.or(from_left_cell_right)
+        match &from_right_cell_left {
+            Some(b) if b.line_type == 0 => from_left_cell_right.or(from_right_cell_left),
+            _ => from_right_cell_left.or(from_left_cell_right),
+        }
     } else {
-        from_left_cell_right.or(from_right_cell_left)
+        match &from_left_cell_right {
+            Some(b) if b.line_type == 0 => from_right_cell_left.or(from_left_cell_right),
+            _ => from_left_cell_right.or(from_right_cell_left),
+        }
     };
 
     // 외곽 테두리 선택 로직: 셀 border와 table default 중 더 두꺼운 것을 사용
@@ -311,10 +320,19 @@ fn horizontal_segment_borderline(
         }
     }
 
+    // 인접 셀 경계에서 primary border가 line_type=0(선 없음)이면
+    // secondary border를 시도한다. 한쪽 셀이 "선 없음"이라도
+    // 반대쪽 셀이 유효한 border를 가지면 해당 border를 사용해야 한다.
     let cell_border = if is_top_edge {
-        from_lower_cell_top.or(from_upper_cell_bottom)
+        match &from_lower_cell_top {
+            Some(b) if b.line_type == 0 => from_upper_cell_bottom.or(from_lower_cell_top),
+            _ => from_lower_cell_top.or(from_upper_cell_bottom),
+        }
     } else {
-        from_upper_cell_bottom.or(from_lower_cell_top)
+        match &from_upper_cell_bottom {
+            Some(b) if b.line_type == 0 => from_lower_cell_top.or(from_upper_cell_bottom),
+            _ => from_upper_cell_bottom.or(from_lower_cell_top),
+        }
     };
 
     // 외곽 테두리 선택 로직: 셀 border와 table default 중 더 두꺼운 것을 사용
