@@ -1801,3 +1801,687 @@ fn test_debug_charshape_strikethrough() {
 }
 
 // test_table_bug_per_page_html_snapshots는 test_all_fixtures_html_snapshots에 통합됨
+
+/// table-bug.hwp page 10의 테이블 셀 구조를 디버그 출력하는 테스트 (수동 실행 전용)
+/// Debug test to print table cell structure on page 10 of table-bug.hwp (manual only)
+/// cargo test --package hwp-core test_debug_table_bug_page10 -- --ignored --nocapture
+#[test]
+#[ignore]
+fn test_debug_table_bug_page10() {
+    use hwp_core::document::bodytext::ctrl_header::{CtrlHeaderData, CtrlId};
+    use std::collections::BTreeSet;
+
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let fixtures_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("fixtures");
+    let snapshots_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("snapshots");
+
+    let hwp_path = fixtures_dir.join("table-bug.hwp");
+    if !hwp_path.exists() {
+        eprintln!("table-bug.hwp not found, skipping test");
+        return;
+    }
+
+    let parser = HwpParser::new();
+    let data = std::fs::read(&hwp_path).unwrap();
+    let document = parser.parse(&data).unwrap();
+
+    // Generate HTML pages to determine page boundaries
+    let options = hwp_core::viewer::html::HtmlOptions {
+        image_output_dir: None,
+        html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
+        include_version: Some(true),
+        include_page_info: Some(true),
+        css_class_prefix: String::new(),
+    };
+    let css_filename = "table-bug_style.css";
+    let html_pages = document.to_html_pages(&options, css_filename);
+
+    println!("=== Total pages: {} ===", html_pages.pages.len());
+    assert!(
+        html_pages.pages.len() >= 10,
+        "Should have at least 10 pages, found {}",
+        html_pages.pages.len()
+    );
+
+    // Page 10 (0-indexed = 9)
+    let page10 = &html_pages.pages[9];
+    let htb_count = page10.matches("class=\"htb\"").count();
+    let hce_count = page10.matches("class=\"hce\"").count();
+    println!(
+        "=== Page 10 HTML stats: {} tables (htb), {} cells (hce) ===",
+        htb_count, hce_count
+    );
+
+    let section = &document.body_text.sections[0];
+    let border_fills = &document.doc_info.border_fill;
+
+    // Helper: convert HWPUNIT (u32) to mm
+    fn hu_to_mm(v: u32) -> f64 {
+        (v as f64 / 7200.0) * 25.4
+    }
+    fn round2(v: f64) -> f64 {
+        (v * 100.0).round() / 100.0
+    }
+
+    // Helper: get border fill by 1-indexed id
+    fn get_bf(
+        border_fills: &[hwp_core::document::docinfo::border_fill::BorderFill],
+        id: u16,
+    ) -> Option<&hwp_core::document::docinfo::border_fill::BorderFill> {
+        if id == 0 {
+            return None;
+        }
+        border_fills.get((id as usize).wrapping_sub(1))
+    }
+
+    fn border_desc(
+        border_fills: &[hwp_core::document::docinfo::border_fill::BorderFill],
+        id: u16,
+        side: usize, // 0=Left,1=Right,2=Top,3=Bottom
+    ) -> String {
+        let side_name = ["L", "R", "T", "B"][side];
+        match get_bf(border_fills, id) {
+            Some(bf) => {
+                let b = &bf.borders[side];
+                format!("bf{}:{} lt={} w={}", id, side_name, b.line_type, b.width)
+            }
+            None => format!("bf{}:{} (none)", id, side_name),
+        }
+    }
+
+    // Collect Table #10 (paragraph 89) with its CtrlHeader height
+    struct TableWithHeader {
+        table: hwp_core::document::bodytext::table::Table,
+        ctrl_header_height_hu: Option<u32>,
+        ctrl_header_width_hu: Option<u32>,
+    }
+
+    let mut table10: Option<TableWithHeader> = None;
+    let mut table_counter: usize = 0;
+
+    for paragraph in &section.paragraphs {
+        for record in &paragraph.records {
+            if let ParagraphRecord::CtrlHeader {
+                header, children, ..
+            } = record
+            {
+                if header.ctrl_id == CtrlId::TABLE {
+                    table_counter += 1;
+                    if table_counter == 10 {
+                        let mut tbl = None;
+                        for child in children {
+                            if let ParagraphRecord::Table { table } = child {
+                                tbl = Some(table.clone());
+                                break;
+                            }
+                        }
+                        if let Some(t) = tbl {
+                            let (h, w) =
+                                if let CtrlHeaderData::ObjectCommon { height, width, .. } =
+                                    &header.data
+                                {
+                                    (Some(height.0), Some(width.0))
+                                } else {
+                                    (None, None)
+                                };
+                            table10 = Some(TableWithHeader {
+                                table: t,
+                                ctrl_header_height_hu: h,
+                                ctrl_header_width_hu: w,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let tw = table10.expect("Table #10 not found");
+    let table = &tw.table;
+    let ctrl_h_mm = tw.ctrl_header_height_hu.map(hu_to_mm);
+    let ctrl_w_mm = tw.ctrl_header_width_hu.map(hu_to_mm);
+
+    println!("\n=== Table #10 Details ===");
+    println!(
+        "  rows={}, cols={}, cells={}, table_border_fill_id={}",
+        table.attributes.row_count,
+        table.attributes.col_count,
+        table.cells.len(),
+        table.attributes.border_fill_id
+    );
+    println!(
+        "  ctrl_header: height={:.2}mm, width={:.2}mm",
+        ctrl_h_mm.unwrap_or(0.0),
+        ctrl_w_mm.unwrap_or(0.0)
+    );
+    println!("  row_cols: {:?}", table.attributes.row_cols);
+
+    // ====================================================================
+    // Compute row_positions (replicating geometry.rs row_positions logic)
+    // ====================================================================
+    let row_count = table.attributes.row_count as usize;
+    let base_row_height_mm = if let Some(ch) = ctrl_h_mm {
+        if row_count > 0 {
+            ch / row_count as f64
+        } else {
+            0.0
+        }
+    } else {
+        0.0
+    };
+
+    // For each row, find max cell height among cells with row_span=1 in that row
+    let mut row_heights: Vec<f64> = vec![0.0; row_count];
+    for cell in &table.cells {
+        if cell.cell_attributes.row_span == 1 {
+            let row_idx = cell.cell_attributes.row_address as usize;
+            if row_idx < row_count {
+                let cell_height = hu_to_mm(cell.cell_attributes.height.0);
+                row_heights[row_idx] = row_heights[row_idx].max(cell_height);
+            }
+        }
+    }
+    // Fallback: use base_row_height for rows with no height
+    for h in row_heights.iter_mut() {
+        if *h < 0.01 && base_row_height_mm > 0.0 {
+            *h = base_row_height_mm;
+        }
+    }
+
+    let mut row_positions: Vec<f64> = vec![0.0];
+    let mut cumulative = 0.0;
+    for row_idx in 0..row_count {
+        cumulative += row_heights[row_idx];
+        row_positions.push(round2(cumulative));
+    }
+
+    println!("\n=== Row positions (mm) ===");
+    for (i, pos) in row_positions.iter().enumerate() {
+        let height = if i < row_count {
+            format!("  height={:.2}mm", row_heights[i])
+        } else {
+            String::new()
+        };
+        println!("  row_pos[{}] = {:.2}mm{}", i, pos, height);
+    }
+
+    // ====================================================================
+    // Compute column_positions (replicating geometry.rs column_positions)
+    // ====================================================================
+    // calculate_cell_left: sum widths of cells with col_address < target in same row
+    fn calc_cell_left(
+        table: &hwp_core::document::bodytext::table::Table,
+        cell: &hwp_core::document::bodytext::table::TableCell,
+    ) -> f64 {
+        let row_addr = cell.cell_attributes.row_address;
+        let target_col = cell.cell_attributes.col_address;
+        let mut row_cells: Vec<_> = table
+            .cells
+            .iter()
+            .filter(|c| {
+                let c_row = c.cell_attributes.row_address;
+                let c_rs = if c.cell_attributes.row_span == 0 {
+                    1
+                } else {
+                    c.cell_attributes.row_span
+                };
+                c_row <= row_addr && row_addr < c_row + c_rs
+            })
+            .collect();
+        row_cells.sort_by_key(|c| c.cell_attributes.col_address);
+        let mut left = 0.0;
+        for rc in &row_cells {
+            if rc.cell_attributes.col_address < target_col {
+                left += hu_to_mm(rc.cell_attributes.width.0);
+            } else {
+                break;
+            }
+        }
+        left
+    }
+
+    let mut col_boundaries: Vec<f64> = vec![0.0];
+    for cell in &table.cells {
+        let cl = calc_cell_left(table, cell);
+        let cw = hu_to_mm(cell.cell_attributes.width.0);
+        col_boundaries.push(round2(cl));
+        col_boundaries.push(round2(cl + cw));
+    }
+    col_boundaries.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    col_boundaries.dedup_by(|a, b| (*a - *b).abs() < 0.01);
+    let col_positions = col_boundaries;
+
+    println!("\n=== Column positions (mm) ===");
+    for (i, pos) in col_positions.iter().enumerate() {
+        println!("  col_pos[{}] = {:.2}mm", i, pos);
+    }
+
+    let content_width = *col_positions.last().unwrap_or(&0.0);
+    let content_height = *row_positions.last().unwrap_or(&0.0);
+    println!(
+        "\n  content size: {:.2}mm x {:.2}mm",
+        content_width, content_height
+    );
+
+    // ====================================================================
+    // Print cells for rows 17-23 (the bottom section around y=172-223mm)
+    // ====================================================================
+    println!("\n=== Cells in rows 17-23 (bottom section) ===");
+    for cell in &table.cells {
+        let ca = &cell.cell_attributes;
+        let row = ca.row_address as usize;
+        let row_end = row
+            + (if ca.row_span == 0 {
+                1
+            } else {
+                ca.row_span as usize
+            });
+        // Show cells that touch rows 17-23
+        if row_end > 17 || row >= 17 {
+            let cell_left = round2(calc_cell_left(table, cell));
+            let cell_top = if row < row_positions.len() {
+                row_positions[row]
+            } else {
+                0.0
+            };
+            let cell_bottom = if row_end < row_positions.len() {
+                row_positions[row_end]
+            } else {
+                content_height
+            };
+            println!(
+                "  row={}-{}, col={}, cs={}, left={:.2}, top={:.2}, bottom={:.2}, w={:.2}, h_attr={:.2}, bf_id={}",
+                ca.row_address,
+                row_end - 1,
+                ca.col_address,
+                ca.col_span,
+                cell_left,
+                cell_top,
+                cell_bottom,
+                hu_to_mm(ca.width.0),
+                hu_to_mm(ca.height.0),
+                ca.border_fill_id
+            );
+        }
+    }
+
+    // ====================================================================
+    // Horizontal border analysis at each row boundary for rows 17-24
+    // ====================================================================
+    println!("\n=== Horizontal border analysis (row boundaries 17-24) ===");
+    println!("  (For each row_y: upper cell bottom border vs lower cell top border per column segment)\n");
+
+    let eps = 0.02;
+
+    for ri in 17..row_positions.len().min(25) {
+        let row_y = row_positions[ri];
+        let is_top_edge = row_y.abs() < 0.01;
+        let is_bottom_edge = (row_y - content_height).abs() < 0.01;
+
+        println!(
+            "--- row boundary {} at y={:.2}mm {} ---",
+            ri,
+            row_y,
+            if is_bottom_edge {
+                "(BOTTOM EDGE)"
+            } else if is_top_edge {
+                "(TOP EDGE)"
+            } else {
+                ""
+            }
+        );
+
+        // For each column segment, find upper/lower cell and their borders
+        for ci in 0..col_positions.len().saturating_sub(1) {
+            let x0 = col_positions[ci];
+            let x1 = col_positions[ci + 1];
+
+            let mut upper_info: Option<(u16, u16, u16, u16)> = None; // (row, col, bf_id, col_span)
+            let mut lower_info: Option<(u16, u16, u16, u16)> = None;
+
+            // Sort cells for deterministic order
+            let mut sorted_cells: Vec<_> = table.cells.iter().collect();
+            sorted_cells
+                .sort_by_key(|c| (c.cell_attributes.row_address, c.cell_attributes.col_address));
+
+            for cell in &sorted_cells {
+                let ca = &cell.cell_attributes;
+                let row = ca.row_address as usize;
+                let rs = if ca.row_span == 0 {
+                    1usize
+                } else {
+                    ca.row_span as usize
+                };
+                if row >= row_positions.len() || row + rs >= row_positions.len() {
+                    continue;
+                }
+                let cell_top = row_positions[row];
+                let cell_bottom = row_positions[row + rs];
+                let cell_left = round2(calc_cell_left(table, cell));
+                let cell_width = hu_to_mm(ca.width.0);
+                let cell_right = round2(cell_left + cell_width);
+
+                // Check x overlap
+                let overlaps_x = !(x1 <= cell_left + eps || x0 >= cell_right - eps);
+                if !overlaps_x {
+                    continue;
+                }
+
+                // Upper cell: its bottom matches row_y
+                if (cell_bottom - row_y).abs() <= eps && upper_info.is_none() {
+                    upper_info = Some((
+                        ca.row_address,
+                        ca.col_address,
+                        ca.border_fill_id,
+                        ca.col_span,
+                    ));
+                }
+                // Lower cell: its top matches row_y
+                if (cell_top - row_y).abs() <= eps && lower_info.is_none() {
+                    lower_info = Some((
+                        ca.row_address,
+                        ca.col_address,
+                        ca.border_fill_id,
+                        ca.col_span,
+                    ));
+                }
+            }
+
+            // Only print if there's something interesting
+            if upper_info.is_some() || lower_info.is_some() {
+                let upper_str = match upper_info {
+                    Some((r, c, bf, cs)) => format!(
+                        "UPPER r{}c{}(cs={}) {} | {}",
+                        r,
+                        c,
+                        cs,
+                        border_desc(border_fills, bf, 3), // Bottom border
+                        border_desc(border_fills, bf, 1), // Right border (for vertical context)
+                    ),
+                    None => "UPPER: (none)".to_string(),
+                };
+                let lower_str = match lower_info {
+                    Some((r, c, bf, cs)) => format!(
+                        "LOWER r{}c{}(cs={}) {} | {}",
+                        r,
+                        c,
+                        cs,
+                        border_desc(border_fills, bf, 2), // Top border
+                        border_desc(border_fills, bf, 0), // Left border (for vertical context)
+                    ),
+                    None => "LOWER: (none)".to_string(),
+                };
+                println!("  x=[{:.2}-{:.2}]: {} ;; {}", x0, x1, upper_str, lower_str);
+            }
+        }
+        println!();
+    }
+
+    // ====================================================================
+    // Vertical border analysis at each column boundary for rows 17-23
+    // ====================================================================
+    println!("\n=== Vertical border analysis (column boundaries, rows 17-23) ===");
+    println!(
+        "  (For each col_x: left cell right border vs right cell left border per row segment)\n"
+    );
+
+    for &col_x in &col_positions {
+        let is_left_edge = col_x.abs() < 0.01;
+        let is_right_edge = (col_x - content_width).abs() < 0.01;
+
+        let mut has_data = false;
+        let mut lines_buf = String::new();
+
+        for ri in 17..row_positions.len().saturating_sub(1).min(24) {
+            let y0 = row_positions[ri];
+            let y1 = row_positions[ri + 1];
+
+            let mut left_cell_info: Option<(u16, u16, u16)> = None; // (row, col, bf_id)
+            let mut right_cell_info: Option<(u16, u16, u16)> = None;
+
+            let mut sorted_cells: Vec<_> = table.cells.iter().collect();
+            sorted_cells
+                .sort_by_key(|c| (c.cell_attributes.row_address, c.cell_attributes.col_address));
+
+            for cell in &sorted_cells {
+                let ca = &cell.cell_attributes;
+                let row = ca.row_address as usize;
+                let rs = if ca.row_span == 0 {
+                    1usize
+                } else {
+                    ca.row_span as usize
+                };
+                if row >= row_positions.len() || row + rs >= row_positions.len() {
+                    continue;
+                }
+                let cell_top = row_positions[row];
+                let cell_bottom = row_positions[row + rs];
+                let cell_left = round2(calc_cell_left(table, cell));
+                let cell_width = hu_to_mm(ca.width.0);
+                let cell_right = round2(cell_left + cell_width);
+
+                // Check y overlap
+                let overlaps_y = !(y1 <= cell_top + eps || y0 >= cell_bottom - eps);
+                if !overlaps_y {
+                    continue;
+                }
+
+                // Left cell: its right edge matches col_x
+                if (cell_right - col_x).abs() <= eps && left_cell_info.is_none() {
+                    left_cell_info = Some((ca.row_address, ca.col_address, ca.border_fill_id));
+                }
+                // Right cell: its left edge matches col_x
+                if (cell_left - col_x).abs() <= eps && right_cell_info.is_none() {
+                    right_cell_info = Some((ca.row_address, ca.col_address, ca.border_fill_id));
+                }
+            }
+
+            if left_cell_info.is_some() || right_cell_info.is_some() {
+                has_data = true;
+                let left_str = match left_cell_info {
+                    Some((r, c, bf)) => format!(
+                        "LEFT r{}c{} {}",
+                        r,
+                        c,
+                        border_desc(border_fills, bf, 1) // Right border
+                    ),
+                    None => "LEFT: (none)".to_string(),
+                };
+                let right_str = match right_cell_info {
+                    Some((r, c, bf)) => format!(
+                        "RIGHT r{}c{} {}",
+                        r,
+                        c,
+                        border_desc(border_fills, bf, 0) // Left border
+                    ),
+                    None => "RIGHT: (none)".to_string(),
+                };
+                lines_buf.push_str(&format!(
+                    "    y=[{:.2}-{:.2}]: {} ;; {}\n",
+                    y0, y1, left_str, right_str
+                ));
+            }
+        }
+
+        if has_data {
+            println!(
+                "  col_x={:.2}mm {}:",
+                col_x,
+                if is_left_edge {
+                    "(LEFT EDGE)"
+                } else if is_right_edge {
+                    "(RIGHT EDGE)"
+                } else {
+                    ""
+                }
+            );
+            print!("{}", lines_buf);
+            println!();
+        }
+    }
+
+    // ====================================================================
+    // Print border fill details for all IDs used in Table #10
+    // ====================================================================
+    let mut all_bf_ids = BTreeSet::new();
+    all_bf_ids.insert(table.attributes.border_fill_id);
+    for cell in &table.cells {
+        all_bf_ids.insert(cell.cell_attributes.border_fill_id);
+    }
+
+    println!("\n=== Border fill details for Table #10 ===");
+    for bf_id in &all_bf_ids {
+        if *bf_id == 0 {
+            println!("  border_fill_id={}: (none/default)", bf_id);
+            continue;
+        }
+        let idx = (*bf_id as usize).wrapping_sub(1);
+        if idx < border_fills.len() {
+            let bf = &border_fills[idx];
+            let dir_names = ["Left", "Right", "Top", "Bottom"];
+            let mut parts: Vec<String> = Vec::new();
+            for (i, border) in bf.borders.iter().enumerate() {
+                parts.push(format!(
+                    "{}:lt={},w={},c=#{:06X}",
+                    dir_names[i], border.line_type, border.width, border.color.0
+                ));
+            }
+            println!("  bf_id={}: {}", bf_id, parts.join(" | "));
+        } else {
+            println!("  bf_id={}: OUT OF RANGE", bf_id);
+        }
+    }
+
+    // ====================================================================
+    // Specifically: what happens at y~195.91 and x~131.24?
+    // Identify which row boundary / col boundary these correspond to
+    // ====================================================================
+    println!("\n=== Target coordinates analysis ===");
+    println!("  Looking for y~195.91mm and x~131.24mm in row/col positions...\n");
+
+    for (i, pos) in row_positions.iter().enumerate() {
+        if (*pos - 195.91).abs() < 1.0 {
+            println!("  ** row_pos[{}] = {:.2}mm (near target y=195.91)", i, pos);
+        }
+    }
+    for (i, pos) in col_positions.iter().enumerate() {
+        if (*pos - 131.24).abs() < 1.0 {
+            println!("  ** col_pos[{}] = {:.2}mm (near target x=131.24)", i, pos);
+        }
+    }
+
+    // Also check absolute positions: the table is placed on the page with
+    // some offset. The target y=195.91 and x=131.24 are page-absolute,
+    // so let's show the CtrlHeader offsets.
+    println!("\n  CtrlHeader offsets for Table #10:");
+    for paragraph in &section.paragraphs {
+        let mut tc = 0usize;
+        for record in &paragraph.records {
+            if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                if header.ctrl_id == CtrlId::TABLE {
+                    tc += 1;
+                    if tc == 10 {
+                        // this count resets per paragraph, but table #10 is at paragraph 89
+                        // so we just match on table count = 10 globally below
+                    }
+                    if let CtrlHeaderData::ObjectCommon {
+                        offset_x,
+                        offset_y,
+                        width,
+                        height,
+                        ..
+                    } = &header.data
+                    {
+                        if tc == 10 {
+                            println!(
+                                "    offset_x={:.2}mm ({}hu), offset_y={:.2}mm ({}hu)",
+                                offset_x.to_mm(),
+                                offset_x.0,
+                                offset_y.to_mm(),
+                                offset_y.0
+                            );
+                            println!(
+                                "    width={:.2}mm ({}hu), height={:.2}mm ({}hu)",
+                                hu_to_mm(width.0),
+                                width.0,
+                                hu_to_mm(height.0),
+                                height.0
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Cross-reference: need to know where this table starts on page 10
+    // by looking at the HTML output for position info
+    println!("\n  Extracting table position from page 10 HTML...");
+    // Find the htb div style
+    if let Some(htb_start) = page10.find("class=\"htb\"") {
+        // Go back to find the style
+        let before_htb = &page10[..htb_start];
+        if let Some(style_start) = before_htb.rfind("style=\"") {
+            let style_slice = &page10[style_start + 7..htb_start];
+            if let Some(style_end) = style_slice.find('"') {
+                let style = &style_slice[..style_end];
+                println!("    htb style: {}", style);
+            }
+        }
+    }
+    // Find the svg element dimensions and viewBox
+    if let Some(svg_start) = page10.find("<svg") {
+        let svg_slice = &page10[svg_start..];
+        if let Some(svg_end) = svg_slice.find('>') {
+            let svg_tag = &svg_slice[..svg_end + 1];
+            println!("    svg tag: {}", svg_tag);
+        }
+    }
+    // Extract all path elements from the SVG for border analysis
+    println!("\n  SVG border paths from page 10 HTML:");
+    let mut path_count = 0;
+    let mut search_from = 0;
+    while let Some(path_start) = page10[search_from..].find("<path d=\"M") {
+        let abs_start = search_from + path_start;
+        if let Some(path_end) = page10[abs_start..].find("/>") {
+            let path_elem = &page10[abs_start..abs_start + path_end + 2];
+            // Filter paths near y~195.91 or x~131.24
+            // Extract coordinates from M{x},{y} L{x},{y}
+            if let Some(d_start) = path_elem.find("d=\"M") {
+                let coords_str = &path_elem[d_start + 4..];
+                if let Some(d_end) = coords_str.find('"') {
+                    let d_val = &coords_str[..d_end];
+                    // Parse M{x1},{y1} L{x2},{y2}
+                    let parts: Vec<&str> = d_val.split(&['M', 'L', ',', ' '][..]).collect();
+                    let nums: Vec<f64> = parts
+                        .iter()
+                        .filter(|s| !s.is_empty())
+                        .filter_map(|s| s.parse::<f64>().ok())
+                        .collect();
+                    if nums.len() >= 4 {
+                        let (x1, y1, x2, y2) = (nums[0], nums[1], nums[2], nums[3]);
+                        // Show paths near target y=195.91 or x=131.24
+                        let near_target_y = (y1 - 195.91).abs() < 2.0
+                            || (y2 - 195.91).abs() < 2.0
+                            || (y1 < 196.0 && y2 > 195.0);
+                        let near_target_x = (x1 - 131.24).abs() < 2.0
+                            || (x2 - 131.24).abs() < 2.0
+                            || (x1 < 132.0 && x2 > 130.0);
+                        if near_target_y || near_target_x {
+                            println!("    {}", path_elem);
+                            path_count += 1;
+                        }
+                    }
+                }
+            }
+            search_from = abs_start + path_end + 2;
+        } else {
+            break;
+        }
+    }
+    println!("  (Total paths near target: {})", path_count);
+}

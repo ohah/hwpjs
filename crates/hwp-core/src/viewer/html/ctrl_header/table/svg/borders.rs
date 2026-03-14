@@ -79,6 +79,29 @@ fn render_border_paths(
     )
 }
 
+/// 한컴 원본 동작: 인접 셀 border 중 더 두꺼운(visible) 것을 선택.
+/// line_type=0인 border는 건너뛰고 반대쪽을 시도.
+fn pick_thicker_border(a: Option<BorderLine>, b: Option<BorderLine>) -> Option<BorderLine> {
+    match (&a, &b) {
+        (Some(al), Some(bl)) => {
+            if al.line_type == 0 && bl.line_type == 0 {
+                a // 둘 다 선 없음
+            } else if al.line_type == 0 {
+                b
+            } else if bl.line_type == 0 {
+                a
+            } else if bl.width > al.width {
+                b
+            } else {
+                a
+            }
+        }
+        (Some(_), None) => a,
+        (None, Some(_)) => b,
+        (None, None) => None,
+    }
+}
+
 fn get_border_fill(document: &HwpDocument, id: u16) -> Option<&BorderFill> {
     if id == 0 {
         return None;
@@ -200,13 +223,11 @@ fn vertical_segment_borderline(
         }
     }
 
-    let cell_border = if is_left_edge {
-        from_right_cell_left.or(from_left_cell_right)
-    } else {
-        from_left_cell_right.or(from_right_cell_left)
-    };
+    // 한컴 원본 동작: 인접 셀 border 중 더 두꺼운 것을 사용.
+    // line_type=0(선 없음)인 border는 건너뛰고 반대쪽을 시도.
+    let cell_border = pick_thicker_border(from_left_cell_right, from_right_cell_left);
 
-    // 외곽 테두리 선택 로직: 셀 border와 table default 중 더 두꺼운 것을 사용
+    // 외곽 테두리: 셀 border와 table default 중 더 두꺼운 것을 사용.
     if is_left_edge || is_right_edge {
         match &cell_border {
             Some(cb) if cb.line_type == 0 => None,
@@ -311,13 +332,10 @@ fn horizontal_segment_borderline(
         }
     }
 
-    let cell_border = if is_top_edge {
-        from_lower_cell_top.or(from_upper_cell_bottom)
-    } else {
-        from_upper_cell_bottom.or(from_lower_cell_top)
-    };
+    // 한컴 원본 동작: 인접 셀 border 중 더 두꺼운 것을 사용.
+    let cell_border = pick_thicker_border(from_upper_cell_bottom, from_lower_cell_top);
 
-    // 외곽 테두리 선택 로직: 셀 border와 table default 중 더 두꺼운 것을 사용
+    // 외곽 테두리: 셀 border와 table default 중 더 두꺼운 것을 사용.
     if is_top_edge || is_bottom_edge {
         match &cell_border {
             Some(cb) if cb.line_type == 0 => None,

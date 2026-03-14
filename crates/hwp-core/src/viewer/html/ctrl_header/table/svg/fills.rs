@@ -4,28 +4,37 @@ use crate::HwpDocument;
 
 use crate::viewer::html::styles::round_to_2dp;
 
-use crate::viewer::html::ctrl_header::table::geometry::{
-    calculate_cell_left, calculate_cell_top, get_cell_height,
-};
+use crate::viewer::html::ctrl_header::table::geometry::calculate_cell_left;
 
 use std::collections::HashMap;
 
 /// 배경 패턴 및 면 채우기 생성 / Build background patterns and fills
+/// row_positions를 사용하여 border와 동일한 정확한 셀 위치/높이를 계산.
 pub(crate) fn render_fills(
     table: &Table,
     document: &HwpDocument,
-    ctrl_header_height_mm: Option<f64>,
-    pattern_counter: &mut usize, // 문서 레벨 pattern_counter (문서 전체에서 패턴 ID 공유) / Document-level pattern_counter (share pattern IDs across document)
-    color_to_pattern: &mut HashMap<u32, String>, // 문서 레벨 color_to_pattern (문서 전체에서 패턴 ID 공유) / Document-level color_to_pattern (share pattern IDs across document)
+    row_positions: &[f64],
+    pattern_counter: &mut usize,
+    color_to_pattern: &mut HashMap<u32, String>,
 ) -> (String, String) {
     let mut svg_paths = String::new();
     let mut pattern_defs = String::new();
 
     for cell in table.cells.iter() {
         let cell_left = calculate_cell_left(table, cell);
-        let cell_top = calculate_cell_top(table, cell, ctrl_header_height_mm);
+        let row = cell.cell_attributes.row_address as usize;
+        let row_span = if cell.cell_attributes.row_span == 0 {
+            1usize
+        } else {
+            cell.cell_attributes.row_span as usize
+        };
+        // row_positions 기반으로 정확한 top/height 계산 (border와 동일)
+        if row_positions.len() <= row || row_positions.len() <= row + row_span {
+            continue;
+        }
+        let cell_top = row_positions[row];
+        let cell_height = row_positions[row + row_span] - cell_top;
         let cell_width = cell.cell_attributes.width.to_mm();
-        let cell_height = get_cell_height(table, cell, ctrl_header_height_mm);
 
         // 셀의 border_fill_id를 사용하거나, 0이면 테이블의 기본 border_fill_id 사용
         // Use cell's border_fill_id, or table's default border_fill_id if 0
