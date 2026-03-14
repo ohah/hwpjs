@@ -340,7 +340,6 @@ pub(crate) fn render_vertical_borders(
     column_positions: &[f64],
     row_positions: &[f64],
     content: Size,
-    _ctrl_header_height_mm: Option<f64>,
 ) -> String {
     let mut svg_paths = String::new();
     let epsilon = 0.01;

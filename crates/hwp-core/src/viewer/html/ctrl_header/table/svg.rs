@@ -38,14 +38,7 @@ pub(crate) fn render_svg(
     }
     let rows = row_positions(table, content.height, document, ctrl_header_height_mm);
 
-    let vertical = borders::render_vertical_borders(
-        table,
-        document,
-        &cols,
-        &rows,
-        content,
-        ctrl_header_height_mm,
-    );
+    let vertical = borders::render_vertical_borders(table, document, &cols, &rows, content);
     let horizontal =
         borders::render_horizontal_borders(table, document, &rows, content, ctrl_header_height_mm);
 
