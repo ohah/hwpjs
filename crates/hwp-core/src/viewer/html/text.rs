@@ -4,6 +4,36 @@ use crate::document::{
     HwpDocument,
 };
 
+/// 연속 공백 변환: 첫 번째 공백은 유지, 이후 연속 공백은 &nbsp;로 변환
+/// Convert consecutive spaces: keep first space, convert subsequent to &nbsp;
+fn convert_consecutive_spaces(text: &str) -> String {
+    let mut result = String::with_capacity(text.len() * 2);
+    let mut space_count = 0u32;
+
+    for ch in text.chars() {
+        if ch == ' ' {
+            space_count += 1;
+            if space_count == 1 {
+                result.push(' ');
+            } else {
+                result.push_str("&nbsp;");
+            }
+        } else {
+            space_count = 0;
+            result.push(ch);
+        }
+    }
+
+    // trailing 단독 공백도 &nbsp;로 변환 (HTML에서 trailing space가 무시되는 것 방지)
+    // Convert trailing single space to &nbsp; (prevent HTML from ignoring trailing space)
+    if result.ends_with(' ') && !result.ends_with("&nbsp;") {
+        result.pop();
+        result.push_str("&nbsp;");
+    }
+
+    result
+}
+
 /// 텍스트를 HTML로 렌더링 / Render text to HTML
 pub fn render_text(
     text: &str,
@@ -74,18 +104,12 @@ pub fn render_text(
             }
         });
 
-        // 텍스트 스타일 적용 / Apply text styles
-        // 첫 공백과 마지막 공백을 &nbsp;로 변환 (HTML 태그 적용 전에 처리) / Convert leading and trailing spaces to &nbsp; (process before applying HTML tags)
-        let mut text_for_styling = segment_text.to_string();
-        // 첫 공백을 &nbsp;로 변환 / Convert leading space to &nbsp;
-        if text_for_styling.starts_with(' ') {
-            text_for_styling = text_for_styling.replacen(' ', "&nbsp;", 1);
-        }
-        // 마지막 공백을 &nbsp;로 변환 / Convert trailing space to &nbsp;
-        if text_for_styling.ends_with(' ') {
-            text_for_styling.pop();
-            text_for_styling.push_str("&nbsp;");
-        }
+        // 연속 공백 처리: 첫 번째 공백은 유지, 이후 연속 공백은 &nbsp;로 변환
+        // HTML에서 연속 스페이스는 하나로 합쳐지므로, 공백을 보존하려면 &nbsp; 필요
+        // (한컴 원본 HTML 역분석: "학번:  " → "학번: &nbsp;")
+        // Consecutive spaces: keep first space as-is, convert subsequent to &nbsp;
+        // HTML collapses consecutive spaces, so &nbsp; is needed to preserve them
+        let text_for_styling = convert_consecutive_spaces(&segment_text);
 
         if let Some(char_shape) = char_shape_opt {
             // CharShape 클래스 적용 / Apply CharShape class (0-based indexing to match XSL/XML format)
