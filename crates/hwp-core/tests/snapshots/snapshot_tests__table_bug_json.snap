@@ -20948,13 +20948,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -20967,7 +20966,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -20992,13 +20991,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21011,7 +21009,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -21036,13 +21034,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -2620,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21053,9 +21050,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -21080,13 +21077,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21099,7 +21095,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21124,13 +21120,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21143,7 +21138,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -21168,101 +21163,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 0,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
-        "border_spacing_left": 0,
-        "border_spacing_right": 0,
-        "border_spacing_top": 0,
-        "border_spacing_bottom": 0,
-        "attributes2": {
-          "single_line_input": 0,
-          "auto_spacing_ko_en": false,
-          "auto_spacing_ko_num": false
-        },
-        "attributes3": {
-          "line_spacing_type": "marginonly"
-        },
-        "line_spacing": 0
-      },
-      {
-        "attributes1": {
-          "line_spacing_type_old": "bycharacter",
-          "align": "justify",
-          "line_divide_en": "word",
-          "line_divide_ko": "character",
-          "use_line_grid": true,
-          "blank_min_value": 0,
-          "protect_orphan_line": false,
-          "with_next_paragraph": false,
-          "protect_paragraph": false,
-          "always_page_break_before": false,
-          "vertical_align": "baseline",
-          "line_height_matches_font": false,
-          "header_shape_type": "none",
-          "paragraph_level": 0,
-          "connect_border": false,
-          "ignore_margin": false,
-          "tail_shape": false
-        },
-        "left_margin": 0,
-        "right_margin": 0,
-        "indent": 0,
-        "outdent": 0,
-        "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
-        "number_bullet_id": 0,
-        "border_fill_id": 0,
-        "border_spacing_left": 0,
-        "border_spacing_right": 0,
-        "border_spacing_top": 0,
-        "border_spacing_bottom": 0,
-        "attributes2": {
-          "single_line_input": 0,
-          "auto_spacing_ko_en": false,
-          "auto_spacing_ko_num": false
-        },
-        "attributes3": {
-          "line_spacing_type": "marginonly"
-        },
-        "line_spacing": 0
-      },
-      {
-        "attributes1": {
-          "line_spacing_type_old": "bycharacter",
-          "align": "justify",
-          "line_divide_en": "word",
-          "line_divide_ko": "character",
-          "use_line_grid": true,
-          "blank_min_value": 0,
-          "protect_orphan_line": false,
-          "with_next_paragraph": false,
-          "protect_paragraph": false,
-          "always_page_break_before": false,
-          "vertical_align": "baseline",
-          "line_height_matches_font": false,
-          "header_shape_type": "none",
-          "paragraph_level": 0,
-          "connect_border": false,
-          "ignore_margin": false,
-          "tail_shape": false
-        },
-        "left_margin": 0,
-        "right_margin": 0,
-        "indent": 0,
-        "outdent": 0,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
-        "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21275,7 +21181,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -21300,13 +21206,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 200,
-        "line_spacing_old": 1,
-        "tab_def_id": 4,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21319,7 +21224,93 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": true,
+          "blank_min_value": 0,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "none",
+          "paragraph_level": 0,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 0,
+        "right_margin": 0,
+        "indent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 2,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 160
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "justify",
+          "line_divide_en": "word",
+          "line_divide_ko": "character",
+          "use_line_grid": true,
+          "blank_min_value": 0,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "none",
+          "paragraph_level": 0,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 0,
+        "right_margin": 0,
+        "indent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 0,
+        "line_spacing_old": 200,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 4,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 200
       },
       {
         "attributes1": {
@@ -21344,13 +21335,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21363,7 +21353,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21388,13 +21378,12 @@ expression: json
         "left_margin": 2000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21407,7 +21396,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21432,13 +21421,12 @@ expression: json
         "left_margin": 4000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21451,7 +21439,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 1
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21476,13 +21464,12 @@ expression: json
         "left_margin": 6000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21495,7 +21482,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 2
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21520,13 +21507,12 @@ expression: json
         "left_margin": 8000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21539,7 +21525,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 3
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21564,13 +21550,12 @@ expression: json
         "left_margin": 10000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21583,7 +21568,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 4
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21608,13 +21593,12 @@ expression: json
         "left_margin": 12000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21627,7 +21611,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 5
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21652,13 +21636,12 @@ expression: json
         "left_margin": 14000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21671,7 +21654,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 6
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21696,13 +21679,12 @@ expression: json
         "left_margin": 3000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21715,7 +21697,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21740,13 +21722,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 150,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 150,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21759,7 +21740,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 150
       },
       {
         "attributes1": {
@@ -21784,13 +21765,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21803,7 +21783,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21828,13 +21808,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21847,7 +21826,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21872,13 +21851,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 4,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21891,7 +21869,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21916,13 +21894,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21935,7 +21912,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -21960,13 +21937,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -21977,9 +21953,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -22004,13 +21980,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22021,9 +21996,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -22048,13 +22023,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22067,7 +22041,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -22092,13 +22066,12 @@ expression: json
         "left_margin": 2024,
         "right_margin": 0,
         "indent": -6976,
-        "outdent": 1704,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "top_spacing": 1704,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22111,7 +22084,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -22136,13 +22109,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -3030,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22155,7 +22127,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -22180,13 +22152,12 @@ expression: json
         "left_margin": 2000,
         "right_margin": 0,
         "indent": -2000,
-        "outdent": 0,
-        "top_spacing": 600,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 2,
+        "top_spacing": 0,
+        "bottom_spacing": 600,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22199,7 +22170,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 2
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -22224,13 +22195,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 2832,
-        "top_spacing": 568,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "top_spacing": 2832,
+        "bottom_spacing": 568,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22243,7 +22213,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -22268,13 +22238,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22287,7 +22256,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -22312,13 +22281,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22331,7 +22299,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -22356,13 +22324,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -5760,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 2,
-        "tab_def_id": 1,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22375,7 +22342,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -22400,13 +22367,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 110,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 110,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22419,7 +22385,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 110
       },
       {
         "attributes1": {
@@ -22444,13 +22410,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -8160,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 150,
-        "line_spacing_old": 1,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 150,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22463,7 +22428,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 150
       },
       {
         "attributes1": {
@@ -22488,13 +22453,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 127,
-        "line_spacing_old": 3,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 127,
+        "tab_def_id": 3,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22507,7 +22471,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 127
       },
       {
         "attributes1": {
@@ -22532,13 +22496,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22551,7 +22514,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -22576,13 +22539,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22595,7 +22557,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -22620,13 +22582,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22637,9 +22598,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -22664,13 +22625,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22681,9 +22641,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -22708,13 +22668,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22725,9 +22684,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -22752,13 +22711,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 110,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 110,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22771,7 +22729,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 110
       },
       {
         "attributes1": {
@@ -22796,13 +22754,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 200,
-        "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 200,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22815,7 +22772,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -22840,13 +22797,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 200,
-        "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 200,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22859,7 +22815,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -22884,13 +22840,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22903,7 +22858,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -22928,13 +22883,12 @@ expression: json
         "left_margin": 400,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 600,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 600,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22947,7 +22901,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -22972,13 +22926,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -22991,7 +22944,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -23016,13 +22969,12 @@ expression: json
         "left_margin": 2000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23035,7 +22987,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -23060,13 +23012,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23079,7 +23030,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -23104,13 +23055,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23123,7 +23073,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -23148,13 +23098,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -2400,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23167,7 +23116,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -23192,13 +23141,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23211,7 +23159,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -23236,13 +23184,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -720,
-        "outdent": 600,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 600,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23255,7 +23202,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -23280,13 +23227,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 110,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 110,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23299,7 +23245,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 110
       },
       {
         "attributes1": {
@@ -23324,13 +23270,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 200,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 200,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23343,7 +23288,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 200
       },
       {
         "attributes1": {
@@ -23368,13 +23313,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23387,7 +23331,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -23412,13 +23356,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -3368,
-        "outdent": 600,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 600,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23431,7 +23374,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -23456,13 +23399,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23475,7 +23417,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -23500,13 +23442,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23519,7 +23460,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -23544,13 +23485,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 110,
-        "line_spacing_old": 1,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 110,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23563,7 +23503,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 110
       },
       {
         "attributes1": {
@@ -23588,13 +23528,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 110,
-        "line_spacing_old": 1,
-        "tab_def_id": 4,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 110,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23607,7 +23546,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 110
       },
       {
         "attributes1": {
@@ -23632,13 +23571,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 0,
-        "tab_def_id": 4,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23649,9 +23587,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -23676,13 +23614,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 200,
-        "line_spacing_old": 1,
-        "tab_def_id": 4,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 200,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23695,7 +23632,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 200
       },
       {
         "attributes1": {
@@ -23720,13 +23657,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -16800,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 200,
-        "line_spacing_old": 1,
-        "tab_def_id": 4,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 200,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23739,7 +23675,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 200
       },
       {
         "attributes1": {
@@ -23764,13 +23700,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 0,
-        "tab_def_id": 4,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23781,9 +23716,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -23808,13 +23743,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
-        "tab_def_id": 52,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 52,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23827,7 +23761,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -23852,13 +23786,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
-        "tab_def_id": 53,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 53,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23871,7 +23804,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -23896,13 +23829,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
-        "tab_def_id": 53,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 53,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23915,7 +23847,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -23940,13 +23872,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -23959,7 +23890,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -23984,13 +23915,12 @@ expression: json
         "left_margin": 2000,
         "right_margin": 2000,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 145,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 145,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24003,7 +23933,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 145
       },
       {
         "attributes1": {
@@ -24028,13 +23958,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 145,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 145,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24047,7 +23976,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 145
       },
       {
         "attributes1": {
@@ -24072,13 +24001,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 145,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 145,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24091,7 +24019,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 145
       },
       {
         "attributes1": {
@@ -24116,13 +24044,12 @@ expression: json
         "left_margin": -200,
         "right_margin": -200,
         "indent": -1920,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 145,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 145,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24135,7 +24062,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 145
       },
       {
         "attributes1": {
@@ -24160,57 +24087,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
-        "border_spacing_left": 0,
-        "border_spacing_right": 0,
-        "border_spacing_top": 0,
-        "border_spacing_bottom": 0,
-        "attributes2": {
-          "single_line_input": 0,
-          "auto_spacing_ko_en": false,
-          "auto_spacing_ko_num": false
-        },
-        "attributes3": {
-          "line_spacing_type": "marginonly"
-        },
-        "line_spacing": 0
-      },
-      {
-        "attributes1": {
-          "line_spacing_type_old": "bycharacter",
-          "align": "right",
-          "line_divide_en": "word",
-          "line_divide_ko": "word",
-          "use_line_grid": true,
-          "blank_min_value": 0,
-          "protect_orphan_line": false,
-          "with_next_paragraph": false,
-          "protect_paragraph": false,
-          "always_page_break_before": false,
-          "vertical_align": "baseline",
-          "line_height_matches_font": false,
-          "header_shape_type": "none",
-          "paragraph_level": 0,
-          "connect_border": false,
-          "ignore_margin": false,
-          "tail_shape": false
-        },
-        "left_margin": 0,
-        "right_margin": 3000,
-        "indent": 0,
-        "outdent": 0,
-        "top_spacing": 2000,
-        "bottom_spacing": 135,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
-        "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24223,7 +24105,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -24248,13 +24130,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 3000,
         "indent": 0,
-        "outdent": 0,
-        "top_spacing": 2000,
-        "bottom_spacing": 65,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 0,
+        "bottom_spacing": 2000,
+        "line_spacing_old": 135,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24265,9 +24146,52 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "fixed"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 135
+      },
+      {
+        "attributes1": {
+          "line_spacing_type_old": "bycharacter",
+          "align": "right",
+          "line_divide_en": "word",
+          "line_divide_ko": "word",
+          "use_line_grid": true,
+          "blank_min_value": 0,
+          "protect_orphan_line": false,
+          "with_next_paragraph": false,
+          "protect_paragraph": false,
+          "always_page_break_before": false,
+          "vertical_align": "baseline",
+          "line_height_matches_font": false,
+          "header_shape_type": "none",
+          "paragraph_level": 0,
+          "connect_border": false,
+          "ignore_margin": false,
+          "tail_shape": false
+        },
+        "left_margin": 0,
+        "right_margin": 3000,
+        "indent": 0,
+        "top_spacing": 0,
+        "bottom_spacing": 2000,
+        "line_spacing_old": 65,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 2,
+        "border_spacing_left": 0,
+        "border_spacing_right": 0,
+        "border_spacing_top": 0,
+        "border_spacing_bottom": 0,
+        "attributes2": {
+          "single_line_input": 0,
+          "auto_spacing_ko_en": false,
+          "auto_spacing_ko_num": false
+        },
+        "attributes3": {
+          "line_spacing_type": "bycharacter"
+        },
+        "line_spacing": 65
       },
       {
         "attributes1": {
@@ -24292,13 +24216,12 @@ expression: json
         "left_margin": 2000,
         "right_margin": 2000,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24309,9 +24232,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -24336,13 +24259,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -4602,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 145,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 145,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24355,7 +24277,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 145
       },
       {
         "attributes1": {
@@ -24380,13 +24302,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -4558,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 145,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 145,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24399,7 +24320,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 145
       },
       {
         "attributes1": {
@@ -24424,13 +24345,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -4552,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 145,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 145,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24443,7 +24363,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 145
       },
       {
         "attributes1": {
@@ -24468,13 +24388,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -5354,
-        "outdent": 1400,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 1400,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24487,7 +24406,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -24512,13 +24431,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -3000,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 4,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 4,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24531,7 +24449,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -24556,13 +24474,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 2000,
         "top_spacing": 2000,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 2000,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24575,7 +24492,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -24600,26 +24517,25 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
-        "tab_def_id": 4,
-        "number_bullet_id": 100,
-        "border_fill_id": 100,
-        "border_spacing_left": 400,
-        "border_spacing_right": 400,
-        "border_spacing_top": 0,
-        "border_spacing_bottom": 0,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 4,
+        "border_spacing_left": 100,
+        "border_spacing_right": 100,
+        "border_spacing_top": 400,
+        "border_spacing_bottom": 400,
         "attributes2": {
           "single_line_input": 0,
           "auto_spacing_ko_en": false,
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -24644,13 +24560,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 4,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24663,7 +24578,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -24688,13 +24603,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 150,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 150,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24707,7 +24621,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 150
       },
       {
         "attributes1": {
@@ -24732,13 +24646,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24751,7 +24664,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -24776,13 +24689,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24795,7 +24707,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -24820,13 +24732,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 1,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24839,7 +24750,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -24864,13 +24775,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 125,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 125,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24883,7 +24793,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 125
       },
       {
         "attributes1": {
@@ -24908,13 +24818,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 125,
-        "line_spacing_old": 65537,
-        "tab_def_id": 2,
-        "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "bottom_spacing": 0,
+        "line_spacing_old": 125,
+        "tab_def_id": 1,
+        "number_bullet_id": 1,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24927,7 +24836,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 125
       },
       {
         "attributes1": {
@@ -24952,13 +24861,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 125,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 125,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -24971,7 +24879,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 125
       },
       {
         "attributes1": {
@@ -24996,13 +24904,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 3000,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 125,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 125,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25015,7 +24922,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 125
       },
       {
         "attributes1": {
@@ -25040,13 +24947,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 180,
-        "line_spacing_old": 1,
-        "tab_def_id": 4,
+        "bottom_spacing": 0,
+        "line_spacing_old": 180,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25059,7 +24965,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 180
       },
       {
         "attributes1": {
@@ -25084,17 +24990,16 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 2000,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
-        "number_bullet_id": 400,
-        "border_fill_id": 400,
-        "border_spacing_left": 100,
-        "border_spacing_right": 100,
-        "border_spacing_top": 0,
-        "border_spacing_bottom": 0,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
+        "number_bullet_id": 0,
+        "border_fill_id": 2,
+        "border_spacing_left": 400,
+        "border_spacing_right": 400,
+        "border_spacing_top": 100,
+        "border_spacing_bottom": 100,
         "attributes2": {
           "single_line_input": 0,
           "auto_spacing_ko_en": false,
@@ -25103,7 +25008,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -25128,13 +25033,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -2596,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25147,7 +25051,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -25172,13 +25076,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25191,7 +25094,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -25216,13 +25119,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -2160,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25235,7 +25137,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -25260,13 +25162,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25279,7 +25180,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -25304,13 +25205,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 1160,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25323,7 +25223,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -25348,13 +25248,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -2160,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25367,7 +25266,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -25392,13 +25291,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25409,9 +25307,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -25436,17 +25334,16 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
         "tab_def_id": 1,
-        "number_bullet_id": 400,
-        "border_fill_id": 400,
-        "border_spacing_left": 100,
-        "border_spacing_right": 100,
-        "border_spacing_top": 0,
-        "border_spacing_bottom": 0,
+        "number_bullet_id": 0,
+        "border_fill_id": 1,
+        "border_spacing_left": 400,
+        "border_spacing_right": 400,
+        "border_spacing_top": 100,
+        "border_spacing_bottom": 100,
         "attributes2": {
           "single_line_input": 0,
           "auto_spacing_ko_en": false,
@@ -25455,7 +25352,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -25480,13 +25377,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 140,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 140,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25499,7 +25395,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 140
       },
       {
         "attributes1": {
@@ -25524,13 +25420,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -11590,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25543,7 +25438,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -25568,17 +25463,16 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
         "tab_def_id": 1,
-        "number_bullet_id": 400,
-        "border_fill_id": 400,
-        "border_spacing_left": 100,
-        "border_spacing_right": 100,
-        "border_spacing_top": 0,
-        "border_spacing_bottom": 0,
+        "number_bullet_id": 0,
+        "border_fill_id": 1,
+        "border_spacing_left": 400,
+        "border_spacing_right": 400,
+        "border_spacing_top": 100,
+        "border_spacing_bottom": 100,
         "attributes2": {
           "single_line_input": 0,
           "auto_spacing_ko_en": false,
@@ -25587,7 +25481,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -25612,13 +25506,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": -7320,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 4,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25631,7 +25524,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -25656,13 +25549,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 4,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25675,7 +25567,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -25700,13 +25592,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 180,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 180,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25719,7 +25610,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 180
       },
       {
         "attributes1": {
@@ -25744,13 +25635,12 @@ expression: json
         "left_margin": 2000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 200,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 200,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25763,7 +25653,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 200
       },
       {
         "attributes1": {
@@ -25788,13 +25678,12 @@ expression: json
         "left_margin": 2000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 200,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 200,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25807,7 +25696,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 200
       },
       {
         "attributes1": {
@@ -25832,13 +25721,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 0,
-        "tab_def_id": 2,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25849,9 +25737,9 @@ expression: json
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -25876,13 +25764,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 0,
-        "tab_def_id": 4,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 4,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25895,7 +25782,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -25920,13 +25807,12 @@ expression: json
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
-        "tab_def_id": 2,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 2,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -25939,7 +25825,7 @@ expression: json
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": 0
+        "line_spacing": 120
       }
     ],
     "styles": [

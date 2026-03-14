@@ -8429,13 +8429,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
-        "tab_def_id": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -8448,7 +8447,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -8473,11 +8472,10 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 127,
-        "line_spacing_old": 2,
-        "tab_def_id": 0,
+        "bottom_spacing": 0,
+        "line_spacing_old": 127,
+        "tab_def_id": 2,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
@@ -8492,7 +8490,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 127
       },
       {
         "attributes1": {
@@ -8517,13 +8515,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -2620,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -8534,9 +8531,9 @@
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -8561,13 +8558,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -8580,7 +8576,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -8605,10 +8601,9 @@
         "left_margin": 1128,
         "right_margin": 0,
         "indent": -5208,
-        "outdent": 1200,
-        "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 0,
+        "top_spacing": 1200,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 0,
         "number_bullet_id": 0,
         "border_fill_id": 0,
@@ -8624,7 +8619,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -8649,10 +8644,9 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 3600,
-        "line_spacing_old": 0,
+        "bottom_spacing": 0,
+        "line_spacing_old": 3600,
         "tab_def_id": 0,
         "number_bullet_id": 0,
         "border_fill_id": 0,
@@ -8661,14 +8655,14 @@
         "border_spacing_top": 0,
         "border_spacing_bottom": 0,
         "attributes2": {
-          "single_line_input": 1,
+          "single_line_input": 0,
           "auto_spacing_ko_en": false,
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "bycharacter"
+          "line_spacing_type": "fixed"
         },
-        "line_spacing": null
+        "line_spacing": 3600
       },
       {
         "attributes1": {
@@ -8693,13 +8687,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
-        "tab_def_id": 18,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
+        "tab_def_id": 0,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 18,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -8712,7 +8705,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -8737,10 +8730,9 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
         "tab_def_id": 0,
         "number_bullet_id": 0,
         "border_fill_id": 0,
@@ -8756,7 +8748,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -8781,13 +8773,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -8800,7 +8791,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -8825,13 +8816,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -8700,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 140,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 140,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -8844,7 +8834,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 140
       },
       {
         "attributes1": {
@@ -8869,13 +8859,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -8700,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -8888,7 +8877,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -8913,13 +8902,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -8932,7 +8920,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -8957,13 +8945,12 @@
         "left_margin": 2000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -8976,7 +8963,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -9001,13 +8988,12 @@
         "left_margin": 4000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9020,7 +9006,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -9045,13 +9031,12 @@
         "left_margin": 6000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9064,7 +9049,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -9089,13 +9074,12 @@
         "left_margin": 8000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9108,7 +9092,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -9133,13 +9117,12 @@
         "left_margin": 10000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9152,7 +9135,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -9177,13 +9160,12 @@
         "left_margin": 12000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9196,7 +9178,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -9221,10 +9203,9 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 100,
-        "line_spacing_old": 0,
+        "bottom_spacing": 0,
+        "line_spacing_old": 100,
         "tab_def_id": 0,
         "number_bullet_id": 0,
         "border_fill_id": 0,
@@ -9240,7 +9221,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 100
       },
       {
         "attributes1": {
@@ -9265,13 +9246,12 @@
         "left_margin": 14000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9284,7 +9264,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -9309,13 +9289,12 @@
         "left_margin": 3000,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9328,7 +9307,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -9353,13 +9332,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 150,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 150,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9372,7 +9350,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 150
       },
       {
         "attributes1": {
@@ -9397,13 +9375,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9414,9 +9391,9 @@
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 130
       },
       {
         "attributes1": {
@@ -9441,13 +9418,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9460,7 +9436,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -9485,11 +9461,10 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 140,
-        "line_spacing_old": 1,
-        "tab_def_id": 0,
+        "bottom_spacing": 0,
+        "line_spacing_old": 140,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
         "border_fill_id": 0,
         "border_spacing_left": 0,
@@ -9504,7 +9479,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 140
       },
       {
         "attributes1": {
@@ -9529,13 +9504,12 @@
         "left_margin": 660,
         "right_margin": 0,
         "indent": -7640,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 150,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 150,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9548,7 +9522,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 150
       },
       {
         "attributes1": {
@@ -9573,13 +9547,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
-        "tab_def_id": 6,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
+        "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 6,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9592,7 +9565,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -9617,13 +9590,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -6142,
-        "outdent": 2000,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9636,7 +9608,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -9661,13 +9633,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -5560,
-        "outdent": 1000,
-        "top_spacing": 0,
-        "bottom_spacing": 180,
-        "line_spacing_old": 65537,
+        "top_spacing": 1000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 180,
         "tab_def_id": 1,
-        "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "number_bullet_id": 1,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9680,7 +9651,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 180
       },
       {
         "attributes1": {
@@ -9705,13 +9676,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -6550,
-        "outdent": 2000,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9724,7 +9694,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -9749,13 +9719,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -6168,
-        "outdent": 2000,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9768,7 +9737,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -9793,13 +9762,12 @@
         "left_margin": 660,
         "right_margin": 0,
         "indent": -7640,
-        "outdent": 1200,
-        "top_spacing": 0,
-        "bottom_spacing": 150,
-        "line_spacing_old": 65537,
+        "top_spacing": 1200,
+        "bottom_spacing": 0,
+        "line_spacing_old": 150,
         "tab_def_id": 1,
-        "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "number_bullet_id": 1,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9812,7 +9780,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 150
       },
       {
         "attributes1": {
@@ -9837,13 +9805,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -6742,
-        "outdent": 2000,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9856,7 +9823,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -9881,13 +9848,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -4688,
-        "outdent": 2600,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2600,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9900,7 +9866,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -9925,13 +9891,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -6674,
-        "outdent": 2000,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9944,7 +9909,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -9969,13 +9934,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -4776,
-        "outdent": 2600,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2600,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -9988,7 +9952,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -10013,13 +9977,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -6156,
-        "outdent": 2000,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -10032,7 +9995,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -10057,13 +10020,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -4692,
-        "outdent": 2600,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2600,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -10076,7 +10038,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -10101,13 +10063,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -6126,
-        "outdent": 2000,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -10120,7 +10081,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -10145,13 +10106,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -4752,
-        "outdent": 2600,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2600,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -10164,7 +10124,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -10189,13 +10149,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -6594,
-        "outdent": 2000,
-        "top_spacing": 0,
-        "bottom_spacing": 170,
-        "line_spacing_old": 1,
+        "top_spacing": 2000,
+        "bottom_spacing": 0,
+        "line_spacing_old": 170,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -10208,7 +10167,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 170
       },
       {
         "attributes1": {
@@ -10233,13 +10192,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": -4656,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -10252,7 +10210,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -10277,13 +10235,12 @@
         "left_margin": -800,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 160,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 160,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -10296,7 +10253,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 160
       },
       {
         "attributes1": {
@@ -10321,13 +10278,12 @@
         "left_margin": -800,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 120,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 120,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -10340,7 +10296,7 @@
         "attributes3": {
           "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 120
       },
       {
         "attributes1": {
@@ -10365,13 +10321,12 @@
         "left_margin": 0,
         "right_margin": 0,
         "indent": 0,
-        "outdent": 0,
         "top_spacing": 0,
-        "bottom_spacing": 130,
-        "line_spacing_old": 1,
+        "bottom_spacing": 0,
+        "line_spacing_old": 130,
         "tab_def_id": 1,
         "number_bullet_id": 0,
-        "border_fill_id": 0,
+        "border_fill_id": 1,
         "border_spacing_left": 0,
         "border_spacing_right": 0,
         "border_spacing_top": 0,
@@ -10382,9 +10337,9 @@
           "auto_spacing_ko_num": false
         },
         "attributes3": {
-          "line_spacing_type": "marginonly"
+          "line_spacing_type": "bycharacter"
         },
-        "line_spacing": null
+        "line_spacing": 130
       }
     ],
     "styles": [
