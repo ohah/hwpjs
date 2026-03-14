@@ -443,7 +443,6 @@ pub(crate) fn render_horizontal_borders(
     document: &HwpDocument,
     row_positions: &[f64],
     content: Size,
-    border_offset: f64,
     ctrl_header_height_mm: Option<f64>,
 ) -> String {
     let mut svg_paths = String::new();
@@ -504,10 +503,14 @@ pub(crate) fn render_horizontal_borders(
                 is_bottom_edge,
             );
             if let Some(line) = line_opt {
+                // 가로선의 양쪽 overshoot는 해당 선의 stroke-width 절반
+                // Horizontal line overshoot is half of the line's stroke-width
+                // (한컴 원본 HTML 역분석: 외곽선 w=0.40 → overshoot=0.20)
+                let overshoot = borderline_base_width_mm(&line) / 2.0;
                 svg_paths.push_str(&render_border_paths(
-                    -border_offset,
+                    -overshoot,
                     row_y,
-                    content.width + border_offset,
+                    content.width + overshoot,
                     row_y,
                     false,
                     &line,
@@ -527,10 +530,11 @@ pub(crate) fn render_horizontal_borders(
                     is_bottom_edge,
                 );
                 if let Some(line) = line_opt {
+                    let overshoot = borderline_base_width_mm(&line) / 2.0;
                     svg_paths.push_str(&render_border_paths(
-                        x_start - border_offset,
+                        x_start - overshoot,
                         row_y,
-                        x_end + border_offset,
+                        x_end + overshoot,
                         row_y,
                         false,
                         &line,
