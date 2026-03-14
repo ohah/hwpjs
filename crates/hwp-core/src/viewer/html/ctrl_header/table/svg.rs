@@ -26,10 +26,13 @@ pub(crate) fn render_svg(
         color_to_pattern,
     );
     let mut cols = column_positions(table);
-    // 테이블의 오른쪽 끝을 명시적으로 추가 (가장 오른쪽 셀의 오른쪽 경계가 content.width와 일치하지 않을 수 있음)
-    // Explicitly add table's right edge (rightmost cell's right boundary may not match content.width)
-    if let Some(&last_col) = cols.last() {
-        if (last_col - content.width).abs() > 0.01 {
+    // column_positions의 마지막 값을 content.width로 정규화
+    // 셀 너비의 개별 합산과 총합은 부동소수점 오차로 다를 수 있으므로,
+    // 마지막 열 경계를 content.width로 맞춰 is_right_edge 판정을 정확하게 함
+    if let Some(last_col) = cols.last_mut() {
+        if (*last_col - content.width).abs() < 0.1 {
+            *last_col = content.width;
+        } else {
             cols.push(content.width);
             cols.sort_by(|a, b| a.partial_cmp(b).unwrap());
         }
