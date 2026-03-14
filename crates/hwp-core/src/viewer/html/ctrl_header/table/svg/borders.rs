@@ -468,6 +468,7 @@ pub(crate) fn render_horizontal_borders(
     table: &Table,
     document: &HwpDocument,
     row_positions: &[f64],
+    column_positions: &[f64],
     content: Size,
     ctrl_header_height_mm: Option<f64>,
 ) -> String {
@@ -516,56 +517,69 @@ pub(crate) fn render_horizontal_borders(
 
         if segments.is_empty() {
             continue;
-        } else if segments.len() == 1 && segments[0].0 == 0.0 && segments[0].1 == content.width {
-            let line_opt = horizontal_segment_borderline(
-                table,
-                document,
-                row_positions,
-                row_y,
-                0.0,
-                content.width,
-                ctrl_header_height_mm,
-                is_top_edge,
-                is_bottom_edge,
-            );
-            if let Some(line) = line_opt {
-                // 가로선의 양쪽 overshoot는 해당 선의 stroke-width 절반
-                // Horizontal line overshoot is half of the line's stroke-width
-                // (한컴 원본 HTML 역분석: 외곽선 w=0.40 → overshoot=0.20)
-                let overshoot = borderline_base_width_mm(&line) / 2.0;
-                svg_paths.push_str(&render_border_paths(
-                    -overshoot,
-                    row_y,
-                    content.width + overshoot,
-                    row_y,
-                    false,
-                    &line,
-                ));
+        }
+
+        // 각 세그먼트를 열(column) 단위로 분할하여 border 확인
+        // 같은 스타일 구간은 결합하고, line_type=0인 구간은 건너뜀
+        for (x_start, x_end) in &segments {
+            let mut col_boundaries: Vec<f64> = vec![*x_start];
+            for col in column_positions {
+                if *col > *x_start + 0.01 && *col < *x_end - 0.01 {
+                    col_boundaries.push(*col);
+                }
             }
-        } else {
-            for (x_start, x_end) in segments {
+            col_boundaries.push(*x_end);
+
+            let mut sub_start: Option<(f64, BorderLine)> = None;
+            for ci in 0..col_boundaries.len() - 1 {
+                let cx0 = col_boundaries[ci];
+                let cx1 = col_boundaries[ci + 1];
                 let line_opt = horizontal_segment_borderline(
                     table,
                     document,
                     row_positions,
                     row_y,
-                    x_start,
-                    x_end,
+                    cx0,
+                    cx1,
                     ctrl_header_height_mm,
                     is_top_edge,
                     is_bottom_edge,
                 );
-                if let Some(line) = line_opt {
-                    let overshoot = borderline_base_width_mm(&line) / 2.0;
-                    svg_paths.push_str(&render_border_paths(
-                        x_start - overshoot,
-                        row_y,
-                        x_end + overshoot,
-                        row_y,
-                        false,
-                        &line,
-                    ));
+                match (&sub_start, &line_opt) {
+                    (Some((_, ref prev)), Some(ref cur))
+                        if prev.width == cur.width && prev.line_type == cur.line_type =>
+                    {
+                        // 같은 스타일 → 연장
+                    }
+                    (Some((sx, prev)), _) => {
+                        let overshoot = borderline_base_width_mm(prev) / 2.0;
+                        svg_paths.push_str(&render_border_paths(
+                            *sx - overshoot,
+                            row_y,
+                            cx0 + overshoot,
+                            row_y,
+                            false,
+                            prev,
+                        ));
+                        sub_start = line_opt.map(|l| (cx0, l));
+                    }
+                    (None, Some(_)) => {
+                        sub_start = line_opt.map(|l| (cx0, l));
+                    }
+                    (None, None) => {}
                 }
+            }
+            // 마지막 구간 출력
+            if let Some((sx, line)) = sub_start {
+                let overshoot = borderline_base_width_mm(&line) / 2.0;
+                svg_paths.push_str(&render_border_paths(
+                    sx - overshoot,
+                    row_y,
+                    *x_end + overshoot,
+                    row_y,
+                    false,
+                    &line,
+                ));
             }
         }
     }
