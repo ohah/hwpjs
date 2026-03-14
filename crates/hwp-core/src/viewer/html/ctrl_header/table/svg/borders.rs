@@ -141,13 +141,13 @@ fn vertical_segment_borderline(
 ) -> Option<BorderLine> {
     let eps = 0.02;
 
-    let mut table_default_line: Option<BorderLine> = None;
-    if is_left_edge {
-        table_default_line = default_borderline(table, document, 0);
-    }
-    if is_right_edge {
-        table_default_line = table_default_line.or(default_borderline(table, document, 1));
-    }
+    let table_default_line: Option<BorderLine> = if is_left_edge {
+        default_borderline(table, document, 0)
+    } else if is_right_edge {
+        default_borderline(table, document, 1)
+    } else {
+        default_borderline(table, document, 0).or_else(|| default_borderline(table, document, 1))
+    };
 
     let mut from_left_cell_right: Option<BorderLine> = None;
     let mut from_right_cell_left: Option<BorderLine> = None;
@@ -223,7 +223,13 @@ fn vertical_segment_borderline(
             None => table_default_line,
         }
     } else {
-        cell_border
+        // 내부 열 경계: 셀 border가 w=0이면 table default를 fallback으로 사용
+        match &cell_border {
+            Some(cb) if cb.line_type == 0 => None,
+            Some(cb) if cb.width == 0 => table_default_line.or(cell_border),
+            Some(_) => cell_border,
+            None => table_default_line,
+        }
     }
 }
 
@@ -242,14 +248,13 @@ fn horizontal_segment_borderline(
     let eps = 0.02; // 부동소수점 누적 오차를 허용하기 위해 0.02mm 사용
     let _ = ctrl_header_height_mm; // row_positions 기반 계산을 사용
 
-    // 바깥 테두리: table.border_fill_id 기본값을 먼저 수집하되, 셀 border와 비교 후 결정
-    let mut table_default_line: Option<BorderLine> = None;
-    if is_top_edge {
-        table_default_line = default_borderline(table, document, 2);
-    }
-    if is_bottom_edge {
-        table_default_line = table_default_line.or(default_borderline(table, document, 3));
-    }
+    let table_default_line: Option<BorderLine> = if is_top_edge {
+        default_borderline(table, document, 2)
+    } else if is_bottom_edge {
+        default_borderline(table, document, 3)
+    } else {
+        default_borderline(table, document, 2).or_else(|| default_borderline(table, document, 3))
+    };
 
     // 경계선 우선순위(원본 HTML과 일치시키기 위한 규칙):
     // - 내부선: "위쪽 셀의 Bottom"을 우선, 없으면 "아래쪽 셀의 Top"
@@ -329,7 +334,13 @@ fn horizontal_segment_borderline(
             None => table_default_line,
         }
     } else {
-        cell_border
+        // 내부 행 경계: 셀 border가 w=0이면 table default를 fallback으로 사용
+        match &cell_border {
+            Some(cb) if cb.line_type == 0 => None,
+            Some(cb) if cb.width == 0 => table_default_line.or(cell_border),
+            Some(_) => cell_border,
+            None => table_default_line,
+        }
     }
 }
 
