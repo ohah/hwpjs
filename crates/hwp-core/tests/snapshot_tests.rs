@@ -1906,9 +1906,7 @@ fn test_debug_table_bug_page10() {
     for paragraph in &section.paragraphs {
         for record in &paragraph.records {
             if let ParagraphRecord::CtrlHeader {
-                header,
-                children,
-                ..
+                header, children, ..
             } = record
             {
                 if header.ctrl_id == CtrlId::TABLE {
@@ -1922,14 +1920,14 @@ fn test_debug_table_bug_page10() {
                             }
                         }
                         if let Some(t) = tbl {
-                            let (h, w) = if let CtrlHeaderData::ObjectCommon {
-                                height, width, ..
-                            } = &header.data
-                            {
-                                (Some(height.0), Some(width.0))
-                            } else {
-                                (None, None)
-                            };
+                            let (h, w) =
+                                if let CtrlHeaderData::ObjectCommon { height, width, .. } =
+                                    &header.data
+                                {
+                                    (Some(height.0), Some(width.0))
+                                } else {
+                                    (None, None)
+                                };
                             table10 = Some(TableWithHeader {
                                 table: t,
                                 ctrl_header_height_hu: h,
@@ -2175,11 +2173,21 @@ fn test_debug_table_bug_page10() {
 
                 // Upper cell: its bottom matches row_y
                 if (cell_bottom - row_y).abs() <= eps && upper_info.is_none() {
-                    upper_info = Some((ca.row_address, ca.col_address, ca.border_fill_id, ca.col_span));
+                    upper_info = Some((
+                        ca.row_address,
+                        ca.col_address,
+                        ca.border_fill_id,
+                        ca.col_span,
+                    ));
                 }
                 // Lower cell: its top matches row_y
                 if (cell_top - row_y).abs() <= eps && lower_info.is_none() {
-                    lower_info = Some((ca.row_address, ca.col_address, ca.border_fill_id, ca.col_span));
+                    lower_info = Some((
+                        ca.row_address,
+                        ca.col_address,
+                        ca.border_fill_id,
+                        ca.col_span,
+                    ));
                 }
             }
 
@@ -2207,10 +2215,7 @@ fn test_debug_table_bug_page10() {
                     ),
                     None => "LOWER: (none)".to_string(),
                 };
-                println!(
-                    "  x=[{:.2}-{:.2}]: {} ;; {}",
-                    x0, x1, upper_str, lower_str
-                );
+                println!("  x=[{:.2}-{:.2}]: {} ;; {}", x0, x1, upper_str, lower_str);
             }
         }
         println!();
@@ -2220,7 +2225,9 @@ fn test_debug_table_bug_page10() {
     // Vertical border analysis at each column boundary for rows 17-23
     // ====================================================================
     println!("\n=== Vertical border analysis (column boundaries, rows 17-23) ===");
-    println!("  (For each col_x: left cell right border vs right cell left border per row segment)\n");
+    println!(
+        "  (For each col_x: left cell right border vs right cell left border per row segment)\n"
+    );
 
     for &col_x in &col_positions {
         let is_left_edge = col_x.abs() < 0.01;
@@ -2358,18 +2365,12 @@ fn test_debug_table_bug_page10() {
 
     for (i, pos) in row_positions.iter().enumerate() {
         if (*pos - 195.91).abs() < 1.0 {
-            println!(
-                "  ** row_pos[{}] = {:.2}mm (near target y=195.91)",
-                i, pos
-            );
+            println!("  ** row_pos[{}] = {:.2}mm (near target y=195.91)", i, pos);
         }
     }
     for (i, pos) in col_positions.iter().enumerate() {
         if (*pos - 131.24).abs() < 1.0 {
-            println!(
-                "  ** col_pos[{}] = {:.2}mm (near target x=131.24)",
-                i, pos
-            );
+            println!("  ** col_pos[{}] = {:.2}mm (near target x=131.24)", i, pos);
         }
     }
 
