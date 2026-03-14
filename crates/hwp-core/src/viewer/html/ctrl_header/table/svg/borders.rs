@@ -223,9 +223,20 @@ fn vertical_segment_borderline(
         }
     }
 
-    // 한컴 원본 동작: 인접 셀 border 중 더 두꺼운 것을 사용.
-    // line_type=0(선 없음)인 border는 건너뛰고 반대쪽을 시도.
-    let cell_border = pick_thicker_border(from_left_cell_right, from_right_cell_left);
+    // 인접 셀 경계에서 primary border가 line_type=0(선 없음)이면
+    // secondary border를 시도한다. 한쪽 셀이 "선 없음"이라도
+    // 반대쪽 셀이 유효한 border를 가지면 해당 border를 사용해야 한다.
+    let cell_border = if is_left_edge {
+        match &from_right_cell_left {
+            Some(b) if b.line_type == 0 => from_left_cell_right.or(from_right_cell_left),
+            _ => from_right_cell_left.or(from_left_cell_right),
+        }
+    } else {
+        match &from_left_cell_right {
+            Some(b) if b.line_type == 0 => from_right_cell_left.or(from_left_cell_right),
+            _ => from_left_cell_right.or(from_right_cell_left),
+        }
+    };
 
     // 외곽 테두리: 셀 border와 table default 중 더 두꺼운 것을 사용.
     if is_left_edge || is_right_edge {
@@ -332,8 +343,20 @@ fn horizontal_segment_borderline(
         }
     }
 
-    // 한컴 원본 동작: 인접 셀 border 중 더 두꺼운 것을 사용.
-    let cell_border = pick_thicker_border(from_upper_cell_bottom, from_lower_cell_top);
+    // 인접 셀 경계에서 primary border가 line_type=0(선 없음)이면
+    // secondary border를 시도한다. 한쪽 셀이 "선 없음"이라도
+    // 반대쪽 셀이 유효한 border를 가지면 해당 border를 사용해야 한다.
+    let cell_border = if is_top_edge {
+        match &from_lower_cell_top {
+            Some(b) if b.line_type == 0 => from_upper_cell_bottom.or(from_lower_cell_top),
+            _ => from_lower_cell_top.or(from_upper_cell_bottom),
+        }
+    } else {
+        match &from_upper_cell_bottom {
+            Some(b) if b.line_type == 0 => from_lower_cell_top.or(from_upper_cell_bottom),
+            _ => from_upper_cell_bottom.or(from_lower_cell_top),
+        }
+    };
 
     // 외곽 테두리: 셀 border와 table default 중 더 두꺼운 것을 사용.
     if is_top_edge || is_bottom_edge {
