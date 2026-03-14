@@ -50,11 +50,6 @@ impl HwpjsSpec for Hwpjs {
         ToMarkdownResult { markdown }
     }
 
-    // NOTE: toPdf 비활성화 (추후 활성화 예정)
-    // fn to_pdf(&mut self, data: Vec<u8>, options: ToPdfOptions) -> Vec<u8> {
-    //     ...
-    // }
-
     fn file_header(&mut self, data: Vec<u8>) -> String {
         let parser = HwpParser::new();
         parser

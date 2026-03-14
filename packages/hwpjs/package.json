@@ -126,7 +126,7 @@
   "devDependencies": {
     "@emnapi/core": "^1.5.0",
     "@emnapi/runtime": "^1.5.0",
-    "@napi-rs/cli": "^3.2.0",
+    "@napi-rs/cli": "^3.5.1",
     "@oxc-node/core": "^0.0.34",
     "craby-modules": "^0.1.0-rc.4",
     "@react-native-community/cli-types": "^20.0.2",
