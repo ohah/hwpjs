@@ -164,4 +164,101 @@ impl RecordTreeNode {
     pub fn children(&self) -> &[RecordTreeNode] {
         &self.children
     }
+
+    /// 원본 데이터의 특정 offset에서 parent_level보다 높은 레벨의 레코드들을
+    /// 서브트리로 재구성. parse_tree와 동일한 레벨 기반 트리 구성 로직 사용.
+    /// offset은 소비한 바이트만큼 전진됨.
+    pub fn parse_subtree(
+        data: &[u8],
+        offset: &mut usize,
+        parent_level: u16,
+    ) -> Result<Vec<RecordTreeNode>, HwpError> {
+        let mut nodes: Vec<(RecordTreeNode, Vec<usize>)> = Vec::new();
+        // 가상 루트 (인덱스 0)
+        nodes.push((
+            RecordTreeNode {
+                header: RecordHeader {
+                    tag_id: 0,
+                    level: parent_level,
+                    size: 0,
+                    has_extended_size: false,
+                },
+                data: Vec::new(),
+                children: Vec::new(),
+            },
+            Vec::new(),
+        ));
+        let mut stack: Vec<usize> = Vec::new(); // 각 레벨의 마지막 노드 인덱스
+
+        while *offset < data.len() {
+            let remaining = &data[*offset..];
+            if let Ok((header, header_size)) = RecordHeader::parse(remaining) {
+                if header.level <= parent_level {
+                    break;
+                }
+
+                *offset += header_size;
+                let data_size = header.size as usize;
+                if *offset + data_size > data.len() {
+                    break;
+                }
+                let record_data = &data[*offset..*offset + data_size];
+                *offset += data_size;
+
+                let new_node = RecordTreeNode {
+                    header,
+                    data: record_data.to_vec(),
+                    children: Vec::new(),
+                };
+                let new_index = nodes.len();
+                nodes.push((new_node, Vec::new()));
+
+                // 스택을 레벨에 맞게 조정
+                let relative_level = (header.level - parent_level - 1) as usize;
+                while stack.len() > relative_level {
+                    stack.pop();
+                }
+
+                // 부모 찾기
+                let parent_index = if relative_level == 0 {
+                    0 // 가상 루트
+                } else {
+                    while stack.len() < relative_level {
+                        if let Some(&last) = stack.last() {
+                            stack.push(last);
+                        } else {
+                            stack.push(0);
+                        }
+                    }
+                    stack[relative_level - 1]
+                };
+
+                nodes[parent_index].1.push(new_index);
+
+                while stack.len() <= relative_level {
+                    stack.push(0);
+                }
+                stack[relative_level] = new_index;
+            } else {
+                break;
+            }
+        }
+
+        // 인덱스 기반 트리를 실제 트리로 변환
+        fn build(nodes: &[(RecordTreeNode, Vec<usize>)], index: usize) -> RecordTreeNode {
+            let (node, children_indices) = &nodes[index];
+            let mut result = RecordTreeNode {
+                header: node.header,
+                data: node.data.clone(),
+                children: Vec::new(),
+            };
+            for &child_index in children_indices {
+                result.children.push(build(nodes, child_index));
+            }
+            result
+        }
+
+        let root = build(&nodes, 0);
+        Ok(root.children)
+    }
 }

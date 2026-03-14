@@ -377,9 +377,107 @@ impl Section {
         let mut records = Vec::new();
 
         // 자식들을 처리 / Process children
-        for child in node.children() {
-            records.push(Self::parse_record_from_tree(child, version, original_data)?);
+        // 중첩 테이블: CTRL_HEADER(tbl, 트리자식=0) 다음의 형제 TABLE, LIST_HEADER를
+        // CTRL_HEADER의 children으로 통합하여 완전한 Table을 조립
+        {
+            let child_nodes: Vec<&RecordTreeNode> = node.children().iter().collect();
+            // PARA_HEADER 자식에 TABLE이 있는지 디버그
+            if child_nodes.iter().any(|c| c.tag_id() == HwpTag::TABLE) {
+                eprintln!(
+                    "[PARA_CHILDREN] PARA_HEADER has TABLE sibling! children tags: {:?}",
+                    child_nodes
+                        .iter()
+                        .map(|c| format!("{}", c.tag_id()))
+                        .collect::<Vec<_>>()
+                );
+            }
+            let mut ci = 0;
+            while ci < child_nodes.len() {
+                let child = child_nodes[ci];
+
+                // CTRL_HEADER(tbl)이고 트리 자식에 TABLE이 없는 경우 (중첩 테이블)
+                if child.tag_id() == HwpTag::CTRL_HEADER {
+                    let ctrl_hdr_data = child.data();
+                    if ctrl_hdr_data.len() >= 4 {
+                        let ctrl_id_value = u32::from_le_bytes([
+                            ctrl_hdr_data[0],
+                            ctrl_hdr_data[1],
+                            ctrl_hdr_data[2],
+                            ctrl_hdr_data[3],
+                        ]);
+                        // TABLE ctrl_id = 'tbl ' = 0x74626C20
+                        let is_tbl = ctrl_id_value == 0x74626C20u32;
+                        let has_table_child =
+                            child.children().iter().any(|c| c.tag_id() == HwpTag::TABLE);
+
+                        if is_tbl && !has_table_child {
+                            eprintln!(
+                                "[NESTED_TBL] Found nested tbl at ci={}, next siblings: {:?}",
+                                ci,
+                                child_nodes.get(ci + 1).map(|s| format!("{}", s.tag_id()))
+                            );
+                            // 형제에서 TABLE, LIST_HEADER를 수집하여 완전한 CtrlHeader 생성
+                            let ctrl_header = CtrlHeader::parse(ctrl_hdr_data)?;
+                            let mut nested_children = Vec::new();
+                            let mut nested_paragraphs = Vec::new();
+                            // 기존 CTRL_HEADER 자식도 처리
+                            for cc in child.children() {
+                                nested_children.push(Self::parse_record_from_tree(
+                                    cc,
+                                    version,
+                                    original_data,
+                                )?);
+                            }
+                            // 형제 TABLE, LIST_HEADER 소비
+                            let mut j = ci + 1;
+                            let mut found_table = false;
+                            while j < child_nodes.len() {
+                                let sibling = child_nodes[j];
+                                if sibling.tag_id() == HwpTag::TABLE && !found_table {
+                                    nested_children.push(Self::parse_record_from_tree(
+                                        sibling,
+                                        version,
+                                        original_data,
+                                    )?);
+                                    found_table = true;
+                                    j += 1;
+                                } else if sibling.tag_id() == HwpTag::LIST_HEADER && found_table {
+                                    nested_children.push(Self::parse_record_from_tree(
+                                        sibling,
+                                        version,
+                                        original_data,
+                                    )?);
+                                    j += 1;
+                                } else if sibling.tag_id() == HwpTag::PARA_HEADER && found_table {
+                                    nested_paragraphs.push(Self::parse_paragraph_from_tree(
+                                        sibling,
+                                        version,
+                                        original_data,
+                                    )?);
+                                    j += 1;
+                                } else {
+                                    break;
+                                }
+                            }
+                            ci = j; // 소비한 형제만큼 건너뜀
+
+                            records.push(ParagraphRecord::CtrlHeader {
+                                header: ctrl_header,
+                                children: nested_children,
+                                paragraphs: nested_paragraphs,
+                            });
+                            continue;
+                        }
+                    }
+                }
+
+                records.push(Self::parse_record_from_tree(child, version, original_data)?);
+                ci += 1;
+            }
         }
+
+        // 중첩 테이블 후처리: assemble에서 Table.cells 채우기
+        records = Self::assemble_nested_tables(records)?;
 
         // 컨트롤 헤더 내부의 머리말/꼬리말/각주/미주 문단인 경우에만 ParaText 레코드 제거 (중복 방지, hwplib 방식)
         // Remove ParaText records only from header/footer/footnote/endnote paragraphs inside control headers (avoid duplication, hwplib approach)
@@ -436,6 +534,135 @@ impl Section {
     }
 
     /// 텍스트 데이터를 파싱하여 ParaText 레코드를 생성합니다. / Parses text data to create a ParaText record.
+    /// 셀 paragraph 내 flat한 중첩 테이블 레코드를 CtrlHeader의 children으로 병합
+    /// HWP 파일에서 셀 안의 중첩 테이블은 CtrlHeader(tbl)의 트리 자식이 아니라
+    /// 같은 paragraph의 형제 레코드로 저장됨
+    /// 중첩 테이블 후처리:
+    /// CtrlHeader(tbl)의 children에 있는 Table의 cells가 비어있고,
+    /// 뒤에 ListHeader가 연속으로 오면 Table.cells를 채웁니다.
+    fn assemble_nested_tables(
+        records: Vec<ParagraphRecord>,
+    ) -> Result<Vec<ParagraphRecord>, HwpError> {
+        use crate::document::bodytext::ctrl_header::CtrlId;
+        use crate::document::bodytext::table::TableCell;
+
+        // CtrlHeader(tbl)의 Table.cells가 비어있고 뒤에 ListHeader가 있는지 확인
+        let needs_assembly = records.iter().enumerate().any(|(i, r)| {
+            if let ParagraphRecord::CtrlHeader {
+                header, children, ..
+            } = r
+            {
+                if header.ctrl_id == CtrlId::TABLE {
+                    let table_cells_empty = children.iter().any(
+                        |c| matches!(c, ParagraphRecord::Table { table } if table.cells.is_empty()),
+                    );
+                    let next_is_list_header = records
+                        .get(i + 1)
+                        .is_some_and(|n| matches!(n, ParagraphRecord::ListHeader { .. }));
+                    return table_cells_empty && next_is_list_header;
+                }
+            }
+            false
+        });
+
+        if !needs_assembly {
+            return Ok(records);
+        }
+
+        let mut result: Vec<ParagraphRecord> = Vec::new();
+        let mut iter = records.into_iter().peekable();
+
+        while let Some(record) = iter.next() {
+            if let ParagraphRecord::CtrlHeader {
+                header,
+                mut children,
+                paragraphs,
+            } = record
+            {
+                if header.ctrl_id == CtrlId::TABLE {
+                    // Table.cells가 비어있으면 뒤따르는 ListHeader에서 셀 생성
+                    let table_cells_empty = children.iter().any(
+                        |c| matches!(c, ParagraphRecord::Table { table } if table.cells.is_empty()),
+                    );
+                    if table_cells_empty {
+                        // 뒤따르는 ListHeader를 소비하여 Table.cells에 추가
+                        let mut cell_list_headers = Vec::new();
+                        while let Some(next) = iter.peek() {
+                            if matches!(next, ParagraphRecord::ListHeader { .. }) {
+                                cell_list_headers.push(iter.next().unwrap());
+                            } else {
+                                break;
+                            }
+                        }
+
+                        // Table.cells 조립
+                        if let Some(ParagraphRecord::Table { ref mut table }) = children
+                            .iter_mut()
+                            .find(|c| matches!(c, ParagraphRecord::Table { .. }))
+                        {
+                            for lh_record in cell_list_headers {
+                                if let ParagraphRecord::ListHeader {
+                                    header: lh,
+                                    paragraphs: cell_paras,
+                                } = lh_record
+                                {
+                                    // CellAttributes는 ListHeader의 raw data에서 파싱해야 하지만,
+                                    // 이미 ListHeader로 파싱되어 raw data를 잃었으므로 기본값 사용
+                                    // 실제 CellAttributes는 children의 ListHeader 순서로 매핑
+                                    let cell_idx = table.cells.len();
+                                    let row_count = table.attributes.row_count as usize;
+                                    let col_count = table.attributes.col_count as usize;
+                                    let row = if col_count > 0 {
+                                        cell_idx / col_count
+                                    } else {
+                                        0
+                                    };
+                                    let col = if col_count > 0 {
+                                        cell_idx % col_count
+                                    } else {
+                                        0
+                                    };
+
+                                    use crate::document::bodytext::table::CellAttributes;
+                                    use crate::types::HWPUNIT;
+                                    let _ = row_count; // suppress warning
+
+                                    table.cells.push(TableCell {
+                                        list_header: lh,
+                                        cell_attributes: CellAttributes {
+                                            col_address: col as u16,
+                                            row_address: row as u16,
+                                            col_span: 1,
+                                            row_span: 1,
+                                            width: HWPUNIT::from(0u32),
+                                            height: HWPUNIT::from(0u32),
+                                            left_margin: 0,
+                                            right_margin: 0,
+                                            top_margin: 0,
+                                            bottom_margin: 0,
+                                            border_fill_id: 0,
+                                        },
+                                        paragraphs: cell_paras,
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                result.push(ParagraphRecord::CtrlHeader {
+                    header,
+                    children,
+                    paragraphs,
+                });
+            } else {
+                result.push(record);
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// 텍스트 데이터를 파싱하여 ParaText 레코드를 생성합니다.
     ///
     /// 제어 문자(0x0001~0x001F)를 찾고, 텍스트와 컨트롤 데이터를 분리합니다.
     /// Finds control characters (0x0001~0x001F) and separates text from control data.
@@ -1221,19 +1448,84 @@ impl Section {
                 let expected_count = list_header.paragraph_count as usize;
 
                 // 먼저 트리 구조에서 자식 노드를 확인 / First check child nodes in tree structure
+                // 중첩 테이블: LIST_HEADER의 자식 중 CTRL_HEADER(tbl) → TABLE → LIST_HEADER 시퀀스를
+                // 바로 앞 paragraph의 records에 추가
                 let mut stack: Vec<&RecordTreeNode> = vec![node];
                 while let Some(current_node) = stack.pop() {
-                    for child in current_node.children() {
+                    let children_nodes: Vec<&RecordTreeNode> =
+                        current_node.children().iter().collect();
+                    let mut ci = 0;
+                    while ci < children_nodes.len() {
+                        let child = children_nodes[ci];
                         if child.tag_id() == HwpTag::PARA_HEADER {
                             paragraphs.push(Self::parse_paragraph_from_tree(
                                 child,
                                 version,
                                 original_data,
                             )?);
+                        } else if child.tag_id() == HwpTag::CTRL_HEADER {
+                            // CTRL_HEADER가 LIST_HEADER의 직접 자식인 경우 (중첩 테이블 등)
+                            let ctrl_hdr = CtrlHeader::parse(child.data())?;
+                            let is_nested_table = ctrl_hdr.ctrl_id == CtrlId::TABLE;
+
+                            if is_nested_table {
+                                // 중첩 테이블: 뒤따르는 형제 TABLE, LIST_HEADER를 children으로 수집
+                                let mut nested_children = Vec::new();
+                                let mut nested_paragraphs = Vec::new();
+                                let mut j = ci + 1;
+                                let mut found_table = false;
+                                while j < children_nodes.len() {
+                                    let sibling = children_nodes[j];
+                                    if sibling.tag_id() == HwpTag::TABLE {
+                                        nested_children.push(Self::parse_record_from_tree(
+                                            sibling,
+                                            version,
+                                            original_data,
+                                        )?);
+                                        found_table = true;
+                                        j += 1;
+                                    } else if sibling.tag_id() == HwpTag::LIST_HEADER && found_table
+                                    {
+                                        nested_children.push(Self::parse_record_from_tree(
+                                            sibling,
+                                            version,
+                                            original_data,
+                                        )?);
+                                        j += 1;
+                                    } else if sibling.tag_id() == HwpTag::PARA_HEADER && found_table
+                                    {
+                                        nested_paragraphs.push(Self::parse_paragraph_from_tree(
+                                            sibling,
+                                            version,
+                                            original_data,
+                                        )?);
+                                        j += 1;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                ci = j - 1; // 소비한 형제 노드만큼 건너뜀
+
+                                let record = ParagraphRecord::CtrlHeader {
+                                    header: ctrl_hdr,
+                                    children: nested_children,
+                                    paragraphs: nested_paragraphs,
+                                };
+                                if let Some(last_para) = paragraphs.last_mut() {
+                                    last_para.records.push(record);
+                                }
+                            } else {
+                                let record =
+                                    Self::parse_record_from_tree(child, version, original_data)?;
+                                if let Some(last_para) = paragraphs.last_mut() {
+                                    last_para.records.push(record);
+                                }
+                            }
                         } else {
-                            // 자식의 자식도 확인하기 위해 스택에 추가 / Add to stack to check children of children
+                            // 자식의 자식도 확인하기 위해 스택에 추가
                             stack.push(child);
                         }
+                        ci += 1;
                     }
                 }
 
@@ -1294,54 +1586,30 @@ impl Section {
                                         let para_data = &original_data[offset..offset + data_size];
                                         offset += data_size;
 
-                                        // PARA_HEADER의 자식 레코드들도 읽기 / Read child records of PARA_HEADER
+                                        // PARA_HEADER의 자식 레코드들을 서브트리로 재구성
+                                        // RecordTreeNode::parse_tree 방식으로 레벨 기반 트리 구성
+                                        // (중첩 테이블: CTRL_HEADER(tbl) → TABLE/LIST_HEADER 관계 보존)
+                                        let para_level = header.level;
+                                        let sub_tree = RecordTreeNode::parse_subtree(
+                                            original_data,
+                                            &mut offset,
+                                            para_level,
+                                        )?;
+
                                         let mut para_records = Vec::new();
-                                        while offset < original_data.len() {
-                                            if let Ok((child_header, child_header_size)) =
-                                                RecordHeader::parse(&original_data[offset..])
+                                        for child_node in &sub_tree {
+                                            let parsed_record = Self::parse_record_from_tree(
+                                                child_node,
+                                                version,
+                                                original_data,
+                                            )?;
+                                            #[cfg(debug_assertions)]
+                                            if let ParagraphRecord::ParaText { text, .. } =
+                                                &parsed_record
                                             {
-                                                // 자식 레코드는 PARA_HEADER보다 레벨이 높아야 함 / Child records must have higher level than PARA_HEADER
-                                                if child_header.level <= header.level {
-                                                    break; // 같은 레벨 이하는 형제 레코드 / Same level or lower are sibling records
-                                                }
-
-                                                offset += child_header_size;
-                                                let child_data_size = child_header.size as usize;
-                                                if offset + child_data_size <= original_data.len() {
-                                                    let child_data = &original_data
-                                                        [offset..offset + child_data_size];
-                                                    offset += child_data_size;
-
-                                                    let child_node = RecordTreeNode {
-                                                        header: child_header,
-                                                        data: child_data.to_vec(),
-                                                        children: Vec::new(),
-                                                    };
-
-                                                    let parsed_record =
-                                                        Self::parse_record_from_tree(
-                                                            &child_node,
-                                                            version,
-                                                            original_data,
-                                                        )?;
-                                                    // 디버그: ListHeader 내부의 ParaText 확인 / Debug: Check ParaText inside ListHeader
-                                                    if let ParagraphRecord::ParaText {
-                                                        text, ..
-                                                    } = &parsed_record
-                                                    {
-                                                        #[cfg(debug_assertions)]
-                                                        eprintln!(
-                                                            "[DEBUG] ListHeader ParaText: {}",
-                                                            text
-                                                        );
-                                                    }
-                                                    para_records.push(parsed_record);
-                                                } else {
-                                                    break;
-                                                }
-                                            } else {
-                                                break;
+                                                eprintln!("[DEBUG] ListHeader ParaText: {}", text);
                                             }
+                                            para_records.push(parsed_record);
                                         }
 
                                         // Paragraph 생성 / Create Paragraph

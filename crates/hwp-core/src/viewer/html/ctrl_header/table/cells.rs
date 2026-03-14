@@ -330,8 +330,54 @@ pub(crate) fn render_cells(
                 }
             }
 
-            // 이미지 수집 (셀 내부에서는 테이블은 렌더링하지 않음) / Collect images (tables are not rendered inside cells)
+            // 이미지 및 중첩 테이블 수집 / Collect images and nested tables
             let mut images = Vec::new();
+            let mut nested_tables: Vec<super::super::super::line_segment::TableInfo> = Vec::new();
+
+            // 셀 안의 중첩 테이블 수집 (CtrlHeader(tbl) → process_ctrl_header)
+            // SHAPE_OBJECT 앵커 위치 수집
+            let shape_anchors: Vec<usize> = {
+                let mut anchors = Vec::new();
+                for record in &para.records {
+                    if let ParagraphRecord::ParaText {
+                        control_char_positions,
+                        ..
+                    } = record
+                    {
+                        for pos in control_char_positions {
+                            if pos.code == 11 {
+                                // SHAPE_OBJECT
+                                anchors.push(pos.position);
+                            }
+                        }
+                    }
+                }
+                anchors
+            };
+            let mut shape_anchor_idx = 0usize;
+            for record in &para.records {
+                if let ParagraphRecord::CtrlHeader {
+                    header, children, ..
+                } = record
+                {
+                    if header.ctrl_id == "tbl " && !children.is_empty() {
+                        let anchor = shape_anchors.get(shape_anchor_idx).copied();
+                        shape_anchor_idx += 1;
+                        for child_rec in children {
+                            if let ParagraphRecord::Table { table: nested_tbl } = child_rec {
+                                use super::super::super::line_segment::TableInfo;
+                                nested_tables.push(TableInfo {
+                                    table: nested_tbl,
+                                    ctrl_header: Some(&header.data),
+                                    anchor_char_pos: anchor,
+                                    caption: None,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            let _ = &shape_anchor_idx; // suppress unused warning
 
             // para.records에서 직접 ShapeComponentPicture 찾기 (CtrlHeader 내부가 아닌 경우만) / Find ShapeComponentPicture directly in para.records (only if not inside CtrlHeader)
             // CtrlHeader가 있는지 먼저 확인 / Check if CtrlHeader exists first
@@ -795,7 +841,7 @@ pub(crate) fn render_cells(
                             control_char_positions: &control_char_positions,
                             original_text_len: para.para_header.text_char_count as usize,
                             images: &images,
-                            tables: &[],
+                            tables: &nested_tables,
                             shape_htmls: &[],
                             marker_info: cell_marker_info.as_ref(),
                             paragraph_markers: &[],
