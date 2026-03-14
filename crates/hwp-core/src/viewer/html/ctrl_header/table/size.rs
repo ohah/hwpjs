@@ -58,7 +58,16 @@ fn cell_max_shape_height_from_records(
                     max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(height_mm));
                 }
             }
-            ParagraphRecord::CtrlHeader { children, .. } => {
+            ParagraphRecord::CtrlHeader {
+                header, children, ..
+            } => {
+                // CtrlHeader의 ObjectCommon height 반영
+                if let CtrlHeaderData::ObjectCommon { height, .. } = &header.data {
+                    let h_mm = height.to_mm();
+                    if h_mm > 0.1 {
+                        max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(h_mm));
+                    }
+                }
                 if let Some(h) = cell_max_shape_height_from_records(children, mc_column_count) {
                     max_height_mm = Some(max_height_mm.unwrap_or(0.0).max(h));
                 }

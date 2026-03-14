@@ -177,6 +177,16 @@ pub(crate) fn render_cells(
                         }
                         break; // ShapeComponent는 하나만 있음 / Only one ShapeComponent per paragraph
                     }
+                    // CtrlHeader(gso)의 ObjectCommon height도 셀 높이에 반영
+                    ParagraphRecord::CtrlHeader { header, .. } => {
+                        if let CtrlHeaderData::ObjectCommon { height, .. } = &header.data {
+                            let h_mm = height.to_mm();
+                            if h_mm > 0.1 {
+                                max_shape_height_mm =
+                                    Some(max_shape_height_mm.unwrap_or(0.0).max(h_mm));
+                            }
+                        }
+                    }
                     // ParaLineSeg가 paragraph records에 직접 있는 경우도 처리 / Also handle ParaLineSeg directly in paragraph records
                     ParagraphRecord::ParaLineSeg { segments } => {
                         if let Some(last) =
@@ -945,7 +955,7 @@ pub(crate) fn render_cells(
                 // last_seg_bottom 업데이트 (line-height + bottom_spacing)
                 let bottom_spacing =
                     if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
-                        document.doc_info.para_shapes[para_shape_id as usize].bottom_spacing as i32
+                        document.doc_info.para_shapes[para_shape_id as usize].bottom_spacing
                     } else {
                         0
                     };
