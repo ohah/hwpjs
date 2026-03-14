@@ -20,9 +20,6 @@ pathdiff = "0.2.1"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 thiserror = "2.0.17"
-printpdf = { version = "0.7", features = ["embedded_images"] }
-image = "0.24"
-rusttype = "0.9"
 
 [dev-dependencies]
 insta = "1.43.2"

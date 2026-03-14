@@ -275,19 +275,6 @@ pub fn to_html(data: Buffer, options: Option<ToHtmlOptions>) -> Result<String, n
     Ok(html)
 }
 
-// NOTE: toPdf는 아직 지원하지 않으므로 비활성화 (추후 활성화 예정)
-// /// PDF conversion options
-// #[napi(object)]
-// pub struct ToPdfOptions {
-//     pub font_dir: Option<String>,
-//     pub embed_images: Option<bool>,
-// }
-//
-// #[napi]
-// pub fn to_pdf(data: Buffer, options: Option<ToPdfOptions>) -> Result<Buffer, napi::Error> {
-//     ...
-// }
-
 /// Extract FileHeader from HWP file as JSON
 ///
 /// # Arguments

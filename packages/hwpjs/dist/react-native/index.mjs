@@ -1,6 +1,6 @@
 import { Platform, TurboModuleRegistry } from "react-native";
 
-//#region ../../node_modules/.bun/craby-modules@0.1.0-rc.4+0891b211bdee886f/node_modules/craby-modules/dist/index.mjs
+//#region ../../node_modules/.bun/craby-modules@0.1.0-rc.4+078b017339bf9ec6/node_modules/craby-modules/dist/index.mjs
 /**
 * Android JNI initialization workaround
 *

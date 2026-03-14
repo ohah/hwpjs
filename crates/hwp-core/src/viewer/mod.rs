@@ -9,10 +9,6 @@ pub mod canvas;
 pub mod core;
 pub mod html;
 pub mod markdown;
-#[allow(missing_docs)] // TODO: Implement PDF viewer
-pub mod pdf;
-
 pub use core::renderer::{DocumentParts, Renderer, TextStyles};
 pub use html::{to_html, to_html_pages, HtmlOptions, HtmlPages};
 pub use markdown::{to_markdown, MarkdownOptions};
-pub use pdf::{to_pdf, PdfOptions};

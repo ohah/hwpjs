@@ -1,7 +1,7 @@
 /// HWP 문서 viewer 변환 함수 통합 테스트
 /// HWP Document viewer conversion functions integration tests
 mod common;
-use hwp_core::viewer::{HtmlOptions, MarkdownOptions, PdfOptions};
+use hwp_core::viewer::{HtmlOptions, MarkdownOptions};
 use hwp_core::{FileHeader, HwpDocument, HwpParser};
 
 // Helper function to create default MarkdownOptions since it doesn't implement Default
@@ -70,30 +70,6 @@ fn test_hwp_document_to_html_basic() {
             // Test basic HTML conversion
             let html = document.to_html(&HtmlOptions::default());
             assert!(!html.is_empty(), "HTML output should not be empty");
-        }
-    }
-}
-
-#[test]
-#[ignore] // Requires font files (Liberation Sans) to be available
-fn test_hwp_document_to_pdf_basic() {
-    // Test basic PDF conversion (requires fonts)
-    use crate::common::find_fixture_file;
-
-    if let Some(path) = find_fixture_file("noori.hwp") {
-        if let Ok(data) = std::fs::read(path) {
-            let parser = HwpParser::new();
-            let result = parser.parse(&data);
-            assert!(result.is_ok(), "Should parse actual HWP file");
-            let document = result.unwrap();
-
-            // Test basic PDF conversion
-            let pdf_bytes = document.to_pdf(&PdfOptions::default());
-            assert!(!pdf_bytes.is_empty(), "PDF output should not be empty");
-            // Check that PDF has minimal structure (first line should be PDF header)
-            if let Some(first_byte) = pdf_bytes.first() {
-                assert_eq!(*first_byte, b'%', "PDF should start with %");
-            }
         }
     }
 }
