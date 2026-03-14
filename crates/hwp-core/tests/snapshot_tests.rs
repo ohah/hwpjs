@@ -1868,10 +1868,10 @@ fn test_debug_table_bug_page10() {
     }
 
     // Helper: get border fill by 1-indexed id
-    fn get_bf<'a>(
-        border_fills: &'a [hwp_core::document::docinfo::border_fill::BorderFill],
+    fn get_bf(
+        border_fills: &[hwp_core::document::docinfo::border_fill::BorderFill],
         id: u16,
-    ) -> Option<&'a hwp_core::document::docinfo::border_fill::BorderFill> {
+    ) -> Option<&hwp_core::document::docinfo::border_fill::BorderFill> {
         if id == 0 {
             return None;
         }
