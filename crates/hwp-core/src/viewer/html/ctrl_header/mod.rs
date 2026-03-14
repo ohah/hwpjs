@@ -99,6 +99,8 @@ pub struct CtrlHeaderResult<'a> {
     pub extra_content: Option<String>,
     /// 그리기 개체 HTML (hpa 레벨에 배치) / Shape object HTML (placed at hpa level)
     pub shape_html: Option<String>,
+    /// 인라인 그리기 개체 HTML (like_letters=true, 본문 흐름 내 배치) / Inline shape object HTML (like_letters=true, placed in paragraph flow)
+    pub inline_shape_html: Option<String>,
 }
 
 impl<'a> CtrlHeaderResult<'a> {
@@ -113,6 +115,7 @@ impl<'a> CtrlHeaderResult<'a> {
             footer_content_height_mm: None,
             extra_content: None,
             shape_html: None,
+            inline_shape_html: None,
         }
     }
 }
