@@ -445,15 +445,23 @@ pub fn render_table(
             String::new()
         } else {
             // 분해된 캡션 텍스트 사용 / Use parsed caption text
+            // label, number, body가 모두 비어있으면 캡션 라벨 없이 paragraphs만 렌더링
+            // (CtrlHeader paragraphs를 CaptionData로 전달한 경우)
+            let has_caption_text =
+                !caption.label.is_empty() || !caption.number.is_empty() || !caption.body.is_empty();
             let caption_label = if !caption.label.is_empty() {
                 caption.label.clone()
-            } else {
+            } else if has_caption_text {
                 "표".to_string() // 기본값 / Default
+            } else {
+                String::new()
             };
             let table_num_text = if !caption.number.is_empty() {
                 caption.number.clone()
-            } else {
+            } else if has_caption_text {
                 table_number.map(|n| n.to_string()).unwrap_or_default()
+            } else {
+                String::new()
             };
             let caption_body = caption.body.clone();
 

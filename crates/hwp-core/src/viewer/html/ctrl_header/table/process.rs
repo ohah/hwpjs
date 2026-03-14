@@ -424,10 +424,32 @@ pub fn process_table<'a>(
             };
 
             // CaptionData 생성 / Create CaptionData
+            // caption_info가 없어도 paragraphs가 있으면 CaptionData 생성
+            // (CtrlHeader paragraphs가 테이블 아래에 배치되는 경우)
             let caption_data = if let (Some(text), Some(info)) = (current_caption, caption_info) {
                 Some(CaptionData {
                     text,
                     info,
+                    paragraphs: current_caption_paragraphs,
+                })
+            } else if !current_caption_paragraphs.is_empty() {
+                // 캡션 정보 없이 paragraphs만 있는 경우: 기본 CaptionInfo로 생성
+                // (CtrlHeader paragraphs가 테이블 아래에 배치되는 경우)
+                Some(CaptionData {
+                    text: CaptionText {
+                        label: String::new(),
+                        number: String::new(),
+                        body: String::new(),
+                    },
+                    info: CaptionInfo {
+                        align: CaptionAlign::Bottom,
+                        is_above: false,
+                        gap: None,
+                        height_mm: None,
+                        width: None,
+                        include_margin: None,
+                        last_width: None,
+                    },
                     paragraphs: current_caption_paragraphs,
                 })
             } else {
