@@ -34,8 +34,13 @@ pub(crate) fn render_svg(
     }
     let rows = row_positions(table, content.height, document, ctrl_header_height_mm);
 
-    let (pattern_defs, fills) =
-        fills::render_fills(table, document, &rows, pattern_counter, color_to_pattern);
+    let (pattern_defs, fills) = fills::render_fills(
+        table,
+        document,
+        &rows,
+        pattern_counter,
+        color_to_pattern,
+    );
 
     let vertical = borders::render_vertical_borders(table, document, &cols, &rows, content);
     let horizontal = borders::render_horizontal_borders(
