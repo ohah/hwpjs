@@ -24,11 +24,16 @@ export default defineConfig({
       // externals 설정 제거
     },
     tools: {
-      rspack: {
-        resolve: {
-          // 브라우저 환경에서 ESM으로 처리
-          conditionNames: ['browser', 'import', 'module', 'require'],
-        },
+      rspack(config, { isServer }) {
+        if (isServer) {
+          // SSR 번들에서 @ohah/hwpjs를 제외하여 wasm import 에러 방지
+          config.externals = config.externals || [];
+          if (Array.isArray(config.externals)) {
+            config.externals.push('@ohah/hwpjs', '@ohah/hwpjs-wasm32-wasi');
+          }
+        }
+        config.resolve = config.resolve || {};
+        config.resolve.conditionNames = ['browser', 'import', 'module', 'require'];
       },
     },
   },
