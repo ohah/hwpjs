@@ -348,21 +348,48 @@ pub(crate) fn render_vertical_borders(
         let is_left_edge = (col_x - 0.0).abs() < epsilon;
         let is_right_edge = (col_x - content.width).abs() < epsilon;
 
-        // 좌/우 외곽선은 항상 전체 높이로 그림
+        // 좌/우 외곽선: 행별로 border를 확인하여 연속 구간 결합
+        // 일부 행에서 line_type=0(선 없음)인 경우 해당 구간은 건너뜀
         if is_left_edge || is_right_edge {
-            if let Some(line) = vertical_segment_borderline(
-                table,
-                document,
-                row_positions,
-                col_x,
-                0.0,
-                content.height,
-                is_left_edge,
-                is_right_edge,
-            ) {
+            let mut seg_start: Option<(f64, BorderLine)> = None;
+            for ri in 0..row_positions.len().saturating_sub(1) {
+                let y0 = row_positions[ri];
+                let y1 = row_positions[ri + 1];
+                let line_opt = vertical_segment_borderline(
+                    table,
+                    document,
+                    row_positions,
+                    col_x,
+                    y0,
+                    y1,
+                    is_left_edge,
+                    is_right_edge,
+                );
+                match (&seg_start, &line_opt) {
+                    (Some((_, ref prev_line)), Some(ref cur_line))
+                        if prev_line.width == cur_line.width
+                            && prev_line.line_type == cur_line.line_type =>
+                    {
+                        // 같은 스타일 → 연장
+                    }
+                    (Some((start_y, prev_line)), _) => {
+                        // 스타일 변경 또는 None → 이전 구간 출력
+                        svg_paths.push_str(&render_border_paths(
+                            col_x, *start_y, col_x, y0, true, prev_line,
+                        ));
+                        seg_start = line_opt.map(|l| (y0, l));
+                    }
+                    (None, Some(_)) => {
+                        seg_start = line_opt.map(|l| (y0, l));
+                    }
+                    (None, None) => {}
+                }
+            }
+            // 마지막 구간 출력
+            if let Some((start_y, line)) = seg_start {
                 svg_paths.push_str(&render_border_paths(
                     col_x,
-                    0.0,
+                    start_y,
                     col_x,
                     content.height,
                     true,

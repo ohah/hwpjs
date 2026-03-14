@@ -4,28 +4,35 @@ use crate::document::{
     HwpDocument,
 };
 
-/// 연속 공백 변환: 첫 번째 공백은 유지, 이후 연속 공백은 &nbsp;로 변환
-/// Convert consecutive spaces: keep first space, convert subsequent to &nbsp;
+/// 연속 공백 변환: leading 공백과 연속 공백을 &nbsp;로 변환
+/// 규칙 (한컴 원본 HTML 역분석):
+///   - leading 공백: 모두 &nbsp;
+///   - 텍스트 뒤 연속 공백: 첫 번째는 일반 스페이스, 이후 &nbsp;
+///   - trailing 단독 공백: &nbsp;
 fn convert_consecutive_spaces(text: &str) -> String {
     let mut result = String::with_capacity(text.len() * 2);
     let mut space_count = 0u32;
+    let mut has_non_space = false; // 공백이 아닌 문자가 나온 적 있는지
 
     for ch in text.chars() {
         if ch == ' ' {
             space_count += 1;
-            if space_count == 1 {
+            if !has_non_space {
+                // leading 공백: 모두 &nbsp;
+                result.push_str("&nbsp;");
+            } else if space_count == 1 {
                 result.push(' ');
             } else {
                 result.push_str("&nbsp;");
             }
         } else {
+            has_non_space = true;
             space_count = 0;
             result.push(ch);
         }
     }
 
-    // trailing 단독 공백도 &nbsp;로 변환 (HTML에서 trailing space가 무시되는 것 방지)
-    // Convert trailing single space to &nbsp; (prevent HTML from ignoring trailing space)
+    // trailing 단독 공백도 &nbsp;로 변환
     if result.ends_with(' ') && !result.ends_with("&nbsp;") {
         result.pop();
         result.push_str("&nbsp;");
