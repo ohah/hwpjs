@@ -215,21 +215,24 @@ fn vertical_segment_borderline(
         }
     };
 
-    // 외곽 테두리 선택 로직: 셀 border와 table default 중 더 두꺼운 것을 사용
+    // 외곽 테두리 선택 로직:
+    // 셀이 table default와 동일한 선 스타일(line_type, color)이면 table default(프레임) 사용.
+    // 셀이 다른 스타일/색을 명시적으로 설정했으면 셀 border를 사용.
     if is_left_edge || is_right_edge {
-        match &cell_border {
-            Some(cb) if cb.line_type == 0 => None,
-            Some(cb) => match &table_default_line {
-                Some(td) if td.line_type != 0 && td.width != 0 => {
-                    if cb.width >= td.width {
-                        cell_border
-                    } else {
-                        table_default_line
-                    }
+        match (&cell_border, &table_default_line) {
+            (Some(cb), Some(td)) if td.line_type != 0 => {
+                // 셀이 table default와 동일한 line_type+color이면 프레임(table default) 사용
+                if cb.line_type == td.line_type && cb.color == td.color {
+                    table_default_line
+                } else if cb.line_type == 0 {
+                    None
+                } else {
+                    cell_border
                 }
-                _ => cell_border,
-            },
-            None => table_default_line,
+            }
+            (Some(cb), _) if cb.line_type == 0 => None,
+            (Some(_), _) => cell_border,
+            (None, _) => table_default_line,
         }
     } else {
         // 내부 열 경계: 셀 border가 w=0이면 table default를 fallback으로 사용
@@ -335,21 +338,23 @@ fn horizontal_segment_borderline(
         }
     };
 
-    // 외곽 테두리 선택 로직: 셀 border와 table default 중 더 두꺼운 것을 사용
+    // 외곽 테두리 선택 로직:
+    // 셀이 table default와 동일한 선 스타일(line_type, color)이면 table default(프레임) 사용.
+    // 셀이 다른 스타일/색을 명시적으로 설정했으면 셀 border를 사용.
     if is_top_edge || is_bottom_edge {
-        match &cell_border {
-            Some(cb) if cb.line_type == 0 => None,
-            Some(cb) => match &table_default_line {
-                Some(td) if td.line_type != 0 && td.width != 0 => {
-                    if cb.width >= td.width {
-                        cell_border
-                    } else {
-                        table_default_line
-                    }
+        match (&cell_border, &table_default_line) {
+            (Some(cb), Some(td)) if td.line_type != 0 => {
+                if cb.line_type == td.line_type && cb.color == td.color {
+                    table_default_line
+                } else if cb.line_type == 0 {
+                    None
+                } else {
+                    cell_border
                 }
-                _ => cell_border,
-            },
-            None => table_default_line,
+            }
+            (Some(cb), _) if cb.line_type == 0 => None,
+            (Some(_), _) => cell_border,
+            (None, _) => table_default_line,
         }
     } else {
         // 내부 행 경계: 셀 border가 w=0이면 table default를 fallback으로 사용
