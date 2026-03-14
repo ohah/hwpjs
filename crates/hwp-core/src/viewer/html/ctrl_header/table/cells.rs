@@ -292,6 +292,10 @@ pub(crate) fn render_cells(
         let mut cell_outline_tracker = OutlineNumberTracker::new();
         let mut cell_number_tracker = NumberTracker::new();
 
+        // LineSegment가 없는 paragraph의 top 위치 추정을 위해
+        // 이전 paragraph의 마지막 line segment bottom 위치를 추적
+        let mut last_seg_bottom_hwpunit: i32 = 0;
+
         for para in &cell.paragraphs {
             // ParaShape 클래스 가져오기 / Get ParaShape class
             let para_shape_id = para.para_header.para_shape_id;
@@ -325,6 +329,10 @@ pub(crate) fn render_cells(
                     // 첫 번째 LineSegment 저장 (hcI top 계산용) / Store first LineSegment (for hcI top calculation)
                     if first_line_segment.is_none() && !segments.is_empty() {
                         first_line_segment = segments.first();
+                    }
+                    // 마지막 segment의 bottom 위치 업데이트
+                    if let Some(last) = segments.last() {
+                        last_seg_bottom_hwpunit = last.vertical_position + last.line_height;
                     }
                     break;
                 }
@@ -874,12 +882,74 @@ pub(crate) fn render_cells(
                 }
             } else if !text.is_empty() {
                 // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment
+                // 이전 paragraph의 line segment에서 다음 위치를 추정하여 top 설정
+                // (LineSegment가 없는 paragraph는 이전 paragraph 바로 다음에 배치)
                 let rendered_text =
                     text::render_text(&text, &char_shapes, document, &options.css_class_prefix);
+
+                // LineSegment가 없는 paragraph의 top 위치:
+                // 이전 paragraph의 마지막 line segment bottom에서 이어감
+                let top_mm = round_to_2dp(int32_to_mm(last_seg_bottom_hwpunit));
+
+                // 기본 line-height: CharShape에서 가져오거나 fallback
+                let default_lh = char_shapes
+                    .first()
+                    .and_then(|cs| {
+                        document
+                            .doc_info
+                            .char_shapes
+                            .get(cs.shape_id as usize)
+                            .map(|shape| round_to_2dp((shape.base_size as f64 / 100.0) * 0.352778))
+                    })
+                    .unwrap_or(2.79);
+
+                let text_height_mm = default_lh;
+                let offset_mm = round_to_2dp((default_lh - text_height_mm) / 2.0);
+                let hls_top_mm = round_to_2dp(top_mm + offset_mm);
+
+                // 문단 번호 마커 렌더링 (hhe div)
+                let marker_html = if let Some(ref marker) = cell_marker_info {
+                    let font_style = marker
+                        .font_size_pt
+                        .map(|pt| format!(r#" style="font-size:{pt}pt;""#))
+                        .unwrap_or_default();
+                    let cs_class = if !marker.char_shape_class.is_empty() {
+                        format!(" {}", marker.char_shape_class)
+                    } else {
+                        String::new()
+                    };
+                    format!(
+                        r#"<div class="hhe" style="display:inline-block;margin-left:{:.2}mm;width:{:.2}mm;height:{:.2}mm;"><span class="hrt{}"{}>{}</span></div>"#,
+                        marker.margin_left_mm,
+                        marker.width_mm,
+                        default_lh,
+                        cs_class,
+                        font_style,
+                        marker.marker_text
+                    )
+                } else {
+                    String::new()
+                };
+
                 cell_content.push_str(&format!(
-                    r#"<div class="hls {}">{}</div>"#,
-                    para_shape_class, rendered_text
+                    r#"<div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:0.00mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;">{}{}</div>"#,
+                    para_shape_class,
+                    default_lh,
+                    hls_top_mm,
+                    default_lh,
+                    round_to_2dp(cell_width - left_margin_mm - _right_margin_mm),
+                    marker_html,
+                    rendered_text
                 ));
+
+                // last_seg_bottom 업데이트 (line-height + bottom_spacing)
+                let bottom_spacing =
+                    if (para_shape_id as usize) < document.doc_info.para_shapes.len() {
+                        document.doc_info.para_shapes[para_shape_id as usize].bottom_spacing as i32
+                    } else {
+                        0
+                    };
+                last_seg_bottom_hwpunit += (default_lh * 7200.0 / 25.4) as i32 + bottom_spacing;
                 cell_has_text = true;
             } else if !images.is_empty() {
                 // LineSegment와 텍스트가 없지만 이미지가 있는 경우 / No LineSegment or text but images exist
