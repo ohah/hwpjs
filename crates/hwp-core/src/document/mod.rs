@@ -1,6 +1,7 @@
 pub mod bindata;
 pub mod bodytext;
 pub mod constants;
+pub mod distribution;
 pub mod docinfo;
 /// HWP Document structure
 ///

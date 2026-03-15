@@ -12,6 +12,7 @@ name = "hwp_core"
 path = "src/lib.rs"
 
 [dependencies]
+aes = "0.8"
 base64 = "0.22.1"
 cfb = "0.12.1"
 encoding_rs = "0.8.33"

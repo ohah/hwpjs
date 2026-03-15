@@ -64,3 +64,42 @@ fn test_hwp_parser_parse_with_invalid_data() {
     // Should fail because it's not a valid CFB structure
     assert!(result.is_err(), "Should fail for invalid CFB data");
 }
+
+#[test]
+fn test_distribution_document_parsing() {
+    use crate::common::find_fixture_file;
+
+    let path = find_fixture_file("distribution.hwp")
+        .expect("distribution.hwp fixture file should exist");
+    let data = std::fs::read(&path).expect("Should read distribution.hwp");
+    let parser = HwpParser::new();
+    let result = parser.parse(&data);
+    if let Err(e) = &result {
+        eprintln!("Parse error: {}", e);
+    }
+    assert!(result.is_ok(), "Should parse distribution document");
+    let doc = result.unwrap();
+
+    // Distribution flag should be set
+    assert!(
+        doc.file_header.is_distribution(),
+        "Distribution flag should be set"
+    );
+
+    // Should have parsed ViewText content, not just preview
+    assert!(
+        !doc.body_text.sections.is_empty(),
+        "Should have at least one section"
+    );
+    let section = &doc.body_text.sections[0];
+    assert!(
+        !section.paragraphs.is_empty(),
+        "Should have at least one paragraph"
+    );
+    // Distribution docs should have more than just the preview paragraph
+    assert!(
+        section.paragraphs.len() > 1,
+        "Should have more than just the preview paragraph (got {} paragraphs)",
+        section.paragraphs.len()
+    );
+}

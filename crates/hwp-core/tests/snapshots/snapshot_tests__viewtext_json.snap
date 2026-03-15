@@ -1,5 +1,6 @@
 ---
 source: crates/hwp-core/tests/snapshot_tests.rs
+assertion_line: 118
 expression: json
 ---
 {
@@ -1611,14 +1612,14 @@ expression: json
         "paragraphs": [
           {
             "para_header": {
-              "text_char_count": 123,
+              "text_char_count": 43,
               "control_mask": {
                 "value": 4,
                 "flags": [
                   "section_column_definition"
                 ]
               },
-              "para_shape_id": 2,
+              "para_shape_id": 1,
               "para_style_id": 0,
               "column_divide_type": [
                 "section",
@@ -1626,14 +1627,14 @@ expression: json
               ],
               "char_shape_count": 1,
               "range_tag_count": 0,
-              "line_align_count": 0,
+              "line_align_count": 1,
               "instance_id": 0,
               "section_merge": null
             },
             "records": [
               {
                 "type": "para_text",
-                "text": "이 문서는 상위 버전의 배포용 문서입니다. 문서를 읽으려면 최신 버전의 한글 또는 한글 전용 뷰어가 필요합니다. (주의! 현재 상태에서 문서를 저장하는 경우 원래 문서의 내용이 사라집니다.)",
+                "text": "pyhwp 테스트를 위한 배포 문서 예제입니다.",
                 "runs": [
                   {
                     "kind": "control",
@@ -1651,11 +1652,11 @@ expression: json
                   },
                   {
                     "kind": "text",
-                    "text": "이 문서는 상위 버전의 배포용 문서입니다. 문서를 읽으려면 최신 버전의 한글 또는 한글 전용 뷰어가 필요합니다. (주의! 현재 상태에서 문서를 저장하는 경우 원래 문서의 내용이 사라집니다.)"
+                    "text": "pyhwp 테스트를 위한 배포 문서 예제입니다."
                   },
                   {
                     "kind": "control",
-                    "position": 122,
+                    "position": 42,
                     "code": 13,
                     "name": "PARA_BREAK",
                     "size_wchars": 1
@@ -1673,7 +1674,7 @@ expression: json
                     "name": "RESERVED_2"
                   },
                   {
-                    "position": 122,
+                    "position": 42,
                     "code": 13,
                     "name": "PARA_BREAK"
                   }
@@ -1694,30 +1695,10 @@ expression: json
                   {
                     "text_start_position": 0,
                     "vertical_position": 0,
-                    "line_height": 750,
+                    "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
-                    "line_spacing": 1600,
-                    "column_start_position": 0,
-                    "segment_width": 42520,
-                    "tag": {
-                      "is_first_line_of_page": true,
-                      "is_first_line_of_column": true,
-                      "is_empty_segment": false,
-                      "is_first_segment_of_line": true,
-                      "is_last_segment_of_line": true,
-                      "has_auto_hyphenation": false,
-                      "has_indentation": false,
-                      "has_paragraph_header_shape": false
-                    }
-                  },
-                  {
-                    "text_start_position": 65,
-                    "vertical_position": 1600,
-                    "line_height": 750,
-                    "text_height": 1000,
-                    "baseline_distance": 850,
-                    "line_spacing": 1600,
+                    "line_spacing": 600,
                     "column_start_position": 0,
                     "segment_width": 42520,
                     "tag": {
