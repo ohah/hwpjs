@@ -784,28 +784,35 @@ impl HwpParser {
 
         // 글자 폭 근사 계산으로 줄바꿈 위치 추정
         // 각 줄의 시작 문자 위치(WCHAR 인덱스)를 반환
-        let estimate_line_breaks = |text: &str, line_width_hu: i32, font_hu: i32| -> Vec<u32> {
-            let mut line_starts: Vec<u32> = vec![0]; // 첫 줄은 항상 0에서 시작
+        // indent_width_hu: 내어쓰기 시 2줄째부터 줄어드는 너비 (양수)
+        let estimate_line_breaks = |text: &str, line_width_hu: i32, font_hu: i32, indent_width_hu: i32| -> Vec<u32> {
+            let mut line_starts: Vec<u32> = vec![0];
             if text.is_empty() || line_width_hu <= 0 || font_hu <= 0 {
                 return line_starts;
             }
             let mut current_width: i32 = 0;
+            let mut line_num = 1usize;
             for (char_idx, ch) in text.chars().enumerate() {
-                // 글자 폭 근사값 (fixture 역산 기반, 맑은 고딕/한컴바탕 등 한글 글꼴 기준)
-                // justify 정렬에서 공백이 늘어나는 것을 감안하여 공백 폭을 작게 설정
                 let char_width = if ch == ' ' {
-                    (font_hu as f64 * 0.10) as i32 // 공백: font_size × 0.10 (justify 정렬에서 공백은 남는 공간을 채우므로 작게 설정)
+                    (font_hu as f64 * 0.10) as i32
                 } else if ch == '\t' {
-                    font_hu * 2 // 탭: font_size × 2 (근사)
+                    font_hu * 2
                 } else if Self::is_fullwidth_char(ch) {
-                    (font_hu as f64 * 0.85) as i32 // 한글/CJK: font_size × 0.85
+                    (font_hu as f64 * 0.85) as i32
                 } else {
-                    (font_hu as f64 * 0.425) as i32 // ASCII/Latin: font_size × 0.425
+                    (font_hu as f64 * 0.425) as i32
                 };
                 current_width += char_width;
-                if current_width > line_width_hu {
+                // 내어쓰기: 2줄째부터 너비가 줄어듬
+                let effective_width = if line_num > 1 && indent_width_hu > 0 {
+                    line_width_hu - indent_width_hu
+                } else {
+                    line_width_hu
+                };
+                if current_width > effective_width {
                     line_starts.push(char_idx as u32);
-                    current_width = char_width; // 현재 글자를 다음 줄로
+                    current_width = char_width;
+                    line_num += 1;
                 }
             }
             line_starts
@@ -819,12 +826,20 @@ impl HwpParser {
             (0, content_width_hu)
         };
 
-        // 줄바꿈 추정은 텍스트 영역 너비 기준
-        let line_starts = estimate_line_breaks(para_text, text_seg_width, font_size_hu);
-        let line_count = line_starts.len();
-
         // ParaShape의 indent로 들여쓰기/내어쓰기 판단
         let indent_val = para_shape.map(|ps| ps.indent).unwrap_or(0);
+
+        // 내어쓰기(indent<0)일 때 2줄째부터 줄어드는 너비
+        // render_line_segment에서 indent / 2.0으로 padding-left를 계산하므로 여기서도 동일하게 적용
+        let indent_padding_hu = if indent_val < 0 {
+            indent_val.unsigned_abs() as i32 / 2
+        } else {
+            0
+        };
+
+        // 줄바꿈 추정은 텍스트 영역 너비 기준
+        let line_starts = estimate_line_breaks(para_text, text_seg_width, font_size_hu, indent_padding_hu);
+        let line_count = line_starts.len();
 
         let mut segments = Vec::with_capacity(line_count);
         for i in 0..line_count {
