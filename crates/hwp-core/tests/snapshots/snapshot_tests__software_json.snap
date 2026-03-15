@@ -11880,7 +11880,7 @@ expression: json
                       "is_first_segment_of_line": true,
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
-                      "has_indentation": false,
+                      "has_indentation": true,
                       "has_paragraph_header_shape": false
                     }
                   },
@@ -11900,7 +11900,7 @@ expression: json
                       "is_first_segment_of_line": true,
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
-                      "has_indentation": false,
+                      "has_indentation": true,
                       "has_paragraph_header_shape": false
                     }
                   }
@@ -12356,7 +12356,7 @@ expression: json
                       "is_first_segment_of_line": true,
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
-                      "has_indentation": false,
+                      "has_indentation": true,
                       "has_paragraph_header_shape": false
                     }
                   },
@@ -12376,7 +12376,7 @@ expression: json
                       "is_first_segment_of_line": true,
                       "is_last_segment_of_line": true,
                       "has_auto_hyphenation": false,
-                      "has_indentation": false,
+                      "has_indentation": true,
                       "has_paragraph_header_shape": false
                     }
                   }
@@ -20513,7 +20513,7 @@ expression: json
                                         "is_first_segment_of_line": true,
                                         "is_last_segment_of_line": true,
                                         "has_auto_hyphenation": false,
-                                        "has_indentation": false,
+                                        "has_indentation": true,
                                         "has_paragraph_header_shape": false
                                       }
                                     }

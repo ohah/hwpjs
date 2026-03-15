@@ -823,6 +823,9 @@ impl HwpParser {
         let line_starts = estimate_line_breaks(para_text, text_seg_width, font_size_hu);
         let line_count = line_starts.len();
 
+        // ParaShape의 indent로 들여쓰기/내어쓰기 판단
+        let indent_val = para_shape.map(|ps| ps.indent).unwrap_or(0);
+
         let mut segments = Vec::with_capacity(line_count);
         for i in 0..line_count {
             segments.push(LineSegmentInfo {
@@ -841,7 +844,9 @@ impl HwpParser {
                     is_first_segment_of_line: true,
                     is_last_segment_of_line: true,
                     has_auto_hyphenation: false,
-                    has_indentation: false,
+                    // 내어쓰기(indent<0): 2번째 줄부터 padding-left 적용
+                    // 들여쓰기(indent>0): 첫 줄에만 padding-left 적용
+                    has_indentation: if indent_val < 0 { i > 0 } else if indent_val > 0 { i == 0 } else { false },
                     has_paragraph_header_shape: false,
                 },
             });
