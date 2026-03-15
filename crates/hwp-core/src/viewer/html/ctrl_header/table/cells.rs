@@ -591,8 +591,9 @@ pub(crate) fn render_cells(
                             None,
                             None,
                         );
-                        // gso(그림 개체)의 이미지는 line_segment에서 빈 세그먼트에서만 렌더링되므로,
-                        // 텍스트와 공존하는 경우 cell_outside_html에 절대 위치로 렌더링
+                        // gso(그림 개체)의 이미지 처리:
+                        // - like_letters=true: 글자처럼 취급 → inline 렌더링 (images에 추가)
+                        // - like_letters=false: 절대 위치로 cell_outside_html에 렌더링
                         if header.ctrl_id == "gso " && !ctrl_result.images.is_empty() {
                             let (off_x_mm, off_y_mm) =
                                 if let CtrlHeaderData::ObjectCommon {
@@ -604,16 +605,21 @@ pub(crate) fn render_cells(
                                     (0.0, 0.0)
                                 };
                             for img in &ctrl_result.images {
-                                let abs_left = round_to_2dp(left_margin_mm + off_x_mm);
-                                let abs_top = round_to_2dp(top_margin_mm + off_y_mm);
-                                let w_mm =
-                                    round_to_2dp(int32_to_mm(img.width as crate::types::INT32));
-                                let h_mm =
-                                    round_to_2dp(int32_to_mm(img.height as crate::types::INT32));
-                                cell_outside_html.push_str(&format!(
-                                    r#"<div class="hsR" style="top:{abs_top}mm;left:{abs_left}mm;width:{w_mm}mm;height:{h_mm}mm;background-repeat:no-repeat;background-image:url('{}');"></div>"#,
-                                    img.url
-                                ));
+                                if img.like_letters {
+                                    images.push(img.clone());
+                                } else {
+                                    let abs_left = round_to_2dp(left_margin_mm + off_x_mm);
+                                    let abs_top = round_to_2dp(top_margin_mm + off_y_mm);
+                                    let w_mm =
+                                        round_to_2dp(int32_to_mm(img.width as crate::types::INT32));
+                                    let h_mm = round_to_2dp(int32_to_mm(
+                                        img.height as crate::types::INT32,
+                                    ));
+                                    cell_outside_html.push_str(&format!(
+                                        r#"<div class="hsR" style="top:{abs_top}mm;left:{abs_left}mm;width:{w_mm}mm;height:{h_mm}mm;background-repeat:no-repeat;background-image:url('{}');"></div>"#,
+                                        img.url
+                                    ));
+                                }
                             }
                         } else {
                             images.extend(ctrl_result.images);
