@@ -277,6 +277,9 @@ pub(crate) fn content_size(table: &Table, ctrl_header: Option<&CtrlHeaderData>) 
 }
 
 /// htb 컨테이너와 콘텐츠 크기 결합 / Combine container and content size
+/// container(ObjectCommon)와 content(셀 실제 높이) 중 더 큰 값을 사용.
+/// HWP 5.1+ 에서 ObjectCommon.height가 설정값(작음)이고 셀 내용이 많으면
+/// content가 더 크므로, 양쪽의 최대값을 사용해야 테이블이 잘리지 않는다.
 pub(crate) fn resolve_container_size(container: Size, content: Size) -> Size {
     if container.width == 0.0 || container.height == 0.0 {
         Size {
@@ -284,6 +287,17 @@ pub(crate) fn resolve_container_size(container: Size, content: Size) -> Size {
             height: content.height,
         }
     } else {
-        container
+        Size {
+            width: if content.width > container.width {
+                content.width
+            } else {
+                container.width
+            },
+            height: if content.height > container.height {
+                content.height
+            } else {
+                container.height
+            },
+        }
     }
 }

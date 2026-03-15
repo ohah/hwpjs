@@ -604,11 +604,13 @@ impl HwpParser {
         });
 
         // 테이블/이미지 등 개체가 포함된 문단이면 개체 높이를 사용
-        // ObjectCommon.height는 설정값이고 셀 내용이 많으면 실제 높이가 더 큼.
-        // 셀 내 LineSeg(이미 합성됨)에서 실제 높이를 계산하여 더 큰 값을 사용.
+        // 단, 셀 내부 문단(content_width_override_hu가 Some)에서는 무시.
+        // 셀 안의 gso는 like_letters=false로 독립 배치되므로 줄 높이에 포함하면 안 됨.
+        let is_inside_cell = content_width_override_hu.is_some();
         let mut object_height_hu: i32 = 0;
         let mut object_margin_hu: i32 = 0;
         let mut has_object = false;
+        if !is_inside_cell {
         for record in &paragraph.records {
             if let ParagraphRecord::CtrlHeader { header, children, .. } = record {
                 if let document::bodytext::CtrlHeaderData::ObjectCommon { height, margin, .. } = &header.data {
@@ -662,6 +664,7 @@ impl HwpParser {
                 }
             }
         }
+        } // is_inside_cell
 
         // 개체가 있으면 1개 세그먼트로 처리 (개체 높이 사용)
         if has_object {
