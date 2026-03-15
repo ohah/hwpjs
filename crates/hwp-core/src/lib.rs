@@ -104,6 +104,7 @@ impl HwpParser {
 
     /// Parse BodyText storage
     /// 구역 개수는 DocumentProperties의 area_count에서 가져옵니다 / Get section count from DocumentProperties.area_count
+    /// 배포용 문서인 경우 ViewText 스트림을 읽어 복호화합니다 / For distribution documents, read and decrypt ViewText streams
     fn parse_bodytext(
         &self,
         cfb: &mut CompoundFile<Cursor<&[u8]>>,
@@ -115,7 +116,56 @@ impl HwpParser {
             .as_ref()
             .map(|props| props.area_count)
             .unwrap_or(1); // 기본값은 1 / Default is 1
-        BodyText::parse(cfb, fileheader, section_count)
+
+        if fileheader.is_distribution() {
+            self.parse_bodytext_distribution(cfb, fileheader, section_count)
+        } else {
+            BodyText::parse(cfb, fileheader, section_count)
+        }
+    }
+
+    /// Parse distribution document ViewText streams
+    /// 배포용 문서의 ViewText 스트림을 읽어 복호화 후 파싱합니다
+    fn parse_bodytext_distribution(
+        &self,
+        cfb: &mut CompoundFile<Cursor<&[u8]>>,
+        fileheader: &FileHeader,
+        section_count: u16,
+    ) -> Result<BodyText, HwpError> {
+        let mut sections = Vec::new();
+
+        for i in 0..section_count {
+            let stream_name = format!("Section{}", i);
+
+            match CfbParser::read_nested_stream(cfb, "ViewText", &stream_name) {
+                Ok(raw_data) => {
+                    // Decrypt ViewText stream (distribution document)
+                    // 배포용 문서 ViewText 스트림 복호화
+                    let section_data = document::distribution::decrypt_viewtext(
+                        &raw_data,
+                        fileheader.is_compressed(),
+                    )?;
+
+                    // Parse section data into paragraph list
+                    let paragraphs =
+                        Section::parse_data(&section_data, fileheader.version)?;
+
+                    sections.push(Section {
+                        index: i,
+                        paragraphs,
+                    });
+                }
+                Err(e) => {
+                    #[cfg(debug_assertions)]
+                    eprintln!(
+                        "Warning: Could not read ViewText/{}: {}",
+                        stream_name, e
+                    );
+                }
+            }
+        }
+
+        Ok(BodyText { sections })
     }
 
     /// Parse BinData storage

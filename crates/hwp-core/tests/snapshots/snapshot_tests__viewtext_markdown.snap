@@ -1,5 +1,6 @@
 ---
 source: crates/hwp-core/tests/snapshot_tests.rs
+assertion_line: 446
 expression: markdown
 ---
 # HWP 문서
@@ -10,4 +11,4 @@ expression: markdown
 
 
 
-이 문서는 상위 버전의 배포용 문서입니다. 문서를 읽으려면 최신 버전의 한글 또는 한글 전용 뷰어가 필요합니다. (주의! 현재 상태에서 문서를 저장하는 경우 원래 문서의 내용이 사라집니다.)
+pyhwp 테스트를 위한 배포 문서 예제입니다.

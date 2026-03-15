@@ -102,6 +102,12 @@ impl FileHeader {
         (self.document_flags & 0x02) != 0
     }
 
+    /// Check if file is a distribution document (배포용 문서)
+    /// Distribution documents use ViewText streams instead of BodyText
+    pub fn is_distribution(&self) -> bool {
+        (self.document_flags & 0x04) != 0
+    }
+
     /// Check if XMLTemplate storage exists
     /// XMLTemplate 스토리지 존재 여부 확인
     pub fn has_xml_template(&self) -> bool {
