@@ -111,6 +111,40 @@ pub fn render_text(
             }
         });
 
+        // 탭 문자를 htC span으로 변환
+        // fixture 구조: <span class="htC" style="left:Xmm;width:Ymm;height:100%;"></span>
+        // 탭 너비는 TabDef에서 가져와야 하지만, 현재는 기본값 사용
+        if segment_text.contains('\t') {
+            // 탭 전/후 텍스트를 분리하여 각각 렌더링
+            let class_name = char_shape_id_opt
+                .map(|id| format!("cs{}", id))
+                .unwrap_or_default();
+            for part in segment_text.split('\t') {
+                if !part.is_empty() {
+                    let part_text = convert_consecutive_spaces(part);
+                    if class_name.is_empty() {
+                        result.push_str(&format!(r#"<span class="hrt">{}</span>"#, part_text));
+                    } else {
+                        result.push_str(&format!(
+                            r#"<span class="hrt {}">{}</span>"#,
+                            class_name, part_text
+                        ));
+                    }
+                }
+                // 탭 공간 삽입 (마지막 분할 뒤에는 추가하지 않음)
+                // 기본 탭 너비: ParaShape tab_def_id 기반 계산 필요, 현재는 근사값 사용
+                // fixture software_1.html: left:0.88mm, width:12.35mm
+                result.push_str(r#"<span class="htC" style="width:12.35mm;height:100%;"></span>"#);
+            }
+            // 마지막에 추가된 여분의 htC 제거
+            if result.ends_with(r#"<span class="htC" style="width:12.35mm;height:100%;"></span>"#) {
+                let htc_len =
+                    r#"<span class="htC" style="width:12.35mm;height:100%;"></span>"#.len();
+                result.truncate(result.len() - htc_len);
+            }
+            continue;
+        }
+
         // 연속 공백 처리: 첫 번째 공백은 유지, 이후 연속 공백은 &nbsp;로 변환
         // HTML에서 연속 스페이스는 하나로 합쳐지므로, 공백을 보존하려면 &nbsp; 필요
         // (한컴 원본 HTML 역분석: "학번:  " → "학번: &nbsp;")
