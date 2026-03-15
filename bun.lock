@@ -113,7 +113,7 @@
     },
     "packages/hwpjs": {
       "name": "@ohah/hwpjs",
-      "version": "0.1.0-rc.9",
+      "version": "0.1.0-rc.10",
       "bin": {
         "hwpjs": "./bin/hwpjs.js",
       },
@@ -141,45 +141,45 @@
         "typescript": "^5.9.3",
       },
       "optionalDependencies": {
-        "@ohah/hwpjs-darwin-arm64": "0.1.0-rc.9",
-        "@ohah/hwpjs-darwin-x64": "0.1.0-rc.9",
-        "@ohah/hwpjs-linux-x64-gnu": "0.1.0-rc.9",
-        "@ohah/hwpjs-wasm32-wasi": "0.1.0-rc.9",
-        "@ohah/hwpjs-win32-arm64-msvc": "0.1.0-rc.9",
-        "@ohah/hwpjs-win32-ia32-msvc": "0.1.0-rc.9",
-        "@ohah/hwpjs-win32-x64-msvc": "0.1.0-rc.9",
+        "@ohah/hwpjs-darwin-arm64": "0.1.0-rc.10",
+        "@ohah/hwpjs-darwin-x64": "0.1.0-rc.10",
+        "@ohah/hwpjs-linux-x64-gnu": "0.1.0-rc.10",
+        "@ohah/hwpjs-wasm32-wasi": "0.1.0-rc.10",
+        "@ohah/hwpjs-win32-arm64-msvc": "0.1.0-rc.10",
+        "@ohah/hwpjs-win32-ia32-msvc": "0.1.0-rc.10",
+        "@ohah/hwpjs-win32-x64-msvc": "0.1.0-rc.10",
       },
     },
     "packages/hwpjs/npm/darwin-arm64": {
       "name": "@ohah/hwpjs-darwin-arm64",
-      "version": "0.1.0-rc.9",
+      "version": "0.1.0-rc.10",
     },
     "packages/hwpjs/npm/darwin-x64": {
       "name": "@ohah/hwpjs-darwin-x64",
-      "version": "0.1.0-rc.9",
+      "version": "0.1.0-rc.10",
     },
     "packages/hwpjs/npm/linux-x64-gnu": {
       "name": "@ohah/hwpjs-linux-x64-gnu",
-      "version": "0.1.0-rc.9",
+      "version": "0.1.0-rc.10",
     },
     "packages/hwpjs/npm/wasm32-wasi": {
       "name": "@ohah/hwpjs-wasm32-wasi",
-      "version": "0.1.0-rc.9",
+      "version": "0.1.0-rc.10",
       "dependencies": {
         "@napi-rs/wasm-runtime": "^1.1.1",
       },
     },
     "packages/hwpjs/npm/win32-arm64-msvc": {
       "name": "@ohah/hwpjs-win32-arm64-msvc",
-      "version": "0.1.0-rc.9",
+      "version": "0.1.0-rc.10",
     },
     "packages/hwpjs/npm/win32-ia32-msvc": {
       "name": "@ohah/hwpjs-win32-ia32-msvc",
-      "version": "0.1.0-rc.9",
+      "version": "0.1.0-rc.10",
     },
     "packages/hwpjs/npm/win32-x64-msvc": {
       "name": "@ohah/hwpjs-win32-x64-msvc",
-      "version": "0.1.0-rc.9",
+      "version": "0.1.0-rc.10",
     },
   },
   "packages": {
