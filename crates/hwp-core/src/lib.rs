@@ -447,8 +447,9 @@ impl HwpParser {
                     seg.vertical_position += *accumulated_vertical;
                 }
                 // 마지막 세그먼트의 끝 위치를 누적에 반영
+                // line_spacing(줄 간격)을 사용하여 다음 문단 시작 위치를 계산
                 if let Some(last) = segments.last() {
-                    *accumulated_vertical = last.vertical_position + last.line_height;
+                    *accumulated_vertical = last.vertical_position + last.line_spacing;
                 }
             }
             // ParaCharShape 바로 뒤에 삽입 (원래 LineSeg가 위치하는 곳)
@@ -598,14 +599,14 @@ impl HwpParser {
 
         // 개체가 있으면 1개 세그먼트로 처리 (개체 높이 사용)
         if has_object {
-            let line_height_hu = object_height_hu.max(text_line_height_hu);
+            let obj_height_hu = object_height_hu.max(text_line_height_hu);
             return vec![LineSegmentInfo {
                 text_start_position: 0,
                 vertical_position: 0,
-                line_height: line_height_hu,
+                line_height: obj_height_hu,
                 text_height: text_height_hu,
                 baseline_distance: baseline_distance_hu,
-                line_spacing: text_line_height_hu,
+                line_spacing: obj_height_hu, // 개체 높이를 줄 간격으로 사용
                 column_start_position: 0,
                 segment_width: content_width_hu,
                 tag: LineSegmentTag {
@@ -666,15 +667,16 @@ impl HwpParser {
         let line_count = estimate_line_count(para_text, content_width_hu, font_size_hu);
 
         // 줄 수만큼 세그먼트 생성
+        // fixture 기준: line_height = text_height (3.53mm), vertical_position 간격 = line_spacing (5.64mm)
         let mut segments = Vec::with_capacity(line_count);
         for i in 0..line_count {
             segments.push(LineSegmentInfo {
                 text_start_position: 0, // 합성이므로 정확한 텍스트 위치 계산 불가
                 vertical_position: (i as i32) * text_line_height_hu,
-                line_height: text_line_height_hu,
+                line_height: text_height_hu,  // fixture 기준: text_height (3.53mm)
                 text_height: text_height_hu,
                 baseline_distance: baseline_distance_hu,
-                line_spacing: text_line_height_hu,
+                line_spacing: text_line_height_hu, // 줄 간격 (5.64mm)
                 column_start_position: 0,
                 segment_width: content_width_hu,
                 tag: LineSegmentTag {
