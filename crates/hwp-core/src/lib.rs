@@ -54,9 +54,21 @@ impl HwpParser {
         document.body_text = self.parse_bodytext(&mut cfb, &fileheader, &document.doc_info)?;
 
         // HWP 5.1+ 대응: HWPTAG_PARA_LINE_SEG가 없는 문단에 합성 LineSeg 삽입
-        // 파싱 완료 후 DocInfo(CharShape/ParaShape)에 접근 가능하므로 이 시점에서 처리한다.
-        // 파싱 레벨에서 삽입하면 렌더링/페이지네이션 등 모든 downstream 코드가 자동으로 혜택을 받는다.
-        Self::synthesize_missing_line_segments(&mut document);
+        // 본문 문단에 LineSeg가 하나라도 있으면(HWP 5.0) 합성하지 않음.
+        // LineSeg가 전혀 없는 파일(HWP 5.1+)에서만 합성 적용.
+        {
+            use document::bodytext::ParagraphRecord;
+            let has_any_line_seg = document.body_text.sections.iter().any(|s| {
+                s.paragraphs.iter().any(|p| {
+                    p.records
+                        .iter()
+                        .any(|r| matches!(r, ParagraphRecord::ParaLineSeg { .. }))
+                })
+            });
+            if !has_any_line_seg {
+                Self::synthesize_missing_line_segments(&mut document);
+            }
+        }
 
         document.bin_data = self.parse_bindata(&mut cfb, &document.doc_info)?;
 
