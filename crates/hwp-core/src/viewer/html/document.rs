@@ -585,6 +585,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
         prev_vertical_mm: None,
         current_max_vertical_mm: 0.0,
         content_height_mm,
+        page_vertical_offset_mm: 0.0,
     };
     let mut current_page_def = page_def; // 현재 페이지의 PageDef 추적 / Track current page's PageDef
 
@@ -783,6 +784,14 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                 current_max_vertical_mm = 0.0;
                 pagination_context.current_max_vertical_mm = 0.0;
                 pagination_context.prev_vertical_mm = None;
+                // HWP 5.1+ 합성 LineSeg: 현재 문단의 vp를 오프셋으로 설정하여
+                // 다음 페이지에서 상대 위치로 비교
+                if let Some(vp) = super::paragraph::collect_line_segments(paragraph)
+                    .first()
+                    .map(|s| s.vertical_position as f64 * 25.4 / 7200.0)
+                {
+                    pagination_context.page_vertical_offset_mm = vp;
+                }
                 first_segment_pos = None; // 새 페이지에서는 첫 번째 세그먼트 위치 리셋 / Reset first segment position for new page
                 hcd_position = None;
                 // 페이지네이션 발생 시 para_index 리셋 / Reset para_index on pagination
@@ -1184,6 +1193,12 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                             current_max_vertical_mm = 0.0;
                             pagination_context.current_max_vertical_mm = 0.0;
                             pagination_context.prev_vertical_mm = None;
+                            if let Some(vp) = super::paragraph::collect_line_segments(paragraph)
+                                .first()
+                                .map(|s| s.vertical_position as f64 * 25.4 / 7200.0)
+                            {
+                                pagination_context.page_vertical_offset_mm = vp;
+                            }
                             first_segment_pos = None;
                             hcd_position = None;
                             para_index = 0;
@@ -1347,6 +1362,7 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                         current_max_vertical_mm = 0.0;
                         pagination_context.current_max_vertical_mm = 0.0;
                         pagination_context.prev_vertical_mm = None;
+                        // 여기서는 paragraph 변수가 없으므로 오프셋은 다음 루프에서 설정됨
                         first_segment_pos = None;
                         hcd_position = None;
                         // 페이지네이션 발생 시 para_index 리셋 / Reset para_index on pagination
