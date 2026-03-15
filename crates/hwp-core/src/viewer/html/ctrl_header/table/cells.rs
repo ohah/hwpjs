@@ -413,40 +413,8 @@ pub(crate) fn render_cells(
                             }
                         }
                     }
-                    // gso(그림/도형 개체): ShapeComponentPicture에서 이미지를 찾아
-                    // cell_outside_html에 hsR로 직접 렌더링 (fixture 구조: hcI 밖, hce 안에 배치)
                     if header.ctrl_id == "gso " {
                         shape_anchor_idx += 1;
-                        let mut gso_images = Vec::new();
-                        collect_images_from_gso(
-                            children,
-                            &header.data,
-                            document,
-                            options,
-                            &mut gso_images,
-                        );
-
-                        // ObjectCommon에서 위치 정보 추출
-                        let (off_x_mm, off_y_mm) =
-                            if let CtrlHeaderData::ObjectCommon {
-                                offset_x, offset_y, ..
-                            } = &header.data
-                            {
-                                (int32_to_mm(offset_x.0), int32_to_mm(offset_y.0))
-                            } else {
-                                (0.0, 0.0)
-                            };
-
-                        for img in &gso_images {
-                            let abs_left = round_to_2dp(left_margin_mm + off_x_mm);
-                            let abs_top = round_to_2dp(top_margin_mm + off_y_mm);
-                            let w_mm = round_to_2dp(int32_to_mm(img.width as crate::types::INT32));
-                            let h_mm = round_to_2dp(int32_to_mm(img.height as crate::types::INT32));
-                            cell_outside_html.push_str(&format!(
-                                r#"<div class="hsR" style="top:{abs_top}mm;left:{abs_left}mm;width:{w_mm}mm;height:{h_mm}mm;background-repeat:no-repeat;background-image:url('{}');"></div>"#,
-                                img.url
-                            ));
-                        }
                     }
                 }
             }
@@ -605,10 +573,6 @@ pub(crate) fn render_cells(
                         paragraphs: ctrl_paragraphs,
                         ..
                     } => {
-                        // gso는 위 첫 번째 루프에서 cell_outside_html로 이미 처리됨
-                        if header.ctrl_id == "gso " {
-                            continue;
-                        }
                         // CtrlHeader 처리 (그림 개체 등) / Process CtrlHeader (shape objects, etc.)
                         // process_ctrl_header를 호출하여 이미지 수집 (paragraph.rs와 동일한 방식) / Call process_ctrl_header to collect images (same way as paragraph.rs)
                         // children이 비어있으면 cell.paragraphs도 확인 / If children is empty, also check cell.paragraphs
@@ -627,7 +591,31 @@ pub(crate) fn render_cells(
                             None,
                             None,
                         );
-                        images.extend(ctrl_result.images);
+                        // gso(그림 개체)의 이미지는 line_segment에서 빈 세그먼트에서만 렌더링되므로,
+                        // 텍스트와 공존하는 경우 cell_outside_html에 절대 위치로 렌더링
+                        if header.ctrl_id == "gso " && !ctrl_result.images.is_empty() {
+                            let (off_x_mm, off_y_mm) =
+                                if let CtrlHeaderData::ObjectCommon {
+                                    offset_x, offset_y, ..
+                                } = &header.data
+                                {
+                                    (int32_to_mm(offset_x.0), int32_to_mm(offset_y.0))
+                                } else {
+                                    (0.0, 0.0)
+                                };
+                            for img in &ctrl_result.images {
+                                let abs_left = round_to_2dp(left_margin_mm + off_x_mm);
+                                let abs_top = round_to_2dp(top_margin_mm + off_y_mm);
+                                let w_mm = round_to_2dp(int32_to_mm(img.width as crate::types::INT32));
+                                let h_mm = round_to_2dp(int32_to_mm(img.height as crate::types::INT32));
+                                cell_outside_html.push_str(&format!(
+                                    r#"<div class="hsR" style="top:{abs_top}mm;left:{abs_left}mm;width:{w_mm}mm;height:{h_mm}mm;background-repeat:no-repeat;background-image:url('{}');"></div>"#,
+                                    img.url
+                                ));
+                            }
+                        } else {
+                            images.extend(ctrl_result.images);
+                        }
                     }
                     _ => {}
                 }
@@ -1161,57 +1149,3 @@ pub(crate) fn render_cells(
     cells_html
 }
 
-/// gso CtrlHeader에서 이미지(ShapeComponentPicture)를 수집
-/// 셀 내부의 gso 개체(like_letters=false)에서 이미지를 찾아 images에 추가
-fn collect_images_from_gso(
-    children: &[ParagraphRecord],
-    ctrl_header_data: &CtrlHeaderData,
-    document: &crate::document::HwpDocument,
-    options: &crate::viewer::HtmlOptions,
-    images: &mut Vec<ImageInfo>,
-) {
-    // ObjectCommon에서 크기 정보 추출
-    let (obj_width, obj_height) =
-        if let CtrlHeaderData::ObjectCommon { width, height, .. } = ctrl_header_data {
-            (u32::from(*width), u32::from(*height))
-        } else {
-            return;
-        };
-
-    // ShapeComponent → ShapeComponentPicture 재귀 탐색
-    for child in children {
-        if let ParagraphRecord::ShapeComponent {
-            shape_component,
-            children: sc_children,
-            ..
-        } = child
-        {
-            let w = shape_component.width.max(obj_width);
-            let h = shape_component.height.max(obj_height);
-
-            for sc_child in sc_children {
-                if let ParagraphRecord::ShapeComponentPicture {
-                    shape_component_picture,
-                } = sc_child
-                {
-                    let bindata_id = shape_component_picture.picture_info.bindata_id;
-                    let image_url = common::get_image_url(
-                        document,
-                        bindata_id,
-                        options.image_output_dir.as_deref(),
-                        options.html_output_dir.as_deref(),
-                    );
-                    if !image_url.is_empty() {
-                        images.push(ImageInfo {
-                            width: w,
-                            height: h,
-                            url: image_url,
-                            like_letters: false,
-                            vert_rel_to: None,
-                        });
-                    }
-                }
-            }
-        }
-    }
-}

@@ -99,6 +99,34 @@ pub fn process_shape_object<'a>(
         (w, h)
     };
 
+    // 이미지 수집 (도형 렌더링과 무관하게 항상 먼저 수행)
+    // 도형(Rectangle/Line) early return 이후에 배치하면 도형+이미지 공존 시 이미지가 누락됨
+    if !children.is_empty() {
+        collect_images_from_records(
+            children,
+            document,
+            options,
+            like_letters,
+            vert_rel_to,
+            initial_width,
+            initial_height,
+            &mut result.images,
+        );
+    } else if initial_width.is_some() && initial_height.is_some() {
+        for para in paragraphs {
+            collect_images_from_records(
+                &para.records,
+                document,
+                options,
+                like_letters,
+                vert_rel_to,
+                initial_width,
+                initial_height,
+                &mut result.images,
+            );
+        }
+    }
+
     // 텍스트 도형(ShapeComponentRectangle) 감지
     let has_rectangle_shape = children.iter().any(|r| {
         if let ParagraphRecord::ShapeComponent { children, .. } = r {
@@ -140,33 +168,6 @@ pub fn process_shape_object<'a>(
         if let Some(html) = render_line_shape(header, children) {
             result.shape_html = Some(html);
             return result;
-        }
-    }
-
-    // 이미지 수집 (기존 로직)
-    if !children.is_empty() {
-        collect_images_from_records(
-            children,
-            document,
-            options,
-            like_letters,
-            vert_rel_to,
-            initial_width,
-            initial_height,
-            &mut result.images,
-        );
-    } else if initial_width.is_some() && initial_height.is_some() {
-        for para in paragraphs {
-            collect_images_from_records(
-                &para.records,
-                document,
-                options,
-                like_letters,
-                vert_rel_to,
-                initial_width,
-                initial_height,
-                &mut result.images,
-            );
         }
     }
 
