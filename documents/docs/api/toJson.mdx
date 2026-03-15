@@ -9,7 +9,6 @@ HWP 파일을 JSON 형식으로 변환하는 함수입니다.
 <PlatformTabs defaultPlatform="web">
   <div data-platform="web">
     ```typescript
-    // buffer-polyfill을 먼저 import한 후
     import * as hwpjs from '@ohah/hwpjs';
 
     // 파일 입력에서 HWP 파일 읽기

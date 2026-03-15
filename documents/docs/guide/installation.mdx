@@ -11,43 +11,6 @@ HWPJS는 여러 플랫폼에서 사용할 수 있습니다. 사용할 환경에 
 
 ## 플랫폼별 설정
 
-### Web - Buffer Polyfill 설정
-
-Web 환경에서는 napi-rs WASM 호환성을 위해 `Buffer` polyfill이 필요합니다. 진입점 파일(예: `main.tsx`, `index.ts`)에서 **가장 먼저** `buffer-polyfill.ts`를 import해야 합니다.
-
-먼저 프로젝트에 `buffer-polyfill.ts` 파일을 생성하세요:
-
-```typescript title="src/buffer-polyfill.ts"
-// Buffer polyfill for napi-rs WASM compatibility
-// This must be imported before any WASM modules
-if (typeof globalThis.Buffer === 'undefined') {
-  globalThis.Buffer = class Buffer extends Uint8Array {
-    static from(data: any) {
-      if (data instanceof Uint8Array) return data;
-      if (data instanceof ArrayBuffer) return new Uint8Array(data);
-      if (Array.isArray(data)) return new Uint8Array(data);
-      return new Uint8Array(data);
-    }
-    static isBuffer(obj: any) {
-      return obj instanceof Uint8Array;
-    }
-  } as any;
-}
-
-// Ensure Buffer is set on window as well for compatibility
-if (typeof window !== 'undefined' && typeof window.Buffer === 'undefined') {
-  (window as any).Buffer = globalThis.Buffer;
-}
-```
-
-그리고 진입점 파일에서 가장 먼저 import하세요:
-
-```typescript title="src/main.tsx"
-import './buffer-polyfill'; // 반드시 가장 먼저 import
-import * as hwpjs from '@ohah/hwpjs';
-// ... 나머지 코드
-```
-
 ### React Native
 
 iOS와 Android 프로젝트는 자동으로 설정됩니다. 추가 설정이 필요하지 않습니다.
@@ -89,8 +52,6 @@ npx @ohah/hwpjs <command>
 
   <div data-platform="web">
     ```typescript
-    // buffer-polyfill을 먼저 import한 후
-    import './buffer-polyfill';
     import * as hwpjs from '@ohah/hwpjs';
 
     // 파일 입력에서 HWP 파일 읽기
