@@ -1,0 +1,255 @@
+---
+source: crates/hwp-core/tests/snapshot_tests.rs
+expression: html
+---
+<!DOCTYPE html>
+<html>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+<head>
+  <title></title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <style>
+body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
+.hce {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hme {margin:0;padding:0;position:absolute;}
+.hhe {margin:0;padding:0;position:relative;}
+.hhi {display:inline-block;margin:0;padding:0;position:relative;background-size:contain;}
+.hls {margin:0;padding:0;position:absolute;}
+.hfS {margin:0;padding:0;position:absolute;}
+.hcD {margin:0;padding:0;position:absolute;}
+.hcI {margin:0;padding:0;position:absolute;}
+.hcS {margin:0;padding:0;position:absolute;}
+.hfN {margin:0;padding:0;position:relative;}
+.hmB {margin:0;padding:0;position:absolute;}
+.hmO {margin:0;padding:0;position:absolute;}
+.hmT {margin:0;padding:0;position:absolute;}
+.hpN {display:inline-block;margin:0;padding:0;position:relative;white-space:nowrap;}
+.htC {display:inline-block;margin:0;padding:0;position:relative;vertical-align:top;overflow:hidden;}
+.haN {display:inline-block;margin:0;padding:0;position:relative;}
+.hdu {margin:0;padding:0;position:relative;}
+.hdS {margin:0;padding:0;position:absolute;}
+.hsC {margin:0;padding:0;position:absolute;}
+.hsR {margin:0;padding:0;position:absolute;background-size:100% 100%;}
+.hsG {margin:0;padding:0;position:absolute;}
+.hsL {margin:0;padding:0;position:absolute;}
+.hsT {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hsE {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hsA {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hsP {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hsV {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hsO {margin:0;padding:0;position:absolute;}
+.hsU {margin:0;padding:0;position:absolute;overflow:hidden;}
+.hpi {margin:0;padding:0;position:absolute;}
+.hch {margin:0;padding:0;position:absolute;}
+.hcG {margin:0;padding:0;position:absolute;}
+.heq {margin:0;padding:0;position:absolute;}
+.heG {margin:0;padding:0;position:absolute;}
+.htA {margin:0;padding:0;position:absolute;}
+.hvi {margin:0;padding:0;position:absolute;}
+.htb {margin:0;padding:0;position:absolute;}
+.htG {margin:0;padding:0;position:absolute;}
+.hfJ {margin:0;padding:0;position:absolute;}
+.hfG {margin:0;padding:0;position:absolute;}
+.hfB {margin:0;padding:0;position:absolute;}
+.hfR {margin:0;padding:0;position:absolute;}
+.hfC {margin:0;padding:0;position:absolute;}
+.hfO {margin:0;padding:0;position:absolute;}
+.hfL {margin:0;padding:0;position:absolute;}
+.hfM {margin:0;padding:0;position:absolute;}
+.hfE {margin:0;padding:0;position:absolute;}
+.hpl {margin:0;padding:0;position:absolute;}
+.hs {margin:0;padding:0;position:absolute;overflow:visible;}
+.hpa {position:relative;padding:0;overflow:hidden;margin-left:2mm;margin-right:0mm;margin-bottom:2mm;margin-top:0mm;border:1px black solid;box-shadow:1mm 1mm 0 #AAAAAA;}
+.hpa::after {content:'';position:absolute;margin:0;padding:0;left:0;right:0;top:0;bottom:0;background-color:white;z-index:-2;}
+.hrt {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;vertical-align:middle;line-height:1.1;}
+.hco {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;}
+.hcc {margin:0;padding:0;position:absolute;}
+.hls {clear:both;}
+[onclick] {cursor:pointer;}
+.cs0 {
+  font-size:12pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+}
+.cs1 {
+  font-size:7pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+}
+.cs2 {
+  font-size:6pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+}
+.cs3 {
+  font-size:10pt;color:rgb(0,0,255);font-family:"맑은 고딕";
+}
+.cs4 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"한컴바탕";
+}
+.cs5 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs6 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬돋움";
+}
+.cs7 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"함초롬돋움";
+}
+.cs8 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"함초롬바탕";
+}
+.cs9 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"함초롬돋움";letter-spacing:-0.03em;
+}
+.cs10 {
+  font-size:16pt;color:rgb(46,116,181);font-family:"함초롬돋움";
+}
+.cs11 {
+  font-size:11pt;color:rgb(0,0,0);font-family:"함초롬돋움";
+}
+.cs12 {
+  font-size:11pt;color:rgb(0,0,0);font-family:"맑은 고딕";font-weight:bold;
+}
+.cs13 {
+  font-size:11pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+}
+.cs14 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+}
+.cs15 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+}
+.cs16 {
+  font-size:9pt;color:rgb(0,0,0);font-family:"맑은 고딕";letter-spacing:-0.01em;
+}
+.cs17 {
+  font-size:11pt;color:rgb(0,0,0);font-family:"맑은 고딕";font-weight:bold;letter-spacing:-0.07em;
+}
+.cs18 {
+  font-size:15pt;color:rgb(0,0,0);font-family:"맑은 고딕";font-weight:bold;
+}
+.cs19 {
+  font-size:13pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+}
+.cs20 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"휴먼고딕";font-weight:bold;
+}
+.cs21 {
+  font-size:11pt;color:rgb(0,0,0);font-family:"맑은 고딕";font-weight:bold;letter-spacing:-0.07em;
+}
+.cs22 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+}
+.cs23 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+}
+.cs24 {
+  font-size:10pt;color:rgb(0,0,255);font-family:"맑은 고딕";
+}
+.cs25 {
+  font-size:10pt;color:rgb(0,0,0);font-family:"맑은 고딕";
+}
+.ps0 {
+  text-align:justify;
+}
+.ps1 {
+  text-align:justify;
+}
+.ps2 {
+  text-align:justify;
+}
+.ps3 {
+  text-align:justify;
+}
+.ps4 {
+  text-align:justify;
+}
+.ps5 {
+  text-align:justify;
+}
+.ps6 {
+  text-align:justify;
+}
+.ps7 {
+  text-align:justify;
+}
+.ps8 {
+  text-align:justify;
+}
+.ps9 {
+  text-align:justify;
+}
+.ps10 {
+  text-align:justify;
+}
+.ps11 {
+  text-align:justify;
+}
+.ps12 {
+  text-align:justify;
+}
+.ps13 {
+  text-align:left;
+}
+.ps14 {
+  text-align:left;
+}
+.ps15 {
+  text-align:left;
+}
+.ps16 {
+  text-align:left;
+}
+.ps17 {
+  text-align:left;
+}
+.ps18 {
+  text-align:justify;
+}
+.ps19 {
+  text-align:justify;
+}
+.ps20 {
+  text-align:justify;
+}
+.ps21 {
+  text-align:justify;
+}
+.ps22 {
+  text-align:center;
+}
+.ps23 {
+  text-align:center;
+}
+.ps24 {
+  text-align:center;
+}
+.ps25 {
+  text-align:center;
+}
+.ps26 {
+  text-align:center;
+}
+.ps27 {
+  text-align:justify;
+}
+.ps28 {
+  text-align:justify;
+}
+.ps29 {
+  text-align:justify;
+}
+.ps30 {
+  text-align:justify;
+}
+.ps31 {
+  text-align:justify;
+}
+@media print {
+.hpa {margin:0;border:0 black none;box-shadow:none;}
+body {padding:0;}
+}
+  </style>
+</head>
+
+
+<body>
+<div class="hpa" style="width:210mm;height:296.99mm;"><div class="hcD" style="left:20mm;top:25mm;"><div class="hcI"><div class="hls ps2"><span class="hrt cs22">1. 개발 배경 및 필요성 : 최근 청소년 대상의 경제/금융 교육은 이론 중심으로 이루어지고 있으며, 학생들이 실제 투자 과정을 체험할 수 있는 환경이 부족한 상황입니다. 특히 중학교 단계에서는 주식이나 자산 관리 개념을 직접 경험하기 어려워, 경제 개념이 단순 암기 과목으로 인식되는 경우가 많습니다. 이러한 한계를 극복하기 위해, 모주(mozu)는 중학생이 직접 기업 정보를 분석하고 뉴스 기사를 바탕으로 투자 결정을 내리는 모의 주식 투자 학습 플랫폼으로 개발되었습니다. 이를 통해 학생들은 단순히 주가의 오르내림을 보는 것이 아니라, 뉴스/재무제표/사회 변화 요인 등 실제 경제 흐름을 이해하며 판단력을 기르는 경험을 하게 됩니다.</span></div><div class="hls ps2"><span class="hrt cs22">&nbsp;&nbsp;- 목 &nbsp;&nbsp;&nbsp;표 : 중학생들이 실제 주식 투자 과정을 체험하며 경제 개념과 투자 원리를 학습할 수 있도록 하는 교육형 모의 주식 투자 플랫폼 개발</span></div><div class="hls ps28"><span class="hrt cs22">&nbsp;&nbsp;- 작동 원리 : 교사(관리자)가 수업 세션를 개설하고 학생들은 기사와 기업 재무제표를 참고해 차수마다 투자를 진행한다. 시스템은 투자 금액/수익률/랭킹등을 실시간으로 계산한다. SSE기반으로 서버에서 클라이언트로 실시간 데이터를 전송하고 모든 투자 정보는 DB에 저장되어 교사와 학생이 즉시 확인 할 수 있다.</span></div><div class="hls ps28"><span class="hrt cs22">	-&nbsp;</span></div><div class="hls ps2"><span class="hrt cs22">&nbsp;2. 개발 목적 : 주식 투자 원리를 게임처럼 직관적으로 학습할 수 있는 플랫폼 제공, 단순 투자 시뮬레이션이 아니라 뉴스/기사 기반 의사결정 훈련을 통해 사고력 향상, 교사 중심의 수업 운영 시스템으로 수업 효율성을 높이고 학생 참여도를 극대화</span></div><div class="hls ps29"><span class="hrt cs22">&nbsp;3. 유사 프로그램 및 차별점 : 기존 모의 주식앱들은 실거래 시세 기반, 교육용이 아니지만 모주(mozu)는 교사 학생 구조의 교육 중심으로 설계되었다. 타 주식 시뮬레이터들은 단순 수익 계산이 주로 이루어져 있지만 모주(mozu)는 뉴시 기사와 재무제표 기반으로 사용자가 판단형 투자 경험을 할 수 있다.</span></div><div class="hls ps27"><span class="hrt cs23">4. 작품 설계</span></div><div class="hls ps27"><span class="hrt cs23">5. [출처표기] <예시 1> 참고문헌&nbsp;</span></div><div class="hls ps27"><span class="hrt cs23">&nbsp;&nbsp;&nbsp;[출처표기] <예시 2> 이미지 및 음원 등에 저작물에 대한 출처 표기</span></div></div></div></div></body>
+
+</html>
