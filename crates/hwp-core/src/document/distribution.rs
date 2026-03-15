@@ -12,7 +12,6 @@
 /// 5. Extract 16-byte AES key from decoded data at offset (seed_low & 0x0F) + 4
 /// 6. AES-128-ECB decrypt the remaining stream data
 /// 7. Decompress the decrypted data (deflate)
-
 use aes::cipher::{BlockDecrypt, KeyInit};
 use aes::Aes128;
 

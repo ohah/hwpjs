@@ -69,8 +69,8 @@ fn test_hwp_parser_parse_with_invalid_data() {
 fn test_distribution_document_parsing() {
     use crate::common::find_fixture_file;
 
-    let path = find_fixture_file("distribution.hwp")
-        .expect("distribution.hwp fixture file should exist");
+    let path =
+        find_fixture_file("distribution.hwp").expect("distribution.hwp fixture file should exist");
     let data = std::fs::read(&path).expect("Should read distribution.hwp");
     let parser = HwpParser::new();
     let result = parser.parse(&data);
