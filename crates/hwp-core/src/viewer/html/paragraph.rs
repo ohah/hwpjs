@@ -446,6 +446,8 @@ pub fn render_paragraph(
     let hyperlink_ranges = collect_hyperlink_ranges(paragraph, &control_char_positions);
 
     // LineSegment 수집 / Collect line segments
+    // HWP 5.1+ 파일에서 LineSeg가 없는 경우, HwpParser::parse() 단계에서
+    // 이미 합성 LineSeg가 삽입되어 있으므로 여기서는 별도 처리 불필요.
     let line_segments = collect_line_segments(paragraph);
 
     // 이미지 수집 / Collect images
@@ -1022,7 +1024,7 @@ pub fn render_paragraph(
             table_htmls.push(html);
         }
     } else if !text.is_empty() {
-        // LineSegment가 없으면 텍스트만 렌더링 / Render text only if no LineSegment
+        // LineSeg가 합성되었으므로 여기에 도달하면 안 되지만, 안전장치로 유지
         let rendered_text =
             text::render_text(&text, &char_shapes, document, &options.css_class_prefix);
         result.push_str(&format!(
