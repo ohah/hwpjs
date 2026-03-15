@@ -13,6 +13,10 @@ pub struct PaginationContext {
     pub current_max_vertical_mm: f64,
     /// 콘텐츠 영역 높이 (mm)
     pub content_height_mm: f64,
+    /// 현재 페이지의 vertical_position 오프셋 (mm)
+    /// HWP 5.1+ 합성 LineSeg에서는 vp가 문서 전체에 누적되므로,
+    /// 페이지 브레이크 후 이 오프셋을 빼서 상대 위치로 비교해야 한다.
+    pub page_vertical_offset_mm: f64,
 }
 
 /// 페이지네이션 결과 / Pagination result
@@ -52,8 +56,12 @@ pub fn check_paragraph_page_break(
     context: &PaginationContext,
     current_page_def: Option<&PageDef>,
 ) -> PaginationResult {
-    // 1. 첫 번째 LineSegment의 vertical_position 추출
-    let first_vertical_mm = extract_first_vertical_position(paragraph);
+    // 1. 첫 번째 LineSegment의 vertical_position 추출 (페이지 오프셋 적용)
+    let first_vertical_mm = extract_first_vertical_position(paragraph)
+        .map(|v| v - context.page_vertical_offset_mm);
+    // 마지막 세그먼트의 끝 위치 (페이지 오프셋 적용)
+    let last_end_mm = extract_last_end_position(paragraph)
+        .map(|v| v - context.page_vertical_offset_mm);
 
     // 2. PageDef 변경 확인
     let has_page_def_change = check_page_def_change(paragraph, current_page_def);
@@ -73,7 +81,7 @@ pub fn check_paragraph_page_break(
         first_vertical_mm,
         context.content_height_mm,
         context.current_max_vertical_mm,
-    );
+    ) || check_end_overflow(last_end_mm, context.content_height_mm, context.current_max_vertical_mm);
 
     // 우선순위에 따라 첫 번째 true인 원인을 반환
     if has_explicit {
@@ -208,6 +216,35 @@ fn extract_first_vertical_position(paragraph: &Paragraph) -> Option<f64> {
     None
 }
 
+/// 마지막 LineSegment의 끝 위치(vertical_position + line_spacing) 추출
+/// HWP 5.1+ 합성 LineSeg에서는 개체(테이블) 높이가 line_spacing에 반영됨
+fn extract_last_end_position(paragraph: &Paragraph) -> Option<f64> {
+    for record in &paragraph.records {
+        if let ParagraphRecord::ParaLineSeg { segments } = record {
+            if let Some(last) = segments.last() {
+                return Some(
+                    (last.vertical_position as f64 + last.line_spacing as f64) * 25.4 / 7200.0,
+                );
+            }
+        }
+    }
+    None
+}
+
+/// 문단 끝 위치가 콘텐츠 영역을 초과하는지 확인
+/// 시작 위치는 content_height 안이지만 끝 위치가 넘는 경우 (테이블 등 큰 개체)
+fn check_end_overflow(
+    end_mm: Option<f64>,
+    content_height_mm: f64,
+    current_max_vertical_mm: f64,
+) -> bool {
+    if let Some(end) = end_mm {
+        end > content_height_mm && current_max_vertical_mm > 0.0
+    } else {
+        false
+    }
+}
+
 /// 명시적 페이지 나누기 확인 / Check explicit page break
 fn check_explicit_page_break(paragraph: &Paragraph) -> bool {
     paragraph
@@ -339,7 +376,7 @@ mod tests {
         let context = PaginationContext {
             prev_vertical_mm: None,
             current_max_vertical_mm: 10.0,
-            content_height_mm: 250.0,
+            content_height_mm: 250.0, page_vertical_offset_mm: 0.0,
         };
 
         // 테이블이 페이지를 넘어가면 페이지 나누기
@@ -355,7 +392,7 @@ mod tests {
         let context_empty = PaginationContext {
             prev_vertical_mm: None,
             current_max_vertical_mm: 0.0,
-            content_height_mm: 250.0,
+            content_height_mm: 250.0, page_vertical_offset_mm: 0.0,
         };
         let result = check_table_page_break(240.0, 20.0, &context_empty);
         assert!(!result.has_page_break);
@@ -366,7 +403,7 @@ mod tests {
         let context = PaginationContext {
             prev_vertical_mm: None,
             current_max_vertical_mm: 10.0,
-            content_height_mm: 250.0,
+            content_height_mm: 250.0, page_vertical_offset_mm: 0.0,
         };
 
         // 객체가 페이지를 넘어가면 페이지 나누기

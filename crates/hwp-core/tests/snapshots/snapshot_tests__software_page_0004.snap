@@ -1,6 +1,0 @@
----
-source: crates/hwp-core/tests/snapshot_tests.rs
-expression: page_html
----
-<!DOCTYPE html>
-<html><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><head><title></title><meta http-equiv="content-type" content="text/html; charset=utf-8"><link rel="stylesheet" type="text/css" href="software_style.css"></head><body><div class="hpa" style="width:210mm;height:296.99mm;"><div class="hcD" style="left:20mm;top:15mm;"><div class="hcI"><div class="hls ps22" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:-0.18mm;height:3.53mm;width:170.00mm;"></div></div></div><div class="hcD" style="left:20mm;top:25mm;"><div class="hcI"><div class="hls ps27" style="line-height:3.53mm;white-space:nowrap;left:0.00mm;top:305.03mm;height:3.53mm;width:170.00mm;"><span class="hrt cs23">5. [출처표기] <예시 1> 참고문헌&nbsp;</span></div></div></div></div></body></html>

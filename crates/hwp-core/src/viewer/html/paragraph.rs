@@ -111,6 +111,7 @@ pub fn render_paragraphs_fragment_with_hls(
         prev_vertical_mm: None,
         current_max_vertical_mm: 0.0,
         content_height_mm: 297.0,
+        page_vertical_offset_mm: 0.0,
     };
     for para in paragraphs {
         let (para_html, _table_htmls, _) =
