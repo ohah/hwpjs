@@ -606,8 +606,10 @@ pub(crate) fn render_cells(
                             for img in &ctrl_result.images {
                                 let abs_left = round_to_2dp(left_margin_mm + off_x_mm);
                                 let abs_top = round_to_2dp(top_margin_mm + off_y_mm);
-                                let w_mm = round_to_2dp(int32_to_mm(img.width as crate::types::INT32));
-                                let h_mm = round_to_2dp(int32_to_mm(img.height as crate::types::INT32));
+                                let w_mm =
+                                    round_to_2dp(int32_to_mm(img.width as crate::types::INT32));
+                                let h_mm =
+                                    round_to_2dp(int32_to_mm(img.height as crate::types::INT32));
                                 cell_outside_html.push_str(&format!(
                                     r#"<div class="hsR" style="top:{abs_top}mm;left:{abs_left}mm;width:{w_mm}mm;height:{h_mm}mm;background-repeat:no-repeat;background-image:url('{}');"></div>"#,
                                     img.url
@@ -1148,4 +1150,3 @@ pub(crate) fn render_cells(
     }
     cells_html
 }
-
