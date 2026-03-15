@@ -11885,7 +11885,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 146,
+                    "text_start_position": 131,
                     "vertical_position": 38202,
                     "line_height": 750,
                     "text_height": 1000,
@@ -12361,7 +12361,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 153,
+                    "text_start_position": 147,
                     "vertical_position": 52602,
                     "line_height": 750,
                     "text_height": 1000,
