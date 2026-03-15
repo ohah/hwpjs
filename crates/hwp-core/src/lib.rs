@@ -652,7 +652,7 @@ impl HwpParser {
                 // 글자 폭 근사값 (fixture 역산 기반, 맑은 고딕/한컴바탕 등 한글 글꼴 기준)
                 // justify 정렬에서 공백이 늘어나는 것을 감안하여 공백 폭을 작게 설정
                 let char_width = if ch == ' ' {
-                    (font_hu as f64 * 0.15) as i32 // 공백: font_size × 0.15
+                    (font_hu as f64 * 0.10) as i32 // 공백: font_size × 0.10 (justify 정렬에서 공백은 남는 공간을 채우므로 작게 설정)
                 } else if ch == '\t' {
                     font_hu * 2 // 탭: font_size × 2 (근사)
                 } else if Self::is_fullwidth_char(ch) {
