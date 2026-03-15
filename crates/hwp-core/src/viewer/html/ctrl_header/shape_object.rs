@@ -1624,10 +1624,7 @@ fn collect_images_from_records(
 
 /// 선 도형(ShapeComponentLine)을 SVG로 렌더링
 /// fixture 기준: <div class="hsR" style="top:...;left:...;width:...;height:...;"><svg>...</svg></div>
-fn render_line_shape(
-    header: &CtrlHeader,
-    children: &[ParagraphRecord],
-) -> Option<String> {
+fn render_line_shape(header: &CtrlHeader, children: &[ParagraphRecord]) -> Option<String> {
     let (offset_x, offset_y, obj_width, obj_height) = match &header.data {
         CtrlHeaderData::ObjectCommon {
             offset_x,
@@ -1635,15 +1632,27 @@ fn render_line_shape(
             width,
             height,
             ..
-        } => (offset_x.0, offset_y.0, u32::from(*width), u32::from(*height)),
+        } => (
+            offset_x.0,
+            offset_y.0,
+            u32::from(*width),
+            u32::from(*height),
+        ),
         _ => return None,
     };
 
     // ShapeComponentLine 찾기
     let line = children.iter().find_map(|r| {
-        if let ParagraphRecord::ShapeComponent { children: sc_children, .. } = r {
+        if let ParagraphRecord::ShapeComponent {
+            children: sc_children,
+            ..
+        } = r
+        {
             sc_children.iter().find_map(|c| {
-                if let ParagraphRecord::ShapeComponentLine { shape_component_line } = c {
+                if let ParagraphRecord::ShapeComponentLine {
+                    shape_component_line,
+                } = c
+                {
                     Some(shape_component_line)
                 } else {
                     None

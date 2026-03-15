@@ -350,13 +350,21 @@ pub(crate) fn render_cells(
 
             // 하이퍼링크 범위 수집 / Collect hyperlink ranges
             let hyperlink_ranges = {
-                let ccp: Vec<_> = para.records.iter().find_map(|r| {
-                    if let ParagraphRecord::ParaText { control_char_positions, .. } = r {
-                        Some(control_char_positions.clone())
-                    } else {
-                        None
-                    }
-                }).unwrap_or_default();
+                let ccp: Vec<_> = para
+                    .records
+                    .iter()
+                    .find_map(|r| {
+                        if let ParagraphRecord::ParaText {
+                            control_char_positions,
+                            ..
+                        } = r
+                        {
+                            Some(control_char_positions.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or_default();
                 super::super::super::paragraph::collect_hyperlink_ranges(para, &ccp)
             };
 
@@ -410,17 +418,24 @@ pub(crate) fn render_cells(
                     if header.ctrl_id == "gso " {
                         shape_anchor_idx += 1;
                         let mut gso_images = Vec::new();
-                        collect_images_from_gso(children, &header.data, document, options, &mut gso_images);
+                        collect_images_from_gso(
+                            children,
+                            &header.data,
+                            document,
+                            options,
+                            &mut gso_images,
+                        );
 
                         // ObjectCommon에서 위치 정보 추출
-                        let (off_x_mm, off_y_mm) = if let CtrlHeaderData::ObjectCommon {
-                            offset_x, offset_y, ..
-                        } = &header.data
-                        {
-                            (int32_to_mm(offset_x.0), int32_to_mm(offset_y.0))
-                        } else {
-                            (0.0, 0.0)
-                        };
+                        let (off_x_mm, off_y_mm) =
+                            if let CtrlHeaderData::ObjectCommon {
+                                offset_x, offset_y, ..
+                            } = &header.data
+                            {
+                                (int32_to_mm(offset_x.0), int32_to_mm(offset_y.0))
+                            } else {
+                                (0.0, 0.0)
+                            };
 
                         for img in &gso_images {
                             let abs_left = round_to_2dp(left_margin_mm + off_x_mm);
@@ -1152,13 +1167,12 @@ fn collect_images_from_gso(
     images: &mut Vec<ImageInfo>,
 ) {
     // ObjectCommon에서 크기 정보 추출
-    let (obj_width, obj_height) = if let CtrlHeaderData::ObjectCommon { width, height, .. } =
-        ctrl_header_data
-    {
-        (u32::from(*width), u32::from(*height))
-    } else {
-        return;
-    };
+    let (obj_width, obj_height) =
+        if let CtrlHeaderData::ObjectCommon { width, height, .. } = ctrl_header_data {
+            (u32::from(*width), u32::from(*height))
+        } else {
+            return;
+        };
 
     // ShapeComponent → ShapeComponentPicture 재귀 탐색
     for child in children {
