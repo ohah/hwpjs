@@ -472,8 +472,53 @@ impl HwpParser {
                                         - cell.cell_attributes.left_margin as i32
                                         - cell.cell_attributes.right_margin as i32;
                                     let cell_w = if cell_content_w > 0 { Some(cell_content_w) } else { None };
+
+                                    // 셀 내 gso 이미지 너비/높이 사전 스캔
+                                    // text_option=square인 gso가 있으면 이미지 높이 범위 내의 문단에
+                                    // column_start_position 오프셋 적용
+                                    let mut cell_gso_width: i32 = 0;
+                                    let mut cell_gso_height: i32 = 0;
+                                    for para in &cell.paragraphs {
+                                        for r in &para.records {
+                                            if let ParagraphRecord::CtrlHeader { header, .. } = r {
+                                                if let document::bodytext::CtrlHeaderData::ObjectCommon {
+                                                    width, height, attribute, ..
+                                                } = &header.data {
+                                                    if matches!(
+                                                        attribute.object_text_option,
+                                                        document::bodytext::ctrl_header::ObjectTextOption::Square
+                                                            | document::bodytext::ctrl_header::ObjectTextOption::Tight
+                                                    ) {
+                                                        cell_gso_width = width.0 as i32;
+                                                        cell_gso_height = height.0 as i32;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
                                     for para in &mut cell.paragraphs {
-                                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut cell_vert, false, cell_w);
+                                        // gso 이미지 높이 범위 내이면 줄어든 너비 적용
+                                        let in_image_range = cell_gso_width > 0 && cell_vert < cell_gso_height;
+                                        let effective_w = if in_image_range {
+                                            cell_w.map(|w| (w - cell_gso_width).max(0))
+                                        } else {
+                                            cell_w
+                                        };
+                                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut cell_vert, false, effective_w);
+
+                                        // 합성된 LineSeg의 column_start_position을 이미지 너비로 조정
+                                        if in_image_range {
+                                            for r in &mut para.records {
+                                                if let ParagraphRecord::ParaLineSeg { segments } = r {
+                                                    for seg in segments.iter_mut() {
+                                                        if seg.column_start_position == 0 {
+                                                            seg.column_start_position = cell_gso_width;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -594,6 +639,34 @@ impl HwpParser {
         let line_height_hu = (text_height_hu as f64 * 0.75).round() as i32;
         let text_line_height_hu = (font_size_hu as f64 * line_spacing_pct / 100.0).round() as i32;
         let baseline_distance_hu = (text_height_hu as f64 * 0.85).round() as i32;
+
+        // 셀 내 gso 이미지 너비 확인 (text_option=square일 때 텍스트 영역 조정)
+        // 셀 레벨에서 이미 effective_w로 처리된 경우 여기서는 건너뜀
+        // (본문 레벨에서만 적용)
+        let mut gso_image_width_hu: i32 = 0;
+        if content_width_override_hu.is_none() {
+            for record in &paragraph.records {
+                if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                    if let document::bodytext::CtrlHeaderData::ObjectCommon {
+                        width, attribute, ..
+                    } = &header.data
+                    {
+                        // text_option이 square/tight이면 텍스트가 개체를 감싸므로
+                        // column_start_position을 이미지 너비만큼 오프셋
+                        if matches!(
+                            attribute.object_text_option,
+                            document::bodytext::ctrl_header::ObjectTextOption::Square
+                                | document::bodytext::ctrl_header::ObjectTextOption::Tight
+                        ) {
+                            let w = width.0 as i32;
+                            if w > gso_image_width_hu {
+                                gso_image_width_hu = w;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // 콘텐츠 너비 (HWPUNIT): 셀 너비 오버라이드가 있으면 사용
         let content_width_hu = content_width_override_hu.unwrap_or_else(|| {
@@ -738,23 +811,29 @@ impl HwpParser {
             line_starts
         };
 
-        let line_starts = estimate_line_breaks(para_text, content_width_hu, font_size_hu);
+        // gso 이미지가 있으면 텍스트 영역을 이미지 오른쪽으로 밀기
+        // fixture: text_option=square일 때 column_start_position=이미지 너비, width=셀너비-이미지너비
+        let (text_col_start, text_seg_width) = if gso_image_width_hu > 0 {
+            (gso_image_width_hu, (content_width_hu - gso_image_width_hu).max(0))
+        } else {
+            (0, content_width_hu)
+        };
+
+        // 줄바꿈 추정은 텍스트 영역 너비 기준
+        let line_starts = estimate_line_breaks(para_text, text_seg_width, font_size_hu);
         let line_count = line_starts.len();
 
-        // 줄 수만큼 세그먼트 생성
-        // fixture 기준: line_height = text_height (3.53mm), vertical_position 간격 = line_spacing (5.64mm)
-        // text_start_position: 각 줄의 시작 문자 위치 (WCHAR 인덱스)
         let mut segments = Vec::with_capacity(line_count);
         for i in 0..line_count {
             segments.push(LineSegmentInfo {
                 text_start_position: line_starts[i],
                 vertical_position: (i as i32) * text_line_height_hu,
-                line_height: line_height_hu,  // fixture 기준: text_height × 0.75
+                line_height: line_height_hu,
                 text_height: text_height_hu,
                 baseline_distance: baseline_distance_hu,
-                line_spacing: text_line_height_hu, // 줄 간격 (5.64mm)
-                column_start_position: 0,
-                segment_width: content_width_hu,
+                line_spacing: text_line_height_hu,
+                column_start_position: text_col_start,
+                segment_width: text_seg_width,
                 tag: LineSegmentTag {
                     is_first_line_of_page: i == 0,
                     is_first_line_of_column: i == 0,
