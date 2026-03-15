@@ -35,6 +35,9 @@ pub struct ParagraphPosition<'a> {
     pub table_fragment_apply_at_index: Option<usize>,
     /// 현재 페이지 번호 (1-based, inside/outside 정렬에 사용)
     pub page_number: usize,
+    /// HWP 5.1+ 합성 LineSeg: 현재 페이지의 vertical_position 오프셋 (mm)
+    /// 합성 LineSeg는 문서 전체 기준 절대값이므로, 렌더링 시 이 값을 빼서 페이지 내 상대 위치로 변환
+    pub page_vertical_offset_mm: f64,
 }
 
 /// 문단 렌더링 컨텍스트 / Paragraph rendering context
@@ -91,6 +94,7 @@ pub fn render_paragraphs_fragment_with_hls(
         table_fragment_height_mm: None,
         table_fragment_apply_at_index: None,
         page_number: 1,
+        page_vertical_offset_mm: 0.0,
     };
     let context = ParagraphRenderContext {
         document,
@@ -449,7 +453,18 @@ pub fn render_paragraph(
     // LineSegment 수집 / Collect line segments
     // HWP 5.1+ 파일에서 LineSeg가 없는 경우, HwpParser::parse() 단계에서
     // 이미 합성 LineSeg가 삽입되어 있으므로 여기서는 별도 처리 불필요.
-    let line_segments = collect_line_segments(paragraph);
+    // 합성 LineSeg의 vertical_position은 문서 전체 기준 절대값이므로,
+    // 페이지 오프셋을 빼서 페이지 내 상대 위치로 변환한다.
+    let page_offset_hu = (context.position.page_vertical_offset_mm * 7200.0 / 25.4).round() as i32;
+    let line_segments: Vec<LineSegmentInfo> = collect_line_segments(paragraph)
+        .into_iter()
+        .map(|mut seg| {
+            if page_offset_hu != 0 {
+                seg.vertical_position = (seg.vertical_position - page_offset_hu).max(0);
+            }
+            seg
+        })
+        .collect();
 
     // 이미지 수집 / Collect images
     let mut images = collect_images(paragraph, document, options);
