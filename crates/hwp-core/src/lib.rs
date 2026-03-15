@@ -584,13 +584,16 @@ impl HwpParser {
 
         // 테이블/이미지 등 개체가 포함된 문단이면 개체 높이를 사용
         let mut object_height_hu: i32 = 0;
+        let mut object_margin_hu: i32 = 0;
         let mut has_object = false;
         for record in &paragraph.records {
             if let ParagraphRecord::CtrlHeader { header, .. } = record {
                 if let document::bodytext::CtrlHeaderData::ObjectCommon { height, margin, .. } = &header.data {
-                    let total = height.0 as i32 + margin.top as i32 + margin.bottom as i32;
+                    let margin_total = margin.top as i32 + margin.bottom as i32;
+                    let total = height.0 as i32 + margin_total;
                     if total > object_height_hu {
                         object_height_hu = total;
+                        object_margin_hu = margin_total;
                         has_object = true;
                     }
                 }
@@ -600,13 +603,15 @@ impl HwpParser {
         // 개체가 있으면 1개 세그먼트로 처리 (개체 높이 사용)
         if has_object {
             let obj_height_hu = object_height_hu.max(text_line_height_hu);
+            // 줄 간격: 개체 높이 + 마진×2 (fixture에서 개체 상하 마진이 내부+외부에 이중 적용)
+            let obj_spacing_hu = obj_height_hu + object_margin_hu * 2;
             return vec![LineSegmentInfo {
                 text_start_position: 0,
                 vertical_position: 0,
                 line_height: obj_height_hu,
                 text_height: text_height_hu,
                 baseline_distance: baseline_distance_hu,
-                line_spacing: obj_height_hu, // 개체 높이를 줄 간격으로 사용
+                line_spacing: obj_spacing_hu, // 개체 높이 + 마진을 줄 간격으로 사용
                 column_start_position: 0,
                 segment_width: content_width_hu,
                 tag: LineSegmentTag {

@@ -6635,7 +6635,7 @@ expression: json
                     "line_height": 20038,
                     "text_height": 1000,
                     "baseline_distance": 850,
-                    "line_spacing": 20038,
+                    "line_spacing": 20602,
                     "column_start_position": 0,
                     "segment_width": 48190,
                     "tag": {
@@ -10792,7 +10792,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 20038,
+                    "vertical_position": 20602,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -10869,7 +10869,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 21638,
+                    "vertical_position": 22202,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -10889,7 +10889,7 @@ expression: json
                   },
                   {
                     "text_start_position": 74,
-                    "vertical_position": 23238,
+                    "vertical_position": 23802,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -10909,7 +10909,7 @@ expression: json
                   },
                   {
                     "text_start_position": 147,
-                    "vertical_position": 24838,
+                    "vertical_position": 25402,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -10929,7 +10929,7 @@ expression: json
                   },
                   {
                     "text_start_position": 220,
-                    "vertical_position": 26438,
+                    "vertical_position": 27002,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -10949,7 +10949,7 @@ expression: json
                   },
                   {
                     "text_start_position": 290,
-                    "vertical_position": 28038,
+                    "vertical_position": 28602,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11002,7 +11002,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 29638,
+                    "vertical_position": 30202,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11079,7 +11079,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 31238,
+                    "vertical_position": 31802,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11099,7 +11099,7 @@ expression: json
                   },
                   {
                     "text_start_position": 79,
-                    "vertical_position": 32838,
+                    "vertical_position": 33402,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11176,7 +11176,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 34438,
+                    "vertical_position": 35002,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11196,7 +11196,7 @@ expression: json
                   },
                   {
                     "text_start_position": 74,
-                    "vertical_position": 36038,
+                    "vertical_position": 36602,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11216,7 +11216,7 @@ expression: json
                   },
                   {
                     "text_start_position": 144,
-                    "vertical_position": 37638,
+                    "vertical_position": 38202,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11319,7 +11319,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 39238,
+                    "vertical_position": 39802,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11396,7 +11396,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 40838,
+                    "vertical_position": 41402,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11416,7 +11416,7 @@ expression: json
                   },
                   {
                     "text_start_position": 76,
-                    "vertical_position": 42438,
+                    "vertical_position": 43002,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11469,7 +11469,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 44038,
+                    "vertical_position": 44602,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11522,7 +11522,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 45638,
+                    "vertical_position": 46202,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11575,7 +11575,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 47238,
+                    "vertical_position": 47802,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11652,7 +11652,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 48838,
+                    "vertical_position": 49402,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11672,7 +11672,7 @@ expression: json
                   },
                   {
                     "text_start_position": 78,
-                    "vertical_position": 50438,
+                    "vertical_position": 51002,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11692,7 +11692,7 @@ expression: json
                   },
                   {
                     "text_start_position": 151,
-                    "vertical_position": 52038,
+                    "vertical_position": 52602,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11745,7 +11745,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 53638,
+                    "vertical_position": 54202,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11798,7 +11798,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 55238,
+                    "vertical_position": 55802,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11875,7 +11875,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 56838,
+                    "vertical_position": 57402,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11962,11 +11962,11 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 58438,
+                    "vertical_position": 59002,
                     "line_height": 5810,
                     "text_height": 1000,
                     "baseline_distance": 850,
-                    "line_spacing": 5810,
+                    "line_spacing": 6942,
                     "column_start_position": 0,
                     "segment_width": 48190,
                     "tag": {
@@ -16466,7 +16466,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 64248,
+                    "vertical_position": 65944,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16519,7 +16519,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 65848,
+                    "vertical_position": 67544,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16596,7 +16596,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 67448,
+                    "vertical_position": 69144,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16649,7 +16649,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 69048,
+                    "vertical_position": 70744,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16726,7 +16726,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 70648,
+                    "vertical_position": 72344,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16813,7 +16813,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 72248,
+                    "vertical_position": 73944,
                     "line_height": 9156,
                     "text_height": 1000,
                     "baseline_distance": 850,
