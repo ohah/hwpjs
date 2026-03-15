@@ -866,14 +866,15 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
 
                 let position = ParagraphPosition {
                     hcd_position,
-                    page_def: current_page_def, // 현재 페이지의 PageDef 사용 / Use current page's PageDef
+                    page_def: current_page_def,
                     first_para_vertical_mm,
                     current_para_vertical_mm,
-                    current_para_index, // 현재 문단 인덱스 전달 / Pass current paragraph index
+                    current_para_index,
                     content_height_mm: Some(content_height_mm),
                     table_fragment_height_mm: None,
                     table_fragment_apply_at_index: None,
                     page_number,
+                    page_vertical_offset_mm: pagination_context.page_vertical_offset_mm,
                 };
 
                 let context = ParagraphRenderContext {
@@ -1425,7 +1426,8 @@ pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
                                 content_height_mm: Some(content_height_mm),
                                 table_fragment_height_mm,
                                 table_fragment_apply_at_index,
-                                page_number: page_number + 1, // 다음 페이지 / Next page
+                                page_number: page_number + 1,
+                                page_vertical_offset_mm: pagination_context.page_vertical_offset_mm,
                             };
 
                             let context_next = ParagraphRenderContext {
