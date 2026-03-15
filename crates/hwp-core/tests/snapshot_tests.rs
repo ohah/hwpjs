@@ -757,8 +757,8 @@ fn test_all_fixtures_html_snapshots() {
                             eprintln!("Failed to write HTML file {}: {}", html_file.display(), e);
                         });
 
-                        // table-bug는 페이지별 HTML도 추가 생성 / Also generate per-page HTML for table-bug
-                        if file_name == "table-bug" {
+                        // table-bug, software는 페이지별 HTML도 추가 생성
+                        if file_name == "table-bug" || file_name == "software" {
                             let css_filename = format!("{}_style.css", file_name);
                             let html_pages = document.to_html_pages(&options, &css_filename);
 
