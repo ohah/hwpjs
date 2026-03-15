@@ -12629,10 +12629,10 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 59002,
-                    "line_height": 46662,
+                    "line_height": 26000,
                     "text_height": 1000,
                     "baseline_distance": 850,
-                    "line_spacing": 47794,
+                    "line_spacing": 27132,
                     "column_start_position": 0,
                     "segment_width": 48190,
                     "tag": {
@@ -12905,10 +12905,10 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 21442,
+                                      "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
-                                      "line_spacing": 21442,
+                                      "line_spacing": 780,
                                       "column_start_position": 0,
                                       "segment_width": 46604,
                                       "tag": {
@@ -13141,7 +13141,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 21442,
+                                      "vertical_position": 780,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13218,7 +13218,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 22222,
+                                      "vertical_position": 1560,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13295,7 +13295,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 23002,
+                                      "vertical_position": 2340,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13372,7 +13372,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 23782,
+                                      "vertical_position": 3120,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13449,7 +13449,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 24562,
+                                      "vertical_position": 3900,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13526,7 +13526,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 25342,
+                                      "vertical_position": 4680,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13603,7 +13603,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 26122,
+                                      "vertical_position": 5460,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13680,7 +13680,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 26902,
+                                      "vertical_position": 6240,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13757,7 +13757,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 27682,
+                                      "vertical_position": 7020,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13834,7 +13834,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 28462,
+                                      "vertical_position": 7800,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13911,7 +13911,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 29242,
+                                      "vertical_position": 8580,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -13988,7 +13988,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 30022,
+                                      "vertical_position": 9360,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14065,7 +14065,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 30802,
+                                      "vertical_position": 10140,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14142,7 +14142,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 31582,
+                                      "vertical_position": 10920,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14219,7 +14219,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 32362,
+                                      "vertical_position": 11700,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14296,7 +14296,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 33142,
+                                      "vertical_position": 12480,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14373,7 +14373,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 33922,
+                                      "vertical_position": 13260,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14426,7 +14426,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 34702,
+                                      "vertical_position": 14040,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14503,7 +14503,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 35482,
+                                      "vertical_position": 14820,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14580,7 +14580,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 36262,
+                                      "vertical_position": 15600,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14657,7 +14657,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 37042,
+                                      "vertical_position": 16380,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14734,7 +14734,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 37822,
+                                      "vertical_position": 17160,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14811,7 +14811,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 38602,
+                                      "vertical_position": 17940,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14888,7 +14888,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 39382,
+                                      "vertical_position": 18720,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -14965,7 +14965,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 40162,
+                                      "vertical_position": 19500,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -15042,7 +15042,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 40942,
+                                      "vertical_position": 20280,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -15119,7 +15119,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 41722,
+                                      "vertical_position": 21060,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -15196,7 +15196,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 42502,
+                                      "vertical_position": 21840,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -15249,7 +15249,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 43282,
+                                      "vertical_position": 22620,
                                       "line_height": 600,
                                       "text_height": 600,
                                       "baseline_distance": 510,
@@ -15302,7 +15302,7 @@
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 44062,
+                                      "vertical_position": 23400,
                                       "line_height": 700,
                                       "text_height": 700,
                                       "baseline_distance": 595,
@@ -17932,7 +17932,7 @@
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 106796,
+                    "vertical_position": 86134,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -17985,7 +17985,7 @@
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 108396,
+                    "vertical_position": 87734,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -18062,7 +18062,7 @@
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 109996,
+                    "vertical_position": 89334,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -18115,7 +18115,7 @@
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 111596,
+                    "vertical_position": 90934,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -18192,7 +18192,7 @@
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 113196,
+                    "vertical_position": 92534,
                     "line_height": 1000,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -18279,7 +18279,7 @@
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 114796,
+                    "vertical_position": 94134,
                     "line_height": 9156,
                     "text_height": 1000,
                     "baseline_distance": 850,
