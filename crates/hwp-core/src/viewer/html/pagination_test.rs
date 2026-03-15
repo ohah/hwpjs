@@ -7,7 +7,8 @@ mod tests {
         let context = PaginationContext {
             prev_vertical_mm: None,
             current_max_vertical_mm: 297.0,
-            content_height_mm: 297.0, page_vertical_offset_mm: 0.0,
+            content_height_mm: 297.0,
+            page_vertical_offset_mm: 0.0,
         };
 
         assert_eq!(context.current_max_vertical_mm, 297.0);
@@ -19,7 +20,8 @@ mod tests {
         let context = PaginationContext {
             prev_vertical_mm: Some(100.0),
             current_max_vertical_mm: 180.0,
-            content_height_mm: 297.0, page_vertical_offset_mm: 0.0,
+            content_height_mm: 297.0,
+            page_vertical_offset_mm: 0.0,
         };
 
         assert_eq!(context.prev_vertical_mm, Some(100.0));
@@ -100,13 +102,15 @@ mod tests {
         let context_a4 = PaginationContext {
             prev_vertical_mm: None,
             current_max_vertical_mm: 297.0,
-            content_height_mm: 297.0, page_vertical_offset_mm: 0.0,
+            content_height_mm: 297.0,
+            page_vertical_offset_mm: 0.0,
         };
 
         let context_legal = PaginationContext {
             prev_vertical_mm: None,
             current_max_vertical_mm: 356.0,
-            content_height_mm: 356.0, page_vertical_offset_mm: 0.0,
+            content_height_mm: 356.0,
+            page_vertical_offset_mm: 0.0,
         };
 
         assert_eq!(context_a4.current_max_vertical_mm, 297.0);
@@ -119,7 +123,8 @@ mod tests {
         let context = PaginationContext {
             prev_vertical_mm: Some(280.0),
             current_max_vertical_mm: 297.0,
-            content_height_mm: 297.0, page_vertical_offset_mm: 0.0,
+            content_height_mm: 297.0,
+            page_vertical_offset_mm: 0.0,
         };
 
         // prev_vertical_mm > 0 implies content exists

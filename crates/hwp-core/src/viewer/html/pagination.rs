@@ -57,11 +57,11 @@ pub fn check_paragraph_page_break(
     current_page_def: Option<&PageDef>,
 ) -> PaginationResult {
     // 1. 첫 번째 LineSegment의 vertical_position 추출 (페이지 오프셋 적용)
-    let first_vertical_mm = extract_first_vertical_position(paragraph)
-        .map(|v| v - context.page_vertical_offset_mm);
+    let first_vertical_mm =
+        extract_first_vertical_position(paragraph).map(|v| v - context.page_vertical_offset_mm);
     // 마지막 세그먼트의 끝 위치 (페이지 오프셋 적용)
-    let last_end_mm = extract_last_end_position(paragraph)
-        .map(|v| v - context.page_vertical_offset_mm);
+    let last_end_mm =
+        extract_last_end_position(paragraph).map(|v| v - context.page_vertical_offset_mm);
 
     // 2. PageDef 변경 확인
     let has_page_def_change = check_page_def_change(paragraph, current_page_def);
@@ -81,7 +81,11 @@ pub fn check_paragraph_page_break(
         first_vertical_mm,
         context.content_height_mm,
         context.current_max_vertical_mm,
-    ) || check_end_overflow(last_end_mm, context.content_height_mm, context.current_max_vertical_mm);
+    ) || check_end_overflow(
+        last_end_mm,
+        context.content_height_mm,
+        context.current_max_vertical_mm,
+    );
 
     // 우선순위에 따라 첫 번째 true인 원인을 반환
     if has_explicit {
@@ -376,7 +380,8 @@ mod tests {
         let context = PaginationContext {
             prev_vertical_mm: None,
             current_max_vertical_mm: 10.0,
-            content_height_mm: 250.0, page_vertical_offset_mm: 0.0,
+            content_height_mm: 250.0,
+            page_vertical_offset_mm: 0.0,
         };
 
         // 테이블이 페이지를 넘어가면 페이지 나누기
@@ -392,7 +397,8 @@ mod tests {
         let context_empty = PaginationContext {
             prev_vertical_mm: None,
             current_max_vertical_mm: 0.0,
-            content_height_mm: 250.0, page_vertical_offset_mm: 0.0,
+            content_height_mm: 250.0,
+            page_vertical_offset_mm: 0.0,
         };
         let result = check_table_page_break(240.0, 20.0, &context_empty);
         assert!(!result.has_page_break);
@@ -403,7 +409,8 @@ mod tests {
         let context = PaginationContext {
             prev_vertical_mm: None,
             current_max_vertical_mm: 10.0,
-            content_height_mm: 250.0, page_vertical_offset_mm: 0.0,
+            content_height_mm: 250.0,
+            page_vertical_offset_mm: 0.0,
         };
 
         // 객체가 페이지를 넘어가면 페이지 나누기

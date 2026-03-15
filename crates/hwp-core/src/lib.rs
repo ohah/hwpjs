@@ -462,7 +462,14 @@ impl HwpParser {
                 } => {
                     let mut sub_vert = 0i32;
                     for para in paragraphs.iter_mut() {
-                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut sub_vert, false, None);
+                        Self::synthesize_for_paragraph(
+                            para,
+                            doc_info,
+                            page_def,
+                            &mut sub_vert,
+                            false,
+                            None,
+                        );
                     }
                     for child in children.iter_mut() {
                         match child {
@@ -472,7 +479,14 @@ impl HwpParser {
                             } => {
                                 let mut list_vert = 0i32;
                                 for para in list_paras.iter_mut() {
-                                    Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false, None);
+                                    Self::synthesize_for_paragraph(
+                                        para,
+                                        doc_info,
+                                        page_def,
+                                        &mut list_vert,
+                                        false,
+                                        None,
+                                    );
                                 }
                             }
                             // 테이블 셀 내부 문단 처리 (셀 너비를 content_width로 전달)
@@ -483,7 +497,11 @@ impl HwpParser {
                                     let cell_content_w = cell.cell_attributes.width.0 as i32
                                         - cell.cell_attributes.left_margin as i32
                                         - cell.cell_attributes.right_margin as i32;
-                                    let cell_w = if cell_content_w > 0 { Some(cell_content_w) } else { None };
+                                    let cell_w = if cell_content_w > 0 {
+                                        Some(cell_content_w)
+                                    } else {
+                                        None
+                                    };
 
                                     // 셀 내 gso 이미지 너비/높이 사전 스캔
                                     // text_option=square인 gso가 있으면 이미지 높이 범위 내의 문단에
@@ -511,21 +529,31 @@ impl HwpParser {
 
                                     for para in &mut cell.paragraphs {
                                         // gso 이미지 높이 범위 내이면 줄어든 너비 적용
-                                        let in_image_range = cell_gso_width > 0 && cell_vert < cell_gso_height;
+                                        let in_image_range =
+                                            cell_gso_width > 0 && cell_vert < cell_gso_height;
                                         let effective_w = if in_image_range {
                                             cell_w.map(|w| (w - cell_gso_width).max(0))
                                         } else {
                                             cell_w
                                         };
-                                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut cell_vert, false, effective_w);
+                                        Self::synthesize_for_paragraph(
+                                            para,
+                                            doc_info,
+                                            page_def,
+                                            &mut cell_vert,
+                                            false,
+                                            effective_w,
+                                        );
 
                                         // 합성된 LineSeg의 column_start_position을 이미지 너비로 조정
                                         if in_image_range {
                                             for r in &mut para.records {
-                                                if let ParagraphRecord::ParaLineSeg { segments } = r {
+                                                if let ParagraphRecord::ParaLineSeg { segments } = r
+                                                {
                                                     for seg in segments.iter_mut() {
                                                         if seg.column_start_position == 0 {
-                                                            seg.column_start_position = cell_gso_width;
+                                                            seg.column_start_position =
+                                                                cell_gso_width;
                                                         }
                                                     }
                                                 }
@@ -541,7 +569,14 @@ impl HwpParser {
                 ParagraphRecord::ListHeader { paragraphs, .. } => {
                     let mut list_vert = 0i32;
                     for para in paragraphs.iter_mut() {
-                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false, None);
+                        Self::synthesize_for_paragraph(
+                            para,
+                            doc_info,
+                            page_def,
+                            &mut list_vert,
+                            false,
+                            None,
+                        );
                     }
                 }
                 ParagraphRecord::ShapeComponent { children, .. } => {
@@ -553,7 +588,14 @@ impl HwpParser {
                         {
                             let mut list_vert = 0i32;
                             for para in list_paras.iter_mut() {
-                                Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false, None);
+                                Self::synthesize_for_paragraph(
+                                    para,
+                                    doc_info,
+                                    page_def,
+                                    &mut list_vert,
+                                    false,
+                                    None,
+                                );
                             }
                         }
                     }
@@ -570,7 +612,12 @@ impl HwpParser {
             .any(|r| matches!(r, ParagraphRecord::ParaLineSeg { .. }));
 
         if !has_line_seg {
-            let mut segments = Self::create_synthetic_line_segments(paragraph, doc_info, page_def, content_width_override_hu);
+            let mut segments = Self::create_synthetic_line_segments(
+                paragraph,
+                doc_info,
+                page_def,
+                content_width_override_hu,
+            );
             // 본문/하위 문단 모두 vertical_position을 누적
             // 하위(셀) 문단에서도 줄 위치가 올바르게 계산되어야 렌더링이 정확함
             for seg in &mut segments {
@@ -585,10 +632,9 @@ impl HwpParser {
                 .position(|r| matches!(r, ParagraphRecord::ParaCharShape { .. }))
                 .map(|i| i + 1)
                 .unwrap_or(paragraph.records.len());
-            paragraph.records.insert(
-                insert_pos,
-                ParagraphRecord::ParaLineSeg { segments },
-            );
+            paragraph
+                .records
+                .insert(insert_pos, ParagraphRecord::ParaLineSeg { segments });
         } else if is_body_level {
             for record in &paragraph.records {
                 if let ParagraphRecord::ParaLineSeg { segments } = record {
@@ -660,7 +706,9 @@ impl HwpParser {
             for record in &paragraph.records {
                 if let ParagraphRecord::CtrlHeader { header, .. } = record {
                     if let document::bodytext::CtrlHeaderData::ObjectCommon {
-                        width, attribute, ..
+                        width,
+                        attribute,
+                        ..
                     } = &header.data
                     {
                         // text_option이 square/tight이면 텍스트가 개체를 감싸므로
@@ -699,59 +747,67 @@ impl HwpParser {
         let mut object_margin_hu: i32 = 0;
         let mut has_object = false;
         if !is_inside_cell {
-        for record in &paragraph.records {
-            if let ParagraphRecord::CtrlHeader { header, children, .. } = record {
-                if let document::bodytext::CtrlHeaderData::ObjectCommon { height, margin, .. } = &header.data {
-                    let margin_total = margin.top as i32 + margin.bottom as i32;
-                    let obj_common_h = height.0 as i32 + margin_total;
+            for record in &paragraph.records {
+                if let ParagraphRecord::CtrlHeader {
+                    header, children, ..
+                } = record
+                {
+                    if let document::bodytext::CtrlHeaderData::ObjectCommon {
+                        height, margin, ..
+                    } = &header.data
+                    {
+                        let margin_total = margin.top as i32 + margin.bottom as i32;
+                        let obj_common_h = height.0 as i32 + margin_total;
 
-                    // 테이블 셀 내 LineSeg에서 실제 높이 계산
-                    let mut cell_max_h: i32 = 0;
-                    for child in children {
-                        if let ParagraphRecord::Table { table } = child {
-                            // 각 행의 최대 셀 높이를 합산
-                            let mut row_heights: std::collections::BTreeMap<u16, i32> = std::collections::BTreeMap::new();
-                            for cell in &table.cells {
-                                let row = cell.cell_attributes.row_address;
-                                let mut cell_h: i32 = 0;
-                                for para in &cell.paragraphs {
-                                    for r in &para.records {
-                                        if let ParagraphRecord::ParaLineSeg { segments } = r {
-                                            for seg in segments {
-                                                let end = seg.vertical_position + seg.line_spacing;
-                                                if end > cell_h {
-                                                    cell_h = end;
+                        // 테이블 셀 내 LineSeg에서 실제 높이 계산
+                        let mut cell_max_h: i32 = 0;
+                        for child in children {
+                            if let ParagraphRecord::Table { table } = child {
+                                // 각 행의 최대 셀 높이를 합산
+                                let mut row_heights: std::collections::BTreeMap<u16, i32> =
+                                    std::collections::BTreeMap::new();
+                                for cell in &table.cells {
+                                    let row = cell.cell_attributes.row_address;
+                                    let mut cell_h: i32 = 0;
+                                    for para in &cell.paragraphs {
+                                        for r in &para.records {
+                                            if let ParagraphRecord::ParaLineSeg { segments } = r {
+                                                for seg in segments {
+                                                    let end =
+                                                        seg.vertical_position + seg.line_spacing;
+                                                    if end > cell_h {
+                                                        cell_h = end;
+                                                    }
                                                 }
                                             }
                                         }
                                     }
+                                    let current = row_heights.entry(row).or_insert(0);
+                                    if cell_h > *current {
+                                        *current = cell_h;
+                                    }
                                 }
-                                let current = row_heights.entry(row).or_insert(0);
-                                if cell_h > *current {
-                                    *current = cell_h;
+                                let total_row_h: i32 = row_heights.values().sum();
+                                if total_row_h > cell_max_h {
+                                    cell_max_h = total_row_h;
                                 }
-                            }
-                            let total_row_h: i32 = row_heights.values().sum();
-                            if total_row_h > cell_max_h {
-                                cell_max_h = total_row_h;
                             }
                         }
-                    }
 
-                    let actual_h = if cell_max_h > obj_common_h {
-                        cell_max_h
-                    } else {
-                        obj_common_h
-                    };
+                        let actual_h = if cell_max_h > obj_common_h {
+                            cell_max_h
+                        } else {
+                            obj_common_h
+                        };
 
-                    if actual_h > object_height_hu {
-                        object_height_hu = actual_h;
-                        object_margin_hu = margin_total;
-                        has_object = true;
+                        if actual_h > object_height_hu {
+                            object_height_hu = actual_h;
+                            object_margin_hu = margin_total;
+                            has_object = true;
+                        }
                     }
                 }
             }
-        }
         } // is_inside_cell
 
         // 개체가 있으면 1개 세그먼트로 처리 (개체 높이 사용)
@@ -797,43 +853,47 @@ impl HwpParser {
         // 글자 폭 근사 계산으로 줄바꿈 위치 추정
         // 각 줄의 시작 문자 위치(WCHAR 인덱스)를 반환
         // indent_width_hu: 내어쓰기 시 2줄째부터 줄어드는 너비 (양수)
-        let estimate_line_breaks = |text: &str, line_width_hu: i32, font_hu: i32, indent_width_hu: i32| -> Vec<u32> {
-            let mut line_starts: Vec<u32> = vec![0];
-            if text.is_empty() || line_width_hu <= 0 || font_hu <= 0 {
-                return line_starts;
-            }
-            let mut current_width: i32 = 0;
-            let mut line_num = 1usize;
-            for (char_idx, ch) in text.chars().enumerate() {
-                let char_width = if ch == ' ' {
-                    (font_hu as f64 * 0.10) as i32
-                } else if ch == '\t' {
-                    font_hu * 2
-                } else if Self::is_fullwidth_char(ch) {
-                    (font_hu as f64 * 0.85) as i32
-                } else {
-                    (font_hu as f64 * 0.425) as i32
-                };
-                current_width += char_width;
-                // 내어쓰기: 2줄째부터 너비가 줄어듬
-                let effective_width = if line_num > 1 && indent_width_hu > 0 {
-                    line_width_hu - indent_width_hu
-                } else {
-                    line_width_hu
-                };
-                if current_width > effective_width {
-                    line_starts.push(char_idx as u32);
-                    current_width = char_width;
-                    line_num += 1;
+        let estimate_line_breaks =
+            |text: &str, line_width_hu: i32, font_hu: i32, indent_width_hu: i32| -> Vec<u32> {
+                let mut line_starts: Vec<u32> = vec![0];
+                if text.is_empty() || line_width_hu <= 0 || font_hu <= 0 {
+                    return line_starts;
                 }
-            }
-            line_starts
-        };
+                let mut current_width: i32 = 0;
+                let mut line_num = 1usize;
+                for (char_idx, ch) in text.chars().enumerate() {
+                    let char_width = if ch == ' ' {
+                        (font_hu as f64 * 0.10) as i32
+                    } else if ch == '\t' {
+                        font_hu * 2
+                    } else if Self::is_fullwidth_char(ch) {
+                        (font_hu as f64 * 0.85) as i32
+                    } else {
+                        (font_hu as f64 * 0.425) as i32
+                    };
+                    current_width += char_width;
+                    // 내어쓰기: 2줄째부터 너비가 줄어듬
+                    let effective_width = if line_num > 1 && indent_width_hu > 0 {
+                        line_width_hu - indent_width_hu
+                    } else {
+                        line_width_hu
+                    };
+                    if current_width > effective_width {
+                        line_starts.push(char_idx as u32);
+                        current_width = char_width;
+                        line_num += 1;
+                    }
+                }
+                line_starts
+            };
 
         // gso 이미지가 있으면 텍스트 영역을 이미지 오른쪽으로 밀기
         // fixture: text_option=square일 때 column_start_position=이미지 너비, width=셀너비-이미지너비
         let (text_col_start, text_seg_width) = if gso_image_width_hu > 0 {
-            (gso_image_width_hu, (content_width_hu - gso_image_width_hu).max(0))
+            (
+                gso_image_width_hu,
+                (content_width_hu - gso_image_width_hu).max(0),
+            )
         } else {
             (0, content_width_hu)
         };
@@ -850,7 +910,8 @@ impl HwpParser {
         };
 
         // 줄바꿈 추정은 텍스트 영역 너비 기준
-        let line_starts = estimate_line_breaks(para_text, text_seg_width, font_size_hu, indent_padding_hu);
+        let line_starts =
+            estimate_line_breaks(para_text, text_seg_width, font_size_hu, indent_padding_hu);
         let line_count = line_starts.len();
 
         let mut segments = Vec::with_capacity(line_count);
@@ -873,7 +934,13 @@ impl HwpParser {
                     has_auto_hyphenation: false,
                     // 내어쓰기(indent<0): 2번째 줄부터 padding-left 적용
                     // 들여쓰기(indent>0): 첫 줄에만 padding-left 적용
-                    has_indentation: if indent_val < 0 { i > 0 } else if indent_val > 0 { i == 0 } else { false },
+                    has_indentation: if indent_val < 0 {
+                        i > 0
+                    } else if indent_val > 0 {
+                        i == 0
+                    } else {
+                        false
+                    },
                     has_paragraph_header_shape: false,
                 },
             });
