@@ -7310,7 +7310,7 @@
                                       "baseline_distance": 1275,
                                       "line_spacing": 2250,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46336,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -7412,10 +7412,30 @@
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 3020,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    },
+                                    {
+                                      "text_start_position": 3,
+                                      "vertical_position": 1760,
+                                      "line_height": 1100,
+                                      "text_height": 1100,
+                                      "baseline_distance": 935,
+                                      "line_spacing": 1760,
+                                      "column_start_position": 0,
+                                      "segment_width": 3020,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
                                         "is_empty_segment": false,
                                         "is_first_segment_of_line": true,
                                         "is_last_segment_of_line": true,
@@ -7514,7 +7534,7 @@
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 21376,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -7616,7 +7636,7 @@
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -7718,7 +7738,7 @@
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -7820,7 +7840,7 @@
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 3020,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -7897,7 +7917,7 @@
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 3020,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -7974,7 +7994,7 @@
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 3020,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -8076,7 +8096,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -8178,7 +8198,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -8280,7 +8300,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -8382,7 +8402,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -8484,7 +8504,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -8586,7 +8606,7 @@
                                       "baseline_distance": 1020,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -8688,7 +8708,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -8790,7 +8810,7 @@
                                       "baseline_distance": 1020,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -8868,7 +8888,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -8946,7 +8966,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -9024,7 +9044,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -9102,7 +9122,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -9180,7 +9200,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -9258,7 +9278,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -9336,7 +9356,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -9414,7 +9434,7 @@
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 10547,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -9516,7 +9536,7 @@
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 3020,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -9594,7 +9614,7 @@
                                       "baseline_distance": 1275,
                                       "line_spacing": 2250,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 43034,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -12774,7 +12794,7 @@
                                       "baseline_distance": 1105,
                                       "line_spacing": 1690,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -12890,7 +12910,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 21442,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13127,7 +13147,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13204,7 +13224,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13281,7 +13301,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13358,7 +13378,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13435,7 +13455,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13512,7 +13532,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13589,7 +13609,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13666,7 +13686,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13743,7 +13763,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13820,7 +13840,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13897,7 +13917,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -13974,7 +13994,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14051,7 +14071,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14128,7 +14148,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14205,7 +14225,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14282,7 +14302,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14359,7 +14379,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14412,7 +14432,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14489,7 +14509,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14566,7 +14586,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14643,7 +14663,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14720,7 +14740,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14797,7 +14817,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14874,7 +14894,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -14951,7 +14971,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -15028,7 +15048,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -15105,7 +15125,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -15182,7 +15202,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -15235,7 +15255,7 @@
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -15288,7 +15308,7 @@
                                       "baseline_distance": 595,
                                       "line_spacing": 910,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 46604,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -18427,7 +18447,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 2605,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -18529,7 +18549,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 6293,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -18631,7 +18651,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 9749,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -18733,7 +18753,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 13167,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -18835,7 +18855,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 12959,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -18937,7 +18957,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 2605,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -19039,7 +19059,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 6293,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -19199,7 +19219,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 9749,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -19331,7 +19351,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 13167,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -19433,7 +19453,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 12959,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -19535,7 +19555,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 2605,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -19637,7 +19657,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 6293,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -19782,7 +19802,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 9749,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -19896,7 +19916,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 13167,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -19998,7 +20018,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 12959,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -20100,7 +20120,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 2605,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -20202,7 +20222,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 6293,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -20347,7 +20367,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 9749,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
@@ -20461,10 +20481,30 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 13167,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,
+                                        "is_empty_segment": false,
+                                        "is_first_segment_of_line": true,
+                                        "is_last_segment_of_line": true,
+                                        "has_auto_hyphenation": false,
+                                        "has_indentation": false,
+                                        "has_paragraph_header_shape": false
+                                      }
+                                    },
+                                    {
+                                      "text_start_position": 19,
+                                      "vertical_position": 1300,
+                                      "line_height": 1000,
+                                      "text_height": 1000,
+                                      "baseline_distance": 850,
+                                      "line_spacing": 1300,
+                                      "column_start_position": 0,
+                                      "segment_width": 13167,
+                                      "tag": {
+                                        "is_first_line_of_page": false,
+                                        "is_first_line_of_column": false,
                                         "is_empty_segment": false,
                                         "is_first_segment_of_line": true,
                                         "is_last_segment_of_line": true,
@@ -20563,7 +20603,7 @@
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
                                       "column_start_position": 0,
-                                      "segment_width": 48190,
+                                      "segment_width": 12959,
                                       "tag": {
                                         "is_first_line_of_page": true,
                                         "is_first_line_of_column": true,

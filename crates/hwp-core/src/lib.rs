@@ -416,6 +416,7 @@ impl HwpParser {
                     &current_page_def,
                     &mut accumulated_vertical,
                     true, // 본문 레벨: vertical_position 누적
+                    None, // 본문 레벨: 페이지 전체 너비 사용
                 );
             }
         }
@@ -424,12 +425,15 @@ impl HwpParser {
     /// 단일 문단 및 하위 문단(테이블 셀, 텍스트박스 등)에 재귀적으로 합성 LineSeg를 삽입한다.
     /// `accumulated_vertical`: 본문 레벨에서 누적 세로 위치 (HWPUNIT). 하위 문단은 0부터 시작.
     /// `is_body_level`: 본문 최상위 문단이면 true. 하위(테이블 셀 등)이면 false.
+    /// `content_width_override_hu`: 셀 내 문단일 때 셀 너비(HWPUNIT)를 전달.
+    /// None이면 PageDef content_width를 사용.
     fn synthesize_for_paragraph(
         paragraph: &mut document::Paragraph,
         doc_info: &DocInfo,
         page_def: &Option<document::bodytext::PageDef>,
         accumulated_vertical: &mut i32,
         is_body_level: bool,
+        content_width_override_hu: Option<i32>,
     ) {
         use document::bodytext::ParagraphRecord;
 
@@ -446,7 +450,7 @@ impl HwpParser {
                 } => {
                     let mut sub_vert = 0i32;
                     for para in paragraphs.iter_mut() {
-                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut sub_vert, false);
+                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut sub_vert, false, None);
                     }
                     for child in children.iter_mut() {
                         match child {
@@ -456,15 +460,20 @@ impl HwpParser {
                             } => {
                                 let mut list_vert = 0i32;
                                 for para in list_paras.iter_mut() {
-                                    Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false);
+                                    Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false, None);
                                 }
                             }
-                            // 테이블 셀 내부 문단 처리
+                            // 테이블 셀 내부 문단 처리 (셀 너비를 content_width로 전달)
                             ParagraphRecord::Table { table } => {
                                 for cell in &mut table.cells {
                                     let mut cell_vert = 0i32;
+                                    // 셀 너비에서 좌우 마진을 뺀 콘텐츠 너비
+                                    let cell_content_w = cell.cell_attributes.width.0 as i32
+                                        - cell.cell_attributes.left_margin as i32
+                                        - cell.cell_attributes.right_margin as i32;
+                                    let cell_w = if cell_content_w > 0 { Some(cell_content_w) } else { None };
                                     for para in &mut cell.paragraphs {
-                                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut cell_vert, false);
+                                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut cell_vert, false, cell_w);
                                     }
                                 }
                             }
@@ -475,7 +484,7 @@ impl HwpParser {
                 ParagraphRecord::ListHeader { paragraphs, .. } => {
                     let mut list_vert = 0i32;
                     for para in paragraphs.iter_mut() {
-                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false);
+                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false, None);
                     }
                 }
                 ParagraphRecord::ShapeComponent { children, .. } => {
@@ -487,7 +496,7 @@ impl HwpParser {
                         {
                             let mut list_vert = 0i32;
                             for para in list_paras.iter_mut() {
-                                Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false);
+                                Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false, None);
                             }
                         }
                     }
@@ -504,7 +513,7 @@ impl HwpParser {
             .any(|r| matches!(r, ParagraphRecord::ParaLineSeg { .. }));
 
         if !has_line_seg {
-            let mut segments = Self::create_synthetic_line_segments(paragraph, doc_info, page_def);
+            let mut segments = Self::create_synthetic_line_segments(paragraph, doc_info, page_def, content_width_override_hu);
             // 본문/하위 문단 모두 vertical_position을 누적
             // 하위(셀) 문단에서도 줄 위치가 올바르게 계산되어야 렌더링이 정확함
             for seg in &mut segments {
@@ -545,6 +554,7 @@ impl HwpParser {
         paragraph: &document::Paragraph,
         doc_info: &DocInfo,
         page_def: &Option<document::bodytext::PageDef>,
+        content_width_override_hu: Option<i32>,
     ) -> Vec<document::bodytext::line_seg::LineSegmentInfo> {
         use document::bodytext::line_seg::{LineSegmentInfo, LineSegmentTag};
         use document::bodytext::ParagraphRecord;
@@ -582,14 +592,16 @@ impl HwpParser {
         let text_line_height_hu = (font_size_hu as f64 * line_spacing_pct / 100.0).round() as i32;
         let baseline_distance_hu = (text_height_hu as f64 * 0.85).round() as i32;
 
-        // 콘텐츠 너비 (HWPUNIT)
-        let content_width_hu = page_def
-            .as_ref()
-            .map(|pd| {
-                let mm = pd.content_width_mm();
-                (mm * 7200.0 / 25.4).round() as i32
-            })
-            .unwrap_or(48189); // 170mm ≈ 48189 HWPUNIT
+        // 콘텐츠 너비 (HWPUNIT): 셀 너비 오버라이드가 있으면 사용
+        let content_width_hu = content_width_override_hu.unwrap_or_else(|| {
+            page_def
+                .as_ref()
+                .map(|pd| {
+                    let mm = pd.content_width_mm();
+                    (mm * 7200.0 / 25.4).round() as i32
+                })
+                .unwrap_or(48189) // 170mm ≈ 48189 HWPUNIT
+        });
 
         // 테이블/이미지 등 개체가 포함된 문단이면 개체 높이를 사용
         // ObjectCommon.height는 설정값이고 셀 내용이 많으면 실제 높이가 더 큼.
