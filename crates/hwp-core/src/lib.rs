@@ -589,6 +589,9 @@ impl HwpParser {
         // base_size는 pt×100 단위, HWPUNIT: 1pt = 100 HWPUNIT
         let font_size_hu = base_size;
         let text_height_hu = font_size_hu;
+        // line_height: fixture 역산 기준 text_height × 0.75 (폰트 메트릭 근사)
+        // HWP 원본의 line_height는 font metric 기반이며 text_height보다 작음
+        let line_height_hu = (text_height_hu as f64 * 0.75).round() as i32;
         let text_line_height_hu = (font_size_hu as f64 * line_spacing_pct / 100.0).round() as i32;
         let baseline_distance_hu = (text_height_hu as f64 * 0.85).round() as i32;
 
@@ -746,7 +749,7 @@ impl HwpParser {
             segments.push(LineSegmentInfo {
                 text_start_position: line_starts[i],
                 vertical_position: (i as i32) * text_line_height_hu,
-                line_height: text_height_hu,  // fixture 기준: text_height (3.53mm)
+                line_height: line_height_hu,  // fixture 기준: text_height × 0.75
                 text_height: text_height_hu,
                 baseline_distance: baseline_distance_hu,
                 line_spacing: text_line_height_hu, // 줄 간격 (5.64mm)

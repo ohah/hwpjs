@@ -97464,7 +97464,7 @@ expression: json
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1250,
@@ -97541,7 +97541,7 @@ expression: json
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 1250,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1250,
@@ -97618,7 +97618,7 @@ expression: json
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 2500,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1250,
@@ -97695,7 +97695,7 @@ expression: json
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 3750,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1250,
@@ -100960,7 +100960,7 @@ expression: json
                           {
                             "text_start_position": 0,
                             "vertical_position": 0,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1250,
@@ -101037,7 +101037,7 @@ expression: json
                           {
                             "text_start_position": 0,
                             "vertical_position": 1250,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1250,
@@ -101114,7 +101114,7 @@ expression: json
                           {
                             "text_start_position": 0,
                             "vertical_position": 2500,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1250,
@@ -101191,7 +101191,7 @@ expression: json
                           {
                             "text_start_position": 0,
                             "vertical_position": 3750,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1250,

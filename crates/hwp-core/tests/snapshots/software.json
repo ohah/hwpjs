@@ -6860,7 +6860,7 @@
                               {
                                 "text_start_position": 0,
                                 "vertical_position": 0,
-                                "line_height": 1500,
+                                "line_height": 1125,
                                 "text_height": 1500,
                                 "baseline_distance": 1275,
                                 "line_spacing": 2250,
@@ -7305,7 +7305,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1500,
+                                      "line_height": 1125,
                                       "text_height": 1500,
                                       "baseline_distance": 1275,
                                       "line_spacing": 2250,
@@ -7407,7 +7407,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1100,
+                                      "line_height": 825,
                                       "text_height": 1100,
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
@@ -7427,7 +7427,7 @@
                                     {
                                       "text_start_position": 3,
                                       "vertical_position": 1760,
-                                      "line_height": 1100,
+                                      "line_height": 825,
                                       "text_height": 1100,
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
@@ -7529,7 +7529,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1100,
+                                      "line_height": 825,
                                       "text_height": 1100,
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
@@ -7631,7 +7631,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1100,
+                                      "line_height": 825,
                                       "text_height": 1100,
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
@@ -7733,7 +7733,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1100,
+                                      "line_height": 825,
                                       "text_height": 1100,
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
@@ -7835,7 +7835,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1100,
+                                      "line_height": 825,
                                       "text_height": 1100,
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
@@ -7912,7 +7912,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 1760,
-                                      "line_height": 1100,
+                                      "line_height": 825,
                                       "text_height": 1100,
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
@@ -7989,7 +7989,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 3520,
-                                      "line_height": 1100,
+                                      "line_height": 825,
                                       "text_height": 1100,
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
@@ -8091,7 +8091,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -8193,7 +8193,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -8295,7 +8295,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -8397,7 +8397,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -8499,7 +8499,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -8601,7 +8601,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1200,
+                                      "line_height": 900,
                                       "text_height": 1200,
                                       "baseline_distance": 1020,
                                       "line_spacing": 1440,
@@ -8703,7 +8703,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -8805,7 +8805,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1200,
+                                      "line_height": 900,
                                       "text_height": 1200,
                                       "baseline_distance": 1020,
                                       "line_spacing": 1440,
@@ -8883,7 +8883,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -8961,7 +8961,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -9039,7 +9039,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -9117,7 +9117,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -9195,7 +9195,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -9273,7 +9273,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -9351,7 +9351,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -9429,7 +9429,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 900,
+                                      "line_height": 675,
                                       "text_height": 900,
                                       "baseline_distance": 765,
                                       "line_spacing": 1440,
@@ -9531,7 +9531,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1100,
+                                      "line_height": 825,
                                       "text_height": 1100,
                                       "baseline_distance": 935,
                                       "line_spacing": 1760,
@@ -9609,7 +9609,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1500,
+                                      "line_height": 1125,
                                       "text_height": 1500,
                                       "baseline_distance": 1275,
                                       "line_spacing": 2250,
@@ -9693,7 +9693,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 0,
-                            "line_height": 1500,
+                            "line_height": 1125,
                             "text_height": 1500,
                             "baseline_distance": 1275,
                             "line_spacing": 2250,
@@ -9770,7 +9770,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 2250,
-                            "line_height": 1100,
+                            "line_height": 825,
                             "text_height": 1100,
                             "baseline_distance": 935,
                             "line_spacing": 1760,
@@ -9847,7 +9847,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 4010,
-                            "line_height": 1100,
+                            "line_height": 825,
                             "text_height": 1100,
                             "baseline_distance": 935,
                             "line_spacing": 1760,
@@ -9924,7 +9924,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 5770,
-                            "line_height": 1100,
+                            "line_height": 825,
                             "text_height": 1100,
                             "baseline_distance": 935,
                             "line_spacing": 1760,
@@ -10001,7 +10001,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 7530,
-                            "line_height": 1100,
+                            "line_height": 825,
                             "text_height": 1100,
                             "baseline_distance": 935,
                             "line_spacing": 1760,
@@ -10078,7 +10078,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 9290,
-                            "line_height": 1100,
+                            "line_height": 825,
                             "text_height": 1100,
                             "baseline_distance": 935,
                             "line_spacing": 1760,
@@ -10155,7 +10155,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 11050,
-                            "line_height": 1100,
+                            "line_height": 825,
                             "text_height": 1100,
                             "baseline_distance": 935,
                             "line_spacing": 1760,
@@ -10232,7 +10232,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 12810,
-                            "line_height": 1100,
+                            "line_height": 825,
                             "text_height": 1100,
                             "baseline_distance": 935,
                             "line_spacing": 1760,
@@ -10309,7 +10309,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 14570,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -10386,7 +10386,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 16010,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -10463,7 +10463,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 17450,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -10540,7 +10540,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 18890,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -10617,7 +10617,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 20330,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -10694,7 +10694,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 21770,
-                            "line_height": 1200,
+                            "line_height": 900,
                             "text_height": 1200,
                             "baseline_distance": 1020,
                             "line_spacing": 1440,
@@ -10771,7 +10771,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 23210,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -10848,7 +10848,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 24650,
-                            "line_height": 1200,
+                            "line_height": 900,
                             "text_height": 1200,
                             "baseline_distance": 1020,
                             "line_spacing": 1440,
@@ -10901,7 +10901,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 26090,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -10954,7 +10954,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 27530,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -11007,7 +11007,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 28970,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -11060,7 +11060,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 30410,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -11113,7 +11113,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 31850,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -11166,7 +11166,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 33290,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -11219,7 +11219,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 34730,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -11272,7 +11272,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 36170,
-                            "line_height": 900,
+                            "line_height": 675,
                             "text_height": 900,
                             "baseline_distance": 765,
                             "line_spacing": 1440,
@@ -11349,7 +11349,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 37610,
-                            "line_height": 1100,
+                            "line_height": 825,
                             "text_height": 1100,
                             "baseline_distance": 935,
                             "line_spacing": 1760,
@@ -11402,7 +11402,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 39370,
-                            "line_height": 1500,
+                            "line_height": 1125,
                             "text_height": 1500,
                             "baseline_distance": 1275,
                             "line_spacing": 2250,
@@ -11459,7 +11459,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 20602,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11536,7 +11536,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 22202,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11556,7 +11556,7 @@
                   {
                     "text_start_position": 76,
                     "vertical_position": 23802,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11576,7 +11576,7 @@
                   {
                     "text_start_position": 150,
                     "vertical_position": 25402,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11596,7 +11596,7 @@
                   {
                     "text_start_position": 224,
                     "vertical_position": 27002,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11616,7 +11616,7 @@
                   {
                     "text_start_position": 296,
                     "vertical_position": 28602,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11669,7 +11669,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 30202,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11746,7 +11746,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 31802,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11766,7 +11766,7 @@
                   {
                     "text_start_position": 82,
                     "vertical_position": 33402,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11843,7 +11843,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 35002,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11863,7 +11863,7 @@
                   {
                     "text_start_position": 75,
                     "vertical_position": 36602,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11883,7 +11883,7 @@
                   {
                     "text_start_position": 146,
                     "vertical_position": 38202,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -11986,7 +11986,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 39802,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12063,7 +12063,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 41402,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12083,7 +12083,7 @@
                   {
                     "text_start_position": 77,
                     "vertical_position": 43002,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12136,7 +12136,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 44602,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12189,7 +12189,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 46202,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12242,7 +12242,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 47802,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12319,7 +12319,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 49402,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12339,7 +12339,7 @@
                   {
                     "text_start_position": 79,
                     "vertical_position": 51002,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12359,7 +12359,7 @@
                   {
                     "text_start_position": 153,
                     "vertical_position": 52602,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12412,7 +12412,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 54202,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12465,7 +12465,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 55802,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12542,7 +12542,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 57402,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -12789,7 +12789,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1300,
+                                      "line_height": 975,
                                       "text_height": 1300,
                                       "baseline_distance": 1105,
                                       "line_spacing": 1690,
@@ -12905,7 +12905,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13142,7 +13142,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 780,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13219,7 +13219,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 1560,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13296,7 +13296,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 2340,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13373,7 +13373,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 3120,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13450,7 +13450,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 3900,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13527,7 +13527,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 4680,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13604,7 +13604,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 5460,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13681,7 +13681,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 6240,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13758,7 +13758,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 7020,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13835,7 +13835,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 7800,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13912,7 +13912,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 8580,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -13989,7 +13989,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 9360,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14066,7 +14066,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 10140,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14143,7 +14143,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 10920,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14220,7 +14220,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 11700,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14297,7 +14297,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 12480,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14374,7 +14374,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 13260,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14427,7 +14427,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 14040,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14504,7 +14504,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 14820,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14581,7 +14581,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 15600,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14658,7 +14658,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 16380,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14735,7 +14735,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 17160,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14812,7 +14812,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 17940,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14889,7 +14889,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 18720,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -14966,7 +14966,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 19500,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -15043,7 +15043,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 20280,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -15120,7 +15120,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 21060,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -15197,7 +15197,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 21840,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -15250,7 +15250,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 22620,
-                                      "line_height": 600,
+                                      "line_height": 450,
                                       "text_height": 600,
                                       "baseline_distance": 510,
                                       "line_spacing": 780,
@@ -15303,7 +15303,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 23400,
-                                      "line_height": 700,
+                                      "line_height": 525,
                                       "text_height": 700,
                                       "baseline_distance": 595,
                                       "line_spacing": 910,
@@ -15387,7 +15387,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 0,
-                            "line_height": 1300,
+                            "line_height": 975,
                             "text_height": 1300,
                             "baseline_distance": 1105,
                             "line_spacing": 1690,
@@ -15715,7 +15715,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 23132,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -15792,7 +15792,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 23912,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -15869,7 +15869,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 24692,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -15946,7 +15946,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 25472,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16023,7 +16023,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 26252,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16100,7 +16100,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 27032,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16177,7 +16177,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 27812,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16254,7 +16254,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 28592,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16331,7 +16331,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 29372,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16408,7 +16408,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 30152,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16485,7 +16485,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 30932,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16562,7 +16562,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 31712,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16639,7 +16639,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 32492,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16716,7 +16716,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 33272,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16793,7 +16793,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 34052,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16870,7 +16870,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 34832,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -16947,7 +16947,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 35612,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17000,7 +17000,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 36392,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17077,7 +17077,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 37172,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17154,7 +17154,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 37952,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17231,7 +17231,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 38732,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17308,7 +17308,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 39512,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17385,7 +17385,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 40292,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17462,7 +17462,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 41072,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17539,7 +17539,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 41852,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17616,7 +17616,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 42632,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17693,7 +17693,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 43412,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17770,7 +17770,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 44192,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17823,7 +17823,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 44972,
-                            "line_height": 600,
+                            "line_height": 450,
                             "text_height": 600,
                             "baseline_distance": 510,
                             "line_spacing": 780,
@@ -17876,7 +17876,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 45752,
-                            "line_height": 700,
+                            "line_height": 525,
                             "text_height": 700,
                             "baseline_distance": 595,
                             "line_spacing": 910,
@@ -17933,7 +17933,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 86134,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -17986,7 +17986,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 87734,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -18063,7 +18063,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 89334,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -18116,7 +18116,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 90934,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -18193,7 +18193,7 @@
                   {
                     "text_start_position": 0,
                     "vertical_position": 92534,
-                    "line_height": 1000,
+                    "line_height": 750,
                     "text_height": 1000,
                     "baseline_distance": 850,
                     "line_spacing": 1600,
@@ -18442,7 +18442,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -18544,7 +18544,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -18646,7 +18646,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -18748,7 +18748,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -18850,7 +18850,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -18952,7 +18952,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -19054,7 +19054,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -19214,7 +19214,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -19346,7 +19346,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -19448,7 +19448,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -19550,7 +19550,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -19652,7 +19652,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -19797,7 +19797,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -19911,7 +19911,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -20013,7 +20013,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -20115,7 +20115,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -20217,7 +20217,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -20362,7 +20362,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -20476,7 +20476,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -20496,7 +20496,7 @@
                                     {
                                       "text_start_position": 19,
                                       "vertical_position": 1300,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -20598,7 +20598,7 @@
                                     {
                                       "text_start_position": 0,
                                       "vertical_position": 0,
-                                      "line_height": 1000,
+                                      "line_height": 750,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
                                       "line_spacing": 1300,
@@ -20682,7 +20682,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 0,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -20759,7 +20759,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 1300,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -20836,7 +20836,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 2600,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -20913,7 +20913,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 3900,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -20990,7 +20990,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 5200,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21067,7 +21067,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 6500,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21144,7 +21144,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 7800,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21279,7 +21279,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 9100,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21386,7 +21386,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 10400,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21463,7 +21463,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 11700,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21540,7 +21540,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 13000,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21617,7 +21617,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 14300,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21737,7 +21737,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 15600,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21826,7 +21826,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 16900,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21903,7 +21903,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 18200,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -21980,7 +21980,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 19500,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -22057,7 +22057,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 20800,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -22177,7 +22177,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 22100,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -22266,7 +22266,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 23400,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
@@ -22343,7 +22343,7 @@
                           {
                             "text_start_position": 0,
                             "vertical_position": 24700,
-                            "line_height": 1000,
+                            "line_height": 750,
                             "text_height": 1000,
                             "baseline_distance": 850,
                             "line_spacing": 1300,
