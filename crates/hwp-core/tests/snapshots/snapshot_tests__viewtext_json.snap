@@ -1712,7 +1712,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 64,
                     "vertical_position": 1600,
                     "line_height": 1000,
                     "text_height": 1000,
