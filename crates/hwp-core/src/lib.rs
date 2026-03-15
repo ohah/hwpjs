@@ -433,48 +433,9 @@ impl HwpParser {
     ) {
         use document::bodytext::ParagraphRecord;
 
-        // 이미 LineSeg가 있으면 스킵 (단, vertical_position 누적은 반영)
-        let has_line_seg = paragraph
-            .records
-            .iter()
-            .any(|r| matches!(r, ParagraphRecord::ParaLineSeg { .. }));
-
-        if !has_line_seg {
-            let mut segments = Self::create_synthetic_line_segments(paragraph, doc_info, page_def);
-            if is_body_level {
-                // 각 세그먼트의 vertical_position을 누적 위치 기준으로 조정
-                for seg in &mut segments {
-                    seg.vertical_position += *accumulated_vertical;
-                }
-                // 마지막 세그먼트의 끝 위치를 누적에 반영
-                // line_spacing(줄 간격)을 사용하여 다음 문단 시작 위치를 계산
-                if let Some(last) = segments.last() {
-                    *accumulated_vertical = last.vertical_position + last.line_spacing;
-                }
-            }
-            // ParaCharShape 바로 뒤에 삽입 (원래 LineSeg가 위치하는 곳)
-            let insert_pos = paragraph
-                .records
-                .iter()
-                .position(|r| matches!(r, ParagraphRecord::ParaCharShape { .. }))
-                .map(|i| i + 1)
-                .unwrap_or(paragraph.records.len());
-            paragraph.records.insert(
-                insert_pos,
-                ParagraphRecord::ParaLineSeg { segments },
-            );
-        } else if is_body_level {
-            // 기존 LineSeg가 있는 경우에도 마지막 세그먼트의 vertical_position + line_height를 누적
-            for record in &paragraph.records {
-                if let ParagraphRecord::ParaLineSeg { segments } = record {
-                    if let Some(last) = segments.last() {
-                        *accumulated_vertical = last.vertical_position + last.line_height;
-                    }
-                }
-            }
-        }
-
-        // 하위 문단에도 재귀 적용 (테이블 셀, 텍스트박스, 각주/미주 등)
+        // 먼저 하위 문단(테이블 셀, 텍스트박스 등)을 재귀 합성
+        // 하위 문단의 LineSeg가 먼저 합성되어야 부모 문단의 개체 높이를 정확히 계산할 수 있음
+        // 하위 문단에 재귀 적용 (테이블 셀, 텍스트박스, 각주/미주 등)
         // 하위는 독립적인 좌표 공간이므로 accumulated_vertical을 0부터 시작
         for record in &mut paragraph.records {
             match record {
@@ -488,15 +449,26 @@ impl HwpParser {
                         Self::synthesize_for_paragraph(para, doc_info, page_def, &mut sub_vert, false);
                     }
                     for child in children.iter_mut() {
-                        if let ParagraphRecord::ListHeader {
-                            paragraphs: list_paras,
-                            ..
-                        } = child
-                        {
-                            let mut list_vert = 0i32;
-                            for para in list_paras.iter_mut() {
-                                Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false);
+                        match child {
+                            ParagraphRecord::ListHeader {
+                                paragraphs: list_paras,
+                                ..
+                            } => {
+                                let mut list_vert = 0i32;
+                                for para in list_paras.iter_mut() {
+                                    Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false);
+                                }
                             }
+                            // 테이블 셀 내부 문단 처리
+                            ParagraphRecord::Table { table } => {
+                                for cell in &mut table.cells {
+                                    let mut cell_vert = 0i32;
+                                    for para in &mut cell.paragraphs {
+                                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut cell_vert, false);
+                                    }
+                                }
+                            }
+                            _ => {}
                         }
                     }
                 }
@@ -521,6 +493,43 @@ impl HwpParser {
                     }
                 }
                 _ => {}
+            }
+        }
+
+        // 하위 문단 합성이 완료된 후, 현재 문단의 LineSeg를 합성
+        // 하위(셀)에 LineSeg가 있어야 개체(테이블) 실제 높이를 정확히 계산 가능
+        let has_line_seg = paragraph
+            .records
+            .iter()
+            .any(|r| matches!(r, ParagraphRecord::ParaLineSeg { .. }));
+
+        if !has_line_seg {
+            let mut segments = Self::create_synthetic_line_segments(paragraph, doc_info, page_def);
+            if is_body_level {
+                for seg in &mut segments {
+                    seg.vertical_position += *accumulated_vertical;
+                }
+                if let Some(last) = segments.last() {
+                    *accumulated_vertical = last.vertical_position + last.line_spacing;
+                }
+            }
+            let insert_pos = paragraph
+                .records
+                .iter()
+                .position(|r| matches!(r, ParagraphRecord::ParaCharShape { .. }))
+                .map(|i| i + 1)
+                .unwrap_or(paragraph.records.len());
+            paragraph.records.insert(
+                insert_pos,
+                ParagraphRecord::ParaLineSeg { segments },
+            );
+        } else if is_body_level {
+            for record in &paragraph.records {
+                if let ParagraphRecord::ParaLineSeg { segments } = record {
+                    if let Some(last) = segments.last() {
+                        *accumulated_vertical = last.vertical_position + last.line_height;
+                    }
+                }
             }
         }
     }
@@ -583,16 +592,58 @@ impl HwpParser {
             .unwrap_or(48189); // 170mm ≈ 48189 HWPUNIT
 
         // 테이블/이미지 등 개체가 포함된 문단이면 개체 높이를 사용
+        // ObjectCommon.height는 설정값이고 셀 내용이 많으면 실제 높이가 더 큼.
+        // 셀 내 LineSeg(이미 합성됨)에서 실제 높이를 계산하여 더 큰 값을 사용.
         let mut object_height_hu: i32 = 0;
         let mut object_margin_hu: i32 = 0;
         let mut has_object = false;
         for record in &paragraph.records {
-            if let ParagraphRecord::CtrlHeader { header, .. } = record {
+            if let ParagraphRecord::CtrlHeader { header, children, .. } = record {
                 if let document::bodytext::CtrlHeaderData::ObjectCommon { height, margin, .. } = &header.data {
                     let margin_total = margin.top as i32 + margin.bottom as i32;
-                    let total = height.0 as i32 + margin_total;
-                    if total > object_height_hu {
-                        object_height_hu = total;
+                    let obj_common_h = height.0 as i32 + margin_total;
+
+                    // 테이블 셀 내 LineSeg에서 실제 높이 계산
+                    let mut cell_max_h: i32 = 0;
+                    for child in children {
+                        if let ParagraphRecord::Table { table } = child {
+                            // 각 행의 최대 셀 높이를 합산
+                            let mut row_heights: std::collections::BTreeMap<u16, i32> = std::collections::BTreeMap::new();
+                            for cell in &table.cells {
+                                let row = cell.cell_attributes.row_address;
+                                let mut cell_h: i32 = 0;
+                                for para in &cell.paragraphs {
+                                    for r in &para.records {
+                                        if let ParagraphRecord::ParaLineSeg { segments } = r {
+                                            for seg in segments {
+                                                let end = seg.vertical_position + seg.line_spacing;
+                                                if end > cell_h {
+                                                    cell_h = end;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                let current = row_heights.entry(row).or_insert(0);
+                                if cell_h > *current {
+                                    *current = cell_h;
+                                }
+                            }
+                            let total_row_h: i32 = row_heights.values().sum();
+                            if total_row_h > cell_max_h {
+                                cell_max_h = total_row_h;
+                            }
+                        }
+                    }
+
+                    let actual_h = if cell_max_h > obj_common_h {
+                        cell_max_h
+                    } else {
+                        obj_common_h
+                    };
+
+                    if actual_h > object_height_hu {
+                        object_height_hu = actual_h;
                         object_margin_hu = margin_total;
                         has_object = true;
                     }
