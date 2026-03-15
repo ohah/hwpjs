@@ -6632,10 +6632,10 @@ expression: json
                   {
                     "text_start_position": 0,
                     "vertical_position": 0,
-                    "line_height": 1600,
+                    "line_height": 20038,
                     "text_height": 1000,
                     "baseline_distance": 850,
-                    "line_spacing": 1600,
+                    "line_spacing": 20038,
                     "column_start_position": 0,
                     "segment_width": 48190,
                     "tag": {
@@ -10792,7 +10792,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 1600,
+                    "vertical_position": 20038,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -10869,7 +10869,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 3200,
+                    "vertical_position": 21638,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -10922,7 +10922,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 4800,
+                    "vertical_position": 23238,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -10999,7 +10999,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 6400,
+                    "vertical_position": 24838,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11076,7 +11076,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 8000,
+                    "vertical_position": 26438,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11179,7 +11179,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 9600,
+                    "vertical_position": 28038,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11256,7 +11256,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 11200,
+                    "vertical_position": 29638,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11309,7 +11309,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 12800,
+                    "vertical_position": 31238,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11362,7 +11362,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 14400,
+                    "vertical_position": 32838,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11415,7 +11415,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 16000,
+                    "vertical_position": 34438,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11492,7 +11492,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 17600,
+                    "vertical_position": 36038,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11545,7 +11545,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 19200,
+                    "vertical_position": 37638,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11598,7 +11598,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 20800,
+                    "vertical_position": 39238,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11675,7 +11675,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 22400,
+                    "vertical_position": 40838,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11762,11 +11762,11 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 24000,
-                    "line_height": 1600,
+                    "vertical_position": 42438,
+                    "line_height": 5810,
                     "text_height": 1000,
                     "baseline_distance": 850,
-                    "line_spacing": 1600,
+                    "line_spacing": 5810,
                     "column_start_position": 0,
                     "segment_width": 48190,
                     "tag": {
@@ -13812,10 +13812,10 @@ expression: json
                           {
                             "text_start_position": 0,
                             "vertical_position": 0,
-                            "line_height": 780,
+                            "line_height": 21442,
                             "text_height": 600,
                             "baseline_distance": 510,
-                            "line_spacing": 780,
+                            "line_spacing": 21442,
                             "column_start_position": 0,
                             "segment_width": 48190,
                             "tag": {
@@ -16266,7 +16266,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 25600,
+                    "vertical_position": 48248,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16319,7 +16319,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 27200,
+                    "vertical_position": 49848,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16396,7 +16396,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 28800,
+                    "vertical_position": 51448,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16449,7 +16449,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 30400,
+                    "vertical_position": 53048,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16526,7 +16526,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 32000,
+                    "vertical_position": 54648,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16613,11 +16613,11 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 33600,
-                    "line_height": 1600,
+                    "vertical_position": 56248,
+                    "line_height": 9156,
                     "text_height": 1000,
                     "baseline_distance": 850,
-                    "line_spacing": 1600,
+                    "line_spacing": 9156,
                     "column_start_position": 0,
                     "segment_width": 48190,
                     "tag": {

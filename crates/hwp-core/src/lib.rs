@@ -557,8 +557,28 @@ impl HwpParser {
         // base_size는 pt×100 단위, HWPUNIT: 1pt = 100 HWPUNIT
         let font_size_hu = base_size;
         let text_height_hu = font_size_hu;
-        let line_height_hu = (font_size_hu as f64 * line_spacing_pct / 100.0).round() as i32;
+        let text_line_height_hu = (font_size_hu as f64 * line_spacing_pct / 100.0).round() as i32;
         let baseline_distance_hu = (text_height_hu as f64 * 0.85).round() as i32;
+
+        // 테이블/이미지 등 개체가 포함된 문단이면 개체 높이를 line_height로 사용
+        // CtrlHeader::ObjectCommon의 height 필드에서 가져옴
+        let mut object_height_hu: i32 = 0;
+        for record in &paragraph.records {
+            if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                if let document::bodytext::CtrlHeaderData::ObjectCommon { height, margin, .. } = &header.data {
+                    let total = height.0 as i32 + margin.top as i32 + margin.bottom as i32;
+                    if total > object_height_hu {
+                        object_height_hu = total;
+                    }
+                }
+            }
+        }
+
+        let line_height_hu = if object_height_hu > text_line_height_hu {
+            object_height_hu
+        } else {
+            text_line_height_hu
+        };
 
         // 콘텐츠 너비 (HWPUNIT)
         let content_width_hu = page_def
