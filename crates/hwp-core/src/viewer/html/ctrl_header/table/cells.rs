@@ -605,6 +605,10 @@ pub(crate) fn render_cells(
                         paragraphs: ctrl_paragraphs,
                         ..
                     } => {
+                        // gso는 위 첫 번째 루프에서 cell_outside_html로 이미 처리됨
+                        if header.ctrl_id == "gso " {
+                            continue;
+                        }
                         // CtrlHeader 처리 (그림 개체 등) / Process CtrlHeader (shape objects, etc.)
                         // process_ctrl_header를 호출하여 이미지 수집 (paragraph.rs와 동일한 방식) / Call process_ctrl_header to collect images (same way as paragraph.rs)
                         // children이 비어있으면 cell.paragraphs도 확인 / If children is empty, also check cell.paragraphs
