@@ -10888,7 +10888,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 74,
                     "vertical_position": 23238,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -10908,7 +10908,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 147,
                     "vertical_position": 24838,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -10928,7 +10928,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 220,
                     "vertical_position": 26438,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -10948,7 +10948,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 290,
                     "vertical_position": 28038,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11098,7 +11098,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 79,
                     "vertical_position": 32838,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11195,7 +11195,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 74,
                     "vertical_position": 36038,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11215,7 +11215,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 144,
                     "vertical_position": 37638,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11415,7 +11415,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 76,
                     "vertical_position": 42438,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11671,7 +11671,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 78,
                     "vertical_position": 50438,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11691,7 +11691,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 0,
+                    "text_start_position": 151,
                     "vertical_position": 52038,
                     "line_height": 1000,
                     "text_height": 1000,

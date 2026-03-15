@@ -635,15 +635,15 @@ impl HwpParser {
             })
             .unwrap_or("");
 
-        // 글자 폭 근사 계산으로 줄 수 추정
-        // font_size_hu 단위로 계산 (HWPUNIT)
-        let estimate_line_count = |text: &str, line_width_hu: i32, font_hu: i32| -> usize {
+        // 글자 폭 근사 계산으로 줄바꿈 위치 추정
+        // 각 줄의 시작 문자 위치(WCHAR 인덱스)를 반환
+        let estimate_line_breaks = |text: &str, line_width_hu: i32, font_hu: i32| -> Vec<u32> {
+            let mut line_starts: Vec<u32> = vec![0]; // 첫 줄은 항상 0에서 시작
             if text.is_empty() || line_width_hu <= 0 || font_hu <= 0 {
-                return 1;
+                return line_starts;
             }
             let mut current_width: i32 = 0;
-            let mut lines = 1usize;
-            for ch in text.chars() {
+            for (char_idx, ch) in text.chars().enumerate() {
                 // 글자 폭 근사값 (fixture 역산 기반, 맑은 고딕/한컴바탕 등 한글 글꼴 기준)
                 // justify 정렬에서 공백이 늘어나는 것을 감안하여 공백 폭을 작게 설정
                 let char_width = if ch == ' ' {
@@ -657,21 +657,23 @@ impl HwpParser {
                 };
                 current_width += char_width;
                 if current_width > line_width_hu {
-                    lines += 1;
+                    line_starts.push(char_idx as u32);
                     current_width = char_width; // 현재 글자를 다음 줄로
                 }
             }
-            lines
+            line_starts
         };
 
-        let line_count = estimate_line_count(para_text, content_width_hu, font_size_hu);
+        let line_starts = estimate_line_breaks(para_text, content_width_hu, font_size_hu);
+        let line_count = line_starts.len();
 
         // 줄 수만큼 세그먼트 생성
         // fixture 기준: line_height = text_height (3.53mm), vertical_position 간격 = line_spacing (5.64mm)
+        // text_start_position: 각 줄의 시작 문자 위치 (WCHAR 인덱스)
         let mut segments = Vec::with_capacity(line_count);
         for i in 0..line_count {
             segments.push(LineSegmentInfo {
-                text_start_position: 0, // 합성이므로 정확한 텍스트 위치 계산 불가
+                text_start_position: line_starts[i],
                 vertical_position: (i as i32) * text_line_height_hu,
                 line_height: text_height_hu,  // fixture 기준: text_height (3.53mm)
                 text_height: text_height_hu,
