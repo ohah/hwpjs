@@ -505,13 +505,13 @@ impl HwpParser {
 
         if !has_line_seg {
             let mut segments = Self::create_synthetic_line_segments(paragraph, doc_info, page_def);
-            if is_body_level {
-                for seg in &mut segments {
-                    seg.vertical_position += *accumulated_vertical;
-                }
-                if let Some(last) = segments.last() {
-                    *accumulated_vertical = last.vertical_position + last.line_spacing;
-                }
+            // 본문/하위 문단 모두 vertical_position을 누적
+            // 하위(셀) 문단에서도 줄 위치가 올바르게 계산되어야 렌더링이 정확함
+            for seg in &mut segments {
+                seg.vertical_position += *accumulated_vertical;
+            }
+            if let Some(last) = segments.last() {
+                *accumulated_vertical = last.vertical_position + last.line_spacing;
             }
             let insert_pos = paragraph
                 .records

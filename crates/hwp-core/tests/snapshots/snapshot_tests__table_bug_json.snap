@@ -97540,7 +97540,7 @@ expression: json
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 0,
+                                      "vertical_position": 1250,
                                       "line_height": 1000,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
@@ -97617,7 +97617,7 @@ expression: json
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 0,
+                                      "vertical_position": 2500,
                                       "line_height": 1000,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
@@ -97694,7 +97694,7 @@ expression: json
                                   "segments": [
                                     {
                                       "text_start_position": 0,
-                                      "vertical_position": 0,
+                                      "vertical_position": 3750,
                                       "line_height": 1000,
                                       "text_height": 1000,
                                       "baseline_distance": 850,
@@ -101036,7 +101036,7 @@ expression: json
                         "segments": [
                           {
                             "text_start_position": 0,
-                            "vertical_position": 0,
+                            "vertical_position": 1250,
                             "line_height": 1000,
                             "text_height": 1000,
                             "baseline_distance": 850,
@@ -101113,7 +101113,7 @@ expression: json
                         "segments": [
                           {
                             "text_start_position": 0,
-                            "vertical_position": 0,
+                            "vertical_position": 2500,
                             "line_height": 1000,
                             "text_height": 1000,
                             "baseline_distance": 850,
@@ -101190,7 +101190,7 @@ expression: json
                         "segments": [
                           {
                             "text_start_position": 0,
-                            "vertical_position": 0,
+                            "vertical_position": 3750,
                             "line_height": 1000,
                             "text_height": 1000,
                             "baseline_distance": 850,
