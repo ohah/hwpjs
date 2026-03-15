@@ -147,8 +147,7 @@ impl HwpParser {
                     )?;
 
                     // Parse section data into paragraph list
-                    let paragraphs =
-                        Section::parse_data(&section_data, fileheader.version)?;
+                    let paragraphs = Section::parse_data(&section_data, fileheader.version)?;
 
                     sections.push(Section {
                         index: i,
@@ -157,10 +156,7 @@ impl HwpParser {
                 }
                 Err(e) => {
                     #[cfg(debug_assertions)]
-                    eprintln!(
-                        "Warning: Could not read ViewText/{}: {}",
-                        stream_name, e
-                    );
+                    eprintln!("Warning: Could not read ViewText/{}: {}", stream_name, e);
                 }
             }
         }
