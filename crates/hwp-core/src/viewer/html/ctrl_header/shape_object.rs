@@ -124,6 +124,25 @@ pub fn process_shape_object<'a>(
         }
     }
 
+    // 선 도형(ShapeComponentLine) 렌더링
+    // fixture에서 선 도형은 <div class="hsR"> 안에 SVG <path>로 렌더링됨
+    let has_line_shape = children.iter().any(|r| {
+        if let ParagraphRecord::ShapeComponent { children, .. } = r {
+            children
+                .iter()
+                .any(|c| matches!(c, ParagraphRecord::ShapeComponentLine { .. }))
+        } else {
+            false
+        }
+    });
+
+    if has_line_shape && !like_letters {
+        if let Some(html) = render_line_shape(header, children) {
+            result.shape_html = Some(html);
+            return result;
+        }
+    }
+
     // 이미지 수집 (기존 로직)
     if !children.is_empty() {
         collect_images_from_records(
@@ -1601,4 +1620,58 @@ fn collect_images_from_records(
             _ => {}
         }
     }
+}
+
+/// 선 도형(ShapeComponentLine)을 SVG로 렌더링
+/// fixture 기준: <div class="hsR" style="top:...;left:...;width:...;height:...;"><svg>...</svg></div>
+fn render_line_shape(
+    header: &CtrlHeader,
+    children: &[ParagraphRecord],
+) -> Option<String> {
+    let (offset_x, offset_y, obj_width, obj_height) = match &header.data {
+        CtrlHeaderData::ObjectCommon {
+            offset_x,
+            offset_y,
+            width,
+            height,
+            ..
+        } => (offset_x.0, offset_y.0, u32::from(*width), u32::from(*height)),
+        _ => return None,
+    };
+
+    // ShapeComponentLine 찾기
+    let line = children.iter().find_map(|r| {
+        if let ParagraphRecord::ShapeComponent { children: sc_children, .. } = r {
+            sc_children.iter().find_map(|c| {
+                if let ParagraphRecord::ShapeComponentLine { shape_component_line } = c {
+                    Some(shape_component_line)
+                } else {
+                    None
+                }
+            })
+        } else {
+            None
+        }
+    })?;
+
+    let top_mm = round_to_2dp(int32_to_mm(offset_y));
+    let left_mm = round_to_2dp(int32_to_mm(offset_x));
+    let width_mm = round_to_2dp(obj_width as f64 / 7200.0 * 25.4);
+    let height_mm = round_to_2dp(obj_height as f64 / 7200.0 * 25.4);
+
+    // 선 좌표를 mm로 변환
+    let start_x_mm = round_to_2dp(int32_to_mm(line.start_point.x));
+    let start_y_mm = round_to_2dp(int32_to_mm(line.start_point.y));
+    let end_x_mm = round_to_2dp(int32_to_mm(line.end_point.x));
+    let end_y_mm = round_to_2dp(int32_to_mm(line.end_point.y));
+
+    let padding = 0.15;
+    let vb_left = round_to_2dp(-padding);
+    let vb_top = round_to_2dp(-padding);
+    let vb_width = round_to_2dp(width_mm + padding * 2.0);
+    let vb_height = round_to_2dp(height_mm + padding * 2.0);
+
+    Some(format!(
+        r#"<div class="hsR" style="top:{top_mm}mm;left:{left_mm}mm;width:{width_mm}mm;height:{height_mm}mm;"><svg class="hs" viewBox="{vb_left} {vb_top} {vb_width} {vb_height}" style="left:{vb_left}mm;top:{vb_top}mm;width:{vb_width}mm;height:{vb_height}mm;"><path d="M{start_x_mm},{start_y_mm} L{end_x_mm},{end_y_mm}" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
+    ))
 }
