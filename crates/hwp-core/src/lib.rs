@@ -52,6 +52,12 @@ impl HwpParser {
         let mut document = HwpDocument::new(fileheader.clone());
         document.doc_info = self.parse_docinfo(&mut cfb, &fileheader)?;
         document.body_text = self.parse_bodytext(&mut cfb, &fileheader, &document.doc_info)?;
+
+        // HWP 5.1+ 대응: HWPTAG_PARA_LINE_SEG가 없는 문단에 합성 LineSeg 삽입
+        // 파싱 완료 후 DocInfo(CharShape/ParaShape)에 접근 가능하므로 이 시점에서 처리한다.
+        // 파싱 레벨에서 삽입하면 렌더링/페이지네이션 등 모든 downstream 코드가 자동으로 혜택을 받는다.
+        Self::synthesize_missing_line_segments(&mut document);
+
         document.bin_data = self.parse_bindata(&mut cfb, &document.doc_info)?;
 
         // Parse optional streams
@@ -362,6 +368,226 @@ impl HwpParser {
                 let empty_summary = crate::document::SummaryInformation::default();
                 serde_json::to_string_pretty(&empty_summary).map_err(error::HwpError::from)
             }
+        }
+    }
+
+    /// HWP 5.1+ 대응: HWPTAG_PARA_LINE_SEG(표 62)가 없는 문단에 합성 LineSeg를 삽입한다.
+    ///
+    /// HWP 5.1.x 이상 버전에서는 LineSeg 레코드(문단 각 줄의 레이아웃 캐시)가
+    /// 파일에 포함되지 않는 경우가 있다. LineSeg가 없으면 .hls(position:absolute)
+    /// 요소에 top/left 좌표를 설정할 수 없어 모든 줄이 (0,0)에 겹쳐 렌더링된다.
+    ///
+    /// 이 함수는 ParaShape(줄간격), CharShape(글꼴 크기), PageDef(페이지 크기)를
+    /// 기반으로 합성 LineSeg를 생성하여 records에 삽입한다.
+    /// 파싱 레벨에서 처리하므로 렌더링, 페이지네이션, 테이블 셀 등
+    /// 모든 downstream 코드가 자동으로 혜택을 받는다.
+    ///
+    /// 줄바꿈 위치는 글꼴 메트릭 없이는 알 수 없으므로 문단 전체를 1개 세그먼트로 처리한다.
+    fn synthesize_missing_line_segments(document: &mut HwpDocument) {
+        use document::bodytext::ParagraphRecord;
+
+        // doc_info에 대한 참조를 먼저 분리하여 borrow 충돌 방지
+        let doc_info = &document.doc_info as *const DocInfo;
+
+        // 현재 PageDef 추적 (섹션별로 다를 수 있음)
+        let mut current_page_def: Option<document::bodytext::PageDef> = None;
+
+        for section in &mut document.body_text.sections {
+            // 본문 문단의 누적 vertical_position 추적 (HWPUNIT)
+            let mut accumulated_vertical: i32 = 0;
+
+            for paragraph in &mut section.paragraphs {
+                // PageDef 업데이트: 섹션 정의(secd) 컨트롤에서 추출
+                for record in &paragraph.records {
+                    if let ParagraphRecord::CtrlHeader { children, .. } = record {
+                        for child in children {
+                            if let ParagraphRecord::PageDef { page_def: pd } = child {
+                                current_page_def = Some(pd.clone());
+                            }
+                        }
+                    }
+                }
+
+                // SAFETY: doc_info는 body_text 수정 중에 변경되지 않으므로 안전
+                let di = unsafe { &*doc_info };
+                Self::synthesize_for_paragraph(
+                    paragraph,
+                    di,
+                    &current_page_def,
+                    &mut accumulated_vertical,
+                    true, // 본문 레벨: vertical_position 누적
+                );
+            }
+        }
+    }
+
+    /// 단일 문단 및 하위 문단(테이블 셀, 텍스트박스 등)에 재귀적으로 합성 LineSeg를 삽입한다.
+    /// `accumulated_vertical`: 본문 레벨에서 누적 세로 위치 (HWPUNIT). 하위 문단은 0부터 시작.
+    /// `is_body_level`: 본문 최상위 문단이면 true. 하위(테이블 셀 등)이면 false.
+    fn synthesize_for_paragraph(
+        paragraph: &mut document::Paragraph,
+        doc_info: &DocInfo,
+        page_def: &Option<document::bodytext::PageDef>,
+        accumulated_vertical: &mut i32,
+        is_body_level: bool,
+    ) {
+        use document::bodytext::ParagraphRecord;
+
+        // 이미 LineSeg가 있으면 스킵 (단, vertical_position 누적은 반영)
+        let has_line_seg = paragraph
+            .records
+            .iter()
+            .any(|r| matches!(r, ParagraphRecord::ParaLineSeg { .. }));
+
+        if !has_line_seg {
+            let mut seg = Self::create_synthetic_line_segment(paragraph, doc_info, page_def);
+            if is_body_level {
+                seg.vertical_position = *accumulated_vertical;
+                *accumulated_vertical += seg.line_height;
+            }
+            // ParaCharShape 바로 뒤에 삽입 (원래 LineSeg가 위치하는 곳)
+            let insert_pos = paragraph
+                .records
+                .iter()
+                .position(|r| matches!(r, ParagraphRecord::ParaCharShape { .. }))
+                .map(|i| i + 1)
+                .unwrap_or(paragraph.records.len());
+            paragraph.records.insert(
+                insert_pos,
+                ParagraphRecord::ParaLineSeg { segments: vec![seg] },
+            );
+        } else if is_body_level {
+            // 기존 LineSeg가 있는 경우에도 마지막 세그먼트의 vertical_position + line_height를 누적
+            for record in &paragraph.records {
+                if let ParagraphRecord::ParaLineSeg { segments } = record {
+                    if let Some(last) = segments.last() {
+                        *accumulated_vertical = last.vertical_position + last.line_height;
+                    }
+                }
+            }
+        }
+
+        // 하위 문단에도 재귀 적용 (테이블 셀, 텍스트박스, 각주/미주 등)
+        // 하위는 독립적인 좌표 공간이므로 accumulated_vertical을 0부터 시작
+        for record in &mut paragraph.records {
+            match record {
+                ParagraphRecord::CtrlHeader {
+                    paragraphs,
+                    children,
+                    ..
+                } => {
+                    let mut sub_vert = 0i32;
+                    for para in paragraphs.iter_mut() {
+                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut sub_vert, false);
+                    }
+                    for child in children.iter_mut() {
+                        if let ParagraphRecord::ListHeader {
+                            paragraphs: list_paras,
+                            ..
+                        } = child
+                        {
+                            let mut list_vert = 0i32;
+                            for para in list_paras.iter_mut() {
+                                Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false);
+                            }
+                        }
+                    }
+                }
+                ParagraphRecord::ListHeader { paragraphs, .. } => {
+                    let mut list_vert = 0i32;
+                    for para in paragraphs.iter_mut() {
+                        Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false);
+                    }
+                }
+                ParagraphRecord::ShapeComponent { children, .. } => {
+                    for child in children.iter_mut() {
+                        if let ParagraphRecord::ListHeader {
+                            paragraphs: list_paras,
+                            ..
+                        } = child
+                        {
+                            let mut list_vert = 0i32;
+                            for para in list_paras.iter_mut() {
+                                Self::synthesize_for_paragraph(para, doc_info, page_def, &mut list_vert, false);
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    /// ParaShape/CharShape/PageDef 기반으로 합성 LineSegmentInfo를 생성한다.
+    fn create_synthetic_line_segment(
+        paragraph: &document::Paragraph,
+        doc_info: &DocInfo,
+        page_def: &Option<document::bodytext::PageDef>,
+    ) -> document::bodytext::line_seg::LineSegmentInfo {
+        use document::bodytext::line_seg::{LineSegmentInfo, LineSegmentTag};
+        use document::bodytext::ParagraphRecord;
+
+        let para_shape_id = paragraph.para_header.para_shape_id as usize;
+        let para_shape = doc_info.para_shapes.get(para_shape_id);
+
+        // 줄간격 (%, bycharacter 기준)
+        let line_spacing_pct = para_shape
+            .and_then(|ps| ps.line_spacing.or(Some(ps.line_spacing_old)))
+            .unwrap_or(160) as f64;
+
+        // CharShape에서 글꼴 크기 가져오기
+        let char_shape_id = paragraph
+            .records
+            .iter()
+            .find_map(|r| {
+                if let ParagraphRecord::ParaCharShape { shapes } = r {
+                    shapes.first().map(|s| s.shape_id as usize)
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(0);
+
+        let base_size = doc_info
+            .char_shapes
+            .get(char_shape_id)
+            .map(|cs| cs.base_size)
+            .unwrap_or(1000); // 10pt 기본값
+
+        // base_size는 pt×100 단위, HWPUNIT: 1pt = 100 HWPUNIT
+        let font_size_hu = base_size;
+        let text_height_hu = font_size_hu;
+        let line_height_hu = (font_size_hu as f64 * line_spacing_pct / 100.0).round() as i32;
+        let baseline_distance_hu = (text_height_hu as f64 * 0.85).round() as i32;
+
+        // 콘텐츠 너비 (HWPUNIT)
+        let content_width_hu = page_def
+            .as_ref()
+            .map(|pd| {
+                let mm = pd.content_width_mm();
+                (mm * 7200.0 / 25.4).round() as i32
+            })
+            .unwrap_or(48189); // 170mm ≈ 48189 HWPUNIT
+
+        LineSegmentInfo {
+            text_start_position: 0,
+            vertical_position: 0,
+            line_height: line_height_hu,
+            text_height: text_height_hu,
+            baseline_distance: baseline_distance_hu,
+            line_spacing: line_height_hu,
+            column_start_position: 0,
+            segment_width: content_width_hu,
+            tag: LineSegmentTag {
+                is_first_line_of_page: true,
+                is_first_line_of_column: true,
+                is_empty_segment: false,
+                is_first_segment_of_line: true,
+                is_last_segment_of_line: true,
+                has_auto_hyphenation: false,
+                has_indentation: false,
+                has_paragraph_header_shape: false,
+            },
         }
     }
 }

@@ -2485,3 +2485,4 @@ fn test_debug_table_bug_page10() {
     }
     println!("  (Total paths near target: {})", path_count);
 }
+
