@@ -32,11 +32,9 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
 
       const arrayBuffer = await file.arrayBuffer();
       const data = new Uint8Array(arrayBuffer);
-      // Web 환경에서 Buffer 타입으로 변환 (napi-rs WASM 호환)
-      const buffer = data as unknown as Buffer;
 
       // 마크다운 변환 (이미지는 base64로 임베드됨)
-      const markdownResult = hwpjs.toMarkdown(buffer, {
+      const markdownResult = hwpjs.toMarkdown(data, {
         image: 'base64',
         useHtml: false,
         includeVersion: false,
@@ -45,11 +43,11 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
       setMarkdown(markdownResult.markdown);
 
       // JSON 변환
-      const jsonString = hwpjs.toJson(buffer);
+      const jsonString = hwpjs.toJson(data);
       setJson(jsonString);
 
       // HTML 변환 (이미지는 base64로 임베드됨)
-      const htmlString = hwpjs.toHtml(buffer, {
+      const htmlString = hwpjs.toHtml(data, {
         includeVersion: false,
         includePageInfo: false,
       });
