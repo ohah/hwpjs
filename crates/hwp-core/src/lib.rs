@@ -440,10 +440,16 @@ impl HwpParser {
             .any(|r| matches!(r, ParagraphRecord::ParaLineSeg { .. }));
 
         if !has_line_seg {
-            let mut seg = Self::create_synthetic_line_segment(paragraph, doc_info, page_def);
+            let mut segments = Self::create_synthetic_line_segments(paragraph, doc_info, page_def);
             if is_body_level {
-                seg.vertical_position = *accumulated_vertical;
-                *accumulated_vertical += seg.line_height;
+                // 각 세그먼트의 vertical_position을 누적 위치 기준으로 조정
+                for seg in &mut segments {
+                    seg.vertical_position += *accumulated_vertical;
+                }
+                // 마지막 세그먼트의 끝 위치를 누적에 반영
+                if let Some(last) = segments.last() {
+                    *accumulated_vertical = last.vertical_position + last.line_height;
+                }
             }
             // ParaCharShape 바로 뒤에 삽입 (원래 LineSeg가 위치하는 곳)
             let insert_pos = paragraph
@@ -454,7 +460,7 @@ impl HwpParser {
                 .unwrap_or(paragraph.records.len());
             paragraph.records.insert(
                 insert_pos,
-                ParagraphRecord::ParaLineSeg { segments: vec![seg] },
+                ParagraphRecord::ParaLineSeg { segments },
             );
         } else if is_body_level {
             // 기존 LineSeg가 있는 경우에도 마지막 세그먼트의 vertical_position + line_height를 누적
@@ -519,11 +525,17 @@ impl HwpParser {
     }
 
     /// ParaShape/CharShape/PageDef 기반으로 합성 LineSegmentInfo를 생성한다.
-    fn create_synthetic_line_segment(
+    /// 글자 폭을 근사 계산하여 줄바꿈 위치를 추정하고, 줄 수만큼 세그먼트를 생성한다.
+    ///
+    /// 글자 폭 근사:
+    /// - 한글/CJK (U+1100~U+FFEF): 폭 ≈ font_size (전각)
+    /// - ASCII/Latin: 폭 ≈ font_size × 0.5 (반각)
+    /// - 공백: 폭 ≈ font_size × 0.25
+    fn create_synthetic_line_segments(
         paragraph: &document::Paragraph,
         doc_info: &DocInfo,
         page_def: &Option<document::bodytext::PageDef>,
-    ) -> document::bodytext::line_seg::LineSegmentInfo {
+    ) -> Vec<document::bodytext::line_seg::LineSegmentInfo> {
         use document::bodytext::line_seg::{LineSegmentInfo, LineSegmentTag};
         use document::bodytext::ParagraphRecord;
 
@@ -560,26 +572,6 @@ impl HwpParser {
         let text_line_height_hu = (font_size_hu as f64 * line_spacing_pct / 100.0).round() as i32;
         let baseline_distance_hu = (text_height_hu as f64 * 0.85).round() as i32;
 
-        // 테이블/이미지 등 개체가 포함된 문단이면 개체 높이를 line_height로 사용
-        // CtrlHeader::ObjectCommon의 height 필드에서 가져옴
-        let mut object_height_hu: i32 = 0;
-        for record in &paragraph.records {
-            if let ParagraphRecord::CtrlHeader { header, .. } = record {
-                if let document::bodytext::CtrlHeaderData::ObjectCommon { height, margin, .. } = &header.data {
-                    let total = height.0 as i32 + margin.top as i32 + margin.bottom as i32;
-                    if total > object_height_hu {
-                        object_height_hu = total;
-                    }
-                }
-            }
-        }
-
-        let line_height_hu = if object_height_hu > text_line_height_hu {
-            object_height_hu
-        } else {
-            text_line_height_hu
-        };
-
         // 콘텐츠 너비 (HWPUNIT)
         let content_width_hu = page_def
             .as_ref()
@@ -589,26 +581,137 @@ impl HwpParser {
             })
             .unwrap_or(48189); // 170mm ≈ 48189 HWPUNIT
 
-        LineSegmentInfo {
-            text_start_position: 0,
-            vertical_position: 0,
-            line_height: line_height_hu,
-            text_height: text_height_hu,
-            baseline_distance: baseline_distance_hu,
-            line_spacing: line_height_hu,
-            column_start_position: 0,
-            segment_width: content_width_hu,
-            tag: LineSegmentTag {
-                is_first_line_of_page: true,
-                is_first_line_of_column: true,
-                is_empty_segment: false,
-                is_first_segment_of_line: true,
-                is_last_segment_of_line: true,
-                has_auto_hyphenation: false,
-                has_indentation: false,
-                has_paragraph_header_shape: false,
-            },
+        // 테이블/이미지 등 개체가 포함된 문단이면 개체 높이를 사용
+        let mut object_height_hu: i32 = 0;
+        let mut has_object = false;
+        for record in &paragraph.records {
+            if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                if let document::bodytext::CtrlHeaderData::ObjectCommon { height, margin, .. } = &header.data {
+                    let total = height.0 as i32 + margin.top as i32 + margin.bottom as i32;
+                    if total > object_height_hu {
+                        object_height_hu = total;
+                        has_object = true;
+                    }
+                }
+            }
         }
+
+        // 개체가 있으면 1개 세그먼트로 처리 (개체 높이 사용)
+        if has_object {
+            let line_height_hu = object_height_hu.max(text_line_height_hu);
+            return vec![LineSegmentInfo {
+                text_start_position: 0,
+                vertical_position: 0,
+                line_height: line_height_hu,
+                text_height: text_height_hu,
+                baseline_distance: baseline_distance_hu,
+                line_spacing: text_line_height_hu,
+                column_start_position: 0,
+                segment_width: content_width_hu,
+                tag: LineSegmentTag {
+                    is_first_line_of_page: true,
+                    is_first_line_of_column: true,
+                    is_empty_segment: false,
+                    is_first_segment_of_line: true,
+                    is_last_segment_of_line: true,
+                    has_auto_hyphenation: false,
+                    has_indentation: false,
+                    has_paragraph_header_shape: false,
+                },
+            }];
+        }
+
+        // 문단 텍스트 가져오기
+        let para_text = paragraph
+            .records
+            .iter()
+            .find_map(|r| {
+                if let ParagraphRecord::ParaText { text, .. } = r {
+                    Some(text.as_str())
+                } else {
+                    None
+                }
+            })
+            .unwrap_or("");
+
+        // 글자 폭 근사 계산으로 줄 수 추정
+        // font_size_hu 단위로 계산 (HWPUNIT)
+        let estimate_line_count = |text: &str, line_width_hu: i32, font_hu: i32| -> usize {
+            if text.is_empty() || line_width_hu <= 0 || font_hu <= 0 {
+                return 1;
+            }
+            let mut current_width: i32 = 0;
+            let mut lines = 1usize;
+            for ch in text.chars() {
+                // 글자 폭 근사값 (fixture 역산 기반, 맑은 고딕/한컴바탕 등 한글 글꼴 기준)
+                // justify 정렬에서 공백이 늘어나는 것을 감안하여 공백 폭을 작게 설정
+                let char_width = if ch == ' ' {
+                    (font_hu as f64 * 0.15) as i32 // 공백: font_size × 0.15
+                } else if ch == '\t' {
+                    font_hu * 2 // 탭: font_size × 2 (근사)
+                } else if Self::is_fullwidth_char(ch) {
+                    (font_hu as f64 * 0.85) as i32 // 한글/CJK: font_size × 0.85
+                } else {
+                    (font_hu as f64 * 0.425) as i32 // ASCII/Latin: font_size × 0.425
+                };
+                current_width += char_width;
+                if current_width > line_width_hu {
+                    lines += 1;
+                    current_width = char_width; // 현재 글자를 다음 줄로
+                }
+            }
+            lines
+        };
+
+        let line_count = estimate_line_count(para_text, content_width_hu, font_size_hu);
+
+        // 줄 수만큼 세그먼트 생성
+        let mut segments = Vec::with_capacity(line_count);
+        for i in 0..line_count {
+            segments.push(LineSegmentInfo {
+                text_start_position: 0, // 합성이므로 정확한 텍스트 위치 계산 불가
+                vertical_position: (i as i32) * text_line_height_hu,
+                line_height: text_line_height_hu,
+                text_height: text_height_hu,
+                baseline_distance: baseline_distance_hu,
+                line_spacing: text_line_height_hu,
+                column_start_position: 0,
+                segment_width: content_width_hu,
+                tag: LineSegmentTag {
+                    is_first_line_of_page: i == 0,
+                    is_first_line_of_column: i == 0,
+                    is_empty_segment: false,
+                    is_first_segment_of_line: true,
+                    is_last_segment_of_line: true,
+                    has_auto_hyphenation: false,
+                    has_indentation: false,
+                    has_paragraph_header_shape: false,
+                },
+            });
+        }
+
+        segments
+    }
+
+    /// 전각 문자 판별 (한글, CJK, 전각 기호 등)
+    fn is_fullwidth_char(ch: char) -> bool {
+        let cp = ch as u32;
+        // 한글 자모
+        (0x1100..=0x11FF).contains(&cp)
+        // 한글 호환 자모
+        || (0x3130..=0x318F).contains(&cp)
+        // 한글 음절
+        || (0xAC00..=0xD7AF).contains(&cp)
+        // CJK 통합 한자
+        || (0x4E00..=0x9FFF).contains(&cp)
+        // CJK 호환 한자
+        || (0xF900..=0xFAFF).contains(&cp)
+        // 전각 기호
+        || (0xFF01..=0xFF60).contains(&cp)
+        // CJK 기호 및 구두점
+        || (0x3000..=0x303F).contains(&cp)
+        // 히라가나/가타카나
+        || (0x3040..=0x30FF).contains(&cp)
     }
 }
 

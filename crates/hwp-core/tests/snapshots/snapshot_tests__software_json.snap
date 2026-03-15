@@ -6635,7 +6635,7 @@ expression: json
                     "line_height": 20038,
                     "text_height": 1000,
                     "baseline_distance": 850,
-                    "line_spacing": 20038,
+                    "line_spacing": 1600,
                     "column_start_position": 0,
                     "segment_width": 48190,
                     "tag": {
@@ -10886,6 +10886,86 @@ expression: json
                       "has_indentation": false,
                       "has_paragraph_header_shape": false
                     }
+                  },
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 23238,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 24838,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 26438,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 28038,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
                   }
                 ]
               }
@@ -10922,7 +11002,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 23238,
+                    "vertical_position": 29638,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -10999,7 +11079,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 24838,
+                    "vertical_position": 31238,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11009,6 +11089,26 @@ expression: json
                     "tag": {
                       "is_first_line_of_page": true,
                       "is_first_line_of_column": true,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 32838,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
                       "is_empty_segment": false,
                       "is_first_segment_of_line": true,
                       "is_last_segment_of_line": true,
@@ -11076,7 +11176,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 26438,
+                    "vertical_position": 34438,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11086,6 +11186,46 @@ expression: json
                     "tag": {
                       "is_first_line_of_page": true,
                       "is_first_line_of_column": true,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 36038,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 37638,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
                       "is_empty_segment": false,
                       "is_first_segment_of_line": true,
                       "is_last_segment_of_line": true,
@@ -11179,7 +11319,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 28038,
+                    "vertical_position": 39238,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11256,7 +11396,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 29638,
+                    "vertical_position": 40838,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11266,6 +11406,26 @@ expression: json
                     "tag": {
                       "is_first_line_of_page": true,
                       "is_first_line_of_column": true,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 42438,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
                       "is_empty_segment": false,
                       "is_first_segment_of_line": true,
                       "is_last_segment_of_line": true,
@@ -11309,7 +11469,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 31238,
+                    "vertical_position": 44038,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11362,7 +11522,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 32838,
+                    "vertical_position": 45638,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11415,7 +11575,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 34438,
+                    "vertical_position": 47238,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11492,7 +11652,100 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 36038,
+                    "vertical_position": 48838,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": true,
+                      "is_first_line_of_column": true,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 50438,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  },
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 52038,
+                    "line_height": 1600,
+                    "text_height": 1000,
+                    "baseline_distance": 850,
+                    "line_spacing": 1600,
+                    "column_start_position": 0,
+                    "segment_width": 48190,
+                    "tag": {
+                      "is_first_line_of_page": false,
+                      "is_first_line_of_column": false,
+                      "is_empty_segment": false,
+                      "is_first_segment_of_line": true,
+                      "is_last_segment_of_line": true,
+                      "has_auto_hyphenation": false,
+                      "has_indentation": false,
+                      "has_paragraph_header_shape": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "para_header": {
+              "text_char_count": 1,
+              "control_mask": {
+                "value": 0,
+                "flags": []
+              },
+              "para_shape_id": 30,
+              "para_style_id": 0,
+              "column_divide_type": [],
+              "char_shape_count": 1,
+              "range_tag_count": 0,
+              "line_align_count": 0,
+              "instance_id": 2147483648,
+              "section_merge": 0
+            },
+            "records": [
+              {
+                "type": "para_char_shape",
+                "shapes": [
+                  {
+                    "position": 0,
+                    "shape_id": 22
+                  }
+                ]
+              },
+              {
+                "type": "para_line_seg",
+                "segments": [
+                  {
+                    "text_start_position": 0,
+                    "vertical_position": 53638,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11545,60 +11798,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 37638,
-                    "line_height": 1600,
-                    "text_height": 1000,
-                    "baseline_distance": 850,
-                    "line_spacing": 1600,
-                    "column_start_position": 0,
-                    "segment_width": 48190,
-                    "tag": {
-                      "is_first_line_of_page": true,
-                      "is_first_line_of_column": true,
-                      "is_empty_segment": false,
-                      "is_first_segment_of_line": true,
-                      "is_last_segment_of_line": true,
-                      "has_auto_hyphenation": false,
-                      "has_indentation": false,
-                      "has_paragraph_header_shape": false
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "para_header": {
-              "text_char_count": 1,
-              "control_mask": {
-                "value": 0,
-                "flags": []
-              },
-              "para_shape_id": 30,
-              "para_style_id": 0,
-              "column_divide_type": [],
-              "char_shape_count": 1,
-              "range_tag_count": 0,
-              "line_align_count": 0,
-              "instance_id": 2147483648,
-              "section_merge": 0
-            },
-            "records": [
-              {
-                "type": "para_char_shape",
-                "shapes": [
-                  {
-                    "position": 0,
-                    "shape_id": 22
-                  }
-                ]
-              },
-              {
-                "type": "para_line_seg",
-                "segments": [
-                  {
-                    "text_start_position": 0,
-                    "vertical_position": 39238,
+                    "vertical_position": 55238,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11675,7 +11875,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 40838,
+                    "vertical_position": 56838,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -11762,11 +11962,11 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 42438,
+                    "vertical_position": 58438,
                     "line_height": 5810,
                     "text_height": 1000,
                     "baseline_distance": 850,
-                    "line_spacing": 5810,
+                    "line_spacing": 1600,
                     "column_start_position": 0,
                     "segment_width": 48190,
                     "tag": {
@@ -13815,7 +14015,7 @@ expression: json
                             "line_height": 21442,
                             "text_height": 600,
                             "baseline_distance": 510,
-                            "line_spacing": 21442,
+                            "line_spacing": 780,
                             "column_start_position": 0,
                             "segment_width": 48190,
                             "tag": {
@@ -16266,7 +16466,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 48248,
+                    "vertical_position": 64248,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16319,7 +16519,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 49848,
+                    "vertical_position": 65848,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16396,7 +16596,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 51448,
+                    "vertical_position": 67448,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16449,7 +16649,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 53048,
+                    "vertical_position": 69048,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16526,7 +16726,7 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 54648,
+                    "vertical_position": 70648,
                     "line_height": 1600,
                     "text_height": 1000,
                     "baseline_distance": 850,
@@ -16613,11 +16813,11 @@ expression: json
                 "segments": [
                   {
                     "text_start_position": 0,
-                    "vertical_position": 56248,
+                    "vertical_position": 72248,
                     "line_height": 9156,
                     "text_height": 1000,
                     "baseline_distance": 850,
-                    "line_spacing": 9156,
+                    "line_spacing": 1600,
                     "column_start_position": 0,
                     "segment_width": 48190,
                     "tag": {
