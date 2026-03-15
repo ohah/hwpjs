@@ -10888,7 +10888,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 74,
+                    "text_start_position": 76,
                     "vertical_position": 23802,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -10908,7 +10908,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 147,
+                    "text_start_position": 150,
                     "vertical_position": 25402,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -10928,7 +10928,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 220,
+                    "text_start_position": 224,
                     "vertical_position": 27002,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -10948,7 +10948,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 290,
+                    "text_start_position": 296,
                     "vertical_position": 28602,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11098,7 +11098,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 79,
+                    "text_start_position": 82,
                     "vertical_position": 33402,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11195,7 +11195,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 74,
+                    "text_start_position": 75,
                     "vertical_position": 36602,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11215,7 +11215,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 144,
+                    "text_start_position": 146,
                     "vertical_position": 38202,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11415,7 +11415,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 76,
+                    "text_start_position": 77,
                     "vertical_position": 43002,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11671,7 +11671,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 78,
+                    "text_start_position": 79,
                     "vertical_position": 51002,
                     "line_height": 1000,
                     "text_height": 1000,
@@ -11691,7 +11691,7 @@ expression: json
                     }
                   },
                   {
-                    "text_start_position": 151,
+                    "text_start_position": 153,
                     "vertical_position": 52602,
                     "line_height": 1000,
                     "text_height": 1000,
