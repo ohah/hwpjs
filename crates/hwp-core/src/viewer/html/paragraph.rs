@@ -248,7 +248,7 @@ fn hlk_command_to_onclick(command: &str) -> Option<String> {
 /// 문단에서 하이퍼링크 범위와 onclick 정보를 수집
 /// code 3 (EXTENDED, field start)과 code 4 (FIELD_END) 위치를 매칭하여 텍스트 범위 결정
 /// 필드 CtrlHeader의 순서 인덱스로 %hlk에 해당하는 code 3/4 쌍만 사용
-fn collect_hyperlink_ranges(
+pub(super) fn collect_hyperlink_ranges(
     paragraph: &Paragraph,
     control_char_positions: &[crate::document::bodytext::control_char::ControlCharPosition],
 ) -> Vec<HyperlinkRange> {

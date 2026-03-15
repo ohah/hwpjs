@@ -348,6 +348,18 @@ pub(crate) fn render_cells(
                 }
             }
 
+            // 하이퍼링크 범위 수집 / Collect hyperlink ranges
+            let hyperlink_ranges = {
+                let ccp: Vec<_> = para.records.iter().find_map(|r| {
+                    if let ParagraphRecord::ParaText { control_char_positions, .. } = r {
+                        Some(control_char_positions.clone())
+                    } else {
+                        None
+                    }
+                }).unwrap_or_default();
+                super::super::super::paragraph::collect_hyperlink_ranges(para, &ccp)
+            };
+
             // 이미지 및 중첩 테이블 수집 / Collect images and nested tables
             let mut images = Vec::new();
             let mut nested_tables: Vec<super::super::super::line_segment::TableInfo> = Vec::new();
@@ -839,7 +851,7 @@ pub(crate) fn render_cells(
                                     footnote_refs: &[],
                                     endnote_refs: &[],
                                     auto_numbers: &[],
-                                    hyperlinks: &[],
+                                    hyperlinks: &hyperlink_ranges,
                                 };
                                 let context = LineSegmentRenderContext {
                                     document,
@@ -894,7 +906,7 @@ pub(crate) fn render_cells(
                             footnote_refs: &[],
                             endnote_refs: &[],
                             auto_numbers: &[],
-                            hyperlinks: &[],
+                            hyperlinks: &hyperlink_ranges,
                         };
                         let context = LineSegmentRenderContext {
                             document,
