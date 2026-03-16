@@ -1,7 +1,6 @@
 use hwp_model::control::HeaderFooter;
 use hwp_model::paragraph::SubList;
 use hwp_model::resources::*;
-use hwp_model::section::*;
 use hwp_model::shape::Picture;
 use hwp_model::table::Table;
 use hwp_model::types::*;
@@ -419,7 +418,7 @@ fn parse_numberings() {
     let doc = HwpxParser::parse(&fixture("lists.hwpx")).unwrap();
     let nums = &doc.resources.numberings;
 
-    assert!(nums.len() >= 1, "Should have numberings");
+    assert!(!nums.is_empty(), "Should have numberings");
 
     let n1 = &nums[0];
     assert_eq!(n1.id, 1);
@@ -855,14 +854,9 @@ fn parse_rect_with_fill() {
 
     let rect = find_first_shape(&doc, "rect");
     if let Some(hwp_model::shape::ShapeObject::Rectangle(r)) = rect {
-        // 채우기가 있는 사각형
-        if r.fill.is_some() {
-            match r.fill.as_ref().unwrap() {
-                hwp_model::resources::FillBrush::WinBrush { face_color, .. } => {
-                    assert!(face_color.is_some());
-                }
-                _ => {}
-            }
+        if let Some(hwp_model::resources::FillBrush::WinBrush { face_color, .. }) = r.fill.as_ref()
+        {
+            assert!(face_color.is_some());
         }
     }
 }
@@ -1002,14 +996,14 @@ fn find_first_shape<'a>(
             for run in &para.runs {
                 for c in &run.contents {
                     if let hwp_model::paragraph::RunContent::Object(obj) = c {
-                        let matches = match (kind, obj) {
-                            ("line", hwp_model::shape::ShapeObject::Line(_)) => true,
-                            ("rect", hwp_model::shape::ShapeObject::Rectangle(_)) => true,
-                            ("ellipse", hwp_model::shape::ShapeObject::Ellipse(_)) => true,
-                            ("container", hwp_model::shape::ShapeObject::Container(_)) => true,
-                            _ => false,
-                        };
-                        if matches {
+                        let is_match = matches!(
+                            (kind, obj),
+                            ("line", hwp_model::shape::ShapeObject::Line(_))
+                                | ("rect", hwp_model::shape::ShapeObject::Rectangle(_))
+                                | ("ellipse", hwp_model::shape::ShapeObject::Ellipse(_))
+                                | ("container", hwp_model::shape::ShapeObject::Container(_))
+                        );
+                        if is_match {
                             return Some(obj);
                         }
                     }
