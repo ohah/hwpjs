@@ -150,35 +150,31 @@ fn parse_font(
     let mut buf = Vec::new();
     loop {
         match reader.read_event_into(&mut buf)? {
-            Event::Empty(ref e) | Event::Start(ref e) => {
-                match local_name(e.name().as_ref()) {
-                    b"typeInfo" => {
-                        font.type_info = Some(FontTypeInfo {
-                            family_type: parse_font_category(
-                                &attr_str(e, b"familyType").unwrap_or_default(),
-                            ),
-                            weight: attr_u8(e, b"weight").unwrap_or(0),
-                            proportion: attr_u8(e, b"proportion").unwrap_or(0),
-                            contrast: attr_u8(e, b"contrast").unwrap_or(0),
-                            stroke_variation: attr_u8(e, b"strokeVariation").unwrap_or(0),
-                            arm_style: attr_u8(e, b"armStyle").unwrap_or(0),
-                            letterform: attr_u8(e, b"letterform").unwrap_or(0),
-                            midline: attr_u8(e, b"midline").unwrap_or(0),
-                            x_height: attr_u8(e, b"xHeight").unwrap_or(0),
-                        });
-                    }
-                    b"substFont" => {
-                        font.subst_font = Some(SubstFont {
-                            face: attr_str(e, b"face").unwrap_or_default(),
-                            font_type: parse_font_type(
-                                &attr_str(e, b"type").unwrap_or_default(),
-                            ),
-                            is_embedded: attr_bool(e, b"isEmbedded").unwrap_or(false),
-                        });
-                    }
-                    _ => {}
+            Event::Empty(ref e) | Event::Start(ref e) => match local_name(e.name().as_ref()) {
+                b"typeInfo" => {
+                    font.type_info = Some(FontTypeInfo {
+                        family_type: parse_font_category(
+                            &attr_str(e, b"familyType").unwrap_or_default(),
+                        ),
+                        weight: attr_u8(e, b"weight").unwrap_or(0),
+                        proportion: attr_u8(e, b"proportion").unwrap_or(0),
+                        contrast: attr_u8(e, b"contrast").unwrap_or(0),
+                        stroke_variation: attr_u8(e, b"strokeVariation").unwrap_or(0),
+                        arm_style: attr_u8(e, b"armStyle").unwrap_or(0),
+                        letterform: attr_u8(e, b"letterform").unwrap_or(0),
+                        midline: attr_u8(e, b"midline").unwrap_or(0),
+                        x_height: attr_u8(e, b"xHeight").unwrap_or(0),
+                    });
                 }
-            }
+                b"substFont" => {
+                    font.subst_font = Some(SubstFont {
+                        face: attr_str(e, b"face").unwrap_or_default(),
+                        font_type: parse_font_type(&attr_str(e, b"type").unwrap_or_default()),
+                        is_embedded: attr_bool(e, b"isEmbedded").unwrap_or(false),
+                    });
+                }
+                _ => {}
+            },
             Event::End(ref e) => {
                 if local_name(e.name().as_ref()) == b"font" {
                     break;
@@ -227,9 +223,10 @@ fn parse_char_shape(
     let mut cs = CharShape {
         id: attr_u16(start, b"id").unwrap_or(0),
         height: attr_i32(start, b"height").unwrap_or(1000),
-        text_color: attr_str(start, b"textColor").map(|s| parse_color(&s)).unwrap_or(Some(0)),
-        shade_color: attr_str(start, b"shadeColor")
-            .and_then(|s| parse_color(&s)),
+        text_color: attr_str(start, b"textColor")
+            .map(|s| parse_color(&s))
+            .unwrap_or(Some(0)),
+        shade_color: attr_str(start, b"shadeColor").and_then(|s| parse_color(&s)),
         use_font_space: attr_bool(start, b"useFontSpace").unwrap_or(false),
         use_kerning: attr_bool(start, b"useKerning").unwrap_or(false),
         sym_mark: attr_str(start, b"symMark")
@@ -244,108 +241,106 @@ fn parse_char_shape(
     let mut buf = Vec::new();
     loop {
         match reader.read_event_into(&mut buf)? {
-            Event::Empty(ref e) | Event::Start(ref e) => {
-                match local_name(e.name().as_ref()) {
-                    b"fontRef" => {
-                        cs.font_ref = LangGroup {
-                            hangul: attr_u16(e, b"hangul").unwrap_or(0),
-                            latin: attr_u16(e, b"latin").unwrap_or(0),
-                            hanja: attr_u16(e, b"hanja").unwrap_or(0),
-                            japanese: attr_u16(e, b"japanese").unwrap_or(0),
-                            other: attr_u16(e, b"other").unwrap_or(0),
-                            symbol: attr_u16(e, b"symbol").unwrap_or(0),
-                            user: attr_u16(e, b"user").unwrap_or(0),
-                        };
-                    }
-                    b"ratio" => {
-                        cs.ratio = LangGroup {
-                            hangul: attr_u8(e, b"hangul").unwrap_or(100),
-                            latin: attr_u8(e, b"latin").unwrap_or(100),
-                            hanja: attr_u8(e, b"hanja").unwrap_or(100),
-                            japanese: attr_u8(e, b"japanese").unwrap_or(100),
-                            other: attr_u8(e, b"other").unwrap_or(100),
-                            symbol: attr_u8(e, b"symbol").unwrap_or(100),
-                            user: attr_u8(e, b"user").unwrap_or(100),
-                        };
-                    }
-                    b"spacing" => {
-                        cs.spacing = LangGroup {
-                            hangul: attr_i8(e, b"hangul").unwrap_or(0),
-                            latin: attr_i8(e, b"latin").unwrap_or(0),
-                            hanja: attr_i8(e, b"hanja").unwrap_or(0),
-                            japanese: attr_i8(e, b"japanese").unwrap_or(0),
-                            other: attr_i8(e, b"other").unwrap_or(0),
-                            symbol: attr_i8(e, b"symbol").unwrap_or(0),
-                            user: attr_i8(e, b"user").unwrap_or(0),
-                        };
-                    }
-                    b"relSz" => {
-                        cs.rel_size = LangGroup {
-                            hangul: attr_u8(e, b"hangul").unwrap_or(100),
-                            latin: attr_u8(e, b"latin").unwrap_or(100),
-                            hanja: attr_u8(e, b"hanja").unwrap_or(100),
-                            japanese: attr_u8(e, b"japanese").unwrap_or(100),
-                            other: attr_u8(e, b"other").unwrap_or(100),
-                            symbol: attr_u8(e, b"symbol").unwrap_or(100),
-                            user: attr_u8(e, b"user").unwrap_or(100),
-                        };
-                    }
-                    b"offset" => {
-                        cs.offset = LangGroup {
-                            hangul: attr_i8(e, b"hangul").unwrap_or(0),
-                            latin: attr_i8(e, b"latin").unwrap_or(0),
-                            hanja: attr_i8(e, b"hanja").unwrap_or(0),
-                            japanese: attr_i8(e, b"japanese").unwrap_or(0),
-                            other: attr_i8(e, b"other").unwrap_or(0),
-                            symbol: attr_i8(e, b"symbol").unwrap_or(0),
-                            user: attr_i8(e, b"user").unwrap_or(0),
-                        };
-                    }
-                    b"bold" => cs.bold = true,
-                    b"italic" => cs.italic = true,
-                    b"emboss" => cs.emboss = true,
-                    b"engrave" => cs.engrave = true,
-                    b"supscript" => cs.superscript = true,
-                    b"subscript" => cs.subscript = true,
-                    b"underline" => {
-                        cs.underline = Some(Underline {
-                            underline_type: attr_str(e, b"type")
-                                .map(|s| parse_underline_type(&s))
-                                .unwrap_or_default(),
-                            shape: attr_str(e, b"shape")
-                                .map(|s| parse_line_type3(&s))
-                                .unwrap_or_default(),
-                            color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
-                        });
-                    }
-                    b"strikeout" => {
-                        cs.strikeout = Some(Strikeout {
-                            shape: attr_str(e, b"shape")
-                                .map(|s| parse_line_type3(&s))
-                                .unwrap_or_default(),
-                            color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
-                        });
-                    }
-                    b"outline" => {
-                        cs.outline = Some(
-                            attr_str(e, b"type")
-                                .map(|s| parse_outline_type(&s))
-                                .unwrap_or_default(),
-                        );
-                    }
-                    b"shadow" => {
-                        cs.shadow = Some(CharShadow {
-                            shadow_type: attr_str(e, b"type")
-                                .map(|s| parse_char_shadow_type(&s))
-                                .unwrap_or_default(),
-                            color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
-                            offset_x: attr_i8(e, b"offsetX").unwrap_or(0),
-                            offset_y: attr_i8(e, b"offsetY").unwrap_or(0),
-                        });
-                    }
-                    _ => {}
+            Event::Empty(ref e) | Event::Start(ref e) => match local_name(e.name().as_ref()) {
+                b"fontRef" => {
+                    cs.font_ref = LangGroup {
+                        hangul: attr_u16(e, b"hangul").unwrap_or(0),
+                        latin: attr_u16(e, b"latin").unwrap_or(0),
+                        hanja: attr_u16(e, b"hanja").unwrap_or(0),
+                        japanese: attr_u16(e, b"japanese").unwrap_or(0),
+                        other: attr_u16(e, b"other").unwrap_or(0),
+                        symbol: attr_u16(e, b"symbol").unwrap_or(0),
+                        user: attr_u16(e, b"user").unwrap_or(0),
+                    };
                 }
-            }
+                b"ratio" => {
+                    cs.ratio = LangGroup {
+                        hangul: attr_u8(e, b"hangul").unwrap_or(100),
+                        latin: attr_u8(e, b"latin").unwrap_or(100),
+                        hanja: attr_u8(e, b"hanja").unwrap_or(100),
+                        japanese: attr_u8(e, b"japanese").unwrap_or(100),
+                        other: attr_u8(e, b"other").unwrap_or(100),
+                        symbol: attr_u8(e, b"symbol").unwrap_or(100),
+                        user: attr_u8(e, b"user").unwrap_or(100),
+                    };
+                }
+                b"spacing" => {
+                    cs.spacing = LangGroup {
+                        hangul: attr_i8(e, b"hangul").unwrap_or(0),
+                        latin: attr_i8(e, b"latin").unwrap_or(0),
+                        hanja: attr_i8(e, b"hanja").unwrap_or(0),
+                        japanese: attr_i8(e, b"japanese").unwrap_or(0),
+                        other: attr_i8(e, b"other").unwrap_or(0),
+                        symbol: attr_i8(e, b"symbol").unwrap_or(0),
+                        user: attr_i8(e, b"user").unwrap_or(0),
+                    };
+                }
+                b"relSz" => {
+                    cs.rel_size = LangGroup {
+                        hangul: attr_u8(e, b"hangul").unwrap_or(100),
+                        latin: attr_u8(e, b"latin").unwrap_or(100),
+                        hanja: attr_u8(e, b"hanja").unwrap_or(100),
+                        japanese: attr_u8(e, b"japanese").unwrap_or(100),
+                        other: attr_u8(e, b"other").unwrap_or(100),
+                        symbol: attr_u8(e, b"symbol").unwrap_or(100),
+                        user: attr_u8(e, b"user").unwrap_or(100),
+                    };
+                }
+                b"offset" => {
+                    cs.offset = LangGroup {
+                        hangul: attr_i8(e, b"hangul").unwrap_or(0),
+                        latin: attr_i8(e, b"latin").unwrap_or(0),
+                        hanja: attr_i8(e, b"hanja").unwrap_or(0),
+                        japanese: attr_i8(e, b"japanese").unwrap_or(0),
+                        other: attr_i8(e, b"other").unwrap_or(0),
+                        symbol: attr_i8(e, b"symbol").unwrap_or(0),
+                        user: attr_i8(e, b"user").unwrap_or(0),
+                    };
+                }
+                b"bold" => cs.bold = true,
+                b"italic" => cs.italic = true,
+                b"emboss" => cs.emboss = true,
+                b"engrave" => cs.engrave = true,
+                b"supscript" => cs.superscript = true,
+                b"subscript" => cs.subscript = true,
+                b"underline" => {
+                    cs.underline = Some(Underline {
+                        underline_type: attr_str(e, b"type")
+                            .map(|s| parse_underline_type(&s))
+                            .unwrap_or_default(),
+                        shape: attr_str(e, b"shape")
+                            .map(|s| parse_line_type3(&s))
+                            .unwrap_or_default(),
+                        color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
+                    });
+                }
+                b"strikeout" => {
+                    cs.strikeout = Some(Strikeout {
+                        shape: attr_str(e, b"shape")
+                            .map(|s| parse_line_type3(&s))
+                            .unwrap_or_default(),
+                        color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
+                    });
+                }
+                b"outline" => {
+                    cs.outline = Some(
+                        attr_str(e, b"type")
+                            .map(|s| parse_outline_type(&s))
+                            .unwrap_or_default(),
+                    );
+                }
+                b"shadow" => {
+                    cs.shadow = Some(CharShadow {
+                        shadow_type: attr_str(e, b"type")
+                            .map(|s| parse_char_shadow_type(&s))
+                            .unwrap_or_default(),
+                        color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
+                        offset_x: attr_i8(e, b"offsetX").unwrap_or(0),
+                        offset_y: attr_i8(e, b"offsetY").unwrap_or(0),
+                    });
+                }
+                _ => {}
+            },
             Event::End(ref e) => {
                 if local_name(e.name().as_ref()) == b"charPr" {
                     break;
@@ -403,38 +398,34 @@ fn parse_border_fill(
     let mut buf = Vec::new();
     loop {
         match reader.read_event_into(&mut buf)? {
-            Event::Empty(ref e) => {
-                match local_name(e.name().as_ref()) {
-                    b"slash" => {
-                        bf.slash = Some(SlashInfo {
-                            slash_type: parse_slash_type(&attr_str(e, b"type").unwrap_or_default()),
-                            crooked: attr_bool(e, b"Crooked").unwrap_or(false),
-                            is_counter: attr_bool(e, b"isCounter").unwrap_or(false),
-                        });
-                    }
-                    b"backSlash" => {
-                        bf.back_slash = Some(SlashInfo {
-                            slash_type: parse_slash_type(&attr_str(e, b"type").unwrap_or_default()),
-                            crooked: attr_bool(e, b"Crooked").unwrap_or(false),
-                            is_counter: attr_bool(e, b"isCounter").unwrap_or(false),
-                        });
-                    }
-                    b"leftBorder" => bf.left_border = Some(parse_line_spec(e)),
-                    b"rightBorder" => bf.right_border = Some(parse_line_spec(e)),
-                    b"topBorder" => bf.top_border = Some(parse_line_spec(e)),
-                    b"bottomBorder" => bf.bottom_border = Some(parse_line_spec(e)),
-                    b"diagonal" => bf.diagonal = Some(parse_line_spec(e)),
-                    _ => {}
+            Event::Empty(ref e) => match local_name(e.name().as_ref()) {
+                b"slash" => {
+                    bf.slash = Some(SlashInfo {
+                        slash_type: parse_slash_type(&attr_str(e, b"type").unwrap_or_default()),
+                        crooked: attr_bool(e, b"Crooked").unwrap_or(false),
+                        is_counter: attr_bool(e, b"isCounter").unwrap_or(false),
+                    });
                 }
-            }
-            Event::Start(ref e) => {
-                match local_name(e.name().as_ref()) {
-                    b"fillBrush" => {
-                        bf.fill = parse_fill_brush(reader)?;
-                    }
-                    _ => {}
+                b"backSlash" => {
+                    bf.back_slash = Some(SlashInfo {
+                        slash_type: parse_slash_type(&attr_str(e, b"type").unwrap_or_default()),
+                        crooked: attr_bool(e, b"Crooked").unwrap_or(false),
+                        is_counter: attr_bool(e, b"isCounter").unwrap_or(false),
+                    });
                 }
-            }
+                b"leftBorder" => bf.left_border = Some(parse_line_spec(e)),
+                b"rightBorder" => bf.right_border = Some(parse_line_spec(e)),
+                b"topBorder" => bf.top_border = Some(parse_line_spec(e)),
+                b"bottomBorder" => bf.bottom_border = Some(parse_line_spec(e)),
+                b"diagonal" => bf.diagonal = Some(parse_line_spec(e)),
+                _ => {}
+            },
+            Event::Start(ref e) => match local_name(e.name().as_ref()) {
+                b"fillBrush" => {
+                    bf.fill = parse_fill_brush(reader)?;
+                }
+                _ => {}
+            },
             Event::End(ref e) => {
                 if local_name(e.name().as_ref()) == b"borderFill" {
                     break;
@@ -465,90 +456,92 @@ fn parse_fill_brush(reader: &mut Reader<&[u8]>) -> Result<Option<FillBrush>, Hwp
 
     loop {
         match reader.read_event_into(&mut buf)? {
-            Event::Empty(ref e) | Event::Start(ref e) => {
-                match local_name(e.name().as_ref()) {
-                    b"winBrush" => {
-                        win_brush = Some(FillBrush::WinBrush {
-                            face_color: attr_str(e, b"faceColor").and_then(|s| parse_color(&s)),
-                            hatch_color: attr_str(e, b"hatchColor").and_then(|s| parse_color(&s)),
-                            hatch_style: attr_str(e, b"hatchStyle").map(|s| parse_hatch_style(&s)),
-                            alpha: attr_u8(e, b"alpha").unwrap_or(0),
-                        });
-                    }
-                    b"gradation" => {
-                        let grad_type = parse_gradation_type(&attr_str(e, b"type").unwrap_or_default());
-                        let angle = attr_u16(e, b"angle").unwrap_or(0);
-                        let center_x = attr_u8(e, b"centerX").unwrap_or(0);
-                        let center_y = attr_u8(e, b"centerY").unwrap_or(0);
-                        let step = attr_u8(e, b"step").unwrap_or(0);
-                        let color_num = attr_u16(e, b"colorNum").unwrap_or(2);
-                        let step_center = attr_u8(e, b"stepCenter").unwrap_or(50);
-                        let alpha = attr_u8(e, b"alpha").unwrap_or(0);
-
-                        let mut colors = Vec::new();
-                        let mut gbuf = Vec::new();
-                        loop {
-                            match reader.read_event_into(&mut gbuf)? {
-                                Event::Empty(ref ce) | Event::Start(ref ce) => {
-                                    if local_name(ce.name().as_ref()) == b"color" {
-                                        colors.push(attr_str(ce, b"value").and_then(|s| parse_color(&s)));
-                                    }
-                                }
-                                Event::End(ref ce) => {
-                                    if local_name(ce.name().as_ref()) == b"gradation" {
-                                        break;
-                                    }
-                                }
-                                Event::Eof => break,
-                                _ => {}
-                            }
-                            gbuf.clear();
-                        }
-
-                        gradation = Some(FillBrush::Gradation {
-                            grad_type,
-                            angle,
-                            center_x,
-                            center_y,
-                            step,
-                            color_num,
-                            step_center,
-                            colors,
-                            alpha,
-                        });
-                    }
-                    b"imgBrush" => {
-                        let mode = parse_image_brush_mode(&attr_str(e, b"mode").unwrap_or_default());
-                        let mut img = ImageRef::default();
-                        let mut ibuf = Vec::new();
-                        loop {
-                            match reader.read_event_into(&mut ibuf)? {
-                                Event::Empty(ref ie) | Event::Start(ref ie) => {
-                                    if local_name(ie.name().as_ref()) == b"img" {
-                                        img = ImageRef {
-                                            binary_item_id: attr_str(ie, b"binaryItemIDRef").unwrap_or_default(),
-                                            bright: attr_i8(ie, b"bright").unwrap_or(0),
-                                            contrast: attr_i8(ie, b"contrast").unwrap_or(0),
-                                            effect: parse_image_effect(&attr_str(ie, b"effect").unwrap_or_default()),
-                                            alpha: attr_u8(ie, b"alpha").unwrap_or(0),
-                                        };
-                                    }
-                                }
-                                Event::End(ref ie) => {
-                                    if local_name(ie.name().as_ref()) == b"imgBrush" {
-                                        break;
-                                    }
-                                }
-                                Event::Eof => break,
-                                _ => {}
-                            }
-                            ibuf.clear();
-                        }
-                        image_brush = Some(FillBrush::ImageBrush { mode, img });
-                    }
-                    _ => {}
+            Event::Empty(ref e) | Event::Start(ref e) => match local_name(e.name().as_ref()) {
+                b"winBrush" => {
+                    win_brush = Some(FillBrush::WinBrush {
+                        face_color: attr_str(e, b"faceColor").and_then(|s| parse_color(&s)),
+                        hatch_color: attr_str(e, b"hatchColor").and_then(|s| parse_color(&s)),
+                        hatch_style: attr_str(e, b"hatchStyle").map(|s| parse_hatch_style(&s)),
+                        alpha: attr_u8(e, b"alpha").unwrap_or(0),
+                    });
                 }
-            }
+                b"gradation" => {
+                    let grad_type = parse_gradation_type(&attr_str(e, b"type").unwrap_or_default());
+                    let angle = attr_u16(e, b"angle").unwrap_or(0);
+                    let center_x = attr_u8(e, b"centerX").unwrap_or(0);
+                    let center_y = attr_u8(e, b"centerY").unwrap_or(0);
+                    let step = attr_u8(e, b"step").unwrap_or(0);
+                    let color_num = attr_u16(e, b"colorNum").unwrap_or(2);
+                    let step_center = attr_u8(e, b"stepCenter").unwrap_or(50);
+                    let alpha = attr_u8(e, b"alpha").unwrap_or(0);
+
+                    let mut colors = Vec::new();
+                    let mut gbuf = Vec::new();
+                    loop {
+                        match reader.read_event_into(&mut gbuf)? {
+                            Event::Empty(ref ce) | Event::Start(ref ce) => {
+                                if local_name(ce.name().as_ref()) == b"color" {
+                                    colors
+                                        .push(attr_str(ce, b"value").and_then(|s| parse_color(&s)));
+                                }
+                            }
+                            Event::End(ref ce) => {
+                                if local_name(ce.name().as_ref()) == b"gradation" {
+                                    break;
+                                }
+                            }
+                            Event::Eof => break,
+                            _ => {}
+                        }
+                        gbuf.clear();
+                    }
+
+                    gradation = Some(FillBrush::Gradation {
+                        grad_type,
+                        angle,
+                        center_x,
+                        center_y,
+                        step,
+                        color_num,
+                        step_center,
+                        colors,
+                        alpha,
+                    });
+                }
+                b"imgBrush" => {
+                    let mode = parse_image_brush_mode(&attr_str(e, b"mode").unwrap_or_default());
+                    let mut img = ImageRef::default();
+                    let mut ibuf = Vec::new();
+                    loop {
+                        match reader.read_event_into(&mut ibuf)? {
+                            Event::Empty(ref ie) | Event::Start(ref ie) => {
+                                if local_name(ie.name().as_ref()) == b"img" {
+                                    img = ImageRef {
+                                        binary_item_id: attr_str(ie, b"binaryItemIDRef")
+                                            .unwrap_or_default(),
+                                        bright: attr_i8(ie, b"bright").unwrap_or(0),
+                                        contrast: attr_i8(ie, b"contrast").unwrap_or(0),
+                                        effect: parse_image_effect(
+                                            &attr_str(ie, b"effect").unwrap_or_default(),
+                                        ),
+                                        alpha: attr_u8(ie, b"alpha").unwrap_or(0),
+                                    };
+                                }
+                            }
+                            Event::End(ref ie) => {
+                                if local_name(ie.name().as_ref()) == b"imgBrush" {
+                                    break;
+                                }
+                            }
+                            Event::Eof => break,
+                            _ => {}
+                        }
+                        ibuf.clear();
+                    }
+                    image_brush = Some(FillBrush::ImageBrush { mode, img });
+                }
+                _ => {}
+            },
             Event::End(ref e) => {
                 if local_name(e.name().as_ref()) == b"fillBrush" {
                     break;
@@ -697,9 +690,13 @@ fn parse_numbering(
                         use_inst_width: attr_bool(e, b"useInstWidth").unwrap_or(false),
                         auto_indent: attr_bool(e, b"autoIndent").unwrap_or(false),
                         width_adjust: attr_i32(e, b"widthAdjust").unwrap_or(0),
-                        text_offset_type: parse_value_unit(&attr_str(e, b"textOffsetType").unwrap_or_default()),
+                        text_offset_type: parse_value_unit(
+                            &attr_str(e, b"textOffsetType").unwrap_or_default(),
+                        ),
                         text_offset: attr_i32(e, b"textOffset").unwrap_or(0),
-                        num_format: parse_number_type2(&attr_str(e, b"numFormat").unwrap_or_default()),
+                        num_format: parse_number_type2(
+                            &attr_str(e, b"numFormat").unwrap_or_default(),
+                        ),
                         char_shape_id: attr_u32(e, b"charPrIDRef"),
                         checkable: attr_bool(e, b"checkable").unwrap_or(false),
                         format_string: String::new(),
@@ -715,9 +712,13 @@ fn parse_numbering(
                         use_inst_width: attr_bool(e, b"useInstWidth").unwrap_or(false),
                         auto_indent: attr_bool(e, b"autoIndent").unwrap_or(false),
                         width_adjust: attr_i32(e, b"widthAdjust").unwrap_or(0),
-                        text_offset_type: parse_value_unit(&attr_str(e, b"textOffsetType").unwrap_or_default()),
+                        text_offset_type: parse_value_unit(
+                            &attr_str(e, b"textOffsetType").unwrap_or_default(),
+                        ),
                         text_offset: attr_i32(e, b"textOffset").unwrap_or(0),
-                        num_format: parse_number_type2(&attr_str(e, b"numFormat").unwrap_or_default()),
+                        num_format: parse_number_type2(
+                            &attr_str(e, b"numFormat").unwrap_or_default(),
+                        ),
                         char_shape_id: attr_u32(e, b"charPrIDRef"),
                         checkable: attr_bool(e, b"checkable").unwrap_or(false),
                         format_string: String::new(),
@@ -803,31 +804,31 @@ fn parse_bullet(
     let mut buf = Vec::new();
     loop {
         match reader.read_event_into(&mut buf)? {
-            Event::Empty(ref e) | Event::Start(ref e) => {
-                match local_name(e.name().as_ref()) {
-                    b"paraHead" => {
-                        bullet.para_head = BulletParaHead {
-                            level: attr_u8(e, b"level").unwrap_or(0),
-                            align: parse_halign(&attr_str(e, b"align").unwrap_or_default()),
-                            use_inst_width: attr_bool(e, b"useInstWidth").unwrap_or(false),
-                            auto_indent: attr_bool(e, b"autoIndent").unwrap_or(false),
-                            width_adjust: attr_i32(e, b"widthAdjust").unwrap_or(0),
-                            text_offset_type: parse_value_unit(&attr_str(e, b"textOffsetType").unwrap_or_default()),
-                            text_offset: attr_i32(e, b"textOffset").unwrap_or(0),
-                            char_shape_id: attr_u32(e, b"charPrIDRef"),
-                        };
-                    }
-                    b"img" => {
-                        bullet.image = Some(BulletImage {
-                            binary_item_id: attr_str(e, b"binaryItemIDRef").unwrap_or_default(),
-                            bright: attr_i8(e, b"bright").unwrap_or(0),
-                            contrast: attr_i8(e, b"contrast").unwrap_or(0),
-                            effect: parse_image_effect(&attr_str(e, b"effect").unwrap_or_default()),
-                        });
-                    }
-                    _ => {}
+            Event::Empty(ref e) | Event::Start(ref e) => match local_name(e.name().as_ref()) {
+                b"paraHead" => {
+                    bullet.para_head = BulletParaHead {
+                        level: attr_u8(e, b"level").unwrap_or(0),
+                        align: parse_halign(&attr_str(e, b"align").unwrap_or_default()),
+                        use_inst_width: attr_bool(e, b"useInstWidth").unwrap_or(false),
+                        auto_indent: attr_bool(e, b"autoIndent").unwrap_or(false),
+                        width_adjust: attr_i32(e, b"widthAdjust").unwrap_or(0),
+                        text_offset_type: parse_value_unit(
+                            &attr_str(e, b"textOffsetType").unwrap_or_default(),
+                        ),
+                        text_offset: attr_i32(e, b"textOffset").unwrap_or(0),
+                        char_shape_id: attr_u32(e, b"charPrIDRef"),
+                    };
                 }
-            }
+                b"img" => {
+                    bullet.image = Some(BulletImage {
+                        binary_item_id: attr_str(e, b"binaryItemIDRef").unwrap_or_default(),
+                        bright: attr_i8(e, b"bright").unwrap_or(0),
+                        contrast: attr_i8(e, b"contrast").unwrap_or(0),
+                        effect: parse_image_effect(&attr_str(e, b"effect").unwrap_or_default()),
+                    });
+                }
+                _ => {}
+            },
             Event::End(ref e) => {
                 if local_name(e.name().as_ref()) == b"bullet" {
                     break;
@@ -890,26 +891,36 @@ fn parse_para_shape(
                 match local_name(e.name().as_ref()) {
                     b"align" => {
                         ps.align = ParagraphAlign {
-                            horizontal: parse_halign(&attr_str(e, b"horizontal").unwrap_or_default()),
+                            horizontal: parse_halign(
+                                &attr_str(e, b"horizontal").unwrap_or_default(),
+                            ),
                             vertical: parse_valign(&attr_str(e, b"vertical").unwrap_or_default()),
                         };
                     }
                     b"heading" => {
                         ps.heading = Some(Heading {
-                            heading_type: parse_heading_type(&attr_str(e, b"type").unwrap_or_default()),
+                            heading_type: parse_heading_type(
+                                &attr_str(e, b"type").unwrap_or_default(),
+                            ),
                             id_ref: attr_u16(e, b"idRef").unwrap_or(0),
                             level: attr_u8(e, b"level").unwrap_or(0),
                         });
                     }
                     b"breakSetting" => {
                         ps.break_setting = BreakSetting {
-                            break_latin_word: parse_break_latin_word(&attr_str(e, b"breakLatinWord").unwrap_or_default()),
-                            break_non_latin_word: parse_break_non_latin_word(&attr_str(e, b"breakNonLatinWord").unwrap_or_default()),
+                            break_latin_word: parse_break_latin_word(
+                                &attr_str(e, b"breakLatinWord").unwrap_or_default(),
+                            ),
+                            break_non_latin_word: parse_break_non_latin_word(
+                                &attr_str(e, b"breakNonLatinWord").unwrap_or_default(),
+                            ),
                             widow_orphan: attr_bool(e, b"widowOrphan").unwrap_or(false),
                             keep_with_next: attr_bool(e, b"keepWithNext").unwrap_or(false),
                             keep_lines: attr_bool(e, b"keepLines").unwrap_or(false),
                             page_break_before: attr_bool(e, b"pageBreakBefore").unwrap_or(false),
-                            line_wrap: parse_line_wrap(&attr_str(e, b"lineWrap").unwrap_or_default()),
+                            line_wrap: parse_line_wrap(
+                                &attr_str(e, b"lineWrap").unwrap_or_default(),
+                            ),
                         };
                     }
                     b"autoSpacing" => {
@@ -926,7 +937,9 @@ fn parse_para_shape(
                     }
                     b"lineSpacing" => {
                         ps.line_spacing = LineSpacing {
-                            spacing_type: parse_line_spacing_type(&attr_str(e, b"type").unwrap_or_default()),
+                            spacing_type: parse_line_spacing_type(
+                                &attr_str(e, b"type").unwrap_or_default(),
+                            ),
                             value: attr_i32(e, b"value").unwrap_or(160) as i32,
                             unit: parse_value_unit(&attr_str(e, b"unit").unwrap_or_default()),
                         };

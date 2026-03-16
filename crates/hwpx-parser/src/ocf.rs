@@ -43,10 +43,8 @@ pub fn parse_version<R: Read + Seek>(
                     version.micro = attr_str(e, b"micro")
                         .and_then(|v| v.parse().ok())
                         .unwrap_or(0);
-                    version.xml_version =
-                        attr_str(e, b"xmlVersion").unwrap_or_default();
-                    version.app_version =
-                        attr_str(e, b"appVersion").unwrap_or_default();
+                    version.xml_version = attr_str(e, b"xmlVersion").unwrap_or_default();
+                    version.app_version = attr_str(e, b"appVersion").unwrap_or_default();
                 }
             }
             Event::Eof => break,
