@@ -6,33 +6,21 @@
 //! HWP/HWPX 양쪽에서 동일한 viewer를 사용할 수 있게 한다.
 
 use crate::document::HwpDocument;
-use hwp_model::document::{
-    BinaryItem, BinaryStore, Document, DocumentMeta, DocumentSettings, ImageFormat,
-};
+use hwp_model::document::{BinaryStore, Document, DocumentMeta, DocumentSettings};
 
 mod resources;
 mod section;
 
 /// HwpDocument를 hwp-model Document로 변환
 pub fn to_document(hwp: &HwpDocument) -> Document {
-    let mut doc = Document::default();
-
-    // 메타데이터
-    doc.meta = convert_meta(hwp);
-
-    // 시작번호
-    doc.settings = convert_settings(hwp);
-
-    // Resources (DocInfo)
-    doc.resources = resources::convert_resources(&hwp.doc_info);
-
-    // Sections (BodyText)
-    doc.sections = section::convert_sections(&hwp.body_text, &hwp.doc_info);
-
-    // Binaries
-    doc.binaries = convert_binaries(hwp);
-
-    doc
+    Document {
+        meta: convert_meta(hwp),
+        settings: convert_settings(hwp),
+        resources: resources::convert_resources(&hwp.doc_info),
+        sections: section::convert_sections(&hwp.body_text, &hwp.doc_info),
+        binaries: convert_binaries(hwp),
+        ..Default::default()
+    }
 }
 
 fn convert_meta(hwp: &HwpDocument) -> DocumentMeta {
