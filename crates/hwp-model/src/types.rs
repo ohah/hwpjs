@@ -390,6 +390,7 @@ pub enum AutoNumType {
 // ═══════════════════════════════════════════
 
 #[derive(Debug, Clone, Default, PartialEq)]
+#[allow(clippy::enum_variant_names)]
 pub enum Landscape {
     #[default]
     Portrait,
@@ -471,6 +472,7 @@ pub enum FootnoteNumbering {
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
+#[allow(clippy::enum_variant_names)]
 pub enum FootnotePlacement {
     #[default]
     EachColumn,
