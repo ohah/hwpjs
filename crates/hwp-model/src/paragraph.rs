@@ -1,4 +1,5 @@
 use crate::control::Control;
+use crate::hints::LineSegmentInfo;
 use crate::shape::ShapeObject;
 use crate::types::*;
 
@@ -13,6 +14,8 @@ pub struct Paragraph {
     pub para_tc_id: Option<String>,
     pub meta_tag: Option<String>,
     pub runs: Vec<Run>,
+    /// 줄 세그먼트 정보 (레이아웃 캐시). HWP와 HWPX 양쪽에 존재.
+    pub line_segments: Vec<LineSegmentInfo>,
 }
 
 /// 동일 글자 모양의 콘텐츠 단위

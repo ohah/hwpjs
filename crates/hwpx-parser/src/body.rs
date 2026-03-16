@@ -1,6 +1,7 @@
 use crate::error::HwpxError;
 use crate::utils::*;
 use hwp_model::control::*;
+use hwp_model::hints::LineSegmentInfo;
 use hwp_model::paragraph::*;
 use hwp_model::resources::ImageRef;
 use hwp_model::section::*;
@@ -58,6 +59,7 @@ fn parse_paragraph(
         para_tc_id: attr_str(start, b"paraTcId"),
         meta_tag: None,
         runs: Vec::new(),
+        line_segments: Vec::new(),
     };
 
     let mut sec_def: Option<SectionDef> = None;
@@ -74,7 +76,7 @@ fn parse_paragraph(
                     }
                 }
                 b"linesegarray" => {
-                    skip_element(reader, e.name().as_ref())?;
+                    para.line_segments = parse_linesegarray(reader)?;
                 }
                 _ => {}
             },
@@ -2454,6 +2456,45 @@ fn parse_textart_object(
         buf.clear();
     }
     Ok(obj)
+}
+
+// ═══════════════════════════════════════════
+// linesegarray 파싱
+// ═══════════════════════════════════════════
+
+fn parse_linesegarray(reader: &mut Reader<&[u8]>) -> Result<Vec<LineSegmentInfo>, HwpxError> {
+    let mut segments = Vec::new();
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"lineseg" {
+                    segments.push(LineSegmentInfo {
+                        text_start_pos: attr_u32(e, b"textpos").unwrap_or(0),
+                        vertical_pos: attr_i32(e, b"vertpos").unwrap_or(0),
+                        line_height: attr_i32(e, b"vertsize").unwrap_or(0),
+                        text_height: attr_i32(e, b"textheight").unwrap_or(0),
+                        baseline_distance: attr_i32(e, b"baseline").unwrap_or(0),
+                        line_spacing: attr_i32(e, b"spacing").unwrap_or(0),
+                        column_start_pos: attr_i32(e, b"horzpos").unwrap_or(0),
+                        segment_width: attr_i32(e, b"horzsize").unwrap_or(0),
+                        flags: attr_u32(e, b"flags").unwrap_or(0),
+                    });
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"linesegarray" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(segments)
 }
 
 fn parse_img_rect(reader: &mut Reader<&[u8]>) -> Result<[Point; 4], HwpxError> {
