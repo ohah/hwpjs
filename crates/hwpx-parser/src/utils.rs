@@ -41,6 +41,7 @@ pub fn attr_str(e: &BytesStart, name: &[u8]) -> Option<String> {
 }
 
 /// XML 속성에서 필수 문자열 값
+#[allow(dead_code)]
 pub fn attr_str_req(e: &BytesStart, name: &[u8]) -> Result<String, HwpxError> {
     attr_str(e, name).ok_or_else(|| {
         HwpxError::MissingElement(format!(
