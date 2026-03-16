@@ -132,6 +132,57 @@ fn parse_run(
                             parse_picture(e, reader)?,
                         ))));
                 }
+                b"line" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::Line(Box::new(
+                            parse_line_object(e, reader)?,
+                        ))));
+                }
+                b"rect" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::Rectangle(Box::new(
+                            parse_rect_object(e, reader)?,
+                        ))));
+                }
+                b"ellipse" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::Ellipse(Box::new(
+                            parse_ellipse_object(e, reader)?,
+                        ))));
+                }
+                b"arc" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::Arc(Box::new(
+                            parse_arc_object(e, reader)?,
+                        ))));
+                }
+                b"polygon" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::Polygon(Box::new(
+                            parse_polygon_object(e, reader)?,
+                        ))));
+                }
+                b"curve" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::Curve(Box::new(
+                            parse_curve_object(e, reader)?,
+                        ))));
+                }
+                b"equation" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::Equation(Box::new(
+                            parse_equation_object(e, reader)?,
+                        ))));
+                }
+                b"container" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::Container(Box::new(
+                            parse_container_object(e, reader)?,
+                        ))));
+                }
+                b"ole" => {
+                    skip_element(reader, e.name().as_ref())?;
+                }
                 _ => {
                     skip_element(reader, e.name().as_ref())?;
                 }
@@ -488,6 +539,18 @@ fn parse_ctrl(reader: &mut Reader<&[u8]>) -> Result<Option<Control>, HwpxError> 
                     b"bookmark" => {
                         result = Some(Control::Bookmark(Bookmark {
                             name: attr_str(e, b"name").unwrap_or_default(),
+                        }));
+                    }
+                    b"fieldBegin" => {
+                        result = Some(Control::FieldBegin(parse_field_begin(e, reader)?));
+                    }
+                    b"fieldEnd" => {
+                        result = Some(Control::FieldEnd);
+                    }
+                    b"newNum" => {
+                        result = Some(Control::NewNum(NewNum {
+                            num_type: parse_numbering_type(&attr_str(e, b"numType").unwrap_or_default()),
+                            num: attr_u16(e, b"num").unwrap_or(0),
                         }));
                     }
                     _ => {}
@@ -1334,5 +1397,642 @@ fn parse_tab_type(s: &str) -> TabType {
         "CENTER" => TabType::Center,
         "DECIMAL" => TabType::Decimal,
         _ => TabType::Left,
+    }
+}
+
+// ═══════════════════════════════════════════
+// 도형 파서
+// ═══════════════════════════════════════════
+
+fn parse_line_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<LineObject, HwpxError> {
+    let mut obj = LineObject {
+        common: parse_shape_common_attrs(start),
+        component: parse_shape_component_attrs(start),
+        is_reverse_hv: attr_bool(start, b"isReverseHV"),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    b"outMargin" => obj.common.out_margin = Some(parse_margin_attrs(e)),
+                    b"offset" => obj.component.offset = Some(Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) }),
+                    b"orgSz" => obj.component.org_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    b"curSz" => obj.component.cur_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    b"flip" => obj.component.flip = Some(Flip { horizontal: attr_bool(e, b"horizontal").unwrap_or(false), vertical: attr_bool(e, b"vertical").unwrap_or(false) }),
+                    b"rotationInfo" => obj.component.rotation = Some(Rotation { angle: attr_f32(e, b"angle").unwrap_or(0.0), ..Default::default() }),
+                    b"lineShape" => obj.line_shape = parse_shape_line_info(e),
+                    b"shadow" => obj.shadow = Some(parse_shape_shadow(e)),
+                    b"startPt" => obj.start_pt = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"endPt" => obj.end_pt = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"line" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(obj)
+}
+
+fn parse_rect_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<RectObject, HwpxError> {
+    let mut obj = RectObject {
+        common: parse_shape_common_attrs(start),
+        component: parse_shape_component_attrs(start),
+        ratio: attr_u8(start, b"ratio").unwrap_or(0),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    b"outMargin" => obj.common.out_margin = Some(parse_margin_attrs(e)),
+                    b"offset" => obj.component.offset = Some(Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) }),
+                    b"orgSz" => obj.component.org_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    b"curSz" => obj.component.cur_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    b"flip" => obj.component.flip = Some(Flip { horizontal: attr_bool(e, b"horizontal").unwrap_or(false), vertical: attr_bool(e, b"vertical").unwrap_or(false) }),
+                    b"rotationInfo" => obj.component.rotation = Some(Rotation { angle: attr_f32(e, b"angle").unwrap_or(0.0), ..Default::default() }),
+                    b"lineShape" => obj.line_shape = parse_shape_line_info(e),
+                    b"fillBrush" => { obj.fill = parse_fill_brush_body(reader)?; }
+                    b"shadow" => obj.shadow = Some(parse_shape_shadow(e)),
+                    b"pt0" => obj.points[0] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"pt1" => obj.points[1] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"pt2" => obj.points[2] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"pt3" => obj.points[3] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"drawText" => { obj.draw_text = Some(parse_draw_text(reader)?); }
+                    b"caption" => { obj.common.caption = Some(parse_caption(e, reader)?); }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"rect" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(obj)
+}
+
+fn parse_ellipse_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<EllipseObject, HwpxError> {
+    let mut obj = EllipseObject {
+        common: parse_shape_common_attrs(start),
+        component: parse_shape_component_attrs(start),
+        interval_dirty: attr_bool(start, b"intervalDirty"),
+        ..Default::default()
+    };
+    parse_generic_shape(reader, b"ellipse", &mut obj.common, &mut obj.component, Some(&mut obj.line_shape), &mut obj.fill, &mut obj.shadow)?;
+    Ok(obj)
+}
+
+fn parse_arc_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<ArcObject, HwpxError> {
+    let mut obj = ArcObject {
+        common: parse_shape_common_attrs(start),
+        component: parse_shape_component_attrs(start),
+        arc_type: parse_arc_type(&attr_str(start, b"type").unwrap_or_default()),
+        ..Default::default()
+    };
+    parse_generic_shape(reader, b"arc", &mut obj.common, &mut obj.component, Some(&mut obj.line_shape), &mut obj.fill, &mut obj.shadow)?;
+    Ok(obj)
+}
+
+fn parse_polygon_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<PolygonObject, HwpxError> {
+    let mut obj = PolygonObject {
+        common: parse_shape_common_attrs(start),
+        component: parse_shape_component_attrs(start),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    b"outMargin" => obj.common.out_margin = Some(parse_margin_attrs(e)),
+                    b"offset" => obj.component.offset = Some(Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) }),
+                    b"orgSz" => obj.component.org_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    b"lineShape" => obj.line_shape = parse_shape_line_info(e),
+                    b"shadow" => obj.shadow = Some(parse_shape_shadow(e)),
+                    b"pt" => obj.points.push(Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) }),
+                    b"fillBrush" => { obj.fill = parse_fill_brush_body(reader)?; }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"polygon" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(obj)
+}
+
+fn parse_curve_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<CurveObject, HwpxError> {
+    let mut obj = CurveObject {
+        common: parse_shape_common_attrs(start),
+        component: parse_shape_component_attrs(start),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    b"lineShape" => obj.line_shape = parse_shape_line_info(e),
+                    b"shadow" => obj.shadow = Some(parse_shape_shadow(e)),
+                    b"seg" => {
+                        obj.segments.push(CurveSegment {
+                            segment_type: parse_curve_segment_type(&attr_str(e, b"type").unwrap_or_default()),
+                            x1: attr_i32(e, b"x1").unwrap_or(0),
+                            y1: attr_i32(e, b"y1").unwrap_or(0),
+                            x2: attr_i32(e, b"x2").unwrap_or(0),
+                            y2: attr_i32(e, b"y2").unwrap_or(0),
+                        });
+                    }
+                    b"fillBrush" => { obj.fill = parse_fill_brush_body(reader)?; }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"curve" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(obj)
+}
+
+fn parse_equation_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<EquationObject, HwpxError> {
+    let mut obj = EquationObject {
+        common: parse_shape_common_attrs(start),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    b"script" => {
+                        // script 텍스트 읽기
+                        let mut tbuf = Vec::new();
+                        if let Ok(Event::Text(t)) = reader.read_event_into(&mut tbuf) {
+                            obj.script = t.unescape().unwrap_or_default().to_string();
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"equation" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(obj)
+}
+
+fn parse_container_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<ContainerObject, HwpxError> {
+    let mut obj = ContainerObject {
+        common: parse_shape_common_attrs(start),
+        component: parse_shape_component_attrs(start),
+        children: Vec::new(),
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    b"line" => obj.children.push(ShapeObject::Line(Box::new(parse_line_object(e, reader)?))),
+                    b"rect" => obj.children.push(ShapeObject::Rectangle(Box::new(parse_rect_object(e, reader)?))),
+                    b"ellipse" => obj.children.push(ShapeObject::Ellipse(Box::new(parse_ellipse_object(e, reader)?))),
+                    b"arc" => obj.children.push(ShapeObject::Arc(Box::new(parse_arc_object(e, reader)?))),
+                    b"polygon" => obj.children.push(ShapeObject::Polygon(Box::new(parse_polygon_object(e, reader)?))),
+                    b"curve" => obj.children.push(ShapeObject::Curve(Box::new(parse_curve_object(e, reader)?))),
+                    b"pic" => obj.children.push(ShapeObject::Picture(Box::new(parse_picture(e, reader)?))),
+                    b"container" => obj.children.push(ShapeObject::Container(Box::new(parse_container_object(e, reader)?))),
+                    _ => { skip_element(reader, e.name().as_ref())?; }
+                }
+            }
+            Event::Empty(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"container" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(obj)
+}
+
+// ═══════════════════════════════════════════
+// 도형 공통 파싱 헬퍼
+// ═══════════════════════════════════════════
+
+fn parse_shape_line_info(e: &quick_xml::events::BytesStart) -> ShapeLineInfo {
+    ShapeLineInfo {
+        color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
+        width: attr_i32(e, b"width").unwrap_or(0),
+        style: parse_line_type1(&attr_str(e, b"style").unwrap_or_default()),
+        end_cap: parse_line_end_cap(&attr_str(e, b"endCap").unwrap_or_default()),
+        head_style: parse_arrow_type(&attr_str(e, b"headStyle").unwrap_or_default()),
+        tail_style: parse_arrow_type(&attr_str(e, b"tailStyle").unwrap_or_default()),
+        head_fill: attr_bool(e, b"headfill").unwrap_or(false),
+        tail_fill: attr_bool(e, b"tailfill").unwrap_or(false),
+        head_size: parse_arrow_size(&attr_str(e, b"headSz").unwrap_or_default()),
+        tail_size: parse_arrow_size(&attr_str(e, b"tailSz").unwrap_or_default()),
+        outline_style: parse_line_outline_style(&attr_str(e, b"outlineStyle").unwrap_or_default()),
+        alpha: attr_u8(e, b"alpha").unwrap_or(0),
+    }
+}
+
+fn parse_shape_shadow(e: &quick_xml::events::BytesStart) -> ShapeShadow {
+    ShapeShadow {
+        shadow_type: parse_shape_shadow_type(&attr_str(e, b"type").unwrap_or_default()),
+        color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
+        offset_x: attr_i32(e, b"offsetX").unwrap_or(0),
+        offset_y: attr_i32(e, b"offsetY").unwrap_or(0),
+        alpha: attr_u8(e, b"alpha").unwrap_or(0),
+    }
+}
+
+fn parse_draw_text(reader: &mut Reader<&[u8]>) -> Result<SubList, HwpxError> {
+    let mut sl = SubList::default();
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"subList" => { sl = parse_sublist(e, reader)?; }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"drawText" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(sl)
+}
+
+fn parse_caption(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<Caption, HwpxError> {
+    let mut cap = Caption {
+        side: parse_caption_side(&attr_str(start, b"side").unwrap_or_default()),
+        full_size: attr_bool(start, b"fullSz").unwrap_or(false),
+        width: attr_i32(start, b"width").unwrap_or(0),
+        gap: attr_i32(start, b"gap").unwrap_or(0),
+        last_width: attr_i32(start, b"lastWidth").map(|v| v),
+        content: SubList::default(),
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"subList" {
+                    cap.content = parse_sublist(e, reader)?;
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"caption" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(cap)
+}
+
+/// fillBrush 파싱 (body.rs용 — header.rs의 것과 동일 로직)
+fn parse_fill_brush_body(reader: &mut Reader<&[u8]>) -> Result<Option<hwp_model::resources::FillBrush>, HwpxError> {
+    use hwp_model::resources::FillBrush;
+    let mut result: Option<FillBrush> = None;
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"winBrush" {
+                    result = Some(FillBrush::WinBrush {
+                        face_color: attr_str(e, b"faceColor").and_then(|s| parse_color(&s)),
+                        hatch_color: attr_str(e, b"hatchColor").and_then(|s| parse_color(&s)),
+                        hatch_style: None,
+                        alpha: attr_u8(e, b"alpha").unwrap_or(0),
+                    });
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"fillBrush" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(result)
+}
+
+/// 범용 도형 내부 파싱 (ellipse, arc 등 공통 구조)
+fn parse_generic_shape(
+    reader: &mut Reader<&[u8]>,
+    tag: &[u8],
+    common: &mut ShapeCommon,
+    component: &mut ShapeComponentData,
+    mut line_shape: Option<&mut ShapeLineInfo>,
+    fill: &mut Option<hwp_model::resources::FillBrush>,
+    shadow: &mut Option<ShapeShadow>,
+) -> Result<(), HwpxError> {
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(common, e),
+                    b"pos" => parse_shape_pos(common, e),
+                    b"outMargin" => common.out_margin = Some(parse_margin_attrs(e)),
+                    b"offset" => component.offset = Some(Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) }),
+                    b"orgSz" => component.org_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    b"curSz" => component.cur_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    b"flip" => component.flip = Some(Flip { horizontal: attr_bool(e, b"horizontal").unwrap_or(false), vertical: attr_bool(e, b"vertical").unwrap_or(false) }),
+                    b"lineShape" => { if let Some(ls) = line_shape.as_deref_mut() { *ls = parse_shape_line_info(e); } }
+                    b"shadow" => { *shadow = Some(parse_shape_shadow(e)); }
+                    b"fillBrush" => { *fill = parse_fill_brush_body(reader)?; }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == tag { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(())
+}
+
+// ═══════════════════════════════════════════
+// fieldBegin 파서
+// ═══════════════════════════════════════════
+
+fn parse_field_begin(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<Field, HwpxError> {
+    let mut field = Field {
+        id: attr_u64(start, b"id").unwrap_or(0),
+        field_type: parse_field_type(&attr_str(start, b"type").unwrap_or_default()),
+        name: attr_str(start, b"name").filter(|s| !s.is_empty()),
+        editable: attr_bool(start, b"editable").unwrap_or(false),
+        dirty: attr_bool(start, b"dirty").unwrap_or(false),
+        field_id: attr_u32(start, b"fieldid"),
+        z_order: attr_i32(start, b"zorder"),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"parameters" => {
+                        field.parameters = parse_field_parameters(reader)?;
+                    }
+                    b"subList" => {
+                        field.sub_list = Some(parse_sublist(e, reader)?);
+                    }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"fieldBegin" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(field)
+}
+
+fn parse_field_parameters(reader: &mut Reader<&[u8]>) -> Result<Vec<FieldParameter>, HwpxError> {
+    let mut params = Vec::new();
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"integerParam" => {
+                        let name = attr_str(e, b"name").unwrap_or_default();
+                        let mut tbuf = Vec::new();
+                        let value = if let Ok(Event::Text(t)) = reader.read_event_into(&mut tbuf) {
+                            t.unescape().unwrap_or_default().parse::<i64>().unwrap_or(0)
+                        } else { 0 };
+                        params.push(FieldParameter::Integer { name, value });
+                    }
+                    b"stringParam" => {
+                        let name = attr_str(e, b"name").unwrap_or_default();
+                        let mut tbuf = Vec::new();
+                        let value = if let Ok(Event::Text(t)) = reader.read_event_into(&mut tbuf) {
+                            t.unescape().unwrap_or_default().to_string()
+                        } else { String::new() };
+                        params.push(FieldParameter::String { name, value });
+                    }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"parameters" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(params)
+}
+
+// ═══════════════════════════════════════════
+// 추가 enum 헬퍼
+// ═══════════════════════════════════════════
+
+fn parse_line_type1(s: &str) -> LineType1 {
+    match s {
+        "SOLID" => LineType1::Solid,
+        "DOT" => LineType1::Dot,
+        "THICK" => LineType1::Thick,
+        "DASH" => LineType1::Dash,
+        "DASH_DOT" => LineType1::DashDot,
+        "DASH_DOT_DOT" => LineType1::DashDotDot,
+        _ => LineType1::None,
+    }
+}
+
+fn parse_line_end_cap(s: &str) -> LineEndCap {
+    match s {
+        "ROUND" => LineEndCap::Round,
+        _ => LineEndCap::Flat,
+    }
+}
+
+fn parse_arrow_type(s: &str) -> ArrowType {
+    match s {
+        "ARROW" => ArrowType::Arrow,
+        "SPEAR" => ArrowType::Spear,
+        "CONCAVE_ARROW" => ArrowType::ConcaveArrow,
+        "EMPTY_DIAMOND" => ArrowType::EmptyDiamond,
+        "EMPTY_CIRCLE" => ArrowType::EmptyCircle,
+        "EMPTY_BOX" => ArrowType::EmptyBox,
+        "FILLED_DIAMOND" => ArrowType::FilledDiamond,
+        "FILLED_CIRCLE" => ArrowType::FilledCircle,
+        "FILLED_BOX" => ArrowType::FilledBox,
+        _ => ArrowType::Normal,
+    }
+}
+
+fn parse_arrow_size(s: &str) -> ArrowSize {
+    match s {
+        "SMALL_SMALL" => ArrowSize::SmallSmall,
+        "SMALL_MEDIUM" => ArrowSize::SmallMedium,
+        "SMALL_LARGE" => ArrowSize::SmallLarge,
+        "MEDIUM_SMALL" => ArrowSize::MediumSmall,
+        "MEDIUM_LARGE" => ArrowSize::MediumLarge,
+        "LARGE_SMALL" => ArrowSize::LargeSmall,
+        "LARGE_MEDIUM" => ArrowSize::LargeMedium,
+        "LARGE_LARGE" => ArrowSize::LargeLarge,
+        _ => ArrowSize::MediumMedium,
+    }
+}
+
+fn parse_line_outline_style(s: &str) -> LineOutlineStyle {
+    match s {
+        "OUTER" => LineOutlineStyle::Outer,
+        "INNER" => LineOutlineStyle::Inner,
+        _ => LineOutlineStyle::Normal,
+    }
+}
+
+fn parse_shape_shadow_type(s: &str) -> ShapeShadowType {
+    match s {
+        "PARELLEL_LEFTTOP" => ShapeShadowType::ParellelLeftTop,
+        "PARELLEL_RIGHTTOP" => ShapeShadowType::ParellelRightTop,
+        "PARELLEL_LEFTBOTTOM" => ShapeShadowType::ParellelLeftBottom,
+        "PARELLEL_RIGHTBOTTOM" => ShapeShadowType::ParellelRightBottom,
+        _ => ShapeShadowType::None,
+    }
+}
+
+fn parse_arc_type(s: &str) -> ArcType {
+    match s {
+        "PIE" => ArcType::Pie,
+        "CHORD" => ArcType::Chord,
+        _ => ArcType::Normal,
+    }
+}
+
+fn parse_curve_segment_type(s: &str) -> CurveSegmentType {
+    match s {
+        "LINE" => CurveSegmentType::Line,
+        _ => CurveSegmentType::Curve,
+    }
+}
+
+fn parse_caption_side(s: &str) -> CaptionSide {
+    match s {
+        "LEFT" => CaptionSide::Left,
+        "RIGHT" => CaptionSide::Right,
+        "TOP" => CaptionSide::Top,
+        _ => CaptionSide::Bottom,
+    }
+}
+
+fn parse_field_type(s: &str) -> FieldType {
+    match s {
+        "HYPERLINK" => FieldType::Hyperlink,
+        "BOOKMARK" => FieldType::Bookmark,
+        "FORMULA" => FieldType::Formula,
+        "SUMMERY" | "SUMMARY" => FieldType::Summary,
+        "USER_INFO" => FieldType::UserInfo,
+        "DATE" => FieldType::Date,
+        "DOC_DATE" => FieldType::DocDate,
+        "PATH" => FieldType::Path,
+        "CROSSREF" => FieldType::CrossRef,
+        "MAILMERGE" => FieldType::MailMerge,
+        "MEMO" => FieldType::Memo,
+        "PROOFREADING_MARKS" => FieldType::ProofreadingMarks,
+        "PRIVATE_INFO" => FieldType::PrivateInfo,
+        "METATAG" => FieldType::MetaTag,
+        "OUTLINE" => FieldType::Outline,
+        _ => FieldType::ClickHere,
     }
 }
