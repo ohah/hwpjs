@@ -360,37 +360,674 @@ fn parse_char_shape(
     Ok(cs)
 }
 
-// ── Stub parsers (TODO: 이후 구현) ──
+// ── borderFills ──
 
-fn parse_border_fills(_reader: &mut Reader<&[u8]>) -> Result<Vec<BorderFill>, HwpxError> {
-    // TODO: borderFills 파싱
-    skip_to_end(_reader, b"borderFills")?;
-    Ok(Vec::new())
+fn parse_border_fills(reader: &mut Reader<&[u8]>) -> Result<Vec<BorderFill>, HwpxError> {
+    let mut fills = Vec::new();
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"borderFill" {
+                    fills.push(parse_border_fill(e, reader)?);
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"borderFills" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(fills)
 }
 
-fn parse_tab_properties(_reader: &mut Reader<&[u8]>) -> Result<Vec<TabDef>, HwpxError> {
-    skip_to_end(_reader, b"tabProperties")?;
-    Ok(Vec::new())
+fn parse_border_fill(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<BorderFill, HwpxError> {
+    let mut bf = BorderFill {
+        id: attr_u16(start, b"id").unwrap_or(0),
+        three_d: attr_bool(start, b"threeD").unwrap_or(false),
+        shadow: attr_bool(start, b"shadow").unwrap_or(false),
+        center_line: parse_center_line_type(&attr_str(start, b"centerLine").unwrap_or_default()),
+        break_cell_separate_line: attr_bool(start, b"breakCellSeparateLine"),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"slash" => {
+                        bf.slash = Some(SlashInfo {
+                            slash_type: parse_slash_type(&attr_str(e, b"type").unwrap_or_default()),
+                            crooked: attr_bool(e, b"Crooked").unwrap_or(false),
+                            is_counter: attr_bool(e, b"isCounter").unwrap_or(false),
+                        });
+                    }
+                    b"backSlash" => {
+                        bf.back_slash = Some(SlashInfo {
+                            slash_type: parse_slash_type(&attr_str(e, b"type").unwrap_or_default()),
+                            crooked: attr_bool(e, b"Crooked").unwrap_or(false),
+                            is_counter: attr_bool(e, b"isCounter").unwrap_or(false),
+                        });
+                    }
+                    b"leftBorder" => bf.left_border = Some(parse_line_spec(e)),
+                    b"rightBorder" => bf.right_border = Some(parse_line_spec(e)),
+                    b"topBorder" => bf.top_border = Some(parse_line_spec(e)),
+                    b"bottomBorder" => bf.bottom_border = Some(parse_line_spec(e)),
+                    b"diagonal" => bf.diagonal = Some(parse_line_spec(e)),
+                    _ => {}
+                }
+            }
+            Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"fillBrush" => {
+                        bf.fill = parse_fill_brush(reader)?;
+                    }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"borderFill" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(bf)
 }
 
-fn parse_numberings(_reader: &mut Reader<&[u8]>) -> Result<Vec<Numbering>, HwpxError> {
-    skip_to_end(_reader, b"numberings")?;
-    Ok(Vec::new())
+fn parse_line_spec(e: &quick_xml::events::BytesStart) -> LineSpec {
+    LineSpec {
+        line_type: parse_line_type3(&attr_str(e, b"type").unwrap_or_default()),
+        width: attr_str(e, b"width").unwrap_or_default(),
+        color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
+    }
 }
 
-fn parse_bullets(_reader: &mut Reader<&[u8]>) -> Result<Vec<Bullet>, HwpxError> {
-    skip_to_end(_reader, b"bullets")?;
-    Ok(Vec::new())
+fn parse_fill_brush(reader: &mut Reader<&[u8]>) -> Result<Option<FillBrush>, HwpxError> {
+    let mut win_brush: Option<FillBrush> = None;
+    let mut gradation: Option<FillBrush> = None;
+    let mut image_brush: Option<FillBrush> = None;
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"winBrush" => {
+                        win_brush = Some(FillBrush::WinBrush {
+                            face_color: attr_str(e, b"faceColor").and_then(|s| parse_color(&s)),
+                            hatch_color: attr_str(e, b"hatchColor").and_then(|s| parse_color(&s)),
+                            hatch_style: attr_str(e, b"hatchStyle").map(|s| parse_hatch_style(&s)),
+                            alpha: attr_u8(e, b"alpha").unwrap_or(0),
+                        });
+                    }
+                    b"gradation" => {
+                        let grad_type = parse_gradation_type(&attr_str(e, b"type").unwrap_or_default());
+                        let angle = attr_u16(e, b"angle").unwrap_or(0);
+                        let center_x = attr_u8(e, b"centerX").unwrap_or(0);
+                        let center_y = attr_u8(e, b"centerY").unwrap_or(0);
+                        let step = attr_u8(e, b"step").unwrap_or(0);
+                        let color_num = attr_u16(e, b"colorNum").unwrap_or(2);
+                        let step_center = attr_u8(e, b"stepCenter").unwrap_or(50);
+                        let alpha = attr_u8(e, b"alpha").unwrap_or(0);
+
+                        let mut colors = Vec::new();
+                        let mut gbuf = Vec::new();
+                        loop {
+                            match reader.read_event_into(&mut gbuf)? {
+                                Event::Empty(ref ce) | Event::Start(ref ce) => {
+                                    if local_name(ce.name().as_ref()) == b"color" {
+                                        colors.push(attr_str(ce, b"value").and_then(|s| parse_color(&s)));
+                                    }
+                                }
+                                Event::End(ref ce) => {
+                                    if local_name(ce.name().as_ref()) == b"gradation" {
+                                        break;
+                                    }
+                                }
+                                Event::Eof => break,
+                                _ => {}
+                            }
+                            gbuf.clear();
+                        }
+
+                        gradation = Some(FillBrush::Gradation {
+                            grad_type,
+                            angle,
+                            center_x,
+                            center_y,
+                            step,
+                            color_num,
+                            step_center,
+                            colors,
+                            alpha,
+                        });
+                    }
+                    b"imgBrush" => {
+                        let mode = parse_image_brush_mode(&attr_str(e, b"mode").unwrap_or_default());
+                        let mut img = ImageRef::default();
+                        let mut ibuf = Vec::new();
+                        loop {
+                            match reader.read_event_into(&mut ibuf)? {
+                                Event::Empty(ref ie) | Event::Start(ref ie) => {
+                                    if local_name(ie.name().as_ref()) == b"img" {
+                                        img = ImageRef {
+                                            binary_item_id: attr_str(ie, b"binaryItemIDRef").unwrap_or_default(),
+                                            bright: attr_i8(ie, b"bright").unwrap_or(0),
+                                            contrast: attr_i8(ie, b"contrast").unwrap_or(0),
+                                            effect: parse_image_effect(&attr_str(ie, b"effect").unwrap_or_default()),
+                                            alpha: attr_u8(ie, b"alpha").unwrap_or(0),
+                                        };
+                                    }
+                                }
+                                Event::End(ref ie) => {
+                                    if local_name(ie.name().as_ref()) == b"imgBrush" {
+                                        break;
+                                    }
+                                }
+                                Event::Eof => break,
+                                _ => {}
+                            }
+                            ibuf.clear();
+                        }
+                        image_brush = Some(FillBrush::ImageBrush { mode, img });
+                    }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"fillBrush" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    let count = win_brush.is_some() as u8 + gradation.is_some() as u8 + image_brush.is_some() as u8;
+    if count == 0 {
+        Ok(None)
+    } else if count == 1 {
+        Ok(win_brush.or(gradation).or(image_brush))
+    } else {
+        Ok(Some(FillBrush::Combined {
+            win_brush: win_brush.map(Box::new),
+            gradation: gradation.map(Box::new),
+            image_brush: image_brush.map(Box::new),
+        }))
+    }
 }
 
-fn parse_para_properties(_reader: &mut Reader<&[u8]>) -> Result<Vec<ParaShape>, HwpxError> {
-    skip_to_end(_reader, b"paraProperties")?;
-    Ok(Vec::new())
+// ── tabProperties ──
+
+fn parse_tab_properties(reader: &mut Reader<&[u8]>) -> Result<Vec<TabDef>, HwpxError> {
+    let mut defs = Vec::new();
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) => {
+                if local_name(e.name().as_ref()) == b"tabPr" {
+                    defs.push(parse_tab_def(e, reader, true)?);
+                }
+            }
+            Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"tabPr" {
+                    defs.push(parse_tab_def(e, reader, false)?);
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"tabProperties" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(defs)
 }
 
-fn parse_styles(_reader: &mut Reader<&[u8]>) -> Result<Vec<Style>, HwpxError> {
-    skip_to_end(_reader, b"styles")?;
-    Ok(Vec::new())
+fn parse_tab_def(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+    is_empty: bool,
+) -> Result<TabDef, HwpxError> {
+    let mut td = TabDef {
+        id: attr_u16(start, b"id").unwrap_or(0),
+        auto_tab_left: attr_bool(start, b"autoTabLeft").unwrap_or(false),
+        auto_tab_right: attr_bool(start, b"autoTabRight").unwrap_or(false),
+        items: Vec::new(),
+    };
+
+    if is_empty {
+        return Ok(td);
+    }
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"tabItem" {
+                    td.items.push(TabItem {
+                        pos: attr_i32(e, b"pos").unwrap_or(0),
+                        tab_type: parse_tab_type_res(&attr_str(e, b"type").unwrap_or_default()),
+                        leader: parse_line_type2_str(&attr_str(e, b"leader").unwrap_or_default()),
+                    });
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"tabPr" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(td)
+}
+
+// ── numberings ──
+
+fn parse_numberings(reader: &mut Reader<&[u8]>) -> Result<Vec<Numbering>, HwpxError> {
+    let mut nums = Vec::new();
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"numbering" {
+                    nums.push(parse_numbering(e, reader)?);
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"numberings" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(nums)
+}
+
+fn parse_numbering(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<Numbering, HwpxError> {
+    let mut num = Numbering {
+        id: attr_u16(start, b"id").unwrap_or(0),
+        start: attr_u16(start, b"start").unwrap_or(0),
+        levels: Vec::new(),
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) => {
+                if local_name(e.name().as_ref()) == b"paraHead" {
+                    num.levels.push(NumberingLevel {
+                        level: attr_u8(e, b"level").unwrap_or(1),
+                        start: attr_u16(e, b"start").unwrap_or(1),
+                        align: parse_halign(&attr_str(e, b"align").unwrap_or_default()),
+                        use_inst_width: attr_bool(e, b"useInstWidth").unwrap_or(false),
+                        auto_indent: attr_bool(e, b"autoIndent").unwrap_or(false),
+                        width_adjust: attr_i32(e, b"widthAdjust").unwrap_or(0),
+                        text_offset_type: parse_value_unit(&attr_str(e, b"textOffsetType").unwrap_or_default()),
+                        text_offset: attr_i32(e, b"textOffset").unwrap_or(0),
+                        num_format: parse_number_type2(&attr_str(e, b"numFormat").unwrap_or_default()),
+                        char_shape_id: attr_u32(e, b"charPrIDRef"),
+                        checkable: attr_bool(e, b"checkable").unwrap_or(false),
+                        format_string: String::new(),
+                    });
+                }
+            }
+            Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"paraHead" {
+                    let mut level = NumberingLevel {
+                        level: attr_u8(e, b"level").unwrap_or(1),
+                        start: attr_u16(e, b"start").unwrap_or(1),
+                        align: parse_halign(&attr_str(e, b"align").unwrap_or_default()),
+                        use_inst_width: attr_bool(e, b"useInstWidth").unwrap_or(false),
+                        auto_indent: attr_bool(e, b"autoIndent").unwrap_or(false),
+                        width_adjust: attr_i32(e, b"widthAdjust").unwrap_or(0),
+                        text_offset_type: parse_value_unit(&attr_str(e, b"textOffsetType").unwrap_or_default()),
+                        text_offset: attr_i32(e, b"textOffset").unwrap_or(0),
+                        num_format: parse_number_type2(&attr_str(e, b"numFormat").unwrap_or_default()),
+                        char_shape_id: attr_u32(e, b"charPrIDRef"),
+                        checkable: attr_bool(e, b"checkable").unwrap_or(false),
+                        format_string: String::new(),
+                    };
+
+                    // paraHead의 텍스트 내용 읽기
+                    let mut tbuf = Vec::new();
+                    loop {
+                        match reader.read_event_into(&mut tbuf)? {
+                            Event::Text(ref t) => {
+                                level.format_string = t.unescape().unwrap_or_default().to_string();
+                            }
+                            Event::End(ref end) => {
+                                if local_name(end.name().as_ref()) == b"paraHead" {
+                                    break;
+                                }
+                            }
+                            Event::Eof => break,
+                            _ => {}
+                        }
+                        tbuf.clear();
+                    }
+
+                    num.levels.push(level);
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"numbering" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(num)
+}
+
+// ── bullets ──
+
+fn parse_bullets(reader: &mut Reader<&[u8]>) -> Result<Vec<Bullet>, HwpxError> {
+    let mut bullets = Vec::new();
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"bullet" {
+                    bullets.push(parse_bullet(e, reader)?);
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"bullets" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(bullets)
+}
+
+fn parse_bullet(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<Bullet, HwpxError> {
+    let char_str = attr_str(start, b"char").unwrap_or_default();
+    let checked_str = attr_str(start, b"checkedChar");
+
+    let mut bullet = Bullet {
+        id: attr_u16(start, b"id").unwrap_or(0),
+        bullet_char: char_str.chars().next().unwrap_or('\0'),
+        checked_char: checked_str.and_then(|s| s.chars().next()),
+        use_image: attr_bool(start, b"useImg").unwrap_or(false),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"paraHead" => {
+                        bullet.para_head = BulletParaHead {
+                            level: attr_u8(e, b"level").unwrap_or(0),
+                            align: parse_halign(&attr_str(e, b"align").unwrap_or_default()),
+                            use_inst_width: attr_bool(e, b"useInstWidth").unwrap_or(false),
+                            auto_indent: attr_bool(e, b"autoIndent").unwrap_or(false),
+                            width_adjust: attr_i32(e, b"widthAdjust").unwrap_or(0),
+                            text_offset_type: parse_value_unit(&attr_str(e, b"textOffsetType").unwrap_or_default()),
+                            text_offset: attr_i32(e, b"textOffset").unwrap_or(0),
+                            char_shape_id: attr_u32(e, b"charPrIDRef"),
+                        };
+                    }
+                    b"img" => {
+                        bullet.image = Some(BulletImage {
+                            binary_item_id: attr_str(e, b"binaryItemIDRef").unwrap_or_default(),
+                            bright: attr_i8(e, b"bright").unwrap_or(0),
+                            contrast: attr_i8(e, b"contrast").unwrap_or(0),
+                            effect: parse_image_effect(&attr_str(e, b"effect").unwrap_or_default()),
+                        });
+                    }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"bullet" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(bullet)
+}
+
+// ── paraProperties ──
+
+fn parse_para_properties(reader: &mut Reader<&[u8]>) -> Result<Vec<ParaShape>, HwpxError> {
+    let mut shapes = Vec::new();
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"paraPr" {
+                    shapes.push(parse_para_shape(e, reader)?);
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"paraProperties" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(shapes)
+}
+
+fn parse_para_shape(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<ParaShape, HwpxError> {
+    let mut ps = ParaShape {
+        id: attr_u16(start, b"id").unwrap_or(0),
+        tab_def_id: attr_u16(start, b"tabPrIDRef"),
+        condense: attr_u8(start, b"condense").unwrap_or(0),
+        font_line_height: attr_bool(start, b"fontLineHeight").unwrap_or(false),
+        snap_to_grid: attr_bool(start, b"snapToGrid").unwrap_or(false),
+        suppress_line_numbers: attr_bool(start, b"suppressLineNumbers"),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"align" => {
+                        ps.align = ParagraphAlign {
+                            horizontal: parse_halign(&attr_str(e, b"horizontal").unwrap_or_default()),
+                            vertical: parse_valign(&attr_str(e, b"vertical").unwrap_or_default()),
+                        };
+                    }
+                    b"heading" => {
+                        ps.heading = Some(Heading {
+                            heading_type: parse_heading_type(&attr_str(e, b"type").unwrap_or_default()),
+                            id_ref: attr_u16(e, b"idRef").unwrap_or(0),
+                            level: attr_u8(e, b"level").unwrap_or(0),
+                        });
+                    }
+                    b"breakSetting" => {
+                        ps.break_setting = BreakSetting {
+                            break_latin_word: parse_break_latin_word(&attr_str(e, b"breakLatinWord").unwrap_or_default()),
+                            break_non_latin_word: parse_break_non_latin_word(&attr_str(e, b"breakNonLatinWord").unwrap_or_default()),
+                            widow_orphan: attr_bool(e, b"widowOrphan").unwrap_or(false),
+                            keep_with_next: attr_bool(e, b"keepWithNext").unwrap_or(false),
+                            keep_lines: attr_bool(e, b"keepLines").unwrap_or(false),
+                            page_break_before: attr_bool(e, b"pageBreakBefore").unwrap_or(false),
+                            line_wrap: parse_line_wrap(&attr_str(e, b"lineWrap").unwrap_or_default()),
+                        };
+                    }
+                    b"autoSpacing" => {
+                        ps.auto_spacing = AutoSpacing {
+                            east_asian_eng: attr_bool(e, b"eAsianEng").unwrap_or(false),
+                            east_asian_num: attr_bool(e, b"eAsianNum").unwrap_or(false),
+                        };
+                    }
+                    b"margin" => {
+                        ps.margin = parse_para_margin(reader)?;
+                    }
+                    b"intent" | b"left" | b"right" | b"prev" | b"next" => {
+                        // margin 하위 요소 — margin Start 이벤트 안에서 처리됨
+                    }
+                    b"lineSpacing" => {
+                        ps.line_spacing = LineSpacing {
+                            spacing_type: parse_line_spacing_type(&attr_str(e, b"type").unwrap_or_default()),
+                            value: attr_i32(e, b"value").unwrap_or(160) as i32,
+                            unit: parse_value_unit(&attr_str(e, b"unit").unwrap_or_default()),
+                        };
+                    }
+                    b"border" => {
+                        ps.border = Some(ParagraphBorder {
+                            border_fill_id: attr_u16(e, b"borderFillIDRef").unwrap_or(0),
+                            offset_left: attr_i32(e, b"offsetLeft").unwrap_or(0),
+                            offset_right: attr_i32(e, b"offsetRight").unwrap_or(0),
+                            offset_top: attr_i32(e, b"offsetTop").unwrap_or(0),
+                            offset_bottom: attr_i32(e, b"offsetBottom").unwrap_or(0),
+                            connect: attr_bool(e, b"connect").unwrap_or(false),
+                            ignore_margin: attr_bool(e, b"ignoreMargin").unwrap_or(false),
+                        });
+                    }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"paraPr" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(ps)
+}
+
+fn parse_para_margin(reader: &mut Reader<&[u8]>) -> Result<ParagraphMargin, HwpxError> {
+    let mut margin = ParagraphMargin::default();
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                let val = HwpValue {
+                    value: attr_i32(e, b"value").unwrap_or(0),
+                    unit: parse_value_unit(&attr_str(e, b"unit").unwrap_or_default()),
+                };
+                match local_name(e.name().as_ref()) {
+                    b"intent" => margin.indent = val,
+                    b"left" => margin.left = val,
+                    b"right" => margin.right = val,
+                    b"prev" => margin.prev = val,
+                    b"next" => margin.next = val,
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"margin" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(margin)
+}
+
+// ── styles ──
+
+fn parse_styles(reader: &mut Reader<&[u8]>) -> Result<Vec<Style>, HwpxError> {
+    let mut styles = Vec::new();
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"style" {
+                    styles.push(Style {
+                        id: attr_u16(e, b"id").unwrap_or(0),
+                        style_type: parse_style_type(&attr_str(e, b"type").unwrap_or_default()),
+                        name: attr_str(e, b"name").unwrap_or_default(),
+                        eng_name: attr_str(e, b"engName").unwrap_or_default(),
+                        para_shape_id: attr_u16(e, b"paraPrIDRef"),
+                        char_shape_id: attr_u16(e, b"charPrIDRef"),
+                        next_style_id: attr_u16(e, b"nextStyleIDRef"),
+                        lang_id: attr_u16(e, b"langID"),
+                        lock_form: attr_bool(e, b"lockForm"),
+                    });
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"styles" {
+                    break;
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    Ok(styles)
 }
 
 fn skip_to_end(reader: &mut Reader<&[u8]>, tag: &[u8]) -> Result<(), HwpxError> {
@@ -518,5 +1155,198 @@ fn parse_char_shadow_type(s: &str) -> CharShadowType {
         "DROP" => CharShadowType::Drop,
         "CONTINUOUS" => CharShadowType::Continuous,
         _ => CharShadowType::None,
+    }
+}
+
+fn parse_center_line_type(s: &str) -> CenterLineType {
+    match s {
+        "LEFT" => CenterLineType::Left,
+        "RIGHT" => CenterLineType::Right,
+        "BOTH" => CenterLineType::Both,
+        _ => CenterLineType::None,
+    }
+}
+
+fn parse_slash_type(s: &str) -> SlashType {
+    match s {
+        "CENTER" => SlashType::Center,
+        "CENTER_BELOW" => SlashType::CenterBelow,
+        "CENTER_ABOVE" => SlashType::CenterAbove,
+        "ALL" => SlashType::All,
+        _ => SlashType::None,
+    }
+}
+
+fn parse_hatch_style(s: &str) -> HatchStyle {
+    match s {
+        "VERTICAL" => HatchStyle::Vertical,
+        "BACK_SLASH" => HatchStyle::BackSlash,
+        "SLASH" => HatchStyle::Slash,
+        "CROSS" => HatchStyle::Cross,
+        "CROSS_DIAGONAL" => HatchStyle::CrossDiagonal,
+        _ => HatchStyle::Horizontal,
+    }
+}
+
+fn parse_gradation_type(s: &str) -> GradationType {
+    match s {
+        "RADIAL" => GradationType::Radial,
+        "CONICAL" => GradationType::Conical,
+        "SQUARE" => GradationType::Square,
+        _ => GradationType::Linear,
+    }
+}
+
+fn parse_image_brush_mode(s: &str) -> ImageBrushMode {
+    match s {
+        "TILE" => ImageBrushMode::Tile,
+        "TILE_HORZ_TOP" => ImageBrushMode::TileHorzTop,
+        "TILE_HORZ_BOTTOM" => ImageBrushMode::TileHorzBottom,
+        "TILE_VERT_LEFT" => ImageBrushMode::TileVertLeft,
+        "TILE_VERT_RIGHT" => ImageBrushMode::TileVertRight,
+        "CENTER" => ImageBrushMode::Center,
+        "CENTER_TOP" => ImageBrushMode::CenterTop,
+        "CENTER_BOTTOM" => ImageBrushMode::CenterBottom,
+        "LEFT_CENTER" => ImageBrushMode::LeftCenter,
+        "LEFT_TOP" => ImageBrushMode::LeftTop,
+        "LEFT_BOTTOM" => ImageBrushMode::LeftBottom,
+        "RIGHT_CENTER" => ImageBrushMode::RightCenter,
+        "RIGHT_TOP" => ImageBrushMode::RightTop,
+        "RIGHT_BOTTOM" => ImageBrushMode::RightBottom,
+        "ZOOM" => ImageBrushMode::Zoom,
+        _ => ImageBrushMode::Total,
+    }
+}
+
+fn parse_image_effect(s: &str) -> ImageEffect {
+    match s {
+        "GRAY_SCALE" => ImageEffect::GrayScale,
+        "BLACK_WHITE" => ImageEffect::BlackWhite,
+        _ => ImageEffect::RealPic,
+    }
+}
+
+fn parse_tab_type_res(s: &str) -> TabType {
+    match s {
+        "RIGHT" => TabType::Right,
+        "CENTER" => TabType::Center,
+        "DECIMAL" => TabType::Decimal,
+        _ => TabType::Left,
+    }
+}
+
+fn parse_line_type2_str(s: &str) -> LineType2 {
+    match s {
+        "SOLID" => LineType2::Solid,
+        "DOT" => LineType2::Dot,
+        "DASH" => LineType2::Dash,
+        "DASH_DOT" => LineType2::DashDot,
+        "DASH_DOT_DOT" => LineType2::DashDotDot,
+        "LONG_DASH" => LineType2::LongDash,
+        "CIRCLE" => LineType2::Circle,
+        "DOUBLE_SLIM" => LineType2::DoubleSlim,
+        "SLIM_THICK" => LineType2::SlimThick,
+        "THICK_SLIM" => LineType2::ThickSlim,
+        "SLIM_THICK_SLIM" => LineType2::SlimThickSlim,
+        _ => LineType2::None,
+    }
+}
+
+fn parse_halign(s: &str) -> HAlign {
+    match s {
+        "LEFT" => HAlign::Left,
+        "RIGHT" => HAlign::Right,
+        "CENTER" => HAlign::Center,
+        "DISTRIBUTE" => HAlign::Distribute,
+        "DISTRIBUTE_SPACE" => HAlign::DistributeSpace,
+        _ => HAlign::Justify,
+    }
+}
+
+fn parse_valign(s: &str) -> VAlign {
+    match s {
+        "CENTER" => VAlign::Center,
+        "BOTTOM" => VAlign::Bottom,
+        _ => VAlign::Baseline,
+    }
+}
+
+fn parse_heading_type(s: &str) -> HeadingType {
+    match s {
+        "OUTLINE" => HeadingType::Outline,
+        "NUMBER" => HeadingType::Number,
+        "BULLET" => HeadingType::Bullet,
+        _ => HeadingType::None,
+    }
+}
+
+fn parse_break_latin_word(s: &str) -> BreakLatinWord {
+    match s {
+        "HYPHENATION" => BreakLatinWord::Hyphenation,
+        "BREAK_WORD" => BreakLatinWord::BreakWord,
+        _ => BreakLatinWord::KeepWord,
+    }
+}
+
+fn parse_break_non_latin_word(s: &str) -> BreakNonLatinWord {
+    match s {
+        "BREAK_WORD" => BreakNonLatinWord::BreakWord,
+        _ => BreakNonLatinWord::KeepWord,
+    }
+}
+
+fn parse_line_wrap(s: &str) -> LineWrap {
+    match s {
+        "SQUEEZE" => LineWrap::Squeeze,
+        "KEEP" => LineWrap::Keep,
+        _ => LineWrap::Break,
+    }
+}
+
+fn parse_line_spacing_type(s: &str) -> LineSpacingType {
+    match s {
+        "FIXED" => LineSpacingType::Fixed,
+        "AT_LEAST" => LineSpacingType::AtLeast,
+        "BETWEEN" | "BETWEEN_LINES" => LineSpacingType::Between,
+        _ => LineSpacingType::Percent,
+    }
+}
+
+fn parse_value_unit(s: &str) -> ValueUnit {
+    match s {
+        "CHAR" => ValueUnit::Char,
+        "PERCENT" => ValueUnit::HwpUnit, // PERCENT은 별도 처리 불필요
+        _ => ValueUnit::HwpUnit,
+    }
+}
+
+fn parse_style_type(s: &str) -> StyleType {
+    match s {
+        "CHAR" => StyleType::Char,
+        _ => StyleType::Para,
+    }
+}
+
+fn parse_number_type2(s: &str) -> NumberType2 {
+    match s {
+        "CIRCLED_DIGIT" => NumberType2::CircledDigit,
+        "ROMAN_CAPITAL" => NumberType2::RomanCapital,
+        "ROMAN_SMALL" => NumberType2::RomanSmall,
+        "LATIN_CAPITAL" => NumberType2::LatinCapital,
+        "LATIN_SMALL" => NumberType2::LatinSmall,
+        "CIRCLED_LATIN_CAPITAL" => NumberType2::CircledLatinCapital,
+        "CIRCLED_LATIN_SMALL" => NumberType2::CircledLatinSmall,
+        "HANGUL_SYLLABLE" => NumberType2::HangulSyllable,
+        "CIRCLED_HANGUL_SYLLABLE" => NumberType2::CircledHangulSyllable,
+        "HANGUL_JAMO" => NumberType2::HangulJamo,
+        "CIRCLED_HANGUL_JAMO" => NumberType2::CircledHangulJamo,
+        "HANGUL_PHONETIC" => NumberType2::HangulPhonetic,
+        "IDEOGRAPH" => NumberType2::Ideograph,
+        "CIRCLED_IDEOGRAPH" => NumberType2::CircledIdeograph,
+        "DECAGON_CIRCLE" => NumberType2::DecagonCircle,
+        "DECAGON_CIRCLE_HANJA" => NumberType2::DecagonCircleHanja,
+        "SYMBOL" => NumberType2::Symbol,
+        "USER_CHAR" => NumberType2::UserChar,
+        _ => NumberType2::Digit,
     }
 }
