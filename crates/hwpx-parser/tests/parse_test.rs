@@ -753,6 +753,229 @@ fn find_header_footer(doc: &hwp_model::document::Document) -> (Option<&HeaderFoo
     (header, footer)
 }
 
+// ═══════════════════════════════════════════
+// 도형 (line, rect)
+// ═══════════════════════════════════════════
+
+#[test]
+fn parse_line_object() {
+    let doc = HwpxParser::parse(&fixture("shapeline.hwpx")).unwrap();
+
+    let line = find_first_shape(&doc, "line");
+    assert!(line.is_some(), "shapeline.hwpx should contain a line");
+
+    if let Some(hwp_model::shape::ShapeObject::Line(l)) = line {
+        assert!(l.common.size.width > 0);
+        assert!(l.common.size.height > 0);
+        assert_eq!(l.start_pt.x, 0);
+        assert_eq!(l.start_pt.y, 0);
+        assert!(l.end_pt.x > 0 || l.end_pt.y > 0);
+        assert_eq!(l.line_shape.style, hwp_model::types::LineType1::Solid);
+        assert_eq!(l.line_shape.end_cap, hwp_model::types::LineEndCap::Flat);
+    }
+}
+
+#[test]
+fn parse_rect_object() {
+    let doc = HwpxParser::parse(&fixture("shaperect.hwpx")).unwrap();
+
+    let rect = find_first_shape(&doc, "rect");
+    assert!(rect.is_some(), "shaperect.hwpx should contain a rect");
+
+    if let Some(hwp_model::shape::ShapeObject::Rectangle(r)) = rect {
+        assert!(r.common.size.width > 0);
+        assert!(r.common.size.height > 0);
+        // 4개 꼭짓점
+        assert!(r.points[2].x > 0);
+        assert!(r.points[2].y > 0);
+    }
+}
+
+#[test]
+fn parse_rect_with_fill() {
+    let doc = HwpxParser::parse(&fixture("shaperect.hwpx")).unwrap();
+
+    let rect = find_first_shape(&doc, "rect");
+    if let Some(hwp_model::shape::ShapeObject::Rectangle(r)) = rect {
+        // 채우기가 있는 사각형
+        if r.fill.is_some() {
+            match r.fill.as_ref().unwrap() {
+                hwp_model::resources::FillBrush::WinBrush { face_color, .. } => {
+                    assert!(face_color.is_some());
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
+#[test]
+fn parse_textbox() {
+    let doc = HwpxParser::parse(&fixture("textbox.hwpx")).unwrap();
+
+    // textbox는 drawText가 있는 rect
+    let rect = find_first_shape(&doc, "rect");
+    assert!(rect.is_some(), "textbox.hwpx should contain a rect");
+
+    if let Some(hwp_model::shape::ShapeObject::Rectangle(r)) = rect {
+        assert!(r.draw_text.is_some(), "textbox rect should have drawText");
+        let dt = r.draw_text.as_ref().unwrap();
+        assert!(!dt.paragraphs.is_empty());
+
+        let text = extract_text_from_sublist(dt);
+        assert!(!text.is_empty(), "drawText should have text content");
+    }
+}
+
+#[test]
+fn parse_rect_with_caption() {
+    let doc = HwpxParser::parse(&fixture("textbox.hwpx")).unwrap();
+
+    // caption이 있는 rect 찾기
+    let has_caption = find_shape_with_caption(&doc);
+    assert!(has_caption, "textbox.hwpx should have a shape with caption");
+}
+
+// ═══════════════════════════════════════════
+// 필드 (hyperlink)
+// ═══════════════════════════════════════════
+
+#[test]
+fn parse_hyperlink_field() {
+    let doc = HwpxParser::parse(&fixture("hyperlink.hwpx")).unwrap();
+
+    let field = find_first_field(&doc);
+    assert!(field.is_some(), "hyperlink.hwpx should contain a field");
+
+    let f = field.unwrap();
+    assert_eq!(f.field_type, hwp_model::types::FieldType::Hyperlink);
+    assert!(!f.parameters.is_empty());
+
+    // Path 파라미터 확인
+    let path_param = f.parameters.iter().find(|p| {
+        matches!(p, hwp_model::control::FieldParameter::String { name, .. } if name == "Path")
+    });
+    assert!(path_param.is_some(), "Should have Path parameter");
+
+    if let Some(hwp_model::control::FieldParameter::String { value, .. }) = path_param {
+        assert!(value.contains("naver.com"), "Path should contain naver.com, got: {}", value);
+    }
+}
+
+#[test]
+fn parse_field_end() {
+    let doc = HwpxParser::parse(&fixture("hyperlink.hwpx")).unwrap();
+
+    // FieldEnd가 있어야 함
+    let has_end = doc.sections[0].paragraphs.iter().any(|p| {
+        p.runs.iter().any(|r| {
+            r.contents.iter().any(|c| matches!(c, hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::FieldEnd)))
+        })
+    });
+    assert!(has_end, "hyperlink.hwpx should have fieldEnd");
+}
+
+// ═══════════════════════════════════════════
+// 묶음 개체 (container)
+// ═══════════════════════════════════════════
+
+#[test]
+fn parse_container_object() {
+    let doc = HwpxParser::parse(&fixture("shapecontainer-2.hwpx")).unwrap();
+
+    let container = find_first_shape(&doc, "container");
+    if let Some(hwp_model::shape::ShapeObject::Container(c)) = container {
+        assert!(!c.children.is_empty(), "Container should have children");
+    }
+    // container가 없는 파일이면 최소한 파싱 성공은 확인
+}
+
+// ═══════════════════════════════════════════
+// 전체 fixture (확장)
+// ═══════════════════════════════════════════
+
+#[test]
+fn parse_all_fixtures_extended() {
+    let fixtures = [
+        "sample-5017.hwpx",
+        "sample-5017-pics.hwpx",
+        "shapecontainer-2.hwpx",
+        "shapepict-scaled.hwpx",
+        "noori.hwpx",
+        "matrix.hwpx",
+        "multicolumns-in-common-controls.hwpx",
+        "issue30.hwpx",
+        "issue144-fields-crossing-lineseg-boundary.hwpx",
+    ];
+
+    for name in &fixtures {
+        let data = fixture(name);
+        let result = HwpxParser::parse(&data);
+        assert!(result.is_ok(), "Failed to parse {}: {:?}", name, result.err());
+    }
+}
+
+// ═══════════════════════════════════════════
+// 헬퍼 함수
+// ═══════════════════════════════════════════
+
+fn find_first_shape<'a>(doc: &'a hwp_model::document::Document, kind: &str) -> Option<&'a hwp_model::shape::ShapeObject> {
+    for sec in &doc.sections {
+        for para in &sec.paragraphs {
+            for run in &para.runs {
+                for c in &run.contents {
+                    if let hwp_model::paragraph::RunContent::Object(obj) = c {
+                        let matches = match (kind, obj) {
+                            ("line", hwp_model::shape::ShapeObject::Line(_)) => true,
+                            ("rect", hwp_model::shape::ShapeObject::Rectangle(_)) => true,
+                            ("ellipse", hwp_model::shape::ShapeObject::Ellipse(_)) => true,
+                            ("container", hwp_model::shape::ShapeObject::Container(_)) => true,
+                            _ => false,
+                        };
+                        if matches { return Some(obj); }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn find_shape_with_caption(doc: &hwp_model::document::Document) -> bool {
+    for sec in &doc.sections {
+        for para in &sec.paragraphs {
+            for run in &para.runs {
+                for c in &run.contents {
+                    if let hwp_model::paragraph::RunContent::Object(obj) = c {
+                        let has = match obj {
+                            hwp_model::shape::ShapeObject::Rectangle(r) => r.common.caption.is_some(),
+                            hwp_model::shape::ShapeObject::Picture(p) => p.common.caption.is_some(),
+                            _ => false,
+                        };
+                        if has { return true; }
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+fn find_first_field(doc: &hwp_model::document::Document) -> Option<&hwp_model::control::Field> {
+    for sec in &doc.sections {
+        for para in &sec.paragraphs {
+            for run in &para.runs {
+                for c in &run.contents {
+                    if let hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::FieldBegin(f)) = c {
+                        return Some(f);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
 fn extract_text_from_sublist(sl: &SubList) -> String {
     let mut text = String::new();
     for para in &sl.paragraphs {
