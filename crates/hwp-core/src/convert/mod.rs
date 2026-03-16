@@ -6,7 +6,9 @@
 //! HWP/HWPX 양쪽에서 동일한 viewer를 사용할 수 있게 한다.
 
 use crate::document::HwpDocument;
-use hwp_model::document::{BinaryItem, BinaryStore, Document, DocumentMeta, DocumentSettings, ImageFormat};
+use hwp_model::document::{
+    BinaryItem, BinaryStore, Document, DocumentMeta, DocumentSettings, ImageFormat,
+};
 
 mod resources;
 mod section;
@@ -48,49 +50,23 @@ fn convert_meta(hwp: &HwpDocument) -> DocumentMeta {
 }
 
 fn convert_settings(hwp: &HwpDocument) -> DocumentSettings {
-    let props = &hwp.doc_info.document_properties;
-    DocumentSettings {
-        page_start: props.page_start_number,
-        footnote_start: props.footnote_start_number,
-        endnote_start: props.endnote_start_number,
-        picture_start: props.image_start_number,
-        table_start: props.table_start_number,
-        equation_start: props.formula_start_number,
+    match &hwp.doc_info.document_properties {
+        Some(props) => DocumentSettings {
+            page_start: props.page_start_number,
+            footnote_start: props.footnote_start_number,
+            endnote_start: props.endnote_start_number,
+            picture_start: props.image_start_number,
+            table_start: props.table_start_number,
+            equation_start: props.formula_start_number,
+        },
+        None => DocumentSettings::default(),
     }
 }
 
-fn convert_binaries(hwp: &HwpDocument) -> BinaryStore {
-    let mut store = BinaryStore::default();
-
-    for (path, data) in &hwp.bin_data.entries {
-        let format = if path.ends_with(".png") || path.ends_with(".PNG") {
-            ImageFormat::Png
-        } else if path.ends_with(".jpg") || path.ends_with(".jpeg") || path.ends_with(".JPG") {
-            ImageFormat::Jpg
-        } else if path.ends_with(".gif") || path.ends_with(".GIF") {
-            ImageFormat::Gif
-        } else if path.ends_with(".bmp") || path.ends_with(".BMP") {
-            ImageFormat::Bmp
-        } else if path.ends_with(".wmf") || path.ends_with(".WMF") {
-            ImageFormat::Wmf
-        } else if path.ends_with(".emf") || path.ends_with(".EMF") {
-            ImageFormat::Emf
-        } else {
-            ImageFormat::Unknown(
-                path.rsplit('.')
-                    .next()
-                    .unwrap_or("")
-                    .to_lowercase(),
-            )
-        };
-
-        store.items.push(BinaryItem {
-            id: path.clone(),
-            src: path.clone(),
-            format,
-            data: data.clone(),
-        });
-    }
-
-    store
+fn convert_binaries(_hwp: &HwpDocument) -> BinaryStore {
+    // HWP 5.0의 BinData는 CFB 스토리지 내 별도 스트림으로 저장되어 있고,
+    // HwpDocument.bin_data.items에는 경로/인덱스 정보만 있음.
+    // 실제 바이너리 데이터는 파싱 시점에 이미 추출되어 있어야 함.
+    // TODO: HwpParser에서 bin_data 바이트를 Document로 전달하는 경로 추가
+    BinaryStore::default()
 }

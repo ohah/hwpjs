@@ -1,6 +1,7 @@
 //! DocInfo → hwp_model Resources 변환
 
 use crate::document::docinfo;
+use crate::document::docinfo::para_shape;
 
 pub fn convert_resources(doc_info: &docinfo::DocInfo) -> hwp_model::resources::Resources {
     hwp_model::resources::Resources {
@@ -29,11 +30,14 @@ fn convert_fonts(face_names: &[docinfo::FaceName]) -> hwp_model::resources::Font
             font_type: FontType::Ttf,
             is_embedded: false,
             binary_item_id: None,
-            subst_font: fn_info.alternative_font_name.as_ref().map(|name| SubstFont {
-                face: name.clone(),
-                font_type: FontType::Ttf,
-                is_embedded: false,
-            }),
+            subst_font: fn_info
+                .alternative_font_name
+                .as_ref()
+                .map(|name| SubstFont {
+                    face: name.clone(),
+                    font_type: FontType::Ttf,
+                    is_embedded: false,
+                }),
             type_info: fn_info.font_type_info.as_ref().map(|ti| FontTypeInfo {
                 family_type: match ti.font_family {
                     1 => FontCategory::Myungjo,
@@ -68,242 +72,259 @@ fn convert_fonts(face_names: &[docinfo::FaceName]) -> hwp_model::resources::Font
     fonts
 }
 
-fn convert_char_shapes(
-    shapes: &[docinfo::CharShape],
-) -> Vec<hwp_model::resources::CharShape> {
+fn convert_char_shapes(shapes: &[docinfo::CharShape]) -> Vec<hwp_model::resources::CharShape> {
     use hwp_model::resources::{CharShadow, Strikeout, Underline};
     use hwp_model::types::*;
 
     shapes
         .iter()
         .enumerate()
-        .map(|(i, cs)| hwp_model::resources::CharShape {
-            id: i as u16,
-            height: cs.base_size as i32,
-            text_color: Some(colorref_to_rgb(cs.text_color)),
-            shade_color: if cs.shading_color == 0xFFFFFFFF {
-                None
-            } else {
-                Some(colorref_to_rgb(cs.shading_color))
-            },
-            use_font_space: cs.use_font_spacing,
-            use_kerning: cs.kerning,
-            sym_mark: match cs.emphasis_mark {
-                1 => SymMark::DotAbove,
-                2 => SymMark::RingAbove,
-                3 => SymMark::Tilde,
-                _ => SymMark::None,
-            },
-            border_fill_id: cs.border_fill_id,
-            font_ref: LangGroup {
-                hangul: cs.font_ids.korean,
-                latin: cs.font_ids.english,
-                hanja: cs.font_ids.chinese,
-                japanese: cs.font_ids.japanese,
-                other: cs.font_ids.other,
-                symbol: cs.font_ids.symbol,
-                user: cs.font_ids.user,
-            },
-            ratio: LangGroup {
-                hangul: cs.font_scale.korean,
-                latin: cs.font_scale.english,
-                hanja: cs.font_scale.chinese,
-                japanese: cs.font_scale.japanese,
-                other: cs.font_scale.other,
-                symbol: cs.font_scale.symbol,
-                user: cs.font_scale.user,
-            },
-            spacing: LangGroup {
-                hangul: cs.font_spacing.korean,
-                latin: cs.font_spacing.english,
-                hanja: cs.font_spacing.chinese,
-                japanese: cs.font_spacing.japanese,
-                other: cs.font_spacing.other,
-                symbol: cs.font_spacing.symbol,
-                user: cs.font_spacing.user,
-            },
-            rel_size: LangGroup {
-                hangul: cs.font_relative_size.korean,
-                latin: cs.font_relative_size.english,
-                hanja: cs.font_relative_size.chinese,
-                japanese: cs.font_relative_size.japanese,
-                other: cs.font_relative_size.other,
-                symbol: cs.font_relative_size.symbol,
-                user: cs.font_relative_size.user,
-            },
-            offset: LangGroup {
-                hangul: cs.font_position.korean,
-                latin: cs.font_position.english,
-                hanja: cs.font_position.chinese,
-                japanese: cs.font_position.japanese,
-                other: cs.font_position.other,
-                symbol: cs.font_position.symbol,
-                user: cs.font_position.user,
-            },
-            bold: cs.bold,
-            italic: cs.italic,
-            underline: if cs.underline_type != 0 {
-                Some(Underline {
-                    underline_type: match cs.underline_type {
-                        2 => UnderlineType::Center,
-                        3 => UnderlineType::Top,
-                        _ => UnderlineType::Bottom,
-                    },
-                    shape: convert_line_type3(cs.underline_style),
-                    color: Some(colorref_to_rgb(cs.underline_color)),
-                })
-            } else {
-                None
-            },
-            strikeout: if cs.strikethrough != 0 {
-                Some(Strikeout {
-                    shape: convert_line_type3(cs.strikethrough_style),
-                    color: cs.strikethrough_color.map(colorref_to_rgb),
-                })
-            } else {
-                None
-            },
-            outline: if cs.outline_type != 0 {
-                Some(match cs.outline_type {
-                    1 => OutlineType::Solid,
-                    2 => OutlineType::Dot,
-                    3 => OutlineType::Thick,
-                    4 => OutlineType::Dash,
-                    5 => OutlineType::DashDot,
-                    6 => OutlineType::DashDotDot,
-                    _ => OutlineType::None,
-                })
-            } else {
-                None
-            },
-            shadow: if cs.shadow_type != 0 {
-                Some(CharShadow {
-                    shadow_type: match cs.shadow_type {
-                        1 => CharShadowType::Drop,
-                        2 => CharShadowType::Continuous,
-                        _ => CharShadowType::None,
-                    },
-                    color: Some(colorref_to_rgb(cs.shadow_color)),
-                    offset_x: cs.shadow_spacing_x,
-                    offset_y: cs.shadow_spacing_y,
-                })
-            } else {
-                None
-            },
-            emboss: cs.emboss,
-            engrave: cs.engrave,
-            superscript: cs.superscript,
-            subscript: cs.subscript,
+        .map(|(i, cs)| {
+            let a = &cs.attributes;
+            hwp_model::resources::CharShape {
+                id: i as u16,
+                height: cs.base_size,
+                text_color: Some(colorref_to_rgb(cs.text_color.0)),
+                shade_color: if cs.shading_color.0 == 0xFFFFFFFF {
+                    None
+                } else {
+                    Some(colorref_to_rgb(cs.shading_color.0))
+                },
+                use_font_space: a.use_font_spacing,
+                use_kerning: a.kerning,
+                sym_mark: match a.emphasis_mark {
+                    1 => SymMark::DotAbove,
+                    2 => SymMark::RingAbove,
+                    3 => SymMark::Tilde,
+                    _ => SymMark::None,
+                },
+                border_fill_id: cs.border_fill_id,
+                font_ref: LangGroup {
+                    hangul: cs.font_ids.korean,
+                    latin: cs.font_ids.english,
+                    hanja: cs.font_ids.chinese,
+                    japanese: cs.font_ids.japanese,
+                    other: cs.font_ids.other,
+                    symbol: cs.font_ids.symbol,
+                    user: cs.font_ids.user,
+                },
+                ratio: LangGroup {
+                    hangul: cs.font_stretch.korean,
+                    latin: cs.font_stretch.english,
+                    hanja: cs.font_stretch.chinese,
+                    japanese: cs.font_stretch.japanese,
+                    other: cs.font_stretch.other,
+                    symbol: cs.font_stretch.symbol,
+                    user: cs.font_stretch.user,
+                },
+                spacing: LangGroup {
+                    hangul: cs.letter_spacing.korean,
+                    latin: cs.letter_spacing.english,
+                    hanja: cs.letter_spacing.chinese,
+                    japanese: cs.letter_spacing.japanese,
+                    other: cs.letter_spacing.other,
+                    symbol: cs.letter_spacing.symbol,
+                    user: cs.letter_spacing.user,
+                },
+                rel_size: LangGroup {
+                    hangul: cs.relative_size.korean,
+                    latin: cs.relative_size.english,
+                    hanja: cs.relative_size.chinese,
+                    japanese: cs.relative_size.japanese,
+                    other: cs.relative_size.other,
+                    symbol: cs.relative_size.symbol,
+                    user: cs.relative_size.user,
+                },
+                offset: LangGroup {
+                    hangul: cs.text_position.korean,
+                    latin: cs.text_position.english,
+                    hanja: cs.text_position.chinese,
+                    japanese: cs.text_position.japanese,
+                    other: cs.text_position.other,
+                    symbol: cs.text_position.symbol,
+                    user: cs.text_position.user,
+                },
+                bold: a.bold,
+                italic: a.italic,
+                underline: if a.underline_type != 0 {
+                    Some(Underline {
+                        underline_type: match a.underline_type {
+                            2 => UnderlineType::Center,
+                            3 => UnderlineType::Top,
+                            _ => UnderlineType::Bottom,
+                        },
+                        shape: convert_line_type3(a.underline_style),
+                        color: Some(colorref_to_rgb(cs.underline_color.0)),
+                    })
+                } else {
+                    None
+                },
+                strikeout: if a.strikethrough != 0 {
+                    Some(Strikeout {
+                        shape: convert_line_type3(a.strikethrough_style),
+                        color: cs.strikethrough_color.map(|c| colorref_to_rgb(c.0)),
+                    })
+                } else {
+                    None
+                },
+                outline: if a.outline_type != 0 {
+                    Some(match a.outline_type {
+                        1 => OutlineType::Solid,
+                        2 => OutlineType::Dot,
+                        3 => OutlineType::Thick,
+                        4 => OutlineType::Dash,
+                        5 => OutlineType::DashDot,
+                        6 => OutlineType::DashDotDot,
+                        _ => OutlineType::None,
+                    })
+                } else {
+                    None
+                },
+                shadow: if a.shadow_type != 0 {
+                    Some(CharShadow {
+                        shadow_type: match a.shadow_type {
+                            1 => CharShadowType::Drop,
+                            2 => CharShadowType::Continuous,
+                            _ => CharShadowType::None,
+                        },
+                        color: Some(colorref_to_rgb(cs.shadow_color.0)),
+                        offset_x: cs.shadow_spacing_x,
+                        offset_y: cs.shadow_spacing_y,
+                    })
+                } else {
+                    None
+                },
+                emboss: a.emboss,
+                engrave: a.engrave,
+                superscript: a.superscript,
+                subscript: a.subscript,
+            }
         })
         .collect()
 }
 
-fn convert_para_shapes(
-    shapes: &[docinfo::ParaShape],
-) -> Vec<hwp_model::resources::ParaShape> {
+fn convert_para_shapes(shapes: &[docinfo::ParaShape]) -> Vec<hwp_model::resources::ParaShape> {
     use hwp_model::resources::*;
     use hwp_model::types::*;
 
     shapes
         .iter()
         .enumerate()
-        .map(|(i, ps)| hwp_model::resources::ParaShape {
-            id: i as u16,
-            tab_def_id: Some(ps.tab_def_id),
-            condense: ps.blank_min_value,
-            font_line_height: ps.line_height_matches_font,
-            snap_to_grid: ps.use_line_grid,
-            suppress_line_numbers: None,
-            text_dir: None,
-            align: ParagraphAlign {
-                horizontal: match ps.alignment {
-                    0 => HAlign::Justify,
-                    1 => HAlign::Left,
-                    2 => HAlign::Right,
-                    3 => HAlign::Center,
-                    4 => HAlign::Distribute,
-                    5 => HAlign::DistributeSpace,
-                    _ => HAlign::Justify,
+        .map(|(i, ps)| {
+            let a1 = &ps.attributes1;
+            let a2 = ps.attributes2.as_ref();
+            let a3 = ps.attributes3.as_ref();
+
+            let line_spacing_type = a3
+                .map(|a| match a.line_spacing_type {
+                    para_shape::LineSpacingType::ByCharacter => LineSpacingType::Percent,
+                    para_shape::LineSpacingType::Fixed => LineSpacingType::Fixed,
+                    para_shape::LineSpacingType::MarginOnly => LineSpacingType::Between,
+                    para_shape::LineSpacingType::Minimum => LineSpacingType::AtLeast,
+                })
+                .unwrap_or(LineSpacingType::Percent);
+
+            let line_spacing_value = ps.line_spacing.unwrap_or(ps.line_spacing_old);
+
+            hwp_model::resources::ParaShape {
+                id: i as u16,
+                tab_def_id: Some(ps.tab_def_id),
+                condense: a1.blank_min_value,
+                font_line_height: a1.line_height_matches_font,
+                snap_to_grid: a1.use_line_grid,
+                suppress_line_numbers: None,
+                text_dir: None,
+                align: ParagraphAlign {
+                    horizontal: match a1.align {
+                        para_shape::ParagraphAlignment::Justify => HAlign::Justify,
+                        para_shape::ParagraphAlignment::Left => HAlign::Left,
+                        para_shape::ParagraphAlignment::Right => HAlign::Right,
+                        para_shape::ParagraphAlignment::Center => HAlign::Center,
+                        para_shape::ParagraphAlignment::Distribute => HAlign::Distribute,
+                        para_shape::ParagraphAlignment::Divide => HAlign::DistributeSpace,
+                    },
+                    vertical: match a1.vertical_align {
+                        para_shape::VerticalAlignment::Baseline => VAlign::Baseline,
+                        para_shape::VerticalAlignment::Top => VAlign::Top,
+                        para_shape::VerticalAlignment::Center => VAlign::Center,
+                        para_shape::VerticalAlignment::Bottom => VAlign::Bottom,
+                    },
                 },
-                vertical: match ps.vertical_alignment {
-                    1 => VAlign::Top,
-                    2 => VAlign::Center,
-                    3 => VAlign::Bottom,
-                    _ => VAlign::Baseline,
+                heading: Some(Heading {
+                    heading_type: match a1.header_shape_type {
+                        para_shape::HeaderShapeType::None => HeadingType::None,
+                        para_shape::HeaderShapeType::Outline => HeadingType::Outline,
+                        para_shape::HeaderShapeType::Number => HeadingType::Number,
+                        para_shape::HeaderShapeType::Bullet => HeadingType::Bullet,
+                    },
+                    id_ref: ps.number_bullet_id,
+                    level: a1.paragraph_level,
+                }),
+                break_setting: BreakSetting {
+                    break_latin_word: match a1.line_divide_en {
+                        para_shape::LineDivideUnit::Word => BreakLatinWord::KeepWord,
+                        para_shape::LineDivideUnit::Hyphen => BreakLatinWord::Hyphenation,
+                        para_shape::LineDivideUnit::Character => BreakLatinWord::BreakWord,
+                    },
+                    break_non_latin_word: match a1.line_divide_ko {
+                        para_shape::LineDivideUnit::Character => BreakNonLatinWord::BreakWord,
+                        _ => BreakNonLatinWord::KeepWord,
+                    },
+                    widow_orphan: a1.protect_orphan_line,
+                    keep_with_next: a1.with_next_paragraph,
+                    keep_lines: a1.protect_paragraph,
+                    page_break_before: a1.always_page_break_before,
+                    line_wrap: a2
+                        .map(|a| match a.single_line_input {
+                            1 => LineWrap::Squeeze,
+                            2 => LineWrap::Keep,
+                            _ => LineWrap::Break,
+                        })
+                        .unwrap_or(LineWrap::Break),
                 },
-            },
-            heading: Some(Heading {
-                heading_type: match ps.header_shape_type {
-                    docinfo::HeaderShapeType::None => HeadingType::None,
-                    docinfo::HeaderShapeType::Outline => HeadingType::Outline,
-                    docinfo::HeaderShapeType::Number => HeadingType::Number,
-                    docinfo::HeaderShapeType::Bullet => HeadingType::Bullet,
+                auto_spacing: a2
+                    .map(|a| AutoSpacing {
+                        east_asian_eng: a.auto_spacing_ko_en,
+                        east_asian_num: a.auto_spacing_ko_num,
+                    })
+                    .unwrap_or_default(),
+                margin: ParagraphMargin {
+                    indent: HwpValue {
+                        value: ps.indent,
+                        unit: ValueUnit::HwpUnit,
+                    },
+                    left: HwpValue {
+                        value: ps.left_margin,
+                        unit: ValueUnit::HwpUnit,
+                    },
+                    right: HwpValue {
+                        value: ps.right_margin,
+                        unit: ValueUnit::HwpUnit,
+                    },
+                    prev: HwpValue {
+                        value: ps.top_spacing,
+                        unit: ValueUnit::HwpUnit,
+                    },
+                    next: HwpValue {
+                        value: ps.bottom_spacing,
+                        unit: ValueUnit::HwpUnit,
+                    },
                 },
-                id_ref: ps.numbering_bullet_id,
-                level: ps.paragraph_level,
-            }),
-            break_setting: BreakSetting {
-                break_latin_word: if ps.line_divide_english == 0 {
-                    BreakLatinWord::KeepWord
-                } else {
-                    BreakLatinWord::BreakWord
-                },
-                break_non_latin_word: if ps.line_divide_korean {
-                    BreakNonLatinWord::BreakWord
-                } else {
-                    BreakNonLatinWord::KeepWord
-                },
-                widow_orphan: ps.protect_orphan_line,
-                keep_with_next: ps.with_next_paragraph,
-                keep_lines: ps.protect_paragraph,
-                page_break_before: ps.always_page_break_before,
-                line_wrap: LineWrap::Break,
-            },
-            auto_spacing: AutoSpacing {
-                east_asian_eng: ps.auto_spacing_ko_en,
-                east_asian_num: ps.auto_spacing_ko_num,
-            },
-            margin: ParagraphMargin {
-                indent: HwpValue {
-                    value: ps.indent,
+                line_spacing: LineSpacing {
+                    spacing_type: line_spacing_type,
+                    value: line_spacing_value,
                     unit: ValueUnit::HwpUnit,
                 },
-                left: HwpValue {
-                    value: ps.left_margin,
-                    unit: ValueUnit::HwpUnit,
-                },
-                right: HwpValue {
-                    value: ps.right_margin,
-                    unit: ValueUnit::HwpUnit,
-                },
-                prev: HwpValue {
-                    value: ps.top_margin,
-                    unit: ValueUnit::HwpUnit,
-                },
-                next: HwpValue {
-                    value: ps.bottom_margin,
-                    unit: ValueUnit::HwpUnit,
-                },
-            },
-            line_spacing: LineSpacing {
-                spacing_type: match ps.line_spacing_type {
-                    1 => LineSpacingType::Fixed,
-                    2 => LineSpacingType::Between,
-                    3 => LineSpacingType::AtLeast,
-                    _ => LineSpacingType::Percent,
-                },
-                value: ps.line_spacing,
-                unit: ValueUnit::HwpUnit,
-            },
-            border: Some(ParagraphBorder {
-                border_fill_id: ps.border_fill_id,
-                offset_left: ps.border_spacing_left as i32,
-                offset_right: ps.border_spacing_right as i32,
-                offset_top: ps.border_spacing_top as i32,
-                offset_bottom: ps.border_spacing_bottom as i32,
-                connect: ps.connect_border,
-                ignore_margin: ps.ignore_margin,
-            }),
+                border: Some(ParagraphBorder {
+                    border_fill_id: ps.border_fill_id,
+                    offset_left: ps.border_spacing_left as i32,
+                    offset_right: ps.border_spacing_right as i32,
+                    offset_top: ps.border_spacing_top as i32,
+                    offset_bottom: ps.border_spacing_bottom as i32,
+                    connect: a1.connect_border,
+                    ignore_margin: a1.ignore_margin,
+                }),
+            }
         })
         .collect()
 }
@@ -313,18 +334,20 @@ fn convert_tab_defs(tabs: &[docinfo::TabDef]) -> Vec<hwp_model::resources::TabDe
         .enumerate()
         .map(|(i, td)| hwp_model::resources::TabDef {
             id: i as u16,
-            auto_tab_left: td.has_left_auto_tab,
-            auto_tab_right: td.has_right_auto_tab,
+            auto_tab_left: td.attributes.has_left_auto_tab,
+            auto_tab_right: td.attributes.has_right_auto_tab,
             items: td
-                .tab_items
+                .tabs
                 .iter()
                 .map(|ti| hwp_model::resources::TabItem {
-                    pos: ti.position as i32,
+                    pos: ti.position.0 as i32,
                     tab_type: match ti.tab_type {
-                        1 => hwp_model::resources::TabType::Right,
-                        2 => hwp_model::resources::TabType::Center,
-                        3 => hwp_model::resources::TabType::Decimal,
-                        _ => hwp_model::resources::TabType::Left,
+                        docinfo::tab_def::TabType::Left => hwp_model::resources::TabType::Left,
+                        docinfo::tab_def::TabType::Right => hwp_model::resources::TabType::Right,
+                        docinfo::tab_def::TabType::Center => hwp_model::resources::TabType::Center,
+                        docinfo::tab_def::TabType::Decimal => {
+                            hwp_model::resources::TabType::Decimal
+                        }
                     },
                     leader: convert_line_type2(ti.fill_type),
                 })
@@ -339,10 +362,9 @@ fn convert_styles(styles: &[docinfo::Style]) -> Vec<hwp_model::resources::Style>
         .enumerate()
         .map(|(i, s)| hwp_model::resources::Style {
             id: i as u16,
-            style_type: if s.style_type == 0 {
-                hwp_model::types::StyleType::Para
-            } else {
-                hwp_model::types::StyleType::Char
+            style_type: match s.style_type {
+                docinfo::style::StyleType::Paragraph => hwp_model::types::StyleType::Para,
+                docinfo::style::StyleType::Character => hwp_model::types::StyleType::Char,
             },
             name: s.local_name.clone(),
             eng_name: s.english_name.clone(),
