@@ -1,0 +1,13 @@
+[package]
+name = "hwp-viewer"
+version = "0.1.0"
+edition = "2021"
+description = "Document viewer - hwp-model Document to HTML/Markdown"
+license = "MIT"
+
+[dependencies]
+hwp-model = { path = "../hwp-model" }
+base64 = "0.22"
+
+[dev-dependencies]
+hwpx-parser = { path = "../hwpx-parser" }
