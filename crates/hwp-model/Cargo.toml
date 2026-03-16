@@ -1,0 +1,8 @@
+[package]
+name = "hwp-model"
+version = "0.1.0"
+edition = "2021"
+description = "Common document model for HWP 5.0 and HWPX (KS X 6101:2024)"
+license = "MIT"
+
+[dependencies]
