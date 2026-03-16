@@ -51,6 +51,13 @@ impl COLORREF {
     pub fn value(self) -> u32 {
         self.0
     }
+    /// BGR(0x00BBGGRR) → RGB(0x00RRGGBB) 변환
+    pub fn to_rgb(self) -> u32 {
+        let r = self.0 & 0xFF;
+        let g = (self.0 >> 8) & 0xFF;
+        let b = (self.0 >> 16) & 0xFF;
+        (r << 16) | (g << 8) | b
+    }
 }
 
 /// JSON 직렬화: { "r", "g", "b" } 객체 형태로 출력 (이전 스냅샷 호환)

@@ -84,11 +84,11 @@ fn convert_char_shapes(shapes: &[docinfo::CharShape]) -> Vec<hwp_model::resource
             hwp_model::resources::CharShape {
                 id: i as u16,
                 height: cs.base_size,
-                text_color: Some(colorref_to_rgb(cs.text_color.0)),
-                shade_color: if cs.shading_color.0 == 0xFFFFFFFF {
+                text_color: Some(cs.text_color.to_rgb()),
+                shade_color: if cs.shading_color.value() == 0xFFFFFFFF {
                     None
                 } else {
-                    Some(colorref_to_rgb(cs.shading_color.0))
+                    Some(cs.shading_color.to_rgb())
                 },
                 use_font_space: a.use_font_spacing,
                 use_kerning: a.kerning,
@@ -154,7 +154,7 @@ fn convert_char_shapes(shapes: &[docinfo::CharShape]) -> Vec<hwp_model::resource
                             _ => UnderlineType::Bottom,
                         },
                         shape: convert_line_type3(a.underline_style),
-                        color: Some(colorref_to_rgb(cs.underline_color.0)),
+                        color: Some(cs.underline_color.to_rgb()),
                     })
                 } else {
                     None
@@ -162,7 +162,7 @@ fn convert_char_shapes(shapes: &[docinfo::CharShape]) -> Vec<hwp_model::resource
                 strikeout: if a.strikethrough != 0 {
                     Some(Strikeout {
                         shape: convert_line_type3(a.strikethrough_style),
-                        color: cs.strikethrough_color.map(|c| colorref_to_rgb(c.0)),
+                        color: cs.strikethrough_color.map(|c| c.to_rgb()),
                     })
                 } else {
                     None
@@ -187,7 +187,7 @@ fn convert_char_shapes(shapes: &[docinfo::CharShape]) -> Vec<hwp_model::resource
                             2 => CharShadowType::Continuous,
                             _ => CharShadowType::None,
                         },
-                        color: Some(colorref_to_rgb(cs.shadow_color.0)),
+                        color: Some(cs.shadow_color.to_rgb()),
                         offset_x: cs.shadow_spacing_x,
                         offset_y: cs.shadow_spacing_y,
                     })
@@ -340,7 +340,7 @@ fn convert_tab_defs(tabs: &[docinfo::TabDef]) -> Vec<hwp_model::resources::TabDe
                 .tabs
                 .iter()
                 .map(|ti| hwp_model::resources::TabItem {
-                    pos: ti.position.0 as i32,
+                    pos: ti.position.value() as i32,
                     tab_type: match ti.tab_type {
                         docinfo::tab_def::TabType::Left => hwp_model::resources::TabType::Left,
                         docinfo::tab_def::TabType::Right => hwp_model::resources::TabType::Right,
@@ -378,13 +378,6 @@ fn convert_styles(styles: &[docinfo::Style]) -> Vec<hwp_model::resources::Style>
 }
 
 // ── 유틸 ──
-
-fn colorref_to_rgb(c: u32) -> u32 {
-    let r = c & 0xFF;
-    let g = (c >> 8) & 0xFF;
-    let b = (c >> 16) & 0xFF;
-    (r << 16) | (g << 8) | b
-}
 
 fn convert_line_type3(v: u8) -> hwp_model::types::LineType3 {
     use hwp_model::types::LineType3;
