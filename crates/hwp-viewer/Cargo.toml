@@ -11,3 +11,4 @@ base64 = "0.22"
 
 [dev-dependencies]
 hwpx-parser = { path = "../hwpx-parser" }
+insta = { version = "1.42", features = ["glob"] }

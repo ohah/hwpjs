@@ -1,0 +1,72 @@
+---
+source: crates/hwp-viewer/tests/snapshot_test.rs
+expression: html
+---
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>문단1</title>
+<style>
+
+body { margin: 0; padding: 20px; background: #eee; font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; }
+.hwp-section { background: #fff; margin: 0 auto 20px; box-shadow: 0 0 5px rgba(0,0,0,0.2); box-sizing: border-box; }
+p { margin: 0; min-height: 1em; word-wrap: break-word; }
+.hwp-table { border-collapse: collapse; }
+.hwp-table td { border: 1px solid #000; padding: 2px 5px; vertical-align: top; }
+.hwp-image { display: inline-block; }
+.hwp-shape { position: relative; }
+.hwp-header, .hwp-footer { color: #666; font-size: 0.9em; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 8px; }
+.hwp-footer { border-bottom: none; border-top: 1px solid #ccc; padding-top: 4px; margin-top: 8px; }
+.hwp-footnote-ref { vertical-align: super; font-size: 0.8em; color: #0066cc; }
+.hwp-footnote-body { font-size: 0.9em; border-top: 1px solid #ccc; padding-top: 4px; margin-top: 8px; }
+.cs0 { font-size: 10pt; color: #000000; background-color: #ffffff; font-family: '굴림'; }
+.cs1 { font-size: 10pt; color: #000000; background-color: #ffffff; font-family: '바탕'; }
+.cs2 { font-size: 9pt; color: #000000; background-color: #ffffff; font-family: '굴림'; }
+.cs3 { font-size: 9pt; color: #000000; background-color: #ffffff; letter-spacing: -0.05em; font-family: '바탕'; }
+.cs4 { font-size: 9pt; color: #000000; background-color: #ffffff; letter-spacing: -0.05em; font-family: '굴림'; }
+.ps0 { text-align: justify; text-indent: -9.24mm; line-height: 130%; }
+.ps1 { text-align: justify; line-height: 160%; }
+.ps2 { text-align: justify; line-height: 160%; }
+.ps3 { text-align: justify; margin-left: 10.58mm; line-height: 160%; }
+.ps4 { text-align: justify; margin-left: 7.06mm; line-height: 160%; }
+.ps5 { text-align: justify; margin-left: 14.11mm; line-height: 160%; }
+.ps6 { text-align: justify; margin-left: 21.17mm; line-height: 160%; }
+.ps7 { text-align: justify; margin-left: 28.22mm; line-height: 160%; }
+.ps8 { text-align: justify; margin-left: 35.28mm; line-height: 160%; }
+.ps9 { text-align: justify; margin-left: 42.33mm; line-height: 160%; }
+.ps10 { text-align: justify; margin-left: 49.39mm; line-height: 160%; }
+.ps11 { text-align: justify; line-height: 150%; }
+.ps12 { text-align: justify; text-indent: 7.06mm; line-height: 160%; }
+.ps13 { text-align: justify; text-indent: -7.06mm; line-height: 160%; }
+.ps14 { text-align: justify; margin-left: 7.76mm; margin-right: 8.47mm; margin-top: 9.17mm; margin-bottom: 9.88mm; line-height: 160%; }
+.ps15 { text-align: left; text-indent: -7.06mm; line-height: 160%; }
+.ps16 { text-align: right; text-indent: -7.06mm; line-height: 160%; }
+.ps17 { text-align: center; text-indent: -7.06mm; line-height: 160%; }
+.ps18 { text-align: justify; text-indent: -7.06mm; line-height: 160%; }
+.ps19 { text-align: justify; text-indent: -7.06mm; line-height: 160%; }
+</style>
+</head>
+<body>
+<div class="hwp-section" style="width:210mm;padding:20mm 30mm 15mm 30mm;">
+<p class="ps14">
+<span class="cs1">문단1</span></p>
+<p class="ps2">
+<span class="cs1">문단2</span></p>
+<p class="ps12">
+<span class="cs1">문단3 - 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt</span></p>
+<p class="ps13">
+<span class="cs1">문단4 - 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt</span></p>
+<p class="ps15">
+<span class="cs1">문단 5</span></p>
+<p class="ps16">
+<span class="cs1">문단 6</span></p>
+<p class="ps17">
+<span class="cs1">문단 7</span></p>
+<p class="ps18">
+<span class="cs1">문단 8</span></p>
+<p class="ps19">
+<span class="cs1">문단 9</span></p>
+</div>
+</body>
+</html>
