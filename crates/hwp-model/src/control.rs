@@ -125,8 +125,11 @@ pub struct ColumnControl {
 
 #[derive(Debug, Clone, Default)]
 pub struct Compose {
-    pub char_shape_id: Option<u16>,
-    pub chars: Vec<String>,
+    pub circle_type: Option<String>,
+    pub char_sz: Option<u16>,
+    pub compose_type: Option<String>,
+    pub compose_text: Option<String>,
+    pub char_pr_refs: Vec<u32>,
 }
 
 // ── 덧말 ──
@@ -137,6 +140,9 @@ pub struct Dutmal {
     pub sub_text: String,
     pub position: DutmalPosition,
     pub alignment: HAlign,
+    pub sz_ratio: Option<u16>,
+    pub option: Option<u32>,
+    pub style_id_ref: Option<u16>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
