@@ -589,6 +589,7 @@ dependencies = [
  "cfb",
  "encoding_rs",
  "flate2",
+ "hwp-model",
  "insta",
  "lopdf",
  "pathdiff",
