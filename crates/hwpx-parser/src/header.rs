@@ -420,12 +420,11 @@ fn parse_border_fill(
                 b"diagonal" => bf.diagonal = Some(parse_line_spec(e)),
                 _ => {}
             },
-            Event::Start(ref e) => match local_name(e.name().as_ref()) {
-                b"fillBrush" => {
+            Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"fillBrush" {
                     bf.fill = parse_fill_brush(reader)?;
                 }
-                _ => {}
-            },
+            }
             Event::End(ref e) => {
                 if local_name(e.name().as_ref()) == b"borderFill" {
                     break;
@@ -1043,6 +1042,7 @@ fn parse_styles(reader: &mut Reader<&[u8]>) -> Result<Vec<Style>, HwpxError> {
     Ok(styles)
 }
 
+#[allow(dead_code)]
 fn skip_to_end(reader: &mut Reader<&[u8]>, tag: &[u8]) -> Result<(), HwpxError> {
     let mut depth = 1u32;
     let mut buf = Vec::new();

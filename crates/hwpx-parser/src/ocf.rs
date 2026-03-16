@@ -59,6 +59,7 @@ pub fn parse_version<R: Read + Seek>(
 pub struct BinaryItemInfo {
     pub id: String,
     pub href: String,
+    #[allow(dead_code)]
     pub media_type: String,
 }
 

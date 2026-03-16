@@ -559,9 +559,6 @@ fn parse_ctrl(reader: &mut Reader<&[u8]>) -> Result<Option<Control>, HwpxError> 
                 b"fieldBegin" => {
                     result = Some(Control::FieldBegin(parse_field_begin(e, reader)?));
                 }
-                b"fieldBegin" => {
-                    result = Some(Control::FieldBegin(parse_field_begin(e, reader)?));
-                }
                 b"fieldEnd" => {
                     result = Some(Control::FieldEnd);
                 }
@@ -617,12 +614,11 @@ fn parse_header_footer(
     let mut buf = Vec::new();
     loop {
         match reader.read_event_into(&mut buf)? {
-            Event::Start(ref e) => match local_name(e.name().as_ref()) {
-                b"subList" => {
+            Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"subList" {
                     hf.content = parse_sublist(e, reader)?;
                 }
-                _ => {}
-            },
+            }
             Event::End(ref e) => {
                 if local_name(e.name().as_ref()) == tag_name.as_slice() {
                     break;
@@ -719,8 +715,8 @@ fn parse_sublist(
             &attr_str(start, b"textDirection").unwrap_or_default(),
         ),
         vert_align: parse_valign(&attr_str(start, b"vertAlign").unwrap_or_default()),
-        text_width: attr_i32(start, b"textWidth").map(|v| v),
-        text_height: attr_i32(start, b"textHeight").map(|v| v),
+        text_width: attr_i32(start, b"textWidth"),
+        text_height: attr_i32(start, b"textHeight"),
         has_text_ref: attr_bool(start, b"hasTextRef").unwrap_or(false),
         has_num_ref: attr_bool(start, b"hasNumRef").unwrap_or(false),
         ..Default::default()
@@ -1914,12 +1910,11 @@ fn parse_draw_text(reader: &mut Reader<&[u8]>) -> Result<SubList, HwpxError> {
     let mut buf = Vec::new();
     loop {
         match reader.read_event_into(&mut buf)? {
-            Event::Start(ref e) => match local_name(e.name().as_ref()) {
-                b"subList" => {
+            Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"subList" {
                     sl = parse_sublist(e, reader)?;
                 }
-                _ => {}
-            },
+            }
             Event::End(ref e) => {
                 if local_name(e.name().as_ref()) == b"drawText" {
                     break;
@@ -1942,7 +1937,7 @@ fn parse_caption(
         full_size: attr_bool(start, b"fullSz").unwrap_or(false),
         width: attr_i32(start, b"width").unwrap_or(0),
         gap: attr_i32(start, b"gap").unwrap_or(0),
-        last_width: attr_i32(start, b"lastWidth").map(|v| v),
+        last_width: attr_i32(start, b"lastWidth"),
         content: SubList::default(),
     };
 
