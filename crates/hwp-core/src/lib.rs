@@ -3,6 +3,7 @@
 /// This library provides core functionality for parsing HWP files.
 /// It accepts byte arrays as input to support cross-platform usage.
 pub mod cfb;
+pub mod convert;
 pub mod decompress;
 pub mod document;
 pub mod error;
