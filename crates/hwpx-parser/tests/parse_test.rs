@@ -1,4 +1,9 @@
+use hwp_model::control::HeaderFooter;
+use hwp_model::paragraph::SubList;
 use hwp_model::resources::*;
+use hwp_model::section::*;
+use hwp_model::shape::Picture;
+use hwp_model::table::Table;
 use hwp_model::types::*;
 use hwpx_parser::HwpxParser;
 use std::fs;
@@ -488,8 +493,273 @@ fn parse_sections_count() {
 }
 
 // ═══════════════════════════════════════════
+// 섹션 정의 (secPr)
+// ═══════════════════════════════════════════
+
+#[test]
+fn parse_section_definition() {
+    let doc = HwpxParser::parse(&fixture("example.hwpx")).unwrap();
+    let sd = &doc.sections[0].definition;
+
+    assert_eq!(sd.text_direction, TextDirection::Horizontal);
+    assert_eq!(sd.space_columns, 1134);
+    assert_eq!(sd.tab_stop, 8000);
+
+    // 페이지 설정
+    assert!(sd.page.width > 0);
+    assert!(sd.page.height > 0);
+    assert_eq!(sd.page.width, 59528);  // A4
+    assert_eq!(sd.page.height, 84188);
+
+    // 여백
+    assert!(sd.page.margin.left > 0);
+    assert!(sd.page.margin.top > 0);
+
+    // grid
+    let grid = sd.grid.as_ref().unwrap();
+    assert_eq!(grid.line_grid, 0);
+    assert_eq!(grid.char_grid, 0);
+
+    // visibility
+    let vis = sd.visibility.as_ref().unwrap();
+    assert!(!vis.hide_first_header);
+    assert_eq!(vis.border, VisibilityValue::ShowAll);
+
+    // 각주
+    assert!(sd.footnote.is_some());
+    let fn_def = sd.footnote.as_ref().unwrap();
+    assert_eq!(fn_def.number_format, NumberType1::Digit);
+    assert_eq!(fn_def.numbering_type, FootnoteNumbering::Continuous);
+    assert_eq!(fn_def.placement, FootnotePlacement::EachColumn);
+
+    // 미주
+    assert!(sd.endnote.is_some());
+    let en_def = sd.endnote.as_ref().unwrap();
+    assert_eq!(en_def.placement, EndnotePlacement::EndOfDocument);
+
+    // pageBorderFill
+    assert!(!sd.page_border_fills.is_empty());
+}
+
+#[test]
+fn parse_pagedefs() {
+    let doc = HwpxParser::parse(&fixture("pagedefs.hwpx")).unwrap();
+    let sd = &doc.sections[0].definition;
+
+    // 페이지 크기와 여백이 파싱되었는지 확인
+    assert!(sd.page.width > 0);
+    assert!(sd.page.height > 0);
+    assert!(sd.page.margin.header > 0);
+    assert!(sd.page.margin.footer > 0);
+}
+
+// ═══════════════════════════════════════════
+// 표 (tbl)
+// ═══════════════════════════════════════════
+
+#[test]
+fn parse_table_structure() {
+    let doc = HwpxParser::parse(&fixture("table.hwpx")).unwrap();
+
+    // 표가 포함된 문단 찾기
+    let has_table = doc.sections[0].paragraphs.iter().any(|p| {
+        p.runs.iter().any(|r| {
+            r.contents.iter().any(|c| matches!(c, hwp_model::paragraph::RunContent::Object(hwp_model::shape::ShapeObject::Table(_))))
+        })
+    });
+    assert!(has_table, "table.hwpx should contain a table");
+
+    // 표 데이터 검증
+    let table = find_first_table(&doc);
+    assert!(table.is_some(), "Should find a table");
+
+    let tbl = table.unwrap();
+    assert_eq!(tbl.row_count, 2);
+    assert_eq!(tbl.col_count, 3);
+    assert_eq!(tbl.rows.len(), 2);
+    assert_eq!(tbl.rows[0].cells.len(), 3);
+
+    // 셀 주소
+    let cell00 = &tbl.rows[0].cells[0];
+    assert_eq!(cell00.col, 0);
+    assert_eq!(cell00.row, 0);
+    assert_eq!(cell00.col_span, 1);
+    assert_eq!(cell00.row_span, 1);
+    assert!(cell00.width > 0);
+}
+
+#[test]
+fn parse_table_border_fill() {
+    let doc = HwpxParser::parse(&fixture("table.hwpx")).unwrap();
+    let tbl = find_first_table(&doc).unwrap();
+
+    assert!(tbl.border_fill_id > 0);
+    assert_eq!(tbl.cell_spacing, 0);
+}
+
+#[test]
+fn parse_table_cell_content() {
+    let doc = HwpxParser::parse(&fixture("table2.hwpx")).unwrap();
+    let tbl = find_first_table(&doc).unwrap();
+
+    // 셀에 문단이 있어야 함
+    for row in &tbl.rows {
+        for cell in &row.cells {
+            assert!(!cell.content.paragraphs.is_empty(), "Cell should have paragraphs");
+        }
+    }
+}
+
+// ═══════════════════════════════════════════
+// 그림 (pic)
+// ═══════════════════════════════════════════
+
+#[test]
+fn parse_picture() {
+    let doc = HwpxParser::parse(&fixture("sample-5017-pics.hwpx")).unwrap();
+
+    let pic = find_first_picture(&doc);
+    assert!(pic.is_some(), "sample-5017-pics.hwpx should contain a picture");
+
+    let p = pic.unwrap();
+    assert!(!p.img.binary_item_id.is_empty());
+    assert!(p.common.size.width > 0);
+    assert!(p.common.size.height > 0);
+}
+
+#[test]
+fn parse_picture_position() {
+    let doc = HwpxParser::parse(&fixture("sample-5017-pics.hwpx")).unwrap();
+    let pic = find_first_picture(&doc).unwrap();
+
+    // 위치 정보가 파싱되었는지 확인
+    // treatAsChar 또는 offset이 설정되어 있어야 함
+    let pos = &pic.common.position;
+    // 값이 기본값이 아닌 경우가 있어야 함 (어떤 위치 정보든)
+    assert!(
+        pos.treat_as_char || pos.vert_offset != 0 || pos.horz_offset != 0
+            || !matches!(pos.vert_rel_to, RelativeTo::Paper)
+            || !matches!(pos.horz_rel_to, RelativeTo::Paper),
+        "Picture should have some position info"
+    );
+}
+
+// ═══════════════════════════════════════════
+// 머리글/꼬리말 (header/footer)
+// ═══════════════════════════════════════════
+
+#[test]
+fn parse_header_footer() {
+    let doc = HwpxParser::parse(&fixture("headerfooter.hwpx")).unwrap();
+
+    let (header, footer) = find_header_footer(&doc);
+    assert!(header.is_some(), "headerfooter.hwpx should have a header");
+    assert!(footer.is_some(), "headerfooter.hwpx should have a footer");
+
+    let h = header.unwrap();
+    assert_eq!(h.apply_page_type, PageApplyType::Both);
+    assert!(!h.content.paragraphs.is_empty());
+
+    // 머리말 텍스트 확인
+    let header_text = extract_text_from_sublist(&h.content);
+    assert!(header_text.contains("Header"), "Header should contain 'Header', got: '{}'", header_text);
+
+    let f = footer.unwrap();
+    assert_eq!(f.apply_page_type, PageApplyType::Odd);
+    let footer_text = extract_text_from_sublist(&f.content);
+    assert!(footer_text.contains("Footer"), "Footer should contain 'Footer', got: '{}'", footer_text);
+}
+
+// ═══════════════════════════════════════════
+// 각주/미주 (footnote/endnote)
+// ═══════════════════════════════════════════
+
+#[test]
+fn parse_footnote_endnote() {
+    let doc = HwpxParser::parse(&fixture("footnote-endnote.hwpx")).unwrap();
+
+    // footnote 또는 endnote control이 있어야 함
+    let has_note = doc.sections[0].paragraphs.iter().any(|p| {
+        p.runs.iter().any(|r| {
+            r.contents.iter().any(|c| matches!(c,
+                hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::FootNote(_))
+                | hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::EndNote(_))
+            ))
+        })
+    });
+    assert!(has_note, "footnote-endnote.hwpx should have footnote or endnote");
+}
+
+// ═══════════════════════════════════════════
 // 전체 fixture 파싱 성공 테스트
 // ═══════════════════════════════════════════
+
+fn find_first_table(doc: &hwp_model::document::Document) -> Option<&Table> {
+    for sec in &doc.sections {
+        for para in &sec.paragraphs {
+            for run in &para.runs {
+                for c in &run.contents {
+                    if let hwp_model::paragraph::RunContent::Object(
+                        hwp_model::shape::ShapeObject::Table(t),
+                    ) = c
+                    {
+                        return Some(t);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn find_first_picture(doc: &hwp_model::document::Document) -> Option<&Picture> {
+    for sec in &doc.sections {
+        for para in &sec.paragraphs {
+            for run in &para.runs {
+                for c in &run.contents {
+                    if let hwp_model::paragraph::RunContent::Object(
+                        hwp_model::shape::ShapeObject::Picture(p),
+                    ) = c
+                    {
+                        return Some(p);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn find_header_footer(doc: &hwp_model::document::Document) -> (Option<&HeaderFooter>, Option<&HeaderFooter>) {
+    let mut header = None;
+    let mut footer = None;
+    for sec in &doc.sections {
+        for para in &sec.paragraphs {
+            for run in &para.runs {
+                for c in &run.contents {
+                    match c {
+                        hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::Header(h)) => {
+                            header = Some(h);
+                        }
+                        hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::Footer(f)) => {
+                            footer = Some(f);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+    (header, footer)
+}
+
+fn extract_text_from_sublist(sl: &SubList) -> String {
+    let mut text = String::new();
+    for para in &sl.paragraphs {
+        text.push_str(&extract_text(para));
+    }
+    text
+}
 
 #[test]
 fn parse_all_fixtures_no_error() {
