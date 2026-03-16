@@ -568,6 +568,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "hwp-model"
+version = "0.1.0"
+
+[[package]]
 name = "hwpjs"
 version = "0.1.0"
 dependencies = [
