@@ -146,7 +146,10 @@ fn parse_strikethrough() {
     let shapes = &doc.resources.char_shapes;
 
     let has_strikeout = shapes.iter().any(|cs| cs.strikeout.is_some());
-    assert!(has_strikeout, "strikethrough.hwpx should have strikeout char shapes");
+    assert!(
+        has_strikeout,
+        "strikethrough.hwpx should have strikeout char shapes"
+    );
 }
 
 #[test]
@@ -155,7 +158,10 @@ fn parse_underline_styles() {
     let shapes = &doc.resources.char_shapes;
 
     let has_underline = shapes.iter().any(|cs| cs.underline.is_some());
-    assert!(has_underline, "underline-styles.hwpx should have underline char shapes");
+    assert!(
+        has_underline,
+        "underline-styles.hwpx should have underline char shapes"
+    );
 }
 
 // ═══════════════════════════════════════════
@@ -187,7 +193,9 @@ fn parse_border_fills() {
     let bf2 = &bfs[1];
     assert!(bf2.fill.is_some());
     match bf2.fill.as_ref().unwrap() {
-        FillBrush::WinBrush { face_color, alpha, .. } => {
+        FillBrush::WinBrush {
+            face_color, alpha, ..
+        } => {
             assert!(face_color.is_some()); // #FFFFFFFF
             assert_eq!(*alpha, 0);
         }
@@ -212,7 +220,12 @@ fn parse_border_fills() {
     // 다섯 번째: gradation
     let bf5 = &bfs[4];
     match bf5.fill.as_ref().unwrap() {
-        FillBrush::Gradation { grad_type, angle, colors, .. } => {
+        FillBrush::Gradation {
+            grad_type,
+            angle,
+            colors,
+            ..
+        } => {
             assert_eq!(*grad_type, GradationType::Linear);
             assert_eq!(*angle, 90);
             assert_eq!(colors.len(), 2);
@@ -243,7 +256,11 @@ fn parse_border_fill_image_brush() {
     // id=7: winBrush + imgBrush (Combined)
     let bf7 = &doc.resources.border_fills[6];
     match bf7.fill.as_ref().unwrap() {
-        FillBrush::Combined { win_brush, image_brush, .. } => {
+        FillBrush::Combined {
+            win_brush,
+            image_brush,
+            ..
+        } => {
             assert!(win_brush.is_some());
             assert!(image_brush.is_some());
         }
@@ -476,7 +493,10 @@ fn parse_paragraphs_run_char_shape() {
 
     // 여러 run이 있는 문단 확인
     let multi_run = paras.iter().find(|p| p.runs.len() > 1);
-    assert!(multi_run.is_some(), "Should have a paragraph with multiple runs");
+    assert!(
+        multi_run.is_some(),
+        "Should have a paragraph with multiple runs"
+    );
 
     let p = multi_run.unwrap();
     // 각 run에 charPrIDRef가 설정되어 있어야 함
@@ -508,7 +528,7 @@ fn parse_section_definition() {
     // 페이지 설정
     assert!(sd.page.width > 0);
     assert!(sd.page.height > 0);
-    assert_eq!(sd.page.width, 59528);  // A4
+    assert_eq!(sd.page.width, 59528); // A4
     assert_eq!(sd.page.height, 84188);
 
     // 여백
@@ -564,7 +584,14 @@ fn parse_table_structure() {
     // 표가 포함된 문단 찾기
     let has_table = doc.sections[0].paragraphs.iter().any(|p| {
         p.runs.iter().any(|r| {
-            r.contents.iter().any(|c| matches!(c, hwp_model::paragraph::RunContent::Object(hwp_model::shape::ShapeObject::Table(_))))
+            r.contents.iter().any(|c| {
+                matches!(
+                    c,
+                    hwp_model::paragraph::RunContent::Object(hwp_model::shape::ShapeObject::Table(
+                        _
+                    ))
+                )
+            })
         })
     });
     assert!(has_table, "table.hwpx should contain a table");
@@ -605,7 +632,10 @@ fn parse_table_cell_content() {
     // 셀에 문단이 있어야 함
     for row in &tbl.rows {
         for cell in &row.cells {
-            assert!(!cell.content.paragraphs.is_empty(), "Cell should have paragraphs");
+            assert!(
+                !cell.content.paragraphs.is_empty(),
+                "Cell should have paragraphs"
+            );
         }
     }
 }
@@ -619,7 +649,10 @@ fn parse_picture() {
     let doc = HwpxParser::parse(&fixture("sample-5017-pics.hwpx")).unwrap();
 
     let pic = find_first_picture(&doc);
-    assert!(pic.is_some(), "sample-5017-pics.hwpx should contain a picture");
+    assert!(
+        pic.is_some(),
+        "sample-5017-pics.hwpx should contain a picture"
+    );
 
     let p = pic.unwrap();
     assert!(!p.img.binary_item_id.is_empty());
@@ -637,7 +670,9 @@ fn parse_picture_position() {
     let pos = &pic.common.position;
     // 값이 기본값이 아닌 경우가 있어야 함 (어떤 위치 정보든)
     assert!(
-        pos.treat_as_char || pos.vert_offset != 0 || pos.horz_offset != 0
+        pos.treat_as_char
+            || pos.vert_offset != 0
+            || pos.horz_offset != 0
             || !matches!(pos.vert_rel_to, RelativeTo::Paper)
             || !matches!(pos.horz_rel_to, RelativeTo::Paper),
         "Picture should have some position info"
@@ -662,12 +697,20 @@ fn parse_header_footer() {
 
     // 머리말 텍스트 확인
     let header_text = extract_text_from_sublist(&h.content);
-    assert!(header_text.contains("Header"), "Header should contain 'Header', got: '{}'", header_text);
+    assert!(
+        header_text.contains("Header"),
+        "Header should contain 'Header', got: '{}'",
+        header_text
+    );
 
     let f = footer.unwrap();
     assert_eq!(f.apply_page_type, PageApplyType::Odd);
     let footer_text = extract_text_from_sublist(&f.content);
-    assert!(footer_text.contains("Footer"), "Footer should contain 'Footer', got: '{}'", footer_text);
+    assert!(
+        footer_text.contains("Footer"),
+        "Footer should contain 'Footer', got: '{}'",
+        footer_text
+    );
 }
 
 // ═══════════════════════════════════════════
@@ -681,13 +724,22 @@ fn parse_footnote_endnote() {
     // footnote 또는 endnote control이 있어야 함
     let has_note = doc.sections[0].paragraphs.iter().any(|p| {
         p.runs.iter().any(|r| {
-            r.contents.iter().any(|c| matches!(c,
-                hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::FootNote(_))
-                | hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::EndNote(_))
-            ))
+            r.contents.iter().any(|c| {
+                matches!(
+                    c,
+                    hwp_model::paragraph::RunContent::Control(
+                        hwp_model::control::Control::FootNote(_)
+                    ) | hwp_model::paragraph::RunContent::Control(
+                        hwp_model::control::Control::EndNote(_)
+                    )
+                )
+            })
         })
     });
-    assert!(has_note, "footnote-endnote.hwpx should have footnote or endnote");
+    assert!(
+        has_note,
+        "footnote-endnote.hwpx should have footnote or endnote"
+    );
 }
 
 // ═══════════════════════════════════════════
@@ -730,7 +782,9 @@ fn find_first_picture(doc: &hwp_model::document::Document) -> Option<&Picture> {
     None
 }
 
-fn find_header_footer(doc: &hwp_model::document::Document) -> (Option<&HeaderFooter>, Option<&HeaderFooter>) {
+fn find_header_footer(
+    doc: &hwp_model::document::Document,
+) -> (Option<&HeaderFooter>, Option<&HeaderFooter>) {
     let mut header = None;
     let mut footer = None;
     for sec in &doc.sections {
@@ -738,10 +792,14 @@ fn find_header_footer(doc: &hwp_model::document::Document) -> (Option<&HeaderFoo
             for run in &para.runs {
                 for c in &run.contents {
                     match c {
-                        hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::Header(h)) => {
+                        hwp_model::paragraph::RunContent::Control(
+                            hwp_model::control::Control::Header(h),
+                        ) => {
                             header = Some(h);
                         }
-                        hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::Footer(f)) => {
+                        hwp_model::paragraph::RunContent::Control(
+                            hwp_model::control::Control::Footer(f),
+                        ) => {
                             footer = Some(f);
                         }
                         _ => {}
@@ -852,13 +910,17 @@ fn parse_hyperlink_field() {
     assert!(!f.parameters.is_empty());
 
     // Path 파라미터 확인
-    let path_param = f.parameters.iter().find(|p| {
-        matches!(p, hwp_model::control::FieldParameter::String { name, .. } if name == "Path")
-    });
+    let path_param = f.parameters.iter().find(
+        |p| matches!(p, hwp_model::control::FieldParameter::String { name, .. } if name == "Path"),
+    );
     assert!(path_param.is_some(), "Should have Path parameter");
 
     if let Some(hwp_model::control::FieldParameter::String { value, .. }) = path_param {
-        assert!(value.contains("naver.com"), "Path should contain naver.com, got: {}", value);
+        assert!(
+            value.contains("naver.com"),
+            "Path should contain naver.com, got: {}",
+            value
+        );
     }
 }
 
@@ -869,7 +931,14 @@ fn parse_field_end() {
     // FieldEnd가 있어야 함
     let has_end = doc.sections[0].paragraphs.iter().any(|p| {
         p.runs.iter().any(|r| {
-            r.contents.iter().any(|c| matches!(c, hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::FieldEnd)))
+            r.contents.iter().any(|c| {
+                matches!(
+                    c,
+                    hwp_model::paragraph::RunContent::Control(
+                        hwp_model::control::Control::FieldEnd
+                    )
+                )
+            })
         })
     });
     assert!(has_end, "hyperlink.hwpx should have fieldEnd");
@@ -911,7 +980,12 @@ fn parse_all_fixtures_extended() {
     for name in &fixtures {
         let data = fixture(name);
         let result = HwpxParser::parse(&data);
-        assert!(result.is_ok(), "Failed to parse {}: {:?}", name, result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to parse {}: {:?}",
+            name,
+            result.err()
+        );
     }
 }
 
@@ -919,7 +993,10 @@ fn parse_all_fixtures_extended() {
 // 헬퍼 함수
 // ═══════════════════════════════════════════
 
-fn find_first_shape<'a>(doc: &'a hwp_model::document::Document, kind: &str) -> Option<&'a hwp_model::shape::ShapeObject> {
+fn find_first_shape<'a>(
+    doc: &'a hwp_model::document::Document,
+    kind: &str,
+) -> Option<&'a hwp_model::shape::ShapeObject> {
     for sec in &doc.sections {
         for para in &sec.paragraphs {
             for run in &para.runs {
@@ -932,7 +1009,9 @@ fn find_first_shape<'a>(doc: &'a hwp_model::document::Document, kind: &str) -> O
                             ("container", hwp_model::shape::ShapeObject::Container(_)) => true,
                             _ => false,
                         };
-                        if matches { return Some(obj); }
+                        if matches {
+                            return Some(obj);
+                        }
                     }
                 }
             }
@@ -948,11 +1027,15 @@ fn find_shape_with_caption(doc: &hwp_model::document::Document) -> bool {
                 for c in &run.contents {
                     if let hwp_model::paragraph::RunContent::Object(obj) = c {
                         let has = match obj {
-                            hwp_model::shape::ShapeObject::Rectangle(r) => r.common.caption.is_some(),
+                            hwp_model::shape::ShapeObject::Rectangle(r) => {
+                                r.common.caption.is_some()
+                            }
                             hwp_model::shape::ShapeObject::Picture(p) => p.common.caption.is_some(),
                             _ => false,
                         };
-                        if has { return true; }
+                        if has {
+                            return true;
+                        }
                     }
                 }
             }
@@ -966,7 +1049,10 @@ fn find_first_field(doc: &hwp_model::document::Document) -> Option<&hwp_model::c
         for para in &sec.paragraphs {
             for run in &para.runs {
                 for c in &run.contents {
-                    if let hwp_model::paragraph::RunContent::Control(hwp_model::control::Control::FieldBegin(f)) = c {
+                    if let hwp_model::paragraph::RunContent::Control(
+                        hwp_model::control::Control::FieldBegin(f),
+                    ) = c
+                    {
                         return Some(f);
                     }
                 }

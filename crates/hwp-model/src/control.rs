@@ -76,10 +76,22 @@ pub struct Field {
 
 #[derive(Debug, Clone)]
 pub enum FieldParameter {
-    Integer { name: String, value: i64 },
-    String { name: String, value: String },
-    Element { name: String, children: Vec<FieldParameter> },
-    List { name: String, items: Vec<FieldParameter> },
+    Integer {
+        name: String,
+        value: i64,
+    },
+    String {
+        name: String,
+        value: String,
+    },
+    Element {
+        name: String,
+        children: Vec<FieldParameter>,
+    },
+    List {
+        name: String,
+        items: Vec<FieldParameter>,
+    },
 }
 
 // ── 책갈피 ──

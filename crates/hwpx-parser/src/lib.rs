@@ -1,8 +1,8 @@
+mod body;
 mod error;
+mod header;
 mod ocf;
 mod opf;
-mod header;
-mod body;
 mod utils;
 
 pub use error::HwpxError;
@@ -38,10 +38,7 @@ impl HwpxParser {
         document.meta = opf.metadata;
 
         // 3. header.xml → Resources
-        let header_path = opf
-            .header_path
-            .as_deref()
-            .unwrap_or("Contents/header.xml");
+        let header_path = opf.header_path.as_deref().unwrap_or("Contents/header.xml");
         document.resources = header::parse_header(&mut archive, header_path)?;
         document.settings = header::parse_settings(&mut archive, header_path)?;
 

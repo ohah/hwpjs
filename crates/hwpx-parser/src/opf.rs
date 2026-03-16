@@ -14,9 +14,7 @@ pub struct OpfInfo {
 }
 
 /// content.hpf (OPF) 파싱
-pub fn parse_opf<R: Read + Seek>(
-    archive: &mut zip::ZipArchive<R>,
-) -> Result<OpfInfo, HwpxError> {
+pub fn parse_opf<R: Read + Seek>(archive: &mut zip::ZipArchive<R>) -> Result<OpfInfo, HwpxError> {
     // container.xml에서 rootfile 경로 찾기
     let opf_path = find_opf_path(archive).unwrap_or_else(|| "Contents/content.hpf".to_string());
     let xml = read_zip_entry_string(archive, &opf_path)?;
@@ -39,29 +37,25 @@ pub fn parse_opf<R: Read + Seek>(
     let mut buf = Vec::new();
     loop {
         match reader.read_event_into(&mut buf)? {
-            Event::Empty(ref e) | Event::Start(ref e) => {
-                match local_name(e.name().as_ref()) {
-                    b"title" => {}
-                    b"language" => {}
-                    b"meta" => {
-                        current_meta_name =
-                            attr_str(e, b"name").unwrap_or_default();
-                    }
-                    b"item" => {
-                        let id = attr_str(e, b"id").unwrap_or_default();
-                        let href = attr_str(e, b"href").unwrap_or_default();
-                        let media_type =
-                            attr_str(e, b"media-type").unwrap_or_default();
-                        manifest_items.push((id, href, media_type));
-                    }
-                    b"itemref" => {
-                        if let Some(idref) = attr_str(e, b"idref") {
-                            spine_refs.push(idref);
-                        }
-                    }
-                    _ => {}
+            Event::Empty(ref e) | Event::Start(ref e) => match local_name(e.name().as_ref()) {
+                b"title" => {}
+                b"language" => {}
+                b"meta" => {
+                    current_meta_name = attr_str(e, b"name").unwrap_or_default();
                 }
-            }
+                b"item" => {
+                    let id = attr_str(e, b"id").unwrap_or_default();
+                    let href = attr_str(e, b"href").unwrap_or_default();
+                    let media_type = attr_str(e, b"media-type").unwrap_or_default();
+                    manifest_items.push((id, href, media_type));
+                }
+                b"itemref" => {
+                    if let Some(idref) = attr_str(e, b"idref") {
+                        spine_refs.push(idref);
+                    }
+                }
+                _ => {}
+            },
             Event::Text(ref t) => {
                 let text = t.unescape().unwrap_or_default().to_string();
                 if !text.is_empty() {
