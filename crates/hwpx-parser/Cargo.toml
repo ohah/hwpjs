@@ -1,0 +1,14 @@
+[package]
+name = "hwpx-parser"
+version = "0.1.0"
+edition = "2021"
+description = "HWPX (KS X 6101:2024) parser - ZIP/XML to hwp-model Document"
+license = "MIT"
+
+[dependencies]
+hwp-model = { path = "../hwp-model" }
+quick-xml = "0.37"
+zip = { version = "2.2", default-features = false, features = ["deflate"] }
+thiserror = "2"
+
+[dev-dependencies]
