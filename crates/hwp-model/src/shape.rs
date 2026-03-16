@@ -150,6 +150,7 @@ pub enum ShapeObject {
     Ole(Box<OleObject>),
     Equation(Box<EquationObject>),
     Chart(Box<ChartObject>),
+    Video(Box<VideoObject>),
 }
 
 // ═══════════════════════════════════════════
@@ -342,8 +343,16 @@ pub struct ConnectLineObject {
     pub connect_type: ConnectLineType,
     pub start_pt: ConnectPoint,
     pub end_pt: ConnectPoint,
+    pub control_points: Vec<ControlPoint>,
     pub line_shape: ShapeLineInfo,
     pub shadow: Option<ShapeShadow>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ControlPoint {
+    pub x: HwpUnit,
+    pub y: HwpUnit,
+    pub point_type: u32,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -363,7 +372,12 @@ pub struct TextArtObject {
     pub text: String,
     pub font_name: Option<String>,
     pub font_style: Option<String>,
+    pub font_type: Option<String>,
     pub text_shape: Option<String>,
+    pub line_spacing: Option<i32>,
+    pub char_spacing: Option<i32>,
+    pub align: Option<HAlign>,
+    pub points: [Point; 4],
     pub outline: Vec<Point>,
     pub line_shape: ShapeLineInfo,
     pub fill: Option<FillBrush>,
@@ -414,4 +428,22 @@ pub struct EquationObject {
 pub struct ChartObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
+}
+
+// ── 비디오 ──
+
+#[derive(Debug, Clone, Default)]
+pub struct VideoObject {
+    pub common: ShapeCommon,
+    pub video_type: VideoType,
+    pub file_id_ref: Option<String>,
+    pub image_id_ref: Option<String>,
+    pub tag: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub enum VideoType {
+    #[default]
+    Local,
+    Web,
 }

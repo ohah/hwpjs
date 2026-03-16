@@ -181,7 +181,28 @@ fn parse_run(
                         ))));
                 }
                 b"ole" => {
-                    skip_element(reader, e.name().as_ref())?;
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::Ole(Box::new(
+                            parse_ole_object(e, reader)?,
+                        ))));
+                }
+                b"connectLine" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::ConnectLine(Box::new(
+                            parse_connect_line(e, reader)?,
+                        ))));
+                }
+                b"textart" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::TextArt(Box::new(
+                            parse_textart_object(e, reader)?,
+                        ))));
+                }
+                b"video" => {
+                    run.contents
+                        .push(RunContent::Object(ShapeObject::Video(Box::new(
+                            parse_video_object(e, reader)?,
+                        ))));
                 }
                 _ => {
                     skip_element(reader, e.name().as_ref())?;
@@ -544,8 +565,23 @@ fn parse_ctrl(reader: &mut Reader<&[u8]>) -> Result<Option<Control>, HwpxError> 
                     b"fieldBegin" => {
                         result = Some(Control::FieldBegin(parse_field_begin(e, reader)?));
                     }
+                    b"fieldBegin" => {
+                        result = Some(Control::FieldBegin(parse_field_begin(e, reader)?));
+                    }
                     b"fieldEnd" => {
                         result = Some(Control::FieldEnd);
+                    }
+                    b"compose" => {
+                        result = Some(Control::Compose(Compose {
+                            circle_type: attr_str(e, b"circleType"),
+                            char_sz: attr_u16(e, b"charSz"),
+                            compose_type: attr_str(e, b"composeType"),
+                            compose_text: attr_str(e, b"composeText"),
+                            char_pr_refs: Vec::new(),
+                        }));
+                    }
+                    b"dutmal" => {
+                        result = Some(Control::Dutmal(parse_dutmal(e, reader)?));
                     }
                     b"newNum" => {
                         result = Some(Control::NewNum(NewNum {
@@ -874,70 +910,37 @@ fn parse_picture(
     let mut buf = Vec::new();
     loop {
         match reader.read_event_into(&mut buf)? {
-            Event::Empty(ref e) | Event::Start(ref e) => {
+            Event::Empty(ref e) => {
                 match local_name(e.name().as_ref()) {
                     b"sz" => parse_shape_size(&mut pic.common, e),
                     b"pos" => parse_shape_pos(&mut pic.common, e),
-                    b"outMargin" => {
-                        pic.common.out_margin = Some(parse_margin_attrs(e));
+                    b"outMargin" => pic.common.out_margin = Some(parse_margin_attrs(e)),
+                    b"offset" => pic.component.offset = Some(Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) }),
+                    b"orgSz" => pic.component.org_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    b"curSz" => pic.component.cur_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    b"flip" => pic.component.flip = Some(Flip { horizontal: attr_bool(e, b"horizontal").unwrap_or(false), vertical: attr_bool(e, b"vertical").unwrap_or(false) }),
+                    b"rotationInfo" => pic.component.rotation = Some(Rotation { angle: attr_f32(e, b"angle").unwrap_or(0.0), center_x: attr_i32(e, b"centerX").unwrap_or(0), center_y: attr_i32(e, b"centerY").unwrap_or(0), ..Default::default() }),
+                    b"imgClip" => pic.img_clip = Some(Margin { left: attr_i32(e, b"left").unwrap_or(0), right: attr_i32(e, b"right").unwrap_or(0), top: attr_i32(e, b"top").unwrap_or(0), bottom: attr_i32(e, b"bottom").unwrap_or(0) }),
+                    b"inMargin" => pic.in_margin = Some(parse_margin_attrs(e)),
+                    b"img" => pic.img = ImageRef { binary_item_id: attr_str(e, b"binaryItemIDRef").unwrap_or_default(), bright: attr_i8(e, b"bright").unwrap_or(0), contrast: attr_i8(e, b"contrast").unwrap_or(0), effect: parse_image_effect(&attr_str(e, b"effect").unwrap_or_default()), alpha: attr_u8(e, b"alpha").unwrap_or(0) },
+                    b"imgDim" => pic.img_dim = Some(Size { width: attr_i32(e, b"dimwidth").unwrap_or(0), height: attr_i32(e, b"dimheight").unwrap_or(0) }),
+                    b"effects" => { /* empty effects tag, skip */ }
+                    _ => {}
+                }
+            }
+            Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"imgRect" => {
+                        pic.img_rect = Some(parse_img_rect(reader)?);
                     }
-                    b"offset" => {
-                        pic.component.offset = Some(Point {
-                            x: attr_i32(e, b"x").unwrap_or(0),
-                            y: attr_i32(e, b"y").unwrap_or(0),
-                        });
+                    b"effects" => {
+                        pic.effects = Some(parse_picture_effects(reader)?);
                     }
-                    b"orgSz" => {
-                        pic.component.org_size = Some(Size {
-                            width: attr_i32(e, b"width").unwrap_or(0),
-                            height: attr_i32(e, b"height").unwrap_or(0),
-                        });
+                    b"caption" => {
+                        pic.common.caption = Some(parse_caption(e, reader)?);
                     }
-                    b"curSz" => {
-                        pic.component.cur_size = Some(Size {
-                            width: attr_i32(e, b"width").unwrap_or(0),
-                            height: attr_i32(e, b"height").unwrap_or(0),
-                        });
-                    }
-                    b"flip" => {
-                        pic.component.flip = Some(Flip {
-                            horizontal: attr_bool(e, b"horizontal").unwrap_or(false),
-                            vertical: attr_bool(e, b"vertical").unwrap_or(false),
-                        });
-                    }
-                    b"rotationInfo" => {
-                        pic.component.rotation = Some(Rotation {
-                            angle: attr_f32(e, b"angle").unwrap_or(0.0),
-                            center_x: attr_i32(e, b"centerX").unwrap_or(0),
-                            center_y: attr_i32(e, b"centerY").unwrap_or(0),
-                            ..Default::default()
-                        });
-                    }
-                    b"imgClip" => {
-                        pic.img_clip = Some(Margin {
-                            left: attr_i32(e, b"left").unwrap_or(0),
-                            right: attr_i32(e, b"right").unwrap_or(0),
-                            top: attr_i32(e, b"top").unwrap_or(0),
-                            bottom: attr_i32(e, b"bottom").unwrap_or(0),
-                        });
-                    }
-                    b"inMargin" => {
-                        pic.in_margin = Some(parse_margin_attrs(e));
-                    }
-                    b"img" => {
-                        pic.img = ImageRef {
-                            binary_item_id: attr_str(e, b"binaryItemIDRef").unwrap_or_default(),
-                            bright: attr_i8(e, b"bright").unwrap_or(0),
-                            contrast: attr_i8(e, b"contrast").unwrap_or(0),
-                            effect: parse_image_effect(&attr_str(e, b"effect").unwrap_or_default()),
-                            alpha: attr_u8(e, b"alpha").unwrap_or(0),
-                        };
-                    }
-                    b"imgDim" => {
-                        pic.img_dim = Some(Size {
-                            width: attr_i32(e, b"dimwidth").unwrap_or(0),
-                            height: attr_i32(e, b"dimheight").unwrap_or(0),
-                        });
+                    b"renderingInfo" => {
+                        skip_element(reader, e.name().as_ref())?;
                     }
                     _ => {}
                 }
@@ -2013,6 +2016,427 @@ fn parse_caption_side(s: &str) -> CaptionSide {
         "RIGHT" => CaptionSide::Right,
         "TOP" => CaptionSide::Top,
         _ => CaptionSide::Bottom,
+    }
+}
+
+// ═══════════════════════════════════════════
+// OLE 파서
+// ═══════════════════════════════════════════
+
+fn parse_ole_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<OleObject, HwpxError> {
+    let mut obj = OleObject {
+        common: parse_shape_common_attrs(start),
+        component: parse_shape_component_attrs(start),
+        object_type: parse_ole_type(&attr_str(start, b"objectType").unwrap_or_default()),
+        binary_item_id: attr_str(start, b"binaryItemIDRef"),
+        has_moniker: attr_bool(start, b"hasMoniker").unwrap_or(false),
+        presentation: parse_ole_presentation(&attr_str(start, b"drawAspect").unwrap_or_default()),
+        eq_baseline: attr_str(start, b"eqBaseLine").and_then(|s| s.parse().ok()),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    b"outMargin" => obj.common.out_margin = Some(parse_margin_attrs(e)),
+                    b"extent" => {
+                        obj.extent = Size {
+                            width: attr_i32(e, b"x").unwrap_or(0),
+                            height: attr_i32(e, b"y").unwrap_or(0),
+                        };
+                    }
+                    b"lineShape" => obj.line_shape = Some(parse_shape_line_info(e)),
+                    b"offset" => obj.component.offset = Some(Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) }),
+                    b"orgSz" => obj.component.org_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"ole" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(obj)
+}
+
+// ═══════════════════════════════════════════
+// 연결선 파서
+// ═══════════════════════════════════════════
+
+fn parse_connect_line(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<ConnectLineObject, HwpxError> {
+    let mut obj = ConnectLineObject {
+        common: parse_shape_common_attrs(start),
+        component: parse_shape_component_attrs(start),
+        connect_type: parse_connect_line_type(&attr_str(start, b"type").unwrap_or_default()),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    b"outMargin" => obj.common.out_margin = Some(parse_margin_attrs(e)),
+                    b"lineShape" => obj.line_shape = parse_shape_line_info(e),
+                    b"shadow" => obj.shadow = Some(parse_shape_shadow(e)),
+                    b"startPt" => {
+                        obj.start_pt = ConnectPoint {
+                            x: attr_i32(e, b"x").unwrap_or(0),
+                            y: attr_i32(e, b"y").unwrap_or(0),
+                            subject_id: attr_u64(e, b"subjectIDRef"),
+                            subject_idx: attr_u16(e, b"subjectIdx"),
+                        };
+                    }
+                    b"endPt" => {
+                        obj.end_pt = ConnectPoint {
+                            x: attr_i32(e, b"x").unwrap_or(0),
+                            y: attr_i32(e, b"y").unwrap_or(0),
+                            subject_id: attr_u64(e, b"subjectIDRef"),
+                            subject_idx: attr_u16(e, b"subjectIdx"),
+                        };
+                    }
+                    b"point" => {
+                        obj.control_points.push(ControlPoint {
+                            x: attr_i32(e, b"x").unwrap_or(0),
+                            y: attr_i32(e, b"y").unwrap_or(0),
+                            point_type: attr_u32(e, b"type").unwrap_or(0),
+                        });
+                    }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"connectLine" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(obj)
+}
+
+// ═══════════════════════════════════════════
+// 글맵시 파서
+// ═══════════════════════════════════════════
+
+fn parse_textart_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<TextArtObject, HwpxError> {
+    let mut obj = TextArtObject {
+        common: parse_shape_common_attrs(start),
+        component: parse_shape_component_attrs(start),
+        text: attr_str(start, b"text").unwrap_or_default(),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    b"outMargin" => obj.common.out_margin = Some(parse_margin_attrs(e)),
+                    b"offset" => obj.component.offset = Some(Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) }),
+                    b"orgSz" => obj.component.org_size = Some(Size { width: attr_i32(e, b"width").unwrap_or(0), height: attr_i32(e, b"height").unwrap_or(0) }),
+                    b"lineShape" => obj.line_shape = parse_shape_line_info(e),
+                    b"fillBrush" => { obj.fill = parse_fill_brush_body(reader)?; }
+                    b"shadow" => obj.shadow = Some(parse_shape_shadow(e)),
+                    b"textartPr" => {
+                        obj.font_name = attr_str(e, b"fontName");
+                        obj.font_style = attr_str(e, b"fontStyle");
+                        obj.font_type = attr_str(e, b"fontType");
+                        obj.text_shape = attr_str(e, b"textShape");
+                        obj.line_spacing = attr_i32(e, b"lineSpacing");
+                        obj.char_spacing = attr_i32(e, b"charSpacing");
+                        obj.align = attr_str(e, b"align").map(|s| parse_halign(&s));
+                    }
+                    b"outline" => {
+                        obj.outline = parse_outline_points(reader)?;
+                    }
+                    b"pt0" => obj.points[0] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"pt1" => obj.points[1] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"pt2" => obj.points[2] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"pt3" => obj.points[3] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"textart" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(obj)
+}
+
+fn parse_img_rect(reader: &mut Reader<&[u8]>) -> Result<[Point; 4], HwpxError> {
+    let mut pts = [Point::default(), Point::default(), Point::default(), Point::default()];
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"pt0" => pts[0] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"pt1" => pts[1] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"pt2" => pts[2] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    b"pt3" => pts[3] = Point { x: attr_i32(e, b"x").unwrap_or(0), y: attr_i32(e, b"y").unwrap_or(0) },
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"imgRect" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(pts)
+}
+
+fn parse_outline_points(reader: &mut Reader<&[u8]>) -> Result<Vec<Point>, HwpxError> {
+    let mut points = Vec::new();
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                if local_name(e.name().as_ref()) == b"pt" {
+                    points.push(Point {
+                        x: attr_i32(e, b"x").unwrap_or(0),
+                        y: attr_i32(e, b"y").unwrap_or(0),
+                    });
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"outline" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(points)
+}
+
+// ═══════════════════════════════════════════
+// 비디오 파서
+// ═══════════════════════════════════════════
+
+fn parse_video_object(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<VideoObject, HwpxError> {
+    let mut obj = VideoObject {
+        common: parse_shape_common_attrs(start),
+        video_type: parse_video_type(&attr_str(start, b"videotype").unwrap_or_default()),
+        file_id_ref: attr_str(start, b"fileIDRef"),
+        image_id_ref: attr_str(start, b"imageIDRef"),
+        tag: attr_str(start, b"tag"),
+    };
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"sz" => parse_shape_size(&mut obj.common, e),
+                    b"pos" => parse_shape_pos(&mut obj.common, e),
+                    b"outMargin" => obj.common.out_margin = Some(parse_margin_attrs(e)),
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"video" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(obj)
+}
+
+// ═══════════════════════════════════════════
+// 덧말 파서
+// ═══════════════════════════════════════════
+
+fn parse_dutmal(
+    start: &quick_xml::events::BytesStart,
+    reader: &mut Reader<&[u8]>,
+) -> Result<Dutmal, HwpxError> {
+    let mut dm = Dutmal {
+        position: parse_dutmal_position(&attr_str(start, b"posType").unwrap_or_default()),
+        sz_ratio: attr_u16(start, b"szRatio"),
+        option: attr_u32(start, b"option"),
+        style_id_ref: attr_u16(start, b"styleIDRef"),
+        alignment: parse_halign(&attr_str(start, b"align").unwrap_or_default()),
+        ..Default::default()
+    };
+
+    let mut buf = Vec::new();
+    let mut current_tag = String::new();
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Start(ref e) => {
+                let tag = e.name();
+                let name = local_name(tag.as_ref());
+                if name == b"mainText" { current_tag = "main".to_string(); }
+                else if name == b"subText" { current_tag = "sub".to_string(); }
+            }
+            Event::Text(ref t) => {
+                let text = t.unescape().unwrap_or_default().to_string();
+                match current_tag.as_str() {
+                    "main" => dm.main_text = text,
+                    "sub" => dm.sub_text = text,
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                let tag = e.name();
+                let name = local_name(tag.as_ref());
+                if name == b"mainText" || name == b"subText" { current_tag.clear(); }
+                if name == b"dutmal" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(dm)
+}
+
+// ═══════════════════════════════════════════
+// 그림 효과 파서
+// ═══════════════════════════════════════════
+
+fn parse_picture_effects(reader: &mut Reader<&[u8]>) -> Result<PictureEffects, HwpxError> {
+    let mut effects = PictureEffects::default();
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Empty(ref e) | Event::Start(ref e) => {
+                match local_name(e.name().as_ref()) {
+                    b"shadow" => {
+                        effects.shadow = Some(PicEffectShadow {
+                            style: parse_effect_shadow_style(&attr_str(e, b"style").unwrap_or_default()),
+                            alpha: attr_f32(e, b"alpha").unwrap_or(0.0),
+                            radius: attr_i32(e, b"radius").unwrap_or(0),
+                            direction: attr_f32(e, b"direction").unwrap_or(0.0),
+                            distance: attr_i32(e, b"distance").unwrap_or(0),
+                            ..Default::default()
+                        });
+                    }
+                    b"glow" => {
+                        effects.glow = Some(PicEffectGlow {
+                            alpha: attr_f32(e, b"alpha").unwrap_or(0.0),
+                            radius: attr_i32(e, b"radius").unwrap_or(0),
+                            ..Default::default()
+                        });
+                    }
+                    b"softEdge" => {
+                        effects.soft_edge = Some(PicEffectSoftEdge {
+                            radius: attr_i32(e, b"radius").unwrap_or(0),
+                        });
+                    }
+                    b"reflection" => {
+                        effects.reflection = Some(PicEffectReflection {
+                            radius: attr_i32(e, b"radius").unwrap_or(0),
+                            direction: attr_f32(e, b"direction").unwrap_or(0.0),
+                            distance: attr_i32(e, b"distance").unwrap_or(0),
+                            ..Default::default()
+                        });
+                    }
+                    _ => {}
+                }
+            }
+            Event::End(ref e) => {
+                if local_name(e.name().as_ref()) == b"effects" { break; }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    Ok(effects)
+}
+
+// ═══════════════════════════════════════════
+// 추가 enum 파싱
+// ═══════════════════════════════════════════
+
+fn parse_ole_type(s: &str) -> OleObjectType {
+    match s {
+        "EMBEDDED" => OleObjectType::Embedded,
+        "LINK" => OleObjectType::Link,
+        "STATIC" => OleObjectType::Static,
+        "EQUATION" => OleObjectType::Equation,
+        _ => OleObjectType::Unknown,
+    }
+}
+
+fn parse_ole_presentation(s: &str) -> OlePresentation {
+    match s {
+        "THUMB_NAIL" => OlePresentation::ThumbNail,
+        "ICON" => OlePresentation::Icon,
+        "DOC_PRINT" => OlePresentation::DocPrint,
+        _ => OlePresentation::Content,
+    }
+}
+
+fn parse_connect_line_type(s: &str) -> ConnectLineType {
+    match s {
+        "STRAIGHT_ONEWAY" => ConnectLineType::StraightOneWay,
+        "STRAIGHT_BOTH" => ConnectLineType::StraightBoth,
+        "STROKE_NOARROW" => ConnectLineType::StrokeNoArrow,
+        "STROKE_ONEWAY" => ConnectLineType::StrokeOneWay,
+        "STROKE_BOTH" => ConnectLineType::StrokeBoth,
+        "ARC_NOARROW" => ConnectLineType::ArcNoArrow,
+        "ARC_ONEWAY" => ConnectLineType::ArcOneWay,
+        "ARC_BOTH" => ConnectLineType::ArcBoth,
+        _ => ConnectLineType::StraightNoArrow,
+    }
+}
+
+fn parse_video_type(s: &str) -> VideoType {
+    match s {
+        "Web" => VideoType::Web,
+        _ => VideoType::Local,
+    }
+}
+
+fn parse_dutmal_position(s: &str) -> DutmalPosition {
+    match s {
+        "BOTTOM" => DutmalPosition::Bottom,
+        "CENTER" => DutmalPosition::Center,
+        _ => DutmalPosition::Top,
+    }
+}
+
+fn parse_effect_shadow_style(s: &str) -> ShadowStyle {
+    match s {
+        "INSIDE" => ShadowStyle::Inside,
+        _ => ShadowStyle::Outside,
     }
 }
 
