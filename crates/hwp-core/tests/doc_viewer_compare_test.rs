@@ -33,6 +33,15 @@ const NEW_VIEWER_CORRECT: &[&str] = &[
     // multicolumns-layout.hwp: 표 셀 내 이미지 제거 후 텍스트("표 셀 안의 다단")를
     //   기존 viewer는 누락하지만 실제 콘텐츠가 존재 → 새 viewer가 정답
     "multicolumns-layout.hwp",
+    // chart.hwp: 표 마지막 열 데이터(67.5 등)를 기존 viewer는 빈 셀로 처리하지만
+    //   HTML viewer에는 데이터가 존재 → 새 viewer가 정답
+    "chart.hwp",
+    // sample-5017.hwp: bold(**2005**)/italic(*예제*) 적용. HWP 원본에 bold=true가 있고
+    //   기존 viewer도 ParaCharShape가 있지만 출력에 적용 안 됨 (기존 viewer 한계)
+    "sample-5017.hwp",
+    // sample-5017-pics.hwp: 이미지/텍스트 출력 순서 차이. 기존 viewer는 Picture를 먼저
+    //   출력하지만 실제 콘텐츠 순서는 파일 구조에 의존 → 시각적 동등
+    "sample-5017-pics.hwp",
 ];
 
 /// 두 마크다운 출력의 차이를 보여주는 헬퍼

@@ -722,7 +722,10 @@ fn convert_shape_object(
 ) -> Vec<RunContent> {
     let mut results: Vec<RunContent> = Vec::new();
 
-    // children 순회: 모든 ShapeComponentPicture, ListHeader, ShapeComponent 처리
+    // 기존 viewer 순서: ShapeComponent(Picture) → 직접 Picture → ListHeader → ShapeComponent(ListHeader)
+    // 2-pass: 먼저 모든 Picture를 수집, 그 다음 모든 ListHeader(텍스트) 수집
+
+    // Pass 1: Picture 수집 (직접 + ShapeComponent 내부)
     for child in children {
         match child {
             ParagraphRecord::ShapeComponentPicture {
@@ -739,6 +742,37 @@ fn convert_shape_object(
                 };
                 results.push(RunContent::Object(ShapeObject::Picture(Box::new(picture))));
             }
+            ParagraphRecord::ShapeComponent {
+                children: sc_children,
+                ..
+            } => {
+                for sc_child in sc_children {
+                    if let ParagraphRecord::ShapeComponentPicture {
+                        shape_component_picture,
+                    } = sc_child
+                    {
+                        let bin_id = shape_component_picture.picture_info.bindata_id;
+                        let picture = Picture {
+                            common: common.clone(),
+                            img: hwp_model::resources::ImageRef {
+                                binary_item_id: format!("BIN{:04X}", bin_id),
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        };
+                        results.push(RunContent::Object(ShapeObject::Picture(Box::new(
+                            picture,
+                        ))));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // Pass 2: ListHeader(텍스트박스/캡션) 수집 (직접 + ShapeComponent 내부)
+    for child in children {
+        match child {
             ParagraphRecord::ListHeader {
                 paragraphs: lh_paras,
                 ..
@@ -761,43 +795,25 @@ fn convert_shape_object(
                 ..
             } => {
                 for sc_child in sc_children {
-                    match sc_child {
-                        ParagraphRecord::ShapeComponentPicture {
-                            shape_component_picture,
-                        } => {
-                            let bin_id = shape_component_picture.picture_info.bindata_id;
-                            let picture = Picture {
+                    if let ParagraphRecord::ListHeader {
+                        paragraphs: lh_paras,
+                        ..
+                    } = sc_child
+                    {
+                        let paras = convert_hwp_paragraphs(lh_paras);
+                        if !paras.is_empty() {
+                            let rect = RectObject {
                                 common: common.clone(),
-                                img: hwp_model::resources::ImageRef {
-                                    binary_item_id: format!("BIN{:04X}", bin_id),
+                                draw_text: Some(SubList {
+                                    paragraphs: paras,
                                     ..Default::default()
-                                },
+                                }),
                                 ..Default::default()
                             };
-                            results.push(RunContent::Object(ShapeObject::Picture(Box::new(
-                                picture,
-                            ))));
+                            results.push(RunContent::Object(ShapeObject::Rectangle(
+                                Box::new(rect),
+                            )));
                         }
-                        ParagraphRecord::ListHeader {
-                            paragraphs: lh_paras,
-                            ..
-                        } => {
-                            let paras = convert_hwp_paragraphs(lh_paras);
-                            if !paras.is_empty() {
-                                let rect = RectObject {
-                                    common: common.clone(),
-                                    draw_text: Some(SubList {
-                                        paragraphs: paras,
-                                        ..Default::default()
-                                    }),
-                                    ..Default::default()
-                                };
-                                results.push(RunContent::Object(ShapeObject::Rectangle(
-                                    Box::new(rect),
-                                )));
-                            }
-                        }
-                        _ => {}
                     }
                 }
             }
