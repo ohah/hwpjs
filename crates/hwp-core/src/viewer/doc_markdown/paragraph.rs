@@ -405,10 +405,22 @@ fn render_table(
             // 셀 내 줄바꿈 → <br> + 공백 (기존 viewer와 동일)
             let cell_text = cell_text.replace("\n\n", "<br> ").replace('\n', "<br> ");
             // 빈 셀은 공백, 일반 셀은 끝에 <br> 추가
+            // 셀에 Object(이미지/하이퍼링크 등)가 있었으면 제거 후에도 <br>로 표시
+            let has_objects = cell.content.paragraphs.iter().any(|p| {
+                p.runs.iter().any(|r| {
+                    r.contents
+                        .iter()
+                        .any(|c| matches!(c, RunContent::Object(_)))
+                })
+            });
             let cell_text = if cell_text.trim().is_empty() {
-                " ".to_string()
+                if has_objects {
+                    "<br>".to_string() // 이미지/도형이 있던 셀은 <br>로 표시
+                } else {
+                    " ".to_string()
+                }
             } else {
-                format!("{}<br>", cell_text.trim_end())
+                format!("{}<br>", cell_text.trim_end_matches('\n'))
             };
             cells.push(cell_text);
         }
