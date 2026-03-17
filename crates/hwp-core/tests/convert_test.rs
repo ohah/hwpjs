@@ -522,6 +522,35 @@ fn convert_all_fixtures_border_fills() {
     }
 }
 
+#[test]
+fn convert_binaries_from_pics() {
+    let hwp_doc = parse_hwp("sample-5017-pics.hwp");
+
+    // HwpDocument에 bin_data가 있어야 함
+    assert!(
+        !hwp_doc.bin_data.items.is_empty(),
+        "sample-5017-pics.hwp should have bin_data items"
+    );
+
+    let doc = to_document(&hwp_doc);
+
+    // Document.binaries에 변환되어야 함
+    assert_eq!(
+        doc.binaries.items.len(),
+        hwp_doc.bin_data.items.len(),
+        "All bin_data items should be converted to binaries"
+    );
+
+    for item in &doc.binaries.items {
+        assert!(!item.id.is_empty(), "Binary item should have an id");
+        assert!(!item.data.is_empty(), "Binary item should have data bytes");
+        assert!(
+            item.id.starts_with("BIN"),
+            "Binary item id should start with BIN"
+        );
+    }
+}
+
 fn extract_all_text(doc: &hwp_model::document::Document) -> String {
     let mut text = String::new();
     for sec in &doc.sections {
