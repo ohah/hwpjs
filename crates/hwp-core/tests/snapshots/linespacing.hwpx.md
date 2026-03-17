@@ -1,51 +1,59 @@
-<u>|HHHHHHHHHHHHHH</u>
+# HWP 문서
 
-<u>|HHHHHHHHHHHHHH</u>
 
-<u>|H 글자에 따라 150%</u>
 
-<u>|HHHHHHHHHHHHHH</u>
+**버전**: 10, 0, 0, 5060 WIN32LEWindows_8
 
-<u>|H 고정 값 15pt</u>
 
-<u>|HHHHHHHHHHHHHH</u>
 
-<u>|H 여백만 지정 5pt</u>
+|HHHHHHHHHHHHHH
 
-<u>|HHHHHHHHHHHHHH</u>
+|HHHHHHHHHHHHHH
 
-<u>|H 글자에 따라 100%</u>
+|H 글자에 따라 150%
 
-<u>|HHHHHHHHHHHHHH</u>
+|HHHHHHHHHHHHHH
 
-<u>|H 고정 값 10pt</u>
+|H 고정 값 15pt
 
-<u>|HHHHHHHHHHHHHH</u>
+|HHHHHHHHHHHHHH
 
-<u>|H 여백만 지정 0pt</u>
+|H 여백만 지정 5pt
 
-<u>|HHHHHHHHHHHHHH</u>
+|HHHHHHHHHHHHHH
 
-<u>|H 글자에 따라 200%</u>
+|H 글자에 따라 100%
 
-<u>|HHHHHHHHHHHHHH</u>
+|HHHHHHHHHHHHHH
 
-<u>|H 고정 값 20pt</u>
+|H 고정 값 10pt
 
-<u>|HHHHHHHHHHHHHH</u>
+|HHHHHHHHHHHHHH
 
-<u>|H 여백만 지정 10pt</u>
+|H 여백만 지정 0pt
 
-<u>|HHHHHHHHHHHHHH</u>
+|HHHHHHHHHHHHHH
 
-<u>|H 글자에 따라</u><u>100%</u>
+|H 글자에 따라 200%
 
-<u>|HHHHHHHHHHHHHH</u>
+|HHHHHHHHHHHHHH
 
-<u>|H 고정 값</u><u>0pt</u>
+|H 고정 값 20pt
 
-<u>|HHHHHHHHHHHHHH</u>
+|HHHHHHHHHHHHHH
 
-<u>|H 여백만 지정</u><u>0pt</u>
+|H 여백만 지정 10pt
 
-<u>|HHHHHHHHHHHHHH</u>
+|HHHHHHHHHHHHHH
+
+|H 글자에 따라100%
+
+|HHHHHHHHHHHHHH
+
+|H 고정 값0pt
+
+|HHHHHHHHHHHHHH
+
+|H 여백만 지정0pt
+
+|HHHHHHHHHHHHHH

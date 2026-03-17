@@ -1,3 +1,11 @@
+# HWP 문서
+
+
+
+**버전**: 10, 0, 0, 5060 WIN32LEWindows_8
+
+
+
 ko바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕
 
 ko한컴바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕

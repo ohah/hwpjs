@@ -53,18 +53,25 @@ fn render_run(
     let mut control_parts: Vec<ControlPart> = Vec::new();
 
     // CharShape에서 스타일 정보 가져오기
+    // 기존 viewer와 동일: bold, italic, strikethrough만 적용 (underline 미적용)
+    // underline_type == Center(2)는 취소선으로 처리
     let char_shape = resources.char_shapes.get(run.char_shape_id as usize);
     let bold = char_shape.is_some_and(|cs| cs.bold);
     let italic = char_shape.is_some_and(|cs| cs.italic);
-    let strikeout = char_shape.is_some_and(|cs| cs.strikeout.is_some());
-    let underline = char_shape.is_some_and(|cs| cs.underline.is_some());
+    let strikeout = char_shape.is_some_and(|cs| {
+        cs.strikeout.is_some()
+            || cs
+                .underline
+                .as_ref()
+                .is_some_and(|u| u.underline_type == hwp_model::types::UnderlineType::Center)
+    });
 
     for content in &run.contents {
         match content {
             RunContent::Text(text_content) => {
                 let text = render_text_content(text_content);
                 if !text.is_empty() {
-                    let styled = apply_styles(&text, bold, italic, strikeout, underline);
+                    let styled = apply_styles(&text, bold, italic, strikeout);
                     text_parts.push(styled);
                 }
             }
@@ -238,22 +245,20 @@ fn render_picture(binary_item_id: &str, binaries: &BinaryStore) -> String {
 }
 
 /// 텍스트에 Markdown 스타일 적용
-fn apply_styles(text: &str, bold: bool, italic: bool, strikeout: bool, underline: bool) -> String {
+/// 기존 viewer와 동일: italic(안쪽) → bold → strikethrough(바깥쪽). underline 미적용.
+fn apply_styles(text: &str, bold: bool, italic: bool, strikeout: bool) -> String {
     if text.is_empty() || text.chars().all(|c| c.is_whitespace()) {
         return text.to_string();
     }
     let mut result = text.to_string();
-    if strikeout {
-        result = format!("~~{}~~", result);
+    if italic {
+        result = format!("*{}*", result);
     }
     if bold {
         result = format!("**{}**", result);
     }
-    if italic {
-        result = format!("*{}*", result);
-    }
-    if underline {
-        result = format!("<u>{}</u>", result);
+    if strikeout {
+        result = format!("~~{}~~", result);
     }
     result
 }

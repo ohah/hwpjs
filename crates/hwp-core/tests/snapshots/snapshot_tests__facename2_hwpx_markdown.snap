@@ -2,6 +2,14 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: markdown
 ---
+# HWP 문서
+
+
+
+**버전**: 10, 0, 0, 5060 WIN32LEWindows_8
+
+
+
 ko바탕 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕
 
 ko한컴돋움 en바탕 cn바탕 jp바탕 other바탕 symbol바탕 user바탕
