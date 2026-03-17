@@ -243,3 +243,9 @@ impl From<HWPUNIT> for u32 {
         value.0
     }
 }
+
+impl From<HWPUNIT> for i32 {
+    fn from(value: HWPUNIT) -> Self {
+        value.0 as i32
+    }
+}
