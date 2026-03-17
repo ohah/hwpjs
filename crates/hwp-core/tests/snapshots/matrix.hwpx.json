@@ -2189,7 +2189,8 @@
                             "has_char_shapes": true
                           }
                         ]
-                      }
+                      },
+                      "is_caption": false
                     }
                   }
                 },
@@ -2340,7 +2341,8 @@
                             "has_char_shapes": true
                           }
                         ]
-                      }
+                      },
+                      "is_caption": false
                     }
                   }
                 },
@@ -2491,7 +2493,8 @@
                             "has_char_shapes": true
                           }
                         ]
-                      }
+                      },
+                      "is_caption": false
                     }
                   }
                 },
