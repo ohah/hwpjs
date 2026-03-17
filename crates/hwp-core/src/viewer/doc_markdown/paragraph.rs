@@ -302,8 +302,8 @@ fn render_table(
                 binaries,
                 options,
             );
-            // 셀 내 줄바꿈 → <br> (기존 viewer와 동일)
-            let cell_text = cell_text.replace("\n\n", "<br>").replace('\n', "<br>");
+            // 셀 내 줄바꿈 → <br> + 공백 (기존 viewer와 동일)
+            let cell_text = cell_text.replace("\n\n", "<br> ").replace('\n', "<br> ");
             // 빈 셀은 공백, 일반 셀은 끝에 <br> 추가
             let cell_text = if cell_text.trim().is_empty() {
                 " ".to_string()

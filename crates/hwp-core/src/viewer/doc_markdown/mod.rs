@@ -205,8 +205,14 @@ pub(crate) fn render_sublist_paragraphs(
     let mut parts = Vec::new();
     for para in paragraphs {
         let (body, _) = paragraph::render_paragraph(para, resources, binaries, options);
-        // SubList 내부에서는 앞뒤 공백/탭 제거 (기존 viewer와 동일)
-        let body = body.replace('\t', "").trim().to_string();
+        // SubList 내부에서는 탭 제거 + bold/italic 마커 제거 + trim (기존 viewer와 동일)
+        let body = body
+            .replace('\t', "")
+            .replace("**", "")
+            .replace("*", "")
+            .replace("~~", "")
+            .trim()
+            .to_string();
         if !body.is_empty() {
             parts.push(body);
         }
