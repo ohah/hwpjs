@@ -121,9 +121,7 @@ fn assemble_runs(
         };
         // 텍스트 없이 CtrlHeader만 있는 문단 (secd, cold 등)
         for record in ctrl_headers {
-            if let Some(content) = convert_ctrl_header(record) {
-                run.contents.push(content);
-            }
+            run.contents.extend(convert_ctrl_header(record));
         }
         return vec![run];
     }
@@ -152,15 +150,13 @@ fn assemble_runs(
                     size_wchars,
                     ..
                 } => {
-                    if let Some(content) = convert_control_char(
+                    run.contents.extend(convert_control_char(
                         *code,
                         *size_wchars,
                         display_text,
                         ctrl_headers,
                         &mut ctrl_idx,
-                    ) {
-                        run.contents.push(content);
-                    }
+                    ));
                 }
             }
         }
@@ -228,15 +224,13 @@ fn assemble_runs(
                 size_wchars,
                 ..
             } => {
-                if let Some(content) = convert_control_char(
+                current_run.contents.extend(convert_control_char(
                     *code,
                     *size_wchars,
                     display_text,
                     ctrl_headers,
                     &mut ctrl_idx,
-                ) {
-                    current_run.contents.push(content);
-                }
+                ));
                 current_pos += *size_wchars as u32;
             }
         }
@@ -296,9 +290,7 @@ fn append_remaining_ctrl_headers(
     consumed: usize,
 ) {
     for record in &ctrl_headers[consumed..] {
-        if let Some(content) = convert_ctrl_header(record) {
-            run.contents.push(content);
-        }
+        run.contents.extend(convert_ctrl_header(record));
     }
 }
 
@@ -315,44 +307,43 @@ fn convert_control_char(
     display_text: &Option<String>,
     ctrl_headers: &[&ParagraphRecord],
     ctrl_idx: &mut usize,
-) -> Option<RunContent> {
+) -> Vec<RunContent> {
     // 인라인 제어 문자
     match code {
-        // code 4: 필드 끝 (하이퍼링크 등)
-        0x04 => return Some(RunContent::Control(Control::FieldEnd)),
+        0x04 => return vec![RunContent::Control(Control::FieldEnd)],
         0x0A => {
-            return Some(RunContent::Text(TextContent {
+            return vec![RunContent::Text(TextContent {
                 char_shape_id: None,
                 elements: vec![TextElement::LineBreak],
-            }))
+            })]
         }
         0x09 => {
-            return Some(RunContent::Text(TextContent {
+            return vec![RunContent::Text(TextContent {
                 char_shape_id: None,
                 elements: vec![TextElement::Tab {
                     width: 0,
                     leader: LineType2::None,
                     tab_type: TabType::Left,
                 }],
-            }))
+            })]
         }
         0x18 => {
-            return Some(RunContent::Text(TextContent {
+            return vec![RunContent::Text(TextContent {
                 char_shape_id: None,
                 elements: vec![TextElement::Hyphen],
-            }))
+            })]
         }
         0x1E => {
-            return Some(RunContent::Text(TextContent {
+            return vec![RunContent::Text(TextContent {
                 char_shape_id: None,
                 elements: vec![TextElement::NbSpace],
-            }))
+            })]
         }
         0x1F => {
-            return Some(RunContent::Text(TextContent {
+            return vec![RunContent::Text(TextContent {
                 char_shape_id: None,
                 elements: vec![TextElement::FwSpace],
-            }))
+            })]
         }
         _ => {}
     }
@@ -365,39 +356,45 @@ fn convert_control_char(
             return convert_ctrl_header(record);
         }
         // CtrlHeader가 부족하면 display_text 폴백
-        return display_text.as_ref().map(|dt| {
-            RunContent::Text(TextContent {
-                char_shape_id: None,
-                elements: vec![TextElement::Text(dt.clone())],
+        return display_text
+            .as_ref()
+            .map(|dt| {
+                vec![RunContent::Text(TextContent {
+                    char_shape_id: None,
+                    elements: vec![TextElement::Text(dt.clone())],
+                })]
             })
-        });
+            .unwrap_or_default();
     }
 
     // 자동번호 등 표시 텍스트
     if code == 0x12 {
-        return display_text.as_ref().map(|dt| {
-            RunContent::Text(TextContent {
-                char_shape_id: None,
-                elements: vec![TextElement::Text(dt.clone())],
+        return display_text
+            .as_ref()
+            .map(|dt| {
+                vec![RunContent::Text(TextContent {
+                    char_shape_id: None,
+                    elements: vec![TextElement::Text(dt.clone())],
+                })]
             })
-        });
+            .unwrap_or_default();
     }
 
-    None
+    vec![]
 }
 
 // ═══════════════════════════════════════════
 // CtrlHeader → RunContent 디스패처
 // ═══════════════════════════════════════════
 
-fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
+fn convert_ctrl_header(record: &ParagraphRecord) -> Vec<RunContent> {
     let ParagraphRecord::CtrlHeader {
         header,
         children,
         paragraphs,
     } = record
     else {
-        return None;
+        return vec![];
     };
 
     match &header.data {
@@ -428,7 +425,9 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
             );
 
             match header.ctrl_id.as_str() {
-                CtrlId::TABLE => convert_table_object(common, children),
+                CtrlId::TABLE => convert_table_object(common, children)
+                    .into_iter()
+                    .collect(),
                 _ => convert_shape_object(common, children, paragraphs),
             }
         }
@@ -445,7 +444,6 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                 ctrl_header::ApplyPage::EvenOnly => PageApplyType::Even,
                 ctrl_header::ApplyPage::OddOnly => PageApplyType::Odd,
             };
-            // 머리글/꼬리글 내용: paragraphs가 비어있으면 children의 ListHeader에서 가져옴
             let source_paras = if paragraphs.is_empty() {
                 find_list_header_paragraphs(children)
             } else {
@@ -474,7 +472,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                     content,
                 })
             };
-            Some(RunContent::Control(ctrl))
+            vec![RunContent::Control(ctrl)]
         }
 
         ctrl_header::CtrlHeaderData::FootnoteEndnote { number, .. } => {
@@ -497,7 +495,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
             } else {
                 Control::EndNote(note)
             };
-            Some(RunContent::Control(ctrl))
+            vec![RunContent::Control(ctrl)]
         }
 
         ctrl_header::CtrlHeaderData::Field {
@@ -532,7 +530,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                 field_id: Some(*id),
                 ..Default::default()
             });
-            Some(RunContent::Control(ctrl))
+            vec![RunContent::Control(ctrl)]
         }
 
         ctrl_header::CtrlHeaderData::ColumnDefinition {
@@ -556,7 +554,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                 same_size: attribute.equal_width,
                 same_gap: *column_spacing as i32,
             });
-            Some(RunContent::Control(ctrl))
+            vec![RunContent::Control(ctrl)]
         }
 
         ctrl_header::CtrlHeaderData::AutoNumber {
@@ -566,7 +564,6 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
             prefix,
             suffix,
         } => {
-            // attribute bits 0-11: number type, bits 12-15: auto num type
             let num_type = match (*attribute >> 12) & 0x0F {
                 1 => AutoNumType::Picture,
                 2 => AutoNumType::Table,
@@ -589,7 +586,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                 prefix_char: non_empty(prefix),
                 suffix_char: non_empty(suffix),
             });
-            Some(RunContent::Control(ctrl))
+            vec![RunContent::Control(ctrl)]
         }
 
         ctrl_header::CtrlHeaderData::NewNumber { attribute, number } => {
@@ -603,7 +600,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                 num_type,
                 num: *number,
             });
-            Some(RunContent::Control(ctrl))
+            vec![RunContent::Control(ctrl)]
         }
 
         ctrl_header::CtrlHeaderData::PageNumberPosition { flags, .. } => {
@@ -611,27 +608,25 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                 page_starts_on: None,
                 visible: Some(true),
             });
-            let _ = flags; // 위치 정보는 hints로 처리
-            Some(RunContent::Control(ctrl))
+            let _ = flags;
+            vec![RunContent::Control(ctrl)]
         }
 
         ctrl_header::CtrlHeaderData::BookmarkMarker { keyword1, .. } => {
-            let ctrl = Control::Bookmark(Bookmark {
+            vec![RunContent::Control(Control::Bookmark(Bookmark {
                 name: keyword1.clone(),
-            });
-            Some(RunContent::Control(ctrl))
+            }))]
         }
 
         ctrl_header::CtrlHeaderData::Hide { attribute } => {
-            let ctrl = Control::PageHiding(PageHiding {
+            vec![RunContent::Control(Control::PageHiding(PageHiding {
                 hide_header: (*attribute & 0x01) != 0,
                 hide_footer: (*attribute & 0x02) != 0,
                 hide_master_page: (*attribute & 0x04) != 0,
                 hide_border: (*attribute & 0x08) != 0,
                 hide_fill: (*attribute & 0x10) != 0,
                 hide_page_num: (*attribute & 0x20) != 0,
-            });
-            Some(RunContent::Control(ctrl))
+            }))]
         }
 
         ctrl_header::CtrlHeaderData::Overlap {
@@ -639,12 +634,11 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
             char_shape_ids,
             ..
         } => {
-            let ctrl = Control::Compose(Compose {
+            vec![RunContent::Control(Control::Compose(Compose {
                 compose_text: Some(text.clone()),
                 char_pr_refs: char_shape_ids.clone(),
                 ..Default::default()
-            });
-            Some(RunContent::Control(ctrl))
+            }))]
         }
 
         ctrl_header::CtrlHeaderData::Comment {
@@ -666,7 +660,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                 2 => HAlign::Right,
                 _ => HAlign::Left,
             };
-            let ctrl = Control::Dutmal(Dutmal {
+            vec![RunContent::Control(Control::Dutmal(Dutmal {
                 main_text: main_text.clone(),
                 sub_text: sub_text.clone(),
                 position: pos,
@@ -674,18 +668,18 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                 sz_ratio: Some(*fsize_ratio as u16),
                 option: Some(*option),
                 style_id_ref: Some(*style_number as u16),
-            });
-            Some(RunContent::Control(ctrl))
+            }))]
         }
 
         ctrl_header::CtrlHeaderData::HiddenDescription => {
             let paras = convert_hwp_paragraphs(paragraphs);
-            let ctrl = Control::HiddenDesc(HiddenDesc { paragraphs: paras });
-            Some(RunContent::Control(ctrl))
+            vec![RunContent::Control(Control::HiddenDesc(HiddenDesc {
+                paragraphs: paras,
+            }))]
         }
 
         // SectionDefinition, PageAdjust, Other → 무시
-        _ => None,
+        _ => vec![],
     }
 }
 
@@ -694,84 +688,115 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
 // ═══════════════════════════════════════════
 
 /// 도형/그림 → ShapeObject 변환 (텍스트박스, 그림 등)
+/// 기존 viewer와 동일하게 children과 paragraphs를 모두 순회하여 콘텐츠 수집
+/// 각 도형을 별도 RunContent로 반환 (기존 viewer처럼 paragraph 내 개별 parts로 처리)
 fn convert_shape_object(
     common: ShapeCommon,
     children: &[ParagraphRecord],
     paragraphs: &[bodytext::Paragraph],
-) -> Option<RunContent> {
-    // children에서 ShapeComponentPicture가 있으면 그림
-    for child in children {
-        if let ParagraphRecord::ShapeComponentPicture {
-            shape_component_picture,
-        } = child
-        {
-            let bin_id = shape_component_picture.picture_info.bindata_id;
-            let picture = Picture {
-                common,
-                img: hwp_model::resources::ImageRef {
-                    binary_item_id: format!("BIN{:04X}", bin_id),
-                    ..Default::default()
-                },
-                ..Default::default()
-            };
-            return Some(RunContent::Object(ShapeObject::Picture(Box::new(picture))));
-        }
-    }
+) -> Vec<RunContent> {
+    let mut results: Vec<RunContent> = Vec::new();
 
-    // ShapeComponent 1단계 하위에서도 ShapeComponentPicture 찾기
+    // children 순회: 모든 ShapeComponentPicture, ListHeader, ShapeComponent 처리
     for child in children {
-        if let ParagraphRecord::ShapeComponent {
-            children: sc_children,
-            ..
-        } = child
-        {
-            for sc_child in sc_children {
-                if let ParagraphRecord::ShapeComponentPicture {
-                    shape_component_picture,
-                } = sc_child
-                {
-                    let bin_id = shape_component_picture.picture_info.bindata_id;
-                    let picture = Picture {
-                        common,
-                        img: hwp_model::resources::ImageRef {
-                            binary_item_id: format!("BIN{:04X}", bin_id),
+        match child {
+            ParagraphRecord::ShapeComponentPicture {
+                shape_component_picture,
+            } => {
+                let bin_id = shape_component_picture.picture_info.bindata_id;
+                let picture = Picture {
+                    common: common.clone(),
+                    img: hwp_model::resources::ImageRef {
+                        binary_item_id: format!("BIN{:04X}", bin_id),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                };
+                results.push(RunContent::Object(ShapeObject::Picture(Box::new(picture))));
+            }
+            ParagraphRecord::ListHeader {
+                paragraphs: lh_paras,
+                ..
+            } => {
+                let paras = convert_hwp_paragraphs(lh_paras);
+                if !paras.is_empty() {
+                    let rect = RectObject {
+                        common: common.clone(),
+                        draw_text: Some(SubList {
+                            paragraphs: paras,
                             ..Default::default()
-                        },
+                        }),
                         ..Default::default()
                     };
-                    return Some(RunContent::Object(ShapeObject::Picture(Box::new(picture))));
+                    results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
                 }
             }
+            ParagraphRecord::ShapeComponent {
+                children: sc_children,
+                ..
+            } => {
+                for sc_child in sc_children {
+                    match sc_child {
+                        ParagraphRecord::ShapeComponentPicture {
+                            shape_component_picture,
+                        } => {
+                            let bin_id = shape_component_picture.picture_info.bindata_id;
+                            let picture = Picture {
+                                common: common.clone(),
+                                img: hwp_model::resources::ImageRef {
+                                    binary_item_id: format!("BIN{:04X}", bin_id),
+                                    ..Default::default()
+                                },
+                                ..Default::default()
+                            };
+                            results.push(RunContent::Object(ShapeObject::Picture(Box::new(
+                                picture,
+                            ))));
+                        }
+                        ParagraphRecord::ListHeader {
+                            paragraphs: lh_paras,
+                            ..
+                        } => {
+                            let paras = convert_hwp_paragraphs(lh_paras);
+                            if !paras.is_empty() {
+                                let rect = RectObject {
+                                    common: common.clone(),
+                                    draw_text: Some(SubList {
+                                        paragraphs: paras,
+                                        ..Default::default()
+                                    }),
+                                    ..Default::default()
+                                };
+                                results.push(RunContent::Object(ShapeObject::Rectangle(
+                                    Box::new(rect),
+                                )));
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
         }
     }
 
-    // 텍스트박스: paragraphs 또는 children/ShapeComponent children의 ListHeader
-    let source_paras = if !paragraphs.is_empty() {
-        paragraphs
-    } else {
-        let found = find_list_header_paragraphs(children);
-        if found.is_empty() {
-            // ShapeComponent 1단계 하위에서 ListHeader 찾기
-            find_list_header_in_shape_components(children)
-        } else {
-            found
+    // ctrl_paragraphs 처리 (기존 viewer의 ctrl_paragraphs 처리와 동일)
+    if !paragraphs.is_empty() {
+        let paras = convert_hwp_paragraphs(paragraphs);
+        if !paras.is_empty() {
+            let rect = RectObject {
+                common: common.clone(),
+                draw_text: Some(SubList {
+                    paragraphs: paras,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+            results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
         }
-    };
-    let paras = convert_hwp_paragraphs(source_paras);
-    if !paras.is_empty() {
-        let sub_list = SubList {
-            paragraphs: paras,
-            ..Default::default()
-        };
-        let rect = RectObject {
-            common,
-            draw_text: Some(sub_list),
-            ..Default::default()
-        };
-        return Some(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
     }
 
-    None
+    results
 }
 
 /// ShapeComponent children에서 ListHeader paragraphs 찾기

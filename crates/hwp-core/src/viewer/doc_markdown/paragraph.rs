@@ -211,10 +211,24 @@ fn render_run(
             RunContent::Object(shape) => {
                 let obj_text = render_shape_object(shape, resources, binaries, options);
                 if !obj_text.is_empty() {
+                    // Object 앞에 텍스트가 있으면 "  \n" 구분자 추가 (기존 viewer의 soft line break)
+                    if !text_parts.is_empty() {
+                        let last = text_parts.last().unwrap();
+                        if !last.ends_with("  \n") && !last.ends_with("\n\n") {
+                            text_parts.push("  \n".to_string());
+                        }
+                    }
                     text_parts.push(obj_text);
+                    // Object 뒤에도 구분자 추가 (다음 Object나 텍스트를 위해)
+                    text_parts.push("  \n".to_string());
                 }
             }
         }
+    }
+
+    // 마지막이 "  \n"이면 제거 (trailing 구분자)
+    while text_parts.last().is_some_and(|s| s == "  \n") {
+        text_parts.pop();
     }
 
     (text_parts.join(""), control_parts)
@@ -249,8 +263,16 @@ fn render_shape_object(
         ShapeObject::Picture(pic) => render_picture(&pic.img.binary_item_id, binaries),
         ShapeObject::Rectangle(rect) => {
             // 텍스트 박스 (draw_text가 있는 경우)
+            // 기존 viewer와 동일하게 일반 문단으로 처리 (bold/italic 마커 유지, trailing 보존)
             if let Some(ref sub_list) = rect.draw_text {
-                super::render_sublist_paragraphs(&sub_list.paragraphs, resources, binaries, options)
+                let mut parts = Vec::new();
+                for para in &sub_list.paragraphs {
+                    let (body, _) = render_paragraph(para, resources, binaries, options);
+                    if !body.trim().is_empty() {
+                        parts.push(body);
+                    }
+                }
+                parts.join("\n\n")
             } else {
                 String::new()
             }

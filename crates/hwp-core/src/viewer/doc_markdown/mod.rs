@@ -71,11 +71,11 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
     let mut endnotes: Vec<String> = Vec::new();
 
     for (section_idx, section) in doc.sections.iter().enumerate() {
-        // 섹션 간 구분선
+        // 섹션 간 구분선 (기존 viewer의 render_page_break와 동일하게 "---\n")
         if section_idx > 0 && !body_lines.is_empty() {
             let last = body_lines.last().map(String::as_str).unwrap_or("");
-            if !last.is_empty() && last != "---" {
-                body_lines.push("---".to_string());
+            if !last.is_empty() && !last.starts_with("---") {
+                body_lines.push("---\n".to_string());
             }
         }
 
@@ -83,8 +83,8 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
             // 페이지 구분선
             if para.page_break && !body_lines.is_empty() {
                 let last = body_lines.last().map(String::as_str).unwrap_or("");
-                if !last.is_empty() && last != "---" {
-                    body_lines.push("---".to_string());
+                if !last.is_empty() && !last.starts_with("---") {
+                    body_lines.push("---\n".to_string());
                 }
             }
 
