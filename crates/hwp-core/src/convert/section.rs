@@ -950,6 +950,27 @@ fn convert_shape_object(
     }
 
     // Pass 2: ListHeader(텍스트박스/캡션) 수집 (직접 + ShapeComponent 내부)
+    // treat_as_char=true 도형: ListHeader를 건너뜀
+    // (기존 viewer에서 글자처럼 취급 도형은 본문에 인라인 삽입됨)
+    if treat_as_char {
+        // ctrl_paragraphs만 처리
+        if !paragraphs.is_empty() {
+            let paras = convert_hwp_paragraphs(paragraphs);
+            if !paras.is_empty() {
+                let rect = RectObject {
+                    common,
+                    draw_text: Some(SubList {
+                        paragraphs: paras,
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                };
+                results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
+            }
+        }
+        return results;
+    }
+
     for child in children {
         match child {
             ParagraphRecord::ListHeader {
