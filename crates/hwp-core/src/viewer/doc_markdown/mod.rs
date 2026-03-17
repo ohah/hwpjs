@@ -129,7 +129,15 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
             }
 
             if !body.is_empty() {
-                body_lines.push(body);
+                // 본문 텍스트(표가 아닌 경우)의 leading/trailing whitespace 제거
+                let body = if !body.contains('\n') {
+                    body.trim().to_string()
+                } else {
+                    body
+                };
+                if !body.is_empty() {
+                    body_lines.push(body);
+                }
             }
         }
     }
