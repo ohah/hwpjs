@@ -54,10 +54,10 @@ fn render_run(
 
     // CharShape에서 스타일 정보 가져오기
     let char_shape = resources.char_shapes.get(run.char_shape_id as usize);
-    let bold = char_shape.map_or(false, |cs| cs.bold);
-    let italic = char_shape.map_or(false, |cs| cs.italic);
-    let strikeout = char_shape.map_or(false, |cs| cs.strikeout.is_some());
-    let underline = char_shape.map_or(false, |cs| cs.underline.is_some());
+    let bold = char_shape.is_some_and(|cs| cs.bold);
+    let italic = char_shape.is_some_and(|cs| cs.italic);
+    let strikeout = char_shape.is_some_and(|cs| cs.strikeout.is_some());
+    let underline = char_shape.is_some_and(|cs| cs.underline.is_some());
 
     for content in &run.contents {
         match content {
