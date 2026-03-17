@@ -150,13 +150,8 @@ pub fn render_paragraph(
     let mut hyperlink_url: Option<String> = None;
     let mut hyperlink_text_parts: Vec<String> = Vec::new();
 
-    // 기존 viewer 동작: ParaCharShape가 없는 문단(단일 Run + 기본 char_shape)은 bold/italic 적용 안 함
-    // char_shape_id == 0이면 기본 char_shape로 간주 (ParaCharShape 레코드가 없었던 경우)
-    let skip_styles = para.runs.len() <= 1
-        && para
-            .runs
-            .first()
-            .map_or(true, |r| r.char_shape_id == 0);
+    // 기존 viewer 동작: ParaCharShape가 없는 문단은 bold/italic 적용 안 함
+    let skip_styles = !para.has_char_shapes;
 
     for run in &para.runs {
         let (run_text, mut run_controls) = render_run(
@@ -354,7 +349,8 @@ fn render_shape_object(
                         parts.push(body);
                     }
                 }
-                parts.join("\n\n")
+                // 기존 viewer와 동일: 텍스트박스 내부 문단은 "  \n" (soft line break)으로 연결
+                parts.join("  \n")
             } else {
                 String::new()
             }

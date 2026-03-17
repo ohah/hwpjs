@@ -18,6 +18,10 @@ pub struct Paragraph {
     pub runs: Vec<Run>,
     /// 줄 세그먼트 정보 (레이아웃 캐시). HWP와 HWPX 양쪽에 존재.
     pub line_segments: Vec<LineSegmentInfo>,
+    /// ParaCharShape 레코드 유무 (HWP 변환 시 설정)
+    /// false이면 기존 viewer와 동일하게 bold/italic 스킵 + trailing space 보존
+    #[serde(default)]
+    pub has_char_shapes: bool,
 }
 
 /// 동일 글자 모양의 콘텐츠 단위

@@ -146,11 +146,14 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
 
             // 기존 viewer와 동일: 머리글/꼬리글/각주/미주가 있는 문단은 body 텍스트 생략
             if !has_header_footer_note && !body.is_empty() {
-                // heading 접두사(들여쓰기 포함)가 적용된 경우 trim 생략
                 let body = if has_heading || body.contains('\n') {
                     body
-                } else {
+                } else if para.has_char_shapes {
+                    // ParaCharShape가 있는 문단: trim() (기존 viewer와 동일)
                     body.trim().to_string()
+                } else {
+                    // ParaCharShape가 없는 문단: trailing space 보존, leading만 제거
+                    body.trim_start().to_string()
                 };
                 if !body.is_empty() {
                     body_lines.push(body);

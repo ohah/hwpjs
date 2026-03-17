@@ -10116,7 +10116,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -10258,7 +10259,8 @@
                                         "segment_width": 5720,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -10403,7 +10405,8 @@
                                         "segment_width": 42508,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -10481,7 +10484,8 @@
                                         "segment_width": 5720,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -10555,7 +10559,8 @@
                                         "segment_width": 18408,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -10629,7 +10634,8 @@
                                         "segment_width": 5736,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -10703,7 +10709,8 @@
                                         "segment_width": 18360,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -10781,7 +10788,8 @@
                                         "segment_width": 5720,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -10855,7 +10863,8 @@
                                         "segment_width": 18408,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -10929,7 +10938,8 @@
                                         "segment_width": 5736,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -11003,7 +11013,8 @@
                                         "segment_width": 18360,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -11040,7 +11051,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -11076,7 +11088,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -11218,7 +11231,8 @@
                                         "segment_width": 47294,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 0,
@@ -11258,7 +11272,8 @@
                                         "segment_width": 47294,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 0,
@@ -11298,7 +11313,8 @@
                                         "segment_width": 47294,
                                         "flags": 2490368
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 0,
@@ -11338,7 +11354,8 @@
                                         "segment_width": 47294,
                                         "flags": 2490368
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -11375,7 +11392,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -11613,7 +11631,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -11735,7 +11754,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -11786,7 +11806,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -11938,7 +11959,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -12075,7 +12097,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -12197,7 +12220,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -12308,7 +12332,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -12475,7 +12500,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -12694,7 +12720,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -12775,7 +12802,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -12923,7 +12951,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -12947,7 +12976,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -12971,7 +13001,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -12995,7 +13026,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -13246,7 +13278,8 @@
                                         "segment_width": 10364,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -13320,7 +13353,8 @@
                                         "segment_width": 36968,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -13360,7 +13394,8 @@
                                         "segment_width": 36968,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -13392,7 +13427,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -13534,7 +13570,8 @@
                                         "segment_width": 5684,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -13592,7 +13629,8 @@
                                         "segment_width": 1440,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -13666,7 +13704,8 @@
                                         "segment_width": 41344,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -13698,7 +13737,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -13840,7 +13880,8 @@
                                         "segment_width": 8076,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -13914,7 +13955,8 @@
                                         "segment_width": 17696,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -13988,7 +14030,8 @@
                                         "segment_width": 19396,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -14066,7 +14109,8 @@
                                         "segment_width": 8476,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -14249,7 +14293,8 @@
                                         "segment_width": 0,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -14432,7 +14477,8 @@
                                         "segment_width": 19396,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -14510,7 +14556,8 @@
                                         "segment_width": 8476,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -14651,7 +14698,8 @@
                                         "segment_width": 17696,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -14736,7 +14784,8 @@
                                         "segment_width": 19396,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -14814,7 +14863,8 @@
                                         "segment_width": 8476,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -14888,7 +14938,8 @@
                                         "segment_width": 17696,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -14962,7 +15013,8 @@
                                         "segment_width": 19396,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15040,7 +15092,8 @@
                                         "segment_width": 8476,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15114,7 +15167,8 @@
                                         "segment_width": 17696,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15188,7 +15242,8 @@
                                         "segment_width": 19396,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15266,7 +15321,8 @@
                                         "segment_width": 8476,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15340,7 +15396,8 @@
                                         "segment_width": 17696,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15414,7 +15471,8 @@
                                         "segment_width": 19396,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15492,7 +15550,8 @@
                                         "segment_width": 8476,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15566,7 +15625,8 @@
                                         "segment_width": 17696,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15640,7 +15700,8 @@
                                         "segment_width": 19396,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15718,7 +15779,8 @@
                                         "segment_width": 8476,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15792,7 +15854,8 @@
                                         "segment_width": 17696,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15866,7 +15929,8 @@
                                         "segment_width": 19396,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -15898,7 +15962,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         }
       ]
     }

@@ -2200,7 +2200,8 @@ expression: json
                                         "segment_width": 3496,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -2258,7 +2259,8 @@ expression: json
                                         "segment_width": 3496,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -2316,7 +2318,8 @@ expression: json
                                         "segment_width": 3496,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -2378,7 +2381,8 @@ expression: json
                                         "segment_width": 7276,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -2410,7 +2414,8 @@ expression: json
               "segment_width": 0,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -2434,7 +2439,8 @@ expression: json
               "segment_width": 42520,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         }
       ]
     }

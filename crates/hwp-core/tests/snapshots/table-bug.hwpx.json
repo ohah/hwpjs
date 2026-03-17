@@ -23976,7 +23976,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -24000,7 +24001,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -24040,7 +24042,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -24190,7 +24193,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -24248,7 +24252,8 @@
                                         "segment_width": 26572,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -24322,7 +24327,8 @@
                                         "segment_width": 4732,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -24396,7 +24402,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -24485,7 +24492,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -24559,7 +24567,8 @@
                                         "segment_width": 26572,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -24599,7 +24608,8 @@
                                         "segment_width": 26572,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -24673,7 +24683,8 @@
                                         "segment_width": 4732,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -24747,7 +24758,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -24787,7 +24799,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -24865,7 +24878,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -24905,7 +24919,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -24979,7 +24994,8 @@
                                         "segment_width": 26572,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -25019,7 +25035,8 @@
                                         "segment_width": 26572,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25077,7 +25094,8 @@
                                         "segment_width": 4732,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25135,7 +25153,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25213,7 +25232,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25287,7 +25307,8 @@
                                         "segment_width": 13000,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25361,7 +25382,8 @@
                                         "segment_width": 13000,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25435,7 +25457,8 @@
                                         "segment_width": 13004,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25513,7 +25536,8 @@
                                         "segment_width": 13000,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25587,7 +25611,8 @@
                                         "segment_width": 13000,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25661,7 +25686,8 @@
                                         "segment_width": 13004,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25739,7 +25765,8 @@
                                         "segment_width": 13000,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25813,7 +25840,8 @@
                                         "segment_width": 13000,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25887,7 +25915,8 @@
                                         "segment_width": 13004,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -25965,7 +25994,8 @@
                                         "segment_width": 13000,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26039,7 +26069,8 @@
                                         "segment_width": 13000,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26113,7 +26144,8 @@
                                         "segment_width": 13004,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26191,7 +26223,8 @@
                                         "segment_width": 13000,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26265,7 +26298,8 @@
                                         "segment_width": 13000,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26339,7 +26373,8 @@
                                         "segment_width": 13004,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26417,7 +26452,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26491,7 +26527,8 @@
                                         "segment_width": 40140,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -26531,7 +26568,8 @@
                                         "segment_width": 40140,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26593,7 +26631,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26667,7 +26706,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26741,7 +26781,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26819,7 +26860,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26877,7 +26919,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -26935,7 +26978,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27013,7 +27057,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27071,7 +27116,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27129,7 +27175,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27207,7 +27254,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27265,7 +27313,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27323,7 +27372,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27401,7 +27451,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27459,7 +27510,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27517,7 +27569,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27595,7 +27648,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27653,7 +27707,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27711,7 +27766,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27789,7 +27845,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27847,7 +27904,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27905,7 +27963,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -27983,7 +28042,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28041,7 +28101,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28099,7 +28160,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28177,7 +28239,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28235,7 +28298,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28293,7 +28357,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28371,7 +28436,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28429,7 +28495,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28487,7 +28554,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28565,7 +28633,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28623,7 +28692,8 @@
                                         "segment_width": 31868,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28681,7 +28751,8 @@
                                         "segment_width": 7704,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -28713,7 +28784,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -28753,7 +28825,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -28777,7 +28850,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -28817,7 +28891,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -28959,7 +29034,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29017,7 +29093,8 @@
                                         "segment_width": 14448,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29091,7 +29168,8 @@
                                         "segment_width": 7616,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29149,7 +29227,8 @@
                                         "segment_width": 16944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29227,7 +29306,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29285,7 +29365,8 @@
                                         "segment_width": 14448,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29359,7 +29440,8 @@
                                         "segment_width": 7616,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29417,7 +29499,8 @@
                                         "segment_width": 16944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29495,7 +29578,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -29535,7 +29619,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29654,7 +29739,8 @@
                                         "segment_width": 40140,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29732,7 +29818,8 @@
                                         "segment_width": 6064,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29806,7 +29893,8 @@
                                         "segment_width": 40140,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -29846,7 +29934,8 @@
                                         "segment_width": 40140,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -29954,7 +30043,8 @@
                                         "segment_width": 46772,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -30032,7 +30122,8 @@
                                         "segment_width": 46772,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -30110,7 +30201,8 @@
                                         "segment_width": 46772,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -30188,7 +30280,8 @@
                                         "segment_width": 46772,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -30266,7 +30359,8 @@
                                         "segment_width": 46772,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -30298,7 +30392,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -30440,7 +30535,8 @@
                                         "segment_width": 46772,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -30518,7 +30614,8 @@
                                         "segment_width": 46772,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -30596,7 +30693,8 @@
                                         "segment_width": 46772,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -30674,7 +30772,8 @@
                                         "segment_width": 46772,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -30752,7 +30851,8 @@
                                         "segment_width": 46772,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -30784,7 +30884,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -30808,7 +30909,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -30832,7 +30934,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -30887,7 +30990,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -30927,7 +31031,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -30951,7 +31056,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -30975,7 +31081,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -30999,7 +31106,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31039,7 +31147,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -31079,7 +31188,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31103,7 +31213,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31150,7 +31261,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31174,7 +31286,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31198,7 +31311,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31372,7 +31486,8 @@
                                 "segment_width": 43652,
                                 "flags": 393216
                               }
-                            ]
+                            ],
+                            "has_char_shapes": true
                           }
                         ]
                       }
@@ -31400,7 +31515,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31424,7 +31540,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31448,7 +31565,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31472,7 +31590,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31496,7 +31615,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31520,7 +31640,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31544,7 +31665,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31568,7 +31690,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31710,7 +31833,8 @@
                                         "segment_width": 13336,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -31784,7 +31908,8 @@
                                         "segment_width": 30316,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -31862,7 +31987,8 @@
                                         "segment_width": 13336,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -31920,7 +32046,8 @@
                                         "segment_width": 30316,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -31952,7 +32079,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -31976,7 +32104,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -32000,7 +32129,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -32024,7 +32154,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -32048,7 +32179,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -32088,7 +32220,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -32112,7 +32245,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -32152,7 +32286,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -32294,7 +32429,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32334,7 +32470,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32374,7 +32511,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32414,7 +32552,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32454,7 +32593,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32478,7 +32618,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32518,7 +32659,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32542,7 +32684,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32582,7 +32725,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32606,7 +32750,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32646,7 +32791,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32670,7 +32816,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32710,7 +32857,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32734,7 +32882,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32774,7 +32923,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32814,7 +32964,8 @@
                                         "segment_width": 47612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -32838,7 +32989,8 @@
                                         "segment_width": 46612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -32870,7 +33022,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -32910,7 +33063,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -32950,7 +33104,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -33092,7 +33247,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33150,7 +33306,8 @@
                                         "segment_width": 37608,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33228,7 +33385,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 0,
@@ -33268,7 +33426,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33342,7 +33501,8 @@
                                         "segment_width": 37608,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33420,7 +33580,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33494,7 +33655,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33568,7 +33730,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33642,7 +33805,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33720,7 +33884,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33778,7 +33943,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33836,7 +34002,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33894,7 +34061,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -33972,7 +34140,8 @@
                                         "segment_width": 8052,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34061,7 +34230,8 @@
                                         "segment_width": 19372,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34139,7 +34309,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34197,7 +34368,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34255,7 +34427,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34313,7 +34486,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34391,7 +34565,8 @@
                                         "segment_width": 8052,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34465,7 +34640,8 @@
                                         "segment_width": 19372,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34543,7 +34719,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34601,7 +34778,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34659,7 +34837,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34717,7 +34896,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34795,7 +34975,8 @@
                                         "segment_width": 8052,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34869,7 +35050,8 @@
                                         "segment_width": 19372,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -34947,7 +35129,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35005,7 +35188,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35063,7 +35247,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35121,7 +35306,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35199,7 +35385,8 @@
                                         "segment_width": 8052,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35273,7 +35460,8 @@
                                         "segment_width": 19372,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35351,7 +35539,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35409,7 +35598,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35467,7 +35657,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35525,7 +35716,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35603,7 +35795,8 @@
                                         "segment_width": 8052,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35677,7 +35870,8 @@
                                         "segment_width": 19372,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -35709,7 +35903,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -35749,7 +35944,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -35773,7 +35969,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -35813,7 +36010,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -35853,7 +36051,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -35877,7 +36076,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -35901,7 +36101,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -36043,7 +36244,8 @@
                                         "segment_width": 4328,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -36083,7 +36285,8 @@
                                         "segment_width": 4328,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -36157,7 +36360,8 @@
                                         "segment_width": 8020,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -36215,7 +36419,8 @@
                                         "segment_width": 33712,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -36293,7 +36498,8 @@
                                         "segment_width": 4328,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -36317,7 +36523,8 @@
                                         "segment_width": 4328,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -36341,7 +36548,8 @@
                                         "segment_width": 4328,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -36381,7 +36589,8 @@
                                         "segment_width": 4328,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -36405,7 +36614,8 @@
                                         "segment_width": 4328,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -36429,7 +36639,8 @@
                                         "segment_width": 4328,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -36469,7 +36680,8 @@
                                         "segment_width": 4328,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -36554,7 +36766,8 @@
                                         "segment_width": 1888,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -36628,7 +36841,8 @@
                                         "segment_width": 3496,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -36686,7 +36900,8 @@
                                         "segment_width": 13204,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -36760,7 +36975,8 @@
                                         "segment_width": 6532,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -36834,7 +37050,8 @@
                                         "segment_width": 15764,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -36912,7 +37129,8 @@
                                         "segment_width": 3496,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -36970,7 +37188,8 @@
                                         "segment_width": 13204,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -37044,7 +37263,8 @@
                                         "segment_width": 6532,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -37102,7 +37322,8 @@
                                         "segment_width": 15764,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -37180,7 +37401,8 @@
                                         "segment_width": 1888,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -37231,7 +37453,8 @@
                                         "segment_width": 1888,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -37305,7 +37528,8 @@
                                         "segment_width": 39840,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -37329,7 +37553,8 @@
                                         "segment_width": 39840,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -37369,7 +37594,8 @@
                                         "segment_width": 39840,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -37447,7 +37673,8 @@
                                         "segment_width": 5004,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -37487,7 +37714,8 @@
                                         "segment_width": 5004,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -37561,7 +37789,8 @@
                                         "segment_width": 4432,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -37619,7 +37848,8 @@
                                         "segment_width": 32012,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -37697,7 +37927,8 @@
                                         "segment_width": 4432,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -37755,7 +37986,8 @@
                                         "segment_width": 32012,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -37787,7 +38019,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -37811,7 +38044,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -37877,7 +38111,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -37913,7 +38148,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -37953,7 +38189,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -37977,7 +38214,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38001,7 +38239,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38041,7 +38280,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38065,7 +38305,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38089,7 +38330,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38113,7 +38355,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38153,7 +38396,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38177,7 +38421,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38217,7 +38462,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38287,7 +38533,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38323,7 +38570,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38378,7 +38626,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38418,7 +38667,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38458,7 +38708,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -38498,7 +38749,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -38538,7 +38790,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38578,7 +38831,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38618,7 +38872,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38658,7 +38913,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -38698,7 +38954,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -38738,7 +38995,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -38762,7 +39020,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38802,7 +39061,8 @@
               "segment_width": 48188,
               "flags": 1441792
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -38981,7 +39241,8 @@
                                         "segment_width": 5860,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -39157,7 +39418,8 @@
                                                                   "segment_width": 38844,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -39272,7 +39534,8 @@
                                                                   "segment_width": 38844,
                                                                   "flags": 1441792
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             },
                                                             {
                                                               "id": 2147483648,
@@ -39312,7 +39575,8 @@
                                                                   "segment_width": 38844,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -39390,7 +39654,8 @@
                                                                   "segment_width": 38844,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -39468,7 +39733,8 @@
                                                                   "segment_width": 38844,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             },
                                                             {
                                                               "id": 2147483648,
@@ -39508,7 +39774,8 @@
                                                                   "segment_width": 38844,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             },
                                                             {
                                                               "id": 2147483648,
@@ -39548,7 +39815,8 @@
                                                                   "segment_width": 38844,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -39580,7 +39848,8 @@
                                         "segment_width": 40056,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -39658,7 +39927,8 @@
                                         "segment_width": 5860,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -39709,7 +39979,8 @@
                                         "segment_width": 5860,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -39869,7 +40140,8 @@
                                                                   "segment_width": 1440,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -39943,7 +40215,8 @@
                                                                   "segment_width": 14904,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -40017,7 +40290,8 @@
                                                                   "segment_width": 20776,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -40095,7 +40369,8 @@
                                                                   "segment_width": 1440,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -40169,7 +40444,8 @@
                                                                   "segment_width": 14904,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -40243,7 +40519,8 @@
                                                                   "segment_width": 20776,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -40275,7 +40552,8 @@
                                         "segment_width": 40056,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -40390,7 +40668,8 @@
                                         "segment_width": 5860,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -40464,7 +40743,8 @@
                                         "segment_width": 40056,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -40504,7 +40784,8 @@
                                         "segment_width": 40056,
                                         "flags": 1441792
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -40615,7 +40896,8 @@
                                         "segment_width": 5860,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -40666,7 +40948,8 @@
                                         "segment_width": 5860,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -40751,7 +41034,8 @@
                                         "segment_width": 40056,
                                         "flags": 1441792
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -40775,7 +41059,8 @@
                                         "segment_width": 40056,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -40882,7 +41167,8 @@
                                         "segment_width": 40056,
                                         "flags": 1441792
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -41062,7 +41348,8 @@
                                                                   "segment_width": 19124,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -41136,7 +41423,8 @@
                                                                   "segment_width": 24732,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -41168,7 +41456,8 @@
                                         "segment_width": 46936,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -41310,7 +41599,8 @@
                                                                   "segment_width": 22520,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -41384,7 +41674,8 @@
                                                                   "segment_width": 21336,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -41416,7 +41707,8 @@
                                         "segment_width": 46936,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -41440,7 +41732,8 @@
                                         "segment_width": 46936,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -41566,7 +41859,8 @@
                                         "segment_width": 46936,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -41590,7 +41884,8 @@
                                         "segment_width": 46936,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -41630,7 +41925,8 @@
                                         "segment_width": 46936,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -41692,7 +41988,8 @@
                                         "segment_width": 18304,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -41766,7 +42063,8 @@
                                         "segment_width": 27612,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -41798,7 +42096,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -41838,7 +42137,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -41878,7 +42178,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -41902,7 +42203,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -42044,7 +42346,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42102,7 +42405,8 @@
                                         "segment_width": 21780,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42176,7 +42480,8 @@
                                         "segment_width": 5648,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42234,7 +42539,8 @@
                                         "segment_width": 9044,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42312,7 +42618,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42370,7 +42677,8 @@
                                         "segment_width": 37608,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -42394,7 +42702,8 @@
                                         "segment_width": 37608,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42472,7 +42781,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42530,7 +42840,8 @@
                                         "segment_width": 37608,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42608,7 +42919,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42682,7 +42994,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42756,7 +43069,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42830,7 +43144,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -42908,7 +43223,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 0,
@@ -42948,7 +43264,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43006,7 +43323,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43064,7 +43382,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43122,7 +43441,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43200,7 +43520,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43258,7 +43579,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43316,7 +43638,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43374,7 +43697,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43436,7 +43760,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43494,7 +43819,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43552,7 +43878,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43610,7 +43937,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43672,7 +44000,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43730,7 +44059,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43788,7 +44118,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43846,7 +44177,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43908,7 +44240,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -43966,7 +44299,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44024,7 +44358,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44082,7 +44417,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44144,7 +44480,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44202,7 +44539,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44260,7 +44598,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44318,7 +44657,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44380,7 +44720,8 @@
                                         "segment_width": 8944,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44438,7 +44779,8 @@
                                         "segment_width": 27992,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44496,7 +44838,8 @@
                                         "segment_width": 4108,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44554,7 +44897,8 @@
                                         "segment_width": 4368,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -44586,7 +44930,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -44610,7 +44955,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -44665,7 +45011,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -44689,7 +45036,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -44713,7 +45061,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -44753,7 +45102,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -44793,7 +45143,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -44833,7 +45184,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -44857,7 +45209,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 2147483648,
@@ -44999,7 +45352,8 @@
                                         "segment_width": 6684,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45057,7 +45411,8 @@
                                         "segment_width": 18376,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45131,7 +45486,8 @@
                                         "segment_width": 5076,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45189,7 +45545,8 @@
                                         "segment_width": 5940,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45263,7 +45620,8 @@
                                         "segment_width": 4808,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45321,7 +45679,8 @@
                                         "segment_width": 4240,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45399,7 +45758,8 @@
                                         "segment_width": 6684,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45473,7 +45833,8 @@
                                         "segment_width": 39564,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45551,7 +45912,8 @@
                                         "segment_width": 6684,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45625,7 +45987,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45716,7 +46079,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45790,7 +46154,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45848,7 +46213,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -45926,7 +46292,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46017,7 +46384,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46079,7 +46447,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46137,7 +46506,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46215,7 +46585,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46306,7 +46677,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46368,7 +46740,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46426,7 +46799,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46504,7 +46878,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46595,7 +46970,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46657,7 +47033,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46715,7 +47092,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46793,7 +47171,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46884,7 +47263,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -46946,7 +47326,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47004,7 +47385,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47082,7 +47464,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47173,7 +47556,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47235,7 +47619,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47293,7 +47678,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47371,7 +47757,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47462,7 +47849,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47524,7 +47912,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47582,7 +47971,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47660,7 +48050,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47751,7 +48142,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47813,7 +48205,8 @@
                                         "segment_width": 30536,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47871,7 +48264,8 @@
                                         "segment_width": 8748,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -47949,7 +48343,8 @@
                                         "segment_width": 6684,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48007,7 +48402,8 @@
                                         "segment_width": 39564,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48085,7 +48481,8 @@
                                         "segment_width": 46528,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -48125,7 +48522,8 @@
                                         "segment_width": 46528,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48187,7 +48585,8 @@
                                         "segment_width": 46528,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48249,7 +48648,8 @@
                                         "segment_width": 30700,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48323,7 +48723,8 @@
                                         "segment_width": 15548,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48401,7 +48802,8 @@
                                         "segment_width": 7632,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48475,7 +48877,8 @@
                                         "segment_width": 7632,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48537,7 +48940,8 @@
                                         "segment_width": 30700,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48595,7 +48999,8 @@
                                         "segment_width": 7632,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48653,7 +49058,8 @@
                                         "segment_width": 7632,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48685,7 +49091,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -48725,7 +49132,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -48867,7 +49275,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -48922,7 +49331,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -48984,7 +49394,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49062,7 +49473,8 @@
                                         "segment_width": 3616,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49136,7 +49548,8 @@
                                         "segment_width": 5904,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49194,7 +49607,8 @@
                                         "segment_width": 34524,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49272,7 +49686,8 @@
                                         "segment_width": 5904,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -49323,7 +49738,8 @@
                                         "segment_width": 5904,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49381,7 +49797,8 @@
                                         "segment_width": 11056,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49466,7 +49883,8 @@
                                         "segment_width": 9924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49524,7 +49942,8 @@
                                         "segment_width": 13180,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49602,7 +50021,8 @@
                                         "segment_width": 5904,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -49642,7 +50062,8 @@
                                         "segment_width": 5904,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49700,7 +50121,8 @@
                                         "segment_width": 35008,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49762,7 +50184,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -49963,7 +50386,8 @@
                                         "segment_width": 44924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -50041,7 +50465,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -50119,7 +50544,8 @@
                                         "segment_width": 25228,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -50204,7 +50630,8 @@
                                         "segment_width": 18640,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -50323,7 +50750,8 @@
                                         "segment_width": 45152,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -50385,7 +50813,8 @@
                                         "segment_width": 44924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50409,7 +50838,8 @@
                                         "segment_width": 44924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50433,7 +50863,8 @@
                                         "segment_width": 44924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50457,7 +50888,8 @@
                                         "segment_width": 44924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50481,7 +50913,8 @@
                                         "segment_width": 44924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50505,7 +50938,8 @@
                                         "segment_width": 44924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50529,7 +50963,8 @@
                                         "segment_width": 44924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50553,7 +50988,8 @@
                                         "segment_width": 44924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50577,7 +51013,8 @@
                                         "segment_width": 44924,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -50639,7 +51076,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50679,7 +51117,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -50798,7 +51237,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50853,7 +51293,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -50934,7 +51375,8 @@
                                         "segment_width": 45664,
                                         "flags": 1441792
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51019,7 +51461,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -51097,7 +51540,8 @@
                                         "segment_width": 45664,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -51129,7 +51573,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -51169,7 +51614,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -51328,7 +51774,8 @@
                                         "segment_width": 44876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -51428,7 +51875,8 @@
                                         "segment_width": 44876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51452,7 +51900,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51492,7 +51941,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51547,7 +51997,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51632,7 +52083,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51687,7 +52139,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51742,7 +52195,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51766,7 +52220,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51821,7 +52276,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51845,7 +52301,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51885,7 +52342,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51925,7 +52383,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -51995,7 +52454,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52050,7 +52510,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52120,7 +52581,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52171,7 +52633,8 @@
                                         "segment_width": 46876,
                                         "flags": 1441792
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52195,7 +52658,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52250,7 +52714,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52274,7 +52739,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52314,7 +52780,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52354,7 +52821,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52409,7 +52877,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52464,7 +52933,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52504,7 +52974,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52528,7 +52999,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52598,7 +53070,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52679,7 +53152,8 @@
                                         "segment_width": 47076,
                                         "flags": 1441792
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52703,7 +53177,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52886,7 +53361,8 @@
                                                                   "segment_width": 48864,
                                                                   "flags": 393216
                                                                 }
-                                                              ]
+                                                              ],
+                                                              "has_char_shapes": true
                                                             }
                                                           ]
                                                         }
@@ -52918,7 +53394,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52958,7 +53435,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -52982,7 +53460,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -53010,7 +53489,8 @@
                                         ]
                                       }
                                     ],
-                                    "line_segments": []
+                                    "line_segments": [],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -53038,7 +53518,8 @@
                                         ]
                                       }
                                     ],
-                                    "line_segments": []
+                                    "line_segments": [],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -53066,7 +53547,8 @@
                                         ]
                                       }
                                     ],
-                                    "line_segments": []
+                                    "line_segments": [],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -53094,7 +53576,8 @@
                                         ]
                                       }
                                     ],
-                                    "line_segments": []
+                                    "line_segments": [],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -53118,7 +53601,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -53158,7 +53642,8 @@
                                         "segment_width": 45376,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -53198,7 +53683,8 @@
                                         "segment_width": 45376,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -53222,7 +53708,8 @@
                                         "segment_width": 46876,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 2147483648,
@@ -53277,7 +53764,8 @@
                                         "segment_width": 45376,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   },
                                   {
                                     "id": 0,
@@ -53301,7 +53789,8 @@
                                         "segment_width": 45376,
                                         "flags": 393216
                                       }
-                                    ]
+                                    ],
+                                    "has_char_shapes": true
                                   }
                                 ]
                               }
@@ -53333,7 +53822,8 @@
               "segment_width": 48188,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         }
       ]
     }

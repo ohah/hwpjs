@@ -111,6 +111,7 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Paragraph {
         meta_tag: None,
         runs,
         line_segments,
+        has_char_shapes: !char_shapes.is_empty(),
     }
 }
 
