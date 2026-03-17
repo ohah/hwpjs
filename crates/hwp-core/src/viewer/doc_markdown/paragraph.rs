@@ -442,9 +442,46 @@ fn render_table(
 
     let mut lines: Vec<String> = Vec::new();
 
+    // row_span 추적: 각 열에 남은 row_span 카운트
+    let mut row_span_remaining: Vec<u16> = vec![0; col_count];
+
     for (row_idx, row) in table.rows.iter().enumerate() {
-        let mut cells: Vec<String> = Vec::new();
+        // cell.col 기반으로 셀 배치
+        let mut cell_map: std::collections::BTreeMap<u16, &hwp_model::table::TableCell> =
+            std::collections::BTreeMap::new();
         for cell in &row.cells {
+            cell_map.insert(cell.col, cell);
+        }
+
+        let mut cells: Vec<String> = Vec::new();
+        let mut col_idx = 0usize;
+        while col_idx < col_count {
+            // 이전 행에서 row_span이 남아있으면 빈 셀 삽입
+            if row_span_remaining[col_idx] > 0 {
+                row_span_remaining[col_idx] -= 1;
+                cells.push(" ".to_string());
+                col_idx += 1;
+                continue;
+            }
+
+            let cell = match cell_map.get(&(col_idx as u16)) {
+                Some(c) => *c,
+                None => {
+                    cells.push(" ".to_string());
+                    col_idx += 1;
+                    continue;
+                }
+            };
+
+            // row_span > 1이면 다음 행들에 빈 셀 예약
+            if cell.row_span > 1 {
+                for cs in 0..cell.col_span.max(1) as usize {
+                    let span_col = col_idx + cs;
+                    if span_col < col_count {
+                        row_span_remaining[span_col] = cell.row_span - 1;
+                    }
+                }
+            }
             let cell_text = super::render_sublist_paragraphs_for_cell(
                 &cell.content.paragraphs,
                 resources,
@@ -479,9 +516,14 @@ fn render_table(
                 format!("{}<br>", cell_text.trim_end_matches('\n'))
             };
             cells.push(cell_text);
-            // col_span > 1이면 병합된 열에 빈 셀 추가 (기존 viewer와 동일)
+            col_idx += 1;
+
+            // col_span > 1이면 병합된 열에 빈 셀 추가
             for _ in 1..cell.col_span {
-                cells.push(" ".to_string());
+                if col_idx < col_count {
+                    cells.push(" ".to_string());
+                    col_idx += 1;
+                }
             }
         }
         // 셀 수가 col_count보다 적으면 빈 셀 채우기
