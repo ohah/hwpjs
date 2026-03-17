@@ -219,17 +219,41 @@ pub(crate) fn render_sublist_paragraphs(
     binaries: &hwp_model::document::BinaryStore,
     options: &DocMarkdownOptions,
 ) -> String {
+    render_sublist_paragraphs_inner(paragraphs, resources, binaries, options, true)
+}
+
+/// 표 셀 전용: leading space 보존
+pub(crate) fn render_sublist_paragraphs_for_cell(
+    paragraphs: &[hwp_model::paragraph::Paragraph],
+    resources: &hwp_model::resources::Resources,
+    binaries: &hwp_model::document::BinaryStore,
+    options: &DocMarkdownOptions,
+) -> String {
+    render_sublist_paragraphs_inner(paragraphs, resources, binaries, options, false)
+}
+
+fn render_sublist_paragraphs_inner(
+    paragraphs: &[hwp_model::paragraph::Paragraph],
+    resources: &hwp_model::resources::Resources,
+    binaries: &hwp_model::document::BinaryStore,
+    options: &DocMarkdownOptions,
+    trim_leading: bool,
+) -> String {
     let mut parts = Vec::new();
     for para in paragraphs {
         let (body, _) = paragraph::render_paragraph(para, resources, binaries, options);
-        // SubList 내부에서는 탭 제거 + bold/italic 마커 제거 + 이미지 제거 + trim (기존 viewer와 동일)
         let body = body
             .replace('\t', "")
             .replace("**", "")
             .replace("*", "")
             .replace("~~", "");
-        // 이미지 마크다운 제거 (기존 viewer는 표 셀 내 이미지를 표시하지 않음)
-        let body = remove_image_markdown(&body).trim().to_string();
+        let body = remove_image_markdown(&body);
+        let body = remove_hyperlink_markdown(&body);
+        let body = if trim_leading {
+            body.trim().to_string()
+        } else {
+            body.trim_end().to_string()
+        };
         if !body.is_empty() {
             parts.push(body);
         }
@@ -290,6 +314,35 @@ fn remove_image_markdown(text: &str) -> String {
                         .iter()
                         .position(|&c| c == ')')
                     {
+                        i = after_bracket + 1 + paren_end + 1;
+                        continue;
+                    }
+                }
+            }
+        }
+        result.push(chars[i]);
+        i += 1;
+    }
+    result
+}
+
+/// Markdown 하이퍼링크 `[text](url)` → `text`로 변환 (plain text만 남김)
+fn remove_hyperlink_markdown(text: &str) -> String {
+    let mut result = String::with_capacity(text.len());
+    let chars: Vec<char> = text.chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        // ![는 이미지이므로 건너뜀 (이미 remove_image_markdown에서 처리됨)
+        if chars[i] == '[' && (i == 0 || chars[i - 1] != '!') {
+            if let Some(bracket_end) = chars[i + 1..].iter().position(|&c| c == ']') {
+                let after_bracket = i + 1 + bracket_end + 1;
+                if after_bracket < chars.len() && chars[after_bracket] == '(' {
+                    if let Some(paren_end) =
+                        chars[after_bracket + 1..].iter().position(|&c| c == ')')
+                    {
+                        // [text](url) → text만 출력
+                        let display: String = chars[i + 1..i + 1 + bracket_end].iter().collect();
+                        result.push_str(&display);
                         i = after_bracket + 1 + paren_end + 1;
                         continue;
                     }
