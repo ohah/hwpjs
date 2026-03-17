@@ -166,6 +166,7 @@ fn render_paragraph_inner(
         None => !para.has_char_shapes,
     };
 
+    let mut prev_run_had_objects = false;
     for run in &para.runs {
         let (run_text, mut run_controls) = render_run(
             run,
@@ -178,9 +179,21 @@ fn render_paragraph_inner(
             &mut hyperlink_url,
             &mut hyperlink_text_parts,
         );
+        let current_has_objects = run
+            .contents
+            .iter()
+            .any(|c| matches!(c, RunContent::Object(_)));
         if !run_text.is_empty() {
+            // 이전 Run이 Object를 포함하고 현재 Run이 Text만이면 구분자 추가
+            if prev_run_had_objects && !current_has_objects && !text_parts.is_empty() {
+                let last = text_parts.last().unwrap();
+                if !last.ends_with("  \n") && !last.ends_with('\n') {
+                    text_parts.push("  \n".to_string());
+                }
+            }
             text_parts.push(run_text);
         }
+        prev_run_had_objects = current_has_objects;
         control_parts.append(&mut run_controls);
     }
 
