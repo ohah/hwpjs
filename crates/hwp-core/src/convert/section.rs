@@ -451,9 +451,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Vec<RunContent> {
             );
 
             match header.ctrl_id.as_str() {
-                CtrlId::TABLE => convert_table_object(common, children)
-                    .into_iter()
-                    .collect(),
+                CtrlId::TABLE => convert_table_object(common, children, paragraphs),
                 _ => convert_shape_object(common, children, paragraphs),
             }
         }
@@ -842,15 +840,25 @@ fn find_list_header_in_shape_components(records: &[ParagraphRecord]) -> &[bodyte
     &[]
 }
 
-fn convert_table_object(common: ShapeCommon, children: &[ParagraphRecord]) -> Option<RunContent> {
-    // children에서 Table 레코드 찾기
-    let table_data = children.iter().find_map(|c| {
-        if let ParagraphRecord::Table { table } = c {
-            Some(table)
-        } else {
-            None
+fn convert_table_object(
+    common: ShapeCommon,
+    children: &[ParagraphRecord],
+    _ctrl_paragraphs: &[bodytext::Paragraph],
+) -> Vec<RunContent> {
+    // children에서 Table 레코드 위치 찾기
+    let table_index = children.iter().position(|c| matches!(c, ParagraphRecord::Table { .. }));
+    let table_data = match table_index {
+        Some(idx) => {
+            if let ParagraphRecord::Table { table } = &children[idx] {
+                table
+            } else {
+                return vec![];
+            }
         }
-    })?;
+        None => return vec![],
+    };
+
+    let mut results: Vec<RunContent> = Vec::new();
 
     let ta = &table_data.attributes;
 
@@ -883,7 +891,7 @@ fn convert_table_object(common: ShapeCommon, children: &[ParagraphRecord]) -> Op
     };
 
     let table = model_table::Table {
-        common,
+        common: common.clone(),
         page_break,
         repeat_header: ta.attribute.header_row_repeat,
         row_count: ta.row_count,
@@ -911,7 +919,8 @@ fn convert_table_object(common: ShapeCommon, children: &[ParagraphRecord]) -> Op
         rows,
     };
 
-    Some(RunContent::Object(ShapeObject::Table(Box::new(table))))
+    results.push(RunContent::Object(ShapeObject::Table(Box::new(table))));
+    results
 }
 
 fn convert_table_cell(cell: &bodytext::table::TableCell) -> model_table::TableCell {
