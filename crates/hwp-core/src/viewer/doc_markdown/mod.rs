@@ -111,19 +111,29 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
                         }
                     }
                     ControlPart::Footnote { ref_num, text } => {
-                        // 본문 마지막 줄에 참조 추가
+                        // 본문 마지막 줄에 참조 추가 (기존 viewer와 동일)
+                        let ref_str = format!("[^{}]", ref_num);
                         if let Some(last) = body_lines.last_mut() {
-                            if !last.is_empty() {
-                                last.push_str(&format!(" [^{}]", ref_num));
+                            if !last.is_empty() && !last.starts_with("---") {
+                                last.push_str(&format!(" {}", ref_str));
+                            } else {
+                                body_lines.push(ref_str);
                             }
+                        } else {
+                            body_lines.push(ref_str);
                         }
                         footnotes.push(format!("[^{}]{}", ref_num, text));
                     }
                     ControlPart::Endnote { ref_num, text } => {
+                        let ref_str = format!("[^{}]", ref_num);
                         if let Some(last) = body_lines.last_mut() {
-                            if !last.is_empty() {
-                                last.push_str(&format!(" [^{}]", ref_num));
+                            if !last.is_empty() && !last.starts_with("---") {
+                                last.push_str(&format!(" {}", ref_str));
+                            } else {
+                                body_lines.push(ref_str);
                             }
+                        } else {
+                            body_lines.push(ref_str);
                         }
                         endnotes.push(format!("[^{}]{}", ref_num, text));
                     }
