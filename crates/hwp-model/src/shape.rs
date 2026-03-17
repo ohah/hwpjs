@@ -261,6 +261,9 @@ pub struct RectObject {
     pub fill: Option<FillBrush>,
     pub shadow: Option<ShapeShadow>,
     pub draw_text: Option<SubList>,
+    /// 표 캡션 여부 (convert에서 설정). viewer에서 구분자 처리에 사용.
+    #[serde(default)]
+    pub is_caption: bool,
 }
 
 // ── 타원 ──
