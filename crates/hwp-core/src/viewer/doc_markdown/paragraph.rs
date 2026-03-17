@@ -21,6 +21,10 @@ pub fn render_paragraph(
     let mut footnote_counter: u16 = 0;
     let mut endnote_counter: u16 = 0;
 
+    // 하이퍼링크 상태: paragraph 레벨에서 Run을 걸쳐 추적
+    let mut hyperlink_url: Option<String> = None;
+    let mut hyperlink_text_parts: Vec<String> = Vec::new();
+
     for run in &para.runs {
         let (run_text, mut run_controls) = render_run(
             run,
@@ -29,6 +33,8 @@ pub fn render_paragraph(
             options,
             &mut footnote_counter,
             &mut endnote_counter,
+            &mut hyperlink_url,
+            &mut hyperlink_text_parts,
         );
         if !run_text.is_empty() {
             text_parts.push(run_text);
@@ -36,11 +42,24 @@ pub fn render_paragraph(
         control_parts.append(&mut run_controls);
     }
 
+    // 하이퍼링크가 FieldEnd 없이 끝난 경우 (HWP에서 흔함)
+    if let Some(url) = hyperlink_url.take() {
+        let display = hyperlink_text_parts.join("");
+        let display = if display.is_empty() {
+            url.clone()
+        } else {
+            display
+        };
+        text_parts.push(format!("[{}]({})", display, url));
+    }
+
     let body = text_parts.join("");
     (body, control_parts)
 }
 
 /// Run 하나를 Markdown으로 렌더링
+/// hyperlink_url/hyperlink_text_parts: paragraph 레벨에서 Run 간 하이퍼링크 상태 공유
+#[allow(clippy::too_many_arguments)]
 fn render_run(
     run: &Run,
     resources: &Resources,
@@ -48,6 +67,8 @@ fn render_run(
     options: &DocMarkdownOptions,
     footnote_counter: &mut u16,
     endnote_counter: &mut u16,
+    hyperlink_url: &mut Option<String>,
+    hyperlink_text_parts: &mut Vec<String>,
 ) -> (String, Vec<ControlPart>) {
     let mut text_parts: Vec<String> = Vec::new();
     let mut control_parts: Vec<ControlPart> = Vec::new();
@@ -71,41 +92,51 @@ fn render_run(
             RunContent::Text(text_content) => {
                 let text = render_text_content(text_content);
                 if !text.is_empty() {
-                    let styled = apply_styles(&text, bold, italic, strikeout);
-                    text_parts.push(styled);
+                    if hyperlink_url.is_some() {
+                        // 하이퍼링크 범위 내 텍스트 수집 (paragraph 레벨)
+                        hyperlink_text_parts.push(text);
+                    } else {
+                        let styled = apply_styles(&text, bold, italic, strikeout);
+                        text_parts.push(styled);
+                    }
                 }
             }
             RunContent::Control(control) => {
-                // 하이퍼링크 필드 등은 inline 텍스트로 처리
+                // 하이퍼링크 시작
                 if let hwp_model::control::Control::FieldBegin(field) = control {
                     if field.field_type == hwp_model::types::FieldType::Hyperlink {
+                        // 이전 하이퍼링크가 끝나지 않았으면 먼저 출력
+                        if let Some(prev_url) = hyperlink_url.take() {
+                            let display = hyperlink_text_parts.join("");
+                            let display = if display.is_empty() {
+                                prev_url.clone()
+                            } else {
+                                display
+                            };
+                            text_parts.push(format!("[{}]({})", display, prev_url));
+                            hyperlink_text_parts.clear();
+                        }
                         let url = doc_utils::extract_hyperlink_url(field);
-                        let display = field
-                            .sub_list
-                            .as_ref()
-                            .map(|sl| {
-                                super::render_sublist_paragraphs(
-                                    &sl.paragraphs,
-                                    resources,
-                                    binaries,
-                                    options,
-                                )
-                            })
-                            .unwrap_or_default();
-                        let display = if display.is_empty() {
-                            url.clone()
-                        } else {
-                            display
-                        };
                         if !url.is_empty() {
-                            text_parts.push(format!("[{}]({})", display, url));
+                            *hyperlink_url = Some(url);
+                            hyperlink_text_parts.clear();
                         }
                         continue;
                     }
                 }
 
-                // FieldEnd는 Markdown에서는 무시 (하이퍼링크는 FieldBegin에서 완결)
+                // 하이퍼링크 종료
                 if let hwp_model::control::Control::FieldEnd = control {
+                    if let Some(url) = hyperlink_url.take() {
+                        let display = hyperlink_text_parts.join("");
+                        let display = if display.is_empty() {
+                            url.clone()
+                        } else {
+                            display
+                        };
+                        text_parts.push(format!("[{}]({})", display, url));
+                        hyperlink_text_parts.clear();
+                    }
                     continue;
                 }
 
@@ -190,17 +221,22 @@ fn render_shape_object(
 }
 
 /// Table을 Markdown 표로 변환
+/// 기존 viewer와 동일한 포맷: 앞뒤 빈 줄, 빈 셀은 공백, 구분선은 |---|
 fn render_table(
     table: &Table,
     resources: &Resources,
     binaries: &BinaryStore,
     options: &DocMarkdownOptions,
 ) -> String {
-    if table.rows.is_empty() {
+    let row_count = table.rows.len();
+    let col_count = table.col_count as usize;
+
+    if row_count == 0 || col_count == 0 {
         return String::new();
     }
 
     let mut lines: Vec<String> = Vec::new();
+    lines.push(String::new()); // 앞 빈 줄
 
     for (row_idx, row) in table.rows.iter().enumerate() {
         let mut cells: Vec<String> = Vec::new();
@@ -211,19 +247,32 @@ fn render_table(
                 binaries,
                 options,
             );
-            // Markdown 표에서는 줄바꿈을 <br>이나 공백으로 대체
-            let cell_text = cell_text.replace("\n\n", " ").replace('\n', " ");
+            // 셀 내 줄바꿈 → <br> (기존 viewer와 동일)
+            let cell_text = cell_text.replace("\n\n", "<br>").replace('\n', "<br>");
+            // 빈 셀은 공백으로
+            let cell_text = if cell_text.trim().is_empty() {
+                " ".to_string()
+            } else {
+                format!(" {}<br>", cell_text.trim())
+            };
             cells.push(cell_text);
+        }
+        // 셀 수가 col_count보다 적으면 빈 셀 채우기
+        while cells.len() < col_count {
+            cells.push(" ".to_string());
         }
         lines.push(format!("| {} |", cells.join(" | ")));
 
-        // 첫 번째 행 이후 구분선 추가
+        // 첫 번째 행 다음 구분선 (공백 없이)
         if row_idx == 0 {
-            let sep: Vec<&str> = cells.iter().map(|_| "---").collect();
-            lines.push(format!("| {} |", sep.join(" | ")));
+            lines.push(format!(
+                "|{}|",
+                (0..col_count).map(|_| "---").collect::<Vec<_>>().join("|")
+            ));
         }
     }
 
+    lines.push(String::new()); // 뒤 빈 줄
     lines.join("\n")
 }
 
