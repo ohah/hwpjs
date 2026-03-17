@@ -429,7 +429,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
 
             match header.ctrl_id.as_str() {
                 CtrlId::TABLE => convert_table_object(common, children),
-                _ => None, // 도형/그림 등은 추후 구현
+                _ => convert_shape_object(common, children, paragraphs),
             }
         }
 
@@ -692,6 +692,54 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
 // ═══════════════════════════════════════════
 // 표 변환
 // ═══════════════════════════════════════════
+
+/// 도형/그림 → ShapeObject 변환 (텍스트박스, 그림 등)
+fn convert_shape_object(
+    common: ShapeCommon,
+    children: &[ParagraphRecord],
+    paragraphs: &[bodytext::Paragraph],
+) -> Option<RunContent> {
+    // children에서 ShapeComponentPicture가 있으면 그림
+    for child in children {
+        if let ParagraphRecord::ShapeComponentPicture {
+            shape_component_picture,
+        } = child
+        {
+            let bin_id = shape_component_picture.picture_info.bindata_id;
+            let picture = Picture {
+                common,
+                img: hwp_model::resources::ImageRef {
+                    binary_item_id: format!("BIN{:04X}", bin_id),
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+            return Some(RunContent::Object(ShapeObject::Picture(Box::new(picture))));
+        }
+    }
+
+    // 텍스트박스: paragraphs 또는 children의 ListHeader에서 텍스트 추출
+    let source_paras = if paragraphs.is_empty() {
+        find_list_header_paragraphs(children)
+    } else {
+        paragraphs
+    };
+    let paras = convert_hwp_paragraphs(source_paras);
+    if !paras.is_empty() {
+        let sub_list = SubList {
+            paragraphs: paras,
+            ..Default::default()
+        };
+        let rect = RectObject {
+            common,
+            draw_text: Some(sub_list),
+            ..Default::default()
+        };
+        return Some(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
+    }
+
+    None
+}
 
 fn convert_table_object(common: ShapeCommon, children: &[ParagraphRecord]) -> Option<RunContent> {
     // children에서 Table 레코드 찾기
