@@ -23,7 +23,14 @@ fn format_with_numbering(id_ref: u16, level: u8, number: u32, resources: &Resour
         let level_index = (level.saturating_sub(1)) as usize;
         if let Some(level_info) = numbering.levels.get(level_index) {
             let fs = &level_info.format_string;
-            if !fs.is_empty() {
+            // 기존 viewer와 동일한 유효성 검사:
+            // - 비어있지 않고
+            // - ^N 플레이스홀더가 있고
+            // - 제어 문자가 없어야 유효
+            if !fs.is_empty()
+                && fs.contains('^')
+                && !fs.chars().any(|c| c.is_control() && c != '\t')
+            {
                 let formatted = crate::viewer::core::outline::format_numbering_string(
                     fs,
                     number,
@@ -76,17 +83,9 @@ pub fn render_paragraph_with_tracker(
                     HeadingType::Outline => {
                         let level = heading.level + 1;
                         let number = outline_tracker.get_and_increment(level);
-                        let effective_id = if heading.id_ref > 0 {
-                            heading.id_ref
-                        } else {
-                            section_outline_id
-                        };
-                        let num_str = format_with_numbering(
-                            effective_id,
-                            level,
-                            number,
-                            resources,
-                        );
+                        // 기존 Markdown viewer와 동일: Outline은 항상 기본 형식 사용
+                        // (format_string은 HTML viewer에서만 사용)
+                        let num_str = format_outline_number(level, number);
                         if (1..=6).contains(&level) {
                             let heading_prefix = "#".repeat(level as usize);
                             return (
