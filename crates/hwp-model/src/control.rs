@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use crate::paragraph::{Paragraph, SubList};
 use crate::types::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Control {
     Column(ColumnControl),
     FieldBegin(Field),
@@ -22,7 +24,7 @@ pub enum Control {
 
 // ── 머리글/꼬리말 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct HeaderFooter {
     pub id: u64,
     pub apply_page_type: PageApplyType,
@@ -31,7 +33,7 @@ pub struct HeaderFooter {
 
 // ── 각주/미주 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Note {
     pub id: u64,
     pub number: Option<u16>,
@@ -40,7 +42,7 @@ pub struct Note {
 
 // ── 자동 번호 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AutoNum {
     pub num_type: AutoNumType,
     pub number_type: NumberType1,
@@ -52,7 +54,7 @@ pub struct AutoNum {
 
 // ── 새 번호 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct NewNum {
     pub num_type: NumberingType,
     pub num: u16,
@@ -60,7 +62,7 @@ pub struct NewNum {
 
 // ── 필드 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Field {
     pub id: u64,
     pub field_type: FieldType,
@@ -74,7 +76,7 @@ pub struct Field {
     pub meta_tag: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FieldParameter {
     Integer {
         name: String,
@@ -96,14 +98,14 @@ pub enum FieldParameter {
 
 // ── 책갈피 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Bookmark {
     pub name: String,
 }
 
 // ── 쪽 번호 제어 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PageNumCtrl {
     pub page_starts_on: Option<PageStartsOn>,
     pub visible: Option<bool>,
@@ -111,7 +113,7 @@ pub struct PageNumCtrl {
 
 // ── 감추기 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PageHiding {
     pub hide_header: bool,
     pub hide_footer: bool,
@@ -123,7 +125,7 @@ pub struct PageHiding {
 
 // ── 단 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ColumnControl {
     pub id: u64,
     pub column_type: ColumnType,
@@ -135,7 +137,7 @@ pub struct ColumnControl {
 
 // ── 글자 겹침 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Compose {
     pub circle_type: Option<String>,
     pub char_sz: Option<u16>,
@@ -146,7 +148,7 @@ pub struct Compose {
 
 // ── 덧말 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Dutmal {
     pub main_text: String,
     pub sub_text: String,
@@ -157,7 +159,7 @@ pub struct Dutmal {
     pub style_id_ref: Option<u16>,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum DutmalPosition {
     #[default]
     Top,
@@ -167,7 +169,7 @@ pub enum DutmalPosition {
 
 // ── 숨은 설명 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct HiddenDesc {
     pub paragraphs: Vec<Paragraph>,
 }

@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 // ═══════════════════════════════════════════
 // 기본 단위
 // ═══════════════════════════════════════════
@@ -18,7 +20,7 @@ pub type Color = Option<u32>;
 // ═══════════════════════════════════════════
 
 /// 7개 언어 그룹 컨테이너. 글꼴, 장평, 자간, 상대크기, 오프셋에 사용.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct LangGroup<T> {
     pub hangul: T,
     pub latin: T,
@@ -74,13 +76,13 @@ impl<T: Copy> LangGroup<T> {
 // ═══════════════════════════════════════════
 
 /// 문단 여백, 줄 간격 등에서 단위를 명시해야 하는 경우.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct HwpValue {
     pub value: HwpUnit,
     pub unit: ValueUnit,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ValueUnit {
     #[default]
     HwpUnit,
@@ -91,7 +93,7 @@ pub enum ValueUnit {
 // 공통 구조
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Margin {
     pub left: HwpUnit,
     pub right: HwpUnit,
@@ -99,13 +101,13 @@ pub struct Margin {
     pub bottom: HwpUnit,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Point {
     pub x: HwpUnit,
     pub y: HwpUnit,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Size {
     pub width: HwpUnit,
     pub height: HwpUnit,
@@ -116,7 +118,7 @@ pub struct Size {
 // ═══════════════════════════════════════════
 
 /// 선형식 1 (외곽선 등)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum LineType1 {
     #[default]
     None,
@@ -129,7 +131,7 @@ pub enum LineType1 {
 }
 
 /// 선형식 2 (탭 채움선 등)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum LineType2 {
     #[default]
     None,
@@ -147,7 +149,7 @@ pub enum LineType2 {
 }
 
 /// 선형식 3 (테두리, 취소선, 밑줄 등)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum LineType3 {
     #[default]
     None,
@@ -167,7 +169,7 @@ pub enum LineType3 {
 }
 
 /// 선 끝 모양
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum LineEndCap {
     #[default]
     Flat,
@@ -175,7 +177,7 @@ pub enum LineEndCap {
 }
 
 /// 선 외곽선 스타일
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum LineOutlineStyle {
     #[default]
     Normal,
@@ -184,7 +186,7 @@ pub enum LineOutlineStyle {
 }
 
 /// 화살표 모양
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ArrowType {
     #[default]
     Normal,
@@ -200,7 +202,7 @@ pub enum ArrowType {
 }
 
 /// 화살표 크기
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ArrowSize {
     SmallSmall,
     SmallMedium,
@@ -218,7 +220,7 @@ pub enum ArrowSize {
 // 정렬
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum HAlign {
     #[default]
     Justify,
@@ -233,7 +235,7 @@ pub enum HAlign {
     Outside,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum VAlign {
     #[default]
     Top,
@@ -251,7 +253,7 @@ pub enum VAlign {
 // ═══════════════════════════════════════════
 
 /// 섹션/개체의 텍스트 방향
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum TextDirection {
     #[default]
     Horizontal,
@@ -261,7 +263,7 @@ pub enum TextDirection {
 }
 
 /// 문단의 텍스트 방향 (LTR/RTL)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum TextDir {
     #[default]
     Ltr,
@@ -272,7 +274,7 @@ pub enum TextDir {
 // 개체 배치
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum TextWrap {
     Square,
     Tight,
@@ -283,7 +285,7 @@ pub enum TextWrap {
     InFrontOfText,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum TextFlow {
     #[default]
     BothSides,
@@ -292,7 +294,7 @@ pub enum TextFlow {
     LargestOnly,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum RelativeTo {
     #[default]
     Paper,
@@ -301,7 +303,7 @@ pub enum RelativeTo {
     Para,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum SizeRelation {
     #[default]
     Absolute,
@@ -317,7 +319,7 @@ pub enum SizeRelation {
 // ═══════════════════════════════════════════
 
 /// 번호유형 1 (각주/미주 등)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum NumberType1 {
     #[default]
     Digit,
@@ -338,7 +340,7 @@ pub enum NumberType1 {
 }
 
 /// 번호유형 2 (문단 번호 등, NumberType1 + 4개)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum NumberType2 {
     #[default]
     Digit,
@@ -363,7 +365,7 @@ pub enum NumberType2 {
 }
 
 /// 자동 번호 범주
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum NumberingType {
     #[default]
     None,
@@ -373,7 +375,7 @@ pub enum NumberingType {
 }
 
 /// 자동 번호 대상 (각주/미주/쪽번호 등)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum AutoNumType {
     Page,
     Footnote,
@@ -389,7 +391,7 @@ pub enum AutoNumType {
 // 섹션 / 페이지
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[allow(clippy::enum_variant_names)]
 pub enum Landscape {
     #[default]
@@ -398,7 +400,7 @@ pub enum Landscape {
     Widely,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum GutterType {
     #[default]
     LeftOnly,
@@ -406,7 +408,7 @@ pub enum GutterType {
     TopBottom,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum PageStartsOn {
     #[default]
     Both,
@@ -414,7 +416,7 @@ pub enum PageStartsOn {
     Odd,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum VisibilityValue {
     HideFirst,
     ShowFirst,
@@ -423,7 +425,7 @@ pub enum VisibilityValue {
 }
 
 /// 쪽 번호 위치
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum PageNumPos {
     #[default]
     None,
@@ -443,7 +445,7 @@ pub enum PageNumPos {
 // 단 정의
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ColumnType {
     #[default]
     Newspaper,
@@ -451,7 +453,7 @@ pub enum ColumnType {
     Parallel,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ColumnLayout {
     #[default]
     Left,
@@ -463,7 +465,7 @@ pub enum ColumnLayout {
 // 각주 / 미주
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum FootnoteNumbering {
     #[default]
     Continuous,
@@ -471,7 +473,7 @@ pub enum FootnoteNumbering {
     OnPage,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[allow(clippy::enum_variant_names)]
 pub enum FootnotePlacement {
     #[default]
@@ -480,14 +482,14 @@ pub enum FootnotePlacement {
     RightMostColumn,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum EndnoteNumbering {
     #[default]
     Continuous,
     OnSection,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum EndnotePlacement {
     #[default]
     EndOfDocument,
@@ -499,7 +501,7 @@ pub enum EndnotePlacement {
 // ═══════════════════════════════════════════
 
 /// 강조점 종류
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum SymMark {
     #[default]
     None,
@@ -518,7 +520,7 @@ pub enum SymMark {
 }
 
 /// 밑줄 위치
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum UnderlineType {
     #[default]
     Bottom,
@@ -527,7 +529,7 @@ pub enum UnderlineType {
 }
 
 /// 그림자 종류 (글자 모양)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum CharShadowType {
     #[default]
     None,
@@ -536,7 +538,7 @@ pub enum CharShadowType {
 }
 
 /// 외곽선 종류
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum OutlineType {
     #[default]
     None,
@@ -552,7 +554,7 @@ pub enum OutlineType {
 // 문단 모양
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum LineSpacingType {
     #[default]
     Percent,
@@ -561,7 +563,7 @@ pub enum LineSpacingType {
     Between,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum HeadingType {
     #[default]
     None,
@@ -570,7 +572,7 @@ pub enum HeadingType {
     Bullet,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum BreakLatinWord {
     #[default]
     KeepWord,
@@ -578,14 +580,14 @@ pub enum BreakLatinWord {
     BreakWord,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum BreakNonLatinWord {
     #[default]
     KeepWord,
     BreakWord,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum LineWrap {
     #[default]
     Break,
@@ -597,7 +599,7 @@ pub enum LineWrap {
 // 표
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum TablePageBreak {
     Table,
     Cell,
@@ -606,7 +608,7 @@ pub enum TablePageBreak {
 }
 
 /// 페이지 적용 유형 (머리글/꼬리말)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum PageApplyType {
     #[default]
     Both,
@@ -619,7 +621,7 @@ pub enum PageApplyType {
 // 채우기
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum HatchStyle {
     #[default]
     Horizontal,
@@ -630,7 +632,7 @@ pub enum HatchStyle {
     CrossDiagonal,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum GradationType {
     #[default]
     Linear,
@@ -639,7 +641,7 @@ pub enum GradationType {
     Square,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ImageBrushMode {
     Tile,
     TileHorzTop,
@@ -660,7 +662,7 @@ pub enum ImageBrushMode {
     Zoom,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ImageEffect {
     #[default]
     RealPic,
@@ -672,7 +674,7 @@ pub enum ImageEffect {
 // 테두리/배경
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum CenterLineType {
     #[default]
     None,
@@ -681,7 +683,7 @@ pub enum CenterLineType {
     Both,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum SlashType {
     #[default]
     None,
@@ -695,7 +697,7 @@ pub enum SlashType {
 // 도형
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ArcType {
     #[default]
     Normal,
@@ -703,14 +705,14 @@ pub enum ArcType {
     Chord,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum CurveSegmentType {
     #[default]
     Curve,
     Line,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum DropcapStyle {
     #[default]
     None,
@@ -720,7 +722,7 @@ pub enum DropcapStyle {
 }
 
 /// 도형 그림자 종류 (글자 그림자와 별개)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ShapeShadowType {
     #[default]
     None,
@@ -741,7 +743,7 @@ pub enum ShapeShadowType {
 }
 
 /// 도형 그림자 스타일 (그림 효과용)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ShadowStyle {
     #[default]
     Outside,
@@ -749,7 +751,7 @@ pub enum ShadowStyle {
 }
 
 /// 캡션 방향
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum CaptionSide {
     Left,
     Right,
@@ -759,7 +761,7 @@ pub enum CaptionSide {
 }
 
 /// 연결선 유형
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ConnectLineType {
     #[default]
     StraightNoArrow,
@@ -774,7 +776,7 @@ pub enum ConnectLineType {
 }
 
 /// 수식 줄 모드
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum EquationLineMode {
     #[default]
     Line,
@@ -785,7 +787,7 @@ pub enum EquationLineMode {
 // OLE
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum OleObjectType {
     #[default]
     Unknown,
@@ -795,7 +797,7 @@ pub enum OleObjectType {
     Equation,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum OlePresentation {
     #[default]
     Content,
@@ -808,7 +810,7 @@ pub enum OlePresentation {
 // 필드
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum FieldType {
     #[default]
     ClickHere,
@@ -833,7 +835,7 @@ pub enum FieldType {
 // 스타일
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum StyleType {
     #[default]
     Para,
@@ -844,7 +846,7 @@ pub enum StyleType {
 // 글꼴
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum FontType {
     Rep,
     #[default]
@@ -853,7 +855,7 @@ pub enum FontType {
     Hft,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum FontCategory {
     #[default]
     Unknown,
@@ -865,7 +867,7 @@ pub enum FontCategory {
     NonRectGt,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum LangType {
     #[default]
     Hangul,
@@ -881,7 +883,7 @@ pub enum LangType {
 // 호환성
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum CompatibleDocument {
     #[default]
     Hwp201X,

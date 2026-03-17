@@ -1,13 +1,15 @@
+use serde::{Deserialize, Serialize};
+
 use crate::paragraph::Paragraph;
 use crate::types::*;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Section {
     pub definition: SectionDef,
     pub paragraphs: Vec<Paragraph>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SectionDef {
     pub id: u64,
     pub text_direction: TextDirection,
@@ -29,7 +31,7 @@ pub struct SectionDef {
     pub master_pages: Vec<MasterPage>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct StartNum {
     pub page_starts_on: PageStartsOn,
     pub page: u16,
@@ -38,14 +40,14 @@ pub struct StartNum {
     pub equation: u16,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Grid {
     pub line_grid: u16,
     pub char_grid: u16,
     pub wonggoji_format: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Visibility {
     pub hide_first_header: bool,
     pub hide_first_footer: bool,
@@ -57,7 +59,7 @@ pub struct Visibility {
     pub show_line_number: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PageDef {
     pub landscape: Landscape,
     pub width: HwpUnit,
@@ -66,7 +68,7 @@ pub struct PageDef {
     pub margin: PageMargin,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PageMargin {
     pub left: HwpUnit,
     pub right: HwpUnit,
@@ -79,7 +81,7 @@ pub struct PageMargin {
 
 // ── 각주/미주 설정 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct FootNoteDef {
     pub numbering_type: FootnoteNumbering,
     pub placement: FootnotePlacement,
@@ -94,7 +96,7 @@ pub struct FootNoteDef {
     pub note_spacing: Option<NoteSpacing>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct EndNoteDef {
     pub numbering_type: EndnoteNumbering,
     pub placement: EndnotePlacement,
@@ -109,7 +111,7 @@ pub struct EndNoteDef {
     pub note_spacing: Option<NoteSpacing>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct NoteLine {
     pub length: u16,
     pub line_type: LineType3,
@@ -117,7 +119,7 @@ pub struct NoteLine {
     pub color: Color,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct NoteSpacing {
     pub between_notes: u16,
     pub below_line: u16,
@@ -126,7 +128,7 @@ pub struct NoteSpacing {
 
 // ── 쪽 테두리/배경 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PageBorderFill {
     pub border_fill_id: u16,
     pub text_border: PageBorderRef,
@@ -136,14 +138,14 @@ pub struct PageBorderFill {
     pub offset: Margin,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum PageBorderRef {
     #[default]
     Paper,
     Text,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum FillArea {
     #[default]
     Paper,
@@ -153,7 +155,7 @@ pub enum FillArea {
 
 // ── 단 정의 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ColumnDef {
     pub id: u64,
     pub column_type: ColumnType,
@@ -165,13 +167,13 @@ pub struct ColumnDef {
     pub col_line: Option<ColumnLine>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ColumnSize {
     pub width: HwpUnit,
     pub gap: HwpUnit,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ColumnLine {
     pub line_type: LineType3,
     pub width: String,
@@ -180,7 +182,7 @@ pub struct ColumnLine {
 
 // ── 줄 번호 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct LineNumberShape {
     pub restart_type: LineNumberRestart,
     pub count_by: u16,
@@ -188,7 +190,7 @@ pub struct LineNumberShape {
     pub start_number: u16,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum LineNumberRestart {
     #[default]
     RestartBySection,
@@ -198,7 +200,7 @@ pub enum LineNumberRestart {
 
 // ── 바탕쪽 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct MasterPage {
     pub id_ref: Option<u16>,
 }

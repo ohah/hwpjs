@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use crate::types::*;
 
 /// DocInfo(HWP 5.0) / refList(HWPX)에 대응하는 공유 자원 모음
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Resources {
     pub fonts: FontFaces,
     pub border_fills: Vec<BorderFill>,
@@ -16,7 +18,7 @@ pub struct Resources {
 
 // ── 글꼴 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct FontFaces {
     pub hangul: Vec<Font>,
     pub latin: Vec<Font>,
@@ -27,7 +29,7 @@ pub struct FontFaces {
     pub user: Vec<Font>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Font {
     pub id: u16,
     pub face: String,
@@ -39,14 +41,14 @@ pub struct Font {
     pub default_font_name: Option<String>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SubstFont {
     pub face: String,
     pub font_type: FontType,
     pub is_embedded: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct FontTypeInfo {
     pub family_type: FontCategory,
     pub weight: u8,
@@ -61,7 +63,7 @@ pub struct FontTypeInfo {
 
 // ── 글자 모양 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CharShape {
     pub id: u16,
     pub height: HwpUnit,
@@ -90,20 +92,20 @@ pub struct CharShape {
     pub subscript: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Underline {
     pub underline_type: UnderlineType,
     pub shape: LineType3,
     pub color: Color,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Strikeout {
     pub shape: LineType3,
     pub color: Color,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CharShadow {
     pub shadow_type: CharShadowType,
     pub color: Color,
@@ -113,7 +115,7 @@ pub struct CharShadow {
 
 // ── 탭 정의 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TabDef {
     pub id: u16,
     pub auto_tab_left: bool,
@@ -121,14 +123,14 @@ pub struct TabDef {
     pub items: Vec<TabItem>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TabItem {
     pub pos: HwpUnit,
     pub tab_type: TabType,
     pub leader: LineType2,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum TabType {
     #[default]
     Left,
@@ -139,14 +141,14 @@ pub enum TabType {
 
 // ── 번호 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Numbering {
     pub id: u16,
     pub start: u16,
     pub levels: Vec<NumberingLevel>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct NumberingLevel {
     pub level: u8,
     pub start: u16,
@@ -164,7 +166,7 @@ pub struct NumberingLevel {
 
 // ── 글머리표 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Bullet {
     pub id: u16,
     pub bullet_char: char,
@@ -174,7 +176,7 @@ pub struct Bullet {
     pub image: Option<BulletImage>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BulletParaHead {
     pub level: u8,
     pub align: HAlign,
@@ -186,7 +188,7 @@ pub struct BulletParaHead {
     pub char_shape_id: Option<u32>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BulletImage {
     pub binary_item_id: String,
     pub bright: i8,
@@ -196,7 +198,7 @@ pub struct BulletImage {
 
 // ── 문단 모양 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ParaShape {
     pub id: u16,
     pub tab_def_id: Option<u16>,
@@ -215,20 +217,20 @@ pub struct ParaShape {
     pub border: Option<ParagraphBorder>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ParagraphAlign {
     pub horizontal: HAlign,
     pub vertical: VAlign,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Heading {
     pub heading_type: HeadingType,
     pub id_ref: u16,
     pub level: u8,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BreakSetting {
     pub break_latin_word: BreakLatinWord,
     pub break_non_latin_word: BreakNonLatinWord,
@@ -239,13 +241,13 @@ pub struct BreakSetting {
     pub line_wrap: LineWrap,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AutoSpacing {
     pub east_asian_eng: bool,
     pub east_asian_num: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ParagraphMargin {
     pub indent: HwpValue,
     pub left: HwpValue,
@@ -254,14 +256,14 @@ pub struct ParagraphMargin {
     pub next: HwpValue,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct LineSpacing {
     pub spacing_type: LineSpacingType,
     pub value: i32,
     pub unit: ValueUnit,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ParagraphBorder {
     pub border_fill_id: u16,
     pub offset_left: HwpUnit,
@@ -274,7 +276,7 @@ pub struct ParagraphBorder {
 
 // ── 테두리/배경 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BorderFill {
     pub id: u16,
     pub three_d: bool,
@@ -291,21 +293,21 @@ pub struct BorderFill {
     pub fill: Option<FillBrush>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SlashInfo {
     pub slash_type: SlashType,
     pub crooked: bool,
     pub is_counter: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct LineSpec {
     pub line_type: LineType3,
     pub width: String,
     pub color: Color,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FillBrush {
     WinBrush {
         face_color: Color,
@@ -335,7 +337,7 @@ pub enum FillBrush {
     },
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ImageRef {
     pub binary_item_id: String,
     pub bright: i8,
@@ -346,7 +348,7 @@ pub struct ImageRef {
 
 // ── 스타일 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Style {
     pub id: u16,
     pub style_type: StyleType,
@@ -361,7 +363,7 @@ pub struct Style {
 
 // ── 메모 모양 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct MemoShape {
     pub id: u16,
     pub width: HwpUnit,
@@ -373,7 +375,7 @@ pub struct MemoShape {
     pub memo_type: MemoType,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum MemoType {
     #[default]
     Normal,

@@ -6,3 +6,4 @@ description = "Common document model for HWP 5.0 and HWPX (KS X 6101:2024)"
 license = "MIT"
 
 [dependencies]
+serde = { version = "1.0", features = ["derive"] }

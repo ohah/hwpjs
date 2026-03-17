@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::paragraph::SubList;
 use crate::resources::{FillBrush, ImageRef};
 use crate::table::Table;
@@ -7,7 +9,7 @@ use crate::types::*;
 // 개체 공통 (AbstractShapeObjectType)
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ShapeCommon {
     pub id: u64,
     pub z_order: i32,
@@ -25,7 +27,7 @@ pub struct ShapeCommon {
     pub meta_tag: Option<String>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ShapeSize {
     pub width: HwpUnit,
     pub width_rel_to: SizeRelation,
@@ -34,7 +36,7 @@ pub struct ShapeSize {
     pub protect: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ShapePosition {
     pub treat_as_char: bool,
     pub affect_line_spacing: bool,
@@ -49,7 +51,7 @@ pub struct ShapePosition {
     pub horz_offset: HwpUnit,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Caption {
     pub side: CaptionSide,
     pub full_size: bool,
@@ -63,7 +65,7 @@ pub struct Caption {
 // 도형 요소 추가 (AbstractShapeComponentType)
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ShapeComponentData {
     pub href: Option<String>,
     pub group_level: u32,
@@ -76,13 +78,13 @@ pub struct ShapeComponentData {
     pub rendering_info: Option<RenderingInfo>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Flip {
     pub horizontal: bool,
     pub vertical: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Rotation {
     pub angle: f32,
     pub center_x: HwpUnit,
@@ -90,7 +92,7 @@ pub struct Rotation {
     pub rotate_image: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RenderingInfo {
     pub trans_matrix: [f32; 6],
     pub sca_matrix: [f32; 6],
@@ -101,7 +103,7 @@ pub struct RenderingInfo {
 // 선/테두리 (도형용, 개체 공통 LineShape)
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ShapeLineInfo {
     pub color: Color,
     pub width: HwpUnit,
@@ -121,7 +123,7 @@ pub struct ShapeLineInfo {
 // 도형 그림자 (도형 개체용)
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ShapeShadow {
     pub shadow_type: ShapeShadowType,
     pub color: Color,
@@ -134,7 +136,7 @@ pub struct ShapeShadow {
 // 개체 타입 enum
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ShapeObject {
     Table(Box<Table>),
     Picture(Box<Picture>),
@@ -157,7 +159,7 @@ pub enum ShapeObject {
 // 개별 도형
 // ═══════════════════════════════════════════
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Picture {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -171,7 +173,7 @@ pub struct Picture {
     pub effects: Option<PictureEffects>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PictureEffects {
     pub shadow: Option<PicEffectShadow>,
     pub glow: Option<PicEffectGlow>,
@@ -179,7 +181,7 @@ pub struct PictureEffects {
     pub reflection: Option<PicEffectReflection>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PicEffectShadow {
     pub style: ShadowStyle,
     pub alpha: f32,
@@ -189,19 +191,19 @@ pub struct PicEffectShadow {
     pub color: Option<EffectsColor>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PicEffectGlow {
     pub alpha: f32,
     pub radius: HwpUnit,
     pub color: Option<EffectsColor>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PicEffectSoftEdge {
     pub radius: HwpUnit,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PicEffectReflection {
     pub align: HAlign,
     pub radius: HwpUnit,
@@ -211,14 +213,14 @@ pub struct PicEffectReflection {
     pub alpha_end: f32,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct EffectsColor {
     pub color_type: EffectsColorType,
     pub value: String,
     pub adjustments: Vec<ColorAdjustment>,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum EffectsColorType {
     #[default]
     Rgb,
@@ -227,7 +229,7 @@ pub enum EffectsColorType {
     System,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ColorAdjustment {
     pub adjustment_type: String,
     pub value: f32,
@@ -235,7 +237,7 @@ pub struct ColorAdjustment {
 
 // ── 선 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct LineObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -249,7 +251,7 @@ pub struct LineObject {
 
 // ── 사각형 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RectObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -263,7 +265,7 @@ pub struct RectObject {
 
 // ── 타원 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct EllipseObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -285,7 +287,7 @@ pub struct EllipseObject {
 
 // ── 호 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ArcObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -301,7 +303,7 @@ pub struct ArcObject {
 
 // ── 다각형 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PolygonObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -314,7 +316,7 @@ pub struct PolygonObject {
 
 // ── 곡선 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CurveObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -325,7 +327,7 @@ pub struct CurveObject {
     pub draw_text: Option<SubList>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CurveSegment {
     pub segment_type: CurveSegmentType,
     pub x1: HwpUnit,
@@ -336,7 +338,7 @@ pub struct CurveSegment {
 
 // ── 연결선 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ConnectLineObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -348,14 +350,14 @@ pub struct ConnectLineObject {
     pub shadow: Option<ShapeShadow>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ControlPoint {
     pub x: HwpUnit,
     pub y: HwpUnit,
     pub point_type: u32,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ConnectPoint {
     pub x: HwpUnit,
     pub y: HwpUnit,
@@ -365,7 +367,7 @@ pub struct ConnectPoint {
 
 // ── 글맵시 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TextArtObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -386,7 +388,7 @@ pub struct TextArtObject {
 
 // ── 묶음 개체 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ContainerObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -395,7 +397,7 @@ pub struct ContainerObject {
 
 // ── OLE ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct OleObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -410,7 +412,7 @@ pub struct OleObject {
 
 // ── 수식 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct EquationObject {
     pub common: ShapeCommon,
     pub line_mode: EquationLineMode,
@@ -424,7 +426,7 @@ pub struct EquationObject {
 
 // ── 차트 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ChartObject {
     pub common: ShapeCommon,
     pub component: ShapeComponentData,
@@ -432,7 +434,7 @@ pub struct ChartObject {
 
 // ── 비디오 ──
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct VideoObject {
     pub common: ShapeCommon,
     pub video_type: VideoType,
@@ -441,7 +443,7 @@ pub struct VideoObject {
     pub tag: Option<String>,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum VideoType {
     #[default]
     Local,
