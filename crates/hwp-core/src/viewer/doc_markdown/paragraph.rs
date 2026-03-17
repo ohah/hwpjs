@@ -406,8 +406,8 @@ fn render_shape_object(
                 for para in &sub_list.paragraphs {
                     let (body, _) =
                         render_paragraph_inner(para, resources, binaries, options, Some(true));
-                    // 각 문단의 trailing \n 및 trailing space 제거
-                    let body = body.trim_end().to_string();
+                    // 각 문단의 trailing \n만 제거 (trailing space는 보존)
+                    let body = body.trim_end_matches('\n').to_string();
                     if !body.trim().is_empty() {
                         parts.push(body);
                     }

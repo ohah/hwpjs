@@ -85,7 +85,7 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Vec<Paragraph> {
     let runs = assemble_runs(&text_runs, &char_shapes, &ctrl_headers);
 
     // LineSegmentInfo 변환
-    let line_segments = line_segs
+    let line_segments: Vec<LineSegmentInfo> = line_segs
         .iter()
         .map(|ls| LineSegmentInfo {
             text_start_pos: ls.text_start_position,
