@@ -17,8 +17,9 @@ fn convert_example_meta() {
     let doc = to_document(&hwp_doc);
 
     // 메타데이터
-    assert!(doc.meta.title.is_some() || doc.meta.creator.is_some() || true);
-    // example.hwp에 summary info가 있으면 title이 있을 수 있음
+    // example.hwp에 summary info가 있으면 메타데이터가 채워짐
+    // 없더라도 변환 자체는 성공해야 함
+    let _ = &doc.meta;
 }
 
 #[test]
