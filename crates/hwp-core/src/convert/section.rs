@@ -100,6 +100,10 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Vec<Paragraph> {
         })
         .collect();
 
+    // TABLE이 있으면 셀 텍스트와 중복되는 Rectangle(ListHeader) 제거
+    // 기존 viewer: table_cell_texts로 중복 체크하여 건너뜀
+    let runs = filter_duplicate_rectangles(runs);
+
     let main_para = Paragraph {
         id: header.instance_id as u64,
         para_shape_id: header.para_shape_id,
@@ -119,6 +123,104 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Vec<Paragraph> {
     };
 
     vec![main_para]
+}
+
+/// TABLE이 있는 Run에서 셀 텍스트와 중복되는 Rectangle을 제거
+fn filter_duplicate_rectangles(runs: Vec<Run>) -> Vec<Run> {
+    // TABLE 셀의 텍스트를 수집
+    let mut table_cell_texts: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
+    let has_table = runs.iter().any(|r| {
+        r.contents.iter().any(|c| {
+            if let RunContent::Object(ShapeObject::Table(table)) = c {
+                // 셀 텍스트 수집
+                for row in &table.rows {
+                    for cell in &row.cells {
+                        for para in &cell.content.paragraphs {
+                            for run in &para.runs {
+                                for content in &run.contents {
+                                    if let RunContent::Text(tc) = content {
+                                        let text: String = tc
+                                            .elements
+                                            .iter()
+                                            .filter_map(|e| {
+                                                if let TextElement::Text(s) = e {
+                                                    Some(s.as_str())
+                                                } else {
+                                                    None
+                                                }
+                                            })
+                                            .collect();
+                                        let trimmed = text.trim().to_string();
+                                        if !trimmed.is_empty() {
+                                            table_cell_texts.insert(trimmed);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                true
+            } else {
+                false
+            }
+        })
+    });
+
+    if !has_table || table_cell_texts.is_empty() {
+        return runs;
+    }
+
+    // Rectangle의 draw_text 텍스트가 셀 텍스트와 중복되면 제거
+    runs.into_iter()
+        .map(|run| {
+            let filtered: Vec<RunContent> = run
+                .contents
+                .into_iter()
+                .filter(|c| {
+                    if let RunContent::Object(ShapeObject::Rectangle(ref rect)) = c {
+                        if let Some(ref sub_list) = rect.draw_text {
+                            let rect_text: String = sub_list
+                                .paragraphs
+                                .iter()
+                                .flat_map(|p| p.runs.iter())
+                                .flat_map(|r| r.contents.iter())
+                                .filter_map(|c| {
+                                    if let RunContent::Text(tc) = c {
+                                        Some(
+                                            tc.elements
+                                                .iter()
+                                                .filter_map(|e| {
+                                                    if let TextElement::Text(s) = e {
+                                                        Some(s.as_str())
+                                                    } else {
+                                                        None
+                                                    }
+                                                })
+                                                .collect::<String>(),
+                                        )
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect();
+                            let trimmed = rect_text.trim();
+                            if !trimmed.is_empty() && table_cell_texts.contains(trimmed) {
+                                return false; // 중복 → 제거
+                            }
+                        }
+                    }
+                    true
+                })
+                .collect();
+            Run {
+                char_shape_id: run.char_shape_id,
+                contents: filtered,
+            }
+        })
+        .filter(|r| !r.contents.is_empty())
+        .collect()
 }
 
 /// HWP Paragraph 목록 → hwp_model Paragraph 목록 변환
@@ -797,6 +899,7 @@ fn convert_shape_object(
     paragraphs: &[bodytext::Paragraph],
 ) -> Vec<RunContent> {
     let mut results: Vec<RunContent> = Vec::new();
+    let treat_as_char = common.position.treat_as_char;
 
     // 기존 viewer 순서: ShapeComponent(Picture) → 직접 Picture → ListHeader → ShapeComponent(ListHeader)
     // 2-pass: 먼저 모든 Picture를 수집, 그 다음 모든 ListHeader(텍스트) 수집
