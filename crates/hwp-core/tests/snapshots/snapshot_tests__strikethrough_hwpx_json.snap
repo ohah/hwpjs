@@ -3093,7 +3093,8 @@ expression: json
               "segment_width": 42520,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -3133,7 +3134,8 @@ expression: json
               "segment_width": 42520,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -3173,7 +3175,8 @@ expression: json
               "segment_width": 42520,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -3197,7 +3200,8 @@ expression: json
               "segment_width": 42520,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         },
         {
           "id": 0,
@@ -3267,7 +3271,8 @@ expression: json
               "segment_width": 42520,
               "flags": 393216
             }
-          ]
+          ],
+          "has_char_shapes": true
         }
       ]
     }

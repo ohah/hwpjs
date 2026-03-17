@@ -60,6 +60,7 @@ fn parse_paragraph(
         meta_tag: None,
         runs: Vec::new(),
         line_segments: Vec::new(),
+        has_char_shapes: true, // HWPX는 항상 Run별 charPrIDRef가 있으므로 true
     };
 
     let mut sec_def: Option<SectionDef> = None;
