@@ -21,7 +21,11 @@ pub fn convert_sections(body: &BodyText, _doc_info: &DocInfo) -> Vec<Section> {
             // SectionDefinition에서 outline_shape_id 추출
             let outline_shape_id = extract_section_outline_id(&sec.paragraphs);
             let mut section = Section {
-                paragraphs: sec.paragraphs.iter().map(convert_paragraph).collect(),
+                paragraphs: sec
+                    .paragraphs
+                    .iter()
+                    .flat_map(convert_paragraph)
+                    .collect(),
                 ..Default::default()
             };
             if outline_shape_id > 0 {
@@ -50,7 +54,7 @@ fn extract_section_outline_id(paragraphs: &[bodytext::Paragraph]) -> u16 {
     0
 }
 
-fn convert_paragraph(para: &bodytext::Paragraph) -> Paragraph {
+fn convert_paragraph(para: &bodytext::Paragraph) -> Vec<Paragraph> {
     let header = &para.para_header;
 
     // ParaText, ParaCharShape, ParaLineSeg를 수집
@@ -96,7 +100,7 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Paragraph {
         })
         .collect();
 
-    Paragraph {
+    let main_para = Paragraph {
         id: header.instance_id as u64,
         para_shape_id: header.para_shape_id,
         style_id: header.para_style_id as u16,
@@ -112,12 +116,14 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Paragraph {
         runs,
         line_segments,
         has_char_shapes: !char_shapes.is_empty(),
-    }
+    };
+
+    vec![main_para]
 }
 
 /// HWP Paragraph 목록 → hwp_model Paragraph 목록 변환
 fn convert_hwp_paragraphs(paras: &[bodytext::Paragraph]) -> Vec<Paragraph> {
-    paras.iter().map(convert_paragraph).collect()
+    paras.iter().flat_map(convert_paragraph).collect()
 }
 
 /// children(ParagraphRecord 목록)에서 ListHeader를 찾아 그 안의 paragraphs를 반환
