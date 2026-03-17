@@ -185,15 +185,27 @@ fn render_paragraph_inner(
         control_parts.append(&mut run_controls);
     }
 
-    // 하이퍼링크가 FieldEnd 없이 끝난 경우 (HWP에서 흔함)
+    // 하이퍼링크가 FieldEnd 없이 끝난 경우
     if let Some(url) = hyperlink_url.take() {
         let display = hyperlink_text_parts.join("");
-        let display = if display.is_empty() {
-            url.clone()
+        // 필드 경계 오류: 이전 텍스트가 단어 중간에서 시작
+        let prev_ends_mid_word = text_parts
+            .last()
+            .and_then(|s| s.chars().last())
+            .is_some_and(|c| c.is_alphanumeric());
+        let display_starts_mid_word = display
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_alphanumeric());
+
+        if display.is_empty() {
+            text_parts.push(format!("[{}]({})", url, url));
+        } else if prev_ends_mid_word && display_starts_mid_word {
+            // 단어 중간에서 필드가 시작됨 → plain text
+            text_parts.push(display);
         } else {
-            display
-        };
-        text_parts.push(format!("[{}]({})", display, url));
+            text_parts.push(format!("[{}]({})", display, url));
+        }
     }
 
     let body = text_parts.join("");
@@ -276,12 +288,25 @@ fn render_run(
                 if let hwp_model::control::Control::FieldEnd = control {
                     if let Some(url) = hyperlink_url.take() {
                         let display = hyperlink_text_parts.join("");
-                        let display = if display.is_empty() {
-                            url.clone()
+                        // 필드 경계 오류 감지: 이전 텍스트가 단어 중간에서 끊겼으면
+                        // 하이퍼링크가 아닌 plain text로 출력
+                        let prev_ends_mid_word = text_parts
+                            .last()
+                            .and_then(|s| s.chars().last())
+                            .is_some_and(|c| c.is_alphanumeric());
+                        let display_starts_mid_word = display
+                            .chars()
+                            .next()
+                            .is_some_and(|c| c.is_alphanumeric());
+
+                        if prev_ends_mid_word && display_starts_mid_word {
+                            // 단어 중간에서 필드가 시작됨 → plain text
+                            text_parts.push(display);
+                        } else if display.is_empty() {
+                            text_parts.push(format!("[{}]({})", url, url));
                         } else {
-                            display
-                        };
-                        text_parts.push(format!("[{}]({})", display, url));
+                            text_parts.push(format!("[{}]({})", display, url));
+                        }
                         hyperlink_text_parts.clear();
                     }
                     continue;
