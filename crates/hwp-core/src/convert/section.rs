@@ -101,7 +101,6 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Vec<Paragraph> {
         .collect();
 
     // TABLE이 있으면 셀 텍스트와 중복되는 Rectangle(ListHeader) 제거
-    // 기존 viewer: table_cell_texts로 중복 체크하여 건너뜀
     let runs = filter_duplicate_rectangles(runs);
 
     let main_para = Paragraph {
@@ -953,21 +952,8 @@ fn convert_shape_object(
     // treat_as_char=true 도형: ListHeader를 건너뜀
     // (기존 viewer에서 글자처럼 취급 도형은 본문에 인라인 삽입됨)
     if treat_as_char {
-        // ctrl_paragraphs만 처리
-        if !paragraphs.is_empty() {
-            let paras = convert_hwp_paragraphs(paragraphs);
-            if !paras.is_empty() {
-                let rect = RectObject {
-                    common,
-                    draw_text: Some(SubList {
-                        paragraphs: paras,
-                        ..Default::default()
-                    }),
-                    ..Default::default()
-                };
-                results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
-            }
-        }
+        // 글자처럼 취급 도형: ListHeader와 ctrl_paragraphs 모두 건너뜀
+        // (기존 viewer: 본문에 인라인으로 삽입 — Picture만 유지)
         return results;
     }
 
@@ -1021,7 +1007,7 @@ fn convert_shape_object(
         }
     }
 
-    // ctrl_paragraphs 처리 (기존 viewer의 ctrl_paragraphs 처리와 동일)
+    // ctrl_paragraphs 처리
     if !paragraphs.is_empty() {
         let paras = convert_hwp_paragraphs(paragraphs);
         if !paras.is_empty() {
