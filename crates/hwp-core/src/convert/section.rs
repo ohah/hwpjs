@@ -1251,7 +1251,7 @@ fn convert_table_object(
                 }
                 let paras = convert_hwp_paragraphs(std::slice::from_ref(para));
                 if !paras.is_empty() {
-                    let rect = RectObject {
+                    let mut rect = RectObject {
                         common: common.clone(),
                         draw_text: Some(SubList {
                             paragraphs: paras,
@@ -1259,6 +1259,7 @@ fn convert_table_object(
                         }),
                         ..Default::default()
                     };
+                    rect.is_caption = true; // TABLE ctrl_paragraphs의 캡션
                     results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
                 }
             }

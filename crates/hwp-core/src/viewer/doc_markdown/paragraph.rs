@@ -343,12 +343,12 @@ fn render_run(
                 let obj_text = render_shape_object(shape, resources, binaries, options);
                 if !obj_text.is_empty() {
                     let is_table = matches!(shape, ShapeObject::Table(_));
+                    let is_caption = matches!(shape, ShapeObject::Rectangle(ref r) if r.is_caption);
                     // Object 앞에 텍스트가 있으면 구분자 추가
                     if !text_parts.is_empty() {
                         let last = text_parts.last().unwrap();
                         if !last.ends_with("  \n") && !last.ends_with("\n\n") && !last.ends_with('\n') {
                             if is_table {
-                                // 표 앞은 "\n\n"으로 분리 (soft line break 불필요)
                                 text_parts.push("\n\n".to_string());
                             } else {
                                 text_parts.push("  \n".to_string());
