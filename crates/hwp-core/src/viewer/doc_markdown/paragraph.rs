@@ -21,24 +21,40 @@ pub fn render_paragraph_with_tracker(
 ) -> (String, Vec<ControlPart>) {
     let (body, ctrl_parts) = render_paragraph(para, resources, binaries, options);
 
-    // 개요 번호 적용
+    // 개요 번호 / 글머리표 적용
     if !body.is_empty() {
         if let Some(ps) = resources.para_shapes.get(para.para_shape_id as usize) {
             if let Some(ref heading) = ps.heading {
-                if heading.heading_type == HeadingType::Outline {
-                    let level = heading.level + 1;
-                    let number = outline_tracker.get_and_increment(level);
-                    let num_str = format_outline_number(level, number);
-                    let body_trimmed = body.trim_end();
-                    if (1..=6).contains(&level) {
-                        let heading_prefix = "#".repeat(level as usize);
+                let body_trimmed = body.trim_end();
+                match heading.heading_type {
+                    HeadingType::Outline => {
+                        let level = heading.level + 1;
+                        let number = outline_tracker.get_and_increment(level);
+                        let num_str = format_outline_number(level, number);
+                        if (1..=6).contains(&level) {
+                            let heading_prefix = "#".repeat(level as usize);
+                            return (
+                                format!("{} {} {}", heading_prefix, num_str, body_trimmed),
+                                ctrl_parts,
+                            );
+                        } else {
+                            return (format!("{} {}", num_str, body_trimmed), ctrl_parts);
+                        }
+                    }
+                    HeadingType::Bullet => {
+                        return (format!("- {}", body_trimmed), ctrl_parts);
+                    }
+                    HeadingType::Number => {
+                        let level = heading.level + 1;
+                        let number = outline_tracker.get_and_increment(level);
+                        let indent = "  ".repeat(heading.level as usize);
+                        let num_str = format_outline_number(level, number);
                         return (
-                            format!("{} {} {}", heading_prefix, num_str, body_trimmed),
+                            format!("{}{} {}", indent, num_str, body_trimmed),
                             ctrl_parts,
                         );
-                    } else {
-                        return (format!("{} {}", num_str, body_trimmed), ctrl_parts);
                     }
+                    _ => {}
                 }
             }
         }
