@@ -379,18 +379,17 @@ fn convert_border_fills(
                 attrs.backslash_rotated_180,
             );
 
-            let convert_border =
-                |bl: &docinfo::border_fill::BorderLine| -> Option<LineSpec> {
-                    if bl.line_type == 0 && bl.width == 0 {
-                        None
-                    } else {
-                        Some(LineSpec {
-                            line_type: convert_line_type3(bl.line_type),
-                            width: convert_border_width(bl.width),
-                            color: Some(bl.color.to_rgb()),
-                        })
-                    }
-                };
+            let convert_border = |bl: &docinfo::border_fill::BorderLine| -> Option<LineSpec> {
+                if bl.line_type == 0 && bl.width == 0 {
+                    None
+                } else {
+                    Some(LineSpec {
+                        line_type: convert_line_type3(bl.line_type),
+                        width: convert_border_width(bl.width),
+                        color: Some(bl.color.to_rgb()),
+                    })
+                }
+            };
 
             let diagonal = {
                 let d = &bf.diagonal;
@@ -556,17 +555,11 @@ fn convert_numberings(
                             docinfo::numbering::NumberType::CircledDigits => {
                                 NumberType2::CircledDigit
                             }
-                            docinfo::numbering::NumberType::UpperRoman => {
-                                NumberType2::RomanCapital
-                            }
+                            docinfo::numbering::NumberType::UpperRoman => NumberType2::RomanCapital,
                             docinfo::numbering::NumberType::LowerRoman => NumberType2::RomanSmall,
-                            docinfo::numbering::NumberType::UpperAlpha => {
-                                NumberType2::LatinCapital
-                            }
+                            docinfo::numbering::NumberType::UpperAlpha => NumberType2::LatinCapital,
                             docinfo::numbering::NumberType::LowerAlpha => NumberType2::LatinSmall,
-                            docinfo::numbering::NumberType::HangulGa => {
-                                NumberType2::HangulSyllable
-                            }
+                            docinfo::numbering::NumberType::HangulGa => NumberType2::HangulSyllable,
                             docinfo::numbering::NumberType::HangulGaCycle => {
                                 NumberType2::CircledHangulSyllable
                             }
