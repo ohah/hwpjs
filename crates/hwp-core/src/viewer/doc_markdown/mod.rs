@@ -162,7 +162,7 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
                     // ParaCharShape가 없는 문단: trailing space 보존, leading만 제거
                     body.trim_start().to_string()
                 };
-                if !body.is_empty() {
+                if !body.is_empty() && !body.trim().is_empty() {
                     body_lines.push(body);
                 }
             }

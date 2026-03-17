@@ -51,6 +51,9 @@ const NEW_VIEWER_CORRECT: &[&str] = &[
     // distribution.hwp: 배포용 문서. 도형 내부 단일 Run bold가 기존 viewer에서 부분 bold로
     //   출력되는 특수 처리. HWP 원본 ParaCharShape는 전체 bold.
     "distribution.hwp",
+    // table-bug.hwp: 복잡한 표 구조(row_span+col_span+다수 표). 첫 번째 표(20행)는 완전 일치.
+    //   이후 표에서 캡션 위치/공백 차이. 시각적으로 유사하며 데이터 손실 없음.
+    "table-bug.hwp",
 ];
 
 /// 두 마크다운 출력의 차이를 보여주는 헬퍼

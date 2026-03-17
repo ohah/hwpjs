@@ -1238,6 +1238,17 @@ fn convert_table_object(
             };
 
             if !is_cell_para {
+                // 빈 문단은 건너뜀
+                let has_text = para.records.iter().any(|r| {
+                    if let ParagraphRecord::ParaText { text, .. } = r {
+                        !text.trim().is_empty()
+                    } else {
+                        false
+                    }
+                });
+                if !has_text {
+                    continue;
+                }
                 let paras = convert_hwp_paragraphs(std::slice::from_ref(para));
                 if !paras.is_empty() {
                     let rect = RectObject {
