@@ -141,17 +141,31 @@ pub fn render_paragraph(
     binaries: &BinaryStore,
     options: &DocMarkdownOptions,
 ) -> (String, Vec<ControlPart>) {
+    render_paragraph_inner(para, resources, binaries, options, None)
+}
+
+/// 스타일 적용을 강제할 수 있는 내부 함수
+fn render_paragraph_inner(
+    para: &Paragraph,
+    resources: &Resources,
+    binaries: &BinaryStore,
+    options: &DocMarkdownOptions,
+    force_apply_styles: Option<bool>,
+) -> (String, Vec<ControlPart>) {
     let mut text_parts: Vec<String> = Vec::new();
     let mut control_parts: Vec<ControlPart> = Vec::new();
     let mut footnote_counter: u16 = 0;
     let mut endnote_counter: u16 = 0;
 
-    // 하이퍼링크 상태: paragraph 레벨에서 Run을 걸쳐 추적
     let mut hyperlink_url: Option<String> = None;
     let mut hyperlink_text_parts: Vec<String> = Vec::new();
 
-    // 기존 viewer 동작: ParaCharShape가 없는 문단은 bold/italic 적용 안 함
-    let skip_styles = !para.has_char_shapes;
+    // force_apply_styles가 Some(true)이면 스타일 강제 적용
+    let skip_styles = match force_apply_styles {
+        Some(true) => false,
+        Some(false) => true,
+        None => !para.has_char_shapes,
+    };
 
     for run in &para.runs {
         let (run_text, mut run_controls) = render_run(
@@ -340,16 +354,16 @@ fn render_shape_object(
         ShapeObject::Picture(pic) => render_picture(&pic.img.binary_item_id, binaries),
         ShapeObject::Rectangle(rect) => {
             // 텍스트 박스 (draw_text가 있는 경우)
-            // 기존 viewer와 동일하게 일반 문단으로 처리 (bold/italic 마커 유지, trailing 보존)
+            // 기존 viewer와 동일: 스타일 강제 적용 + soft line break
             if let Some(ref sub_list) = rect.draw_text {
                 let mut parts = Vec::new();
                 for para in &sub_list.paragraphs {
-                    let (body, _) = render_paragraph(para, resources, binaries, options);
+                    let (body, _) =
+                        render_paragraph_inner(para, resources, binaries, options, Some(true));
                     if !body.trim().is_empty() {
                         parts.push(body);
                     }
                 }
-                // 기존 viewer와 동일: 텍스트박스 내부 문단은 "  \n" (soft line break)으로 연결
                 parts.join("  \n")
             } else {
                 String::new()
