@@ -142,7 +142,6 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
 
             // 기존 viewer와 동일: 머리글/꼬리글/각주/미주가 있는 문단은 body 텍스트 생략
             if !has_header_footer_note && !body.is_empty() {
-                // 본문 텍스트(표가 아닌 경우)의 leading/trailing whitespace 제거
                 let body = if !body.contains('\n') {
                     body.trim().to_string()
                 } else {

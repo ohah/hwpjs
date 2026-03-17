@@ -257,7 +257,17 @@ fn convert_para_shapes(shapes: &[docinfo::ParaShape]) -> Vec<hwp_model::resource
                         para_shape::HeaderShapeType::Number => HeadingType::Number,
                         para_shape::HeaderShapeType::Bullet => HeadingType::Bullet,
                     },
-                    id_ref: ps.number_bullet_id,
+                    // line_spacing_old 상위 16비트에 numbering ID 인코딩
+                    // 0이면 number_bullet_id를 fallback으로 사용
+                    id_ref: {
+                        let encoded_id =
+                            ((ps.line_spacing_old as u32 >> 16) & 0xFFFF) as u16;
+                        if encoded_id > 0 {
+                            encoded_id
+                        } else {
+                            ps.number_bullet_id
+                        }
+                    },
                     level: a1.paragraph_level,
                 }),
                 break_setting: BreakSetting {
