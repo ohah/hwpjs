@@ -96,6 +96,8 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
                 &mut outline_tracker,
             );
 
+            let has_header_footer_note = !ctrl_parts.is_empty();
+
             for part in ctrl_parts {
                 match part {
                     ControlPart::Header(text) => {
@@ -128,7 +130,8 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
                 }
             }
 
-            if !body.is_empty() {
+            // 기존 viewer와 동일: 머리글/꼬리글/각주/미주가 있는 문단은 body 텍스트 생략
+            if !has_header_footer_note && !body.is_empty() {
                 // 본문 텍스트(표가 아닌 경우)의 leading/trailing whitespace 제거
                 let body = if !body.contains('\n') {
                     body.trim().to_string()
@@ -205,14 +208,14 @@ pub(crate) fn render_sublist_paragraphs(
     let mut parts = Vec::new();
     for para in paragraphs {
         let (body, _) = paragraph::render_paragraph(para, resources, binaries, options);
-        // SubList 내부에서는 탭 제거 + bold/italic 마커 제거 + trim (기존 viewer와 동일)
+        // SubList 내부에서는 탭 제거 + bold/italic 마커 제거 + 이미지 제거 + trim (기존 viewer와 동일)
         let body = body
             .replace('\t', "")
             .replace("**", "")
             .replace("*", "")
-            .replace("~~", "")
-            .trim()
-            .to_string();
+            .replace("~~", "");
+        // 이미지 마크다운 제거 (기존 viewer는 표 셀 내 이미지를 표시하지 않음)
+        let body = remove_image_markdown(&body).trim().to_string();
         if !body.is_empty() {
             parts.push(body);
         }
@@ -256,4 +259,31 @@ pub(crate) fn extract_control_parts(
         }
         _ => None,
     }
+}
+
+/// Markdown 이미지 구문 `![...](...)` 제거
+fn remove_image_markdown(text: &str) -> String {
+    let mut result = String::with_capacity(text.len());
+    let chars: Vec<char> = text.chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        if i + 1 < chars.len() && chars[i] == '!' && chars[i + 1] == '[' {
+            // ![...](...)  패턴 스킵
+            if let Some(bracket_end) = chars[i + 2..].iter().position(|&c| c == ']') {
+                let after_bracket = i + 2 + bracket_end + 1;
+                if after_bracket < chars.len() && chars[after_bracket] == '(' {
+                    if let Some(paren_end) = chars[after_bracket + 1..]
+                        .iter()
+                        .position(|&c| c == ')')
+                    {
+                        i = after_bracket + 1 + paren_end + 1;
+                        continue;
+                    }
+                }
+            }
+        }
+        result.push(chars[i]);
+        i += 1;
+    }
+    result
 }
