@@ -6,7 +6,8 @@
 //! HWP/HWPX 양쪽에서 동일한 viewer를 사용할 수 있게 한다.
 
 use crate::document::HwpDocument;
-use hwp_model::document::{BinaryStore, Document, DocumentMeta, DocumentSettings};
+use base64::{engine::general_purpose::STANDARD, Engine as _};
+use hwp_model::document::{BinaryItem, BinaryStore, Document, DocumentMeta, DocumentSettings, ImageFormat};
 
 mod resources;
 mod section;
@@ -51,10 +52,62 @@ fn convert_settings(hwp: &HwpDocument) -> DocumentSettings {
     }
 }
 
-fn convert_binaries(_hwp: &HwpDocument) -> BinaryStore {
-    // HWP 5.0의 BinData는 CFB 스토리지 내 별도 스트림으로 저장되어 있고,
-    // HwpDocument.bin_data.items에는 경로/인덱스 정보만 있음.
-    // 실제 바이너리 데이터는 파싱 시점에 이미 추출되어 있어야 함.
-    // TODO: HwpParser에서 bin_data 바이트를 Document로 전달하는 경로 추가
-    BinaryStore::default()
+fn convert_binaries(hwp: &HwpDocument) -> BinaryStore {
+    use crate::document::docinfo::BinDataRecord;
+
+    // DocInfo의 BinDataRecord에서 확장자 정보를 인덱스별로 매핑
+    let mut ext_map = std::collections::HashMap::new();
+    for record in &hwp.doc_info.bin_data {
+        match record {
+            BinDataRecord::Embedding { embedding, .. } => {
+                ext_map.insert(embedding.binary_data_id, embedding.extension.clone());
+            }
+            BinDataRecord::Storage { storage, .. } => {
+                ext_map.insert(storage.binary_data_id, "ole".to_string());
+            }
+            BinDataRecord::Link { .. } => {}
+        }
+    }
+
+    let items = hwp
+        .bin_data
+        .items
+        .iter()
+        .filter_map(|item| {
+            let data = STANDARD.decode(&item.data).ok()?;
+            let ext = ext_map
+                .get(&item.index)
+                .map(|s| s.as_str())
+                .unwrap_or("");
+            let format = extension_to_image_format(ext);
+            let id = format!("BIN{:04X}", item.index);
+            let src = if ext.is_empty() {
+                id.clone()
+            } else {
+                format!("{}.{}", id, ext)
+            };
+            Some(BinaryItem {
+                id,
+                src,
+                format,
+                data,
+            })
+        })
+        .collect();
+
+    BinaryStore { items }
+}
+
+fn extension_to_image_format(ext: &str) -> ImageFormat {
+    match ext.to_lowercase().as_str() {
+        "png" => ImageFormat::Png,
+        "jpg" | "jpeg" => ImageFormat::Jpg,
+        "bmp" => ImageFormat::Bmp,
+        "gif" => ImageFormat::Gif,
+        "tiff" | "tif" => ImageFormat::Tiff,
+        "wmf" => ImageFormat::Wmf,
+        "emf" => ImageFormat::Emf,
+        "svg" => ImageFormat::Svg,
+        other => ImageFormat::Unknown(other.to_string()),
+    }
 }
