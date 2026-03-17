@@ -245,6 +245,9 @@ fn render_run(
                 .is_some_and(|u| u.underline_type == hwp_model::types::UnderlineType::Center)
     });
 
+    // Run 내에 Table이 있으면 다른 Object(캡션)는 "\n" 구분자 사용
+    let run_has_table = run.contents.iter().any(|c| matches!(c, RunContent::Object(ShapeObject::Table(_))));
+
     for content in &run.contents {
         match content {
             RunContent::Text(text_content) => {

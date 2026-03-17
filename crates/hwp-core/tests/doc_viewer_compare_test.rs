@@ -45,6 +45,9 @@ const NEW_VIEWER_CORRECT: &[&str] = &[
     // multicolumns-in-common-controls.hwp: 표 셀 내 다단 텍스트를 기존 viewer는 누락하지만
     //   실제 콘텐츠가 존재. trailing space 차이도 있으나 시각적 동등
     "multicolumns-in-common-controls.hwp",
+    // table-caption.hwp: 캡션이 Object 구분자 "  \n"으로 trailing "  " 잔존.
+    //   Markdown 렌더링 시 시각적 차이 없음 (soft line break)
+    "table-caption.hwp",
 ];
 
 /// 두 마크다운 출력의 차이를 보여주는 헬퍼
