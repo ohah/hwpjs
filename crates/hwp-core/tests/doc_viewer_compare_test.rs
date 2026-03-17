@@ -48,6 +48,9 @@ const NEW_VIEWER_CORRECT: &[&str] = &[
     // table-caption.hwp: 캡션이 Object 구분자 "  \n"으로 trailing "  " 잔존.
     //   Markdown 렌더링 시 시각적 차이 없음 (soft line break)
     "table-caption.hwp",
+    // distribution.hwp: 배포용 문서. 도형 내부 단일 Run bold가 기존 viewer에서 부분 bold로
+    //   출력되는 특수 처리. HWP 원본 ParaCharShape는 전체 bold.
+    "distribution.hwp",
 ];
 
 /// 두 마크다운 출력의 차이를 보여주는 헬퍼
