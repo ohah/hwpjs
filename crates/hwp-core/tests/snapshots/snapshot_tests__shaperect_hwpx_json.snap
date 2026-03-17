@@ -2230,7 +2230,8 @@ expression: json
                         "offset_y": 0,
                         "alpha": 0
                       },
-                      "draw_text": null
+                      "draw_text": null,
+                      "is_caption": false
                     }
                   }
                 },
@@ -2397,7 +2398,8 @@ expression: json
                             "has_char_shapes": true
                           }
                         ]
-                      }
+                      },
+                      "is_caption": false
                     }
                   }
                 },
@@ -2511,7 +2513,8 @@ expression: json
                         "offset_y": 0,
                         "alpha": 0
                       },
-                      "draw_text": null
+                      "draw_text": null,
+                      "is_caption": false
                     }
                   }
                 },
@@ -2632,7 +2635,8 @@ expression: json
                         "offset_y": 0,
                         "alpha": 0
                       },
-                      "draw_text": null
+                      "draw_text": null,
+                      "is_caption": false
                     }
                   }
                 },

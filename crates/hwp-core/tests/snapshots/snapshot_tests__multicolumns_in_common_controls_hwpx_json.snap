@@ -2684,7 +2684,8 @@ expression: json
                             "has_char_shapes": true
                           }
                         ]
-                      }
+                      },
+                      "is_caption": false
                     }
                   }
                 },

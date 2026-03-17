@@ -2226,7 +2226,8 @@
                         "offset_y": 0,
                         "alpha": 0
                       },
-                      "draw_text": null
+                      "draw_text": null,
+                      "is_caption": false
                     }
                   }
                 },
@@ -2393,7 +2394,8 @@
                             "has_char_shapes": true
                           }
                         ]
-                      }
+                      },
+                      "is_caption": false
                     }
                   }
                 },
@@ -2507,7 +2509,8 @@
                         "offset_y": 0,
                         "alpha": 0
                       },
-                      "draw_text": null
+                      "draw_text": null,
+                      "is_caption": false
                     }
                   }
                 },
@@ -2628,7 +2631,8 @@
                         "offset_y": 0,
                         "alpha": 0
                       },
-                      "draw_text": null
+                      "draw_text": null,
+                      "is_caption": false
                     }
                   }
                 },
