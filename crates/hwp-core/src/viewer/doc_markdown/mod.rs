@@ -329,13 +329,12 @@ fn remove_image_markdown(text: &str) -> String {
     result
 }
 
-/// Markdown 하이퍼링크 `[text](url)` → `text`로 변환 (plain text만 남김)
+/// Markdown 하이퍼링크 `[text](url)` 완전 제거 (기존 viewer는 표 셀 내 하이퍼링크를 표시하지 않음)
 fn remove_hyperlink_markdown(text: &str) -> String {
     let mut result = String::with_capacity(text.len());
     let chars: Vec<char> = text.chars().collect();
     let mut i = 0;
     while i < chars.len() {
-        // ![는 이미지이므로 건너뜀 (이미 remove_image_markdown에서 처리됨)
         if chars[i] == '[' && (i == 0 || chars[i - 1] != '!') {
             if let Some(bracket_end) = chars[i + 1..].iter().position(|&c| c == ']') {
                 let after_bracket = i + 1 + bracket_end + 1;
@@ -343,9 +342,7 @@ fn remove_hyperlink_markdown(text: &str) -> String {
                     if let Some(paren_end) =
                         chars[after_bracket + 1..].iter().position(|&c| c == ')')
                     {
-                        // [text](url) → text만 출력
-                        let display: String = chars[i + 1..i + 1 + bracket_end].iter().collect();
-                        result.push_str(&display);
+                        // [text](url) 전체 제거
                         i = after_bracket + 1 + paren_end + 1;
                         continue;
                     }
