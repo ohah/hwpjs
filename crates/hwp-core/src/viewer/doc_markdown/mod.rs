@@ -146,8 +146,23 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
 
             // 기존 viewer와 동일: 머리글/꼬리글/각주/미주가 있는 문단은 body 텍스트 생략
             if !has_header_footer_note && !body.is_empty() {
-                let body = if has_heading || body.contains('\n') {
+                let body = if has_heading {
                     body
+                } else if body.contains('\n') {
+                    // 멀티라인: 표(|로 시작)는 그대로, 나머지는 trailing "  \n" 제거
+                    if body.contains('|') {
+                        // 표를 포함하면 그대로
+                        body
+                    } else {
+                        let mut b = body;
+                        while b.ends_with("  \n") {
+                            b = b[..b.len() - 3].to_string();
+                        }
+                        while b.ends_with('\n') {
+                            b.pop();
+                        }
+                        b
+                    }
                 } else if para.has_char_shapes {
                     // ParaCharShape가 있는 문단: trim() (기존 viewer와 동일)
                     body.trim().to_string()
