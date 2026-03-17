@@ -340,7 +340,7 @@ fn render_run(
                         }
                     }
                     text_parts.push(obj_text);
-                    // Object 뒤에도 구분자 추가 (다음 Object나 텍스트를 위해)
+                    // Object 뒤에도 구분자 추가
                     text_parts.push("  \n".to_string());
                 }
             }
@@ -390,8 +390,8 @@ fn render_shape_object(
                 for para in &sub_list.paragraphs {
                     let (body, _) =
                         render_paragraph_inner(para, resources, binaries, options, Some(true));
-                    // 각 문단의 trailing \n 제거 (join "  \n"과 중복 방지)
-                    let body = body.trim_end_matches('\n').to_string();
+                    // 각 문단의 trailing \n 및 trailing space 제거
+                    let body = body.trim_end().to_string();
                     if !body.trim().is_empty() {
                         parts.push(body);
                     }
