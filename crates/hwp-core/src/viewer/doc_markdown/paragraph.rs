@@ -444,6 +444,10 @@ fn render_table(
                 format!("{}<br>", cell_text.trim_end_matches('\n'))
             };
             cells.push(cell_text);
+            // col_span > 1이면 병합된 열에 빈 셀 추가 (기존 viewer와 동일)
+            for _ in 1..cell.col_span {
+                cells.push(" ".to_string());
+            }
         }
         // 셀 수가 col_count보다 적으면 빈 셀 채우기
         while cells.len() < col_count {
