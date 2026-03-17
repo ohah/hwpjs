@@ -18,7 +18,7 @@ expression: markdown
 
 (1)`E=mr  ^{2} = {nc  ^{2}} over {sqrt {1- {r  ^{2}} over {d  ^{2}}}}`(2)`Q= lim _{TRIANGLE t -> 0} {{TRIANGLE s} over {TRIANGLE t} = {d  ^{2} s} over {dt  ^{2}}} +1`
 
-(1)`Y= sqrt {{gL} over {2 pi }} = {gT} over {2 pi }`				(2)`{a  ^{4}} over {T  ^{2}} -1= {G} over {4 pi   ^{2}} (M+m)`
+(1)`Y= sqrt {{gL} over {2 pi }} = {gT} over {2 pi }`		(2)`{a  ^{4}} over {T  ^{2}} -1= {G} over {4 pi   ^{2}} (M+m)`
 
 (1)`E= sqrt {{GM} over {R}} ,` {R ^{3}} over {T ^{2}} = {GM} over {4 pi  ^{2}}`(2)`sum _{k=1} ^{n} k  ^{3} = {n(n+1)} over {2} = sum _{k=1} ^{n} k`
 
