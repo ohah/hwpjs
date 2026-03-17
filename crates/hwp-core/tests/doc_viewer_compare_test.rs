@@ -5,7 +5,7 @@ use common::find_fixture_file;
 
 use hwp_core::convert::to_document;
 use hwp_core::viewer::doc_markdown::{doc_to_markdown, DocMarkdownOptions};
-use hwp_core::viewer::{to_markdown, MarkdownOptions};
+use hwp_core::viewer::MarkdownOptions;
 use hwp_core::HwpParser;
 
 fn old_markdown_options() -> MarkdownOptions {
