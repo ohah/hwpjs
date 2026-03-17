@@ -108,6 +108,8 @@ pub fn render_paragraph(
     }
 
     let body = text_parts.join("");
+    // 연속 탭을 단일 탭으로 (convert에서 중복 생성 방지)
+    let body = body.replace("\t\t", "\t");
     (body, control_parts)
 }
 
