@@ -420,16 +420,23 @@ fn render_table(
             let cell_text = cell_text.replace("\n\n", "<br> ").replace('\n', "<br> ");
             // 빈 셀은 공백, 일반 셀은 끝에 <br> 추가
             // 셀에 Object(이미지/하이퍼링크 등)가 있었으면 제거 후에도 <br>로 표시
-            let has_objects = cell.content.paragraphs.iter().any(|p| {
+            // 이미지/도형/하이퍼링크가 있던 셀은 제거 후에도 <br>로 표시
+            let has_removable_content = cell.content.paragraphs.iter().any(|p| {
                 p.runs.iter().any(|r| {
-                    r.contents
-                        .iter()
-                        .any(|c| matches!(c, RunContent::Object(_)))
+                    r.contents.iter().any(|c| {
+                        matches!(c, RunContent::Object(_))
+                            || matches!(
+                                c,
+                                RunContent::Control(
+                                    hwp_model::control::Control::FieldBegin(_)
+                                )
+                            )
+                    })
                 })
             });
             let cell_text = if cell_text.trim().is_empty() {
-                if has_objects {
-                    "<br>".to_string() // 이미지/도형이 있던 셀은 <br>로 표시
+                if has_removable_content {
+                    "<br>".to_string()
                 } else {
                     " ".to_string()
                 }
