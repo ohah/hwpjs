@@ -1,0 +1,25 @@
+---
+source: crates/hwp-core/tests/snapshot_tests.rs
+expression: markdown
+---
+<u>실선밑줄</u>
+
+<u>대시밑줄</u>
+
+<u>점선밑줄</u>
+
+<u>대시일점밑줄</u>
+
+<u>대시이점밑줄</u>
+
+<u>긴대시밑줄</u>
+
+<u>큰점선밑줄</u>
+
+<u>이중실선밑줄</u>
+
+<u>이중증가밑줄</u>
+
+<u>이중감소밑줄</u>
+
+<u>삼중밑줄</u>

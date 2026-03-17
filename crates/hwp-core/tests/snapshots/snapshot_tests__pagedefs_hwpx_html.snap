@@ -1,0 +1,8 @@
+---
+source: crates/hwp-core/tests/snapshot_tests.rs
+expression: html
+---
+<div class="hwp-body">
+<p><span style="font-size: 10.0pt; font-family: '바탕'">Section 1: A4 portrait</span></p>
+<p><span style="font-size: 10.0pt; font-family: '바탕'">Section 2: A4 landscape</span></p>
+</div>

@@ -1,0 +1,11 @@
+---
+source: crates/hwp-core/tests/snapshot_tests.rs
+expression: markdown
+---
+~~strikethrough~~
+
+~~취소선~~
+
+<u>밑줄</u>
+
+<u>밑줄</u><u>~~취소선~~</u><u>**굵게**</u>

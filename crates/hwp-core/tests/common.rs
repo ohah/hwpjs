@@ -77,6 +77,27 @@ pub fn find_all_hwp_files() -> Vec<String> {
     Vec::new()
 }
 
+/// Helper function to get all HWPX files in fixtures directory
+#[allow(dead_code)]
+pub fn find_all_hwpx_files() -> Vec<String> {
+    if let Some(dir) = find_fixtures_dir() {
+        let mut files = Vec::new();
+        if let Ok(entries) = std::fs::read_dir(&dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("hwpx") {
+                    if let Some(path_str) = path.to_str() {
+                        files.push(path_str.to_string());
+                    }
+                }
+            }
+        }
+        files.sort();
+        return files;
+    }
+    Vec::new()
+}
+
 /// PDF 테스트용 폰트 디렉터리. `tests/fixtures/fonts`에 LiberationSans-*.ttf를 두면 사용됨.
 #[allow(dead_code)]
 pub fn find_font_dir() -> Option<PathBuf> {

@@ -24,6 +24,7 @@ serde_json = "1.0.145"
 thiserror = "2.0.17"
 
 [dev-dependencies]
+hwpx-parser = { path = "../hwpx-parser" }
 insta = "1.43.2"
 lopdf = "0.33"
 regex = "1"
