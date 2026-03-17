@@ -150,12 +150,21 @@ pub fn render_paragraph(
     let mut hyperlink_url: Option<String> = None;
     let mut hyperlink_text_parts: Vec<String> = Vec::new();
 
+    // 기존 viewer 동작: ParaCharShape가 없는 문단(단일 Run + 기본 char_shape)은 bold/italic 적용 안 함
+    // char_shape_id == 0이면 기본 char_shape로 간주 (ParaCharShape 레코드가 없었던 경우)
+    let skip_styles = para.runs.len() <= 1
+        && para
+            .runs
+            .first()
+            .map_or(true, |r| r.char_shape_id == 0);
+
     for run in &para.runs {
         let (run_text, mut run_controls) = render_run(
             run,
             resources,
             binaries,
             options,
+            skip_styles,
             &mut footnote_counter,
             &mut endnote_counter,
             &mut hyperlink_url,
@@ -192,6 +201,7 @@ fn render_run(
     resources: &Resources,
     binaries: &BinaryStore,
     options: &DocMarkdownOptions,
+    skip_styles: bool,
     footnote_counter: &mut u16,
     endnote_counter: &mut u16,
     hyperlink_url: &mut Option<String>,
@@ -203,10 +213,11 @@ fn render_run(
     // CharShape에서 스타일 정보 가져오기
     // 기존 viewer와 동일: bold, italic, strikethrough만 적용 (underline 미적용)
     // underline_type == Center(2)는 취소선으로 처리
+    // skip_styles=true이면 스타일 적용 안 함 (ParaCharShape 없는 문단)
     let char_shape = resources.char_shapes.get(run.char_shape_id as usize);
-    let bold = char_shape.is_some_and(|cs| cs.bold);
-    let italic = char_shape.is_some_and(|cs| cs.italic);
-    let strikeout = char_shape.is_some_and(|cs| {
+    let bold = !skip_styles && char_shape.is_some_and(|cs| cs.bold);
+    let italic = !skip_styles && char_shape.is_some_and(|cs| cs.italic);
+    let strikeout = !skip_styles && char_shape.is_some_and(|cs| {
         cs.strikeout.is_some()
             || cs
                 .underline
