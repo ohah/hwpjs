@@ -418,14 +418,8 @@ fn convert_header_footer() {
             }
         }
     }
-    assert!(
-        found_header,
-        "headerfooter.hwp should have header control"
-    );
-    assert!(
-        found_footer,
-        "headerfooter.hwp should have footer control"
-    );
+    assert!(found_header, "headerfooter.hwp should have header control");
+    assert!(found_footer, "headerfooter.hwp should have footer control");
 }
 
 #[test]
@@ -450,10 +444,7 @@ fn convert_footnote_endnote() {
             }
         }
     }
-    assert!(
-        found_footnote,
-        "footnote-endnote.hwp should have footnote"
-    );
+    assert!(found_footnote, "footnote-endnote.hwp should have footnote");
     assert!(found_endnote, "footnote-endnote.hwp should have endnote");
 }
 
@@ -479,10 +470,7 @@ fn convert_hyperlink_field() {
             }
         }
     }
-    assert!(
-        found_field,
-        "hyperlink.hwp should have hyperlink field"
-    );
+    assert!(found_field, "hyperlink.hwp should have hyperlink field");
 }
 
 #[test]
@@ -505,10 +493,7 @@ fn convert_multicolumns() {
             }
         }
     }
-    assert!(
-        found_column,
-        "multicolumns.hwp should have column control"
-    );
+    assert!(found_column, "multicolumns.hwp should have column control");
 }
 
 #[test]

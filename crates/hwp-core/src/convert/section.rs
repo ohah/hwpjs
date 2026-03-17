@@ -512,7 +512,11 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
             Some(RunContent::Control(ctrl))
         }
 
-        ctrl_header::CtrlHeaderData::ColumnDefinition { attribute, column_spacing, .. } => {
+        ctrl_header::CtrlHeaderData::ColumnDefinition {
+            attribute,
+            column_spacing,
+            ..
+        } => {
             let ctrl = Control::Column(ColumnControl {
                 id: 0,
                 column_type: match attribute.column_type {
@@ -588,9 +592,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
             Some(RunContent::Control(ctrl))
         }
 
-        ctrl_header::CtrlHeaderData::BookmarkMarker {
-            keyword1, ..
-        } => {
+        ctrl_header::CtrlHeaderData::BookmarkMarker { keyword1, .. } => {
             let ctrl = Control::Bookmark(Bookmark {
                 name: keyword1.clone(),
             });
@@ -668,10 +670,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
 // 표 변환
 // ═══════════════════════════════════════════
 
-fn convert_table_object(
-    common: ShapeCommon,
-    children: &[ParagraphRecord],
-) -> Option<RunContent> {
+fn convert_table_object(common: ShapeCommon, children: &[ParagraphRecord]) -> Option<RunContent> {
     // children에서 Table 레코드 찾기
     let table_data = children.iter().find_map(|c| {
         if let ParagraphRecord::Table { table } = c {
