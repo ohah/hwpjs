@@ -65,6 +65,7 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
     // 2-pass: 먼저 전체 순회하여 머리글/꼬리글/각주/미주와 본문을 분리 수집
     let mut headers: Vec<String> = Vec::new();
     let mut body_lines: Vec<String> = Vec::new();
+    let mut outline_tracker = crate::viewer::core::outline::OutlineNumberTracker::new();
     let mut footers: Vec<String> = Vec::new();
     let mut footnotes: Vec<String> = Vec::new();
     let mut endnotes: Vec<String> = Vec::new();
@@ -87,8 +88,13 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
                 }
             }
 
-            let (body, ctrl_parts) =
-                paragraph::render_paragraph(para, &doc.resources, &doc.binaries, options);
+            let (body, ctrl_parts) = paragraph::render_paragraph_with_tracker(
+                para,
+                &doc.resources,
+                &doc.binaries,
+                options,
+                &mut outline_tracker,
+            );
 
             for part in ctrl_parts {
                 match part {
