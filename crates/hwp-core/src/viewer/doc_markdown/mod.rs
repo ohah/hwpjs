@@ -69,7 +69,15 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
     let mut footnotes: Vec<String> = Vec::new();
     let mut endnotes: Vec<String> = Vec::new();
 
-    for section in &doc.sections {
+    for (section_idx, section) in doc.sections.iter().enumerate() {
+        // 섹션 간 구분선
+        if section_idx > 0 && !body_lines.is_empty() {
+            let last = body_lines.last().map(String::as_str).unwrap_or("");
+            if !last.is_empty() && last != "---" {
+                body_lines.push("---".to_string());
+            }
+        }
+
         for para in &section.paragraphs {
             // 페이지 구분선
             if para.page_break && !body_lines.is_empty() {
@@ -115,11 +123,7 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
             }
 
             if !body.is_empty() {
-                // trailing space 제거 (기존 viewer와 동일)
-                let body = body.trim_end().to_string();
-                if !body.is_empty() {
-                    body_lines.push(body);
-                }
+                body_lines.push(body);
             }
         }
     }
@@ -187,6 +191,8 @@ pub(crate) fn render_sublist_paragraphs(
     let mut parts = Vec::new();
     for para in paragraphs {
         let (body, _) = paragraph::render_paragraph(para, resources, binaries, options);
+        // SubList 내부에서는 앞뒤 공백/탭 제거 (기존 viewer와 동일)
+        let body = body.replace('\t', "").trim().to_string();
         if !body.is_empty() {
             parts.push(body);
         }

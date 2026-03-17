@@ -271,7 +271,6 @@ fn render_table(
         }
     }
 
-    // 표 앞뒤에 빈 줄 추가 (기존 viewer와 동일: \n\n표내용\n\n)
     format!("\n{}\n", lines.join("\n"))
 }
 
