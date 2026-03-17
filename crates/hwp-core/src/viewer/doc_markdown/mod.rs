@@ -252,7 +252,6 @@ fn render_sublist_paragraphs_inner(
     let mut parts = Vec::new();
     for para in paragraphs {
         let (body, _) = paragraph::render_paragraph(para, resources, binaries, options);
-        let raw_body_not_empty = !body.trim().is_empty();
         let body = body
             .replace('\t', "")
             .replace("**", "")
