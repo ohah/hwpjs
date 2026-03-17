@@ -1,0 +1,45 @@
+---
+source: crates/hwp-core/tests/snapshot_tests.rs
+expression: html
+---
+<div class="hwp-body">
+<table class="hwp-table">
+<tr>
+<td>  </td>
+</tr>
+</table>
+<table class="hwp-table">
+<tr>
+<td>  </td>
+</tr>
+</table>
+<table class="hwp-table">
+<tr>
+<td>  </td>
+</tr>
+</table>
+<table class="hwp-table">
+<tr>
+<td>  </td>
+</tr>
+</table>
+<table class="hwp-table">
+<tr>
+<td>  </td>
+</tr>
+</table>
+<table class="hwp-table">
+<tr>
+<td>  </td>
+</tr>
+</table>
+<table class="hwp-table">
+<tr>
+<td>  </td>
+</tr>
+</table><table class="hwp-table">
+<tr>
+<td>  </td>
+</tr>
+</table>
+</div>

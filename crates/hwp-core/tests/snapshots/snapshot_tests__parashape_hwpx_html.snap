@@ -1,0 +1,15 @@
+---
+source: crates/hwp-core/tests/snapshot_tests.rs
+expression: html
+---
+<div class="hwp-body">
+<p style="margin-left: 22.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">문단1</span></p>
+<p><span style="font-size: 10.0pt; font-family: '바탕'">문단2</span></p>
+<p style="text-indent: 20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">문단3 - 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt 들여쓰기 10pt</span></p>
+<p style="text-indent: -20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">문단4 - 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt 내어쓰기 10pt</span></p>
+<p style="text-align: left; text-indent: -20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">문단 5</span></p>
+<p style="text-align: right; text-indent: -20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">문단 6</span></p>
+<p style="text-align: center; text-indent: -20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">문단 7</span></p>
+<p style="text-indent: -20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">문단 8</span></p>
+<p style="text-indent: -20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">문단 9</span></p>
+</div>

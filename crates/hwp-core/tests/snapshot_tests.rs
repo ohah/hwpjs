@@ -4,8 +4,11 @@ mod common;
 use common::*;
 
 use hwp_core::document::ParagraphRecord;
+use hwp_core::viewer::doc_html::{doc_to_html, DocHtmlOptions};
+use hwp_core::viewer::doc_markdown::{doc_to_markdown, DocMarkdownOptions};
 use hwp_core::*;
 use insta::{assert_snapshot, with_settings};
+use serde_json;
 
 // insta가 tests/snapshots 디렉토리를 사용하도록 설정하는 헬퍼 매크로
 macro_rules! assert_snapshot_with_path {
@@ -2484,4 +2487,160 @@ fn test_debug_table_bug_page10() {
         }
     }
     println!("  (Total paths near target: {})", path_count);
+}
+
+// ═══════════════════════════════════════════
+// HWPX → Document → JSON 스냅샷
+// ═══════════════════════════════════════════
+
+#[test]
+fn test_all_fixtures_hwpx_json_snapshots() {
+    let hwpx_files = find_all_hwpx_files();
+    if hwpx_files.is_empty() {
+        println!("No HWPX files found in fixtures directory");
+        return;
+    }
+
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let snapshots_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("snapshots");
+
+    for file_path in &hwpx_files {
+        let file_name = std::path::Path::new(file_path)
+            .file_stem()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown");
+        let snapshot_name = file_name.replace(['-', '.'], "_");
+        let snapshot_name_json = format!("{}_hwpx_json", snapshot_name);
+
+        let data = match std::fs::read(file_path) {
+            Ok(d) => d,
+            Err(e) => {
+                eprintln!("Failed to read {}: {}", file_path, e);
+                continue;
+            }
+        };
+
+        let document = match hwpx_parser::HwpxParser::parse(&data) {
+            Ok(doc) => doc,
+            Err(e) => {
+                eprintln!("Failed to parse {}: {}", file_path, e);
+                continue;
+            }
+        };
+
+        let json =
+            serde_json::to_string_pretty(&document).expect("Should serialize Document to JSON");
+        assert_snapshot_with_path!(snapshot_name_json.as_str(), json);
+
+        // JSON 파일로도 저장
+        std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
+        let json_file = snapshots_dir.join(format!("{}.hwpx.json", file_name));
+        std::fs::write(&json_file, &json).unwrap_or_else(|e| {
+            eprintln!("Failed to write JSON file: {}", e);
+        });
+    }
+}
+
+#[test]
+fn test_all_fixtures_hwpx_markdown_snapshots() {
+    let hwpx_files = find_all_hwpx_files();
+    if hwpx_files.is_empty() {
+        println!("No HWPX files found in fixtures directory");
+        return;
+    }
+
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let snapshots_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("snapshots");
+
+    let md_options = DocMarkdownOptions::default();
+
+    for file_path in &hwpx_files {
+        let file_name = std::path::Path::new(file_path)
+            .file_stem()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown");
+        let snapshot_name = file_name.replace(['-', '.'], "_");
+        let snapshot_name_md = format!("{}_hwpx_markdown", snapshot_name);
+
+        let data = match std::fs::read(file_path) {
+            Ok(d) => d,
+            Err(e) => {
+                eprintln!("Failed to read {}: {}", file_path, e);
+                continue;
+            }
+        };
+
+        let document = match hwpx_parser::HwpxParser::parse(&data) {
+            Ok(doc) => doc,
+            Err(e) => {
+                eprintln!("Failed to parse {}: {}", file_path, e);
+                continue;
+            }
+        };
+
+        let markdown = doc_to_markdown(&document, &md_options);
+        assert_snapshot_with_path!(snapshot_name_md.as_str(), markdown);
+
+        // MD 파일로도 저장
+        std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
+        let md_file = snapshots_dir.join(format!("{}.hwpx.md", file_name));
+        std::fs::write(&md_file, &markdown).unwrap_or_else(|e| {
+            eprintln!("Failed to write MD file: {}", e);
+        });
+    }
+}
+
+#[test]
+fn test_all_fixtures_hwpx_html_snapshots() {
+    let hwpx_files = find_all_hwpx_files();
+    if hwpx_files.is_empty() {
+        println!("No HWPX files found in fixtures directory");
+        return;
+    }
+
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let snapshots_dir = std::path::Path::new(manifest_dir)
+        .join("tests")
+        .join("snapshots");
+
+    let html_options = DocHtmlOptions::default();
+
+    for file_path in &hwpx_files {
+        let file_name = std::path::Path::new(file_path)
+            .file_stem()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown");
+        let snapshot_name = file_name.replace(['-', '.'], "_");
+        let snapshot_name_html = format!("{}_hwpx_html", snapshot_name);
+
+        let data = match std::fs::read(file_path) {
+            Ok(d) => d,
+            Err(e) => {
+                eprintln!("Failed to read {}: {}", file_path, e);
+                continue;
+            }
+        };
+
+        let document = match hwpx_parser::HwpxParser::parse(&data) {
+            Ok(doc) => doc,
+            Err(e) => {
+                eprintln!("Failed to parse {}: {}", file_path, e);
+                continue;
+            }
+        };
+
+        let html = doc_to_html(&document, &html_options);
+        assert_snapshot_with_path!(snapshot_name_html.as_str(), html);
+
+        // HTML 파일로도 저장
+        std::fs::create_dir_all(&snapshots_dir).unwrap_or(());
+        let html_file = snapshots_dir.join(format!("{}.hwpx.html", file_name));
+        std::fs::write(&html_file, &html).unwrap_or_else(|e| {
+            eprintln!("Failed to write HTML file: {}", e);
+        });
+    }
 }

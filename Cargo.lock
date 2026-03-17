@@ -590,6 +590,7 @@ dependencies = [
  "encoding_rs",
  "flate2",
  "hwp-model",
+ "hwpx-parser",
  "insta",
  "lopdf",
  "pathdiff",
@@ -602,6 +603,9 @@ dependencies = [
 [[package]]
 name = "hwp-model"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "hwpjs"

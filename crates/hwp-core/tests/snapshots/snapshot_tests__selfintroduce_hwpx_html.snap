@@ -1,0 +1,14 @@
+---
+source: crates/hwp-core/tests/snapshot_tests.rs
+expression: html
+---
+<div class="hwp-body">
+<p style="text-align: center"><span style="font-size: 16.0pt; font-family: '맑은 고딕'">나를 소개 합니다</span></p>
+<p style="line-height: 180%"><span style="font-size: 16.0pt; font-family: '맑은 고딕'">①</span><span style="font-size: 16.0pt; font-family: '맑은 고딕'">이름</span><span style="font-size: 16.0pt; font-family: '맑은 고딕'">:</span></p>
+<p style="line-height: 180%"><span style="font-size: 16.0pt; font-family: '맑은 고딕'">혈액형 : O형</span></p>
+<p style="line-height: 180%"><span style="font-size: 16.0pt; font-family: '맑은 고딕'">성격 : 자유로운 영혼</span></p>
+<p style="line-height: 180%"><span style="font-size: 16.0pt; font-family: '맑은 고딕'">좌우명 : A sound mind in a sound body.</span></p>
+<p style="line-height: 180%"><span style="font-size: 16.0pt; font-family: '맑은 고딕'">소개하는 글</span></p>
+<p style="line-height: 180%"><span style="font-size: 16.0pt; font-family: '맑은 고딕'">어린 시절은 변두리 작은 동네에서 꿈 많은 소녀로 자라났습니다. 할머니, 할아버지, 삼촌들까지 대가족 속에서 막내로 귀여움을 받으면서 살았습니다. 가족들은 저에게</span><span style="font-size: 16.0pt; font-family: '맑은 고딕'">微笑天使</span><span style="font-size: 16.0pt; font-family: '맑은 고딕'">라고 부르곤 했습니다. 가족들의 사랑 덕분에 잘 자라날 수 있었습니다.</span></p>
+<p style="line-height: 180%"><span style="font-size: 16.0pt; font-family: '맑은 고딕'">현재 저는 사랑하는 아이들과 남편과 함께</span><span style="font-size: 16.0pt; font-family: '맑은 고딕'">행복</span><span style="font-size: 16.0pt; font-family: '맑은 고딕'">(幸福)한 삶을 살아가고 있습니다. 앞으로의 꿈은 아이들이 결혼하고 나면 남편과 시골에서 조그마한 텃밭을 가꾸면서 살아가는 것입니다. 그 꿈을 실현할 수 있기를 바랍니다.</span></p>
+</div>

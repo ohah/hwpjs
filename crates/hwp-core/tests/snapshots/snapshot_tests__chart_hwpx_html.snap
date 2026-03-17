@@ -1,0 +1,203 @@
+---
+source: crates/hwp-core/tests/snapshot_tests.rs
+expression: html
+---
+<div class="hwp-body">
+<p style="text-align: center"><span style="font-size: 13.0pt; font-family: '함초롬바탕'"><b>차트를 조건에 따라 완성하여 제출해 주세요.</b></span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><b>유형 1.</b></span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">&lt;&lt;차트조건&gt;&gt;</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">1) 차트 데이터는 표 내용에서 연령대별 2015년, 2014년, 2013년의 값만 이용할 것</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">2) 종류 - &lt;묶은 세로 막대형&gt;으로 작업할 것</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">3) 제목 – 굴림, 진하게, 12pt, 배경 – 선 모양(한줄로), 그림자(2pt)</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">4) 제목 이외의 전체 글꼴 – 굴림, 보통, 10pt</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">5) 축제목과 범례는 &lt;&lt;출력형태&gt;&gt;와 동일하게 처리할 것</span></p>
+<table class="hwp-table">
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '돋움'">구분</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '돋움'">10대</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '돋움'">20대</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '돋움'">30대</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '돋움'">40대 이상</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '돋움'">합계</span></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '돋움'">2015년</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">11.2</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">24.7</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">16.3</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">15.3</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">67.5</span></a></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '돋움'">2014년</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">11.0</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">25.5</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">18.7</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">18.7</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">73.9</span></a></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '돋움'">2013년</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">16.4</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">41.6</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">25.9</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">9.5</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">93.4</span></a></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '돋움'">2012년</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">19.9</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">40.9</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">24.5</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">12.9</span></p>  </td>
+<td>  </td>
+</tr>
+</table>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><b>유형 2.</b></span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">&lt;&lt;차트조건&gt;&gt;</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">1) 차트 데이터는 표 내용에서 연도별 초등학교, 중학교, 고등학교의 값만 이용할 것</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">2) 종류 - &lt;묶은 세로 막대형&gt;으로 작업할 것</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">3) 제목 – 궁서, 진하게, 12pt, 배경 – 선 모양(한줄로), 그림자(2pt)</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">4) 제목 이외의 전체 글꼴 – 궁서, 보통, 10pt</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">5) 축제목과 범례는 &lt;&lt;출력형태&gt;&gt;와 동일하게 처리할 것</span></p>
+<table class="hwp-table">
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">구분</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">2012년</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">2013년</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">2014년</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">2015년</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">합계</span></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">초등학교</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">167,900</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">184,100</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">174,900</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">132,200</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">659,100</span></a></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">중학교</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">167,800</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">161,700</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">198,300</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">203,200</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">731,000</span></a></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">고등학교</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">138,700</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">145,400</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">140,600</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">98,800</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">523,500</span></a></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">기타</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">102,600</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">103,700</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">101,800</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">89,900</span></p>  </td>
+<td>  </td>
+</tr>
+</table>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><b>유형 3.</b></span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">&lt;&lt;차트조건&gt;&gt;</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">1) 차트 데이터는 표 내용에서 구분별 일자마라톤, 8자마라톤, 스피드, 2단 뛰기의 값만 이용할 것</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">2) 종류 - &lt;묶은 가로 막대형&gt;으로 작업할 것</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">3) 제목 – 굴림, 진하게, 12pt, 배경 – 선 모양(한줄로), 그림자(2pt)</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">4) 제목 이외의 전체 글꼴 – 굴림, 보통, 10pt</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">5) 축제목과 범례는 &lt;&lt;출력형태&gt;&gt;와 동일하게 처리할 것</span></p>
+<table class="hwp-table">
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">구분</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">일자마라톤</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">8자마라톤</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">스피드</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">2단 뛰기</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">많이 넘기</span></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">초등부</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">58</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">35</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">37</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">127</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">67</span></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">중등부</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">89</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">45</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">52</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">145</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">84</span></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">고등부</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">98</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">56</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">63</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">192</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">95</span></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">합계</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">245</span></a></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">136</span></a></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">152</span></a></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">464</span></a></p>  </td>
+<td>  </td>
+</tr>
+</table>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><b>유형 4.</b></span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">&lt;&lt;차트조건&gt;&gt;</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">1) 차트 데이터는 표 내용에서 지역별 기술, 포스터, 논문의 값만 이용할 것</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">2) 종류 - &lt;꺽은선형&gt;으로 작업할 것</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">3) 제목 – 궁서, 진하게, 12pt, 배경 – 선 모양(한줄로), 그림자(2pt)</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">4) 제목 이외의 전체 글꼴 – 궁서, 보통, 10pt</span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">5) 축제목과 범례는 &lt;&lt;출력형태&gt;&gt;와 동일하게 처리할 것</span></p>
+<table class="hwp-table">
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">구분</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">아시아</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">유럽</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">미주</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">아프리카</span></p>  </td>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">평균</span></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">기술</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">418</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">306</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">237</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">103</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">266.00</span></a></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">포스터</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">341</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">385</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">231</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">194</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">287.75</span></a></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">논문</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">224</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">273</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">251</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">148</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">224.00</span></a></p>  </td>
+</tr>
+<tr>
+<td><p style="text-align: center"><span style="font-size: 10.0pt; font-family: '굴림'">기타</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">146</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">204</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">183</span></p>  </td>
+<td><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">126</span></p>  </td>
+<td>  </td>
+</tr>
+</table>
+</div>
