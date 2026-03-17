@@ -245,6 +245,7 @@ fn render_sublist_paragraphs_inner(
     let mut parts = Vec::new();
     for para in paragraphs {
         let (body, _) = paragraph::render_paragraph(para, resources, binaries, options);
+        let raw_body_not_empty = !body.trim().is_empty();
         let body = body
             .replace('\t', "")
             .replace("**", "")
@@ -255,7 +256,8 @@ fn render_sublist_paragraphs_inner(
         let body = if trim_leading {
             body.trim().to_string()
         } else {
-            body.trim_end().to_string()
+            // 표 셀: trailing space 보존 (기존 viewer 동일), trailing \n만 제거
+            body.trim_end_matches('\n').to_string()
         };
         if !body.is_empty() {
             parts.push(body);
