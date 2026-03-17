@@ -4,11 +4,49 @@ use hwp_model::paragraph::{Paragraph, Run, RunContent, TextContent, TextElement}
 use hwp_model::resources::Resources;
 use hwp_model::shape::ShapeObject;
 use hwp_model::table::Table;
+use hwp_model::types::HeadingType;
 
 use super::{extract_control_parts, ControlPart, DocMarkdownOptions};
+use crate::viewer::core::outline::{format_outline_number, OutlineNumberTracker};
 use crate::viewer::doc_utils;
 
 /// 문단 하나를 Markdown으로 렌더링.
+/// (본문 텍스트, 추출된 컨트롤 파트들) 반환.
+pub fn render_paragraph_with_tracker(
+    para: &Paragraph,
+    resources: &Resources,
+    binaries: &BinaryStore,
+    options: &DocMarkdownOptions,
+    outline_tracker: &mut OutlineNumberTracker,
+) -> (String, Vec<ControlPart>) {
+    let (body, ctrl_parts) = render_paragraph(para, resources, binaries, options);
+
+    // 개요 번호 적용
+    if !body.is_empty() {
+        if let Some(ps) = resources.para_shapes.get(para.para_shape_id as usize) {
+            if let Some(ref heading) = ps.heading {
+                if heading.heading_type == HeadingType::Outline {
+                    let level = heading.level + 1;
+                    let number = outline_tracker.get_and_increment(level);
+                    let num_str = format_outline_number(level, number);
+                    let body_trimmed = body.trim_end();
+                    if (1..=6).contains(&level) {
+                        let heading_prefix = "#".repeat(level as usize);
+                        return (
+                            format!("{} {} {}", heading_prefix, num_str, body_trimmed),
+                            ctrl_parts,
+                        );
+                    } else {
+                        return (format!("{} {}", num_str, body_trimmed), ctrl_parts);
+                    }
+                }
+            }
+        }
+    }
+
+    (body, ctrl_parts)
+}
+
 /// (본문 텍스트, 추출된 컨트롤 파트들) 반환.
 pub fn render_paragraph(
     para: &Paragraph,
