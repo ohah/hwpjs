@@ -6,6 +6,7 @@ use hwp_model::shape::ShapeObject;
 use hwp_model::table::Table;
 
 use super::{render_sublist_paragraphs, DocHtmlOptions, HtmlControlPart};
+use crate::viewer::doc_utils;
 
 /// 문단 하나를 HTML로 렌더링
 pub fn render_paragraph(
@@ -128,7 +129,7 @@ fn render_run(
                 // 하이퍼링크
                 if let hwp_model::control::Control::FieldBegin(field) = control {
                     if field.field_type == hwp_model::types::FieldType::Hyperlink {
-                        let url = extract_hyperlink_url(field);
+                        let url = doc_utils::extract_hyperlink_url(field);
                         let display = field
                             .sub_list
                             .as_ref()
@@ -252,7 +253,10 @@ fn apply_char_style_html(
     let font_id = cs.font_ref.hangul as usize;
     if let Some(font) = resources.fonts.hangul.get(font_id) {
         if !font.face.is_empty() {
-            styles.push(format!("font-family: '{}'", font.face));
+            styles.push(format!(
+                "font-family: '{}'",
+                doc_utils::escape_css_font_name(&font.face)
+            ));
         }
     }
 
@@ -372,33 +376,24 @@ fn render_table_html(
 
 /// 이미지를 HTML <img>로 변환
 fn render_picture_html(binary_item_id: &str, binaries: &BinaryStore) -> String {
-    if binary_item_id.is_empty() {
-        return String::new();
-    }
-
-    if let Some(item) = binaries.items.iter().find(|b| b.id == binary_item_id) {
+    if let Some(item) = doc_utils::find_binary_item(binary_item_id, binaries) {
         if item.data.is_empty() {
             format!("<img src=\"{}\" alt=\"이미지\">", html_escape(&item.src))
         } else {
-            let mime = match &item.format {
-                hwp_model::document::ImageFormat::Png => "image/png",
-                hwp_model::document::ImageFormat::Jpg => "image/jpeg",
-                hwp_model::document::ImageFormat::Gif => "image/gif",
-                hwp_model::document::ImageFormat::Bmp => "image/bmp",
-                hwp_model::document::ImageFormat::Svg => "image/svg+xml",
-                _ => "application/octet-stream",
-            };
+            let mime = doc_utils::image_format_to_mime(&item.format);
             let b64 = {
                 use base64::Engine;
                 base64::engine::general_purpose::STANDARD.encode(&item.data)
             };
             format!("<img src=\"data:{};base64,{}\" alt=\"이미지\">", mime, b64)
         }
-    } else {
+    } else if !binary_item_id.is_empty() {
         format!(
             "<img src=\"{}\" alt=\"이미지\">",
             html_escape(binary_item_id)
         )
+    } else {
+        String::new()
     }
 }
 
@@ -438,30 +433,6 @@ fn extract_html_control_part(
         }
         _ => None,
     }
-}
-
-/// 하이퍼링크 URL 추출
-fn extract_hyperlink_url(field: &hwp_model::control::Field) -> String {
-    for param in &field.parameters {
-        match param {
-            hwp_model::control::FieldParameter::String { name, value } => {
-                if name == "url" || name == "href" {
-                    return value.clone();
-                }
-            }
-            hwp_model::control::FieldParameter::Element { children, .. } => {
-                for child in children {
-                    if let hwp_model::control::FieldParameter::String { name, value } = child {
-                        if name == "url" || name == "href" {
-                            return value.clone();
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-    String::new()
 }
 
 /// HTML 이스케이프
