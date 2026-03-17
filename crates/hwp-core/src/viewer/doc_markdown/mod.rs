@@ -88,12 +88,14 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
                 }
             }
 
-            let (body, ctrl_parts) = paragraph::render_paragraph_with_tracker(
+            let section_outline_id = section.definition.outline_shape_id.unwrap_or(0);
+            let (body, ctrl_parts, has_heading) = paragraph::render_paragraph_with_tracker(
                 para,
                 &doc.resources,
                 &doc.binaries,
                 options,
                 &mut outline_tracker,
+                section_outline_id,
             );
 
             let has_header_footer_note = !ctrl_parts.is_empty();
@@ -142,10 +144,11 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
 
             // 기존 viewer와 동일: 머리글/꼬리글/각주/미주가 있는 문단은 body 텍스트 생략
             if !has_header_footer_note && !body.is_empty() {
-                let body = if !body.contains('\n') {
-                    body.trim().to_string()
-                } else {
+                // heading 접두사(들여쓰기 포함)가 적용된 경우 trim 생략
+                let body = if has_heading || body.contains('\n') {
                     body
+                } else {
+                    body.trim().to_string()
                 };
                 if !body.is_empty() {
                     body_lines.push(body);

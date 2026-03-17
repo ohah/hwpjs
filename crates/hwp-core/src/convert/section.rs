@@ -17,11 +17,37 @@ use hwp_model::types::*;
 pub fn convert_sections(body: &BodyText, _doc_info: &DocInfo) -> Vec<Section> {
     body.sections
         .iter()
-        .map(|sec| Section {
-            paragraphs: sec.paragraphs.iter().map(convert_paragraph).collect(),
-            ..Default::default()
+        .map(|sec| {
+            // SectionDefinition에서 outline_shape_id 추출
+            let outline_shape_id = extract_section_outline_id(&sec.paragraphs);
+            let mut section = Section {
+                paragraphs: sec.paragraphs.iter().map(convert_paragraph).collect(),
+                ..Default::default()
+            };
+            if outline_shape_id > 0 {
+                section.definition.outline_shape_id = Some(outline_shape_id);
+            }
+            section
         })
         .collect()
+}
+
+/// SectionDefinition CtrlHeader에서 number_para_shape_id(개요 번호 ID) 추출
+fn extract_section_outline_id(paragraphs: &[bodytext::Paragraph]) -> u16 {
+    for para in paragraphs {
+        for record in &para.records {
+            if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                if let ctrl_header::CtrlHeaderData::SectionDefinition {
+                    number_para_shape_id,
+                    ..
+                } = &header.data
+                {
+                    return *number_para_shape_id;
+                }
+            }
+        }
+    }
+    0
 }
 
 fn convert_paragraph(para: &bodytext::Paragraph) -> Paragraph {

@@ -55,14 +55,15 @@ fn convert_num_format(
 }
 
 /// 문단 하나를 Markdown으로 렌더링.
-/// (본문 텍스트, 추출된 컨트롤 파트들) 반환.
+/// (본문 텍스트, 추출된 컨트롤 파트들, heading 적용 여부) 반환.
 pub fn render_paragraph_with_tracker(
     para: &Paragraph,
     resources: &Resources,
     binaries: &BinaryStore,
     options: &DocMarkdownOptions,
     outline_tracker: &mut OutlineNumberTracker,
-) -> (String, Vec<ControlPart>) {
+    section_outline_id: u16,
+) -> (String, Vec<ControlPart>, bool) {
     let (body, ctrl_parts) = render_paragraph(para, resources, binaries, options);
 
     // 개요 번호 / 글머리표 적용
@@ -74,8 +75,13 @@ pub fn render_paragraph_with_tracker(
                     HeadingType::Outline => {
                         let level = heading.level + 1;
                         let number = outline_tracker.get_and_increment(level);
+                        let effective_id = if heading.id_ref > 0 {
+                            heading.id_ref
+                        } else {
+                            section_outline_id
+                        };
                         let num_str = format_with_numbering(
-                            heading.id_ref,
+                            effective_id,
                             level,
                             number,
                             resources,
@@ -85,13 +91,18 @@ pub fn render_paragraph_with_tracker(
                             return (
                                 format!("{} {} {}", heading_prefix, num_str, body_trimmed),
                                 ctrl_parts,
+                                true,
                             );
                         } else {
-                            return (format!("{} {}", num_str, body_trimmed), ctrl_parts);
+                            return (
+                                format!("{} {}", num_str, body_trimmed),
+                                ctrl_parts,
+                                true,
+                            );
                         }
                     }
                     HeadingType::Bullet => {
-                        return (format!("- {}", body_trimmed), ctrl_parts);
+                        return (format!("- {}", body_trimmed), ctrl_parts, true);
                     }
                     HeadingType::Number => {
                         let level = heading.level + 1;
@@ -106,6 +117,7 @@ pub fn render_paragraph_with_tracker(
                         return (
                             format!("{}{} {}", indent, num_str, body_trimmed),
                             ctrl_parts,
+                            true,
                         );
                     }
                     _ => {}
@@ -114,7 +126,7 @@ pub fn render_paragraph_with_tracker(
         }
     }
 
-    (body, ctrl_parts)
+    (body, ctrl_parts, false)
 }
 
 /// (본문 텍스트, 추출된 컨트롤 파트들) 반환.
