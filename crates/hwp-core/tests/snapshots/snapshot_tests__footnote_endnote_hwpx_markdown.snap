@@ -2,7 +2,15 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: markdown
 ---
-각주참조[^e1][^e2]
+# HWP 문서
+
+
+
+**버전**: 10, 0, 0, 5060 WIN32LEWindows_8
+
+
+
+각주참조 [^1] [^2]
 
 미주참조
 
@@ -12,9 +20,9 @@ expression: markdown
 
 
 
-[^1]: 각주입니다.
+[^1]각주입니다.
 
-[^2]: 각주 두 번째입니다.
+[^2]각주 두 번째입니다.
 
 
 
@@ -22,6 +30,6 @@ expression: markdown
 
 
 
-[^e1]: 미주입니다.
+[^1]미주입니다.
 
-[^e2]: 미주 두 번째입니다.
+[^2]미주 두 번째입니다.

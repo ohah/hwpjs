@@ -12,6 +12,10 @@ pub struct DocMarkdownOptions {
     pub image_output_dir: Option<String>,
     /// HTML 태그 사용 여부 (<br> 등)
     pub use_html: bool,
+    /// 버전 정보 포함 여부 (None 또는 Some(true)이면 포함)
+    pub include_version: Option<bool>,
+    /// 페이지 정보 포함 여부
+    pub include_page_info: Option<bool>,
 }
 
 impl Default for DocMarkdownOptions {
@@ -19,6 +23,8 @@ impl Default for DocMarkdownOptions {
         Self {
             image_output_dir: None,
             use_html: false,
+            include_version: None,
+            include_page_info: None,
         }
     }
 }
@@ -27,74 +33,136 @@ impl Default for DocMarkdownOptions {
 pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
     let mut lines: Vec<String> = Vec::new();
 
-    // 머리글/꼬리글/각주/미주 수집
+    // 문서 헤더
+    lines.push("# HWP 문서".to_string());
+    lines.push(String::new());
+
+    // 버전 정보
+    if options.include_version != Some(false) {
+        if let Some(ref hints) = doc.hwp_hints {
+            let (a, b, c, d) = hints.version;
+            lines.push(format!("**버전**: {}.{:02}.{:02}.{:02}", a, b, c, d));
+            lines.push(String::new());
+        } else if let Some(ref hints) = doc.hwpx_hints {
+            if let Some(ref ver) = hints.app_version {
+                lines.push(format!("**버전**: {}", ver));
+                lines.push(String::new());
+            }
+        }
+    }
+
+    // 페이지 정보
+    if options.include_page_info == Some(true) {
+        if let Some(section) = doc.sections.first() {
+            let page = &section.definition.page;
+            let w_mm = page.width as f64 / 283.465;
+            let h_mm = page.height as f64 / 283.465;
+            lines.push(format!("**용지 크기**: {:.2}mm x {:.2}mm", w_mm, h_mm));
+            lines.push(String::new());
+        }
+    }
+
+    // 2-pass: 먼저 전체 순회하여 머리글/꼬리글/각주/미주와 본문을 분리 수집
     let mut headers: Vec<String> = Vec::new();
+    let mut body_lines: Vec<String> = Vec::new();
     let mut footers: Vec<String> = Vec::new();
     let mut footnotes: Vec<String> = Vec::new();
     let mut endnotes: Vec<String> = Vec::new();
 
     for section in &doc.sections {
         for para in &section.paragraphs {
+            // 페이지 구분선
+            if para.page_break && !body_lines.is_empty() {
+                let last = body_lines.last().map(String::as_str).unwrap_or("");
+                if !last.is_empty() && last != "---" {
+                    body_lines.push("---".to_string());
+                }
+            }
+
             let (body, ctrl_parts) =
                 paragraph::render_paragraph(para, &doc.resources, &doc.binaries, options);
 
-            // 컨트롤에서 추출된 머리글/꼬리글/각주/미주 분배
             for part in ctrl_parts {
                 match part {
-                    ControlPart::Header(text) => headers.push(text),
-                    ControlPart::Footer(text) => footers.push(text),
-                    ControlPart::Footnote { ref_num, text } => {
-                        // 본문에 각주 참조 추가
-                        if let Some(last) = lines.last_mut() {
-                            last.push_str(&format!("[^{}]", ref_num));
+                    ControlPart::Header(text) => {
+                        if !text.is_empty() {
+                            headers.push(text);
                         }
-                        footnotes.push(format!("[^{}]: {}", ref_num, text));
+                    }
+                    ControlPart::Footer(text) => {
+                        if !text.is_empty() {
+                            footers.push(text);
+                        }
+                    }
+                    ControlPart::Footnote { ref_num, text } => {
+                        // 본문 마지막 줄에 참조 추가
+                        if let Some(last) = body_lines.last_mut() {
+                            if !last.is_empty() {
+                                last.push_str(&format!(" [^{}]", ref_num));
+                            }
+                        }
+                        footnotes.push(format!("[^{}]{}", ref_num, text));
                     }
                     ControlPart::Endnote { ref_num, text } => {
-                        if let Some(last) = lines.last_mut() {
-                            last.push_str(&format!("[^e{}]", ref_num));
+                        if let Some(last) = body_lines.last_mut() {
+                            if !last.is_empty() {
+                                last.push_str(&format!(" [^{}]", ref_num));
+                            }
                         }
-                        endnotes.push(format!("[^e{}]: {}", ref_num, text));
+                        endnotes.push(format!("[^{}]{}", ref_num, text));
                     }
                 }
             }
 
             if !body.is_empty() {
-                lines.push(body);
+                body_lines.push(body);
             }
         }
     }
 
-    // 조합: 머리글 → 본문 → 꼬리글 → 각주 → 미주
-    let mut result = Vec::new();
-
+    // 기존 viewer와 동일한 순서로 조합: 머리글 → 본문 → 꼬리글 → 각주 → 미주
     if !headers.is_empty() {
-        result.extend(headers);
-        result.push(String::new());
+        lines.extend(headers);
+        lines.push(String::new());
     }
 
-    result.extend(lines);
+    lines.extend(body_lines);
 
     if !footers.is_empty() {
-        result.push(String::new());
-        result.extend(footers);
+        if !lines.is_empty() {
+            let last = lines.last().map(String::as_str).unwrap_or("");
+            if !last.is_empty() {
+                lines.push(String::new());
+            }
+        }
+        lines.extend(footers);
     }
 
     if !footnotes.is_empty() {
-        result.push(String::new());
-        result.push("## 각주".to_string());
-        result.push(String::new());
-        result.extend(footnotes);
+        if !lines.is_empty() {
+            let last = lines.last().map(String::as_str).unwrap_or("");
+            if !last.is_empty() {
+                lines.push(String::new());
+            }
+        }
+        lines.push("## 각주".to_string());
+        lines.push(String::new());
+        lines.extend(footnotes);
     }
 
     if !endnotes.is_empty() {
-        result.push(String::new());
-        result.push("## 미주".to_string());
-        result.push(String::new());
-        result.extend(endnotes);
+        if !lines.is_empty() {
+            let last = lines.last().map(String::as_str).unwrap_or("");
+            if !last.is_empty() {
+                lines.push(String::new());
+            }
+        }
+        lines.push("## 미주".to_string());
+        lines.push(String::new());
+        lines.extend(endnotes);
     }
 
-    result.join("\n\n")
+    lines.join("\n\n")
 }
 
 /// 컨트롤에서 추출된 문서 부분

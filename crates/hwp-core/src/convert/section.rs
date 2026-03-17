@@ -93,6 +93,16 @@ fn convert_hwp_paragraphs(paras: &[bodytext::Paragraph]) -> Vec<Paragraph> {
     paras.iter().map(convert_paragraph).collect()
 }
 
+/// children(ParagraphRecord 목록)에서 ListHeader를 찾아 그 안의 paragraphs를 반환
+fn find_list_header_paragraphs(children: &[ParagraphRecord]) -> &[bodytext::Paragraph] {
+    for child in children {
+        if let ParagraphRecord::ListHeader { paragraphs, .. } = child {
+            return paragraphs;
+        }
+    }
+    &[]
+}
+
 /// ParaTextRun + ParaCharShape → Run[] 조립
 fn assemble_runs(
     text_runs: &[ParaTextRun],
@@ -433,7 +443,13 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                 ctrl_header::ApplyPage::EvenOnly => PageApplyType::Even,
                 ctrl_header::ApplyPage::OddOnly => PageApplyType::Odd,
             };
-            let paras = convert_hwp_paragraphs(paragraphs);
+            // 머리글/꼬리글 내용: paragraphs가 비어있으면 children의 ListHeader에서 가져옴
+            let source_paras = if paragraphs.is_empty() {
+                find_list_header_paragraphs(children)
+            } else {
+                paragraphs.as_slice()
+            };
+            let paras = convert_hwp_paragraphs(source_paras);
             let content = SubList {
                 text_width: Some((*text_width).into()),
                 text_height: Some((*text_height).into()),
@@ -460,7 +476,12 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
         }
 
         ctrl_header::CtrlHeaderData::FootnoteEndnote { number, .. } => {
-            let paras = convert_hwp_paragraphs(paragraphs);
+            let source_paras = if paragraphs.is_empty() {
+                find_list_header_paragraphs(children)
+            } else {
+                paragraphs.as_slice()
+            };
+            let paras = convert_hwp_paragraphs(source_paras);
             let note = Note {
                 id: 0,
                 number: Some(*number as u16),
