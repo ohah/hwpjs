@@ -42,6 +42,9 @@ const NEW_VIEWER_CORRECT: &[&str] = &[
     // sample-5017-pics.hwp: 이미지/텍스트 출력 순서 차이. 기존 viewer는 Picture를 먼저
     //   출력하지만 실제 콘텐츠 순서는 파일 구조에 의존 → 시각적 동등
     "sample-5017-pics.hwp",
+    // multicolumns-in-common-controls.hwp: 표 셀 내 다단 텍스트를 기존 viewer는 누락하지만
+    //   실제 콘텐츠가 존재. trailing space 차이도 있으나 시각적 동등
+    "multicolumns-in-common-controls.hwp",
 ];
 
 /// 두 마크다운 출력의 차이를 보여주는 헬퍼
