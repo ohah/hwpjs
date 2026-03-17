@@ -200,8 +200,62 @@ fn assemble_runs(
     }
 
     // 일반 케이스: CharShape 변경점에 따라 Run 분할
+    // CharShape position은 원본 WCHAR 위치. Clean text 위치로 변환하여 비교.
+    // 먼저 control 문자의 위치 정보를 수집하여 변환에 사용
+    let mut ctrl_delta: i32 = 0; // 원본 위치와 clean text 위치의 차이 누적
+    let mut ctrl_deltas: Vec<(u32, i32)> = Vec::new(); // (원본 위치, 누적 delta)
+    {
+        let mut wchar_pos: u32 = 0;
+        for tr in text_runs {
+            match tr {
+                ParaTextRun::Text { text } => {
+                    wchar_pos += text.chars().count() as u32;
+                }
+                ParaTextRun::Control { size_wchars, code, .. } => {
+                    let original_size = *size_wchars as i32;
+                    // 변환 가능한 제어 문자는 clean text에서 1 문자, 아니면 0
+                    let clean_size = if bodytext::control_char::ControlChar::is_convertible(*code)
+                        && *code != bodytext::control_char::ControlChar::PARA_BREAK
+                    {
+                        1i32
+                    } else {
+                        0i32
+                    };
+                    ctrl_deltas.push((wchar_pos, ctrl_delta));
+                    ctrl_delta += clean_size - original_size;
+                    wchar_pos += *size_wchars as u32;
+                }
+            }
+        }
+    }
+
+    // CharShape position을 clean text 위치로 변환하는 함수
+    let to_clean_pos = |original_pos: u32| -> u32 {
+        let mut delta = 0i32;
+        for &(pos, d) in &ctrl_deltas {
+            if pos >= original_pos {
+                break;
+            }
+            delta = d;
+        }
+        // ctrl_deltas의 마지막보다 큰 위치면 마지막 delta 사용
+        if !ctrl_deltas.is_empty() {
+            let last = ctrl_deltas.last().unwrap();
+            if original_pos > last.0 {
+                delta = ctrl_delta;
+            }
+        }
+        (original_pos as i32 + delta).max(0) as u32
+    };
+
+    // CharShape position을 clean text 위치로 변환
+    let clean_char_shapes: Vec<(u32, u32)> = char_shapes
+        .iter()
+        .map(|cs| (to_clean_pos(cs.position), cs.shape_id))
+        .collect();
+
     let mut runs = Vec::new();
-    let mut current_pos: u32 = 0;
+    let mut current_pos: u32 = 0; // clean text 위치
     let mut shape_idx = 0;
     let mut current_shape_id = char_shapes.first().map(|cs| cs.shape_id).unwrap_or(0);
 
@@ -219,8 +273,9 @@ fn assemble_runs(
                 for (ci, _ch) in chars.iter().enumerate() {
                     let abs_pos = current_pos + ci as u32;
 
-                    if shape_idx + 1 < char_shapes.len()
-                        && abs_pos >= char_shapes[shape_idx + 1].position
+                    // CharShape 변경점 체크 (clean text 위치로 변환된 값 사용)
+                    if shape_idx + 1 < clean_char_shapes.len()
+                        && abs_pos >= clean_char_shapes[shape_idx + 1].0
                     {
                         if ci > text_start {
                             let chunk: String = chars[text_start..ci].iter().collect();
@@ -231,8 +286,15 @@ fn assemble_runs(
                         }
 
                         runs.push(current_run);
-                        shape_idx += 1;
-                        current_shape_id = char_shapes[shape_idx].shape_id;
+
+                        // 현재 위치에 해당하는 마지막 CharShape까지 이동
+                        while shape_idx + 1 < clean_char_shapes.len()
+                            && abs_pos >= clean_char_shapes[shape_idx + 1].0
+                        {
+                            shape_idx += 1;
+                        }
+
+                        current_shape_id = clean_char_shapes[shape_idx].1;
                         current_run = Run {
                             char_shape_id: current_shape_id as u16,
                             contents: Vec::new(),
@@ -264,7 +326,15 @@ fn assemble_runs(
                     ctrl_headers,
                     &mut ctrl_idx,
                 ));
-                current_pos += *size_wchars as u32;
+                // clean text 위치: 변환 가능한 제어 문자는 1, 아니면 0
+                let clean_size = if bodytext::control_char::ControlChar::is_convertible(*code)
+                    && *code != bodytext::control_char::ControlChar::PARA_BREAK
+                {
+                    1u32
+                } else {
+                    0u32
+                };
+                current_pos += clean_size;
             }
         }
     }
