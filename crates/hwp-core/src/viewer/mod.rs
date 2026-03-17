@@ -11,6 +11,8 @@ pub mod core;
 pub mod doc_html;
 /// Document(hwp-model) 기반 Markdown viewer — HWP/HWPX 공통
 pub mod doc_markdown;
+/// Document 기반 viewer 공통 유틸리티
+pub(crate) mod doc_utils;
 pub mod html;
 pub mod markdown;
 pub use core::renderer::{DocumentParts, Renderer, TextStyles};

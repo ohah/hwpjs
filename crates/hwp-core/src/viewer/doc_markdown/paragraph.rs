@@ -6,6 +6,7 @@ use hwp_model::shape::ShapeObject;
 use hwp_model::table::Table;
 
 use super::{extract_control_parts, ControlPart, DocMarkdownOptions};
+use crate::viewer::doc_utils;
 
 /// 문단 하나를 Markdown으로 렌더링.
 /// (본문 텍스트, 추출된 컨트롤 파트들) 반환.
@@ -71,7 +72,7 @@ fn render_run(
                 // 하이퍼링크 필드 등은 inline 텍스트로 처리
                 if let hwp_model::control::Control::FieldBegin(field) = control {
                     if field.field_type == hwp_model::types::FieldType::Hyperlink {
-                        let url = extract_hyperlink_url(field);
+                        let url = doc_utils::extract_hyperlink_url(field);
                         let display = field
                             .sub_list
                             .as_ref()
@@ -94,6 +95,11 @@ fn render_run(
                         }
                         continue;
                     }
+                }
+
+                // FieldEnd는 Markdown에서는 무시 (하이퍼링크는 FieldBegin에서 완결)
+                if let hwp_model::control::Control::FieldEnd = control {
+                    continue;
                 }
 
                 // 머리글/꼬리글/각주/미주 추출
@@ -216,58 +222,19 @@ fn render_table(
 
 /// 이미지를 Markdown으로 변환
 fn render_picture(binary_item_id: &str, binaries: &BinaryStore) -> String {
-    if binary_item_id.is_empty() {
-        return String::new();
-    }
-
-    // BinaryStore에서 해당 아이템 찾기
-    if let Some(item) = binaries.items.iter().find(|b| b.id == binary_item_id) {
+    if let Some(item) = doc_utils::find_binary_item(binary_item_id, binaries) {
         if item.data.is_empty() {
-            // data가 없으면 src 표시
             format!("![이미지]({})", item.src)
         } else {
-            // base64 data URI
-            let mime = match &item.format {
-                hwp_model::document::ImageFormat::Png => "image/png",
-                hwp_model::document::ImageFormat::Jpg => "image/jpeg",
-                hwp_model::document::ImageFormat::Gif => "image/gif",
-                hwp_model::document::ImageFormat::Bmp => "image/bmp",
-                hwp_model::document::ImageFormat::Svg => "image/svg+xml",
-                hwp_model::document::ImageFormat::Tiff => "image/tiff",
-                hwp_model::document::ImageFormat::Wmf => "image/x-wmf",
-                hwp_model::document::ImageFormat::Emf => "image/x-emf",
-                hwp_model::document::ImageFormat::Unknown(_) => "application/octet-stream",
-            };
+            let mime = doc_utils::image_format_to_mime(&item.format);
             let b64 = base64_encode(&item.data);
             format!("![이미지](data:{};base64,{})", mime, b64)
         }
-    } else {
+    } else if !binary_item_id.is_empty() {
         format!("![이미지]({})", binary_item_id)
+    } else {
+        String::new()
     }
-}
-
-/// 하이퍼링크 URL 추출
-fn extract_hyperlink_url(field: &hwp_model::control::Field) -> String {
-    for param in &field.parameters {
-        match param {
-            hwp_model::control::FieldParameter::String { name, value } => {
-                if name == "url" || name == "href" {
-                    return value.clone();
-                }
-            }
-            hwp_model::control::FieldParameter::Element { children, .. } => {
-                for child in children {
-                    if let hwp_model::control::FieldParameter::String { name, value } = child {
-                        if name == "url" || name == "href" {
-                            return value.clone();
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-    String::new()
 }
 
 /// 텍스트에 Markdown 스타일 적용
