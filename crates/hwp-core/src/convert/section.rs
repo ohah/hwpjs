@@ -28,16 +28,14 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Paragraph {
     let header = &para.para_header;
 
     // ParaText, ParaCharShape, ParaLineSeg를 수집
-    let mut _text_content = String::new();
     let mut text_runs: Vec<ParaTextRun> = Vec::new();
     let mut char_shapes: Vec<bodytext::CharShapeInfo> = Vec::new();
     let mut line_segs: Vec<bodytext::LineSegmentInfo> = Vec::new();
-    let mut ctrl_headers: Vec<(usize, &ParagraphRecord)> = Vec::new();
+    let mut ctrl_headers: Vec<&ParagraphRecord> = Vec::new();
 
-    for (idx, record) in para.records.iter().enumerate() {
+    for record in &para.records {
         match record {
-            ParagraphRecord::ParaText { text, runs, .. } => {
-                _text_content = text.clone();
+            ParagraphRecord::ParaText { runs, .. } => {
                 text_runs = runs.clone();
             }
             ParagraphRecord::ParaCharShape { shapes } => {
@@ -47,7 +45,7 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Paragraph {
                 line_segs = segments.clone();
             }
             ParagraphRecord::CtrlHeader { .. } => {
-                ctrl_headers.push((idx, record));
+                ctrl_headers.push(record);
             }
             _ => {}
         }
@@ -99,7 +97,7 @@ fn convert_hwp_paragraphs(paras: &[bodytext::Paragraph]) -> Vec<Paragraph> {
 fn assemble_runs(
     text_runs: &[ParaTextRun],
     char_shapes: &[bodytext::CharShapeInfo],
-    ctrl_headers: &[(usize, &ParagraphRecord)],
+    ctrl_headers: &[&ParagraphRecord],
 ) -> Vec<Run> {
     if text_runs.is_empty() && char_shapes.is_empty() && ctrl_headers.is_empty() {
         return Vec::new();
@@ -112,7 +110,7 @@ fn assemble_runs(
             contents: Vec::new(),
         };
         // 텍스트 없이 CtrlHeader만 있는 문단 (secd, cold 등)
-        for (_, record) in ctrl_headers {
+        for record in ctrl_headers {
             if let Some(content) = convert_ctrl_header(record) {
                 run.contents.push(content);
             }
@@ -272,13 +270,22 @@ fn line_seg_tag_to_flags(tag: &bodytext::line_seg::LineSegmentTag) -> u32 {
     flags
 }
 
+/// 빈 문자열이면 None, 아니면 Some(clone)
+fn non_empty(s: &str) -> Option<String> {
+    if s.is_empty() {
+        None
+    } else {
+        Some(s.to_string())
+    }
+}
+
 /// 텍스트 제어 문자에 의해 소비되지 않은 CtrlHeader를 마지막 Run에 추가
 fn append_remaining_ctrl_headers(
     run: &mut Run,
-    ctrl_headers: &[(usize, &ParagraphRecord)],
+    ctrl_headers: &[&ParagraphRecord],
     consumed: usize,
 ) {
-    for (_, record) in ctrl_headers.iter().skip(consumed) {
+    for record in &ctrl_headers[consumed..] {
         if let Some(content) = convert_ctrl_header(record) {
             run.contents.push(content);
         }
@@ -296,7 +303,7 @@ fn convert_control_char(
     code: u8,
     size_wchars: usize,
     display_text: &Option<String>,
-    ctrl_headers: &[(usize, &ParagraphRecord)],
+    ctrl_headers: &[&ParagraphRecord],
     ctrl_idx: &mut usize,
 ) -> Option<RunContent> {
     // 인라인 제어 문자
@@ -341,7 +348,7 @@ fn convert_control_char(
     // 확장 제어 문자: CtrlHeader 소비
     if size_wchars > 1 {
         if *ctrl_idx < ctrl_headers.len() {
-            let (_, record) = &ctrl_headers[*ctrl_idx];
+            let record = ctrl_headers[*ctrl_idx];
             *ctrl_idx += 1;
             return convert_ctrl_header(record);
         }
@@ -409,7 +416,7 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
             );
 
             match header.ctrl_id.as_str() {
-                "tbl " => convert_table_object(common, children),
+                CtrlId::TABLE => convert_table_object(common, children),
                 _ => None, // 도형/그림 등은 추후 구현
             }
         }
@@ -478,29 +485,25 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
             ..
         } => {
             let ft = match field_type.as_str() {
-                "%%%%" => FieldType::ClickHere,
-                "%hlk" => FieldType::Hyperlink,
-                "%bmk" => FieldType::Bookmark,
-                "%eqr" => FieldType::Formula,
-                "%dsm" => FieldType::Summary,
-                "%usr" => FieldType::UserInfo,
-                "%dte" => FieldType::Date,
-                "%ddt" => FieldType::DocDate,
-                "%pat" => FieldType::Path,
-                "%xrf" => FieldType::CrossRef,
-                "%mmg" => FieldType::MailMerge,
-                "%out" => FieldType::Outline,
-                "%cpr" => FieldType::PrivateInfo,
+                CtrlId::FIELD_START => FieldType::ClickHere,
+                CtrlId::FIELD_HYPERLINK => FieldType::Hyperlink,
+                CtrlId::FIELD_BOOKMARK => FieldType::Bookmark,
+                CtrlId::FIELD_FORMULA => FieldType::Formula,
+                CtrlId::FIELD_DOCSUMMARY => FieldType::Summary,
+                CtrlId::FIELD_USER => FieldType::UserInfo,
+                CtrlId::FIELD_DATE => FieldType::Date,
+                CtrlId::FIELD_DOC_DATE => FieldType::DocDate,
+                CtrlId::FIELD_PATH => FieldType::Path,
+                CtrlId::FIELD_CROSS_REF => FieldType::CrossRef,
+                CtrlId::FIELD_MAIL_MERGE => FieldType::MailMerge,
+                CtrlId::FIELD_OUTLINE => FieldType::Outline,
+                CtrlId::FIELD_PRIVATE_INFO_SECURITY => FieldType::PrivateInfo,
                 _ => FieldType::ClickHere,
             };
             let ctrl = Control::FieldBegin(Field {
                 id: *id as u64,
                 field_type: ft,
-                name: if command.is_empty() {
-                    None
-                } else {
-                    Some(command.clone())
-                },
+                name: non_empty(command),
                 editable: (*attribute & 0x01) != 0,
                 dirty: (*attribute & 0x02) != 0,
                 field_id: Some(*id),
@@ -555,21 +558,9 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Option<RunContent> {
                 num_type,
                 number_type: number_format,
                 num: *number,
-                user_char: if user_symbol.is_empty() {
-                    None
-                } else {
-                    Some(user_symbol.clone())
-                },
-                prefix_char: if prefix.is_empty() {
-                    None
-                } else {
-                    Some(prefix.clone())
-                },
-                suffix_char: if suffix.is_empty() {
-                    None
-                } else {
-                    Some(suffix.clone())
-                },
+                user_char: non_empty(user_symbol),
+                prefix_char: non_empty(prefix),
+                suffix_char: non_empty(suffix),
             });
             Some(RunContent::Control(ctrl))
         }

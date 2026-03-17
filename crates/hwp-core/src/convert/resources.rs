@@ -368,37 +368,16 @@ fn convert_border_fills(
         .map(|(i, bf)| {
             let attrs = &bf.attributes;
 
-            let slash = if attrs.slash_shape != 0 {
-                Some(SlashInfo {
-                    slash_type: match attrs.slash_shape {
-                        1 => SlashType::Center,
-                        2 => SlashType::CenterBelow,
-                        3 => SlashType::CenterAbove,
-                        4 => SlashType::All,
-                        _ => SlashType::None,
-                    },
-                    crooked: attrs.slash_broken_line != 0,
-                    is_counter: attrs.slash_rotated_180,
-                })
-            } else {
-                None
-            };
-
-            let back_slash = if attrs.backslash_shape != 0 {
-                Some(SlashInfo {
-                    slash_type: match attrs.backslash_shape {
-                        1 => SlashType::Center,
-                        2 => SlashType::CenterBelow,
-                        3 => SlashType::CenterAbove,
-                        4 => SlashType::All,
-                        _ => SlashType::None,
-                    },
-                    crooked: attrs.backslash_broken_line,
-                    is_counter: attrs.backslash_rotated_180,
-                })
-            } else {
-                None
-            };
+            let slash = build_slash_info(
+                attrs.slash_shape,
+                attrs.slash_broken_line != 0,
+                attrs.slash_rotated_180,
+            );
+            let back_slash = build_slash_info(
+                attrs.backslash_shape,
+                attrs.backslash_broken_line,
+                attrs.backslash_rotated_180,
+            );
 
             let convert_border =
                 |bl: &docinfo::border_fill::BorderLine| -> Option<LineSpec> {
@@ -520,11 +499,7 @@ fn convert_fill_info(
                 (
                     img.image_info[0] as i8,
                     img.image_info[1] as i8,
-                    match img.image_info[2] {
-                        1 => ImageEffect::GrayScale,
-                        2 => ImageEffect::BlackWhite,
-                        _ => ImageEffect::RealPic,
-                    },
+                    convert_image_effect(img.image_info[2]),
                     id.to_string(),
                 )
             } else {
@@ -634,11 +609,7 @@ fn convert_bullets(bullets: &[docinfo::bullet::Bullet]) -> Vec<hwp_model::resour
                     binary_item_id: ia.id.to_string(),
                     bright: ia.brightness as i8,
                     contrast: ia.contrast as i8,
-                    effect: match ia.effect {
-                        1 => ImageEffect::GrayScale,
-                        2 => ImageEffect::BlackWhite,
-                        _ => ImageEffect::RealPic,
-                    },
+                    effect: convert_image_effect(ia.effect),
                 })
             } else {
                 None
@@ -718,6 +689,35 @@ fn convert_line_type3(v: u8) -> hwp_model::types::LineType3 {
         9 => LineType3::ThickSlim,
         10 => LineType3::SlimThickSlim,
         _ => LineType3::None,
+    }
+}
+
+fn build_slash_info(
+    shape: u8,
+    crooked: bool,
+    is_counter: bool,
+) -> Option<hwp_model::resources::SlashInfo> {
+    if shape == 0 {
+        return None;
+    }
+    Some(hwp_model::resources::SlashInfo {
+        slash_type: match shape {
+            1 => hwp_model::types::SlashType::Center,
+            2 => hwp_model::types::SlashType::CenterBelow,
+            3 => hwp_model::types::SlashType::CenterAbove,
+            4 => hwp_model::types::SlashType::All,
+            _ => hwp_model::types::SlashType::None,
+        },
+        crooked,
+        is_counter,
+    })
+}
+
+fn convert_image_effect(v: u8) -> hwp_model::types::ImageEffect {
+    match v {
+        1 => hwp_model::types::ImageEffect::GrayScale,
+        2 => hwp_model::types::ImageEffect::BlackWhite,
+        _ => hwp_model::types::ImageEffect::RealPic,
     }
 }
 
