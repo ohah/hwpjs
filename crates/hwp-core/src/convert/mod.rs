@@ -7,7 +7,9 @@
 
 use crate::document::HwpDocument;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use hwp_model::document::{BinaryItem, BinaryStore, Document, DocumentMeta, DocumentSettings, ImageFormat};
+use hwp_model::document::{
+    BinaryItem, BinaryStore, Document, DocumentMeta, DocumentSettings, ImageFormat,
+};
 
 mod resources;
 mod section;
@@ -75,10 +77,7 @@ fn convert_binaries(hwp: &HwpDocument) -> BinaryStore {
         .iter()
         .filter_map(|item| {
             let data = STANDARD.decode(&item.data).ok()?;
-            let ext = ext_map
-                .get(&item.index)
-                .map(|s| s.as_str())
-                .unwrap_or("");
+            let ext = ext_map.get(&item.index).map(|s| s.as_str()).unwrap_or("");
             let format = extension_to_image_format(ext);
             let id = format!("BIN{:04X}", item.index);
             let src = if ext.is_empty() {
