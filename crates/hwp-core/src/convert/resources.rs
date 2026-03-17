@@ -6,11 +6,11 @@ use crate::document::docinfo::para_shape;
 pub fn convert_resources(doc_info: &docinfo::DocInfo) -> hwp_model::resources::Resources {
     hwp_model::resources::Resources {
         fonts: convert_fonts(&doc_info.face_names),
-        border_fills: Vec::new(), // TODO
+        border_fills: convert_border_fills(&doc_info.border_fill),
         char_shapes: convert_char_shapes(&doc_info.char_shapes),
         tab_defs: convert_tab_defs(&doc_info.tab_defs),
-        numberings: Vec::new(), // TODO
-        bullets: Vec::new(),    // TODO
+        numberings: convert_numberings(&doc_info.numbering),
+        bullets: convert_bullets(&doc_info.bullets),
         para_shapes: convert_para_shapes(&doc_info.para_shapes),
         styles: convert_styles(&doc_info.styles),
         memo_shapes: Vec::new(),
@@ -356,6 +356,330 @@ fn convert_tab_defs(tabs: &[docinfo::TabDef]) -> Vec<hwp_model::resources::TabDe
         .collect()
 }
 
+fn convert_border_fills(
+    fills: &[docinfo::border_fill::BorderFill],
+) -> Vec<hwp_model::resources::BorderFill> {
+    use hwp_model::resources::*;
+    use hwp_model::types::*;
+
+    fills
+        .iter()
+        .enumerate()
+        .map(|(i, bf)| {
+            let attrs = &bf.attributes;
+
+            let slash = if attrs.slash_shape != 0 {
+                Some(SlashInfo {
+                    slash_type: match attrs.slash_shape {
+                        1 => SlashType::Center,
+                        2 => SlashType::CenterBelow,
+                        3 => SlashType::CenterAbove,
+                        4 => SlashType::All,
+                        _ => SlashType::None,
+                    },
+                    crooked: attrs.slash_broken_line != 0,
+                    is_counter: attrs.slash_rotated_180,
+                })
+            } else {
+                None
+            };
+
+            let back_slash = if attrs.backslash_shape != 0 {
+                Some(SlashInfo {
+                    slash_type: match attrs.backslash_shape {
+                        1 => SlashType::Center,
+                        2 => SlashType::CenterBelow,
+                        3 => SlashType::CenterAbove,
+                        4 => SlashType::All,
+                        _ => SlashType::None,
+                    },
+                    crooked: attrs.backslash_broken_line,
+                    is_counter: attrs.backslash_rotated_180,
+                })
+            } else {
+                None
+            };
+
+            let convert_border =
+                |bl: &docinfo::border_fill::BorderLine| -> Option<LineSpec> {
+                    if bl.line_type == 0 && bl.width == 0 {
+                        None
+                    } else {
+                        Some(LineSpec {
+                            line_type: convert_line_type3(bl.line_type),
+                            width: convert_border_width(bl.width),
+                            color: Some(bl.color.to_rgb()),
+                        })
+                    }
+                };
+
+            let diagonal = {
+                let d = &bf.diagonal;
+                if d.line_type == 0 && d.thickness == 0 {
+                    None
+                } else {
+                    Some(LineSpec {
+                        line_type: convert_line_type3(d.line_type),
+                        width: convert_border_width(d.thickness),
+                        color: Some(d.color.to_rgb()),
+                    })
+                }
+            };
+
+            let fill = convert_fill_info(&bf.fill);
+
+            BorderFill {
+                id: i as u16,
+                three_d: attrs.has_3d_effect,
+                shadow: attrs.has_shadow,
+                center_line: if attrs.has_center_line {
+                    CenterLineType::Both
+                } else {
+                    CenterLineType::None
+                },
+                break_cell_separate_line: None,
+                slash,
+                back_slash,
+                left_border: convert_border(&bf.borders[0]),
+                right_border: convert_border(&bf.borders[1]),
+                top_border: convert_border(&bf.borders[2]),
+                bottom_border: convert_border(&bf.borders[3]),
+                diagonal,
+                fill,
+            }
+        })
+        .collect()
+}
+
+fn convert_fill_info(
+    fill: &docinfo::border_fill::FillInfo,
+) -> Option<hwp_model::resources::FillBrush> {
+    use hwp_model::resources::FillBrush;
+    use hwp_model::types::*;
+
+    match fill {
+        docinfo::border_fill::FillInfo::None => None,
+        docinfo::border_fill::FillInfo::Solid(s) => {
+            let hatch_style = if s.pattern_type > 0 {
+                Some(match s.pattern_type {
+                    1 => HatchStyle::Vertical,
+                    2 => HatchStyle::BackSlash,
+                    3 => HatchStyle::Slash,
+                    4 => HatchStyle::Cross,
+                    5 => HatchStyle::CrossDiagonal,
+                    _ => HatchStyle::Horizontal,
+                })
+            } else {
+                None
+            };
+            Some(FillBrush::WinBrush {
+                face_color: Some(s.background_color.to_rgb()),
+                hatch_color: Some(s.pattern_color.to_rgb()),
+                hatch_style,
+                alpha: 255,
+            })
+        }
+        docinfo::border_fill::FillInfo::Gradient(g) => Some(FillBrush::Gradation {
+            grad_type: match g.gradient_type {
+                1 => GradationType::Radial,
+                2 => GradationType::Conical,
+                3 => GradationType::Square,
+                _ => GradationType::Linear,
+            },
+            angle: g.angle as u16,
+            center_x: g.horizontal_center as u8,
+            center_y: g.vertical_center as u8,
+            step: g.spread as u8,
+            color_num: g.color_count as u16,
+            step_center: 50,
+            colors: g.colors.iter().map(|c| Some(c.to_rgb())).collect(),
+            alpha: 255,
+        }),
+        docinfo::border_fill::FillInfo::Image(img) => {
+            let mode = match img.image_fill_type {
+                0 => ImageBrushMode::Tile,
+                1 => ImageBrushMode::TileHorzTop,
+                2 => ImageBrushMode::TileHorzBottom,
+                3 => ImageBrushMode::TileVertLeft,
+                4 => ImageBrushMode::TileVertRight,
+                5 => ImageBrushMode::Total,
+                6 => ImageBrushMode::Center,
+                7 => ImageBrushMode::CenterTop,
+                8 => ImageBrushMode::CenterBottom,
+                9 => ImageBrushMode::LeftCenter,
+                10 => ImageBrushMode::LeftTop,
+                11 => ImageBrushMode::LeftBottom,
+                12 => ImageBrushMode::RightCenter,
+                13 => ImageBrushMode::RightTop,
+                14 => ImageBrushMode::RightBottom,
+                15 => ImageBrushMode::Zoom,
+                _ => ImageBrushMode::Total,
+            };
+            let (bright, contrast, effect, bin_id) = if img.image_info.len() >= 5 {
+                let id = u16::from_le_bytes([img.image_info[3], img.image_info[4]]);
+                (
+                    img.image_info[0] as i8,
+                    img.image_info[1] as i8,
+                    match img.image_info[2] {
+                        1 => ImageEffect::GrayScale,
+                        2 => ImageEffect::BlackWhite,
+                        _ => ImageEffect::RealPic,
+                    },
+                    id.to_string(),
+                )
+            } else {
+                (0, 0, ImageEffect::RealPic, String::new())
+            };
+            Some(FillBrush::ImageBrush {
+                mode,
+                img: hwp_model::resources::ImageRef {
+                    binary_item_id: bin_id,
+                    bright,
+                    contrast,
+                    effect,
+                    alpha: 255,
+                },
+            })
+        }
+    }
+}
+
+fn convert_numberings(
+    numberings: &[docinfo::numbering::Numbering],
+) -> Vec<hwp_model::resources::Numbering> {
+    use hwp_model::resources::*;
+    use hwp_model::types::*;
+
+    numberings
+        .iter()
+        .enumerate()
+        .map(|(i, n)| {
+            let levels: Vec<NumberingLevel> = n
+                .levels
+                .iter()
+                .enumerate()
+                .map(|(lvl, info)| {
+                    let a = &info.attributes;
+                    NumberingLevel {
+                        level: lvl as u8,
+                        start: info.start_number,
+                        align: match a.align_type {
+                            docinfo::numbering::ParagraphAlignType::Center => HAlign::Center,
+                            docinfo::numbering::ParagraphAlignType::Right => HAlign::Right,
+                            _ => HAlign::Left,
+                        },
+                        use_inst_width: a.instance_like,
+                        auto_indent: a.auto_outdent,
+                        width_adjust: info.width as i32,
+                        text_offset_type: match a.distance_type {
+                            docinfo::numbering::DistanceType::Value => ValueUnit::HwpUnit,
+                            docinfo::numbering::DistanceType::Ratio => ValueUnit::Char,
+                        },
+                        text_offset: info.distance as i32,
+                        num_format: match a.number_type {
+                            docinfo::numbering::NumberType::Arabic => NumberType2::Digit,
+                            docinfo::numbering::NumberType::CircledDigits => {
+                                NumberType2::CircledDigit
+                            }
+                            docinfo::numbering::NumberType::UpperRoman => {
+                                NumberType2::RomanCapital
+                            }
+                            docinfo::numbering::NumberType::LowerRoman => NumberType2::RomanSmall,
+                            docinfo::numbering::NumberType::UpperAlpha => {
+                                NumberType2::LatinCapital
+                            }
+                            docinfo::numbering::NumberType::LowerAlpha => NumberType2::LatinSmall,
+                            docinfo::numbering::NumberType::HangulGa => {
+                                NumberType2::HangulSyllable
+                            }
+                            docinfo::numbering::NumberType::HangulGaCycle => {
+                                NumberType2::CircledHangulSyllable
+                            }
+                        },
+                        char_shape_id: if info.char_shape_id > 0 {
+                            Some(info.char_shape_id)
+                        } else {
+                            None
+                        },
+                        checkable: false,
+                        format_string: info.format_string.clone(),
+                    }
+                })
+                .collect();
+
+            let start = levels.first().map(|l| l.start).unwrap_or(1);
+
+            Numbering {
+                id: i as u16,
+                start,
+                levels,
+            }
+        })
+        .collect()
+}
+
+fn convert_bullets(bullets: &[docinfo::bullet::Bullet]) -> Vec<hwp_model::resources::Bullet> {
+    use hwp_model::resources::*;
+    use hwp_model::types::*;
+
+    bullets
+        .iter()
+        .enumerate()
+        .map(|(i, b)| {
+            let a = &b.attributes;
+            let use_image = b.image_bullet_id > 0;
+
+            let image = if use_image {
+                b.image_bullet_attributes.as_ref().map(|ia| BulletImage {
+                    binary_item_id: ia.id.to_string(),
+                    bright: ia.brightness as i8,
+                    contrast: ia.contrast as i8,
+                    effect: match ia.effect {
+                        1 => ImageEffect::GrayScale,
+                        2 => ImageEffect::BlackWhite,
+                        _ => ImageEffect::RealPic,
+                    },
+                })
+            } else {
+                None
+            };
+
+            Bullet {
+                id: i as u16,
+                bullet_char: char::from_u32(b.bullet_char as u32).unwrap_or('●'),
+                checked_char: if b.check_bullet_char != 0 {
+                    char::from_u32(b.check_bullet_char as u32)
+                } else {
+                    None
+                },
+                use_image,
+                para_head: BulletParaHead {
+                    level: 0,
+                    align: match a.align_type {
+                        docinfo::bullet::BulletAlignType::Center => HAlign::Center,
+                        docinfo::bullet::BulletAlignType::Right => HAlign::Right,
+                        _ => HAlign::Left,
+                    },
+                    use_inst_width: a.instance_like,
+                    auto_indent: a.auto_outdent,
+                    width_adjust: b.width as i32,
+                    text_offset_type: match a.distance_type {
+                        docinfo::bullet::BulletDistanceType::Value => ValueUnit::HwpUnit,
+                        docinfo::bullet::BulletDistanceType::Ratio => ValueUnit::Char,
+                    },
+                    text_offset: b.space as i32,
+                    char_shape_id: if b.char_shape_id > 0 {
+                        Some(b.char_shape_id as u32)
+                    } else {
+                        None
+                    },
+                },
+                image,
+            }
+        })
+        .collect()
+}
+
 fn convert_styles(styles: &[docinfo::Style]) -> Vec<hwp_model::resources::Style> {
     styles
         .iter()
@@ -395,6 +719,30 @@ fn convert_line_type3(v: u8) -> hwp_model::types::LineType3 {
         10 => LineType3::SlimThickSlim,
         _ => LineType3::None,
     }
+}
+
+/// HWP 5.0 Table 26 테두리선 굵기 → 문자열 (mm)
+fn convert_border_width(v: u8) -> String {
+    match v {
+        0 => "0.1mm",
+        1 => "0.12mm",
+        2 => "0.15mm",
+        3 => "0.2mm",
+        4 => "0.25mm",
+        5 => "0.3mm",
+        6 => "0.4mm",
+        7 => "0.5mm",
+        8 => "0.6mm",
+        9 => "0.7mm",
+        10 => "1.0mm",
+        11 => "1.5mm",
+        12 => "2.0mm",
+        13 => "3.0mm",
+        14 => "4.0mm",
+        15 => "5.0mm",
+        _ => "0.1mm",
+    }
+    .to_string()
 }
 
 fn convert_line_type2(v: u8) -> hwp_model::types::LineType2 {
