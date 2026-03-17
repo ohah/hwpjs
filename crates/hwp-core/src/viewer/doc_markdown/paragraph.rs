@@ -236,7 +236,7 @@ fn render_table(
     }
 
     let mut lines: Vec<String> = Vec::new();
-    lines.push(String::new()); // 앞 빈 줄
+    lines.push(String::new()); // 표 앞 빈 줄 (기존 viewer와 동일)
 
     for (row_idx, row) in table.rows.iter().enumerate() {
         let mut cells: Vec<String> = Vec::new();
@@ -249,11 +249,11 @@ fn render_table(
             );
             // 셀 내 줄바꿈 → <br> (기존 viewer와 동일)
             let cell_text = cell_text.replace("\n\n", "<br>").replace('\n', "<br>");
-            // 빈 셀은 공백으로
+            // 빈 셀은 공백, 일반 셀은 끝에 <br> 추가
             let cell_text = if cell_text.trim().is_empty() {
                 " ".to_string()
             } else {
-                format!(" {}<br>", cell_text.trim())
+                format!("{}<br>", cell_text.trim())
             };
             cells.push(cell_text);
         }
@@ -272,7 +272,7 @@ fn render_table(
         }
     }
 
-    lines.push(String::new()); // 뒤 빈 줄
+    lines.push(String::new()); // 표 뒤 빈 줄
     lines.join("\n")
 }
 

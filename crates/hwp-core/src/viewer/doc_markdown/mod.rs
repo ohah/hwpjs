@@ -115,7 +115,11 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
             }
 
             if !body.is_empty() {
-                body_lines.push(body);
+                // trailing space 제거 (기존 viewer와 동일)
+                let body = body.trim_end().to_string();
+                if !body.is_empty() {
+                    body_lines.push(body);
+                }
             }
         }
     }
