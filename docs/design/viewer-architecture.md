@@ -30,17 +30,69 @@
 
 ## 현재 구현된 뷰어
 
-### Markdown 뷰어 (`viewer/markdown/`)
+### 기존 뷰어 (HwpDocument 기반)
 
-- **상태**: 완료
+HwpDocument(hwp-core 내부 타입)를 직접 참조하여 렌더링합니다.
+
+#### Markdown 뷰어 (`viewer/markdown/`)
+
+- **상태**: 완료 (HWP 5.0 전용)
 - **출력 형식**: Markdown 텍스트
 - **특징**: 텍스트 기반 출력, 이미지 파일/base64, Markdown 테이블, 각주/미주 `[^1]:` 형식
 
-### HTML 뷰어 (`viewer/html/`)
+#### HTML 뷰어 (`viewer/html/`)
 
-- **상태**: 완료
+- **상태**: 완료 (HWP 5.0 전용)
 - **출력 형식**: 완전한 HTML 문서 (`<html>`, `<head>`, `<body>` 포함)
 - **특징**: CSS 클래스(접두사 `ohah-hwpjs-`), CSS reset, 폰트/테두리/배경 매핑, base64/파일 이미지, `<table>` (colspan/rowspan), 각주/미주 `<div>` 컨테이너
+
+### 새 뷰어 (Document 기반, HWP/HWPX 공통)
+
+hwp-model의 공통 Document 모델을 사용하여 HWP/HWPX 양쪽에서 동일한 뷰어를 사용할 수 있습니다.
+
+#### Document Markdown 뷰어 (`viewer/doc_markdown/`)
+
+- **상태**: 진행 중 (26/46 HWP fixture 기존 뷰어와 동등)
+- **출력 형식**: Markdown 텍스트
+- **진입점**: `doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String`
+- **구현된 기능**:
+  - 문서 헤더 (`# HWP 문서` + 버전)
+  - 페이지/섹션 구분선 (`---`)
+  - 글자 모양 (bold, italic, strikethrough — underline 제외)
+  - 머리글/꼬리글 (2-pass 수집)
+  - 표 (빈 셀, 구분선, `<br>` 변환, bold 마커 제거)
+  - 하이퍼링크 (Run 간 상태 추적 + HWP %hlk command)
+  - 개요 번호/글머리표/번호 목록 트래커
+  - 도형/그림 (ShapeComponent → Picture/Rectangle)
+- **남은 작업**:
+  - 표 빈 줄 정밀 조정
+  - trailing `"  "` (문단 끝 2-space)
+  - Numbering format_string (제1장, 제1절 등)
+  - 각주/미주 참조 위치/포맷
+  - 이미지 바이너리 출력 정밀화
+
+#### Document HTML 뷰어 (`viewer/doc_html/`)
+
+- **상태**: 기본 구현 완료 (HWPX 스냅샷 생성용)
+- **출력 형식**: HTML 문서 블록
+- **진입점**: `doc_to_html(doc: &Document, options: &DocHtmlOptions) -> String`
+- **특징**: inline style, CSS 클래스 접두사, CharShape/ParaShape 기반 스타일링
+
+#### 공통 유틸리티 (`viewer/doc_utils.rs`)
+
+- `extract_hyperlink_url`: HWP %hlk command / HWPX parameters에서 URL 추출
+- `image_format_to_mime`: ImageFormat → MIME type
+- `find_binary_item`: BinaryStore에서 ID로 아이템 찾기
+- `escape_css_font_name`: CSS font-family 이스케이핑
+
+### 뷰어 교체 전략
+
+기존 HwpDocument 기반 뷰어를 새 Document 기반 뷰어로 점진적으로 교체합니다:
+
+1. **현재**: 기존 뷰어와 새 뷰어가 병렬 공존
+2. **진행 중**: `doc_viewer_compare_test`로 출력 동등성 검증 (26/46 통과)
+3. **목표**: 46/46 통과 후 기존 뷰어를 새 뷰어로 교체
+4. **최종**: HWP/HWPX 양쪽 동일 뷰어 사용
 
 ## 향후 구현 예정 뷰어
 
