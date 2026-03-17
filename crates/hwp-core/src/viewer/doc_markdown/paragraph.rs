@@ -326,11 +326,17 @@ fn render_run(
             RunContent::Object(shape) => {
                 let obj_text = render_shape_object(shape, resources, binaries, options);
                 if !obj_text.is_empty() {
-                    // Object 앞에 텍스트가 있으면 "  \n" 구분자 추가 (기존 viewer의 soft line break)
+                    let is_table = matches!(shape, ShapeObject::Table(_));
+                    // Object 앞에 텍스트가 있으면 구분자 추가
                     if !text_parts.is_empty() {
                         let last = text_parts.last().unwrap();
-                        if !last.ends_with("  \n") && !last.ends_with("\n\n") {
-                            text_parts.push("  \n".to_string());
+                        if !last.ends_with("  \n") && !last.ends_with("\n\n") && !last.ends_with('\n') {
+                            if is_table {
+                                // 표 앞은 "\n\n"으로 분리 (soft line break 불필요)
+                                text_parts.push("\n\n".to_string());
+                            } else {
+                                text_parts.push("  \n".to_string());
+                            }
                         }
                     }
                     text_parts.push(obj_text);
@@ -384,6 +390,8 @@ fn render_shape_object(
                 for para in &sub_list.paragraphs {
                     let (body, _) =
                         render_paragraph_inner(para, resources, binaries, options, Some(true));
+                    // 각 문단의 trailing \n 제거 (join "  \n"과 중복 방지)
+                    let body = body.trim_end_matches('\n').to_string();
                     if !body.trim().is_empty() {
                         parts.push(body);
                     }
