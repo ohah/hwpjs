@@ -8,7 +8,6 @@ use hwp_core::viewer::doc_html::{doc_to_html, DocHtmlOptions};
 use hwp_core::viewer::doc_markdown::{doc_to_markdown, DocMarkdownOptions};
 use hwp_core::*;
 use insta::{assert_snapshot, with_settings};
-use serde_json;
 
 // insta가 tests/snapshots 디렉토리를 사용하도록 설정하는 헬퍼 매크로
 macro_rules! assert_snapshot_with_path {
