@@ -100,6 +100,10 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Vec<Paragraph> {
         })
         .collect();
 
+    // Object(Table/Shape)가 있으면 Text를 Object 뒤로 재배치
+    // 기존 viewer: ParaText를 마지막에 결합 (Object 먼저 처리)
+    let runs = reorder_text_after_objects(runs);
+
     // TABLE이 있으면 셀 텍스트와 중복되는 Rectangle(ListHeader) 제거
     let runs = filter_duplicate_rectangles(runs);
 
@@ -122,6 +126,74 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Vec<Paragraph> {
     };
 
     vec![main_para]
+}
+
+/// Object(Table/Shape)가 있는 Run에서 Text를 Object 뒤로 재배치
+/// 기존 viewer: ParaText를 마지막에 결합하므로 Object가 먼저 출력됨
+fn reorder_text_after_objects(runs: Vec<Run>) -> Vec<Run> {
+    let has_objects = runs.iter().any(|r| {
+        r.contents
+            .iter()
+            .any(|c| matches!(c, RunContent::Object(_)))
+    });
+
+    if !has_objects {
+        return runs;
+    }
+
+    // 모든 Run의 contents를 합쳐서 Object와 Text를 분리
+    let mut objects: Vec<RunContent> = Vec::new();
+    let mut texts: Vec<(u16, RunContent)> = Vec::new(); // (char_shape_id, content)
+
+    for run in &runs {
+        for content in &run.contents {
+            match content {
+                RunContent::Object(_) | RunContent::Control(_) => {
+                    objects.push(content.clone());
+                }
+                RunContent::Text(_) => {
+                    texts.push((run.char_shape_id, content.clone()));
+                }
+            }
+        }
+    }
+
+    if texts.is_empty() || objects.is_empty() {
+        return runs;
+    }
+
+    // Object를 먼저, Text를 나중에 별도 Run으로 배치
+    let shape_id = runs.first().map(|r| r.char_shape_id).unwrap_or(0);
+
+    let mut result_runs: Vec<Run> = vec![Run {
+        char_shape_id: shape_id,
+        contents: objects,
+    }];
+
+    // Text RunContent를 원래 char_shape_id별로 그룹화하여 별도 Run으로 추가
+    let mut current_cs = texts.first().map(|(cs, _)| *cs).unwrap_or(0);
+    let mut current_run = Run {
+        char_shape_id: current_cs,
+        contents: Vec::new(),
+    };
+    for (cs, content) in texts {
+        if cs != current_cs {
+            if !current_run.contents.is_empty() {
+                result_runs.push(current_run);
+            }
+            current_cs = cs;
+            current_run = Run {
+                char_shape_id: cs,
+                contents: Vec::new(),
+            };
+        }
+        current_run.contents.push(content);
+    }
+    if !current_run.contents.is_empty() {
+        result_runs.push(current_run);
+    }
+
+    result_runs
 }
 
 /// TABLE이 있는 Run에서 셀 텍스트와 중복되는 Rectangle을 제거
