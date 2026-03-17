@@ -400,7 +400,7 @@ fn render_table(
     for (row_idx, row) in table.rows.iter().enumerate() {
         let mut cells: Vec<String> = Vec::new();
         for cell in &row.cells {
-            let cell_text = super::render_sublist_paragraphs(
+            let cell_text = super::render_sublist_paragraphs_for_cell(
                 &cell.content.paragraphs,
                 resources,
                 binaries,
@@ -412,7 +412,7 @@ fn render_table(
             let cell_text = if cell_text.trim().is_empty() {
                 " ".to_string()
             } else {
-                format!("{}<br>", cell_text.trim())
+                format!("{}<br>", cell_text.trim_end())
             };
             cells.push(cell_text);
         }
