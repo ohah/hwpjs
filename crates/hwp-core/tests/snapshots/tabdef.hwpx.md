@@ -6,18 +6,16 @@
 
 
 
-			
+L	L	L
 
-	L	L	L
+R	R	R
 
-	R	R	R
+C	C	C
 
-	C	C	C
+M	M	M
 
-	M	M	M
+L	L	L
 
-	L	L	L
+E	E
 
-	E	E
-
-	I	I	I
+I	I	I
