@@ -718,11 +718,44 @@ fn convert_shape_object(
         }
     }
 
-    // 텍스트박스: paragraphs 또는 children의 ListHeader에서 텍스트 추출
-    let source_paras = if paragraphs.is_empty() {
-        find_list_header_paragraphs(children)
-    } else {
+    // ShapeComponent 1단계 하위에서도 ShapeComponentPicture 찾기
+    for child in children {
+        if let ParagraphRecord::ShapeComponent {
+            children: sc_children,
+            ..
+        } = child
+        {
+            for sc_child in sc_children {
+                if let ParagraphRecord::ShapeComponentPicture {
+                    shape_component_picture,
+                } = sc_child
+                {
+                    let bin_id = shape_component_picture.picture_info.bindata_id;
+                    let picture = Picture {
+                        common,
+                        img: hwp_model::resources::ImageRef {
+                            binary_item_id: format!("BIN{:04X}", bin_id),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    };
+                    return Some(RunContent::Object(ShapeObject::Picture(Box::new(picture))));
+                }
+            }
+        }
+    }
+
+    // 텍스트박스: paragraphs 또는 children/ShapeComponent children의 ListHeader
+    let source_paras = if !paragraphs.is_empty() {
         paragraphs
+    } else {
+        let found = find_list_header_paragraphs(children);
+        if found.is_empty() {
+            // ShapeComponent 1단계 하위에서 ListHeader 찾기
+            find_list_header_in_shape_components(children)
+        } else {
+            found
+        }
     };
     let paras = convert_hwp_paragraphs(source_paras);
     if !paras.is_empty() {
@@ -739,6 +772,23 @@ fn convert_shape_object(
     }
 
     None
+}
+
+/// ShapeComponent children에서 ListHeader paragraphs 찾기
+fn find_list_header_in_shape_components(records: &[ParagraphRecord]) -> &[bodytext::Paragraph] {
+    for record in records {
+        if let ParagraphRecord::ShapeComponent {
+            children: sc_children,
+            ..
+        } = record
+        {
+            let found = find_list_header_paragraphs(sc_children);
+            if !found.is_empty() {
+                return found;
+            }
+        }
+    }
+    &[]
 }
 
 fn convert_table_object(common: ShapeCommon, children: &[ParagraphRecord]) -> Option<RunContent> {

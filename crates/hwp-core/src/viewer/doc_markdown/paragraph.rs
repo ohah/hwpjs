@@ -236,7 +236,6 @@ fn render_table(
     }
 
     let mut lines: Vec<String> = Vec::new();
-    lines.push(String::new()); // 표 앞 빈 줄 (기존 viewer와 동일)
 
     for (row_idx, row) in table.rows.iter().enumerate() {
         let mut cells: Vec<String> = Vec::new();
@@ -272,8 +271,8 @@ fn render_table(
         }
     }
 
-    lines.push(String::new()); // 표 뒤 빈 줄
-    lines.join("\n")
+    // 표 앞뒤에 빈 줄 추가 (기존 viewer와 동일: \n\n표내용\n\n)
+    format!("\n{}\n", lines.join("\n"))
 }
 
 /// 이미지를 Markdown으로 변환
