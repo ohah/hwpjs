@@ -1,9 +1,11 @@
+use serde::{Deserialize, Serialize};
+
 use crate::control::Control;
 use crate::hints::LineSegmentInfo;
 use crate::shape::ShapeObject;
 use crate::types::*;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Paragraph {
     pub id: u64,
     pub para_shape_id: u16,
@@ -19,13 +21,13 @@ pub struct Paragraph {
 }
 
 /// 동일 글자 모양의 콘텐츠 단위
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Run {
     pub char_shape_id: u16,
     pub contents: Vec<RunContent>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RunContent {
     Text(TextContent),
     Control(Control),
@@ -33,14 +35,14 @@ pub enum RunContent {
 }
 
 /// `<t>` 요소에 대응. 텍스트와 특수 요소의 혼합.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TextContent {
     /// t 요소 자체의 charPrIDRef (run과 다를 때)
     pub char_shape_id: Option<u16>,
     pub elements: Vec<TextElement>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TextElement {
     Text(String),
     Tab {
@@ -85,7 +87,7 @@ pub enum TextElement {
 }
 
 /// 탭 유형 (TextElement::Tab에서 사용)
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum TabType {
     #[default]
     Left,
@@ -95,7 +97,7 @@ pub enum TabType {
 }
 
 /// 문단 리스트를 담는 재귀 컨테이너 (캡션, 셀, 머리글 등에서 공통 사용)
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SubList {
     pub id: u64,
     pub text_direction: TextDirection,

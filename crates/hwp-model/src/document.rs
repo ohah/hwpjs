@@ -1,10 +1,12 @@
+use serde::{Deserialize, Serialize};
+
 use crate::hints::{HwpDocumentHints, HwpxDocumentHints};
 use crate::resources::Resources;
 use crate::section::Section;
 use crate::types::CompatibleDocument;
 
 /// 공통 문서 루트. HWP 5.0과 HWPX 양쪽에서 파싱한 결과를 담는다.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Document {
     pub meta: DocumentMeta,
     pub settings: DocumentSettings,
@@ -20,7 +22,7 @@ pub struct Document {
 }
 
 /// Dublin Core 메타데이터 + HWP 공통
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DocumentMeta {
     pub title: Option<String>,
     pub creator: Option<String>,
@@ -34,7 +36,7 @@ pub struct DocumentMeta {
 }
 
 /// 시작번호 설정
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DocumentSettings {
     pub page_start: u16,
     pub footnote_start: u16,
@@ -45,20 +47,21 @@ pub struct DocumentSettings {
 }
 
 /// 바이너리(이미지 등) 저장소
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BinaryStore {
     pub items: Vec<BinaryItem>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BinaryItem {
     pub id: String,
     pub src: String,
     pub format: ImageFormat,
+    #[serde(skip)]
     pub data: Vec<u8>,
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum ImageFormat {
     #[default]
     Png,

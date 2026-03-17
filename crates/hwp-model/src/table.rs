@@ -1,8 +1,10 @@
+use serde::{Deserialize, Serialize};
+
 use crate::paragraph::SubList;
 use crate::shape::ShapeCommon;
 use crate::types::*;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Table {
     pub common: ShapeCommon,
     pub page_break: TablePageBreak,
@@ -17,7 +19,7 @@ pub struct Table {
     pub rows: Vec<TableRow>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CellZone {
     pub start_row: u16,
     pub start_col: u16,
@@ -26,12 +28,12 @@ pub struct CellZone {
     pub border_fill_id: u16,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TableRow {
     pub cells: Vec<TableCell>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TableCell {
     pub name: Option<String>,
     pub header: bool,
