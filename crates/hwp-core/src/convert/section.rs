@@ -318,6 +318,8 @@ fn convert_control_char(
 ) -> Option<RunContent> {
     // 인라인 제어 문자
     match code {
+        // code 4: 필드 끝 (하이퍼링크 등)
+        0x04 => return Some(RunContent::Control(Control::FieldEnd)),
         0x0A => {
             return Some(RunContent::Text(TextContent {
                 char_shape_id: None,
