@@ -67,8 +67,37 @@ pub fn render_layout_table(
                 cell_margin, cell_margin
             ));
 
-            // 셀 내 문단 렌더링
+            // 셀 내 문단 렌더링 (텍스트 + Object)
             for para in &cell.content.paragraphs {
+                // Object(Picture/Rectangle) 렌더링
+                for run in &para.runs {
+                    for content in &run.contents {
+                        if let hwp_model::paragraph::RunContent::Object(ref shape) = content {
+                            let obj_html = match shape {
+                                hwp_model::shape::ShapeObject::Picture(ref pic) => {
+                                    super::layout_image::render_layout_picture(pic, _binaries)
+                                }
+                                hwp_model::shape::ShapeObject::Rectangle(ref rect) => {
+                                    if let Some(ref dt) = rect.draw_text {
+                                        super::layout_image::render_layout_textbox(
+                                            &rect.common,
+                                            &dt.paragraphs,
+                                            resources,
+                                        )
+                                    } else {
+                                        String::new()
+                                    }
+                                }
+                                _ => String::new(),
+                            };
+                            if !obj_html.is_empty() {
+                                html.push_str(&obj_html);
+                            }
+                        }
+                    }
+                }
+
+                // 텍스트 렌더링
                 let flat = flat_text::extract_flat_text(para);
                 if flat.text.is_empty() {
                     continue;
