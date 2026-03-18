@@ -21,31 +21,8 @@ fn new_markdown_options() -> DocMarkdownOptions {
     DocMarkdownOptions::default()
 }
 
-/// 새 viewer가 기존 viewer보다 더 정확한 파일 목록 (비교 대상에서 제외)
-/// 이 파일들은 기존 viewer의 한계(표 셀 데이터 누락, bold 경계 오류 등)로 인해
-/// 출력이 다르며, 새 viewer의 출력이 HTML viewer와 더 일치한다.
-/// snapshot 테스트(test_all_fixtures_markdown_snapshots)로 검증.
-const NEW_VIEWER_IS_GOLDEN: &[&str] = &[
-    // software.hwp: 표 셀 내 텍스트("주요 기능 흐름")를 기존 viewer는 누락
-    "software.hwp",
-    // noori.hwp: bold 경계에서 공백 위치 차이 → 새 viewer가 HTML과 일치
-    "noori.hwp",
-    // multicolumns-layout.hwp: 표 셀 내 텍스트("표 셀 안의 다단") 기존 viewer 누락
-    "multicolumns-layout.hwp",
-    // chart.hwp: 수정 완료 (PARA_BREAK position 보정) → 비교 대상으로 이동
-    // sample-5017.hwp: bold/italic 적용 → 기존 viewer 한계
-    "sample-5017.hwp",
-    // sample-5017-pics.hwp: 이미지/텍스트 출력 순서 차이 → 시각적 동등
-    "sample-5017-pics.hwp",
-    // multicolumns-in-common-controls.hwp: 표 셀 내 다단 텍스트 기존 viewer 누락
-    "multicolumns-in-common-controls.hwp",
-    // table-bug.hwp: 복잡한 표 구조(row_span+col_span+다수 표). 새 viewer가 더 많은
-    //   셀 데이터 출력 (팀장 확인, 개인정보 항목 등). 기존 viewer는 CtrlHeader 미처리.
-    "table-bug.hwp",
-    // distribution.hwp: 배포용 문서. bold 경계/heading 번호 차이.
-    //   기존 viewer의 CharShape 세그먼트 처리 한계 (부분 bold 깨짐).
-    "distribution.hwp",
-];
+/// 비교 제외 파일 목록 (현재 없음: to_markdown()이 새 viewer를 사용하므로 모두 일치)
+const NEW_VIEWER_IS_GOLDEN: &[&str] = &[];
 
 /// 두 마크다운 출력의 차이를 보여주는 헬퍼
 fn diff_lines(old: &str, new: &str) -> Vec<String> {
