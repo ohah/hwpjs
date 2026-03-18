@@ -25,9 +25,10 @@ pub fn render_layout_table(
     let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
     let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
 
+    // htb: 표 본체 (old viewer 구조: htb > svg + hce[])
     let mut html = format!(
-        r#"<div class="htb" style="left:{:.2}mm;top:{:.2}mm;width:{:.2}mm;height:{:.2}mm;">"#,
-        x_mm, y_mm, width_mm, height_mm
+        r#"<div class="htb" style="left:{:.2}mm;width:{:.2}mm;top:{:.2}mm;height:{:.2}mm;">"#,
+        x_mm, width_mm, y_mm, height_mm
     );
 
     // SVG 테두리
@@ -35,12 +36,6 @@ pub fn render_layout_table(
     if !svg.is_empty() {
         html.push_str(&svg);
     }
-
-    // 테이블 그리드: htG
-    html.push_str(&format!(
-        r#"<div class="htG" style="width:{:.2}mm;height:{:.2}mm;">"#,
-        width_mm, height_mm
-    ));
 
     // 셀 절대 좌표 계산을 위한 row/col 누적 위치
     let mut row_top_mm = 0.0_f64;
@@ -131,7 +126,6 @@ pub fn render_layout_table(
         row_top_mm += max_height_mm;
     }
 
-    html.push_str("</div>"); // htG
     html.push_str("</div>"); // htb
 
     html
