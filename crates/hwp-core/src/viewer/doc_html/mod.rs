@@ -287,11 +287,21 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         }
     }
 
-    // HTML 조합
+    // HTML 조합 (old viewer와 동일한 헤더 구조)
+    let title = doc
+        .meta
+        .title
+        .as_deref()
+        .unwrap_or("");
     let mut html = String::new();
-    html.push_str("<!DOCTYPE html>\n<html>\n<head>\n<style>\n");
+    html.push_str("<!DOCTYPE html>\n<html>\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">\n\n<head>\n");
+    if !title.is_empty() {
+        html.push_str(&format!("  <title>{}</title>\n", title));
+    }
+    html.push_str("  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n");
+    html.push_str("  <style>\n");
     html.push_str(&css);
-    html.push_str("</style>\n</head>\n<body>\n");
+    html.push_str("  </style>\n</head>\n\n\n<body>\n");
     for page in &pages_html {
         html.push_str(page);
     }

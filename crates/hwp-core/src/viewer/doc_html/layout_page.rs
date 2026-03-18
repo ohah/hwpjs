@@ -40,16 +40,19 @@ pub fn render_page(
     );
 
     let mut html = format!(
-        r#"<div class="hpa" style="width:{}mm;height:{}mm;">"#,
-        width_mm, height_mm
+        r#"<div class="hpa" style="width:{};height:{};">"#,
+        super::styles::fmt_mm(width_mm),
+        super::styles::fmt_mm(height_mm),
     );
+
+    use super::styles::fmt_mm;
 
     // 머리말
     if let Some(h) = header_html {
         if !h.is_empty() {
             html.push_str(&format!(
-                r#"<div class="hcD" style="left:{:.2}mm;top:{:.2}mm;"><div class="hcI">{}</div></div>"#,
-                left_mm, header_top_mm, h
+                r#"<div class="hcD" style="left:{};top:{};"><div class="hcI">{}</div></div>"#,
+                fmt_mm(left_mm), fmt_mm(header_top_mm), h
             ));
         }
     }
@@ -58,8 +61,8 @@ pub fn render_page(
     if let Some(f) = footer_html {
         if !f.is_empty() {
             html.push_str(&format!(
-                r#"<div class="hcD" style="left:{:.2}mm;top:{:.2}mm;"><div class="hcI">{}</div></div>"#,
-                left_mm, footer_top_mm, f
+                r#"<div class="hcD" style="left:{};top:{};"><div class="hcI">{}</div></div>"#,
+                fmt_mm(left_mm), fmt_mm(footer_top_mm), f
             ));
         }
     }
@@ -68,8 +71,8 @@ pub fn render_page(
     let has_content = blocks.iter().any(|b| !b.html.is_empty());
     if has_content {
         html.push_str(&format!(
-            r#"<div class="hcD" style="left:{:.2}mm;top:{:.2}mm;"><div class="hcI">"#,
-            left_mm, top_mm
+            r#"<div class="hcD" style="left:{};top:{};"><div class="hcI">"#,
+            fmt_mm(left_mm), fmt_mm(top_mm)
         ));
         for block in blocks {
             if !block.html.is_empty() {
