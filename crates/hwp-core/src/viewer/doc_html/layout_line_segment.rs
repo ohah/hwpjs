@@ -108,7 +108,9 @@ pub fn render_line_segments_with_marker(
         let vertical_pos_mm = hwpunit_to_mm(seg.vertical_pos);
         let height_raw = hwpunit_to_mm(seg.line_height);
         let text_height_raw = hwpunit_to_mm(seg.text_height);
-        let top_mm = if height_raw > text_height_raw {
+        // old viewer: text가 있는 줄만 offset 적용
+        let has_content = !seg_text.is_empty();
+        let top_mm = if has_content && height_raw > text_height_raw {
             round_mm(vertical_pos_mm + (height_raw - text_height_raw) / 2.0)
         } else {
             round_mm(vertical_pos_mm)
