@@ -173,7 +173,7 @@ fn render_caption(
     html
 }
 
-/// 표의 셀 경계를 SVG path로 생성
+/// 표의 셀 경계를 SVG path로 생성 (셀별 BorderFill 기반)
 fn generate_table_svg_borders(
     table: &Table,
     width_mm: f64,
@@ -182,105 +182,114 @@ fn generate_table_svg_borders(
 ) -> String {
     use std::fmt::Write;
 
-    let margin = 2.5; // SVG 오버플로우 마진 (mm)
+    let margin = 2.5;
     let vb_w = round_mm(width_mm + margin * 2.0);
     let vb_h = round_mm(height_mm + margin * 2.0);
 
     let mut svg = format!(
         r#"<svg class="hs" viewBox="-{m} -{m} {w} {h}" style="left:-{m}mm;top:-{m}mm;width:{w}mm;height:{h}mm;">"#,
-        m = margin,
-        w = vb_w,
-        h = vb_h,
+        m = margin, w = vb_w, h = vb_h,
     );
     svg.push_str("<defs></defs>");
 
-    // BorderFill에서 선 색상/두께 가져오기
-    let border_fill = if table.border_fill_id > 0 {
-        resources
-            .border_fills
-            .get((table.border_fill_id as usize).wrapping_sub(1))
-    } else {
-        None
-    };
-
-    let stroke_color = border_fill
-        .and_then(|bf| bf.left_border.as_ref())
-        .and_then(|l| l.color)
-        .map(|c| {
-            format!(
-                "#{:02X}{:02X}{:02X}",
-                (c >> 16) & 0xFF,
-                (c >> 8) & 0xFF,
-                c & 0xFF
-            )
-        })
-        .unwrap_or_else(|| "#000000".to_string());
-
-    let stroke_width = border_fill
-        .and_then(|bf| bf.left_border.as_ref())
-        .map(|l| l.width.clone())
-        .unwrap_or_else(|| "0.12".to_string())
-        .replace("mm", "");
-
-    // 세로선 (열 경계)
-    let mut col_x = 0.0_f64;
-    if let Some(first_row) = table.rows.first() {
-        // 왼쪽 경계
-        write!(
-            svg,
-            r#"<path d="M{:.2},0 L{:.2},{:.0}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
-            0.0, 0.0, height_mm, stroke_color, stroke_width
-        )
-        .ok();
-        svg.push_str("</path>");
-
-        for cell in &first_row.cells {
-            col_x += round_mm(hwpunit_to_mm(cell.width));
-            write!(
-                svg,
-                r#"<path d="M{:.2},0 L{:.2},{:.0}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
-                col_x, col_x, height_mm, stroke_color, stroke_width
-            )
-            .ok();
-            svg.push_str("</path>");
-        }
-    }
-
-    // 가로선 (행 경계)
-    let mut row_y = 0.0_f64;
-    // 상단 경계
-    write!(
-        svg,
-        r#"<path d="M-0.06,0 L{:.2},0" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
-        round_mm(width_mm + 0.06),
-        stroke_color,
-        stroke_width
-    )
-    .ok();
-    svg.push_str("</path>");
+    // 셀별 절대 좌표를 계산하여 각 셀의 4변을 그림
+    let mut row_top = 0.0_f64;
 
     for row in &table.rows {
-        let max_h = row
-            .cells
-            .iter()
-            .map(|c| hwpunit_to_mm(c.height))
-            .fold(0.0_f64, f64::max);
-        row_y += round_mm(max_h);
-        write!(
-            svg,
-            r#"<path d="M-0.06,{:.2} L{:.2},{:.2}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
-            row_y,
-            round_mm(width_mm + 0.06),
-            row_y,
-            stroke_color,
-            stroke_width
-        )
-        .ok();
-        svg.push_str("</path>");
+        let mut col_left = 0.0_f64;
+        let mut max_h = 0.0_f64;
+
+        for cell in &row.cells {
+            let cw = round_mm(hwpunit_to_mm(cell.width));
+            let ch = round_mm(hwpunit_to_mm(cell.height));
+            if ch > max_h {
+                max_h = ch;
+            }
+
+            // 셀의 BorderFill에서 테두리 정보 가져오기
+            let bf = if cell.border_fill_id > 0 {
+                resources
+                    .border_fills
+                    .get((cell.border_fill_id as usize).wrapping_sub(1))
+            } else {
+                None
+            };
+
+            let x1 = round_mm(col_left);
+            let y1 = round_mm(row_top);
+            let x2 = round_mm(col_left + cw);
+            let y2 = round_mm(row_top + ch);
+
+            // 중복 방지: 왼쪽 변과 위쪽 변만 그림
+            // (오른쪽/아래는 인접 셀의 왼쪽/위로 그려짐)
+            // 표 오른쪽/아래 외곽선은 마지막 셀에서 그림
+            if let Some(bf) = bf {
+                // 왼쪽 변
+                if let Some(ref line) = bf.left_border {
+                    draw_border_line(&mut svg, x1, y1, x1, y2, line);
+                }
+                // 위쪽 변
+                if let Some(ref line) = bf.top_border {
+                    draw_border_line(&mut svg, x1, y1, x2, y1, line);
+                }
+                // 표 오른쪽 외곽 (마지막 열)
+                if (x2 - width_mm).abs() < 0.5 {
+                    if let Some(ref line) = bf.right_border {
+                        draw_border_line(&mut svg, x2, y1, x2, y2, line);
+                    }
+                }
+                // 표 아래쪽 외곽 (마지막 행)
+                if (y2 - height_mm).abs() < 0.5 {
+                    if let Some(ref line) = bf.bottom_border {
+                        draw_border_line(&mut svg, x1, y2, x2, y2, line);
+                    }
+                }
+            }
+
+            col_left += cw;
+        }
+
+        row_top += max_h;
     }
 
     svg.push_str("</svg>");
     svg
+}
+
+/// SVG path 하나를 그리는 헬퍼
+fn draw_border_line(
+    svg: &mut String,
+    x1: f64,
+    y1: f64,
+    x2: f64,
+    y2: f64,
+    line: &hwp_model::resources::LineSpec,
+) {
+    use std::fmt::Write;
+
+    let color = match line.color {
+        Some(c) if c != 0xFFFFFF => format!(
+            "#{:02X}{:02X}{:02X}",
+            (c >> 16) & 0xFF,
+            (c >> 8) & 0xFF,
+            c & 0xFF
+        ),
+        _ => return, // 투명 또는 흰색이면 스킵
+    };
+
+    let width = if line.width.is_empty() {
+        "0.12"
+    } else {
+        line.width.trim_end_matches("mm").trim_end_matches(" mm")
+    };
+
+    write!(
+        svg,
+        r#"<path d="M{:.2},{:.2} L{:.2},{:.2}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
+        x1, y1, x2, y2, color, width
+    )
+    .ok();
+    svg.push_str("</path>");
 }
 
 #[cfg(test)]
