@@ -114,6 +114,7 @@ fn html_options() -> HtmlOptions {
         include_version: Some(false),
         include_page_info: Some(false),
         css_class_prefix: "hwp-".to_string(),
+        layout: false,
     }
 }
 
@@ -122,7 +123,63 @@ fn doc_html_options() -> DocHtmlOptions {
         css_class_prefix: "hwp-".to_string(),
         inline_style: true,
         image_output_dir: None,
+        layout: false,
     }
+}
+
+// ==================== 레이아웃 모드 테스트 ====================
+
+#[test]
+fn test_layout_mode_produces_hpa() {
+    let hwp_files = common::find_all_hwp_files();
+    if hwp_files.is_empty() {
+        return;
+    }
+    let parser = HwpParser::new();
+    let data = std::fs::read(&hwp_files[0]).unwrap();
+    let hwp_doc = parser.parse(&data).unwrap();
+
+    // layout=true로 HTML 생성
+    let options = HtmlOptions {
+        layout: true,
+        ..html_options()
+    };
+    let html = hwp_doc.to_html(&options);
+
+    // hpa div가 있어야 함
+    assert!(
+        html.contains(r#"class="hpa""#),
+        "Layout mode should produce hpa div"
+    );
+    assert!(
+        html.contains(r#"class="hls"#),
+        "Layout mode should produce hls div"
+    );
+    assert!(
+        html.contains("<style>"),
+        "Layout mode should include CSS"
+    );
+}
+
+#[test]
+fn test_layout_mode_hwpx() {
+    let hwpx_files = common::find_all_hwpx_files();
+    if hwpx_files.is_empty() {
+        return;
+    }
+    let data = std::fs::read(&hwpx_files[0]).unwrap();
+    let document = hwpx_parser::HwpxParser::parse(&data).unwrap();
+
+    let options = DocHtmlOptions {
+        layout: true,
+        ..doc_html_options()
+    };
+    let html = doc_to_html(&document, &options);
+
+    assert!(
+        html.contains(r#"class="hpa""#),
+        "HWPX layout mode should produce hpa div"
+    );
 }
 
 #[test]

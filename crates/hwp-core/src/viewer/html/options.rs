@@ -18,6 +18,11 @@ pub struct HtmlOptions {
     /// CSS 클래스 접두사 (기본값: "" - noori.html 스타일)
     /// CSS class prefix (default: "" - noori.html style)
     pub css_class_prefix: String,
+
+    /// 레이아웃 모드: true이면 pixel-accurate 레이아웃 HTML (hpa/hls/hcD 구조)
+    /// false이면 시맨틱 HTML (기본값)
+    /// Layout mode: true for pixel-accurate layout HTML, false for semantic HTML (default)
+    pub layout: bool,
 }
 
 impl Default for HtmlOptions {
@@ -27,7 +32,8 @@ impl Default for HtmlOptions {
             html_output_dir: None,
             include_version: Some(true),
             include_page_info: Some(false),
-            css_class_prefix: String::new(), // noori.html 스타일은 접두사 없음
+            css_class_prefix: String::new(),
+            layout: false,
         }
     }
 }
