@@ -107,7 +107,12 @@ pub fn render_line_segments_with_marker(
         let top_mm = round_mm(hwpunit_to_mm(seg.vertical_pos));
         let height_mm = round_mm(hwpunit_to_mm(seg.line_height));
         let line_height_mm = round_mm(hwpunit_to_mm(seg.text_height));
-        let width_mm = round_mm(hwpunit_to_mm(seg.segment_width));
+        // segment_width가 0이면 content_width 사용 (old viewer 호환)
+        let width_mm = if seg.segment_width > 0 {
+            round_mm(hwpunit_to_mm(seg.segment_width))
+        } else {
+            150.0 // 기본값
+        };
         let left_mm = round_mm(content_left_mm);
 
         // hls div 생성 (첫 줄에 marker 삽입)
