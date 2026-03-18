@@ -52,7 +52,66 @@ fn get_image_src(binary_item_id: &str, binaries: &BinaryStore) -> String {
     }
 }
 
-/// Rectangle(draw_text=None)를 SVG로 렌더링 (외곽선 + 채우기)
+/// Rectangle을 SVG로 렌더링 (fill + line_shape 기반)
+pub fn render_layout_rect_svg(rect: &hwp_model::shape::RectObject) -> String {
+    let common = &rect.common;
+    let width_mm = round_mm(hwpunit_to_mm(common.size.width));
+    let height_mm = round_mm(hwpunit_to_mm(common.size.height));
+    let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
+    let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
+
+    if width_mm <= 0.0 || height_mm <= 0.0 {
+        return String::new();
+    }
+
+    let margin = 0.15;
+    let vb_w = round_mm(width_mm + margin * 2.0);
+    let vb_h = round_mm(height_mm + margin * 2.0);
+    let pw = round_mm(width_mm - 0.12);
+    let ph = round_mm(height_mm - 0.12);
+
+    // 채우기
+    let fill_attr = match &rect.fill {
+        Some(hwp_model::resources::FillBrush::WinBrush { face_color, .. }) => {
+            if let Some(c) = face_color {
+                if *c != 0xFFFFFF && *c != 0 {
+                    format!(
+                        r#"fill="rgb({},{},{})""#,
+                        (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF
+                    )
+                } else { "fill=\"none\"".to_string() }
+            } else { "fill=\"none\"".to_string() }
+        }
+        _ => "fill=\"none\"".to_string(),
+    };
+
+    // 외곽선
+    let line = &rect.line_shape;
+    let stroke_color = line.color
+        .filter(|&c| c != 0)
+        .map(|c| format!("#{:02X}{:02X}{:02X}", (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF))
+        .unwrap_or_else(|| "#000000".to_string());
+
+    let dash = match line.style {
+        hwp_model::types::LineType1::Dot => "stroke-dasharray:0.17,0.26;",
+        hwp_model::types::LineType1::Dash => "stroke-dasharray:0.47,0.47,0.47,0,0.47,0.47,0.47,0;",
+        hwp_model::types::LineType1::DashDot => "stroke-dasharray:1.86,0.52,0.17,0.52;",
+        hwp_model::types::LineType1::DashDotDot => "stroke-dasharray:0.47,0.47,0.47,0,0.47,0.47,0.47,0;",
+        hwp_model::types::LineType1::None => "stroke:none;",
+        _ => "",
+    };
+
+    format!(
+        r#"<div class="hsR" style="top:{y:.2}mm;left:{x:.2}mm;width:{w:.2}mm;height:{h:.2}mm;"><svg class="hs" viewBox="-{m} -{m} {vw} {vh}" style="left:-{m}mm;top:-{m}mm;width:{vw}mm;height:{vh}mm;"><path {fill} d="M0,0L{pw:.2},0L{pw:.2},{ph:.2}L0,{ph:.2}L0,0Z " style="stroke:{sc};stroke-linecap:butt;{da}stroke-width:0.12;"></path></svg></div>"#,
+        y = y_mm, x = x_mm, w = width_mm, h = height_mm,
+        m = margin, vw = vb_w, vh = vb_h,
+        fill = fill_attr, pw = pw, ph = ph,
+        sc = stroke_color, da = dash,
+    )
+}
+
+/// Rectangle(draw_text=None)를 SVG 외곽선으로 렌더링 (하위 호환)
+#[allow(dead_code)]
 pub fn render_layout_rect_outline(common: &ShapeCommon) -> String {
     render_layout_rect_with_fill(common, None)
 }

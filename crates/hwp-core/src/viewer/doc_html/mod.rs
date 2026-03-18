@@ -155,7 +155,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                             &doc.resources,
                                         )
                                     } else {
-                                        layout_image::render_layout_rect_outline(&rect.common)
+                                        layout_image::render_layout_rect_svg(rect)
                                     }
                                 }
                                 hwp_model::shape::ShapeObject::Container(ref container) => {
