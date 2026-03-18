@@ -26,7 +26,7 @@ pub fn render_line_segments(
     para_shape_class: &str,
     content_left_mm: f64,
 ) -> Vec<String> {
-    if line_segments.is_empty() || text.is_empty() {
+    if line_segments.is_empty() {
         return Vec::new();
     }
 

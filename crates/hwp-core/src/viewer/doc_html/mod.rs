@@ -177,18 +177,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 }
             }
 
-            // 텍스트 렌더링
+            // 텍스트 렌더링 (빈 문단도 line_segments가 있으면 빈 hls 생성)
             let flat = flat_text::extract_flat_text(para);
-            if flat.text.is_empty() {
-                if let Some(vp) = layout_pagination::last_vertical_pos_mm(para) {
-                    let rel_vp = vp - pag_ctx.page_vertical_offset_mm;
-                    pag_ctx.prev_vertical_mm = Some(rel_vp);
-                    if rel_vp > pag_ctx.current_max_vertical_mm {
-                        pag_ctx.current_max_vertical_mm = rel_vp;
-                    }
-                }
-                continue;
-            }
 
             let para_shape_class = format!("ps{}", para.para_shape_id);
             let content_left = layout_page::content_left_mm(page_def);
