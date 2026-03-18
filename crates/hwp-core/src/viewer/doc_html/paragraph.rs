@@ -23,9 +23,8 @@ pub fn render_paragraph_with_tracker(
     endnote_counter: &mut u16,
     outline_tracker: &mut OutlineNumberTracker,
     number_tracker: &mut std::collections::HashMap<u16, OutlineNumberTracker>,
-    _section_outline_id: u16,
 ) -> (String, Vec<HtmlControlPart>) {
-    let (body_html, ctrl_parts) = render_paragraph(
+    let pc = render_paragraph_content(
         para,
         resources,
         binaries,
@@ -34,90 +33,93 @@ pub fn render_paragraph_with_tracker(
         endnote_counter,
     );
 
-    // 개요/번호/글머리표 적용
-    if !body_html.is_empty() {
-        if let Some(ps) = resources.para_shapes.get(para.para_shape_id as usize) {
-            if let Some(ref heading) = ps.heading {
-                match heading.heading_type {
-                    HeadingType::Outline => {
-                        let level = heading.level + 1;
-                        let number = outline_tracker.get_and_increment(level);
-                        let num_str = format_outline_number(level, number);
-                        let tag = if (1..=6).contains(&level) {
-                            format!("h{}", level)
-                        } else {
-                            "p".to_string()
-                        };
-                        // 기존 <p> 태그를 heading 태그로 교체
-                        let inner = strip_p_tag(&body_html);
-                        let html = format!(
-                            "<{} class=\"{}outline-{}\"><span class=\"{}outline-number\">{}</span> {}</{}>",
-                            tag, options.css_class_prefix, level,
-                            options.css_class_prefix,
-                            html_escape(&num_str), inner, tag
-                        );
-                        return (html, ctrl_parts);
-                    }
-                    HeadingType::Bullet => {
-                        let inner = strip_p_tag(&body_html);
-                        let html = format!(
-                            "<p class=\"{}bullet\">{}</p>",
-                            options.css_class_prefix, inner
-                        );
-                        return (html, ctrl_parts);
-                    }
-                    HeadingType::Number => {
-                        let level = heading.level + 1;
-                        let tracker = number_tracker.entry(heading.id_ref).or_default();
-                        let number = tracker.get_and_increment(level);
-                        let num_str =
-                            format_with_numbering(heading.id_ref, level, number, resources);
-                        let inner = strip_p_tag(&body_html);
-                        let html = format!(
-                            "<p class=\"{}number-{}\"><span class=\"{}number\">{}</span> {}</p>",
-                            options.css_class_prefix, level,
-                            options.css_class_prefix,
-                            html_escape(&num_str), inner
-                        );
-                        return (html, ctrl_parts);
-                    }
-                    _ => {}
+    if pc.content.is_empty() {
+        return (String::new(), pc.controls);
+    }
+
+    // 개요/번호/글머리표 적용 (content를 직접 사용, strip_p_tag 불필요)
+    if let Some(ps) = resources.para_shapes.get(para.para_shape_id as usize) {
+        if let Some(ref heading) = ps.heading {
+            match heading.heading_type {
+                HeadingType::Outline => {
+                    let level = heading.level + 1;
+                    let number = outline_tracker.get_and_increment(level);
+                    let num_str = format_outline_number(level, number);
+                    let tag = if (1..=6).contains(&level) {
+                        format!("h{}", level)
+                    } else {
+                        "p".to_string()
+                    };
+                    let html = format!(
+                        "<{} class=\"{}outline-{}\"><span class=\"{}outline-number\">{}</span> {}</{}>",
+                        tag, options.css_class_prefix, level,
+                        options.css_class_prefix,
+                        html_escape(&num_str), pc.content, tag
+                    );
+                    return (html, pc.controls);
                 }
+                HeadingType::Bullet => {
+                    let html = format!(
+                        "<p class=\"{}bullet\">{}</p>",
+                        options.css_class_prefix, pc.content
+                    );
+                    return (html, pc.controls);
+                }
+                HeadingType::Number => {
+                    let level = heading.level + 1;
+                    let tracker = number_tracker.entry(heading.id_ref).or_default();
+                    let number = tracker.get_and_increment(level);
+                    let num_str =
+                        format_with_numbering(heading.id_ref, level, number, resources);
+                    let html = format!(
+                        "<p class=\"{}number-{}\"><span class=\"{}number\">{}</span> {}</p>",
+                        options.css_class_prefix, level,
+                        options.css_class_prefix,
+                        html_escape(&num_str), pc.content
+                    );
+                    return (html, pc.controls);
+                }
+                _ => {}
             }
         }
     }
 
-    (body_html, ctrl_parts)
+    // heading 미적용: 일반 문단으로 렌더링
+    let body = if pc.has_block {
+        pc.content
+    } else if pc.para_style.is_empty() {
+        format!("<p>{}</p>", pc.content)
+    } else {
+        format!("<p style=\"{}\">{}</p>", pc.para_style, pc.content)
+    };
+
+    (body, pc.controls)
 }
 
-/// <p>...</p> 또는 <p style="...">...</p>의 내부 콘텐츠 추출
-fn strip_p_tag(html: &str) -> &str {
-    let inner = html.strip_prefix("<p>").or_else(|| {
-        // <p style="..."> 형태도 처리
-        if html.starts_with("<p ") {
-            html.find('>').map(|i| &html[i + 1..])
-        } else {
-            None
-        }
-    });
-    match inner {
-        Some(s) => s.strip_suffix("</p>").unwrap_or(s),
-        None => html, // <p>로 감싸지 않은 경우 (블록 요소 등)
-    }
+/// 문단 내부 콘텐츠와 메타데이터를 반환 (wrapper 태그 없이)
+struct ParagraphContent {
+    /// 내부 HTML 콘텐츠 (태그 미포함)
+    content: String,
+    /// 블록 요소 포함 여부
+    has_block: bool,
+    /// 인라인 스타일 (빈 문자열이면 없음)
+    para_style: String,
+    /// 추출된 컨트롤 파트
+    controls: Vec<HtmlControlPart>,
 }
 
-/// 문단 하나를 HTML로 렌더링
-pub fn render_paragraph(
+/// 문단 내부 콘텐츠 추출 (wrapper 없이)
+fn render_paragraph_content(
     para: &Paragraph,
     resources: &Resources,
     binaries: &BinaryStore,
     options: &DocHtmlOptions,
     footnote_counter: &mut u16,
     endnote_counter: &mut u16,
-) -> (String, Vec<HtmlControlPart>) {
-    let mut text_parts: Vec<String> = Vec::new();
-    let mut control_parts: Vec<HtmlControlPart> = Vec::new();
-    let mut has_block_element = false;
+) -> ParagraphContent {
+    let mut content = String::new();
+    let mut controls: Vec<HtmlControlPart> = Vec::new();
+    let mut has_block = false;
 
     for run in &para.runs {
         let (run_html, mut run_controls, is_block) = render_run(
@@ -129,34 +131,58 @@ pub fn render_paragraph(
             endnote_counter,
         );
         if is_block {
-            has_block_element = true;
+            has_block = true;
         }
         if !run_html.is_empty() {
-            text_parts.push(run_html);
+            content.push_str(&run_html);
         }
-        control_parts.append(&mut run_controls);
+        controls.append(&mut run_controls);
     }
-
-    if text_parts.is_empty() {
-        return (String::new(), control_parts);
-    }
-
-    let content = text_parts.join("");
-
-    // 블록 요소(표, 이미지)가 있으면 <p>로 감싸지 않음
-    let body = if has_block_element {
-        content
+    let para_style = if has_block || content.is_empty() {
+        String::new()
     } else {
-        // 인라인 스타일 적용
-        let style = build_para_style(para, resources, options);
-        if style.is_empty() {
-            format!("<p>{}</p>", content)
-        } else {
-            format!("<p style=\"{}\">{}</p>", style, content)
-        }
+        build_para_style(para, resources, options)
     };
 
-    (body, control_parts)
+    ParagraphContent {
+        content,
+        has_block,
+        para_style,
+        controls,
+    }
+}
+
+/// 문단 하나를 HTML로 렌더링 (<p> 태그 포함)
+pub fn render_paragraph(
+    para: &Paragraph,
+    resources: &Resources,
+    binaries: &BinaryStore,
+    options: &DocHtmlOptions,
+    footnote_counter: &mut u16,
+    endnote_counter: &mut u16,
+) -> (String, Vec<HtmlControlPart>) {
+    let pc = render_paragraph_content(
+        para,
+        resources,
+        binaries,
+        options,
+        footnote_counter,
+        endnote_counter,
+    );
+
+    if pc.content.is_empty() {
+        return (String::new(), pc.controls);
+    }
+
+    let body = if pc.has_block {
+        pc.content
+    } else if pc.para_style.is_empty() {
+        format!("<p>{}</p>", pc.content)
+    } else {
+        format!("<p style=\"{}\">{}</p>", pc.para_style, pc.content)
+    };
+
+    (body, pc.controls)
 }
 
 /// 문단 스타일 생성
@@ -208,7 +234,7 @@ fn render_run(
     footnote_counter: &mut u16,
     endnote_counter: &mut u16,
 ) -> (String, Vec<HtmlControlPart>, bool) {
-    let mut text_parts: Vec<String> = Vec::new();
+    let mut html_buf = String::new();
     let mut control_parts: Vec<HtmlControlPart> = Vec::new();
     let mut is_block = false;
 
@@ -220,7 +246,7 @@ fn render_run(
                 let text = render_text_content_html(tc);
                 if !text.is_empty() {
                     let styled = apply_char_style_html(&text, char_shape, resources);
-                    text_parts.push(styled);
+                    html_buf.push_str(&styled);
                 }
             }
             RunContent::Control(control) => {
@@ -246,18 +272,17 @@ fn render_run(
                             display
                         };
                         if !url.is_empty() {
-                            text_parts.push(format!(
-                                "<a href=\"{}\">{}",
-                                html_escape(&url),
-                                display
-                            ));
+                            html_buf.push_str("<a href=\"");
+                            html_buf.push_str(&html_escape(&url));
+                            html_buf.push_str("\">");
+                            html_buf.push_str(&display);
                             // FieldEnd에서 </a> 닫힘
                         }
                         continue;
                     }
                 }
                 if let hwp_model::control::Control::FieldEnd = control {
-                    text_parts.push("</a>".to_string());
+                    html_buf.push_str("</a>");
                     continue;
                 }
 
@@ -280,33 +305,33 @@ fn render_run(
                     is_block = true;
                 }
                 if !obj_html.is_empty() {
-                    text_parts.push(obj_html);
+                    html_buf.push_str(&obj_html);
                 }
             }
         }
     }
 
-    (text_parts.join(""), control_parts, is_block)
+    (html_buf, control_parts, is_block)
 }
 
 /// TextContent를 HTML로 변환
 fn render_text_content_html(tc: &TextContent) -> String {
-    let mut parts = Vec::new();
+    let mut result = String::new();
     for elem in &tc.elements {
         match elem {
-            TextElement::Text(s) => parts.push(html_escape(s)),
-            TextElement::Tab { .. } => parts.push("&emsp;".to_string()),
-            TextElement::LineBreak => parts.push("<br>".to_string()),
-            TextElement::NbSpace => parts.push("&nbsp;".to_string()),
-            TextElement::FwSpace => parts.push("&ensp;".to_string()),
-            TextElement::Hyphen => parts.push("-".to_string()),
+            TextElement::Text(s) => result.push_str(&html_escape(s)),
+            TextElement::Tab { .. } => result.push_str("&emsp;"),
+            TextElement::LineBreak => result.push_str("<br>"),
+            TextElement::NbSpace => result.push_str("&nbsp;"),
+            TextElement::FwSpace => result.push_str("&ensp;"),
+            TextElement::Hyphen => result.push('-'),
             _ => {}
         }
     }
-    parts.join("")
+    result
 }
 
-/// CharShape를 HTML inline style + tags로 적용
+/// CharShape를 HTML inline style + tags로 적용 (단일 buffer 방식)
 fn apply_char_style_html(
     text: &str,
     char_shape: Option<&hwp_model::resources::CharShape>,
@@ -317,59 +342,85 @@ fn apply_char_style_html(
         None => return text.to_string(),
     };
 
-    let mut result = text.to_string();
+    // 여는 태그 수집 (안쪽 → 바깥쪽 순서로 닫힘)
+    let mut open_tags = String::new();
+    let mut close_tags = String::new();
 
     if cs.bold {
-        result = format!("<b>{}</b>", result);
+        open_tags.push_str("<b>");
+        close_tags.insert_str(0, "</b>");
     }
     if cs.italic {
-        result = format!("<i>{}</i>", result);
+        open_tags.push_str("<i>");
+        close_tags.insert_str(0, "</i>");
     }
     if cs.underline.is_some() {
-        result = format!("<u>{}</u>", result);
+        open_tags.push_str("<u>");
+        close_tags.insert_str(0, "</u>");
     }
     if cs.strikeout.is_some() {
-        result = format!("<del>{}</del>", result);
+        open_tags.push_str("<del>");
+        close_tags.insert_str(0, "</del>");
     }
     if cs.superscript {
-        result = format!("<sup>{}</sup>", result);
+        open_tags.push_str("<sup>");
+        close_tags.insert_str(0, "</sup>");
     }
     if cs.subscript {
-        result = format!("<sub>{}</sub>", result);
+        open_tags.push_str("<sub>");
+        close_tags.insert_str(0, "</sub>");
     }
 
     // inline style
-    let mut styles = Vec::new();
+    let mut style_buf = String::new();
 
     // font-size (HwpUnit → pt: / 100)
     if cs.height != 0 {
-        let pt = cs.height as f64 / 100.0;
-        styles.push(format!("font-size: {:.1}pt", pt));
+        use std::fmt::Write;
+        write!(style_buf, "font-size: {:.1}pt", cs.height as f64 / 100.0).ok();
     }
 
     // font-family
     let font_id = cs.font_ref.hangul as usize;
     if let Some(font) = resources.fonts.hangul.get(font_id) {
         if !font.face.is_empty() {
-            styles.push(format!(
-                "font-family: '{}'",
-                doc_utils::escape_css_font_name(&font.face)
-            ));
+            if !style_buf.is_empty() {
+                style_buf.push_str("; ");
+            }
+            style_buf.push_str("font-family: '");
+            style_buf.push_str(&doc_utils::escape_css_font_name(&font.face));
+            style_buf.push('\'');
         }
     }
 
     // color
     if let Some(color) = cs.text_color {
-        let r = (color >> 16) & 0xFF;
-        let g = (color >> 8) & 0xFF;
-        let b = color & 0xFF;
         if color != 0 {
-            styles.push(format!("color: rgb({},{},{})", r, g, b));
+            let r = (color >> 16) & 0xFF;
+            let g = (color >> 8) & 0xFF;
+            let b = color & 0xFF;
+            if !style_buf.is_empty() {
+                style_buf.push_str("; ");
+            }
+            use std::fmt::Write;
+            write!(style_buf, "color: rgb({},{},{})", r, g, b).ok();
         }
     }
 
-    if !styles.is_empty() {
-        result = format!("<span style=\"{}\">{}</span>", styles.join("; "), result);
+    // 최종 조합: <span style="..."><b><i>text</i></b></span>
+    let mut result = String::with_capacity(
+        style_buf.len() + open_tags.len() + close_tags.len() + text.len() + 30,
+    );
+    if !style_buf.is_empty() {
+        result.push_str("<span style=\"");
+        result.push_str(&style_buf);
+        result.push_str("\">");
+    }
+    result.push_str(&open_tags);
+    result.push_str(text);
+    result.push_str(&close_tags);
+    if !style_buf.is_empty() {
+        result.push_str("</span>");
     }
 
     result

@@ -374,10 +374,25 @@ fn detect_format(data: &[u8]) -> &'static str {
     }
 }
 
+/// 자동 감지 후 Document 모델로 파싱하는 공용 헬퍼
+fn parse_to_document(
+    data: &[u8],
+) -> Result<hwp_model::document::Document, napi::Error> {
+    match detect_format(data) {
+        "hwp" => {
+            let parser = HwpParser::new();
+            let hwp_doc = parser.parse(data).map_err(napi::Error::from_reason)?;
+            Ok(hwp_core::convert::to_document(&hwp_doc))
+        }
+        "hwpx" => hwpx_parser::HwpxParser::parse(data)
+            .map_err(|e| napi::Error::from_reason(format!("Failed to parse HWPX: {}", e))),
+        _ => Err(napi::Error::from_reason(
+            "Unknown file format: expected HWP (CFB) or HWPX (ZIP)",
+        )),
+    }
+}
+
 /// Detect file format (HWP or HWPX)
-///
-/// # Arguments
-/// * `data` - Byte array containing HWP or HWPX file data
 ///
 /// # Returns
 /// "hwp", "hwpx", or "unknown"
@@ -388,15 +403,10 @@ pub fn detect(data: Buffer) -> String {
 }
 
 /// Convert HWP or HWPX file to JSON (auto-detect format)
-///
-/// # Arguments
-/// * `data` - Byte array containing HWP or HWPX file data
-///
-/// # Returns
-/// Parsed document as JSON string
 #[napi]
 pub fn parse(data: Buffer) -> Result<String, napi::Error> {
     let data_vec: Vec<u8> = data.into();
+    // JSON은 원본 HwpDocument도 직렬화 가능해야 하므로 포맷별 분기
     match detect_format(&data_vec) {
         "hwp" => {
             let parser = HwpParser::new();
@@ -417,19 +427,13 @@ pub fn parse(data: Buffer) -> Result<String, napi::Error> {
 }
 
 /// Convert HWP or HWPX file to HTML (auto-detect format)
-///
-/// # Arguments
-/// * `data` - Byte array containing HWP or HWPX file data
-/// * `options` - Optional HTML conversion options
-///
-/// # Returns
-/// HTML string representation of the document
 #[napi]
 pub fn convert_to_html(
     data: Buffer,
     options: Option<ToHtmlOptions>,
 ) -> Result<String, napi::Error> {
     let data_vec: Vec<u8> = data.into();
+    let document = parse_to_document(&data_vec)?;
     let doc_options = hwp_core::viewer::doc_html::DocHtmlOptions {
         css_class_prefix: options
             .as_ref()
@@ -438,39 +442,17 @@ pub fn convert_to_html(
         inline_style: true,
         image_output_dir: options.as_ref().and_then(|o| o.image_output_dir.clone()),
     };
-
-    match detect_format(&data_vec) {
-        "hwp" => {
-            let parser = HwpParser::new();
-            let hwp_doc = parser.parse(&data_vec).map_err(napi::Error::from_reason)?;
-            let document = hwp_core::convert::to_document(&hwp_doc);
-            Ok(hwp_core::viewer::doc_to_html(&document, &doc_options))
-        }
-        "hwpx" => {
-            let document = hwpx_parser::HwpxParser::parse(&data_vec)
-                .map_err(|e| napi::Error::from_reason(format!("Failed to parse HWPX: {}", e)))?;
-            Ok(hwp_core::viewer::doc_to_html(&document, &doc_options))
-        }
-        _ => Err(napi::Error::from_reason(
-            "Unknown file format: expected HWP (CFB) or HWPX (ZIP)",
-        )),
-    }
+    Ok(hwp_core::viewer::doc_to_html(&document, &doc_options))
 }
 
 /// Convert HWP or HWPX file to Markdown (auto-detect format)
-///
-/// # Arguments
-/// * `data` - Byte array containing HWP or HWPX file data
-/// * `options` - Optional markdown conversion options
-///
-/// # Returns
-/// Markdown string representation of the document
 #[napi]
 pub fn convert_to_markdown(
     data: Buffer,
     options: Option<ToMarkdownOptions>,
 ) -> Result<String, napi::Error> {
     let data_vec: Vec<u8> = data.into();
+    let document = parse_to_document(&data_vec)?;
     let md_options = hwp_core::viewer::doc_markdown::DocMarkdownOptions {
         image_output_dir: options.as_ref().and_then(|o| o.image_output_dir.clone()),
         use_html: options
@@ -480,21 +462,5 @@ pub fn convert_to_markdown(
         include_version: options.as_ref().and_then(|o| o.include_version),
         include_page_info: options.as_ref().and_then(|o| o.include_page_info),
     };
-
-    match detect_format(&data_vec) {
-        "hwp" => {
-            let parser = HwpParser::new();
-            let hwp_doc = parser.parse(&data_vec).map_err(napi::Error::from_reason)?;
-            let document = hwp_core::convert::to_document(&hwp_doc);
-            Ok(hwp_core::viewer::doc_to_markdown(&document, &md_options))
-        }
-        "hwpx" => {
-            let document = hwpx_parser::HwpxParser::parse(&data_vec)
-                .map_err(|e| napi::Error::from_reason(format!("Failed to parse HWPX: {}", e)))?;
-            Ok(hwp_core::viewer::doc_to_markdown(&document, &md_options))
-        }
-        _ => Err(napi::Error::from_reason(
-            "Unknown file format: expected HWP (CFB) or HWPX (ZIP)",
-        )),
-    }
+    Ok(hwp_core::viewer::doc_to_markdown(&document, &md_options))
 }
