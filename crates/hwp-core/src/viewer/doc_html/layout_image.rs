@@ -6,25 +6,33 @@ use hwp_model::document::BinaryStore;
 use hwp_model::shape::{Picture, ShapeCommon};
 
 /// 이미지를 레이아웃 HTML로 렌더링
-/// `hsR` div에 절대 좌표로 배치 + background-image로 이미지 표시
+/// treat_as_char=true: hhi span (인라인)
+/// treat_as_char=false: hsR div (절대 좌표)
 pub fn render_layout_picture(pic: &Picture, binaries: &BinaryStore) -> String {
     let common = &pic.common;
     let width_mm = round_mm(hwpunit_to_mm(common.size.width));
     let height_mm = round_mm(hwpunit_to_mm(common.size.height));
-    let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
-    let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
 
-    // 이미지 데이터
     let img_src = get_image_src(&pic.img.binary_item_id, binaries);
-
     if img_src.is_empty() {
         return String::new();
     }
 
-    format!(
-        r#"<div class="hsR" style="left:{:.2}mm;top:{:.2}mm;width:{:.2}mm;height:{:.2}mm;background-image:url({});"></div>"#,
-        x_mm, y_mm, width_mm, height_mm, img_src
-    )
+    if common.position.treat_as_char {
+        // 인라인 이미지 (hhi span)
+        format!(
+            r#"<span class="hhi" style="width:{:.2}mm;height:{:.2}mm;background-image:url({});"></span>"#,
+            width_mm, height_mm, img_src
+        )
+    } else {
+        // 절대 좌표 이미지 (hsR div)
+        let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
+        let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
+        format!(
+            r#"<div class="hsR" style="left:{:.2}mm;top:{:.2}mm;width:{:.2}mm;height:{:.2}mm;background-image:url({});"></div>"#,
+            x_mm, y_mm, width_mm, height_mm, img_src
+        )
+    }
 }
 
 /// 이미지를 <img> 태그가 아닌 background-image data URI로 반환
