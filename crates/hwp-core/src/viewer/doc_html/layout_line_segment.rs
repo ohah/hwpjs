@@ -104,9 +104,17 @@ pub fn render_line_segments_with_marker(
         let text_html = render_layout_text(seg_text, &seg_char_shapes, resources);
 
         // 좌표 계산 (HwpUnit → mm)
-        let top_mm = round_mm(hwpunit_to_mm(seg.vertical_pos));
-        let height_mm = round_mm(hwpunit_to_mm(seg.line_height));
-        let line_height_mm = round_mm(hwpunit_to_mm(seg.text_height));
+        // old viewer 동일: text segment에 (line_height - text_height) / 2 오프셋 적용
+        let vertical_pos_mm = hwpunit_to_mm(seg.vertical_pos);
+        let height_raw = hwpunit_to_mm(seg.line_height);
+        let text_height_raw = hwpunit_to_mm(seg.text_height);
+        let top_mm = if height_raw > text_height_raw {
+            round_mm(vertical_pos_mm + (height_raw - text_height_raw) / 2.0)
+        } else {
+            round_mm(vertical_pos_mm)
+        };
+        let height_mm = round_mm(height_raw);
+        let line_height_mm = round_mm(text_height_raw);
         let width_mm = if seg.segment_width > 0 {
             round_mm(hwpunit_to_mm(seg.segment_width))
         } else {
