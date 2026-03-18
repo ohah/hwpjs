@@ -324,6 +324,7 @@ pub fn hwpx_to_html(data: Buffer, options: Option<ToHtmlOptions>) -> Result<Stri
             .unwrap_or_else(|| "hwp-".to_string()),
         inline_style: true,
         image_output_dir: options.as_ref().and_then(|o| o.image_output_dir.clone()),
+        layout: false,
     };
 
     let html = hwp_core::viewer::doc_to_html(&document, &html_options);
@@ -441,6 +442,7 @@ pub fn convert_to_html(
             .unwrap_or_default(),
         inline_style: true,
         image_output_dir: options.as_ref().and_then(|o| o.image_output_dir.clone()),
+        layout: false,
     };
     Ok(hwp_core::viewer::doc_to_html(&document, &doc_options))
 }
