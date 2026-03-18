@@ -234,6 +234,9 @@ pub struct ToHtmlOptions {
     /// CSS class prefix (default: "" - noori.html style)
     /// CSS 클래스 접두사 (기본값: "" - noori.html 스타일)
     pub css_class_prefix: Option<String>,
+    /// Layout mode: true for pixel-accurate layout HTML (hpa/hls/hcD), false for semantic HTML (default)
+    /// 레이아웃 모드: true이면 pixel-accurate 레이아웃, false이면 시맨틱 HTML (기본값)
+    pub layout: Option<bool>,
 }
 
 /// Convert HWP file to HTML format
@@ -260,6 +263,7 @@ pub fn to_html(data: Buffer, options: Option<ToHtmlOptions>) -> Result<String, n
             .as_ref()
             .and_then(|o| o.css_class_prefix.clone())
             .unwrap_or_default(),
+        layout: options.as_ref().and_then(|o| o.layout).unwrap_or(false),
     };
 
     // Convert to HTML
@@ -324,7 +328,7 @@ pub fn hwpx_to_html(data: Buffer, options: Option<ToHtmlOptions>) -> Result<Stri
             .unwrap_or_else(|| "hwp-".to_string()),
         inline_style: true,
         image_output_dir: options.as_ref().and_then(|o| o.image_output_dir.clone()),
-        layout: false,
+        layout: options.as_ref().and_then(|o| o.layout).unwrap_or(false),
     };
 
     let html = hwp_core::viewer::doc_to_html(&document, &html_options);
@@ -442,7 +446,7 @@ pub fn convert_to_html(
             .unwrap_or_default(),
         inline_style: true,
         image_output_dir: options.as_ref().and_then(|o| o.image_output_dir.clone()),
-        layout: false,
+        layout: options.as_ref().and_then(|o| o.layout).unwrap_or(false),
     };
     Ok(hwp_core::viewer::doc_to_html(&document, &doc_options))
 }

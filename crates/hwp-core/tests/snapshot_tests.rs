@@ -511,6 +511,7 @@ fn test_document_html_snapshot() {
             include_version: Some(true),
             include_page_info: Some(true),
             css_class_prefix: "ohah-hwpjs-".to_string(),
+            layout: false,
         };
         let html = document.to_html(&options);
         assert_snapshot_with_path!(snapshot_name_html.as_str(), html);
@@ -562,6 +563,7 @@ fn test_headerfooter_html() {
                         include_version: Some(true),
                         include_page_info: Some(true),
                         css_class_prefix: "ohah-hwpjs-".to_string(),
+            layout: false,
                     };
 
                     let html = document.to_html(&options);
@@ -626,6 +628,7 @@ fn test_footnote_endnote_html_snapshot() {
         include_version: Some(false),
         include_page_info: Some(false),
         css_class_prefix: "ohah-hwpjs-".to_string(),
+            layout: false,
     };
     let html = document.to_html(&options);
 
@@ -689,6 +692,7 @@ fn test_outline_number_in_html_when_document_has_outline() {
             include_version: Some(false),
             include_page_info: Some(false),
             css_class_prefix: "ohah-hwpjs-".to_string(),
+            layout: false,
         };
         let html = document.to_html(&options);
         // 새 viewer: outline-number 클래스로 개요 마커가 렌더링됨
@@ -741,6 +745,7 @@ fn test_all_fixtures_html_snapshots() {
                             } else {
                                 String::new() // table.html과 일치하도록 빈 문자열 사용
                             },
+            layout: false,
                         };
                         if file_name == "table" {
                             eprintln!("DEBUG: Processing table.hwp file");
@@ -896,6 +901,7 @@ fn test_table_bug_cell_positions_match_hancom() {
         include_version: Some(true),
         include_page_info: Some(true),
         css_class_prefix: String::new(),
+            layout: false,
     };
     let css_filename = "table-bug_style.css";
     #[allow(deprecated)]
@@ -990,6 +996,7 @@ fn test_nested_table_rendering() {
         include_version: Some(true),
         include_page_info: Some(true),
         css_class_prefix: String::new(),
+            layout: false,
     };
     let css_filename = "table-bug_style.css";
     #[allow(deprecated)]
@@ -1840,6 +1847,7 @@ fn test_debug_table_bug_page10() {
         include_version: Some(true),
         include_page_info: Some(true),
         css_class_prefix: String::new(),
+            layout: false,
     };
     let css_filename = "table-bug_style.css";
     #[allow(deprecated)]
