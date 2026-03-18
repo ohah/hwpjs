@@ -86,6 +86,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         let mut header_html: Option<String> = None;
         let mut footer_html: Option<String> = None;
         let mut footnote_blocks: Vec<(u16, String)> = Vec::new();
+        let mut has_page_number = false;
+        let mut page_number: usize = 0;
         let mut endnote_blocks: Vec<(u16, String)> = Vec::new();
         let mut inline_note_refs: Vec<String> = Vec::new();
         let mut footnote_counter: u16 = 0;
@@ -114,6 +116,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                     &footnote_blocks,
                     &endnote_blocks,
                 );
+                page_number += 1;
                 pages_html.push(page_html);
                 current_page_blocks.clear();
                 footnote_blocks.clear();
@@ -217,6 +220,9 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                         id = id
                                     ));
                                 }
+                                hwp_model::control::Control::PageNumCtrl(_) => {
+                                    has_page_number = true;
+                                }
                                 _ => {}
                             }
                         }
@@ -283,9 +289,12 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 &footnote_blocks,
                 &endnote_blocks,
             );
+            page_number += 1;
             pages_html.push(page_html);
         }
     }
+
+    // TODO: 페이지 번호 렌더링 — footer 내 AutoNumber → 실제 번호 교체
 
     // HTML 조합 (old viewer와 동일한 헤더 구조)
     let title = doc
