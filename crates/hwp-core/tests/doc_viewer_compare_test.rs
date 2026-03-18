@@ -21,39 +21,31 @@ fn new_markdown_options() -> DocMarkdownOptions {
     DocMarkdownOptions::default()
 }
 
-/// HTML viewer와 비교하여 새 viewer가 더 정확한 파일 목록
-/// 이 파일들은 기존 viewer와 diff가 있어도 "통과"로 간주
-const NEW_VIEWER_CORRECT: &[&str] = &[
-    // software.hwp: 표 셀 내 텍스트("주요 기능 흐름")를 기존 viewer는 누락하지만
-    //   HTML viewer에는 존재 → 새 viewer가 정답
+/// 새 viewer가 기존 viewer보다 더 정확한 파일 목록 (비교 대상에서 제외)
+/// 이 파일들은 기존 viewer의 한계(표 셀 데이터 누락, bold 경계 오류 등)로 인해
+/// 출력이 다르며, 새 viewer의 출력이 HTML viewer와 더 일치한다.
+/// snapshot 테스트(test_all_fixtures_markdown_snapshots)로 검증.
+const NEW_VIEWER_IS_GOLDEN: &[&str] = &[
+    // software.hwp: 표 셀 내 텍스트("주요 기능 흐름")를 기존 viewer는 누락
     "software.hwp",
-    // noori.hwp: bold 경계에서 공백 위치가 다름.
-    //   HTML에서 </span> 후 &nbsp; → 공백이 bold 바깥 = 새 viewer가 더 가까움
+    // noori.hwp: bold 경계에서 공백 위치 차이 → 새 viewer가 HTML과 일치
     "noori.hwp",
-    // multicolumns-layout.hwp: 표 셀 내 이미지 제거 후 텍스트("표 셀 안의 다단")를
-    //   기존 viewer는 누락하지만 실제 콘텐츠가 존재 → 새 viewer가 정답
+    // multicolumns-layout.hwp: 표 셀 내 텍스트("표 셀 안의 다단") 기존 viewer 누락
     "multicolumns-layout.hwp",
-    // chart.hwp: 표 마지막 열 데이터(67.5 등)를 기존 viewer는 빈 셀로 처리하지만
-    //   HTML viewer에는 데이터가 존재 → 새 viewer가 정답
+    // chart.hwp: 표 마지막 열 데이터(67.5 등) 기존 viewer 빈 셀 처리
     "chart.hwp",
-    // sample-5017.hwp: bold(**2005**)/italic(*예제*) 적용. HWP 원본에 bold=true가 있고
-    //   기존 viewer도 ParaCharShape가 있지만 출력에 적용 안 됨 (기존 viewer 한계)
+    // sample-5017.hwp: bold/italic 적용 → 기존 viewer 한계
     "sample-5017.hwp",
-    // sample-5017-pics.hwp: 이미지/텍스트 출력 순서 차이. 기존 viewer는 Picture를 먼저
-    //   출력하지만 실제 콘텐츠 순서는 파일 구조에 의존 → 시각적 동등
+    // sample-5017-pics.hwp: 이미지/텍스트 출력 순서 차이 → 시각적 동등
     "sample-5017-pics.hwp",
-    // multicolumns-in-common-controls.hwp: 표 셀 내 다단 텍스트를 기존 viewer는 누락하지만
-    //   실제 콘텐츠가 존재. trailing space 차이도 있으나 시각적 동등
+    // multicolumns-in-common-controls.hwp: 표 셀 내 다단 텍스트 기존 viewer 누락
     "multicolumns-in-common-controls.hwp",
-    // table-caption.hwp: 캡션이 Object 구분자 "  \n"으로 trailing "  " 잔존.
-    //   Markdown 렌더링 시 시각적 차이 없음 (soft line break)
-    "table-caption.hwp",
-    // distribution.hwp: 배포용 문서. 도형 내부 단일 Run bold가 기존 viewer에서 부분 bold로
-    //   출력되는 특수 처리. HWP 원본 ParaCharShape는 전체 bold.
-    "distribution.hwp",
-    // table-bug.hwp: 복잡한 표 구조(row_span+col_span+다수 표). 첫 번째 표(20행)는 완전 일치.
-    //   이후 표에서 캡션 위치/공백 차이. 시각적으로 유사하며 데이터 손실 없음.
+    // table-bug.hwp: 복잡한 표 구조(row_span+col_span+다수 표). 새 viewer가 더 많은
+    //   셀 데이터 출력 (팀장 확인, 개인정보 항목 등). 기존 viewer는 CtrlHeader 미처리.
     "table-bug.hwp",
+    // distribution.hwp: 배포용 문서. bold 경계/heading 번호 차이.
+    //   기존 viewer의 CharShape 세그먼트 처리 한계 (부분 bold 깨짐).
+    "distribution.hwp",
 ];
 
 /// 두 마크다운 출력의 차이를 보여주는 헬퍼
@@ -95,7 +87,7 @@ fn compare_all_hwp_markdown() {
 
     let parser = HwpParser::new();
     let mut passed = Vec::new();
-    let mut new_correct = Vec::new();
+    let mut golden_skipped = Vec::new();
     let mut failed = Vec::new();
 
     for file_path in &hwp_files {
@@ -103,6 +95,12 @@ fn compare_all_hwp_markdown() {
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or("unknown");
+
+        // 새 viewer가 golden인 파일은 비교 제외 (snapshot 테스트로 검증)
+        if NEW_VIEWER_IS_GOLDEN.contains(&file_name) {
+            golden_skipped.push(file_name.to_string());
+            continue;
+        }
 
         let data = match std::fs::read(file_path) {
             Ok(d) => d,
@@ -121,43 +119,41 @@ fn compare_all_hwp_markdown() {
         let diffs = diff_lines(&old_md, &new_md);
         if diffs.is_empty() {
             passed.push(file_name.to_string());
-        } else if NEW_VIEWER_CORRECT.contains(&file_name) {
-            println!(
-                "\n=== {} NEW_CORRECT: {} diffs (새 viewer가 더 정확) ===",
-                file_name,
-                diffs.len()
-            );
-            new_correct.push(file_name.to_string());
         } else {
             println!("\n=== {} FAILED: {} diffs ===", file_name, diffs.len());
-            for d in diffs.iter().take(5) {
+            for d in diffs.iter().take(10) {
                 println!("  {}", d);
             }
-            if diffs.len() > 5 {
-                println!("  ... and {} more", diffs.len() - 5);
+            if diffs.len() > 10 {
+                println!("  ... and {} more", diffs.len() - 10);
             }
+            // Dump for analysis
+            let dump_dir = std::path::Path::new("/tmp/hwp_diffs");
+            std::fs::create_dir_all(dump_dir).ok();
+            let base = file_name.replace(".hwp", "");
+            std::fs::write(dump_dir.join(format!("{}_old.md", base)), &old_md).ok();
+            std::fs::write(dump_dir.join(format!("{}_new.md", base)), &new_md).ok();
             failed.push(file_name.to_string());
         }
     }
 
-    let total = passed.len() + new_correct.len() + failed.len();
-    let pass_total = passed.len() + new_correct.len();
+    let compared = passed.len() + failed.len();
     println!("\n=== SUMMARY ===");
-    println!("PASSED ({}/{}): {:?}", passed.len(), total, passed);
-    if !new_correct.is_empty() {
+    println!("COMPARED: {}/{}", compared, compared + golden_skipped.len());
+    println!("PASSED ({}/{}): {:?}", passed.len(), compared, passed);
+    if !golden_skipped.is_empty() {
         println!(
-            "NEW_CORRECT ({}/{}): {:?}",
-            new_correct.len(),
-            total,
-            new_correct
+            "GOLDEN_SKIP ({}): {:?}",
+            golden_skipped.len(),
+            golden_skipped
         );
     }
-    println!(
-        "TOTAL PASS ({}/{})",
-        pass_total,
-        total,
+    println!("FAILED ({}/{}): {:?}", failed.len(), compared, failed);
+    assert!(
+        failed.is_empty(),
+        "다음 파일에서 기존 viewer와 새 viewer 출력이 다릅니다: {:?}",
+        failed
     );
-    println!("FAILED ({}/{}): {:?}", failed.len(), total, failed);
 }
 
 fn compare_single_hwp(filename: &str) {
