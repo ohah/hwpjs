@@ -87,6 +87,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         let mut footer_html: Option<String> = None;
         let mut footnote_blocks: Vec<(u16, String)> = Vec::new();
         let mut endnote_blocks: Vec<(u16, String)> = Vec::new();
+        let mut inline_note_refs: Vec<String> = Vec::new();
         let mut footnote_counter: u16 = 0;
         let mut endnote_counter: u16 = 0;
         let mut outline_tracker = crate::viewer::core::outline::OutlineNumberTracker::new();
@@ -194,6 +195,11 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                         &doc.resources,
                                     );
                                     footnote_blocks.push((id, note_html));
+                                    // 인라인 참조 (hfN)
+                                    inline_note_refs.push(format!(
+                                        r#"<span class="hfN" style="top:-1.76mm;"><span class="hrt" style="font-size:5pt;top:-1pt;">{id})</span></span>"#,
+                                        id = id
+                                    ));
                                 }
                                 hwp_model::control::Control::EndNote(note) => {
                                     endnote_counter += 1;
@@ -203,6 +209,10 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                         &doc.resources,
                                     );
                                     endnote_blocks.push((id, note_html));
+                                    inline_note_refs.push(format!(
+                                        r#"<span class="hfN" style="top:-1.76mm;"><span class="hrt" style="font-size:5pt;top:-1pt;">{id})</span></span>"#,
+                                        id = id
+                                    ));
                                 }
                                 _ => {}
                             }
@@ -233,6 +243,18 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
 
             for line in hls_lines {
                 current_page_blocks.push(layout_page::PageBlock { html: line });
+            }
+
+            // 인라인 각주/미주 참조를 마지막 hls에 삽입
+            if !inline_note_refs.is_empty() {
+                if let Some(last_block) = current_page_blocks.last_mut() {
+                    // </div> 앞에 hfN span 삽입
+                    let refs_html = inline_note_refs.join("");
+                    if let Some(pos) = last_block.html.rfind("</div>") {
+                        last_block.html.insert_str(pos, &refs_html);
+                    }
+                }
+                inline_note_refs.clear();
             }
 
             // vertical position 추적
