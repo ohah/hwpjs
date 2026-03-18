@@ -143,3 +143,53 @@ pub fn skip_element(reader: &mut Reader<&[u8]>, tag_name: &[u8]) -> Result<(), H
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_color_bgr_to_rgb() {
+        // #A5E7E7 (BGR) → RGB 0xE7E7A5 (R=231, G=231, B=165)
+        assert_eq!(parse_color("#A5E7E7"), Some(0xE7E7A5));
+    }
+
+    #[test]
+    fn test_parse_color_black() {
+        assert_eq!(parse_color("#000000"), Some(0x000000));
+    }
+
+    #[test]
+    fn test_parse_color_white() {
+        assert_eq!(parse_color("#FFFFFF"), Some(0xFFFFFF));
+    }
+
+    #[test]
+    fn test_parse_color_red_bgr() {
+        // #0000FF (BGR: B=0, G=0, R=FF) → RGB 0xFF0000
+        assert_eq!(parse_color("#0000FF"), Some(0xFF0000));
+    }
+
+    #[test]
+    fn test_parse_color_blue_bgr() {
+        // #FF0000 (BGR: B=FF, G=0, R=0) → RGB 0x0000FF
+        assert_eq!(parse_color("#FF0000"), Some(0x0000FF));
+    }
+
+    #[test]
+    fn test_parse_color_with_alpha() {
+        // #FFA5E7E7 (AA=FF, BGR=A5E7E7) → RGB 0xE7E7A5
+        assert_eq!(parse_color("#FFA5E7E7"), Some(0xE7E7A5));
+    }
+
+    #[test]
+    fn test_parse_color_none() {
+        assert_eq!(parse_color("none"), None);
+        assert_eq!(parse_color("NONE"), None);
+    }
+
+    #[test]
+    fn test_parse_color_no_hash() {
+        assert_eq!(parse_color("A5E7E7"), Some(0xE7E7A5));
+    }
+}
