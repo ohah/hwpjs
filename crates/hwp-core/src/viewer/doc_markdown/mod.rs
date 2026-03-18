@@ -66,7 +66,10 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
     let mut headers: Vec<String> = Vec::new();
     let mut body_lines: Vec<String> = Vec::new();
     let mut outline_tracker = crate::viewer::core::outline::OutlineNumberTracker::new();
-    let mut number_tracker: std::collections::HashMap<u16, crate::viewer::core::outline::OutlineNumberTracker> = std::collections::HashMap::new();
+    let mut number_tracker: std::collections::HashMap<
+        u16,
+        crate::viewer::core::outline::OutlineNumberTracker,
+    > = std::collections::HashMap::new();
     let mut footers: Vec<String> = Vec::new();
     let mut footnotes: Vec<String> = Vec::new();
     let mut endnotes: Vec<String> = Vec::new();
@@ -321,9 +324,8 @@ fn remove_image_markdown(text: &str) -> String {
             if let Some(bracket_end) = chars[i + 2..].iter().position(|&c| c == ']') {
                 let after_bracket = i + 2 + bracket_end + 1;
                 if after_bracket < chars.len() && chars[after_bracket] == '(' {
-                    if let Some(paren_end) = chars[after_bracket + 1..]
-                        .iter()
-                        .position(|&c| c == ')')
+                    if let Some(paren_end) =
+                        chars[after_bracket + 1..].iter().position(|&c| c == ')')
                     {
                         i = after_bracket + 1 + paren_end + 1;
                         continue;
