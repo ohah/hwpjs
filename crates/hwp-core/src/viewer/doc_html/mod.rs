@@ -2,6 +2,7 @@
 /// HWP/HWPX 양쪽에서 생성된 Document를 HTML로 변환
 pub(crate) mod flat_text;
 pub(crate) mod layout_line_segment;
+pub(crate) mod layout_page;
 pub(crate) mod layout_text;
 mod paragraph;
 pub(crate) mod styles;
@@ -17,6 +18,9 @@ pub struct DocHtmlOptions {
     pub inline_style: bool,
     /// 이미지를 파일로 저장할 디렉토리 경로 (None이면 base64 데이터 URI로 임베드)
     pub image_output_dir: Option<String>,
+    /// 레이아웃 모드: true이면 pixel-accurate 레이아웃 (hpa/hls/hcD 구조)
+    /// false이면 시맨틱 HTML (기본값)
+    pub layout: bool,
 }
 
 impl Default for DocHtmlOptions {
@@ -25,12 +29,72 @@ impl Default for DocHtmlOptions {
             css_class_prefix: "hwp-".to_string(),
             inline_style: true,
             image_output_dir: None,
+            layout: false,
         }
     }
 }
 
 /// Document를 HTML로 변환
 pub fn doc_to_html(doc: &Document, options: &DocHtmlOptions) -> String {
+    if options.layout {
+        return doc_to_html_layout(doc, options);
+    }
+    doc_to_html_semantic(doc, options)
+}
+
+/// 레이아웃 모드 HTML 생성 (pixel-accurate, hpa/hls/hcD 구조)
+fn doc_to_html_layout(doc: &Document, options: &DocHtmlOptions) -> String {
+    let css = styles::generate_layout_css(doc);
+    let mut pages_html = Vec::new();
+
+    for section in &doc.sections {
+        let page_def = &section.definition.page;
+
+        // 각 문단을 LineSegment로 렌더링하여 페이지 블록 생성
+        let mut blocks: Vec<layout_page::PageBlock> = Vec::new();
+
+        for para in &section.paragraphs {
+            let flat = flat_text::extract_flat_text(para);
+            if flat.text.is_empty() {
+                continue;
+            }
+
+            let para_shape_class = format!("ps{}", para.para_shape_id);
+            let content_left = layout_page::content_left_mm(page_def);
+
+            let hls_lines = layout_line_segment::render_line_segments(
+                &flat.text,
+                &flat.char_shapes,
+                &para.line_segments,
+                &doc.resources,
+                &para_shape_class,
+                content_left,
+            );
+
+            for line in hls_lines {
+                blocks.push(layout_page::PageBlock { html: line });
+            }
+        }
+
+        // TODO: 페이지네이션 (Phase 4) — 현재는 모든 콘텐츠를 단일 페이지에
+        let page_html = layout_page::render_page(&blocks, page_def, None, None);
+        pages_html.push(page_html);
+    }
+
+    // HTML 조합
+    let mut html = String::new();
+    html.push_str("<!DOCTYPE html>\n<html>\n<head>\n<style>\n");
+    html.push_str(&css);
+    html.push_str("</style>\n</head>\n<body>\n");
+    for page in &pages_html {
+        html.push_str(page);
+    }
+    html.push_str("\n</body>\n</html>");
+    html
+}
+
+/// 시맨틱 모드 HTML 생성 (기존 동작)
+fn doc_to_html_semantic(doc: &Document, options: &DocHtmlOptions) -> String {
     let mut body_parts: Vec<String> = Vec::new();
     let mut header_parts: Vec<String> = Vec::new();
     let mut footer_parts: Vec<String> = Vec::new();

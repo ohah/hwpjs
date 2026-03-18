@@ -133,6 +133,7 @@ impl HwpDocument {
             css_class_prefix: options.css_class_prefix.clone(),
             inline_style: true,
             image_output_dir: options.image_output_dir.clone(),
+            layout: false,
         };
         crate::viewer::doc_html::doc_to_html(&document, &doc_options)
     }
