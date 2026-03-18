@@ -21,6 +21,7 @@ mod tests {
             include_version: Some(true),
             include_page_info: Some(false),
             css_class_prefix: String::new(),
+            layout: false,
         };
 
         assert_eq!(options.image_output_dir, Some("/images".to_string()));
@@ -34,6 +35,7 @@ mod tests {
             include_version: Some(true),
             include_page_info: Some(false),
             css_class_prefix: String::new(),
+            layout: false,
         };
 
         assert_eq!(options.html_output_dir, Some("/html".to_string()));
@@ -47,6 +49,7 @@ mod tests {
             include_version: Some(false),
             include_page_info: Some(false),
             css_class_prefix: String::new(),
+            layout: false,
         };
 
         assert_eq!(options.image_output_dir, Some("/images".to_string()));
@@ -63,6 +66,7 @@ mod tests {
             include_version: Some(false),
             include_page_info: Some(true),
             css_class_prefix: "prefix".to_string(),
+            layout: false,
         };
 
         assert_eq!(options.image_output_dir, Some("/img".to_string()));
@@ -80,6 +84,7 @@ mod tests {
             include_version: Some(true),
             include_page_info: Some(false),
             css_class_prefix: "".to_string(),
+            layout: false,
         };
 
         assert_eq!(options.css_class_prefix, "");
@@ -93,6 +98,7 @@ mod tests {
             include_version: Some(true),
             include_page_info: Some(false),
             css_class_prefix: "my-app".to_string(),
+            layout: false,
         };
 
         assert_eq!(options.css_class_prefix, "my-app");
@@ -106,6 +112,7 @@ mod tests {
             include_version: Some(true),
             include_page_info: Some(false),
             css_class_prefix: "hwp-viewer-2.0".to_string(),
+            layout: false,
         };
 
         assert_eq!(options.css_class_prefix, "hwp-viewer-2.0");
@@ -119,6 +126,7 @@ mod tests {
             include_version: Some(false),
             include_page_info: Some(true),
             css_class_prefix: "site".to_string(),
+            layout: false,
         };
 
         assert_eq!(
@@ -141,6 +149,7 @@ mod tests {
             include_version: None,
             include_page_info: None,
             css_class_prefix: "prefix".to_string(),
+            layout: false,
         };
 
         assert!(options.image_output_dir.is_none());

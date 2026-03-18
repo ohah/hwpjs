@@ -305,3 +305,80 @@ fn consistency_all_hwpx_html() {
         failed
     );
 }
+
+#[test]
+fn compare_old_vs_new_layout_html() {
+    let hwp_files = common::find_all_hwp_files();
+    if hwp_files.is_empty() {
+        return;
+    }
+    let parser = HwpParser::new();
+
+    for file_path in &hwp_files {
+        let file_name = std::path::Path::new(file_path)
+            .file_stem()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown");
+
+        let data = match std::fs::read(file_path) {
+            Ok(d) => d,
+            Err(_) => continue,
+        };
+        let hwp_doc = match parser.parse(&data) {
+            Ok(d) => d,
+            Err(_) => continue,
+        };
+
+        // old viewer HTML
+        #[allow(deprecated)]
+        let old_html = hwp_core::viewer::to_html(
+            &hwp_doc,
+            &HtmlOptions {
+                layout: false,
+                ..html_options()
+            },
+        );
+
+        // new layout HTML
+        let document = to_document(&hwp_doc);
+        let new_html = doc_to_html(
+            &document,
+            &DocHtmlOptions {
+                layout: true,
+                ..doc_html_options()
+            },
+        );
+
+        // 둘 다 /tmp에 저장하여 수동 비교 가능
+        let dump_dir = std::path::Path::new("/tmp/hwp_layout_compare");
+        std::fs::create_dir_all(dump_dir).ok();
+        std::fs::write(dump_dir.join(format!("{}_old.html", file_name)), &old_html).ok();
+        std::fs::write(dump_dir.join(format!("{}_new.html", file_name)), &new_html).ok();
+
+        // 기본 검증: 둘 다 비어있지 않아야 함
+        assert!(
+            !old_html.is_empty(),
+            "{}: old HTML is empty",
+            file_name
+        );
+        assert!(
+            !new_html.is_empty(),
+            "{}: new layout HTML is empty",
+            file_name
+        );
+
+        // hpa div가 새 HTML에 있어야 함
+        assert!(
+            new_html.contains(r#"class="hpa""#),
+            "{}: new layout should have hpa",
+            file_name
+        );
+
+        println!(
+            "  {} — old: {} bytes, new: {} bytes",
+            file_name,
+            old_html.len(),
+            new_html.len()
+        );
+    }
+}
