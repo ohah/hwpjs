@@ -1,6 +1,7 @@
 /// Document(hwp-model) 기반 HTML viewer
 /// HWP/HWPX 양쪽에서 생성된 Document를 HTML로 변환
 pub(crate) mod flat_text;
+pub(crate) mod layout_image;
 pub(crate) mod layout_line_segment;
 pub(crate) mod layout_page;
 pub(crate) mod layout_pagination;
@@ -62,6 +63,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         };
 
         let mut current_page_blocks: Vec<layout_page::PageBlock> = Vec::new();
+        let mut header_html: Option<String> = None;
+        let mut footer_html: Option<String> = None;
 
         for para in &section.paragraphs {
             // 페이지 나누기 판단
@@ -69,7 +72,12 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
             if break_result.should_break && !current_page_blocks.is_empty() {
                 // 현재 페이지 flush
                 let page_html =
-                    layout_page::render_page(&current_page_blocks, page_def, None, None);
+                    layout_page::render_page(
+                        &current_page_blocks,
+                        page_def,
+                        header_html.as_deref(),
+                        footer_html.as_deref(),
+                    );
                 pages_html.push(page_html);
                 current_page_blocks.clear();
 
@@ -85,19 +93,59 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 pag_ctx.current_max_vertical_mm = 0.0;
             }
 
-            // 문단 내 Table/Object 렌더링
+            // 문단 내 Object/Control 렌더링
             for run in &para.runs {
                 for content in &run.contents {
-                    if let hwp_model::paragraph::RunContent::Object(
-                        hwp_model::shape::ShapeObject::Table(ref table),
-                    ) = content
-                    {
-                        let table_html =
-                            layout_table::render_layout_table(table, &doc.resources, &doc.binaries);
-                        if !table_html.is_empty() {
-                            current_page_blocks
-                                .push(layout_page::PageBlock { html: table_html });
+                    match content {
+                        hwp_model::paragraph::RunContent::Object(ref shape) => {
+                            let obj_html = match shape {
+                                hwp_model::shape::ShapeObject::Table(ref table) => {
+                                    layout_table::render_layout_table(
+                                        table,
+                                        &doc.resources,
+                                        &doc.binaries,
+                                    )
+                                }
+                                hwp_model::shape::ShapeObject::Picture(ref pic) => {
+                                    layout_image::render_layout_picture(pic, &doc.binaries)
+                                }
+                                hwp_model::shape::ShapeObject::Rectangle(ref rect) => {
+                                    if let Some(ref dt) = rect.draw_text {
+                                        layout_image::render_layout_textbox(
+                                            &rect.common,
+                                            &dt.paragraphs,
+                                            &doc.resources,
+                                        )
+                                    } else {
+                                        String::new()
+                                    }
+                                }
+                                _ => String::new(),
+                            };
+                            if !obj_html.is_empty() {
+                                current_page_blocks
+                                    .push(layout_page::PageBlock { html: obj_html });
+                            }
                         }
+                        hwp_model::paragraph::RunContent::Control(ref ctrl) => {
+                            // 머리글/꼬리글 수집
+                            match ctrl {
+                                hwp_model::control::Control::Header(hf) => {
+                                    header_html = Some(render_sublist_layout(
+                                        &hf.content.paragraphs,
+                                        &doc.resources,
+                                    ));
+                                }
+                                hwp_model::control::Control::Footer(hf) => {
+                                    footer_html = Some(render_sublist_layout(
+                                        &hf.content.paragraphs,
+                                        &doc.resources,
+                                    ));
+                                }
+                                _ => {}
+                            }
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -143,7 +191,12 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
 
         // 마지막 페이지 flush
         if !current_page_blocks.is_empty() {
-            let page_html = layout_page::render_page(&current_page_blocks, page_def, None, None);
+            let page_html = layout_page::render_page(
+                        &current_page_blocks,
+                        page_def,
+                        header_html.as_deref(),
+                        footer_html.as_deref(),
+                    );
             pages_html.push(page_html);
         }
     }
@@ -158,6 +211,31 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
     }
     html.push_str("\n</body>\n</html>");
     html
+}
+
+/// SubList(머리글/꼬리글 등) 문단을 레이아웃 HTML로 렌더링
+fn render_sublist_layout(
+    paragraphs: &[hwp_model::paragraph::Paragraph],
+    resources: &hwp_model::resources::Resources,
+) -> String {
+    let mut parts = Vec::new();
+    for para in paragraphs {
+        let flat = flat_text::extract_flat_text(para);
+        if flat.text.is_empty() {
+            continue;
+        }
+        let ps_class = format!("ps{}", para.para_shape_id);
+        let lines = layout_line_segment::render_line_segments(
+            &flat.text,
+            &flat.char_shapes,
+            &para.line_segments,
+            resources,
+            &ps_class,
+            0.0,
+        );
+        parts.extend(lines);
+    }
+    parts.join("")
 }
 
 /// 시맨틱 모드 HTML 생성 (기존 동작)
