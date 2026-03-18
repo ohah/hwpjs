@@ -6,9 +6,9 @@
 
 
 
-![이미지](/Users/yoonhb/Documents/workspace/hwpjs/crates/hwp-core/tests/snapshots/images/shapepict-scaled/BIN0001.jpg)
+![이미지]({{SNAPSHOTS_DIR}}/images/shapepict-scaled/BIN0001.jpg)
 
 ---
 
 
-![이미지](/Users/yoonhb/Documents/workspace/hwpjs/crates/hwp-core/tests/snapshots/images/shapepict-scaled/BIN0001.jpg)
+![이미지]({{SNAPSHOTS_DIR}}/images/shapepict-scaled/BIN0001.jpg)

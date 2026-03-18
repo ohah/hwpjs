@@ -16,7 +16,7 @@ expression: markdown
 
 
 
-![이미지](/Users/yoonhb/Documents/workspace/hwpjs/crates/hwp-core/tests/snapshots/images/distribution/BIN0001.bmp)
+![이미지]({{SNAPSHOTS_DIR}}/images/distribution/BIN0001.bmp)
 
 **글 문서 파일 구조 - 배포용 문서**  
 **Hwp Document File Formats – **  
@@ -133,7 +133,7 @@ WCHAR
 
 다음은 “배포용 문서 데이터”를 통해 스트림을 복호화하는 과정을 설명한다.
 
-![이미지](/Users/yoonhb/Documents/workspace/hwpjs/crates/hwp-core/tests/snapshots/images/distribution/BIN0002.bmp)
+![이미지]({{SNAPSHOTS_DIR}}/images/distribution/BIN0002.bmp)
 
 ### 1) **Seed 찾기**
 
@@ -166,7 +166,7 @@ srand()의 초기 값은 앞서 찾은 Seed를 입력하며, rand()함수의 결
 
 4. 배열크기가 256이 될 때까지 3항을 반복한다.
 
-![이미지](/Users/yoonhb/Documents/workspace/hwpjs/crates/hwp-core/tests/snapshots/images/distribution/BIN0003.bmp)
+![이미지]({{SNAPSHOTS_DIR}}/images/distribution/BIN0003.bmp)
 
 ### 3) **해시코드 추출하기**
 
