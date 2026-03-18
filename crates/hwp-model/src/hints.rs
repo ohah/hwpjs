@@ -50,6 +50,35 @@ pub struct LineSegmentInfo {
     pub flags: u32,
 }
 
+/// LineSegmentInfo.flags 디코딩 결과
+#[derive(Debug, Clone, Default)]
+pub struct LineSegmentFlags {
+    pub is_first_line_of_page: bool,
+    pub is_first_line_of_column: bool,
+    pub is_empty_segment: bool,
+    pub is_first_segment_of_line: bool,
+    pub is_last_segment_of_line: bool,
+    pub has_auto_hyphenation: bool,
+    pub has_indentation: bool,
+    pub has_paragraph_header_shape: bool,
+}
+
+impl LineSegmentInfo {
+    /// flags u32 → 개별 플래그로 디코딩
+    pub fn decode_flags(&self) -> LineSegmentFlags {
+        LineSegmentFlags {
+            is_first_line_of_page: (self.flags & 0x0000_0001) != 0,
+            is_first_line_of_column: (self.flags & 0x0000_0002) != 0,
+            is_empty_segment: (self.flags & 0x0001_0000) != 0,
+            is_first_segment_of_line: (self.flags & 0x0002_0000) != 0,
+            is_last_segment_of_line: (self.flags & 0x0004_0000) != 0,
+            has_auto_hyphenation: (self.flags & 0x0008_0000) != 0,
+            has_indentation: (self.flags & 0x0010_0000) != 0,
+            has_paragraph_header_shape: (self.flags & 0x0020_0000) != 0,
+        }
+    }
+}
+
 /// HWPX roundtrip용 문서 힌트
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct HwpxDocumentHints {
