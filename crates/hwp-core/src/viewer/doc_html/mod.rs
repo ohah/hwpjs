@@ -1,7 +1,8 @@
 /// Document(hwp-model) 기반 HTML viewer
 /// HWP/HWPX 양쪽에서 생성된 Document를 HTML로 변환
+pub(crate) mod flat_text;
 mod paragraph;
-mod styles;
+pub(crate) mod styles;
 
 use hwp_model::document::Document;
 
