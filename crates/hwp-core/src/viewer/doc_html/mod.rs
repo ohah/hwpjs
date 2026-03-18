@@ -85,6 +85,10 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         let mut current_page_blocks: Vec<layout_page::PageBlock> = Vec::new();
         let mut header_html: Option<String> = None;
         let mut footer_html: Option<String> = None;
+        let mut footnote_blocks: Vec<(u16, String)> = Vec::new();
+        let mut endnote_blocks: Vec<(u16, String)> = Vec::new();
+        let mut footnote_counter: u16 = 0;
+        let mut endnote_counter: u16 = 0;
 
         for para in &section.paragraphs {
             // 페이지 나누기 판단
@@ -98,8 +102,16 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                         header_html.as_deref(),
                         footer_html.as_deref(),
                     );
+                // 각주를 페이지 </div> 앞에 삽입
+                let page_html = append_footnotes_to_page(
+                    page_html,
+                    &footnote_blocks,
+                    &endnote_blocks,
+                );
                 pages_html.push(page_html);
                 current_page_blocks.clear();
+                footnote_blocks.clear();
+                endnote_blocks.clear();
 
                 // 페이지 오프셋 업데이트
                 if let Some(vp) = layout_pagination::last_vertical_pos_mm(para) {
@@ -169,6 +181,24 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                         &doc.resources,
                                     ));
                                 }
+                                hwp_model::control::Control::FootNote(note) => {
+                                    footnote_counter += 1;
+                                    let id = note.number.unwrap_or(footnote_counter);
+                                    let note_html = render_sublist_layout(
+                                        &note.content.paragraphs,
+                                        &doc.resources,
+                                    );
+                                    footnote_blocks.push((id, note_html));
+                                }
+                                hwp_model::control::Control::EndNote(note) => {
+                                    endnote_counter += 1;
+                                    let id = note.number.unwrap_or(endnote_counter);
+                                    let note_html = render_sublist_layout(
+                                        &note.content.paragraphs,
+                                        &doc.resources,
+                                    );
+                                    endnote_blocks.push((id, note_html));
+                                }
                                 _ => {}
                             }
                         }
@@ -214,6 +244,11 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                         header_html.as_deref(),
                         footer_html.as_deref(),
                     );
+            let page_html = append_footnotes_to_page(
+                page_html,
+                &footnote_blocks,
+                &endnote_blocks,
+            );
             pages_html.push(page_html);
         }
     }
@@ -228,6 +263,51 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
     }
     html.push_str("\n</body>\n</html>");
     html
+}
+
+/// 페이지 HTML에 각주/미주 블록을 삽입 (</div> 앞)
+fn append_footnotes_to_page(
+    mut page_html: String,
+    footnotes: &[(u16, String)],
+    endnotes: &[(u16, String)],
+) -> String {
+    if footnotes.is_empty() && endnotes.is_empty() {
+        return page_html;
+    }
+
+    let mut footer = String::new();
+
+    if !footnotes.is_empty() {
+        // 각주 구분선
+        footer.push_str(
+            r#"<div class="hfS" style="left:0mm;width:50.00mm;height:0.11mm;"><svg class="hs" viewBox="-0.12 -0.12 50.23 0.35" style="left:-0.12mm;top:-0.12mm;width:50.23mm;height:0.35mm;left:0;top:0;"><path d="M0,0.06 L50,0.06" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
+        );
+        for (id, html) in footnotes {
+            footer.push_str(&format!(
+                r#"<div class="hcD"><div class="hcI"><div class="haN"><span class="hrt">{id})</span></div>{html}</div></div>"#,
+                id = id,
+                html = html
+            ));
+        }
+    }
+
+    if !endnotes.is_empty() {
+        for (id, html) in endnotes {
+            footer.push_str(&format!(
+                r#"<div class="hcD"><div class="hcI"><div class="haN"><span class="hrt">{id})</span></div>{html}</div></div>"#,
+                id = id,
+                html = html
+            ));
+        }
+    }
+
+    // </div> (hpa 닫기 태그) 앞에 삽입
+    if let Some(pos) = page_html.rfind("</div>") {
+        page_html.insert_str(pos, &footer);
+    } else {
+        page_html.push_str(&footer);
+    }
+    page_html
 }
 
 /// Container 도형 렌더링 (하위 도형 재귀)
