@@ -147,6 +147,50 @@ pub fn render_layout_rect_with_fill(
     )
 }
 
+/// Line 도형을 SVG로 렌더링
+pub fn render_layout_line(line: &hwp_model::shape::LineObject) -> String {
+    let common = &line.common;
+    let width_mm = round_mm(hwpunit_to_mm(common.size.width));
+    let height_mm = round_mm(hwpunit_to_mm(common.size.height));
+    let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
+    let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
+
+    if width_mm <= 0.0 && height_mm <= 0.0 {
+        return String::new();
+    }
+
+    let margin = 0.15;
+    let vb_w = round_mm(width_mm.max(0.3) + margin * 2.0);
+    let vb_h = round_mm(height_mm.max(0.3) + margin * 2.0);
+
+    let stroke_color = line
+        .line_shape
+        .color
+        .filter(|&c| c != 0)
+        .map(|c| {
+            format!(
+                "#{:02X}{:02X}{:02X}",
+                (c >> 16) & 0xFF,
+                (c >> 8) & 0xFF,
+                c & 0xFF
+            )
+        })
+        .unwrap_or_else(|| "#000000".to_string());
+
+    let x1 = round_mm(hwpunit_to_mm(line.start_pt.x));
+    let y1 = round_mm(hwpunit_to_mm(line.start_pt.y));
+    let x2 = round_mm(hwpunit_to_mm(line.end_pt.x));
+    let y2 = round_mm(hwpunit_to_mm(line.end_pt.y));
+
+    format!(
+        r#"<div class="hsL" style="left:{lx:.2}mm;top:{ly:.2}mm;width:{w:.2}mm;height:{h:.2}mm;"><svg class="hs" viewBox="-{m} -{m} {vw} {vh}" style="left:-{m}mm;top:-{m}mm;width:{vw}mm;height:{vh}mm;"><path d="M{x1:.2},{y1:.2} L{x2:.2},{y2:.2}" style="stroke:{sc};stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
+        lx = x_mm, ly = y_mm, w = width_mm.max(0.3), h = height_mm.max(0.3),
+        m = margin, vw = vb_w, vh = vb_h,
+        x1 = x1, y1 = y1, x2 = x2, y2 = y2,
+        sc = stroke_color,
+    )
+}
+
 /// ShapeObject(Rectangle) 텍스트 박스를 레이아웃 HTML로 렌더링
 pub fn render_layout_textbox(
     common: &ShapeCommon,
