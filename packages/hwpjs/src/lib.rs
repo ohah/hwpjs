@@ -172,13 +172,6 @@ pub fn to_markdown(
                 let pattern = format!("![이미지]({})", base64_data_uri);
                 let replacement = format!("![이미지]({})", image_id);
                 markdown = markdown.replace(&pattern, &replacement);
-
-                // Also handle cases where the pattern might be split across lines or have different formatting
-                let pattern2 = format!(
-                    "![이미지]({})",
-                    base64_data_uri.replace("(", "\\(").replace(")", "\\)")
-                );
-                markdown = markdown.replace(&pattern2, &replacement);
             }
         }
     }

@@ -7,59 +7,10 @@ use hwp_model::table::Table;
 use hwp_model::types::HeadingType;
 
 use super::{extract_control_parts, ControlPart, DocMarkdownOptions};
-use crate::viewer::core::outline::{format_outline_number, OutlineNumberTracker};
+use crate::viewer::core::outline::{
+    format_outline_number, format_with_numbering, OutlineNumberTracker,
+};
 use crate::viewer::doc_utils;
-
-/// Numbering format_string을 사용하여 번호 포맷
-/// 기존 viewer의 compute_outline_marker와 동일한 로직
-fn format_with_numbering(id_ref: u16, level: u8, number: u32, resources: &Resources) -> String {
-    // id_ref > 0이면 해당 numbering ID 사용 (1-based)
-    let numbering_id = if id_ref > 0 {
-        (id_ref - 1) as usize
-    } else {
-        return format_outline_number(level, number);
-    };
-    if let Some(numbering) = resources.numberings.get(numbering_id) {
-        let level_index = (level.saturating_sub(1)) as usize;
-        if let Some(level_info) = numbering.levels.get(level_index) {
-            let fs = &level_info.format_string;
-            // 기존 viewer와 동일한 유효성 검사:
-            // - 비어있지 않고
-            // - ^N 플레이스홀더가 있고
-            // - 제어 문자가 없어야 유효
-            if !fs.is_empty()
-                && fs.contains('^')
-                && !fs.chars().any(|c| c.is_control() && c != '\t')
-            {
-                let formatted = crate::viewer::core::outline::format_numbering_string(
-                    fs,
-                    number,
-                    convert_num_format(&level_info.num_format),
-                );
-                return formatted;
-            }
-        }
-    }
-    format_outline_number(level, number)
-}
-
-/// hwp_model NumberType2 → HwpDocument NumberType 변환
-fn convert_num_format(
-    nf: &hwp_model::types::NumberType2,
-) -> crate::document::docinfo::numbering::NumberType {
-    use crate::document::docinfo::numbering::NumberType;
-    match nf {
-        hwp_model::types::NumberType2::Digit => NumberType::Arabic,
-        hwp_model::types::NumberType2::CircledDigit => NumberType::CircledDigits,
-        hwp_model::types::NumberType2::RomanCapital => NumberType::UpperRoman,
-        hwp_model::types::NumberType2::RomanSmall => NumberType::LowerRoman,
-        hwp_model::types::NumberType2::LatinCapital => NumberType::UpperAlpha,
-        hwp_model::types::NumberType2::LatinSmall => NumberType::LowerAlpha,
-        hwp_model::types::NumberType2::HangulSyllable => NumberType::HangulGa,
-        hwp_model::types::NumberType2::HangulJamo => NumberType::HangulGaCycle,
-        _ => NumberType::Arabic,
-    }
-}
 
 /// 문단 하나를 Markdown으로 렌더링.
 /// (본문 텍스트, 추출된 컨트롤 파트들, heading 적용 여부) 반환.
