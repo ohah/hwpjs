@@ -140,6 +140,13 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                         String::new()
                                     }
                                 }
+                                hwp_model::shape::ShapeObject::Container(ref container) => {
+                                    render_container_layout(
+                                        container,
+                                        &doc.resources,
+                                        &doc.binaries,
+                                    )
+                                }
                                 _ => String::new(),
                             };
                             if !obj_html.is_empty() {
@@ -230,6 +237,49 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         html.push_str(page);
     }
     html.push_str("\n</body>\n</html>");
+    html
+}
+
+/// Container 도형 렌더링 (하위 도형 재귀)
+fn render_container_layout(
+    container: &hwp_model::shape::ContainerObject,
+    resources: &hwp_model::resources::Resources,
+    binaries: &hwp_model::document::BinaryStore,
+) -> String {
+    let common = &container.common;
+    let width_mm = styles::round_mm(styles::hwpunit_to_mm(common.size.width));
+    let height_mm = styles::round_mm(styles::hwpunit_to_mm(common.size.height));
+    let x_mm = styles::round_mm(styles::hwpunit_to_mm(common.position.horz_offset));
+    let y_mm = styles::round_mm(styles::hwpunit_to_mm(common.position.vert_offset));
+
+    let mut html = format!(
+        r#"<div class="hsC" style="left:{:.2}mm;top:{:.2}mm;width:{:.2}mm;height:{:.2}mm;">"#,
+        x_mm, y_mm, width_mm, height_mm
+    );
+
+    for child in &container.children {
+        let child_html = match child {
+            hwp_model::shape::ShapeObject::Picture(ref pic) => {
+                layout_image::render_layout_picture(pic, binaries)
+            }
+            hwp_model::shape::ShapeObject::Rectangle(ref rect) => {
+                if let Some(ref dt) = rect.draw_text {
+                    layout_image::render_layout_textbox(&rect.common, &dt.paragraphs, resources)
+                } else {
+                    String::new()
+                }
+            }
+            hwp_model::shape::ShapeObject::Container(ref sub) => {
+                render_container_layout(sub, resources, binaries)
+            }
+            _ => String::new(),
+        };
+        if !child_html.is_empty() {
+            html.push_str(&child_html);
+        }
+    }
+
+    html.push_str("</div>");
     html
 }
 
