@@ -428,7 +428,11 @@ fn render_shape_object(
 ) -> String {
     match shape {
         ShapeObject::Table(table) => render_table(table, resources, binaries, options),
-        ShapeObject::Picture(pic) => render_picture(&pic.img.binary_item_id, binaries),
+        ShapeObject::Picture(pic) => render_picture(
+            &pic.img.binary_item_id,
+            binaries,
+            options.image_output_dir.as_deref(),
+        ),
         ShapeObject::Rectangle(rect) => {
             // 텍스트 박스 (draw_text가 있는 경우)
             // 기존 viewer와 동일: 스타일 강제 적용 + 블록 감지 기반 구분자
@@ -588,10 +592,36 @@ fn render_table(
 }
 
 /// 이미지를 Markdown으로 변환
-fn render_picture(binary_item_id: &str, binaries: &BinaryStore) -> String {
+fn render_picture(
+    binary_item_id: &str,
+    binaries: &BinaryStore,
+    image_output_dir: Option<&str>,
+) -> String {
     if let Some(item) = doc_utils::find_binary_item(binary_item_id, binaries) {
         if item.data.is_empty() {
             format!("![이미지]({})", item.src)
+        } else if let Some(dir) = image_output_dir {
+            // 이미지를 파일로 저장
+            let ext = match doc_utils::image_format_to_mime(&item.format) {
+                "image/jpeg" => "jpg",
+                "image/png" => "png",
+                "image/gif" => "gif",
+                "image/bmp" => "bmp",
+                "image/tiff" => "tiff",
+                "image/wmf" => "wmf",
+                "image/emf" => "emf",
+                _ => "bin",
+            };
+            let file_name = format!("{}.{}", binary_item_id, ext);
+            let file_path = std::path::Path::new(dir).join(&file_name);
+            if let Ok(()) = std::fs::write(&file_path, &item.data) {
+                format!("![이미지]({})", file_path.display())
+            } else {
+                // 파일 저장 실패 시 base64 fallback
+                let mime = doc_utils::image_format_to_mime(&item.format);
+                let b64 = base64_encode(&item.data);
+                format!("![이미지](data:{};base64,{})", mime, b64)
+            }
         } else {
             let mime = doc_utils::image_format_to_mime(&item.format);
             let b64 = base64_encode(&item.data);

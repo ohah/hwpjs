@@ -2,11 +2,11 @@
 
 
 
-**버전**: 5.01.00.01
+**용지 크기**: 0.00mm x 0.00mm
 
 
 
-한글 2005 예제 파일입니다.
+한글 2005 예제 **파일입니**다*.*
 
 머리말입니다
 
@@ -20,7 +20,6 @@
 
 | table2<br> |
 |---|
-  
 표표끝
 
 
@@ -35,7 +34,7 @@
 
 본 문서는 먼저 글 문서 파일 형식 5.0에 관하여 설명한 후, 글 97 문서 파일 형식, HWPML에 관하여 설명한다. 각 형식에 대한 설명은 문서 파일 형식 내의 주요한 자료 형식 및 파일 구조, 레코드 구조에 대해서 설명한다.
 
-![이미지](images/BIN0001.jpg)
+![이미지](/Users/yoonhb/Documents/workspace/hwpjs/crates/hwp-core/tests/snapshots/images/sample-5017/BIN0001.jpg)
 
 미주입니다.
 
@@ -44,6 +43,5 @@
 ---
 
 
-![이미지](images/BIN0002.png)
-
+![이미지](/Users/yoonhb/Documents/workspace/hwpjs/crates/hwp-core/tests/snapshots/images/sample-5017/BIN0002.png)  
 다음 페이지

@@ -88,7 +88,15 @@ impl HwpDocument {
     /// # Returns / 반환값
     /// Markdown string representation of the document / 문서의 마크다운 문자열 표현
     pub fn to_markdown(&self, options: &crate::viewer::markdown::MarkdownOptions) -> String {
-        crate::viewer::to_markdown(self, options)
+        // Document 모델 기반 새 viewer를 사용 (기존 viewer보다 정확)
+        let document = crate::convert::to_document(self);
+        let doc_options = crate::viewer::doc_markdown::DocMarkdownOptions {
+            image_output_dir: options.image_output_dir.clone(),
+            use_html: options.use_html.unwrap_or(false),
+            include_version: options.include_version,
+            include_page_info: options.include_page_info,
+        };
+        crate::viewer::doc_markdown::doc_to_markdown(&document, &doc_options)
     }
 
     /// Convert HWP document to Markdown format (기존 API 호환성)

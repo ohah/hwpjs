@@ -2,13 +2,13 @@
 
 
 
-**버전**: 5.01.00.01
+**용지 크기**: 0.00mm x 0.00mm
 
 
 
-![이미지](images/BIN0001.jpg)
+![이미지](/Users/yoonhb/Documents/workspace/hwpjs/crates/hwp-core/tests/snapshots/images/shapepict-scaled/BIN0001.jpg)
 
 ---
 
 
-![이미지](images/BIN0001.jpg)
+![이미지](/Users/yoonhb/Documents/workspace/hwpjs/crates/hwp-core/tests/snapshots/images/shapepict-scaled/BIN0001.jpg)
