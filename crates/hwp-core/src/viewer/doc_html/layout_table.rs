@@ -98,11 +98,8 @@ pub fn render_layout_table(
                     }
                 }
 
-                // 텍스트 렌더링
+                // 텍스트 렌더링 (빈 문단도 line_segments가 있으면 빈 hls 생성)
                 let flat = flat_text::extract_flat_text(para);
-                if flat.text.is_empty() {
-                    continue;
-                }
                 let ps_class = format!("ps{}", para.para_shape_id);
                 let lines = layout_line_segment::render_line_segments(
                     &flat.text,
