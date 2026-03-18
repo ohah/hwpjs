@@ -487,7 +487,8 @@ fn test_document_html_snapshot() {
         .and_then(|n| n.to_str())
         .unwrap_or("unknown");
     let snapshot_name = file_name.replace(['-', '.'], "_");
-    let snapshot_name_html = format!("{}_html", snapshot_name);
+    // test_all_fixtures_html_snapshots와 겹치지 않도록 prefix 포함 스냅샷 이름 사용
+    let snapshot_name_html = format!("{}_with_prefix_html", snapshot_name);
 
     if let Ok(data) = std::fs::read(&file_path) {
         let parser = HwpParser::new();
@@ -504,11 +505,9 @@ fn test_document_html_snapshot() {
         let snapshots_dir = std::path::Path::new(manifest_dir)
             .join("tests")
             .join("snapshots");
-        let images_dir = snapshots_dir.join("images").join(file_name);
-        std::fs::create_dir_all(&images_dir).unwrap_or(());
         let options = hwp_core::viewer::HtmlOptions {
-            image_output_dir: images_dir.to_str().map(|s| s.to_string()),
-            html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
+            image_output_dir: None,
+            html_output_dir: None,
             include_version: Some(true),
             include_page_info: Some(true),
             css_class_prefix: "ohah-hwpjs-".to_string(),
@@ -558,8 +557,8 @@ fn test_headerfooter_html() {
                     std::fs::create_dir_all(&images_dir).unwrap_or(());
 
                     let options = hwp_core::viewer::html::HtmlOptions {
-                        image_output_dir: images_dir.to_str().map(|s| s.to_string()),
-                        html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
+                        image_output_dir: None, // 이미지는 base64 임베드 (절대경로 방지)
+                        html_output_dir: None,
                         include_version: Some(true),
                         include_page_info: Some(true),
                         css_class_prefix: "ohah-hwpjs-".to_string(),
@@ -567,27 +566,23 @@ fn test_headerfooter_html() {
 
                     let html = document.to_html(&options);
 
-                    // 머리말/꼬리말이 hpa 안에 hcD로 출력되는지 검증 (body 직하위 블록 아님) / Verify header/footer are inside hpa as hcD (not body-level blocks)
+                    // 머리말/꼬리말 텍스트가 HTML에 포함되는지 검증
                     assert!(
-                        html.contains("Header 이것은 머리말입니다"),
+                        html.contains("이것은 머리말입니다"),
                         "HTML should contain header text"
                     );
                     assert!(
-                        html.contains("Footer 이것은 꼬리말입니다"),
+                        html.contains("이것은 꼬리말입니다"),
                         "HTML should contain footer text"
                     );
+                    // 새 viewer: header/footer가 <header>/<footer> 시맨틱 태그로 출력
                     assert!(
-                        html.contains(r#"<div class="hpa""#),
-                        "HTML should contain page container (hpa)"
-                    );
-                    // body 직하위에 ohah-hwpjs-header/footer가 없어야 함 (hpa 내부 hcD로만 출력) / No body-level header/footer blocks
-                    assert!(
-                        !html.contains("ohah-hwpjs-header"),
-                        "Header should be inside hpa as hcD, not body-level ohah-hwpjs-header"
+                        html.contains("<header"),
+                        "HTML should contain <header> element"
                     );
                     assert!(
-                        !html.contains("ohah-hwpjs-footer"),
-                        "Footer should be inside hpa as hcD, not body-level ohah-hwpjs-footer"
+                        html.contains("<footer"),
+                        "HTML should contain <footer> element"
                     );
 
                     // 스냅샷 생성 / Create snapshot
@@ -634,15 +629,15 @@ fn test_footnote_endnote_html_snapshot() {
     };
     let html = document.to_html(&options);
 
-    // 본문 내 각주/미주 인라인 참조 마크업 (hfN 클래스)
+    // 본문 내 각주 인라인 참조 마크업 (새 viewer: <sup><a href="#fn-N">)
     assert!(
-        html.contains("hfN"),
-        "HTML should contain inline footnote/endnote reference (class hfN)"
+        html.contains("fn-") || html.contains("fnref-"),
+        "HTML should contain inline footnote reference (fn-N or fnref-N)"
     );
-    // 페이지 내 각주 블록 (haN 마커 + hfS 구분선)
+    // 각주 섹션 (새 viewer: class="..footnotes")
     assert!(
-        html.contains("hfS") || html.contains("haN"),
-        "HTML should contain footnote separator (hfS) or annotation number marker (haN)"
+        html.contains("footnote") || html.contains("endnote"),
+        "HTML should contain footnote or endnote section"
     );
 
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
@@ -658,7 +653,7 @@ fn test_footnote_endnote_html_snapshot() {
     });
 }
 
-/// 본문에 개요 문단이 있는 문서는 HTML에 outline-number 클래스가 포함되는지 검증
+/// 본문에 개요 문단이 있는 문서는 HTML에 outline-number 마커가 포함되는지 검증
 #[test]
 fn test_outline_number_in_html_when_document_has_outline() {
     use hwp_core::document::HeaderShapeType;
@@ -696,10 +691,10 @@ fn test_outline_number_in_html_when_document_has_outline() {
             css_class_prefix: "ohah-hwpjs-".to_string(),
         };
         let html = document.to_html(&options);
-        // hhe div 메커니즘으로 개요 마커가 렌더링됨 (구 방식 outline-number span 대신)
+        // 새 viewer: outline-number 클래스로 개요 마커가 렌더링됨
         assert!(
-            html.contains(r#"class="hhe""#),
-            "When document has outline paragraph in body, HTML should contain hhe marker div; file: {}",
+            html.contains("outline-number"),
+            "When document has outline paragraph in body, HTML should contain outline-number marker; file: {}",
             file_path
         );
     }
@@ -734,14 +729,10 @@ fn test_all_fixtures_html_snapshots() {
             Ok(data) => {
                 match parser.parse(&data) {
                     Ok(document) => {
-                        // Convert to HTML with image files (not base64)
-                        // 이미지를 파일로 저장하고 파일 경로를 사용 / Save images as files and use file paths
-                        let images_dir = snapshots_dir.join("images").join(file_name);
-                        std::fs::create_dir_all(&images_dir).unwrap_or(());
-
+                        // 이미지는 base64 임베드 (절대경로가 스냅샷에 포함되는 것을 방지)
                         let options = hwp_core::viewer::html::HtmlOptions {
-                            image_output_dir: images_dir.to_str().map(|s| s.to_string()),
-                            html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
+                            image_output_dir: None,
+                            html_output_dir: None,
                             include_version: Some(true),
                             include_page_info: Some(true),
                             // headerfooter는 전용 테스트(test_headerfooter_html)와 동일한 스냅샷을 사용하므로 접두사 일치
@@ -767,7 +758,8 @@ fn test_all_fixtures_html_snapshots() {
                             eprintln!("Failed to write HTML file {}: {}", html_file.display(), e);
                         });
 
-                        // table-bug, software는 페이지별 HTML도 추가 생성
+                        // table-bug, software는 페이지별 HTML도 추가 생성 (old viewer)
+                        #[allow(deprecated)]
                         if file_name == "table-bug" || file_name == "software" {
                             let css_filename = format!("{}_style.css", file_name);
                             let html_pages = document.to_html_pages(&options, &css_filename);
@@ -840,8 +832,8 @@ fn test_table2_html_snapshot() {
                     std::fs::create_dir_all(&images_dir).unwrap_or(());
 
                     let options = hwp_core::viewer::html::HtmlOptions {
-                        image_output_dir: images_dir.to_str().map(|s| s.to_string()),
-                        html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
+                        image_output_dir: None, // 이미지는 base64 임베드 (절대경로 방지)
+                        html_output_dir: None,
                         include_version: Some(true),
                         include_page_info: Some(true),
                         css_class_prefix: String::new(), // table.html과 일치하도록 빈 문자열 사용
@@ -900,12 +892,13 @@ fn test_table_bug_cell_positions_match_hancom() {
 
     let options = hwp_core::viewer::html::HtmlOptions {
         image_output_dir: None,
-        html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
+        html_output_dir: None,
         include_version: Some(true),
         include_page_info: Some(true),
         css_class_prefix: String::new(),
     };
     let css_filename = "table-bug_style.css";
+    #[allow(deprecated)]
     let html_pages = document.to_html_pages(&options, css_filename);
     let our_page1 = &html_pages.pages[0];
 
@@ -993,12 +986,13 @@ fn test_nested_table_rendering() {
 
     let options = hwp_core::viewer::html::HtmlOptions {
         image_output_dir: None,
-        html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
+        html_output_dir: None,
         include_version: Some(true),
         include_page_info: Some(true),
         css_class_prefix: String::new(),
     };
     let css_filename = "table-bug_style.css";
+    #[allow(deprecated)]
     let html_pages = document.to_html_pages(&options, css_filename);
 
     assert!(html_pages.pages.len() >= 8, "Should have at least 8 pages");
@@ -1842,12 +1836,13 @@ fn test_debug_table_bug_page10() {
     // Generate HTML pages to determine page boundaries
     let options = hwp_core::viewer::html::HtmlOptions {
         image_output_dir: None,
-        html_output_dir: snapshots_dir.to_str().map(|s| s.to_string()),
+        html_output_dir: None,
         include_version: Some(true),
         include_page_info: Some(true),
         css_class_prefix: String::new(),
     };
     let css_filename = "table-bug_style.css";
+    #[allow(deprecated)]
     let html_pages = document.to_html_pages(&options, css_filename);
 
     println!("=== Total pages: {} ===", html_pages.pages.len());

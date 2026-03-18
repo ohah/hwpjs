@@ -449,6 +449,7 @@ fn detect_column_definition(paragraph: &crate::document::Paragraph) -> Option<Co
 ///
 /// # Returns / 반환값
 /// HTML string representation of the document / 문서의 HTML 문자열 표현
+#[deprecated(note = "Use doc_to_html() instead — HwpDocument::to_html() already uses the new viewer internally")]
 pub fn to_html(document: &HwpDocument, options: &HtmlOptions) -> String {
     let mut html = String::new();
 
@@ -1680,12 +1681,14 @@ pub struct HtmlPages {
 /// * `document` - HWP 문서 / HWP document
 /// * `options` - HTML 변환 옵션 / HTML conversion options
 /// * `css_filename` - CSS 파일명 (예: "document_style.css") / CSS filename (e.g., "document_style.css")
+#[deprecated(note = "Old pixel-accurate viewer — will be replaced by doc_to_html with pagination support")]
 pub fn to_html_pages(
     document: &HwpDocument,
     options: &HtmlOptions,
     css_filename: &str,
 ) -> HtmlPages {
     // 전체 HTML 생성 / Generate full HTML
+    #[allow(deprecated)]
     let full_html = to_html(document, options);
 
     // CSS 스타일 추출 / Extract CSS styles

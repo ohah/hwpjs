@@ -616,6 +616,8 @@ dependencies = [
  "craby_build",
  "cxx",
  "hwp-core",
+ "hwp-model",
+ "hwpx-parser",
  "serde_json",
 ]
 
@@ -625,6 +627,8 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "hwp-core",
+ "hwp-model",
+ "hwpx-parser",
  "napi",
  "napi-build",
  "napi-derive",

@@ -4,61 +4,63 @@ expression: html
 ---
 <div class="hwp-body">
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표 두 번째</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">문단번호</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2-1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3-1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3-2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3-2-1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3-2-2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3-2-3</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">4</span></p>
+<p class="hwp-number-1"><span class="hwp-number">1.</span> <span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-number-1"><span class="hwp-number">2.</span> <span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-number-2"><span class="hwp-number">가.</span> <span style="font-size: 10.0pt; font-family: '바탕'">2-1</span></p>
+<p class="hwp-number-1"><span class="hwp-number">3.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-number-2"><span class="hwp-number">가.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-1</span></p>
+<p class="hwp-number-2"><span class="hwp-number">나.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2</span></p>
+<p class="hwp-number-3"><span class="hwp-number">1)</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-1</span></p>
+<p class="hwp-number-3"><span class="hwp-number">2)</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-2</span></p>
+<p class="hwp-number-3"><span class="hwp-number">3)</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-3</span></p>
+<p class="hwp-number-1"><span class="hwp-number">4.</span> <span style="font-size: 10.0pt; font-family: '바탕'">4</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">문단번호 두 번째 (번호 이어짐)</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">5</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">5-1</span></p>
+<p class="hwp-number-1"><span class="hwp-number">5.</span> <span style="font-size: 10.0pt; font-family: '바탕'">5</span></p>
+<p class="hwp-number-2"><span class="hwp-number">가.</span> <span style="font-size: 10.0pt; font-family: '바탕'">5-1</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">문단번호 세 번째 (새 번호)</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2-1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3-1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3-2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3-2-1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3-2-2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3-2-3</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">4</span></p>
+<p class="hwp-number-1"><span class="hwp-number">I.</span> <span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-number-1"><span class="hwp-number">II.</span> <span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-number-2"><span class="hwp-number">A.</span> <span style="font-size: 10.0pt; font-family: '바탕'">2-1</span></p>
+<p class="hwp-number-1"><span class="hwp-number">III.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-number-2"><span class="hwp-number">A.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-1</span></p>
+<p class="hwp-number-2"><span class="hwp-number">B.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2</span></p>
+<p class="hwp-number-3"><span class="hwp-number">1.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-1</span></p>
+<p class="hwp-number-3"><span class="hwp-number">2.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-2</span></p>
+<p class="hwp-number-3"><span class="hwp-number">3.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-3</span></p>
+<p class="hwp-number-1"><span class="hwp-number">IV.</span> <span style="font-size: 10.0pt; font-family: '바탕'">4</span></p>
+<hr class="hwp-page-break">
 <p><span style="font-size: 10.0pt; font-family: '바탕'">개요</span></p>
-<p style="margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p style="margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p style="margin-left: 40.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">2-1</span></p>
-<p style="margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
-<p style="margin-left: 40.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3-1</span></p>
-<p style="margin-left: 40.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3-2</span></p>
-<p style="margin-left: 60.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3-2-1</span></p>
-<p style="margin-left: 60.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3-2-2</span></p>
-<p style="margin-left: 60.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3-2-3</span></p>
-<p style="margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">4</span></p>
+<h1 class="hwp-outline-1"><span class="hwp-outline-number">1.</span> <span style="font-size: 10.0pt; font-family: '바탕'">1</span></h1>
+<h1 class="hwp-outline-1"><span class="hwp-outline-number">2.</span> <span style="font-size: 10.0pt; font-family: '바탕'">2</span></h1>
+<h2 class="hwp-outline-2"><span class="hwp-outline-number">가.</span> <span style="font-size: 10.0pt; font-family: '바탕'">2-1</span></h2>
+<h1 class="hwp-outline-1"><span class="hwp-outline-number">3.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3</span></h1>
+<h2 class="hwp-outline-2"><span class="hwp-outline-number">가.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-1</span></h2>
+<h2 class="hwp-outline-2"><span class="hwp-outline-number">나.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2</span></h2>
+<h3 class="hwp-outline-3"><span class="hwp-outline-number">1)</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-1</span></h3>
+<h3 class="hwp-outline-3"><span class="hwp-outline-number">2)</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-2</span></h3>
+<h3 class="hwp-outline-3"><span class="hwp-outline-number">3)</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-3</span></h3>
+<h1 class="hwp-outline-1"><span class="hwp-outline-number">4.</span> <span style="font-size: 10.0pt; font-family: '바탕'">4</span></h1>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">개요 두 번째 (번호 이어짐)</span></p>
-<p style="margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">5</span></p>
-<p style="margin-left: 40.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">5-1</span></p>
+<h1 class="hwp-outline-1"><span class="hwp-outline-number">5.</span> <span style="font-size: 10.0pt; font-family: '바탕'">5</span></h1>
+<h2 class="hwp-outline-2"><span class="hwp-outline-number">가.</span> <span style="font-size: 10.0pt; font-family: '바탕'">5-1</span></h2>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">개요 세 번째 (새 번호)</span></p>
-<p style="margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p style="margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p style="margin-left: 40.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">2-1</span></p>
-<p style="margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
-<p style="margin-left: 40.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3-1</span></p>
-<p style="margin-left: 40.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3-2</span></p>
-<p style="margin-left: 60.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3-2-1</span></p>
-<p style="margin-left: 60.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3-2-2</span></p>
-<p style="margin-left: 60.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">3-2-3</span></p>
-<p style="margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '바탕'">4</span></p>
+<hr class="hwp-section-break">
+<h1 class="hwp-outline-1"><span class="hwp-outline-number">6.</span> <span style="font-size: 10.0pt; font-family: '바탕'">1</span></h1>
+<h1 class="hwp-outline-1"><span class="hwp-outline-number">7.</span> <span style="font-size: 10.0pt; font-family: '바탕'">2</span></h1>
+<h2 class="hwp-outline-2"><span class="hwp-outline-number">가.</span> <span style="font-size: 10.0pt; font-family: '바탕'">2-1</span></h2>
+<h1 class="hwp-outline-1"><span class="hwp-outline-number">8.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3</span></h1>
+<h2 class="hwp-outline-2"><span class="hwp-outline-number">가.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-1</span></h2>
+<h2 class="hwp-outline-2"><span class="hwp-outline-number">나.</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2</span></h2>
+<h3 class="hwp-outline-3"><span class="hwp-outline-number">1)</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-1</span></h3>
+<h3 class="hwp-outline-3"><span class="hwp-outline-number">2)</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-2</span></h3>
+<h3 class="hwp-outline-3"><span class="hwp-outline-number">3)</span> <span style="font-size: 10.0pt; font-family: '바탕'">3-2-3</span></h3>
+<h1 class="hwp-outline-1"><span class="hwp-outline-number">9.</span> <span style="font-size: 10.0pt; font-family: '바탕'">4</span></h1>
 </div>

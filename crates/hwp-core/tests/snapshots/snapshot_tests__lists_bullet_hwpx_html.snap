@@ -4,115 +4,115 @@ expression: html
 ---
 <div class="hwp-body">
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">1</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">2</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">3</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표 사용자정의 ☀</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">너비 10pt</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">정렬 가운데</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 50%</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">글자모양 없음</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">너비 10pt</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">정렬 가운데</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 50%</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">글자모양 없음</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표 사용자정의 ☀</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">너비 10pt</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">정렬 오른쪽</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 50%</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">글자모양 없음</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">너비 10pt</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">정렬 오른쪽</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 50%</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">글자모양 없음</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표 사용자정의 ☀</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">너비 20pt</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">정렬 왼쪽</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 50%</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">글자모양 없음</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">너비 20pt</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">정렬 왼쪽</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 50%</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">글자모양 없음</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표 사용자정의 ☀</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">너비 10pt</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">정렬 왼쪽</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 0%</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">글자모양 없음</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">너비 10pt</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">정렬 왼쪽</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 0%</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">글자모양 없음</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표 사용자정의 ☀</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">너비 10pt</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">정렬 왼쪽</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 0%</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기 X</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">글자모양 없음</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">너비 10pt</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">정렬 왼쪽</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 0%</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기 X</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">글자모양 없음</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">글머리표 사용자정의 ☀</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">너비 10pt</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">정렬 왼쪽</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 0%</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기 X</span></p>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">새 글머리표 모양: sun</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">너비 10pt</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">정렬 왼쪽</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">본문과의 간격 0%</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">자동 내어쓰기 X</span></p>
+<p class="hwp-bullet"><span style="font-size: 10.0pt; font-family: '바탕'">새 글머리표 모양: sun</span></p>
 </div>

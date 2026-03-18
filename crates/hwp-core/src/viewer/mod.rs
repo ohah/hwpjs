@@ -18,5 +18,7 @@ pub mod markdown;
 pub use core::renderer::{DocumentParts, Renderer, TextStyles};
 pub use doc_html::doc_to_html;
 pub use doc_markdown::doc_to_markdown;
+#[allow(deprecated)]
 pub use html::{to_html, to_html_pages, HtmlOptions, HtmlPages};
+#[allow(deprecated)]
 pub use markdown::{to_markdown, MarkdownOptions};

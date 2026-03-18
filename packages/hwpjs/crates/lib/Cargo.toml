@@ -8,6 +8,8 @@ anyhow = "1.0.99"
 craby = "0.1.0-rc.3"
 cxx = { version = "1.0.187", features = ["c++20"] }
 hwp-core = { path = "../../../../crates/hwp-core" }
+hwpx-parser = { path = "../../../../crates/hwpx-parser" }
+hwp-model = { path = "../../../../crates/hwp-model" }
 serde_json = "1.0.145"
 
 

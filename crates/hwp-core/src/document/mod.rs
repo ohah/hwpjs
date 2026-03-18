@@ -115,7 +115,7 @@ impl HwpDocument {
             include_version: Some(true),
             include_page_info: Some(true),
         };
-        crate::viewer::to_markdown(self, &options)
+        self.to_markdown(&options)
     }
 
     /// Convert HWP document to HTML format
@@ -127,7 +127,14 @@ impl HwpDocument {
     /// # Returns / 반환값
     /// HTML string representation of the document / 문서의 HTML 문자열 표현
     pub fn to_html(&self, options: &crate::viewer::html::HtmlOptions) -> String {
-        crate::viewer::to_html(self, options)
+        // Document 모델 기반 새 viewer를 사용 (기존 viewer보다 정확)
+        let document = crate::convert::to_document(self);
+        let doc_options = crate::viewer::doc_html::DocHtmlOptions {
+            css_class_prefix: options.css_class_prefix.clone(),
+            inline_style: true,
+            image_output_dir: options.image_output_dir.clone(),
+        };
+        crate::viewer::doc_html::doc_to_html(&document, &doc_options)
     }
 
     /// Convert HWP document to per-page HTML
@@ -139,11 +146,13 @@ impl HwpDocument {
     ///
     /// # Returns / 반환값
     /// HtmlPages containing CSS string and per-page HTML documents / CSS 문자열과 페이지별 HTML 문서
+    #[deprecated(note = "Old pixel-accurate viewer — will be replaced by doc_to_html with pagination support")]
     pub fn to_html_pages(
         &self,
         options: &crate::viewer::html::HtmlOptions,
         css_filename: &str,
     ) -> crate::viewer::html::HtmlPages {
+        #[allow(deprecated)]
         crate::viewer::html::to_html_pages(self, options, css_filename)
     }
 
