@@ -92,6 +92,11 @@ fn parse_paragraph(
         buf.clear();
     }
 
+    // 빈 run 제거: 텍스트/Control/Object가 없는 run 필터
+    // 빈 run의 char_shape_id가 필요한 경우 (연속된 빈 run 후 텍스트 run이 오면),
+    // HWP와 다르게 빈 run이 생성되어 폰트 매핑이 달라지는 문제 방지
+    para.runs.retain(|run| !run.contents.is_empty());
+
     Ok((para, sec_def))
 }
 
