@@ -128,6 +128,51 @@ pub fn render_layout_table(
 
     html.push_str("</div>"); // htb
 
+    // 캡션 렌더링 (표 아래/위/좌/우에 배치)
+    if let Some(ref caption) = table.common.caption {
+        let cap_html = render_caption(caption, resources);
+        if !cap_html.is_empty() {
+            html.push_str(&cap_html);
+        }
+    }
+
+    html
+}
+
+/// 표 캡션 렌더링
+fn render_caption(
+    caption: &hwp_model::shape::Caption,
+    resources: &Resources,
+) -> String {
+    let gap_mm = round_mm(hwpunit_to_mm(caption.gap));
+    let width_mm = round_mm(hwpunit_to_mm(caption.width));
+
+    let mut html = format!(
+        r#"<div class="hcD" style="width:{:.2}mm;height:3.53mm;overflow:hidden;"><div class="hcI">"#,
+        width_mm
+    );
+
+    for para in &caption.content.paragraphs {
+        let flat = flat_text::extract_flat_text(para);
+        if flat.text.is_empty() {
+            continue;
+        }
+        let ps_class = format!("ps{}", para.para_shape_id);
+        let lines = layout_line_segment::render_line_segments(
+            &flat.text,
+            &flat.char_shapes,
+            &para.line_segments,
+            resources,
+            &ps_class,
+            0.0,
+        );
+        for line in lines {
+            html.push_str(&line);
+        }
+    }
+
+    html.push_str("</div></div>");
+    let _ = gap_mm; // TODO: 캡션 위치를 gap 기반으로 계산
     html
 }
 
