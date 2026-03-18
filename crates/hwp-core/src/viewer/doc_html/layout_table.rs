@@ -25,11 +25,29 @@ pub fn render_layout_table(
     let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
     let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
 
-    // htb: 표 본체 (old viewer 구조: htb > svg + hce[])
-    let mut html = format!(
+    let has_caption = table.common.caption.is_some();
+
+    // htG wrapper (캡션 있을 때 — old viewer 구조: htG > htb + hcD)
+    let mut html = String::new();
+    if has_caption {
+        // htG: 표 + 캡션 그룹 (캡션 gap 포함 크기)
+        let cap_gap = table.common.caption.as_ref()
+            .map(|c| round_mm(hwpunit_to_mm(c.gap)))
+            .unwrap_or(3.0);
+        let htg_height = height_mm + cap_gap + 3.53; // 캡션 높이 근사
+        html.push_str(&format!(
+            r#"<div class="htG" style="left:{:.2}mm;width:{:.2}mm;top:{:.2}mm;height:{:.2}mm;">"#,
+            x_mm, width_mm, y_mm, htg_height
+        ));
+    }
+
+    // htb: 표 본체
+    let htb_x = if has_caption { 0.0 } else { x_mm };
+    let htb_y = if has_caption { 0.0 } else { y_mm };
+    html.push_str(&format!(
         r#"<div class="htb" style="left:{:.2}mm;width:{:.2}mm;top:{:.2}mm;height:{:.2}mm;">"#,
-        x_mm, width_mm, y_mm, height_mm
-    );
+        htb_x, width_mm, htb_y, height_mm
+    ));
 
     // SVG 테두리
     let svg = generate_table_svg_borders(table, width_mm, height_mm, resources);
@@ -125,12 +143,17 @@ pub fn render_layout_table(
 
     html.push_str("</div>"); // htb
 
-    // 캡션 렌더링 (표 아래/위/좌/우에 배치)
+    // 캡션 렌더링
     if let Some(ref caption) = table.common.caption {
         let cap_html = render_caption(caption, resources);
         if !cap_html.is_empty() {
             html.push_str(&cap_html);
         }
+    }
+
+    // htG 닫기
+    if has_caption {
+        html.push_str("</div>"); // htG
     }
 
     html
