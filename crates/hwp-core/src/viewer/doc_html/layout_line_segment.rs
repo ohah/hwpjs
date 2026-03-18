@@ -26,6 +26,27 @@ pub fn render_line_segments(
     para_shape_class: &str,
     content_left_mm: f64,
 ) -> Vec<String> {
+    render_line_segments_with_marker(
+        text,
+        char_shapes,
+        line_segments,
+        resources,
+        para_shape_class,
+        content_left_mm,
+        None,
+    )
+}
+
+/// 마커(hhe div) 포함 라인 세그먼트 렌더링
+pub fn render_line_segments_with_marker(
+    text: &str,
+    char_shapes: &[FlatCharShapeInfo],
+    line_segments: &[LineSegmentInfo],
+    resources: &Resources,
+    para_shape_class: &str,
+    content_left_mm: f64,
+    marker_html: Option<&str>,
+) -> Vec<String> {
     if line_segments.is_empty() {
         return Vec::new();
     }
@@ -89,15 +110,21 @@ pub fn render_line_segments(
         let width_mm = round_mm(hwpunit_to_mm(seg.segment_width));
         let left_mm = round_mm(content_left_mm);
 
-        // hls div 생성
+        // hls div 생성 (첫 줄에 marker 삽입)
+        let marker = if html_lines.is_empty() {
+            marker_html.unwrap_or("")
+        } else {
+            ""
+        };
         let hls = format!(
-            r#"<div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:{:.2}mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;">{}</div>"#,
+            r#"<div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:{:.2}mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;">{}{}</div>"#,
             para_shape_class,
             line_height_mm,
             left_mm,
             top_mm,
             height_mm,
             width_mm,
+            marker,
             text_html
         );
 
