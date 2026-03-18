@@ -103,9 +103,7 @@ pub fn render_paragraph_with_tracker(
                     HeadingType::Number => {
                         let level = heading.level + 1;
                         // Number 타입은 numbering_id별 독립 카운터 사용 (기존 viewer의 NumberTracker와 동일)
-                        let tracker = number_tracker
-                            .entry(heading.id_ref)
-                            .or_default();
+                        let tracker = number_tracker.entry(heading.id_ref).or_default();
                         let number = tracker.get_and_increment(level);
                         let indent = "  ".repeat(heading.level as usize);
                         let num_str =
