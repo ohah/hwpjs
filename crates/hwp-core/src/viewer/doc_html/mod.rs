@@ -89,6 +89,11 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         let mut endnote_blocks: Vec<(u16, String)> = Vec::new();
         let mut footnote_counter: u16 = 0;
         let mut endnote_counter: u16 = 0;
+        let mut outline_tracker = crate::viewer::core::outline::OutlineNumberTracker::new();
+        let mut number_tracker: std::collections::HashMap<
+            u16,
+            crate::viewer::core::outline::OutlineNumberTracker,
+        > = std::collections::HashMap::new();
 
         for para in &section.paragraphs {
             // 페이지 나누기 판단
@@ -207,19 +212,23 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 }
             }
 
+            // heading 마커 생성 (outline/bullet/number)
+            let marker_html = generate_heading_marker(para, &doc.resources, &mut outline_tracker, &mut number_tracker);
+
             // 텍스트 렌더링 (빈 문단도 line_segments가 있으면 빈 hls 생성)
             let flat = flat_text::extract_flat_text(para);
 
             let para_shape_class = format!("ps{}", para.para_shape_id);
             let content_left = layout_page::content_left_mm(page_def);
 
-            let hls_lines = layout_line_segment::render_line_segments(
+            let hls_lines = layout_line_segment::render_line_segments_with_marker(
                 &flat.text,
                 &flat.char_shapes,
                 &para.line_segments,
                 &doc.resources,
                 &para_shape_class,
                 content_left,
+                marker_html.as_deref(),
             );
 
             for line in hls_lines {
@@ -263,6 +272,54 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
     }
     html.push_str("\n</body>\n</html>");
     html
+}
+
+/// heading 마커 HTML 생성 (hhe div)
+fn generate_heading_marker(
+    para: &hwp_model::paragraph::Paragraph,
+    resources: &hwp_model::resources::Resources,
+    outline_tracker: &mut crate::viewer::core::outline::OutlineNumberTracker,
+    number_tracker: &mut std::collections::HashMap<
+        u16,
+        crate::viewer::core::outline::OutlineNumberTracker,
+    >,
+) -> Option<String> {
+    use crate::viewer::core::outline::{format_outline_number, format_with_numbering};
+    use hwp_model::types::HeadingType;
+
+    let ps = resources.para_shapes.get(para.para_shape_id as usize)?;
+    let heading = ps.heading.as_ref()?;
+
+    match heading.heading_type {
+        HeadingType::Outline => {
+            let level = heading.level + 1;
+            let number = outline_tracker.get_and_increment(level);
+            let num_str = format_outline_number(level, number);
+            Some(format!(
+                r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:5.29mm;height:3.53mm;"><span class="hrt cs{}">{}</span></div>"#,
+                para.runs.first().map(|r| r.char_shape_id).unwrap_or(0),
+                num_str
+            ))
+        }
+        HeadingType::Bullet => {
+            Some(format!(
+                r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:5.29mm;height:3.53mm;"><span class="hrt cs{}" style="font-size:3.33pt;">●</span></div>"#,
+                para.runs.first().map(|r| r.char_shape_id).unwrap_or(0),
+            ))
+        }
+        HeadingType::Number => {
+            let level = heading.level + 1;
+            let tracker = number_tracker.entry(heading.id_ref).or_default();
+            let number = tracker.get_and_increment(level);
+            let num_str = format_with_numbering(heading.id_ref, level, number, resources);
+            Some(format!(
+                r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:13.16mm;height:3.53mm;"><span class="hrt cs{}" style="font-size:10pt;">{}</span></div>"#,
+                para.runs.first().map(|r| r.char_shape_id).unwrap_or(0),
+                num_str
+            ))
+        }
+        _ => None,
+    }
 }
 
 /// 페이지 HTML에 각주/미주 블록을 삽입 (</div> 앞)
