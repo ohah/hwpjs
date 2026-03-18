@@ -92,7 +92,6 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
                 }
             }
 
-            let section_outline_id = section.definition.outline_shape_id.unwrap_or(0);
             let (body, ctrl_parts, has_heading) = paragraph::render_paragraph_with_tracker(
                 para,
                 &doc.resources,
@@ -100,7 +99,6 @@ pub fn doc_to_markdown(doc: &Document, options: &DocMarkdownOptions) -> String {
                 options,
                 &mut outline_tracker,
                 &mut number_tracker,
-                section_outline_id,
             );
 
             let has_header_footer_note = !ctrl_parts.is_empty();

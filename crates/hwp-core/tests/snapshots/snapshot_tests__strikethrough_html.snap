@@ -3,8 +3,8 @@ source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
 <div class="body">
-<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><del><u>strikethrough</u></del></span></p>
-<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><del><u>취소선</u></del></span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><u><del>strikethrough</del></u></span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><u><del>취소선</del></u></span></p>
 <p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><u>밑줄</u></span></p>
-<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><u>밑줄</u></span><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><del><u>취소선</u></del></span><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><u><b>굵게</b></u></span></p>
+<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><u>밑줄</u></span><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><u><del>취소선</del></u></span><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><b><u>굵게</u></b></span></p>
 </div>

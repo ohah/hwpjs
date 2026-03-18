@@ -21,7 +21,6 @@ pub fn render_paragraph_with_tracker(
     options: &DocMarkdownOptions,
     outline_tracker: &mut OutlineNumberTracker,
     number_tracker: &mut std::collections::HashMap<u16, OutlineNumberTracker>,
-    _section_outline_id: u16,
 ) -> (String, Vec<ControlPart>, bool) {
     let (body, ctrl_parts) = render_paragraph(para, resources, binaries, options);
 

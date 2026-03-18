@@ -56,7 +56,6 @@ pub fn doc_to_html(doc: &Document, options: &DocHtmlOptions) -> String {
             body_parts.push(format!("<hr class=\"{}section-break\">", options.css_class_prefix));
         }
 
-        let section_outline_id = section.definition.outline_shape_id.unwrap_or(0);
         for para in &section.paragraphs {
             // 페이지 구분선
             if para.page_break && !body_parts.is_empty() {
@@ -75,7 +74,6 @@ pub fn doc_to_html(doc: &Document, options: &DocHtmlOptions) -> String {
                 &mut endnote_counter,
                 &mut outline_tracker,
                 &mut number_tracker,
-                section_outline_id,
             );
 
             for part in ctrl_parts {
