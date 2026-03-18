@@ -329,6 +329,8 @@ fn test_document_markdown_snapshot() {
             include_page_info: Some(true),
         };
         let markdown = document.to_markdown(&options);
+        // 절대경로를 상대경로로 치환 (CI 환경 호환)
+        let markdown = markdown.replace(snapshots_dir.to_str().unwrap_or(""), "{{SNAPSHOTS_DIR}}");
         assert_snapshot_with_path!(snapshot_name_md.as_str(), markdown);
 
         // 실제 Markdown 파일로도 저장 / Also save as actual Markdown file
@@ -380,6 +382,9 @@ fn test_headerfooter_markdown() {
                     };
 
                     let markdown = document.to_markdown(&options);
+                    // 절대경로를 상대경로로 치환 (CI 환경 호환)
+                    let markdown =
+                        markdown.replace(snapshots_dir.to_str().unwrap_or(""), "{{SNAPSHOTS_DIR}}");
 
                     // 스냅샷 생성 / Create snapshot
                     assert_snapshot_with_path!(snapshot_name_md.as_str(), markdown);
@@ -443,6 +448,9 @@ fn test_all_fixtures_markdown_snapshots() {
                             include_page_info: Some(true),
                         };
                         let markdown = document.to_markdown(&options);
+                        // 절대경로를 상대경로로 치환 (CI 환경 호환)
+                        let markdown = markdown
+                            .replace(snapshots_dir.to_str().unwrap_or(""), "{{SNAPSHOTS_DIR}}");
 
                         // 스냅샷 생성 / Create snapshot
                         assert_snapshot_with_path!(snapshot_name_md.as_str(), markdown);

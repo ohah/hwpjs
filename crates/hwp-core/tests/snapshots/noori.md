@@ -6,7 +6,7 @@
 
 
 
-![이미지](/Users/yoonhb/Documents/workspace/hwpjs/crates/hwp-core/tests/snapshots/images/noori/BIN0001.jpg)
+![이미지]({{SNAPSHOTS_DIR}}/images/noori/BIN0001.jpg)
 
 
 | 보도일시<br> | 2018. 9. 4.(화) 조간(온라인 9. 3. 12:00)부터 보도해 주시기 바랍니다.  <br> |   |   |
