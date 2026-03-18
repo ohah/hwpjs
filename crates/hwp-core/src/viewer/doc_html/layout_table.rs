@@ -215,7 +215,11 @@ fn generate_table_svg_borders(
     );
     svg.push_str("<defs></defs>");
 
-    // 셀별 절대 좌표를 계산하여 각 셀의 4변을 그림
+    // 중복 path 방지
+    let mut drawn: std::collections::HashSet<(i32, i32, i32, i32)> =
+        std::collections::HashSet::new();
+
+    // 셀별 절대 좌표를 계산하여 각 셀의 경계를 그림
     let mut row_top = 0.0_f64;
 
     for row in &table.rows {
@@ -247,24 +251,31 @@ fn generate_table_svg_borders(
             // (오른쪽/아래는 인접 셀의 왼쪽/위로 그려짐)
             // 표 오른쪽/아래 외곽선은 마지막 셀에서 그림
             if let Some(bf) = bf {
-                // 왼쪽 변
+                let mk = |a: f64, b: f64, c: f64, d: f64| {
+                    ((a * 100.0) as i32, (b * 100.0) as i32, (c * 100.0) as i32, (d * 100.0) as i32)
+                };
                 if let Some(ref line) = bf.left_border {
-                    draw_border_line(&mut svg, x1, y1, x1, y2, line);
-                }
-                // 위쪽 변
-                if let Some(ref line) = bf.top_border {
-                    draw_border_line(&mut svg, x1, y1, x2, y1, line);
-                }
-                // 표 오른쪽 외곽 (마지막 열)
-                if (x2 - width_mm).abs() < 0.5 {
-                    if let Some(ref line) = bf.right_border {
-                        draw_border_line(&mut svg, x2, y1, x2, y2, line);
+                    if drawn.insert(mk(x1, y1, x1, y2)) {
+                        draw_border_line(&mut svg, x1, y1, x1, y2, line);
                     }
                 }
-                // 표 아래쪽 외곽 (마지막 행)
+                if let Some(ref line) = bf.top_border {
+                    if drawn.insert(mk(x1, y1, x2, y1)) {
+                        draw_border_line(&mut svg, x1, y1, x2, y1, line);
+                    }
+                }
+                if (x2 - width_mm).abs() < 0.5 {
+                    if let Some(ref line) = bf.right_border {
+                        if drawn.insert(mk(x2, y1, x2, y2)) {
+                            draw_border_line(&mut svg, x2, y1, x2, y2, line);
+                        }
+                    }
+                }
                 if (y2 - height_mm).abs() < 0.5 {
                     if let Some(ref line) = bf.bottom_border {
-                        draw_border_line(&mut svg, x1, y2, x2, y2, line);
+                        if drawn.insert(mk(x1, y2, x2, y2)) {
+                            draw_border_line(&mut svg, x1, y2, x2, y2, line);
+                        }
                     }
                 }
             }
