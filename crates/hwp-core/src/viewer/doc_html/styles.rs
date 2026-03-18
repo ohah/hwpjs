@@ -245,10 +245,15 @@ pub fn round_mm(value: f64) -> f64 {
     (value * 100.0).round() / 100.0
 }
 
-/// mm 값을 문자열로 포맷 (정수면 소수점 없이, old viewer 호환)
+/// mm 값을 문자열로 포맷 (old viewer 호환)
+/// 0이 아닌 정수: 소수점 없이 (예: 30mm)
+/// 0: "0.00mm" (old viewer 동일)
+/// 소수: 소수점 2자리 (예: 14.50mm)
 pub fn fmt_mm(value: f64) -> String {
     let rounded = round_mm(value);
-    if (rounded - rounded.round()).abs() < 0.005 && rounded == rounded.round() {
+    if rounded == 0.0 {
+        "0.00mm".to_string()
+    } else if (rounded - rounded.round()).abs() < 0.005 && rounded == rounded.round() {
         format!("{}mm", rounded as i64)
     } else {
         format!("{:.2}mm", rounded)
