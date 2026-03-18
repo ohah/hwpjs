@@ -20,6 +20,7 @@ pub fn convert_sections(body: &BodyText, _doc_info: &DocInfo) -> Vec<Section> {
         .map(|sec| {
             let outline_shape_id = extract_section_outline_id(&sec.paragraphs);
             let page_def = extract_page_def(&sec.paragraphs);
+            let column_def = extract_column_def(&sec.paragraphs);
             let mut section = Section {
                 paragraphs: sec.paragraphs.iter().flat_map(convert_paragraph).collect(),
                 ..Default::default()
@@ -29,6 +30,9 @@ pub fn convert_sections(body: &BodyText, _doc_info: &DocInfo) -> Vec<Section> {
             }
             if let Some(pd) = page_def {
                 section.definition.page = convert_page_def(&pd);
+            }
+            if let Some(cd) = column_def {
+                section.definition.columns = Some(cd);
             }
             section
         })
@@ -50,6 +54,76 @@ fn extract_page_def(
                     if let ParagraphRecord::PageDef { page_def } = child {
                         return Some(page_def.clone());
                     }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// ParagraphRecord에서 ColumnDef 추출
+fn extract_column_def(
+    paragraphs: &[bodytext::Paragraph],
+) -> Option<hwp_model::section::ColumnDef> {
+    use hwp_model::section::{ColumnDef, ColumnLine, ColumnSize};
+
+    for para in paragraphs {
+        for record in &para.records {
+            if let ParagraphRecord::CtrlHeader { header, .. } = record {
+                if let ctrl_header::CtrlHeaderData::ColumnDefinition {
+                    attribute,
+                    column_spacing,
+                    column_widths,
+                    divider_line_type,
+                    divider_line_thickness,
+                    divider_line_color,
+                    ..
+                } = &header.data
+                {
+                    if attribute.column_count <= 1 {
+                        continue;
+                    }
+                    let col_count = attribute.column_count as u16;
+                    let same_gap = *column_spacing as HwpUnit;
+
+                    let col_sizes: Vec<ColumnSize> = column_widths
+                        .iter()
+                        .map(|w| ColumnSize {
+                            width: *w as HwpUnit,
+                            gap: same_gap,
+                        })
+                        .collect();
+
+                    let col_line = if *divider_line_type > 0 {
+                        Some(ColumnLine {
+                            line_type: Default::default(),
+                            width: format!("{}mm", *divider_line_thickness as f64 * 0.1),
+                            color: Some((*divider_line_color).into()),
+                        })
+                    } else {
+                        None
+                    };
+
+                    return Some(ColumnDef {
+                        id: 0,
+                        column_type: match attribute.column_type {
+                            ctrl_header::ColumnType::Normal => ColumnType::Newspaper,
+                            ctrl_header::ColumnType::Distributed => {
+                                ColumnType::BalancedNewspaper
+                            }
+                            ctrl_header::ColumnType::Parallel => ColumnType::Parallel,
+                        },
+                        col_count,
+                        layout: match attribute.column_direction {
+                            ctrl_header::ColumnDirection::Left => ColumnLayout::Left,
+                            ctrl_header::ColumnDirection::Right => ColumnLayout::Right,
+                            ctrl_header::ColumnDirection::Both => ColumnLayout::Mirror,
+                        },
+                        same_size: attribute.equal_width,
+                        same_gap,
+                        col_sizes,
+                        col_line,
+                    });
                 }
             }
         }
