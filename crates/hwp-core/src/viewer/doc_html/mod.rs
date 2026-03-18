@@ -76,12 +76,14 @@ pub fn doc_to_html(doc: &Document, options: &DocHtmlOptions) -> String {
                 &mut number_tracker,
             );
 
+            // 각주/미주 인라인 참조를 수집 (본문 뒤에 붙임)
+            let mut inline_refs = String::new();
             for part in ctrl_parts {
                 match part {
                     HtmlControlPart::Header(html) => header_parts.push(html),
                     HtmlControlPart::Footer(html) => footer_parts.push(html),
                     HtmlControlPart::Footnote { id, html } => {
-                        body_parts.push(format!(
+                        inline_refs.push_str(&format!(
                             "<sup><a href=\"#fn-{}\" id=\"fnref-{}\">[{}]</a></sup>",
                             id, id, id
                         ));
@@ -91,7 +93,7 @@ pub fn doc_to_html(doc: &Document, options: &DocHtmlOptions) -> String {
                         ));
                     }
                     HtmlControlPart::Endnote { id, html } => {
-                        body_parts.push(format!(
+                        inline_refs.push_str(&format!(
                             "<sup><a href=\"#en-{}\" id=\"enref-{}\">[e{}]</a></sup>",
                             id, id, id
                         ));
@@ -104,7 +106,21 @@ pub fn doc_to_html(doc: &Document, options: &DocHtmlOptions) -> String {
             }
 
             if !body_html.is_empty() {
-                body_parts.push(body_html);
+                if !inline_refs.is_empty() {
+                    // 각주/미주 참조를 본문 마지막 </p> 앞에 삽입
+                    if let Some(pos) = body_html.rfind("</p>") {
+                        let mut merged = body_html;
+                        merged.insert_str(pos, &inline_refs);
+                        body_parts.push(merged);
+                    } else {
+                        // <p>가 없는 경우 (블록 요소): 뒤에 붙임
+                        body_parts.push(format!("{}{}", body_html, inline_refs));
+                    }
+                } else {
+                    body_parts.push(body_html);
+                }
+            } else if !inline_refs.is_empty() {
+                body_parts.push(inline_refs);
             }
         }
     }

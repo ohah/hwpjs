@@ -3,12 +3,8 @@ source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
 <div class="ohah-hwpjs-body">
-<sup><a href="#fn-1" id="fnref-1">[1]</a></sup>
-<sup><a href="#fn-2" id="fnref-2">[2]</a></sup>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">각주참조</span></p>
-<sup><a href="#en-1" id="enref-1">[e1]</a></sup>
-<sup><a href="#en-2" id="enref-2">[e2]</a></sup>
-<p><span style="font-size: 10.0pt; font-family: '바탕'">미주참조</span></p>
+<p><span style="font-size: 10.0pt; font-family: '바탕'">각주참조</span><sup><a href="#fn-1" id="fnref-1">[1]</a></sup><sup><a href="#fn-2" id="fnref-2">[2]</a></sup></p>
+<p><span style="font-size: 10.0pt; font-family: '바탕'">미주참조</span><sup><a href="#en-1" id="enref-1">[e1]</a></sup><sup><a href="#en-2" id="enref-2">[e2]</a></sup></p>
 </div>
 <section class="ohah-hwpjs-footnotes">
 <div id="fn-1" class="ohah-hwpjs-footnote"><a href="#fnref-1">↩</a> <p style="line-height: 130%; text-indent: -26.2pt"><span style="font-size: 9.0pt; font-family: '바탕'"> 각주입니다.</span></p></div>

@@ -237,6 +237,7 @@ fn render_run(
     let mut html_buf = String::new();
     let mut control_parts: Vec<HtmlControlPart> = Vec::new();
     let mut is_block = false;
+    let mut in_hyperlink = false;
 
     let char_shape = resources.char_shapes.get(run.char_shape_id as usize);
 
@@ -276,13 +277,16 @@ fn render_run(
                             html_buf.push_str(&html_escape(&url));
                             html_buf.push_str("\">");
                             html_buf.push_str(&display);
-                            // FieldEnd에서 </a> 닫힘
+                            in_hyperlink = true;
                         }
                         continue;
                     }
                 }
                 if let hwp_model::control::Control::FieldEnd = control {
-                    html_buf.push_str("</a>");
+                    if in_hyperlink {
+                        html_buf.push_str("</a>");
+                        in_hyperlink = false;
+                    }
                     continue;
                 }
 
