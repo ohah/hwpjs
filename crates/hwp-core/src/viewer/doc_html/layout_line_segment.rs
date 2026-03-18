@@ -107,13 +107,17 @@ pub fn render_line_segments_with_marker(
         let top_mm = round_mm(hwpunit_to_mm(seg.vertical_pos));
         let height_mm = round_mm(hwpunit_to_mm(seg.line_height));
         let line_height_mm = round_mm(hwpunit_to_mm(seg.text_height));
-        // segment_width가 0이면 content_width 사용 (old viewer 호환)
         let width_mm = if seg.segment_width > 0 {
             round_mm(hwpunit_to_mm(seg.segment_width))
         } else {
-            150.0 // 기본값
+            150.0
         };
-        let left_mm = round_mm(content_left_mm);
+        // column_start_pos > 0이면 다단 내 좌표, 아니면 content_left
+        let left_mm = if seg.column_start_pos > 0 {
+            round_mm(hwpunit_to_mm(seg.column_start_pos))
+        } else {
+            round_mm(content_left_mm)
+        };
 
         // hls div 생성 (첫 줄에 marker 삽입)
         let marker = if html_lines.is_empty() {
