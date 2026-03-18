@@ -3,6 +3,7 @@
 pub(crate) mod flat_text;
 pub(crate) mod layout_line_segment;
 pub(crate) mod layout_page;
+pub(crate) mod layout_pagination;
 pub(crate) mod layout_text;
 mod paragraph;
 pub(crate) mod styles;
@@ -43,19 +44,57 @@ pub fn doc_to_html(doc: &Document, options: &DocHtmlOptions) -> String {
 }
 
 /// 레이아웃 모드 HTML 생성 (pixel-accurate, hpa/hls/hcD 구조)
-fn doc_to_html_layout(doc: &Document, options: &DocHtmlOptions) -> String {
+fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
     let css = styles::generate_layout_css(doc);
     let mut pages_html = Vec::new();
 
     for section in &doc.sections {
         let page_def = &section.definition.page;
+        let ch_mm = layout_pagination::content_height_mm(page_def);
 
-        // 각 문단을 LineSegment로 렌더링하여 페이지 블록 생성
-        let mut blocks: Vec<layout_page::PageBlock> = Vec::new();
+        // 페이지네이션 컨텍스트
+        let mut pag_ctx = layout_pagination::PaginationContext {
+            prev_vertical_mm: None,
+            current_max_vertical_mm: 0.0,
+            content_height_mm: ch_mm,
+            page_vertical_offset_mm: 0.0,
+        };
+
+        let mut current_page_blocks: Vec<layout_page::PageBlock> = Vec::new();
 
         for para in &section.paragraphs {
+            // 페이지 나누기 판단
+            let break_result = layout_pagination::check_page_break(para, &pag_ctx);
+            if break_result.should_break && !current_page_blocks.is_empty() {
+                // 현재 페이지 flush
+                let page_html =
+                    layout_page::render_page(&current_page_blocks, page_def, None, None);
+                pages_html.push(page_html);
+                current_page_blocks.clear();
+
+                // 페이지 오프셋 업데이트
+                if let Some(vp) = layout_pagination::last_vertical_pos_mm(para) {
+                    // vertical_reset인 경우 새 페이지 시작이므로 오프셋 갱신
+                    if break_result.reason
+                        == Some(layout_pagination::PageBreakReason::VerticalReset)
+                    {
+                        pag_ctx.page_vertical_offset_mm = vp;
+                    }
+                }
+                pag_ctx.current_max_vertical_mm = 0.0;
+            }
+
+            // 문단 렌더링
             let flat = flat_text::extract_flat_text(para);
             if flat.text.is_empty() {
+                // 빈 문단도 vertical position 추적
+                if let Some(vp) = layout_pagination::last_vertical_pos_mm(para) {
+                    let rel_vp = vp - pag_ctx.page_vertical_offset_mm;
+                    pag_ctx.prev_vertical_mm = Some(rel_vp);
+                    if rel_vp > pag_ctx.current_max_vertical_mm {
+                        pag_ctx.current_max_vertical_mm = rel_vp;
+                    }
+                }
                 continue;
             }
 
@@ -72,13 +111,24 @@ fn doc_to_html_layout(doc: &Document, options: &DocHtmlOptions) -> String {
             );
 
             for line in hls_lines {
-                blocks.push(layout_page::PageBlock { html: line });
+                current_page_blocks.push(layout_page::PageBlock { html: line });
+            }
+
+            // vertical position 추적
+            if let Some(vp) = layout_pagination::last_vertical_pos_mm(para) {
+                let rel_vp = vp - pag_ctx.page_vertical_offset_mm;
+                pag_ctx.prev_vertical_mm = Some(rel_vp);
+                if rel_vp > pag_ctx.current_max_vertical_mm {
+                    pag_ctx.current_max_vertical_mm = rel_vp;
+                }
             }
         }
 
-        // TODO: 페이지네이션 (Phase 4) — 현재는 모든 콘텐츠를 단일 페이지에
-        let page_html = layout_page::render_page(&blocks, page_def, None, None);
-        pages_html.push(page_html);
+        // 마지막 페이지 flush
+        if !current_page_blocks.is_empty() {
+            let page_html = layout_page::render_page(&current_page_blocks, page_def, None, None);
+            pages_html.push(page_html);
+        }
     }
 
     // HTML 조합
