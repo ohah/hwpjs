@@ -1084,14 +1084,52 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Vec<RunContent> {
 // ═══════════════════════════════════════════
 
 /// ShapeComponent 내부의 Picture/Rectangle/ListHeader를 재귀 수집
+/// ShapeComponent에서 추출한 fill/line 정보
+struct ShapeDrawInfo {
+    fill: Option<hwp_model::resources::FillBrush>,
+    line_shape: hwp_model::shape::ShapeLineInfo,
+}
+
 fn collect_shape_parts<'a>(
     children: &'a [ParagraphRecord],
     common: &ShapeCommon,
     results: &mut Vec<RunContent>,
     has_rect: &mut bool,
     list_header_paras: &mut Option<&'a [bodytext::Paragraph]>,
-) {
+) -> Option<ShapeDrawInfo> {
+    // ShapeComponent 레벨의 draw info 수집
+    let mut draw_info: Option<ShapeDrawInfo> = None;
+
     for child in children {
+        // ShapeComponent의 drawing_object_common에서 fill/line 추출
+        if let ParagraphRecord::ShapeComponent {
+            drawing_object_common: Some(ref doc),
+            ..
+        } = child
+        {
+            use crate::convert::resources::convert_fill_info_pub;
+            use crate::document::bodytext::shape_component::drawing_object_common::LineType as HwpLineType;
+            let fill = convert_fill_info_pub(&doc.fill_info);
+            let line = hwp_model::shape::ShapeLineInfo {
+                color: Some(doc.line_info.color.to_rgb()),
+                width: doc.line_info.thickness as i32,
+                style: match doc.line_info.line_type {
+                    HwpLineType::None => hwp_model::types::LineType1::None,
+                    HwpLineType::Solid => hwp_model::types::LineType1::Solid,
+                    HwpLineType::Dash => hwp_model::types::LineType1::Dash,
+                    HwpLineType::Dot => hwp_model::types::LineType1::Dot,
+                    HwpLineType::DashDot => hwp_model::types::LineType1::DashDot,
+                    HwpLineType::DashDotDot => hwp_model::types::LineType1::DashDotDot,
+                    _ => hwp_model::types::LineType1::Solid,
+                },
+                ..Default::default()
+            };
+            draw_info = Some(ShapeDrawInfo {
+                fill,
+                line_shape: line,
+            });
+        }
+
         match child {
             ParagraphRecord::ShapeComponentPicture {
                 shape_component_picture,
@@ -1136,12 +1174,18 @@ fn collect_shape_parts<'a>(
             ParagraphRecord::ShapeComponent {
                 children: nested, ..
             } => {
-                // 재귀 탐색
-                collect_shape_parts(nested, common, results, has_rect, list_header_paras);
+                // 재귀 탐색 (draw_info 상위 전파)
+                if let Some(di) = collect_shape_parts(nested, common, results, has_rect, list_header_paras) {
+                    if draw_info.is_none() {
+                        draw_info = Some(di);
+                    }
+                }
             }
             _ => {}
         }
     }
+
+    draw_info
 }
 
 /// 도형/그림 → ShapeObject 변환 (텍스트박스, 그림 등)
@@ -1177,15 +1221,37 @@ fn convert_shape_object(
             }
             ParagraphRecord::ShapeComponent {
                 children: sc_children,
+                drawing_object_common: ref doc_opt,
                 ..
             } => {
-                // ShapeComponent 내부의 Picture/Rectangle 수집
-                // ListHeader가 있으면 Rectangle의 draw_text로 연결
                 let mut has_rect = false;
                 let mut list_header_paras: Option<&[bodytext::Paragraph]> = None;
 
+                // 1레벨 ShapeComponent의 drawing_object_common에서 fill/line 추출
+                let mut shape_draw: Option<ShapeDrawInfo> = None;
+                if let Some(ref doc) = doc_opt {
+                    use crate::convert::resources::convert_fill_info_pub;
+                    use crate::document::bodytext::shape_component::drawing_object_common::LineType as HwpLineType;
+                    let fill = convert_fill_info_pub(&doc.fill_info);
+                    let line = hwp_model::shape::ShapeLineInfo {
+                        color: Some(doc.line_info.color.to_rgb()),
+                        width: doc.line_info.thickness as i32,
+                        style: match doc.line_info.line_type {
+                            HwpLineType::None => hwp_model::types::LineType1::None,
+                            HwpLineType::Solid => hwp_model::types::LineType1::Solid,
+                            HwpLineType::Dash => hwp_model::types::LineType1::Dash,
+                            HwpLineType::Dot => hwp_model::types::LineType1::Dot,
+                            HwpLineType::DashDot => hwp_model::types::LineType1::DashDot,
+                            HwpLineType::DashDotDot => hwp_model::types::LineType1::DashDotDot,
+                            _ => hwp_model::types::LineType1::Solid,
+                        },
+                        ..Default::default()
+                    };
+                    shape_draw = Some(ShapeDrawInfo { fill, line_shape: line });
+                }
+
                 // 중첩 ShapeComponent 재귀 탐색
-                collect_shape_parts(
+                let nested_draw = collect_shape_parts(
                     sc_children,
                     &common,
                     &mut results,
@@ -1193,7 +1259,10 @@ fn convert_shape_object(
                     &mut list_header_paras,
                 );
 
-                // Rectangle + ListHeader → draw_text 포함 Rectangle 생성
+                // 1레벨 draw_info 우선, 없으면 nested
+                let final_draw = shape_draw.or(nested_draw);
+
+                // Rectangle + ListHeader → draw_text + fill/line 포함 Rectangle 생성
                 if has_rect {
                     let draw_text = list_header_paras.map(|paras| {
                         let converted = convert_hwp_paragraphs(paras);
@@ -1202,9 +1271,15 @@ fn convert_shape_object(
                             ..Default::default()
                         }
                     });
+                    let (fill, line_shape) = match final_draw {
+                        Some(di) => (di.fill, di.line_shape),
+                        None => (None, Default::default()),
+                    };
                     let rect = RectObject {
                         common: common.clone(),
                         draw_text,
+                        fill,
+                        line_shape,
                         ..Default::default()
                     };
                     results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
