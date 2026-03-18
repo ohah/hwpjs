@@ -50,8 +50,28 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
     let css = styles::generate_layout_css(doc);
     let mut pages_html = Vec::new();
 
+    // A4 기본값 PageDef (PageDef가 비어있는 경우 fallback)
+    let default_page_def = hwp_model::section::PageDef {
+        width: 59528,  // 210mm
+        height: 84188, // 297mm
+        margin: hwp_model::section::PageMargin {
+            left: 8504,   // 30mm
+            right: 8504,
+            top: 5669,    // 20mm
+            bottom: 4252, // 15mm
+            header: 4252, // 15mm
+            footer: 4252,
+            gutter: 0,
+        },
+        ..Default::default()
+    };
+
     for section in &doc.sections {
-        let page_def = &section.definition.page;
+        let page_def = if section.definition.page.width > 0 {
+            &section.definition.page
+        } else {
+            &default_page_def
+        };
         let ch_mm = layout_pagination::content_height_mm(page_def);
 
         // 페이지네이션 컨텍스트
@@ -189,8 +209,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
             }
         }
 
-        // 마지막 페이지 flush
-        if !current_page_blocks.is_empty() {
+        // 마지막 페이지 flush (비어있어도 섹션당 최소 1페이지)
+        if !current_page_blocks.is_empty() || pages_html.is_empty() {
             let page_html = layout_page::render_page(
                         &current_page_blocks,
                         page_def,

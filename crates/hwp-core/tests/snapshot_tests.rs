@@ -842,6 +842,7 @@ fn test_table2_html_snapshot() {
                         include_version: Some(true),
                         include_page_info: Some(true),
                         css_class_prefix: String::new(), // table.html과 일치하도록 빈 문자열 사용
+                        layout: false,
                     };
                     eprintln!("DEBUG: Processing table2.hwp file");
                     let html = document.to_html(&options);
