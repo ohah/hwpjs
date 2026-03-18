@@ -1110,6 +1110,23 @@ fn collect_shape_parts<'a>(
             ParagraphRecord::ShapeComponentRectangle { .. } => {
                 *has_rect = true;
             }
+            ParagraphRecord::ShapeComponentLine {
+                shape_component_line,
+            } => {
+                let line_obj = hwp_model::shape::LineObject {
+                    common: common.clone(),
+                    start_pt: hwp_model::types::Point {
+                        x: shape_component_line.start_point.x,
+                        y: shape_component_line.start_point.y,
+                    },
+                    end_pt: hwp_model::types::Point {
+                        x: shape_component_line.end_point.x,
+                        y: shape_component_line.end_point.y,
+                    },
+                    ..Default::default()
+                };
+                results.push(RunContent::Object(ShapeObject::Line(Box::new(line_obj))));
+            }
             ParagraphRecord::ListHeader {
                 paragraphs: lh_paras,
                 ..

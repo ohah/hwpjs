@@ -158,6 +158,9 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                         layout_image::render_layout_rect_svg(rect)
                                     }
                                 }
+                                hwp_model::shape::ShapeObject::Line(ref line) => {
+                                    layout_image::render_layout_line(line)
+                                }
                                 hwp_model::shape::ShapeObject::Container(ref container) => {
                                     render_container_layout(
                                         container,
