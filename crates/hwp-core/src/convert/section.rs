@@ -1044,22 +1044,57 @@ fn convert_shape_object(
                 children: sc_children,
                 ..
             } => {
+                // ShapeComponent 내부의 Picture/Rectangle 수집
+                // ListHeader가 있으면 Rectangle의 draw_text로 연결
+                let mut has_rect = false;
+                let mut list_header_paras: Option<&[bodytext::Paragraph]> = None;
+
                 for sc_child in sc_children {
-                    if let ParagraphRecord::ShapeComponentPicture {
-                        shape_component_picture,
-                    } = sc_child
-                    {
-                        let bin_id = shape_component_picture.picture_info.bindata_id;
-                        let picture = Picture {
-                            common: common.clone(),
-                            img: hwp_model::resources::ImageRef {
-                                binary_item_id: format!("BIN{:04X}", bin_id),
+                    match sc_child {
+                        ParagraphRecord::ShapeComponentPicture {
+                            shape_component_picture,
+                        } => {
+                            let bin_id = shape_component_picture.picture_info.bindata_id;
+                            let picture = Picture {
+                                common: common.clone(),
+                                img: hwp_model::resources::ImageRef {
+                                    binary_item_id: format!("BIN{:04X}", bin_id),
+                                    ..Default::default()
+                                },
                                 ..Default::default()
-                            },
-                            ..Default::default()
-                        };
-                        results.push(RunContent::Object(ShapeObject::Picture(Box::new(picture))));
+                            };
+                            results.push(RunContent::Object(ShapeObject::Picture(Box::new(
+                                picture,
+                            ))));
+                        }
+                        ParagraphRecord::ShapeComponentRectangle { .. } => {
+                            has_rect = true;
+                        }
+                        ParagraphRecord::ListHeader {
+                            paragraphs: lh_paras,
+                            ..
+                        } => {
+                            list_header_paras = Some(lh_paras);
+                        }
+                        _ => {}
                     }
+                }
+
+                // Rectangle + ListHeader → draw_text 포함 Rectangle 생성
+                if has_rect {
+                    let draw_text = list_header_paras.map(|paras| {
+                        let converted = convert_hwp_paragraphs(paras);
+                        SubList {
+                            paragraphs: converted,
+                            ..Default::default()
+                        }
+                    });
+                    let rect = RectObject {
+                        common: common.clone(),
+                        draw_text,
+                        ..Default::default()
+                    };
+                    results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
                 }
             }
             _ => {}
