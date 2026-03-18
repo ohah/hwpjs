@@ -13,6 +13,8 @@ crate-type = ["cdylib"]
 napi = "3.8.3"
 napi-derive = "3.5.2"
 hwp-core = { path = "../../crates/hwp-core" }
+hwpx-parser = { path = "../../crates/hwpx-parser" }
+hwp-model = { path = "../../crates/hwp-model" }
 serde_json = "1.0.145"
 base64 = "0.22.1"
 

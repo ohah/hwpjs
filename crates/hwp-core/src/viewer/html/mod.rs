@@ -32,7 +32,9 @@ pub(crate) mod text;
 mod text_test;
 
 // Re-export public API
+#[allow(deprecated)]
 pub use document::to_html;
+#[allow(deprecated)]
 pub use document::to_html_pages;
 pub use document::HtmlPages;
 pub use options::HtmlOptions;

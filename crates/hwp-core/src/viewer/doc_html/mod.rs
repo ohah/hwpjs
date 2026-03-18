@@ -12,6 +12,8 @@ pub struct DocHtmlOptions {
     pub css_class_prefix: String,
     /// inline style 사용 여부 (false이면 <style> 블록 생성)
     pub inline_style: bool,
+    /// 이미지를 파일로 저장할 디렉토리 경로 (None이면 base64 데이터 URI로 임베드)
+    pub image_output_dir: Option<String>,
 }
 
 impl Default for DocHtmlOptions {
@@ -19,6 +21,7 @@ impl Default for DocHtmlOptions {
         Self {
             css_class_prefix: "hwp-".to_string(),
             inline_style: true,
+            image_output_dir: None,
         }
     }
 }
@@ -33,6 +36,13 @@ pub fn doc_to_html(doc: &Document, options: &DocHtmlOptions) -> String {
     let mut footnote_counter: u16 = 0;
     let mut endnote_counter: u16 = 0;
 
+    // 개요/번호 추적기
+    let mut outline_tracker = crate::viewer::core::outline::OutlineNumberTracker::new();
+    let mut number_tracker: std::collections::HashMap<
+        u16,
+        crate::viewer::core::outline::OutlineNumberTracker,
+    > = std::collections::HashMap::new();
+
     // CSS 스타일 생성
     let css = if !options.inline_style {
         styles::generate_css(doc, &options.css_class_prefix)
@@ -40,15 +50,32 @@ pub fn doc_to_html(doc: &Document, options: &DocHtmlOptions) -> String {
         String::new()
     };
 
-    for section in &doc.sections {
+    for (section_idx, section) in doc.sections.iter().enumerate() {
+        // 섹션 간 구분선
+        if section_idx > 0 && !body_parts.is_empty() {
+            body_parts.push(format!("<hr class=\"{}section-break\">", options.css_class_prefix));
+        }
+
+        let section_outline_id = section.definition.outline_shape_id.unwrap_or(0);
         for para in &section.paragraphs {
-            let (body_html, ctrl_parts) = paragraph::render_paragraph(
+            // 페이지 구분선
+            if para.page_break && !body_parts.is_empty() {
+                body_parts.push(format!(
+                    "<hr class=\"{}page-break\">",
+                    options.css_class_prefix
+                ));
+            }
+
+            let (body_html, ctrl_parts) = paragraph::render_paragraph_with_tracker(
                 para,
                 &doc.resources,
                 &doc.binaries,
                 options,
                 &mut footnote_counter,
                 &mut endnote_counter,
+                &mut outline_tracker,
+                &mut number_tracker,
+                section_outline_id,
             );
 
             for part in ctrl_parts {

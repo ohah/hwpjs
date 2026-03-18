@@ -132,8 +132,11 @@ impl Renderer for MarkdownRenderer {
         options: &Self::Options,
     ) -> String {
         // 기존 to_markdown 함수의 로직 사용
-        use crate::viewer::markdown::to_markdown;
-        to_markdown(document, options)
+        #[allow(deprecated)]
+        {
+            use crate::viewer::markdown::to_markdown;
+            to_markdown(document, options)
+        }
     }
 
     fn render_document_header(&self, document: &HwpDocument, options: &Self::Options) -> String {

@@ -2,131 +2,19 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
-<!DOCTYPE html>
-<html>
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-
-<head>
-  <title>각주참조</title>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  <style>
-body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
-.hce {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hme {margin:0;padding:0;position:absolute;}
-.hhe {margin:0;padding:0;position:relative;}
-.hhi {display:inline-block;margin:0;padding:0;position:relative;background-size:contain;}
-.hls {margin:0;padding:0;position:absolute;}
-.hfS {margin:0;padding:0;position:absolute;}
-.hcD {margin:0;padding:0;position:absolute;}
-.hcI {margin:0;padding:0;position:absolute;}
-.hcS {margin:0;padding:0;position:absolute;}
-.hfN {margin:0;padding:0;position:relative;}
-.hmB {margin:0;padding:0;position:absolute;}
-.hmO {margin:0;padding:0;position:absolute;}
-.hmT {margin:0;padding:0;position:absolute;}
-.hpN {display:inline-block;margin:0;padding:0;position:relative;white-space:nowrap;}
-.htC {display:inline-block;margin:0;padding:0;position:relative;vertical-align:top;overflow:hidden;}
-.haN {display:inline-block;margin:0;padding:0;position:relative;}
-.hdu {margin:0;padding:0;position:relative;}
-.hdS {margin:0;padding:0;position:absolute;}
-.hsC {margin:0;padding:0;position:absolute;}
-.hsR {margin:0;padding:0;position:absolute;background-size:100% 100%;}
-.hsG {margin:0;padding:0;position:absolute;}
-.hsL {margin:0;padding:0;position:absolute;}
-.hsT {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hsE {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hsA {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hsP {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hsV {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hsO {margin:0;padding:0;position:absolute;}
-.hsU {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hpi {margin:0;padding:0;position:absolute;}
-.hch {margin:0;padding:0;position:absolute;}
-.hcG {margin:0;padding:0;position:absolute;}
-.heq {margin:0;padding:0;position:absolute;}
-.heG {margin:0;padding:0;position:absolute;}
-.htA {margin:0;padding:0;position:absolute;}
-.hvi {margin:0;padding:0;position:absolute;}
-.htb {margin:0;padding:0;position:absolute;}
-.htG {margin:0;padding:0;position:absolute;}
-.hfJ {margin:0;padding:0;position:absolute;}
-.hfG {margin:0;padding:0;position:absolute;}
-.hfB {margin:0;padding:0;position:absolute;}
-.hfR {margin:0;padding:0;position:absolute;}
-.hfC {margin:0;padding:0;position:absolute;}
-.hfO {margin:0;padding:0;position:absolute;}
-.hfL {margin:0;padding:0;position:absolute;}
-.hfM {margin:0;padding:0;position:absolute;}
-.hfE {margin:0;padding:0;position:absolute;}
-.hpl {margin:0;padding:0;position:absolute;}
-.hs {margin:0;padding:0;position:absolute;overflow:visible;}
-.hpa {position:relative;padding:0;overflow:hidden;margin-left:2mm;margin-right:0mm;margin-bottom:2mm;margin-top:0mm;border:1px black solid;box-shadow:1mm 1mm 0 #AAAAAA;}
-.hpa::after {content:'';position:absolute;margin:0;padding:0;left:0;right:0;top:0;bottom:0;background-color:white;z-index:-2;}
-.hrt {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;vertical-align:middle;line-height:1.1;}
-.hco {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;}
-.hcc {margin:0;padding:0;position:absolute;}
-.hls {clear:both;}
-[onclick] {cursor:pointer;}
-.cs0 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"굴림";
-}
-.cs1 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"바탕";
-}
-.cs2 {
-  font-size:9pt;color:rgb(0,0,0);font-family:"굴림";
-}
-.cs3 {
-  font-size:9pt;color:rgb(0,0,0);font-family:"굴림";letter-spacing:-0.03em;
-}
-.cs4 {
-  font-size:9pt;color:rgb(0,0,0);font-family:"바탕";letter-spacing:-0.03em;
-}
-.ps0 {
-  text-align:justify;
-}
-.ps1 {
-  text-align:justify;
-}
-.ps2 {
-  text-align:justify;
-}
-.ps3 {
-  text-align:justify;
-}
-.ps4 {
-  text-align:justify;
-}
-.ps5 {
-  text-align:justify;
-}
-.ps6 {
-  text-align:justify;
-}
-.ps7 {
-  text-align:justify;
-}
-.ps8 {
-  text-align:justify;
-}
-.ps9 {
-  text-align:justify;
-}
-.ps10 {
-  text-align:justify;
-}
-.ps11 {
-  text-align:justify;
-}
-@media print {
-.hpa {margin:0;border:0 black none;box-shadow:none;}
-body {padding:0;}
-}
-  </style>
-</head>
-
-
-<body>
-<div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps11" style="line-height:3.53mm;white-space:nowrap;left:0.00mm;top:0.00mm;height:3.53mm;width:150.00mm;"><span class="hrt cs1">각주참조</span><span class="hfN" style="top:-1.76mm;"><span class="hrt cs1" style="font-size:5pt;top:-1pt;">1)</span></span><span class="hfN" style="top:-1.76mm;"><span class="hrt cs1" style="font-size:5pt;top:-1pt;">2)</span></span></div><div class="hls ps11" style="line-height:3.53mm;white-space:nowrap;left:0.00mm;top:5.64mm;height:3.53mm;width:150.00mm;"><span class="hrt cs1">미주참조</span><span class="hfN" style="top:-1.76mm;"><span class="hrt cs1" style="font-size:5pt;top:-1pt;">1)</span></span><span class="hfN" style="top:-1.76mm;"><span class="hrt cs1" style="font-size:5pt;top:-1pt;">2)</span></span></div></div><div class="hfS" style="left:0mm;top:223.48mm;width:50.00mm;height:0.11mm;"><svg class="hs" viewBox="-0.12 -0.12 50.23 0.35" style="left:-0.12mm;top:-0.12mm;width:50.23mm;height:0.35mm;left:0;top:0;"><path d="M0,0.06 L50,0.06" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div><div class="hcD" style="left:0mm;top:225.64mm;"><div class="hcI"><div class="hls ps10" style="line-height:3.18mm;white-space:nowrap;left:0mm;top:0.00mm;height:3.18mm;width:150.00mm;"><div class="haN" style="left:0mm;top:0mm;width:2.93mm;height:3.18mm;"><span class="hrt cs4">1)</span></div><span class="hrt cs4">&nbsp;각주입니다.</span></div></div></div><div class="hcD" style="left:0mm;top:228.82mm;"><div class="hcI"><div class="hls ps10" style="line-height:3.18mm;white-space:nowrap;left:0mm;top:0.00mm;height:3.18mm;width:150.00mm;"><div class="haN" style="left:0mm;top:0mm;width:2.93mm;height:3.18mm;"><span class="hrt cs4">2)</span></div><span class="hrt cs4">&nbsp;각주 두 번째입니다.</span></div></div></div></div></div><div class="hpa" style="width:210mm;height:297mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcD" style="left:0mm;top:0.00mm;"><div class="hcI"><div class="hls ps0" style="line-height:3.53mm;white-space:nowrap;left:0mm;top:0.00mm;height:3.53mm;width:150.00mm;"><div class="haN" style="left:0mm;top:0mm;width:3.42mm;height:3.53mm;"><span class="hrt cs1">1)</span></div><span class="hrt cs1">&nbsp;미주입니다.</span></div></div></div><div class="hcD" style="left:0mm;top:3.53mm;"><div class="hcI"><div class="hls ps0" style="line-height:3.53mm;white-space:nowrap;left:0mm;top:0.00mm;height:3.53mm;width:150.00mm;"><div class="haN" style="left:0mm;top:0mm;width:3.42mm;height:3.53mm;"><span class="hrt cs1">2)</span></div><span class="hrt cs1">&nbsp;미주 두 번째입니다.</span></div></div></div><div class="hcI"></div></div></div></body>
-
-</html>
+<div class="ohah-hwpjs-body">
+<sup><a href="#fn-1" id="fnref-1">[1]</a></sup>
+<sup><a href="#fn-2" id="fnref-2">[2]</a></sup>
+<p><span style="font-size: 10.0pt; font-family: '바탕'">각주참조</span></p>
+<sup><a href="#en-1" id="enref-1">[e1]</a></sup>
+<sup><a href="#en-2" id="enref-2">[e2]</a></sup>
+<p><span style="font-size: 10.0pt; font-family: '바탕'">미주참조</span></p>
+</div>
+<section class="ohah-hwpjs-footnotes">
+<div id="fn-1" class="ohah-hwpjs-footnote"><a href="#fnref-1">↩</a> <p style="line-height: 130%; text-indent: -26.2pt"><span style="font-size: 9.0pt; font-family: '바탕'"> 각주입니다.</span></p></div>
+<div id="fn-2" class="ohah-hwpjs-footnote"><a href="#fnref-2">↩</a> <p style="line-height: 130%; text-indent: -26.2pt"><span style="font-size: 9.0pt; font-family: '바탕'"> 각주 두 번째입니다.</span></p></div>
+</section>
+<section class="ohah-hwpjs-endnotes">
+<div id="en-1" class="ohah-hwpjs-endnote"><a href="#enref-1">↩</a> <p><span style="font-size: 10.0pt; font-family: '바탕'"> 미주입니다.</span></p></div>
+<div id="en-2" class="ohah-hwpjs-endnote"><a href="#enref-2">↩</a> <p><span style="font-size: 10.0pt; font-family: '바탕'"> 미주 두 번째입니다.</span></p></div>
+</section>

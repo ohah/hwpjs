@@ -2,158 +2,20 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
-<!DOCTYPE html>
-<html>
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-
-<head>
-  <title>strikethrough</title>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  <style>
-body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}
-.hce {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hme {margin:0;padding:0;position:absolute;}
-.hhe {margin:0;padding:0;position:relative;}
-.hhi {display:inline-block;margin:0;padding:0;position:relative;background-size:contain;}
-.hls {margin:0;padding:0;position:absolute;}
-.hfS {margin:0;padding:0;position:absolute;}
-.hcD {margin:0;padding:0;position:absolute;}
-.hcI {margin:0;padding:0;position:absolute;}
-.hcS {margin:0;padding:0;position:absolute;}
-.hfN {margin:0;padding:0;position:relative;}
-.hmB {margin:0;padding:0;position:absolute;}
-.hmO {margin:0;padding:0;position:absolute;}
-.hmT {margin:0;padding:0;position:absolute;}
-.hpN {display:inline-block;margin:0;padding:0;position:relative;white-space:nowrap;}
-.htC {display:inline-block;margin:0;padding:0;position:relative;vertical-align:top;overflow:hidden;}
-.haN {display:inline-block;margin:0;padding:0;position:relative;}
-.hdu {margin:0;padding:0;position:relative;}
-.hdS {margin:0;padding:0;position:absolute;}
-.hsC {margin:0;padding:0;position:absolute;}
-.hsR {margin:0;padding:0;position:absolute;background-size:100% 100%;}
-.hsG {margin:0;padding:0;position:absolute;}
-.hsL {margin:0;padding:0;position:absolute;}
-.hsT {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hsE {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hsA {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hsP {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hsV {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hsO {margin:0;padding:0;position:absolute;}
-.hsU {margin:0;padding:0;position:absolute;overflow:hidden;}
-.hpi {margin:0;padding:0;position:absolute;}
-.hch {margin:0;padding:0;position:absolute;}
-.hcG {margin:0;padding:0;position:absolute;}
-.heq {margin:0;padding:0;position:absolute;}
-.heG {margin:0;padding:0;position:absolute;}
-.htA {margin:0;padding:0;position:absolute;}
-.hvi {margin:0;padding:0;position:absolute;}
-.htb {margin:0;padding:0;position:absolute;}
-.htG {margin:0;padding:0;position:absolute;}
-.hfJ {margin:0;padding:0;position:absolute;}
-.hfG {margin:0;padding:0;position:absolute;}
-.hfB {margin:0;padding:0;position:absolute;}
-.hfR {margin:0;padding:0;position:absolute;}
-.hfC {margin:0;padding:0;position:absolute;}
-.hfO {margin:0;padding:0;position:absolute;}
-.hfL {margin:0;padding:0;position:absolute;}
-.hfM {margin:0;padding:0;position:absolute;}
-.hfE {margin:0;padding:0;position:absolute;}
-.hpl {margin:0;padding:0;position:absolute;}
-.hs {margin:0;padding:0;position:absolute;overflow:visible;}
-.hpa {position:relative;padding:0;overflow:hidden;margin-left:2mm;margin-right:0mm;margin-bottom:2mm;margin-top:0mm;border:1px black solid;box-shadow:1mm 1mm 0 #AAAAAA;}
-.hpa::after {content:'';position:absolute;margin:0;padding:0;left:0;right:0;top:0;bottom:0;background-color:white;z-index:-2;}
-.hrt {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;vertical-align:middle;line-height:1.1;}
-.hco {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;}
-.hcc {margin:0;padding:0;position:absolute;}
-.hls {clear:both;}
-[onclick] {cursor:pointer;}
-.cs0 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬바탕";
-}
-.cs1 {
-  font-size:10pt;color:rgb(0,0,0);font-family:"함초롬돋움";
-}
-.cs2 {
-  font-size:9pt;color:rgb(0,0,0);font-family:"함초롬돋움";
-}
-.cs3 {
-  font-size:9pt;color:rgb(0,0,0);font-family:"함초롬바탕";
-}
-.cs4 {
-  font-size:9pt;color:rgb(0,0,0);font-family:"함초롬돋움";letter-spacing:-0.03em;
-}
-.cs5 {
-  font-size:16pt;color:rgb(46,116,181);font-family:"함초롬돋움";
-}
-.cs6 {
-  font-size:11pt;color:rgb(0,0,0);font-family:"함초롬돋움";
-}
-.ps0 {
-  text-align:justify;
-}
-.ps1 {
-  text-align:justify;
-}
-.ps2 {
-  text-align:justify;
-}
-.ps3 {
-  text-align:justify;
-}
-.ps4 {
-  text-align:justify;
-}
-.ps5 {
-  text-align:justify;
-}
-.ps6 {
-  text-align:justify;
-}
-.ps7 {
-  text-align:justify;
-}
-.ps8 {
-  text-align:justify;
-}
-.ps9 {
-  text-align:justify;
-}
-.ps10 {
-  text-align:justify;
-}
-.ps11 {
-  text-align:left;
-}
-.ps12 {
-  text-align:left;
-}
-.ps13 {
-  text-align:left;
-}
-.ps14 {
-  text-align:left;
-}
-.ps15 {
-  text-align:left;
-}
-.ps16 {
-  text-align:justify;
-}
-.ps17 {
-  text-align:justify;
-}
-.ps18 {
-  text-align:justify;
-}
-@media print {
-.hpa {margin:0;border:0 black none;box-shadow:none;}
-body {padding:0;}
-}
-  </style>
-</head>
-
-
-<body>
-<div class="hpa" style="width:210mm;height:296.99mm;"><div class="hcD" style="left:30mm;top:35mm;"><div class="hcI"><div class="hls ps2" style="line-height:3.53mm;white-space:nowrap;left:3.53mm;top:0.00mm;height:3.53mm;width:146.47mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:4.90mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">1.</span></div><span class="hrt cs0">개요 1</span></div><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:5.46mm;height:3.53mm;width:150.00mm;"></div><div class="hls ps3" style="line-height:3.53mm;white-space:nowrap;left:7.06mm;top:11.29mm;height:3.53mm;width:142.95mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:6.32mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">가.</span></div><span class="hrt cs0">개요2</span></div><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:16.75mm;height:3.53mm;width:150.00mm;"></div><div class="hls ps4" style="line-height:3.53mm;white-space:nowrap;left:10.58mm;top:22.58mm;height:3.53mm;width:139.42mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:5.19mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">1)</span></div><span class="hrt cs0">개요3</span></div><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:28.04mm;height:3.53mm;width:150.00mm;"></div><div class="hls ps5" style="line-height:3.53mm;white-space:nowrap;left:14.11mm;top:33.87mm;height:3.53mm;width:135.89mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:6.61mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">가)</span></div><span class="hrt cs0">개요4</span></div><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:39.33mm;height:3.53mm;width:150.00mm;"></div><div class="hls ps6" style="line-height:3.53mm;white-space:nowrap;left:17.64mm;top:45.16mm;height:3.53mm;width:132.36mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:6.94mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">(1)</span></div><span class="hrt cs0">개요 5</span></div><div class="hls ps6" style="line-height:3.53mm;white-space:nowrap;left:17.64mm;top:50.80mm;height:3.53mm;width:132.36mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:6.94mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">(2)</span></div><span class="hrt cs0">개요 5-2</span></div><div class="hls ps3" style="line-height:3.53mm;white-space:nowrap;left:7.06mm;top:56.44mm;height:3.53mm;width:142.95mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:6.32mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">나.</span></div><span class="hrt cs0">개요2-2</span></div><div class="hls ps7" style="line-height:3.53mm;white-space:nowrap;left:21.17mm;top:62.09mm;height:3.53mm;width:128.83mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:8.36mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">(가)</span></div><span class="hrt cs0">개요 6&nbsp;</span></div><div class="hls ps7" style="line-height:3.53mm;white-space:nowrap;left:21.17mm;top:67.73mm;height:3.53mm;width:128.83mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:8.36mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">(나)</span></div><span class="hrt cs0">개요 6-2</span></div><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:73.20mm;height:3.53mm;width:150.00mm;"></div><div class="hls ps8" style="line-height:3.53mm;white-space:nowrap;left:24.69mm;top:79.02mm;height:3.53mm;width:125.31mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:4.86mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">①</span></div><span class="hrt cs0">개요7</span></div><div class="hls ps8" style="line-height:3.53mm;white-space:nowrap;left:24.69mm;top:84.67mm;height:3.53mm;width:125.31mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:4.86mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">②</span></div><span class="hrt cs0">개요7-2</span></div><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:90.13mm;height:3.53mm;width:150.00mm;"></div><div class="hls ps18" style="line-height:3.53mm;white-space:nowrap;left:28.22mm;top:95.96mm;height:3.53mm;width:121.78mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:4.86mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">③</span></div><span class="hrt cs0">개요8</span></div><div class="hls ps18" style="line-height:2.79mm;white-space:nowrap;left:28.22mm;top:101.42mm;height:3.53mm;width:121.78mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:4.86mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">④</span></div></div><div class="hls ps16" style="line-height:3.53mm;white-space:nowrap;left:31.75mm;top:107.24mm;height:3.53mm;width:118.25mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:4.86mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">⑤</span></div><span class="hrt cs0">개요9</span></div><div class="hls ps16" style="line-height:2.79mm;white-space:nowrap;left:31.75mm;top:112.71mm;height:3.53mm;width:118.25mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:4.86mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">⑥</span></div></div><div class="hls ps17" style="line-height:3.53mm;white-space:nowrap;left:35.28mm;top:118.53mm;height:3.53mm;width:114.72mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:4.86mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">⑦</span></div><span class="hrt cs0">개요10</span></div><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:124.00mm;height:3.53mm;width:150.00mm;"></div><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:129.64mm;height:3.53mm;width:150.00mm;"></div><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:135.29mm;height:3.53mm;width:150.00mm;"></div><div class="hls ps2" style="line-height:3.53mm;white-space:nowrap;left:3.53mm;top:141.11mm;height:3.53mm;width:146.47mm;"><div class="hhe" style="display:inline-block;margin-left:0mm;width:4.90mm;height:3.53mm;"><span class="hrt cs1" style="font-size:10pt;">2.</span></div><span class="hrt cs0">개요 1-2</span></div><div class="hls ps0" style="line-height:2.79mm;white-space:nowrap;left:0.00mm;top:146.58mm;height:3.53mm;width:150.00mm;"></div></div></div></div></body>
-
-</html>
+<div class="body">
+<h1 class="outline-1"><span class="outline-number">1.</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요 1</span></h1>
+<h2 class="outline-2"><span class="outline-number">가.</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요2</span></h2>
+<h3 class="outline-3"><span class="outline-number">1)</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요3</span></h3>
+<h4 class="outline-4"><span class="outline-number">가)</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요4</span></h4>
+<h5 class="outline-5"><span class="outline-number">(1)</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요 5</span></h5>
+<h5 class="outline-5"><span class="outline-number">(2)</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요 5-2</span></h5>
+<h2 class="outline-2"><span class="outline-number">나.</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요2-2</span></h2>
+<h6 class="outline-6"><span class="outline-number">(가)</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요 6 </span></h6>
+<h6 class="outline-6"><span class="outline-number">(나)</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요 6-2</span></h6>
+<p class="outline-7"><span class="outline-number">①</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요7</span></p>
+<p class="outline-7"><span class="outline-number">②</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요7-2</span></p>
+<p class="outline-7"><span class="outline-number">③</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요8</span></p>
+<p class="outline-7"><span class="outline-number">④</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요9</span></p>
+<p class="outline-7"><span class="outline-number">⑤</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요10</span></p>
+<h1 class="outline-1"><span class="outline-number">2.</span> <span style="font-size: 10.0pt; font-family: '함초롬바탕'">개요 1-2</span></h1>
+</div>

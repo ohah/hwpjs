@@ -4,9 +4,150 @@ use hwp_model::paragraph::{Paragraph, Run, RunContent, TextContent, TextElement}
 use hwp_model::resources::Resources;
 use hwp_model::shape::ShapeObject;
 use hwp_model::table::Table;
+use hwp_model::types::HeadingType;
 
 use super::{render_sublist_paragraphs, DocHtmlOptions, HtmlControlPart};
+use crate::viewer::core::outline::{format_outline_number, OutlineNumberTracker};
 use crate::viewer::doc_utils;
+
+/// Numbering format_string을 사용하여 번호 포맷 (doc_markdown과 동일 로직)
+fn format_with_numbering(id_ref: u16, level: u8, number: u32, resources: &Resources) -> String {
+    let numbering_id = if id_ref > 0 {
+        (id_ref - 1) as usize
+    } else {
+        return format_outline_number(level, number);
+    };
+    if let Some(numbering) = resources.numberings.get(numbering_id) {
+        let level_index = (level.saturating_sub(1)) as usize;
+        if let Some(level_info) = numbering.levels.get(level_index) {
+            let fs = &level_info.format_string;
+            if !fs.is_empty()
+                && fs.contains('^')
+                && !fs.chars().any(|c| c.is_control() && c != '\t')
+            {
+                let formatted = crate::viewer::core::outline::format_numbering_string(
+                    fs,
+                    number,
+                    convert_num_format(&level_info.num_format),
+                );
+                return formatted;
+            }
+        }
+    }
+    format_outline_number(level, number)
+}
+
+/// hwp_model NumberType2 → HwpDocument NumberType 변환
+fn convert_num_format(
+    nf: &hwp_model::types::NumberType2,
+) -> crate::document::docinfo::numbering::NumberType {
+    use crate::document::docinfo::numbering::NumberType;
+    match nf {
+        hwp_model::types::NumberType2::Digit => NumberType::Arabic,
+        hwp_model::types::NumberType2::CircledDigit => NumberType::CircledDigits,
+        hwp_model::types::NumberType2::RomanCapital => NumberType::UpperRoman,
+        hwp_model::types::NumberType2::RomanSmall => NumberType::LowerRoman,
+        hwp_model::types::NumberType2::LatinCapital => NumberType::UpperAlpha,
+        hwp_model::types::NumberType2::LatinSmall => NumberType::LowerAlpha,
+        hwp_model::types::NumberType2::HangulSyllable => NumberType::HangulGa,
+        hwp_model::types::NumberType2::HangulJamo => NumberType::HangulGaCycle,
+        _ => NumberType::Arabic,
+    }
+}
+
+/// 개요/번호 추적기를 사용하여 문단을 HTML로 렌더링
+#[allow(clippy::too_many_arguments)]
+pub fn render_paragraph_with_tracker(
+    para: &Paragraph,
+    resources: &Resources,
+    binaries: &BinaryStore,
+    options: &DocHtmlOptions,
+    footnote_counter: &mut u16,
+    endnote_counter: &mut u16,
+    outline_tracker: &mut OutlineNumberTracker,
+    number_tracker: &mut std::collections::HashMap<u16, OutlineNumberTracker>,
+    _section_outline_id: u16,
+) -> (String, Vec<HtmlControlPart>) {
+    let (body_html, ctrl_parts) = render_paragraph(
+        para,
+        resources,
+        binaries,
+        options,
+        footnote_counter,
+        endnote_counter,
+    );
+
+    // 개요/번호/글머리표 적용
+    if !body_html.is_empty() {
+        if let Some(ps) = resources.para_shapes.get(para.para_shape_id as usize) {
+            if let Some(ref heading) = ps.heading {
+                match heading.heading_type {
+                    HeadingType::Outline => {
+                        let level = heading.level + 1;
+                        let number = outline_tracker.get_and_increment(level);
+                        let num_str = format_outline_number(level, number);
+                        let tag = if (1..=6).contains(&level) {
+                            format!("h{}", level)
+                        } else {
+                            "p".to_string()
+                        };
+                        // 기존 <p> 태그를 heading 태그로 교체
+                        let inner = strip_p_tag(&body_html);
+                        let html = format!(
+                            "<{} class=\"{}outline-{}\"><span class=\"{}outline-number\">{}</span> {}</{}>",
+                            tag, options.css_class_prefix, level,
+                            options.css_class_prefix,
+                            html_escape(&num_str), inner, tag
+                        );
+                        return (html, ctrl_parts);
+                    }
+                    HeadingType::Bullet => {
+                        let inner = strip_p_tag(&body_html);
+                        let html = format!(
+                            "<p class=\"{}bullet\">{}</p>",
+                            options.css_class_prefix, inner
+                        );
+                        return (html, ctrl_parts);
+                    }
+                    HeadingType::Number => {
+                        let level = heading.level + 1;
+                        let tracker = number_tracker.entry(heading.id_ref).or_default();
+                        let number = tracker.get_and_increment(level);
+                        let num_str =
+                            format_with_numbering(heading.id_ref, level, number, resources);
+                        let inner = strip_p_tag(&body_html);
+                        let html = format!(
+                            "<p class=\"{}number-{}\"><span class=\"{}number\">{}</span> {}</p>",
+                            options.css_class_prefix, level,
+                            options.css_class_prefix,
+                            html_escape(&num_str), inner
+                        );
+                        return (html, ctrl_parts);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    (body_html, ctrl_parts)
+}
+
+/// <p>...</p> 또는 <p style="...">...</p>의 내부 콘텐츠 추출
+fn strip_p_tag(html: &str) -> &str {
+    let inner = html.strip_prefix("<p>").or_else(|| {
+        // <p style="..."> 형태도 처리
+        if html.starts_with("<p ") {
+            html.find('>').map(|i| &html[i + 1..])
+        } else {
+            None
+        }
+    });
+    match inner {
+        Some(s) => s.strip_suffix("</p>").unwrap_or(s),
+        None => html, // <p>로 감싸지 않은 경우 (블록 요소 등)
+    }
+}
 
 /// 문단 하나를 HTML로 렌더링
 pub fn render_paragraph(
@@ -286,7 +427,14 @@ fn render_shape_object_html(
 ) -> (String, bool) {
     match shape {
         ShapeObject::Table(table) => (render_table_html(table, resources, binaries, options), true),
-        ShapeObject::Picture(pic) => (render_picture_html(&pic.img.binary_item_id, binaries), true),
+        ShapeObject::Picture(pic) => (
+            render_picture_html(
+                &pic.img.binary_item_id,
+                binaries,
+                options.image_output_dir.as_deref(),
+            ),
+            true,
+        ),
         ShapeObject::Rectangle(rect) => {
             if let Some(ref sub_list) = rect.draw_text {
                 let content =
@@ -341,7 +489,18 @@ fn render_table_html(
         return String::new();
     }
 
-    let mut html = format!("<table class=\"{}table\">\n", options.css_class_prefix);
+    let table_style = build_cell_style(table.border_fill_id, resources);
+    let mut html = if table_style.is_empty() {
+        format!(
+            "<table class=\"{}table\" style=\"border-collapse: collapse\">\n",
+            options.css_class_prefix
+        )
+    } else {
+        format!(
+            "<table class=\"{}table\" style=\"border-collapse: collapse; {}\">\n",
+            options.css_class_prefix, table_style
+        )
+    };
 
     for row in &table.rows {
         html.push_str("<tr>\n");
@@ -354,6 +513,20 @@ fn render_table_html(
             if cell.row_span > 1 {
                 attrs.push(format!("rowspan=\"{}\"", cell.row_span));
             }
+
+            // border_fill_id + width로 셀 스타일 적용
+            let mut cell_styles = Vec::new();
+            let bf_style = build_cell_style(cell.border_fill_id, resources);
+            if !bf_style.is_empty() {
+                cell_styles.push(bf_style);
+            }
+            if cell.width > 0 {
+                cell_styles.push(format!("width: {:.1}pt", cell.width as f64 / 100.0));
+            }
+            if !cell_styles.is_empty() {
+                attrs.push(format!("style=\"{}\"", cell_styles.join("; ")));
+            }
+
             let attrs_str = if attrs.is_empty() {
                 String::new()
             } else {
@@ -375,10 +548,39 @@ fn render_table_html(
 }
 
 /// 이미지를 HTML <img>로 변환
-fn render_picture_html(binary_item_id: &str, binaries: &BinaryStore) -> String {
+fn render_picture_html(
+    binary_item_id: &str,
+    binaries: &BinaryStore,
+    image_output_dir: Option<&str>,
+) -> String {
     if let Some(item) = doc_utils::find_binary_item(binary_item_id, binaries) {
         if item.data.is_empty() {
             format!("<img src=\"{}\" alt=\"이미지\">", html_escape(&item.src))
+        } else if let Some(dir) = image_output_dir {
+            // 이미지를 파일로 저장
+            let ext = match doc_utils::image_format_to_mime(&item.format) {
+                "image/jpeg" => "jpg",
+                "image/png" => "png",
+                "image/gif" => "gif",
+                "image/bmp" => "bmp",
+                _ => "bin",
+            };
+            let file_name = format!("{}.{}", binary_item_id, ext);
+            let file_path = std::path::Path::new(dir).join(&file_name);
+            if std::fs::write(&file_path, &item.data).is_ok() {
+                format!(
+                    "<img src=\"{}\" alt=\"이미지\">",
+                    html_escape(&file_path.display().to_string())
+                )
+            } else {
+                // 파일 저장 실패 시 base64 fallback
+                let mime = doc_utils::image_format_to_mime(&item.format);
+                let b64 = {
+                    use base64::Engine;
+                    base64::engine::general_purpose::STANDARD.encode(&item.data)
+                };
+                format!("<img src=\"data:{};base64,{}\" alt=\"이미지\">", mime, b64)
+            }
         } else {
             let mime = doc_utils::image_format_to_mime(&item.format);
             let b64 = {
@@ -395,6 +597,75 @@ fn render_picture_html(binary_item_id: &str, binaries: &BinaryStore) -> String {
     } else {
         String::new()
     }
+}
+
+/// BorderFill로부터 셀 CSS 스타일 생성
+fn build_cell_style(border_fill_id: u16, resources: &Resources) -> String {
+    if border_fill_id == 0 {
+        return String::new();
+    }
+    // border_fill_id는 1-based
+    let bf = match resources.border_fills.get((border_fill_id as usize).wrapping_sub(1)) {
+        Some(bf) => bf,
+        None => return String::new(),
+    };
+
+    let mut styles = Vec::new();
+
+    // 배경색
+    if let Some(ref fill) = bf.fill {
+        let color = match fill {
+            hwp_model::resources::FillBrush::WinBrush { face_color, .. } => *face_color,
+            hwp_model::resources::FillBrush::Gradation { colors, .. } => {
+                colors.first().copied().flatten()
+            }
+            _ => None,
+        };
+        if let Some(c) = color {
+            if c != 0xFFFFFF && c != 0 {
+                let r = (c >> 16) & 0xFF;
+                let g = (c >> 8) & 0xFF;
+                let b = c & 0xFF;
+                styles.push(format!("background-color: rgb({},{},{})", r, g, b));
+            }
+        }
+    }
+
+    // 테두리
+    fn border_css(line: &Option<hwp_model::resources::LineSpec>, side: &str) -> Option<String> {
+        let line = line.as_ref()?;
+        let color = line.color?;
+        if color == 0xFFFFFF {
+            return None;
+        }
+        let r = (color >> 16) & 0xFF;
+        let g = (color >> 8) & 0xFF;
+        let b = color & 0xFF;
+        let width = if line.width.is_empty() {
+            "1px"
+        } else {
+            &line.width
+        };
+        Some(format!(
+            "border-{}: {} solid rgb({},{},{})",
+            side, width, r, g, b
+        ))
+    }
+
+    if let Some(s) = border_css(&bf.left_border, "left") {
+        styles.push(s);
+    }
+    if let Some(s) = border_css(&bf.right_border, "right") {
+        styles.push(s);
+    }
+    if let Some(s) = border_css(&bf.top_border, "top") {
+        styles.push(s);
+    }
+    if let Some(s) = border_css(&bf.bottom_border, "bottom") {
+        styles.push(s);
+    }
+
+    styles.join("; ")
 }
 
 /// 컨트롤에서 HtmlControlPart 추출
