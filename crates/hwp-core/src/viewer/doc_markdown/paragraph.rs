@@ -70,7 +70,7 @@ pub fn render_paragraph_with_tracker(
     options: &DocMarkdownOptions,
     outline_tracker: &mut OutlineNumberTracker,
     number_tracker: &mut std::collections::HashMap<u16, OutlineNumberTracker>,
-    section_outline_id: u16,
+    _section_outline_id: u16,
 ) -> (String, Vec<ControlPart>, bool) {
     let (body, ctrl_parts) = render_paragraph(para, resources, binaries, options);
 
@@ -105,7 +105,7 @@ pub fn render_paragraph_with_tracker(
                         // Number 타입은 numbering_id별 독립 카운터 사용 (기존 viewer의 NumberTracker와 동일)
                         let tracker = number_tracker
                             .entry(heading.id_ref)
-                            .or_insert_with(OutlineNumberTracker::new);
+                            .or_default();
                         let number = tracker.get_and_increment(level);
                         let indent = "  ".repeat(heading.level as usize);
                         let num_str =
