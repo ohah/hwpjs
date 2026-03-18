@@ -233,15 +233,16 @@ fn fill_cell_content(
                 sorted_positions.sort_by_key(|pos| pos.position);
 
                 for pos in sorted_positions {
-                    // position은 문자 인덱스이므로, 그 위치까지의 텍스트를 문자 단위로 추가
-                    // position is character index, so add text up to that position by character
+                    // position은 원본 스트림 기준이므로 text_len보다 클 수 있음
+                    // 텍스트 끝까지 추출 후 break 추가
                     let text_len = text.chars().count();
-                    if pos.position > last_char_pos && pos.position <= text_len {
+                    let effective_pos = pos.position.min(text_len);
+                    if effective_pos > last_char_pos {
                         // 문자 단위로 텍스트 추출 / Extract text by character
                         let text_before: String = text
                             .chars()
                             .skip(last_char_pos)
-                            .take(pos.position - last_char_pos)
+                            .take(effective_pos - last_char_pos)
                             .collect();
                         // trim() 없이 그대로 추가 (정확한 위치 유지) / Add as-is without trim (maintain exact position)
                         para_text_result.push_str(&text_before);
@@ -321,6 +322,61 @@ fn fill_cell_content(
                             cell_parts.push(shape_part);
                         }
                     }
+                    ParagraphRecord::CtrlHeader {
+                        header,
+                        children: ctrl_children,
+                        paragraphs: ctrl_paragraphs,
+                        ..
+                    } => {
+                        // CtrlHeader 내부 문단에서 텍스트 추출
+                        // %hlk는 이미 ParaText에서 처리되므로 건너뜀
+                        if header.ctrl_id == "%hlk" {
+                            continue;
+                        }
+                        // ctrl_paragraphs에서 텍스트 추출
+                        for ctrl_para in ctrl_paragraphs {
+                            for ctrl_rec in &ctrl_para.records {
+                                if let ParagraphRecord::ParaText {
+                                    text,
+                                    control_char_positions,
+                                    ..
+                                } = ctrl_rec
+                                {
+                                    if !text.trim().is_empty() {
+                                        // 테이블 셀 내에서는 줄바꿈을 <br>로 변환
+                                        let has_breaks = control_char_positions.iter().any(|pos| {
+                                            use crate::document::bodytext::ControlChar;
+                                            pos.code == ControlChar::PARA_BREAK
+                                                || pos.code == ControlChar::LINE_BREAK
+                                        });
+                                        if has_breaks && options.use_html == Some(true) {
+                                            // 줄바꿈 처리는 기존 ParaText 처리와 동일하게
+                                            cell_parts.push(text.clone());
+                                        } else {
+                                            cell_parts.push(text.clone());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // children에서 이미지 추출
+                        for ctrl_child in ctrl_children {
+                            if let ParagraphRecord::ShapeComponentPicture {
+                                shape_component_picture,
+                            } = ctrl_child
+                            {
+                                if let Some(image_md) =
+                                    crate::viewer::markdown::document::bodytext::shape_component_picture::convert_shape_component_picture_to_markdown(
+                                        shape_component_picture,
+                                        document,
+                                        options.image_output_dir.as_deref(),
+                                    )
+                                {
+                                    cell_parts.push(image_md);
+                                }
+                            }
+                        }
+                    }
                     _ => {
                         // 기타 레코드는 서식 정보이므로 건너뜀 / Other records are formatting info, skip
                     }
@@ -359,8 +415,7 @@ fn fill_cell_content(
 
         // 병합된 열을 빈 셀로 채움 (마크다운에서는 병합을 직접 표현할 수 없으므로 빈 셀로 처리)
         // Fill merged columns with empty cells (markdown doesn't support cell merging directly)
-        for _ in (col + 1)..(col + col_span).min(col_count) {
-            let c = col + 1;
+        for c in (col + 1)..(col + col_span).min(col_count) {
             if grid[row][c].is_none() {
                 grid[row][c] = Some(" ".to_string());
             }
@@ -368,10 +423,8 @@ fn fill_cell_content(
 
         // 병합된 행을 빈 셀로 채움
         // Fill merged rows with empty cells
-        #[allow(clippy::needless_range_loop)]
         for r in (row + 1)..(row + row_span).min(row_count) {
-            for _ in col..(col + col_span).min(col_count) {
-                let c = col;
+            for c in col..(col + col_span).min(col_count) {
                 if grid[r][c].is_none() {
                     grid[r][c] = Some(" ".to_string());
                 }

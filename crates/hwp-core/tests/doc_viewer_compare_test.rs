@@ -32,8 +32,7 @@ const NEW_VIEWER_IS_GOLDEN: &[&str] = &[
     "noori.hwp",
     // multicolumns-layout.hwp: 표 셀 내 텍스트("표 셀 안의 다단") 기존 viewer 누락
     "multicolumns-layout.hwp",
-    // chart.hwp: 표 마지막 열 데이터(67.5 등) 기존 viewer 빈 셀 처리
-    "chart.hwp",
+    // chart.hwp: 수정 완료 (PARA_BREAK position 보정) → 비교 대상으로 이동
     // sample-5017.hwp: bold/italic 적용 → 기존 viewer 한계
     "sample-5017.hwp",
     // sample-5017-pics.hwp: 이미지/텍스트 출력 순서 차이 → 시각적 동등
