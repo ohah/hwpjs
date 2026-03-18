@@ -98,9 +98,15 @@ pub fn parse_color(s: &str) -> hwp_model::types::Color {
     if s.eq_ignore_ascii_case("none") {
         return None;
     }
-    // #AARRGGBB (8자리) → alpha 무시, RGB만
+    // HWPX(OWPML) 색상은 BGR 순서로 저장됨 (#BBGGRR 또는 #AABBGGRR)
+    // HWP의 COLORREF(0x00BBGGRR)와 동일한 형식
+    // RGB(0x00RRGGBB)로 변환하여 hwp-model에 저장
     let hex = if s.len() == 8 { &s[2..] } else { s };
-    u32::from_str_radix(hex, 16).ok()
+    let bgr = u32::from_str_radix(hex, 16).ok()?;
+    let b = (bgr >> 16) & 0xFF;
+    let g = (bgr >> 8) & 0xFF;
+    let r = bgr & 0xFF;
+    Some((r << 16) | (g << 8) | b)
 }
 
 /// local name 추출 (네임스페이스 접두어 제거)

@@ -524,7 +524,7 @@
         "top_border": {
           "line_type": "Dot",
           "width": "0.12 mm",
-          "color": 16711680
+          "color": 255
         },
         "bottom_border": {
           "line_type": "Solid",
@@ -581,8 +581,8 @@
         },
         "fill": {
           "WinBrush": {
-            "face_color": 16764057,
-            "hatch_color": 16750848,
+            "face_color": 10079487,
+            "hatch_color": 39423,
             "hatch_style": "Vertical",
             "alpha": 0
           }

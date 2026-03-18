@@ -3476,7 +3476,7 @@
         "bottom_border": {
           "line_type": "Solid",
           "width": "0.12 mm",
-          "color": 5986648
+          "color": 5790043
         },
         "diagonal": null,
         "fill": null
@@ -3585,7 +3585,7 @@
         "left_border": {
           "line_type": "None",
           "width": "0.15 mm",
-          "color": 5986648
+          "color": 5790043
         },
         "right_border": {
           "line_type": "None",
@@ -4655,7 +4655,7 @@
         },
         "fill": {
           "WinBrush": {
-            "face_color": 16247773,
+            "face_color": 14543863,
             "hatch_color": 0,
             "hatch_style": null,
             "alpha": 0
@@ -4705,7 +4705,7 @@
         },
         "fill": {
           "WinBrush": {
-            "face_color": 13431551,
+            "face_color": 16773836,
             "hatch_color": 0,
             "hatch_style": null,
             "alpha": 0
@@ -7744,7 +7744,7 @@
       {
         "id": 35,
         "height": 900,
-        "text_color": 16711680,
+        "text_color": 255,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,
@@ -8645,7 +8645,7 @@
         "underline": {
           "underline_type": "Bottom",
           "shape": "Solid",
-          "color": 255
+          "color": 16711680
         },
         "strikeout": null,
         "outline": null,
@@ -9633,7 +9633,7 @@
       {
         "id": 64,
         "height": 700,
-        "text_color": 16711680,
+        "text_color": 255,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,
@@ -9702,7 +9702,7 @@
       {
         "id": 65,
         "height": 1200,
-        "text_color": 16711680,
+        "text_color": 255,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,
@@ -14264,7 +14264,7 @@
       {
         "id": 135,
         "height": 2000,
-        "text_color": 16711680,
+        "text_color": 255,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,
@@ -14719,7 +14719,7 @@
       {
         "id": 142,
         "height": 1200,
-        "text_color": 16711680,
+        "text_color": 255,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,

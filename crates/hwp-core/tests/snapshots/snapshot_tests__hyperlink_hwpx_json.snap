@@ -743,7 +743,7 @@ expression: json
       {
         "id": 5,
         "height": 1600,
-        "text_color": 11891758,
+        "text_color": 3044533,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,
@@ -873,7 +873,7 @@ expression: json
       {
         "id": 7,
         "height": 1000,
-        "text_color": 16711680,
+        "text_color": 255,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,
@@ -929,7 +929,7 @@ expression: json
         "underline": {
           "underline_type": "Bottom",
           "shape": "Solid",
-          "color": 16711680
+          "color": 255
         },
         "strikeout": null,
         "outline": null,

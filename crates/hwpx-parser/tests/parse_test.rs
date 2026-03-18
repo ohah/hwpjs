@@ -207,11 +207,11 @@ fn parse_border_fills() {
     assert_eq!(lb3.line_type, LineType3::Solid);
     assert_eq!(lb3.width, "0.12 mm");
 
-    // 네 번째: 단색 배경 #FF7F3F
+    // 네 번째: 단색 배경 #FF7F3F (BGR) → RGB 0x3F7FFF
     let bf4 = &bfs[3];
     match bf4.fill.as_ref().unwrap() {
         FillBrush::WinBrush { face_color, .. } => {
-            assert_eq!(*face_color, Some(0xFF7F3F));
+            assert_eq!(*face_color, Some(0x3F7FFF));
         }
         _ => panic!("Expected WinBrush fill"),
     }
@@ -228,7 +228,7 @@ fn parse_border_fills() {
             assert_eq!(*grad_type, GradationType::Linear);
             assert_eq!(*angle, 90);
             assert_eq!(colors.len(), 2);
-            assert_eq!(colors[0], Some(0xFF7F3F));
+            assert_eq!(colors[0], Some(0x3F7FFF)); // #FF7F3F (BGR) → RGB
             assert_eq!(colors[1], Some(0x000000));
         }
         _ => panic!("Expected Gradation fill"),
