@@ -259,7 +259,7 @@ fn render_run(
     });
 
     // Run 내에 Table이 있으면 다른 Object(캡션)는 "\n" 구분자 사용
-    let run_has_table = run.contents.iter().any(|c| matches!(c, RunContent::Object(ShapeObject::Table(_))));
+    let _run_has_table = run.contents.iter().any(|c| matches!(c, RunContent::Object(ShapeObject::Table(_))));
 
     for content in &run.contents {
         match content {
@@ -343,11 +343,24 @@ fn render_run(
                 let obj_text = render_shape_object(shape, resources, binaries, options);
                 if !obj_text.is_empty() {
                     let is_table = matches!(shape, ShapeObject::Table(_));
-                    let is_caption = matches!(shape, ShapeObject::Rectangle(ref r) if r.is_caption);
-                    // Object 앞에 텍스트가 있으면 구분자 추가
+                    // Object 앞에 이전 파트가 있으면 구분자 추가
                     if !text_parts.is_empty() {
                         let last = text_parts.last().unwrap();
-                        if !last.ends_with("  \n") && !last.ends_with("\n\n") && !last.ends_with('\n') {
+                        if last == "  \n" {
+                            // 이전에 "  \n" 구분자가 있으면, 그 앞의 실제 콘텐츠를 확인
+                            // 실제 콘텐츠가 블록(starts_with "|", "---", "![이미지]")이면
+                            // "  \n"을 "\n\n"으로 교체
+                            let prev_is_block = text_parts.len() >= 2
+                                && is_block_element(&text_parts[text_parts.len() - 2]);
+                            let curr_is_block = is_block_element(&obj_text);
+                            if prev_is_block || curr_is_block {
+                                let len = text_parts.len();
+                                text_parts[len - 1] = "\n\n".to_string();
+                            }
+                        } else if !last.ends_with("  \n")
+                            && !last.ends_with("\n\n")
+                            && !last.ends_with('\n')
+                        {
                             if is_table {
                                 text_parts.push("\n\n".to_string());
                             } else {
@@ -388,6 +401,35 @@ fn render_text_content(tc: &TextContent) -> String {
     parts.join("")
 }
 
+/// 블록 요소 여부 판정 (기존 viewer utils.rs와 동일)
+fn is_block_element(part: &str) -> bool {
+    part.starts_with("![이미지]") || part.starts_with('|') || part.starts_with("---")
+}
+
+/// 텍스트 파트 여부 판정 (기존 viewer utils.rs와 동일: 개행으로 시작하지 않고 블록이 아닌 파트)
+fn is_text_part(part: &str) -> bool {
+    !part.starts_with('\n') && !is_block_element(part)
+}
+
+/// 기존 viewer와 동일한 구분자 로직으로 파트 결합
+/// - 텍스트 + 텍스트: "  \n" (soft line break)
+/// - 블록 포함: "\n\n" (빈 줄)
+fn join_with_block_detection(parts: &[String]) -> String {
+    if parts.is_empty() {
+        return String::new();
+    }
+    let mut result = parts[0].clone();
+    for i in 1..parts.len() {
+        if is_text_part(&parts[i - 1]) && is_text_part(&parts[i]) {
+            result.push_str("  \n");
+        } else {
+            result.push_str("\n\n");
+        }
+        result.push_str(&parts[i]);
+    }
+    result
+}
+
 /// ShapeObject를 Markdown으로 변환
 fn render_shape_object(
     shape: &ShapeObject,
@@ -400,7 +442,7 @@ fn render_shape_object(
         ShapeObject::Picture(pic) => render_picture(&pic.img.binary_item_id, binaries),
         ShapeObject::Rectangle(rect) => {
             // 텍스트 박스 (draw_text가 있는 경우)
-            // 기존 viewer와 동일: 스타일 강제 적용 + soft line break
+            // 기존 viewer와 동일: 스타일 강제 적용 + 블록 감지 기반 구분자
             if let Some(ref sub_list) = rect.draw_text {
                 let mut parts = Vec::new();
                 for para in &sub_list.paragraphs {
@@ -412,7 +454,8 @@ fn render_shape_object(
                         parts.push(body);
                     }
                 }
-                parts.join("  \n")
+                // 기존 viewer와 동일: 블록 요소(표, 이미지, 구분선) 포함 시 \n\n, 텍스트끼리는   \n
+                join_with_block_detection(&parts)
             } else {
                 String::new()
             }
