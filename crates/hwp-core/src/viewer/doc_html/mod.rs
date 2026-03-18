@@ -304,9 +304,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         .unwrap_or("");
     let mut html = String::new();
     html.push_str("<!DOCTYPE html>\n<html>\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">\n\n<head>\n");
-    if !title.is_empty() {
-        html.push_str(&format!("  <title>{}</title>\n", title));
-    }
+    html.push_str(&format!("  <title>{}</title>\n", title));
     html.push_str("  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n");
     html.push_str("  <style>\n");
     html.push_str(&css);
@@ -314,7 +312,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
     for page in &pages_html {
         html.push_str(page);
     }
-    html.push_str("\n</body>\n</html>");
+    html.push_str("</body>\n\n</html>\n");
     html
 }
 
