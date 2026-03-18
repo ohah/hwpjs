@@ -251,12 +251,22 @@ fn generate_table_svg_borders(
             // (오른쪽/아래는 인접 셀의 왼쪽/위로 그려짐)
             // 표 오른쪽/아래 외곽선은 마지막 셀에서 그림
             if let Some(bf) = bf {
+                // 정규화된 키: 시작점을 항상 작은 쪽으로
                 let mk = |a: f64, b: f64, c: f64, d: f64| {
+                    let (a, b, c, d) = if a > c || (a == c && b > d) {
+                        (c, d, a, b)
+                    } else {
+                        (a, b, c, d)
+                    };
                     ((a * 100.0) as i32, (b * 100.0) as i32, (c * 100.0) as i32, (d * 100.0) as i32)
                 };
-                if let Some(ref line) = bf.left_border {
-                    if drawn.insert(mk(x1, y1, x1, y2)) {
-                        draw_border_line(&mut svg, x1, y1, x1, y2, line);
+                // row_span=1 또는 첫 행일 때만 왼쪽/위 변 그림
+                let is_first_row_of_span = cell.row_span <= 1 || cell.row == 0;
+                if is_first_row_of_span {
+                    if let Some(ref line) = bf.left_border {
+                        if drawn.insert(mk(x1, y1, x1, y2)) {
+                            draw_border_line(&mut svg, x1, y1, x1, y2, line);
+                        }
                     }
                 }
                 if let Some(ref line) = bf.top_border {
