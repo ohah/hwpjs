@@ -50,16 +50,14 @@ pub fn render_line_segments(
             text_len
         };
 
-        if seg_start >= text_len || seg_start >= seg_end {
+        if seg_start > text_len {
             continue;
         }
+        let seg_end = seg_end.min(text_len);
 
         let seg_text: String = text_chars[seg_start..seg_end].iter().collect();
         // trailing newline 제거
         let seg_text = seg_text.trim_end_matches('\n');
-        if seg_text.is_empty() {
-            continue;
-        }
 
         // 이 구간의 CharShape 정보 필터링 (seg_start 기준으로 offset 조정)
         let seg_char_shapes: Vec<FlatCharShapeInfo> = char_shapes
