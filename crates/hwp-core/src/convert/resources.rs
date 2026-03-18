@@ -439,6 +439,13 @@ fn convert_border_fills(
         .collect()
 }
 
+/// FillInfo → FillBrush 변환 (공개 API)
+pub fn convert_fill_info_pub(
+    fill: &docinfo::border_fill::FillInfo,
+) -> Option<hwp_model::resources::FillBrush> {
+    convert_fill_info(fill)
+}
+
 fn convert_fill_info(
     fill: &docinfo::border_fill::FillInfo,
 ) -> Option<hwp_model::resources::FillBrush> {
