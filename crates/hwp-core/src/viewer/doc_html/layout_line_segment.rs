@@ -125,14 +125,15 @@ pub fn render_line_segments_with_marker(
         } else {
             ""
         };
+        use super::styles::fmt_mm;
         let hls = format!(
-            r#"<div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:{:.2}mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;">{}{}</div>"#,
+            r#"<div class="hls {}" style="line-height:{};white-space:nowrap;left:{};top:{};height:{};width:{};">{}{}</div>"#,
             para_shape_class,
-            line_height_mm,
-            left_mm,
-            top_mm,
-            height_mm,
-            width_mm,
+            fmt_mm(line_height_mm),
+            fmt_mm(left_mm),
+            fmt_mm(top_mm),
+            fmt_mm(height_mm),
+            fmt_mm(width_mm),
             marker,
             text_html
         );
@@ -181,6 +182,6 @@ mod tests {
         assert_eq!(result.len(), 1);
         assert!(result[0].contains("hls ps0"));
         assert!(result[0].contains("Hello"));
-        assert!(result[0].contains("left:30.00mm"));
+        assert!(result[0].contains("left:30mm"));
     }
 }

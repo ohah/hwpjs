@@ -244,3 +244,13 @@ pub fn hwpunit_to_mm(value: i32) -> f64 {
 pub fn round_mm(value: f64) -> f64 {
     (value * 100.0).round() / 100.0
 }
+
+/// mm 값을 문자열로 포맷 (정수면 소수점 없이, old viewer 호환)
+pub fn fmt_mm(value: f64) -> String {
+    let rounded = round_mm(value);
+    if (rounded - rounded.round()).abs() < 0.005 && rounded == rounded.round() {
+        format!("{}mm", rounded as i64)
+    } else {
+        format!("{:.2}mm", rounded)
+    }
+}
