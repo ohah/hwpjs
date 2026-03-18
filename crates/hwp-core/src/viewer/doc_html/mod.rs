@@ -4,6 +4,7 @@ pub(crate) mod flat_text;
 pub(crate) mod layout_line_segment;
 pub(crate) mod layout_page;
 pub(crate) mod layout_pagination;
+pub(crate) mod layout_table;
 pub(crate) mod layout_text;
 mod paragraph;
 pub(crate) mod styles;
@@ -84,10 +85,26 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 pag_ctx.current_max_vertical_mm = 0.0;
             }
 
-            // 문단 렌더링
+            // 문단 내 Table/Object 렌더링
+            for run in &para.runs {
+                for content in &run.contents {
+                    if let hwp_model::paragraph::RunContent::Object(
+                        hwp_model::shape::ShapeObject::Table(ref table),
+                    ) = content
+                    {
+                        let table_html =
+                            layout_table::render_layout_table(table, &doc.resources, &doc.binaries);
+                        if !table_html.is_empty() {
+                            current_page_blocks
+                                .push(layout_page::PageBlock { html: table_html });
+                        }
+                    }
+                }
+            }
+
+            // 텍스트 렌더링
             let flat = flat_text::extract_flat_text(para);
             if flat.text.is_empty() {
-                // 빈 문단도 vertical position 추적
                 if let Some(vp) = layout_pagination::last_vertical_pos_mm(para) {
                     let rel_vp = vp - pag_ctx.page_vertical_offset_mm;
                     pag_ctx.prev_vertical_mm = Some(rel_vp);
