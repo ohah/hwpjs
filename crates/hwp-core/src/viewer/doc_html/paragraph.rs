@@ -358,9 +358,15 @@ fn apply_char_style_html(
         open_tags.push_str("<i>");
         close_tags.insert_str(0, "</i>");
     }
-    if cs.underline.is_some() {
-        open_tags.push_str("<u>");
-        close_tags.insert_str(0, "</u>");
+    if let Some(ref ul) = cs.underline {
+        if ul.underline_type == hwp_model::types::UnderlineType::Center {
+            // 가운데줄(Center)은 취소선으로 렌더링
+            open_tags.push_str("<del>");
+            close_tags.insert_str(0, "</del>");
+        } else {
+            open_tags.push_str("<u>");
+            close_tags.insert_str(0, "</u>");
+        }
     }
     if cs.strikeout.is_some() {
         open_tags.push_str("<del>");

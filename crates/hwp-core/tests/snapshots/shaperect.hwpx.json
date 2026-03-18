@@ -2213,7 +2213,7 @@
                       },
                       "fill": {
                         "WinBrush": {
-                          "face_color": 16764006,
+                          "face_color": 6737151,
                           "hatch_color": 0,
                           "hatch_style": null,
                           "alpha": 0
@@ -2603,7 +2603,7 @@
                         }
                       ],
                       "line_shape": {
-                        "color": 3342591,
+                        "color": 16711731,
                         "width": 33,
                         "style": "DashDot",
                         "end_cap": "Flat",

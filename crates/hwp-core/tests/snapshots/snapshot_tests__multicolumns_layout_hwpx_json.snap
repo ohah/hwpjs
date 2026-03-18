@@ -916,7 +916,7 @@ expression: json
       {
         "id": 7,
         "height": 12000,
-        "text_color": 6697728,
+        "text_color": 13158,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,
@@ -981,7 +981,7 @@ expression: json
       {
         "id": 8,
         "height": 12000,
-        "text_color": 255,
+        "text_color": 16711680,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,

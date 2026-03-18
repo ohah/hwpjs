@@ -1551,22 +1551,22 @@
         "left_border": {
           "line_type": "Solid",
           "width": "0.5 mm",
-          "color": 6297371
+          "color": 1775456
         },
         "right_border": {
           "line_type": "Solid",
           "width": "0.5 mm",
-          "color": 6297371
+          "color": 1775456
         },
         "top_border": {
           "line_type": "Solid",
           "width": "0.5 mm",
-          "color": 6297371
+          "color": 1775456
         },
         "bottom_border": {
           "line_type": "Solid",
           "width": "0.5 mm",
-          "color": 6297371
+          "color": 1775456
         },
         "diagonal": {
           "line_type": "Solid",
@@ -1575,7 +1575,7 @@
         },
         "fill": {
           "WinBrush": {
-            "face_color": 12463412,
+            "face_color": 3419582,
             "hatch_color": 0,
             "hatch_style": null,
             "alpha": 0
@@ -1601,7 +1601,7 @@
         "left_border": {
           "line_type": "Solid",
           "width": "0.5 mm",
-          "color": 6297371
+          "color": 1775456
         },
         "right_border": {
           "line_type": "None",
@@ -1611,7 +1611,7 @@
         "top_border": {
           "line_type": "None",
           "width": "0.5 mm",
-          "color": 6297371
+          "color": 1775456
         },
         "bottom_border": {
           "line_type": "None",
@@ -1654,12 +1654,12 @@
         "top_border": {
           "line_type": "Solid",
           "width": "0.5 mm",
-          "color": 6297371
+          "color": 1775456
         },
         "bottom_border": {
           "line_type": "Solid",
           "width": "0.5 mm",
-          "color": 6297371
+          "color": 1775456
         },
         "diagonal": {
           "line_type": "Solid",
@@ -2097,7 +2097,7 @@
         },
         "fill": {
           "WinBrush": {
-            "face_color": 10872807,
+            "face_color": 15198117,
             "hatch_color": 16777215,
             "hatch_style": null,
             "alpha": 0
@@ -2147,7 +2147,7 @@
         },
         "fill": {
           "WinBrush": {
-            "face_color": 10872807,
+            "face_color": 15198117,
             "hatch_color": 16777215,
             "hatch_style": null,
             "alpha": 0
@@ -3234,7 +3234,7 @@
       {
         "id": 15,
         "height": 1300,
-        "text_color": 255,
+        "text_color": 16711680,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,
@@ -3429,7 +3429,7 @@
       {
         "id": 18,
         "height": 1300,
-        "text_color": 255,
+        "text_color": 16711680,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,
@@ -4274,7 +4274,7 @@
       {
         "id": 31,
         "height": 1200,
-        "text_color": 16711680,
+        "text_color": 255,
         "shade_color": 16777215,
         "use_font_space": false,
         "use_kerning": false,

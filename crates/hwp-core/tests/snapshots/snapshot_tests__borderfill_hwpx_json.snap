@@ -499,7 +499,7 @@ expression: json
         },
         "fill": {
           "WinBrush": {
-            "face_color": 16744255,
+            "face_color": 4161535,
             "hatch_color": 0,
             "hatch_style": null,
             "alpha": 0
@@ -557,7 +557,7 @@ expression: json
             "color_num": 2,
             "step_center": 50,
             "colors": [
-              16744255,
+              4161535,
               0
             ],
             "alpha": 0
@@ -652,7 +652,7 @@ expression: json
           "Combined": {
             "win_brush": {
               "WinBrush": {
-                "face_color": 16744255,
+                "face_color": 4161535,
                 "hatch_color": 0,
                 "hatch_style": null,
                 "alpha": 0
@@ -782,7 +782,7 @@ expression: json
                 "color_num": 2,
                 "step_center": 50,
                 "colors": [
-                  16744255,
+                  4161535,
                   0
                 ],
                 "alpha": 0

@@ -799,7 +799,7 @@ expression: json
         "underline": {
           "underline_type": "Top",
           "shape": "Dash",
-          "color": 16711680
+          "color": 255
         },
         "strikeout": null,
         "outline": null,
@@ -868,7 +868,7 @@ expression: json
         "underline": {
           "underline_type": "Top",
           "shape": "Dash",
-          "color": 16711680
+          "color": 255
         },
         "strikeout": null,
         "outline": null,
@@ -937,7 +937,7 @@ expression: json
         "underline": {
           "underline_type": "Top",
           "shape": "Dash",
-          "color": 16711680
+          "color": 255
         },
         "strikeout": null,
         "outline": null,

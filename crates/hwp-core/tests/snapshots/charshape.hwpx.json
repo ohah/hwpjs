@@ -1646,7 +1646,7 @@
         "underline": {
           "underline_type": "Bottom",
           "shape": "Solid",
-          "color": 255
+          "color": 16711680
         },
         "strikeout": null,
         "outline": null,
