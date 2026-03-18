@@ -94,11 +94,7 @@ pub fn render_paragraph_with_tracker(
                                 true,
                             );
                         } else {
-                            return (
-                                format!("{} {}", num_str, body_trimmed),
-                                ctrl_parts,
-                                true,
-                            );
+                            return (format!("{} {}", num_str, body_trimmed), ctrl_parts, true);
                         }
                     }
                     HeadingType::Bullet => {
@@ -112,12 +108,8 @@ pub fn render_paragraph_with_tracker(
                             .or_insert_with(OutlineNumberTracker::new);
                         let number = tracker.get_and_increment(level);
                         let indent = "  ".repeat(heading.level as usize);
-                        let num_str = format_with_numbering(
-                            heading.id_ref,
-                            level,
-                            number,
-                            resources,
-                        );
+                        let num_str =
+                            format_with_numbering(heading.id_ref, level, number, resources);
                         return (
                             format!("{}{} {}", indent, num_str, body_trimmed),
                             ctrl_parts,
@@ -205,10 +197,7 @@ fn render_paragraph_inner(
             .last()
             .and_then(|s| s.chars().last())
             .is_some_and(|c| c.is_alphanumeric());
-        let display_starts_mid_word = display
-            .chars()
-            .next()
-            .is_some_and(|c| c.is_alphanumeric());
+        let display_starts_mid_word = display.chars().next().is_some_and(|c| c.is_alphanumeric());
 
         if display.is_empty() {
             text_parts.push(format!("[{}]({})", url, url));
@@ -250,16 +239,20 @@ fn render_run(
     let char_shape = resources.char_shapes.get(run.char_shape_id as usize);
     let bold = !skip_styles && char_shape.is_some_and(|cs| cs.bold);
     let italic = !skip_styles && char_shape.is_some_and(|cs| cs.italic);
-    let strikeout = !skip_styles && char_shape.is_some_and(|cs| {
-        cs.strikeout.is_some()
-            || cs
-                .underline
-                .as_ref()
-                .is_some_and(|u| u.underline_type == hwp_model::types::UnderlineType::Center)
-    });
+    let strikeout = !skip_styles
+        && char_shape.is_some_and(|cs| {
+            cs.strikeout.is_some()
+                || cs
+                    .underline
+                    .as_ref()
+                    .is_some_and(|u| u.underline_type == hwp_model::types::UnderlineType::Center)
+        });
 
     // Run 내에 Table이 있으면 다른 Object(캡션)는 "\n" 구분자 사용
-    let _run_has_table = run.contents.iter().any(|c| matches!(c, RunContent::Object(ShapeObject::Table(_))));
+    let _run_has_table = run
+        .contents
+        .iter()
+        .any(|c| matches!(c, RunContent::Object(ShapeObject::Table(_))));
 
     for content in &run.contents {
         match content {
@@ -309,10 +302,8 @@ fn render_run(
                             .last()
                             .and_then(|s| s.chars().last())
                             .is_some_and(|c| c.is_alphanumeric());
-                        let display_starts_mid_word = display
-                            .chars()
-                            .next()
-                            .is_some_and(|c| c.is_alphanumeric());
+                        let display_starts_mid_word =
+                            display.chars().next().is_some_and(|c| c.is_alphanumeric());
 
                         if prev_ends_mid_word && display_starts_mid_word {
                             // 단어 중간에서 필드가 시작됨 → plain text
@@ -555,9 +546,7 @@ fn render_table(
                         matches!(c, RunContent::Object(_))
                             || matches!(
                                 c,
-                                RunContent::Control(
-                                    hwp_model::control::Control::FieldBegin(_)
-                                )
+                                RunContent::Control(hwp_model::control::Control::FieldBegin(_))
                             )
                     })
                 })

@@ -21,11 +21,7 @@ pub fn convert_sections(body: &BodyText, _doc_info: &DocInfo) -> Vec<Section> {
             // SectionDefinition에서 outline_shape_id 추출
             let outline_shape_id = extract_section_outline_id(&sec.paragraphs);
             let mut section = Section {
-                paragraphs: sec
-                    .paragraphs
-                    .iter()
-                    .flat_map(convert_paragraph)
-                    .collect(),
+                paragraphs: sec.paragraphs.iter().flat_map(convert_paragraph).collect(),
                 ..Default::default()
             };
             if outline_shape_id > 0 {
@@ -199,8 +195,7 @@ fn reorder_text_after_objects(runs: Vec<Run>) -> Vec<Run> {
 /// TABLE이 있는 Run에서 셀 텍스트와 중복되는 Rectangle을 제거
 fn filter_duplicate_rectangles(runs: Vec<Run>) -> Vec<Run> {
     // TABLE 셀의 텍스트를 수집
-    let mut table_cell_texts: std::collections::HashSet<String> =
-        std::collections::HashSet::new();
+    let mut table_cell_texts: std::collections::HashSet<String> = std::collections::HashSet::new();
     let has_table = runs.iter().any(|r| {
         r.contents.iter().any(|c| {
             if let RunContent::Object(ShapeObject::Table(table)) = c {
@@ -384,7 +379,9 @@ fn assemble_runs(
                 ParaTextRun::Text { text } => {
                     wchar_pos += text.chars().count() as u32;
                 }
-                ParaTextRun::Control { size_wchars, code, .. } => {
+                ParaTextRun::Control {
+                    size_wchars, code, ..
+                } => {
                     let original_size = *size_wchars as i32;
                     // 변환 가능한 제어 문자는 clean text에서 1 문자, 아니면 0
                     let clean_size = if bodytext::control_char::ControlChar::is_convertible(*code)
@@ -1010,9 +1007,7 @@ fn convert_shape_object(
                             },
                             ..Default::default()
                         };
-                        results.push(RunContent::Object(ShapeObject::Picture(Box::new(
-                            picture,
-                        ))));
+                        results.push(RunContent::Object(ShapeObject::Picture(Box::new(picture))));
                     }
                 }
             }
@@ -1068,9 +1063,8 @@ fn convert_shape_object(
                                 }),
                                 ..Default::default()
                             };
-                            results.push(RunContent::Object(ShapeObject::Rectangle(
-                                Box::new(rect),
-                            )));
+                            results
+                                .push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
                         }
                     }
                 }
@@ -1121,7 +1115,9 @@ fn convert_table_object(
     ctrl_paragraphs: &[bodytext::Paragraph],
 ) -> Vec<RunContent> {
     // children에서 Table 레코드 위치 찾기
-    let table_index = children.iter().position(|c| matches!(c, ParagraphRecord::Table { .. }));
+    let table_index = children
+        .iter()
+        .position(|c| matches!(c, ParagraphRecord::Table { .. }));
     let table_data = match table_index {
         Some(idx) => {
             if let ParagraphRecord::Table { table } = &children[idx] {
@@ -1215,9 +1211,17 @@ fn convert_table_object(
                 cell_instance_ids.contains(&para.para_header.instance_id)
             } else {
                 // instance_id == 0이면 텍스트로 비교
-                let para_text: String = para.records.iter().filter_map(|r| {
-                    if let ParagraphRecord::ParaText { text, .. } = r { Some(text.as_str()) } else { None }
-                }).collect();
+                let para_text: String = para
+                    .records
+                    .iter()
+                    .filter_map(|r| {
+                        if let ParagraphRecord::ParaText { text, .. } = r {
+                            Some(text.as_str())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
                 let trimmed = para_text.trim();
                 // 표 셀에 동일한 텍스트가 있으면 셀 내부로 판단
                 if trimmed.is_empty() {
