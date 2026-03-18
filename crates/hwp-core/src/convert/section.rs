@@ -18,8 +18,8 @@ pub fn convert_sections(body: &BodyText, _doc_info: &DocInfo) -> Vec<Section> {
     body.sections
         .iter()
         .map(|sec| {
-            // SectionDefinition에서 outline_shape_id 추출
             let outline_shape_id = extract_section_outline_id(&sec.paragraphs);
+            let page_def = extract_page_def(&sec.paragraphs);
             let mut section = Section {
                 paragraphs: sec.paragraphs.iter().flat_map(convert_paragraph).collect(),
                 ..Default::default()
@@ -27,9 +27,60 @@ pub fn convert_sections(body: &BodyText, _doc_info: &DocInfo) -> Vec<Section> {
             if outline_shape_id > 0 {
                 section.definition.outline_shape_id = Some(outline_shape_id);
             }
+            if let Some(pd) = page_def {
+                section.definition.page = convert_page_def(&pd);
+            }
             section
         })
         .collect()
+}
+
+/// ParagraphRecord에서 PageDef 추출
+fn extract_page_def(
+    paragraphs: &[bodytext::Paragraph],
+) -> Option<bodytext::PageDef> {
+    for para in paragraphs {
+        for record in &para.records {
+            if let ParagraphRecord::PageDef { page_def } = record {
+                return Some(page_def.clone());
+            }
+            // CtrlHeader children에서도 찾기
+            if let ParagraphRecord::CtrlHeader { children, .. } = record {
+                for child in children {
+                    if let ParagraphRecord::PageDef { page_def } = child {
+                        return Some(page_def.clone());
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// HWP PageDef → hwp-model PageDef 변환
+fn convert_page_def(pd: &bodytext::PageDef) -> hwp_model::section::PageDef {
+    use hwp_model::section::PageMargin;
+
+    let landscape = match pd.attributes.paper_direction {
+        bodytext::PaperDirection::Horizontal => Landscape::Landscape,
+        bodytext::PaperDirection::Vertical => Landscape::Portrait,
+    };
+
+    hwp_model::section::PageDef {
+        landscape,
+        width: pd.paper_width.0 as HwpUnit,
+        height: pd.paper_height.0 as HwpUnit,
+        gutter_type: GutterType::default(),
+        margin: PageMargin {
+            left: pd.left_margin.0 as HwpUnit,
+            right: pd.right_margin.0 as HwpUnit,
+            top: pd.top_margin.0 as HwpUnit,
+            bottom: pd.bottom_margin.0 as HwpUnit,
+            header: pd.header_margin.0 as HwpUnit,
+            footer: pd.footer_margin.0 as HwpUnit,
+            gutter: pd.binding_margin.0 as HwpUnit,
+        },
+    }
 }
 
 /// SectionDefinition CtrlHeader에서 number_para_shape_id(개요 번호 ID) 추출
