@@ -6,12 +6,18 @@ use hwp_model::document::{BinaryStore, ImageFormat};
 /// HWP: Field.name에 "%hlk" command 문자열 (URL;타입 형식)
 /// HWPX: Field.parameters에 url/href 키
 pub fn extract_hyperlink_url(field: &Field) -> String {
-    // 1. HWPX 방식: parameters에서 url/href 찾기
+    // 1. HWPX 방식: parameters에서 url/href/Command 찾기
     for param in &field.parameters {
         match param {
             FieldParameter::String { name, value } => {
                 if name == "url" || name == "href" {
                     return value.clone();
+                }
+                // HWPX Command 파라미터: HWP %hlk command와 동일 형식
+                if name == "Command" && !value.is_empty() {
+                    if let Some(url) = hlk_command_to_url(value) {
+                        return url;
+                    }
                 }
             }
             FieldParameter::Element { children, .. } => {
@@ -19,6 +25,11 @@ pub fn extract_hyperlink_url(field: &Field) -> String {
                     if let FieldParameter::String { name, value } = child {
                         if name == "url" || name == "href" {
                             return value.clone();
+                        }
+                        if name == "Command" && !value.is_empty() {
+                            if let Some(url) = hlk_command_to_url(value) {
+                                return url;
+                            }
                         }
                     }
                 }
@@ -105,4 +116,89 @@ pub fn find_binary_item<'a>(
 /// CSS font-family 값 이스케이핑 (single quote 내부용)
 pub fn escape_css_font_name(name: &str) -> String {
     name.replace('\\', "\\\\").replace('\'', "\\'")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use hwp_model::control::{Field, FieldParameter};
+    use hwp_model::types::FieldType;
+
+    fn make_field(name: Option<&str>, params: Vec<FieldParameter>) -> Field {
+        Field {
+            field_type: FieldType::Hyperlink,
+            name: name.map(|s| s.to_string()),
+            parameters: params,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_hwp_hyperlink_url() {
+        // HWP: name 필드에 %hlk command
+        let field = make_field(Some("http\\://example.com;1"), vec![]);
+        assert_eq!(extract_hyperlink_url(&field), "http://example.com");
+    }
+
+    #[test]
+    fn test_hwp_hyperlink_bookmark() {
+        let field = make_field(Some(";0"), vec![]);
+        assert_eq!(extract_hyperlink_url(&field), "#");
+    }
+
+    #[test]
+    fn test_hwp_hyperlink_email() {
+        let field = make_field(Some("user@example.com;2"), vec![]);
+        assert_eq!(extract_hyperlink_url(&field), "mailto:user@example.com");
+    }
+
+    #[test]
+    fn test_hwpx_hyperlink_command_param() {
+        // HWPX: Command 파라미터
+        let field = make_field(
+            None,
+            vec![FieldParameter::String {
+                name: "Command".to_string(),
+                value: "http\\://naver.com;1;0;0;".to_string(),
+            }],
+        );
+        assert_eq!(extract_hyperlink_url(&field), "http://naver.com");
+    }
+
+    #[test]
+    fn test_hwpx_hyperlink_command_bookmark() {
+        let field = make_field(
+            None,
+            vec![FieldParameter::String {
+                name: "Command".to_string(),
+                value: "|얼라인;0;0;0;".to_string(),
+            }],
+        );
+        assert_eq!(extract_hyperlink_url(&field), "#");
+    }
+
+    #[test]
+    fn test_hwpx_hyperlink_url_param() {
+        // 직접 url 파라미터
+        let field = make_field(
+            None,
+            vec![FieldParameter::String {
+                name: "url".to_string(),
+                value: "https://example.com".to_string(),
+            }],
+        );
+        assert_eq!(extract_hyperlink_url(&field), "https://example.com");
+    }
+
+    #[test]
+    fn test_empty_field_returns_empty() {
+        let field = make_field(None, vec![]);
+        assert_eq!(extract_hyperlink_url(&field), "");
+    }
+
+    #[test]
+    fn test_escape_css_font_name() {
+        assert_eq!(escape_css_font_name("맑은 고딕"), "맑은 고딕");
+        assert_eq!(escape_css_font_name("font'name"), "font\\'name");
+    }
 }
