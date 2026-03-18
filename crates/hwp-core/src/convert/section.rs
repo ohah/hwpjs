@@ -1009,6 +1009,50 @@ fn convert_ctrl_header(record: &ParagraphRecord) -> Vec<RunContent> {
 // 표 변환
 // ═══════════════════════════════════════════
 
+/// ShapeComponent 내부의 Picture/Rectangle/ListHeader를 재귀 수집
+fn collect_shape_parts<'a>(
+    children: &'a [ParagraphRecord],
+    common: &ShapeCommon,
+    results: &mut Vec<RunContent>,
+    has_rect: &mut bool,
+    list_header_paras: &mut Option<&'a [bodytext::Paragraph]>,
+) {
+    for child in children {
+        match child {
+            ParagraphRecord::ShapeComponentPicture {
+                shape_component_picture,
+            } => {
+                let bin_id = shape_component_picture.picture_info.bindata_id;
+                let picture = Picture {
+                    common: common.clone(),
+                    img: hwp_model::resources::ImageRef {
+                        binary_item_id: format!("BIN{:04X}", bin_id),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                };
+                results.push(RunContent::Object(ShapeObject::Picture(Box::new(picture))));
+            }
+            ParagraphRecord::ShapeComponentRectangle { .. } => {
+                *has_rect = true;
+            }
+            ParagraphRecord::ListHeader {
+                paragraphs: lh_paras,
+                ..
+            } => {
+                *list_header_paras = Some(lh_paras);
+            }
+            ParagraphRecord::ShapeComponent {
+                children: nested, ..
+            } => {
+                // 재귀 탐색
+                collect_shape_parts(nested, common, results, has_rect, list_header_paras);
+            }
+            _ => {}
+        }
+    }
+}
+
 /// 도형/그림 → ShapeObject 변환 (텍스트박스, 그림 등)
 /// 기존 viewer와 동일하게 children과 paragraphs를 모두 순회하여 콘텐츠 수집
 /// 각 도형을 별도 RunContent로 반환 (기존 viewer처럼 paragraph 내 개별 parts로 처리)
@@ -1049,36 +1093,14 @@ fn convert_shape_object(
                 let mut has_rect = false;
                 let mut list_header_paras: Option<&[bodytext::Paragraph]> = None;
 
-                for sc_child in sc_children {
-                    match sc_child {
-                        ParagraphRecord::ShapeComponentPicture {
-                            shape_component_picture,
-                        } => {
-                            let bin_id = shape_component_picture.picture_info.bindata_id;
-                            let picture = Picture {
-                                common: common.clone(),
-                                img: hwp_model::resources::ImageRef {
-                                    binary_item_id: format!("BIN{:04X}", bin_id),
-                                    ..Default::default()
-                                },
-                                ..Default::default()
-                            };
-                            results.push(RunContent::Object(ShapeObject::Picture(Box::new(
-                                picture,
-                            ))));
-                        }
-                        ParagraphRecord::ShapeComponentRectangle { .. } => {
-                            has_rect = true;
-                        }
-                        ParagraphRecord::ListHeader {
-                            paragraphs: lh_paras,
-                            ..
-                        } => {
-                            list_header_paras = Some(lh_paras);
-                        }
-                        _ => {}
-                    }
-                }
+                // 중첩 ShapeComponent 재귀 탐색
+                collect_shape_parts(
+                    sc_children,
+                    &common,
+                    &mut results,
+                    &mut has_rect,
+                    &mut list_header_paras,
+                );
 
                 // Rectangle + ListHeader → draw_text 포함 Rectangle 생성
                 if has_rect {
