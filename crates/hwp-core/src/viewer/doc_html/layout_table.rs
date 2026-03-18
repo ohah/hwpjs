@@ -30,6 +30,12 @@ pub fn render_layout_table(
         x_mm, y_mm, width_mm, height_mm
     );
 
+    // SVG 테두리
+    let svg = generate_table_svg_borders(table, width_mm, height_mm, resources);
+    if !svg.is_empty() {
+        html.push_str(&svg);
+    }
+
     // 테이블 그리드: htG
     html.push_str(&format!(
         r#"<div class="htG" style="width:{:.2}mm;height:{:.2}mm;">"#,
@@ -129,6 +135,116 @@ pub fn render_layout_table(
     html.push_str("</div>"); // htb
 
     html
+}
+
+/// 표의 셀 경계를 SVG path로 생성
+fn generate_table_svg_borders(
+    table: &Table,
+    width_mm: f64,
+    height_mm: f64,
+    resources: &Resources,
+) -> String {
+    use std::fmt::Write;
+
+    let margin = 2.5; // SVG 오버플로우 마진 (mm)
+    let vb_w = round_mm(width_mm + margin * 2.0);
+    let vb_h = round_mm(height_mm + margin * 2.0);
+
+    let mut svg = format!(
+        r#"<svg class="hs" viewBox="-{m} -{m} {w} {h}" style="left:-{m}mm;top:-{m}mm;width:{w}mm;height:{h}mm;">"#,
+        m = margin,
+        w = vb_w,
+        h = vb_h,
+    );
+    svg.push_str("<defs></defs>");
+
+    // BorderFill에서 선 색상/두께 가져오기
+    let border_fill = if table.border_fill_id > 0 {
+        resources
+            .border_fills
+            .get((table.border_fill_id as usize).wrapping_sub(1))
+    } else {
+        None
+    };
+
+    let stroke_color = border_fill
+        .and_then(|bf| bf.left_border.as_ref())
+        .and_then(|l| l.color)
+        .map(|c| {
+            format!(
+                "#{:02X}{:02X}{:02X}",
+                (c >> 16) & 0xFF,
+                (c >> 8) & 0xFF,
+                c & 0xFF
+            )
+        })
+        .unwrap_or_else(|| "#000000".to_string());
+
+    let stroke_width = border_fill
+        .and_then(|bf| bf.left_border.as_ref())
+        .map(|l| l.width.clone())
+        .unwrap_or_else(|| "0.12".to_string())
+        .replace("mm", "");
+
+    // 세로선 (열 경계)
+    let mut col_x = 0.0_f64;
+    if let Some(first_row) = table.rows.first() {
+        // 왼쪽 경계
+        write!(
+            svg,
+            r#"<path d="M{:.2},0 L{:.2},{:.0}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
+            0.0, 0.0, height_mm, stroke_color, stroke_width
+        )
+        .ok();
+        svg.push_str("</path>");
+
+        for cell in &first_row.cells {
+            col_x += round_mm(hwpunit_to_mm(cell.width));
+            write!(
+                svg,
+                r#"<path d="M{:.2},0 L{:.2},{:.0}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
+                col_x, col_x, height_mm, stroke_color, stroke_width
+            )
+            .ok();
+            svg.push_str("</path>");
+        }
+    }
+
+    // 가로선 (행 경계)
+    let mut row_y = 0.0_f64;
+    // 상단 경계
+    write!(
+        svg,
+        r#"<path d="M-0.06,0 L{:.2},0" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
+        round_mm(width_mm + 0.06),
+        stroke_color,
+        stroke_width
+    )
+    .ok();
+    svg.push_str("</path>");
+
+    for row in &table.rows {
+        let max_h = row
+            .cells
+            .iter()
+            .map(|c| hwpunit_to_mm(c.height))
+            .fold(0.0_f64, f64::max);
+        row_y += round_mm(max_h);
+        write!(
+            svg,
+            r#"<path d="M-0.06,{:.2} L{:.2},{:.2}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
+            row_y,
+            round_mm(width_mm + 0.06),
+            row_y,
+            stroke_color,
+            stroke_width
+        )
+        .ok();
+        svg.push_str("</path>");
+    }
+
+    svg.push_str("</svg>");
+    svg
 }
 
 #[cfg(test)]
