@@ -52,8 +52,16 @@ fn get_image_src(binary_item_id: &str, binaries: &BinaryStore) -> String {
     }
 }
 
-/// Rectangle(draw_text=None)를 SVG 외곽선으로 렌더링
+/// Rectangle(draw_text=None)를 SVG로 렌더링 (외곽선 + 채우기)
 pub fn render_layout_rect_outline(common: &ShapeCommon) -> String {
+    render_layout_rect_with_fill(common, None)
+}
+
+/// Rectangle을 SVG로 렌더링 (외곽선 + 선택적 배경색)
+pub fn render_layout_rect_with_fill(
+    common: &ShapeCommon,
+    fill_color: Option<&str>,
+) -> String {
     let width_mm = round_mm(hwpunit_to_mm(common.size.width));
     let height_mm = round_mm(hwpunit_to_mm(common.size.height));
     let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
@@ -67,10 +75,15 @@ pub fn render_layout_rect_outline(common: &ShapeCommon) -> String {
     let vb_w = round_mm(width_mm + margin * 2.0);
     let vb_h = round_mm(height_mm + margin * 2.0);
 
+    let fill_attr = fill_color
+        .map(|c| format!(r#"fill="{}""#, c))
+        .unwrap_or_else(|| "fill=\"none\"".to_string());
+
     format!(
-        r#"<div class="hsR" style="top:{y:.2}mm;left:{x:.2}mm;width:{w:.2}mm;height:{h:.2}mm;"><svg class="hs" viewBox="-{m} -{m} {vw} {vh}" style="left:-{m}mm;top:-{m}mm;width:{vw}mm;height:{vh}mm;"><path fill="none" d="M0,0L{pw:.2},0L{pw:.2},{ph:.2}L0,{ph:.2}L0,0Z " style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
+        r#"<div class="hsR" style="top:{y:.2}mm;left:{x:.2}mm;width:{w:.2}mm;height:{h:.2}mm;"><svg class="hs" viewBox="-{m} -{m} {vw} {vh}" style="left:-{m}mm;top:-{m}mm;width:{vw}mm;height:{vh}mm;"><path {fill} d="M0,0L{pw:.2},0L{pw:.2},{ph:.2}L0,{ph:.2}L0,0Z " style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
         y = y_mm, x = x_mm, w = width_mm, h = height_mm,
         m = margin, vw = vb_w, vh = vb_h,
+        fill = fill_attr,
         pw = round_mm(width_mm - 0.12), ph = round_mm(height_mm - 0.12),
     )
 }
