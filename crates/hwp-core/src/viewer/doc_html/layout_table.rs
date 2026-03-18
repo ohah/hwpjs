@@ -36,17 +36,35 @@ pub fn render_layout_table(
         width_mm, height_mm
     ));
 
-    // 셀 렌더링
+    // 셀 절대 좌표 계산을 위한 row/col 누적 위치
+    let mut row_top_mm = 0.0_f64;
+
     for row in &table.rows {
+        let mut col_left_mm = 0.0_f64;
+        let mut max_height_mm = 0.0_f64;
+
         for cell in &row.cells {
             let cell_width_mm = round_mm(hwpunit_to_mm(cell.width));
             let cell_height_mm = round_mm(hwpunit_to_mm(cell.height));
+            let cell_margin = 0.5; // 기본 셀 내부 마진 (mm)
 
-            // 셀 위치는 col/row 기반으로 계산 (간략화: 순차 배치)
-            // 완전한 구현은 CellZone + col_widths 필요
+            if cell_height_mm > max_height_mm {
+                max_height_mm = cell_height_mm;
+            }
+
+            // hce: 절대 좌표 배치
             html.push_str(&format!(
-                r#"<div class="hce" style="width:{:.2}mm;height:{:.2}mm;">"#,
-                cell_width_mm, cell_height_mm
+                r#"<div class="hce" style="left:{:.2}mm;top:{:.2}mm;width:{:.2}mm;height:{:.2}mm;">"#,
+                round_mm(col_left_mm),
+                round_mm(row_top_mm),
+                cell_width_mm,
+                cell_height_mm
+            ));
+
+            // hcD > hcI 구조 (old viewer와 동일)
+            html.push_str(&format!(
+                r#"<div class="hcD" style="left:{:.1}mm;top:{:.1}mm;"><div class="hcI">"#,
+                cell_margin, cell_margin
             ));
 
             // 셀 내 문단 렌더링
@@ -69,8 +87,13 @@ pub fn render_layout_table(
                 }
             }
 
+            html.push_str("</div></div>"); // hcI, hcD
             html.push_str("</div>"); // hce
+
+            col_left_mm += cell_width_mm;
         }
+
+        row_top_mm += max_height_mm;
     }
 
     html.push_str("</div>"); // htG
