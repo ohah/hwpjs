@@ -6,9 +6,15 @@ use hwp_model::document::BinaryStore;
 use hwp_model::shape::{Picture, ShapeCommon};
 
 /// 이미지를 레이아웃 HTML로 렌더링
-/// treat_as_char=true: hhi span (인라인)
-/// treat_as_char=false: hsR div (절대 좌표)
 pub fn render_layout_picture(pic: &Picture, binaries: &BinaryStore) -> String {
+    render_layout_picture_with_offset(pic, binaries, 0.0, 0.0)
+}
+
+/// 이미지를 레이아웃 HTML로 렌더링 (페이지 오프셋 포함)
+pub fn render_layout_picture_with_offset(
+    pic: &Picture, binaries: &BinaryStore,
+    page_left: f64, page_top: f64,
+) -> String {
     let common = &pic.common;
     let width_mm = round_mm(hwpunit_to_mm(common.size.width));
     let height_mm = round_mm(hwpunit_to_mm(common.size.height));
@@ -19,15 +25,13 @@ pub fn render_layout_picture(pic: &Picture, binaries: &BinaryStore) -> String {
     }
 
     if common.position.treat_as_char {
-        // 인라인 이미지 (hhi span)
         format!(
             r#"<span class="hhi" style="width:{:.2}mm;height:{:.2}mm;background-image:url({});"></span>"#,
             width_mm, height_mm, img_src
         )
     } else {
-        // 절대 좌표 이미지 (hsR div) — old viewer: top;left 순서
-        let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
-        let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
+        let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset) + page_left);
+        let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset) + page_top);
         format!(
             r#"<div class="hsR" style="top:{:.2}mm;left:{:.2}mm;width:{:.2}mm;height:{:.2}mm;background-image:url({});"></div>"#,
             y_mm, x_mm, width_mm, height_mm, img_src
@@ -54,11 +58,18 @@ fn get_image_src(binary_item_id: &str, binaries: &BinaryStore) -> String {
 
 /// Rectangle을 SVG로 렌더링 (fill + line_shape 기반)
 pub fn render_layout_rect_svg(rect: &hwp_model::shape::RectObject) -> String {
+    render_layout_rect_svg_with_offset(rect, 0.0, 0.0)
+}
+
+pub fn render_layout_rect_svg_with_offset(
+    rect: &hwp_model::shape::RectObject,
+    page_left: f64, page_top: f64,
+) -> String {
     let common = &rect.common;
     let width_mm = round_mm(hwpunit_to_mm(common.size.width));
     let height_mm = round_mm(hwpunit_to_mm(common.size.height));
-    let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
-    let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
+    let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset) + page_left);
+    let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset) + page_top);
 
     if width_mm <= 0.0 || height_mm <= 0.0 {
         return String::new();
@@ -149,11 +160,18 @@ pub fn render_layout_rect_with_fill(
 
 /// Line 도형을 SVG로 렌더링
 pub fn render_layout_line(line: &hwp_model::shape::LineObject) -> String {
+    render_layout_line_with_offset(line, 0.0, 0.0)
+}
+
+pub fn render_layout_line_with_offset(
+    line: &hwp_model::shape::LineObject,
+    page_left: f64, page_top: f64,
+) -> String {
     let common = &line.common;
     let width_mm = round_mm(hwpunit_to_mm(common.size.width));
     let height_mm = round_mm(hwpunit_to_mm(common.size.height));
-    let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
-    let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
+    let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset) + page_left);
+    let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset) + page_top);
 
     if width_mm <= 0.0 && height_mm <= 0.0 {
         return String::new();
@@ -197,12 +215,21 @@ pub fn render_layout_textbox(
     paragraphs: &[hwp_model::paragraph::Paragraph],
     resources: &hwp_model::resources::Resources,
 ) -> String {
+    render_layout_textbox_with_offset(common, paragraphs, resources, 0.0, 0.0)
+}
+
+pub fn render_layout_textbox_with_offset(
+    common: &ShapeCommon,
+    paragraphs: &[hwp_model::paragraph::Paragraph],
+    resources: &hwp_model::resources::Resources,
+    page_left: f64, page_top: f64,
+) -> String {
     use super::{flat_text, layout_line_segment};
 
     let width_mm = round_mm(hwpunit_to_mm(common.size.width));
     let height_mm = round_mm(hwpunit_to_mm(common.size.height));
-    let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
-    let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
+    let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset) + page_left);
+    let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset) + page_top);
 
     let mut html = format!(
         r#"<div class="hsT" style="top:{:.2}mm;left:{:.2}mm;width:{:.2}mm;height:{:.2}mm;">"#,

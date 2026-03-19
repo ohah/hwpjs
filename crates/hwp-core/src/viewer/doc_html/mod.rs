@@ -138,6 +138,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
 
             // 문단 내 Object/Control 수집 (hls 뒤에 배치하기 위해 먼저 수집)
             let mut obj_blocks: Vec<String> = Vec::new();
+            let page_left = layout_page::content_left_abs_mm(page_def);
+            let page_top = layout_page::content_top_abs_mm(page_def);
             for run in &para.runs {
                 for content in &run.contents {
                     match content {
@@ -153,6 +155,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                     )
                                 }
                                 hwp_model::shape::ShapeObject::Picture(ref pic) => {
+                                    // 도형 좌표는 이미 페이지 절대좌표 (offset 불요)
                                     layout_image::render_layout_picture(pic, &doc.binaries)
                                 }
                                 hwp_model::shape::ShapeObject::Rectangle(ref rect) => {
