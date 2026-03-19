@@ -93,7 +93,13 @@ pub fn render_layout_table_with_offset(
     for (ri, row) in table.rows.iter().enumerate() {
         for cell in &row.cells {
             if cell.row_span <= 1 {
-                let ch = round_mm(hwpunit_to_mm(cell.height));
+                let parsed_h = hwpunit_to_mm(cell.height);
+                let ch = if parsed_h < 1.0 && cell.height != 0 {
+                    let content_h = compute_cell_content_height_raw(cell);
+                    round_mm(if content_h > parsed_h { content_h } else { parsed_h })
+                } else {
+                    round_mm(parsed_h)
+                };
                 if ch > row_heights[ri] {
                     row_heights[ri] = ch;
                 }
@@ -113,7 +119,16 @@ pub fn render_layout_table_with_offset(
 
         for cell in &row.cells {
             let cell_width_mm = round_mm(hwpunit_to_mm(cell.width));
-            let cell_height_raw = hwpunit_to_mm(cell.height); // hcI 계산용 (반올림 전)
+            // 셀 높이: cell.height가 실제 높이보다 작은 경우 콘텐츠 기반 높이 사용
+            // (HWP 파서에서 cell.height가 내부 마진만 포함할 수 있음)
+            let parsed_height_raw = hwpunit_to_mm(cell.height);
+            let cell_height_raw = if parsed_height_raw < 1.0 && cell.height != 0 {
+                // 콘텐츠 기반 높이 계산 (line_segments 사용)
+                let content_h = compute_cell_content_height_raw(cell);
+                if content_h > parsed_height_raw { content_h } else { parsed_height_raw }
+            } else {
+                parsed_height_raw
+            };
             let cell_height_mm = round_mm(cell_height_raw);
             // 셀 마진: 실제 데이터 사용, 없으면 기본 0.5mm
             let margin_left = if cell.cell_margin.left != 0 {
@@ -422,7 +437,13 @@ fn compute_row_positions(table: &Table) -> Vec<f64> {
     for (ri, row) in table.rows.iter().enumerate() {
         for cell in &row.cells {
             if cell.row_span <= 1 {
-                let ch = round_mm(hwpunit_to_mm(cell.height));
+                let parsed_h = hwpunit_to_mm(cell.height);
+                let ch = if parsed_h < 1.0 && cell.height != 0 {
+                    let content_h = compute_cell_content_height_raw(cell);
+                    round_mm(if content_h > parsed_h { content_h } else { parsed_h })
+                } else {
+                    round_mm(parsed_h)
+                };
                 if ch > row_heights[ri] { row_heights[ri] = ch; }
             }
         }
@@ -588,6 +609,18 @@ fn draw_border_line(
     )
     .ok();
     svg.push_str("</path>");
+}
+
+/// 셀 콘텐츠 높이 (raw mm, 마진 미포함) — line_segments에서 계산
+fn compute_cell_content_height_raw(cell: &hwp_model::table::TableCell) -> f64 {
+    let mut max_bottom: Option<i32> = None;
+    for para in &cell.content.paragraphs {
+        for seg in &para.line_segments {
+            let bottom = seg.vertical_pos + seg.line_height;
+            max_bottom = Some(max_bottom.map(|x: i32| x.max(bottom)).unwrap_or(bottom));
+        }
+    }
+    max_bottom.map(|b| hwpunit_to_mm(b)).unwrap_or(0.0)
 }
 
 /// 셀 내 콘텐츠 높이 계산 (세로 정렬용)
