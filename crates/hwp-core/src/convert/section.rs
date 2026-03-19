@@ -1357,32 +1357,8 @@ fn convert_shape_object(
                     results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
                 }
             }
-            ParagraphRecord::ShapeComponent {
-                children: sc_children,
-                ..
-            } => {
-                for sc_child in sc_children {
-                    if let ParagraphRecord::ListHeader {
-                        paragraphs: lh_paras,
-                        ..
-                    } = sc_child
-                    {
-                        let paras = convert_hwp_paragraphs(lh_paras);
-                        if !paras.is_empty() {
-                            let rect = RectObject {
-                                common: common.clone(),
-                                draw_text: Some(SubList {
-                                    paragraphs: paras,
-                                    ..Default::default()
-                                }),
-                                ..Default::default()
-                            };
-                            results
-                                .push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
-                        }
-                    }
-                }
-            }
+            // ShapeComponent 내부 ListHeader는 Pass 1에서 이미 처리됨 — 건너뜀
+            ParagraphRecord::ShapeComponent { .. } => {}
             _ => {}
         }
     }
