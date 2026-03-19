@@ -3,7 +3,7 @@ source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
 <div class="hwp-body">
-<p style="line-height: 120%"><span style="font-size: 10.0pt; font-family: '한컴바탕'">[붙임 1]</span></p>
+<p style="line-height: 120%"><span style="font-size: 10.0pt; font-family: '한컴바탕'"><b>[붙임 1]</b></span></p>
 <p style="text-align: center; text-indent: -30.0pt"><span style="font-size: 16.0pt; font-family: 'HY헤드라인M'">2026학년도 자율(전공)동아리 개설 신청서</span></p>
 <table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
 <tr>

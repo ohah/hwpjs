@@ -570,7 +570,7 @@ fn assemble_runs(
             if last.0 == clean_pos {
                 // 같은 clean position: 텍스트 시작 위치의 CharShape 우선
                 // 단, 뒤에 더 다른 CharShape가 있을 때만 (중간값 우선)
-                if cs.position >= first_text_pos && cs.position < char_shapes.last().map(|c| c.position).unwrap_or(0) {
+                if cs.position >= first_text_pos && cs.position <= char_shapes.last().map(|c| c.position).unwrap_or(0) {
                     last.1 = cs.shape_id;
                 }
                 continue;
