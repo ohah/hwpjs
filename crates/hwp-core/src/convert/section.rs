@@ -40,9 +40,7 @@ pub fn convert_sections(body: &BodyText, _doc_info: &DocInfo) -> Vec<Section> {
 }
 
 /// ParagraphRecord에서 PageDef 추출
-fn extract_page_def(
-    paragraphs: &[bodytext::Paragraph],
-) -> Option<bodytext::PageDef> {
+fn extract_page_def(paragraphs: &[bodytext::Paragraph]) -> Option<bodytext::PageDef> {
     for para in paragraphs {
         for record in &para.records {
             if let ParagraphRecord::PageDef { page_def } = record {
@@ -62,9 +60,7 @@ fn extract_page_def(
 }
 
 /// ParagraphRecord에서 ColumnDef 추출
-fn extract_column_def(
-    paragraphs: &[bodytext::Paragraph],
-) -> Option<hwp_model::section::ColumnDef> {
+fn extract_column_def(paragraphs: &[bodytext::Paragraph]) -> Option<hwp_model::section::ColumnDef> {
     use hwp_model::section::{ColumnDef, ColumnLine, ColumnSize};
 
     for para in paragraphs {
@@ -108,9 +104,7 @@ fn extract_column_def(
                         id: 0,
                         column_type: match attribute.column_type {
                             ctrl_header::ColumnType::Normal => ColumnType::Newspaper,
-                            ctrl_header::ColumnType::Distributed => {
-                                ColumnType::BalancedNewspaper
-                            }
+                            ctrl_header::ColumnType::Distributed => ColumnType::BalancedNewspaper,
                             ctrl_header::ColumnType::Parallel => ColumnType::Parallel,
                         },
                         col_count,
@@ -561,7 +555,9 @@ fn assemble_runs(
             if last.0 == clean_pos {
                 // 같은 clean position: 텍스트 시작 위치의 CharShape 우선
                 // 단, 뒤에 더 다른 CharShape가 있을 때만 (중간값 우선)
-                if cs.position >= first_text_pos && cs.position <= char_shapes.last().map(|c| c.position).unwrap_or(0) {
+                if cs.position >= first_text_pos
+                    && cs.position <= char_shapes.last().map(|c| c.position).unwrap_or(0)
+                {
                     last.1 = cs.shape_id;
                 }
                 continue;
@@ -1208,7 +1204,9 @@ fn collect_shape_parts<'a>(
                 // 재귀 탐색: 각 중첩 SC의 Rectangle+ListHeader를 독립적으로 처리
                 let mut nested_rect = false;
                 let mut nested_lh: Option<&'a [bodytext::Paragraph]> = None;
-                if let Some(di) = collect_shape_parts(nested, common, results, &mut nested_rect, &mut nested_lh) {
+                if let Some(di) =
+                    collect_shape_parts(nested, common, results, &mut nested_rect, &mut nested_lh)
+                {
                     if draw_info.is_none() {
                         draw_info = Some(di);
                     }
@@ -1223,7 +1221,11 @@ fn collect_shape_parts<'a>(
                         let is_dup = (0..half).all(|i| {
                             extract_para_text(&paras[i]) == extract_para_text(&paras[half + i])
                         });
-                        if is_dup { &paras[half..] } else { paras }
+                        if is_dup {
+                            &paras[half..]
+                        } else {
+                            paras
+                        }
                     } else {
                         paras
                     };
@@ -1241,7 +1243,9 @@ fn collect_shape_parts<'a>(
                     }
                 } else {
                     // 상위로 전파
-                    if nested_rect { *has_rect = true; }
+                    if nested_rect {
+                        *has_rect = true;
+                    }
                     if nested_lh.is_some() && list_header_paras.is_none() {
                         *list_header_paras = nested_lh;
                     }
@@ -1313,7 +1317,10 @@ fn convert_shape_object(
                         },
                         ..Default::default()
                     };
-                    shape_draw = Some(ShapeDrawInfo { fill, line_shape: line });
+                    shape_draw = Some(ShapeDrawInfo {
+                        fill,
+                        line_shape: line,
+                    });
                 }
 
                 // 중첩 ShapeComponent 재귀 탐색
@@ -1339,7 +1346,11 @@ fn convert_shape_object(
                             let is_dup = (0..half).all(|i| {
                                 extract_para_text(&paras[i]) == extract_para_text(&paras[half + i])
                             });
-                            if is_dup { &paras[half..] } else { paras }
+                            if is_dup {
+                                &paras[half..]
+                            } else {
+                                paras
+                            }
                         } else if paras.len() == 2 {
                             &paras[paras.len() - 1..]
                         } else {

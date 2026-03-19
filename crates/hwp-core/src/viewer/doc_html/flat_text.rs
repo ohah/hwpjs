@@ -5,7 +5,6 @@
 /// - text: &str (전체 문단 텍스트, 컨트롤 문자 제거)
 /// - char_shapes: &[CharShapeInfo] (position, shape_id)
 /// - control_char_positions: &[ControlCharPosition] (제어 문자 위치)
-
 use hwp_model::paragraph::{Paragraph, Run, RunContent, TextElement};
 
 /// old viewer의 CharShapeInfo 호환 구조
@@ -53,7 +52,7 @@ pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
     let mut wchar_pos: u32 = 0; // 추출 텍스트 내 위치
     let mut original_wchar_pos: u32 = 0; // 원본 HWP WCHAR 위치 (제어 문자 포함)
     let mut hyperlink_start: Option<(u32, String, Option<u16>)> = None; // (start_pos, onclick, next_cs)
-    // 매핑 초기점
+                                                                        // 매핑 초기점
     result.wchar_map.push((0, 0));
 
     for run in &para.runs {
@@ -64,7 +63,12 @@ pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
         });
         // hyperlink 범위 내 첫 번째 텍스트 Run의 CharShape 저장
         if let Some((_, _, ref mut cs_opt)) = hyperlink_start {
-            if cs_opt.is_none() && run.contents.iter().any(|c| matches!(c, RunContent::Text(_))) {
+            if cs_opt.is_none()
+                && run
+                    .contents
+                    .iter()
+                    .any(|c| matches!(c, RunContent::Text(_)))
+            {
                 *cs_opt = Some(run.char_shape_id);
             }
         }
@@ -212,10 +216,7 @@ mod tests {
     #[test]
     fn test_extract_flat_text_simple() {
         let para = Paragraph {
-            runs: vec![
-                make_text_run(0, "Hello "),
-                make_text_run(1, "World"),
-            ],
+            runs: vec![make_text_run(0, "Hello "), make_text_run(1, "World")],
             ..Default::default()
         };
         let result = extract_flat_text(&para);
@@ -236,7 +237,11 @@ mod tests {
                     char_shape_id: None,
                     elements: vec![
                         TextElement::Text("A".to_string()),
-                        TextElement::Tab { width: 0, leader: Default::default(), tab_type: Default::default() },
+                        TextElement::Tab {
+                            width: 0,
+                            leader: Default::default(),
+                            tab_type: Default::default(),
+                        },
                         TextElement::Text("B".to_string()),
                     ],
                 })],
@@ -251,9 +256,18 @@ mod tests {
     #[test]
     fn test_find_char_shape_at() {
         let shapes = vec![
-            FlatCharShapeInfo { position: 0, shape_id: 10 },
-            FlatCharShapeInfo { position: 5, shape_id: 20 },
-            FlatCharShapeInfo { position: 10, shape_id: 30 },
+            FlatCharShapeInfo {
+                position: 0,
+                shape_id: 10,
+            },
+            FlatCharShapeInfo {
+                position: 5,
+                shape_id: 20,
+            },
+            FlatCharShapeInfo {
+                position: 10,
+                shape_id: 30,
+            },
         ];
         assert_eq!(find_char_shape_at(&shapes, 0), 10);
         assert_eq!(find_char_shape_at(&shapes, 3), 10);

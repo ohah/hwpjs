@@ -12,8 +12,10 @@ pub fn render_layout_picture(pic: &Picture, binaries: &BinaryStore) -> String {
 
 /// 이미지를 레이아웃 HTML로 렌더링 (페이지 오프셋 포함)
 pub fn render_layout_picture_with_offset(
-    pic: &Picture, binaries: &BinaryStore,
-    page_left: f64, page_top: f64,
+    pic: &Picture,
+    binaries: &BinaryStore,
+    page_left: f64,
+    page_top: f64,
 ) -> String {
     let common = &pic.common;
     let width_mm = round_mm(hwpunit_to_mm(common.size.width));
@@ -63,7 +65,8 @@ pub fn render_layout_rect_svg(rect: &hwp_model::shape::RectObject) -> String {
 
 pub fn render_layout_rect_svg_with_offset(
     rect: &hwp_model::shape::RectObject,
-    page_left: f64, page_top: f64,
+    page_left: f64,
+    page_top: f64,
 ) -> String {
     let common = &rect.common;
     let width_mm = round_mm(hwpunit_to_mm(common.size.width));
@@ -88,36 +91,60 @@ pub fn render_layout_rect_svg_with_offset(
                 if *c != 0xFFFFFF && *c != 0 {
                     format!(
                         r#"fill="rgb({},{},{})""#,
-                        (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF
+                        (c >> 16) & 0xFF,
+                        (c >> 8) & 0xFF,
+                        c & 0xFF
                     )
-                } else { "fill=\"none\"".to_string() }
-            } else { "fill=\"none\"".to_string() }
+                } else {
+                    "fill=\"none\"".to_string()
+                }
+            } else {
+                "fill=\"none\"".to_string()
+            }
         }
         _ => "fill=\"none\"".to_string(),
     };
 
     // 외곽선
     let line = &rect.line_shape;
-    let stroke_color = line.color
+    let stroke_color = line
+        .color
         .filter(|&c| c != 0)
-        .map(|c| format!("#{:02X}{:02X}{:02X}", (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF))
+        .map(|c| {
+            format!(
+                "#{:02X}{:02X}{:02X}",
+                (c >> 16) & 0xFF,
+                (c >> 8) & 0xFF,
+                c & 0xFF
+            )
+        })
         .unwrap_or_else(|| "#000000".to_string());
 
     let dash = match line.style {
         hwp_model::types::LineType1::Dot => "stroke-dasharray:0.17,0.26;",
         hwp_model::types::LineType1::Dash => "stroke-dasharray:0.47,0.47,0.47,0,0.47,0.47,0.47,0;",
         hwp_model::types::LineType1::DashDot => "stroke-dasharray:1.86,0.52,0.17,0.52;",
-        hwp_model::types::LineType1::DashDotDot => "stroke-dasharray:0.47,0.47,0.47,0,0.47,0.47,0.47,0;",
+        hwp_model::types::LineType1::DashDotDot => {
+            "stroke-dasharray:0.47,0.47,0.47,0,0.47,0.47,0.47,0;"
+        }
         hwp_model::types::LineType1::None => "stroke:none;",
         _ => "",
     };
 
     format!(
         r#"<div class="hsR" style="top:{y:.2}mm;left:{x:.2}mm;width:{w:.2}mm;height:{h:.2}mm;"><svg class="hs" viewBox="-{m} -{m} {vw} {vh}" style="left:-{m}mm;top:-{m}mm;width:{vw}mm;height:{vh}mm;"><path {fill} d="M0,0L{pw:.2},0L{pw:.2},{ph:.2}L0,{ph:.2}L0,0Z " style="stroke:{sc};stroke-linecap:butt;{da}stroke-width:0.12;"></path></svg></div>"#,
-        y = y_mm, x = x_mm, w = width_mm, h = height_mm,
-        m = margin, vw = vb_w, vh = vb_h,
-        fill = fill_attr, pw = pw, ph = ph,
-        sc = stroke_color, da = dash,
+        y = y_mm,
+        x = x_mm,
+        w = width_mm,
+        h = height_mm,
+        m = margin,
+        vw = vb_w,
+        vh = vb_h,
+        fill = fill_attr,
+        pw = pw,
+        ph = ph,
+        sc = stroke_color,
+        da = dash,
     )
 }
 
@@ -128,10 +155,7 @@ pub fn render_layout_rect_outline(common: &ShapeCommon) -> String {
 }
 
 /// Rectangle을 SVG로 렌더링 (외곽선 + 선택적 배경색)
-pub fn render_layout_rect_with_fill(
-    common: &ShapeCommon,
-    fill_color: Option<&str>,
-) -> String {
+pub fn render_layout_rect_with_fill(common: &ShapeCommon, fill_color: Option<&str>) -> String {
     let width_mm = round_mm(hwpunit_to_mm(common.size.width));
     let height_mm = round_mm(hwpunit_to_mm(common.size.height));
     let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
@@ -151,10 +175,16 @@ pub fn render_layout_rect_with_fill(
 
     format!(
         r#"<div class="hsR" style="top:{y:.2}mm;left:{x:.2}mm;width:{w:.2}mm;height:{h:.2}mm;"><svg class="hs" viewBox="-{m} -{m} {vw} {vh}" style="left:-{m}mm;top:-{m}mm;width:{vw}mm;height:{vh}mm;"><path {fill} d="M0,0L{pw:.2},0L{pw:.2},{ph:.2}L0,{ph:.2}L0,0Z " style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
-        y = y_mm, x = x_mm, w = width_mm, h = height_mm,
-        m = margin, vw = vb_w, vh = vb_h,
+        y = y_mm,
+        x = x_mm,
+        w = width_mm,
+        h = height_mm,
+        m = margin,
+        vw = vb_w,
+        vh = vb_h,
         fill = fill_attr,
-        pw = round_mm(width_mm - 0.12), ph = round_mm(height_mm - 0.12),
+        pw = round_mm(width_mm - 0.12),
+        ph = round_mm(height_mm - 0.12),
     )
 }
 
@@ -165,7 +195,8 @@ pub fn render_layout_line(line: &hwp_model::shape::LineObject) -> String {
 
 pub fn render_layout_line_with_offset(
     line: &hwp_model::shape::LineObject,
-    page_left: f64, page_top: f64,
+    page_left: f64,
+    page_top: f64,
 ) -> String {
     let common = &line.common;
     let width_mm = round_mm(hwpunit_to_mm(common.size.width));
@@ -202,9 +233,17 @@ pub fn render_layout_line_with_offset(
 
     format!(
         r#"<div class="hsR" style="top:{ly:.2}mm;left:{lx:.2}mm;width:{w:.2}mm;height:{h:.2}mm;"><svg class="hs" viewBox="-{m} -{m} {vw} {vh}" style="left:-{m}mm;top:-{m}mm;width:{vw}mm;height:{vh}mm;"><path d="M{x1},{y1} L{x2},{y2}" style="stroke:{sc};stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
-        lx = x_mm, ly = y_mm, w = width_mm.max(0.3), h = height_mm.max(0.3),
-        m = margin, vw = vb_w, vh = vb_h,
-        x1 = x1, y1 = y1, x2 = x2, y2 = y2,
+        lx = x_mm,
+        ly = y_mm,
+        w = width_mm.max(0.3),
+        h = height_mm.max(0.3),
+        m = margin,
+        vw = vb_w,
+        vh = vb_h,
+        x1 = x1,
+        y1 = y1,
+        x2 = x2,
+        y2 = y2,
         sc = stroke_color,
     )
 }
@@ -222,7 +261,8 @@ pub fn render_layout_textbox_with_offset(
     common: &ShapeCommon,
     paragraphs: &[hwp_model::paragraph::Paragraph],
     resources: &hwp_model::resources::Resources,
-    page_left: f64, page_top: f64,
+    page_left: f64,
+    page_top: f64,
 ) -> String {
     use super::{flat_text, layout_line_segment};
 

@@ -155,10 +155,7 @@ fn test_layout_mode_produces_hpa() {
         html.contains(r#"class="hls"#),
         "Layout mode should produce hls div"
     );
-    assert!(
-        html.contains("<style>"),
-        "Layout mode should include CSS"
-    );
+    assert!(html.contains("<style>"), "Layout mode should include CSS");
 }
 
 #[test]
@@ -356,11 +353,7 @@ fn compare_old_vs_new_layout_html() {
         std::fs::write(dump_dir.join(format!("{}_new.html", file_name)), &new_html).ok();
 
         // 기본 검증: 둘 다 비어있지 않아야 함
-        assert!(
-            !old_html.is_empty(),
-            "{}: old HTML is empty",
-            file_name
-        );
+        assert!(!old_html.is_empty(), "{}: old HTML is empty", file_name);
         assert!(
             !new_html.is_empty(),
             "{}: new layout HTML is empty",

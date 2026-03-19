@@ -28,8 +28,13 @@ pub fn render_layout_table_with_offset(
     let mut pattern_counter = 0_usize;
     let mut color_to_pattern = std::collections::HashMap::new();
     render_layout_table_full(
-        table, resources, _binaries, page_left_mm, page_top_mm,
-        &mut pattern_counter, &mut color_to_pattern,
+        table,
+        resources,
+        _binaries,
+        page_left_mm,
+        page_top_mm,
+        &mut pattern_counter,
+        &mut color_to_pattern,
     )
 }
 
@@ -56,13 +61,17 @@ pub fn render_layout_table_full(
 
     // 외곽 마진 (old viewer: ObjectCommon.width + margin.left + margin.right)
     // 반올림 전 raw 값으로 합산 후 최종 반올림 (old viewer 정밀도 일치)
-    let (margin_l_raw, margin_r_raw, margin_t_raw, margin_b_raw) = common.out_margin.as_ref()
-        .map(|m| (
-            hwpunit_to_mm(m.left),
-            hwpunit_to_mm(m.right),
-            hwpunit_to_mm(m.top),
-            hwpunit_to_mm(m.bottom),
-        ))
+    let (margin_l_raw, margin_r_raw, margin_t_raw, margin_b_raw) = common
+        .out_margin
+        .as_ref()
+        .map(|m| {
+            (
+                hwpunit_to_mm(m.left),
+                hwpunit_to_mm(m.right),
+                hwpunit_to_mm(m.top),
+                hwpunit_to_mm(m.bottom),
+            )
+        })
         .unwrap_or((0.0, 0.0, 0.0, 0.0));
 
     // htb 크기: content + margins (old viewer htb_size)
@@ -79,7 +88,10 @@ pub fn render_layout_table_full(
     let mut html = String::new();
     if has_caption {
         // htG: 표 + 캡션 그룹 (캡션 gap 포함 크기)
-        let cap_gap = table.common.caption.as_ref()
+        let cap_gap = table
+            .common
+            .caption
+            .as_ref()
             .map(|c| round_mm(hwpunit_to_mm(c.gap)))
             .unwrap_or(3.0);
         let htg_height = round_mm(htb_height + cap_gap + 3.53); // 캡션 높이 근사
@@ -99,8 +111,12 @@ pub fn render_layout_table_full(
 
     // SVG 테두리 (viewBox는 htb 크기 기반)
     let svg = generate_table_svg_borders_with_patterns(
-        table, htb_width, htb_height, resources,
-        doc_pattern_counter, doc_color_to_pattern,
+        table,
+        htb_width,
+        htb_height,
+        resources,
+        doc_pattern_counter,
+        doc_color_to_pattern,
     );
     if !svg.is_empty() {
         html.push_str(&svg);
@@ -117,7 +133,11 @@ pub fn render_layout_table_full(
                 let parsed_h = hwpunit_to_mm(cell.height);
                 let ch = if parsed_h < 1.0 && cell.height != 0 {
                     let content_h = compute_cell_content_height_raw(cell);
-                    round_mm(if content_h > parsed_h { content_h } else { parsed_h })
+                    round_mm(if content_h > parsed_h {
+                        content_h
+                    } else {
+                        parsed_h
+                    })
                 } else {
                     round_mm(parsed_h)
                 };
@@ -146,7 +166,11 @@ pub fn render_layout_table_full(
             let cell_height_raw = if parsed_height_raw < 1.0 && cell.height != 0 {
                 // 콘텐츠 기반 높이 계산 (line_segments 사용)
                 let content_h = compute_cell_content_height_raw(cell);
-                if content_h > parsed_height_raw { content_h } else { parsed_height_raw }
+                if content_h > parsed_height_raw {
+                    content_h
+                } else {
+                    parsed_height_raw
+                }
             } else {
                 parsed_height_raw
             };
@@ -154,13 +178,19 @@ pub fn render_layout_table_full(
             // 셀 마진: 실제 데이터 사용, 없으면 기본 0.5mm
             let margin_left = if cell.cell_margin.left != 0 {
                 round_mm(hwpunit_to_mm(cell.cell_margin.left))
-            } else { 0.5 };
+            } else {
+                0.5
+            };
             let margin_top = if cell.cell_margin.top != 0 {
                 round_mm(hwpunit_to_mm(cell.cell_margin.top))
-            } else { 0.5 };
+            } else {
+                0.5
+            };
             let margin_bottom = if cell.cell_margin.bottom != 0 {
                 round_mm(hwpunit_to_mm(cell.cell_margin.bottom))
-            } else { 0.5 };
+            } else {
+                0.5
+            };
 
             let cell_top = round_mm(row_positions[ri]);
             let cell_left = round_mm(col_left_mm);
@@ -168,10 +198,7 @@ pub fn render_layout_table_full(
             // hce: old viewer mm 포맷 (정수는 소수점 없이)
             html.push_str(&format!(
                 r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;">"#,
-                cell_left,
-                cell_top,
-                cell_width_mm,
-                cell_height_mm
+                cell_left, cell_top, cell_width_mm, cell_height_mm
             ));
 
             // 셀 내 콘텐츠 높이 계산 (세로 정렬용)
@@ -268,10 +295,7 @@ pub fn render_layout_table_full(
 }
 
 /// 표 캡션 렌더링
-fn render_caption(
-    caption: &hwp_model::shape::Caption,
-    resources: &Resources,
-) -> String {
+fn render_caption(caption: &hwp_model::shape::Caption, resources: &Resources) -> String {
     let gap_mm = round_mm(hwpunit_to_mm(caption.gap));
     let width_mm = round_mm(hwpunit_to_mm(caption.width));
 
@@ -313,7 +337,9 @@ fn generate_table_svg_borders(
 ) -> String {
     let mut pc = 0_usize;
     let mut ctp = std::collections::HashMap::new();
-    generate_table_svg_borders_with_patterns(table, width_mm, height_mm, resources, &mut pc, &mut ctp)
+    generate_table_svg_borders_with_patterns(
+        table, width_mm, height_mm, resources, &mut pc, &mut ctp,
+    )
 }
 
 fn generate_table_svg_borders_with_patterns(
@@ -337,13 +363,19 @@ fn generate_table_svg_borders_with_patterns(
 
     // SVG fills (배경 패턴) 생성 — document level 상태 사용
     let (pattern_defs, fill_paths) = generate_table_fills(
-        table, &row_positions, resources, pattern_counter, color_to_pattern,
+        table,
+        &row_positions,
+        resources,
+        pattern_counter,
+        color_to_pattern,
     );
 
     // SVG viewBox와 style (old viewer: ViewBox 기반)
     let mut svg = format!(
         r#"<svg class="hs" viewBox="-{m} -{m} {w} {h}" style="left:-{m}mm;top:-{m}mm;width:{w}mm;height:{h}mm;">"#,
-        m = margin, w = vb_w, h = vb_h,
+        m = margin,
+        w = vb_w,
+        h = vb_h,
     );
     svg.push_str(&format!("<defs>{}</defs>", pattern_defs));
     svg.push_str(&fill_paths);
@@ -352,18 +384,30 @@ fn generate_table_svg_borders_with_patterns(
     let content_h = *row_positions.last().unwrap_or(&height_mm);
 
     // 기본 border 정보 (첫 번째 셀의 BorderFill 사용)
-    let default_border = table.rows.first()
+    let default_border = table
+        .rows
+        .first()
         .and_then(|r| r.cells.first())
         .and_then(|c| {
             if c.border_fill_id > 0 {
-                resources.border_fills.get((c.border_fill_id as usize).wrapping_sub(1))
-            } else { None }
+                resources
+                    .border_fills
+                    .get((c.border_fill_id as usize).wrapping_sub(1))
+            } else {
+                None
+            }
         });
     let default_stroke_width = default_border
         .and_then(|bf| bf.left_border.as_ref())
         .map(|l| {
-            if l.width.is_empty() { 0.12 }
-            else { l.width.trim_end_matches("mm").parse::<f64>().unwrap_or(0.12) }
+            if l.width.is_empty() {
+                0.12
+            } else {
+                l.width
+                    .trim_end_matches("mm")
+                    .parse::<f64>()
+                    .unwrap_or(0.12)
+            }
         })
         .unwrap_or(0.12);
     let overshoot = default_stroke_width / 2.0;
@@ -381,7 +425,11 @@ fn generate_table_svg_borders_with_patterns(
                 // 셀이 이 열 경계를 가로지르는가? (셀 내부에 경계가 있으면 선 생략)
                 if cl + 0.01 < col_x && cr - 0.01 > col_x {
                     let ri = cell.row as usize;
-                    let rs = if cell.row_span > 0 { cell.row_span as usize } else { 1 };
+                    let rs = if cell.row_span > 0 {
+                        cell.row_span as usize
+                    } else {
+                        1
+                    };
                     if ri < row_positions.len() && ri + rs < row_positions.len() {
                         covered.push((row_positions[ri], row_positions[ri + rs]));
                     }
@@ -395,7 +443,9 @@ fn generate_table_svg_borders_with_patterns(
         let mut segments = Vec::new();
         let mut cur_y = 0.0_f64;
         for (cs, ce) in &covered {
-            if cur_y < *cs { segments.push((cur_y, *cs)); }
+            if cur_y < *cs {
+                segments.push((cur_y, *cs));
+            }
             cur_y = cur_y.max(*ce);
         }
         // old viewer: covered가 있으면 마지막 세그먼트도 포함 (zero-length 포함)
@@ -404,7 +454,15 @@ fn generate_table_svg_borders_with_patterns(
         }
 
         for (y0, y1) in &segments {
-            svg_path_v(&mut svg, col_x, *y0, *y1, default_stroke_width, resources, default_border);
+            svg_path_v(
+                &mut svg,
+                col_x,
+                *y0,
+                *y1,
+                default_stroke_width,
+                resources,
+                default_border,
+            );
         }
     }
 
@@ -417,7 +475,11 @@ fn generate_table_svg_borders_with_patterns(
             for cell in &row.cells {
                 let cw = round_mm(hwpunit_to_mm(cell.width));
                 let ri = cell.row as usize;
-                let rs = if cell.row_span > 0 { cell.row_span as usize } else { 1 };
+                let rs = if cell.row_span > 0 {
+                    cell.row_span as usize
+                } else {
+                    1
+                };
                 if ri < row_positions.len() && ri + rs < row_positions.len() {
                     let ct = row_positions[ri];
                     let cb = row_positions[ri + rs];
@@ -434,14 +496,26 @@ fn generate_table_svg_borders_with_patterns(
         let mut segments = Vec::new();
         let mut cur_x = 0.0_f64;
         for (cs, ce) in &covered {
-            if cur_x < *cs { segments.push((cur_x, *cs)); }
+            if cur_x < *cs {
+                segments.push((cur_x, *cs));
+            }
             cur_x = cur_x.max(*ce);
         }
-        if cur_x < content_w { segments.push((cur_x, content_w)); }
+        if cur_x < content_w {
+            segments.push((cur_x, content_w));
+        }
 
         for (x0, x1) in &segments {
             // overshoot: 수평선 양끝에 stroke-width/2만큼 확장
-            svg_path_h(&mut svg, *x0 - overshoot, *x1 + overshoot, row_y, default_stroke_width, resources, default_border);
+            svg_path_h(
+                &mut svg,
+                *x0 - overshoot,
+                *x1 + overshoot,
+                row_y,
+                default_stroke_width,
+                resources,
+                default_border,
+            );
         }
     }
 
@@ -472,11 +546,17 @@ fn compute_row_positions(table: &Table) -> Vec<f64> {
                 let parsed_h = hwpunit_to_mm(cell.height);
                 let ch = if parsed_h < 1.0 && cell.height != 0 {
                     let content_h = compute_cell_content_height_raw(cell);
-                    round_mm(if content_h > parsed_h { content_h } else { parsed_h })
+                    round_mm(if content_h > parsed_h {
+                        content_h
+                    } else {
+                        parsed_h
+                    })
                 } else {
                     round_mm(parsed_h)
                 };
-                if ch > row_heights[ri] { row_heights[ri] = ch; }
+                if ch > row_heights[ri] {
+                    row_heights[ri] = ch;
+                }
             }
         }
     }
@@ -490,7 +570,9 @@ fn compute_row_positions(table: &Table) -> Vec<f64> {
 /// 수직 경계선 path
 fn svg_path_v(
     svg: &mut String,
-    x: f64, y0: f64, y1: f64,
+    x: f64,
+    y0: f64,
+    y1: f64,
     stroke_width: f64,
     _resources: &Resources,
     default_border: Option<&hwp_model::resources::BorderFill>,
@@ -498,20 +580,36 @@ fn svg_path_v(
     let color = default_border
         .and_then(|bf| bf.left_border.as_ref())
         .and_then(|l| l.color)
-        .map(|c| format!("#{:02X}{:02X}{:02X}", (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF))
+        .map(|c| {
+            format!(
+                "#{:02X}{:02X}{:02X}",
+                (c >> 16) & 0xFF,
+                (c >> 8) & 0xFF,
+                c & 0xFF
+            )
+        })
         .unwrap_or_else(|| "#000000".to_string());
     use std::fmt::Write;
-    write!(svg,
+    write!(
+        svg,
         r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
-        round_mm(x), round_mm(y0), round_mm(x), round_mm(y1), color, stroke_width
-    ).ok();
+        round_mm(x),
+        round_mm(y0),
+        round_mm(x),
+        round_mm(y1),
+        color,
+        stroke_width
+    )
+    .ok();
     svg.push_str("</path>");
 }
 
 /// 수평 경계선 path
 fn svg_path_h(
     svg: &mut String,
-    x0: f64, x1: f64, y: f64,
+    x0: f64,
+    x1: f64,
+    y: f64,
     stroke_width: f64,
     _resources: &Resources,
     default_border: Option<&hwp_model::resources::BorderFill>,
@@ -519,13 +617,27 @@ fn svg_path_h(
     let color = default_border
         .and_then(|bf| bf.top_border.as_ref())
         .and_then(|l| l.color)
-        .map(|c| format!("#{:02X}{:02X}{:02X}", (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF))
+        .map(|c| {
+            format!(
+                "#{:02X}{:02X}{:02X}",
+                (c >> 16) & 0xFF,
+                (c >> 8) & 0xFF,
+                c & 0xFF
+            )
+        })
         .unwrap_or_else(|| "#000000".to_string());
     use std::fmt::Write;
-    write!(svg,
+    write!(
+        svg,
         r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
-        round_mm(x0), round_mm(y), round_mm(x1), round_mm(y), color, stroke_width
-    ).ok();
+        round_mm(x0),
+        round_mm(y),
+        round_mm(x1),
+        round_mm(y),
+        color,
+        stroke_width
+    )
+    .ok();
     svg.push_str("</path>");
 }
 
@@ -546,19 +658,28 @@ fn generate_table_fills(
             let cell_left = round_mm(cx);
             let cell_width = round_mm(hwpunit_to_mm(cell.width));
             let ri = cell.row as usize;
-            let rs = if cell.row_span > 0 { cell.row_span as usize } else { 1 };
+            let rs = if cell.row_span > 0 {
+                cell.row_span as usize
+            } else {
+                1
+            };
 
             if ri < row_positions.len() && ri + rs < row_positions.len() {
                 let cell_top = row_positions[ri];
                 let cell_height = row_positions[ri + rs] - cell_top;
 
                 if cell.border_fill_id > 0 {
-                    if let Some(bf) = resources.border_fills.get((cell.border_fill_id as usize).wrapping_sub(1)) {
+                    if let Some(bf) = resources
+                        .border_fills
+                        .get((cell.border_fill_id as usize).wrapping_sub(1))
+                    {
                         if let Some(ref fill) = bf.fill {
                             // Solid 배경색 처리
                             if let Some(color) = extract_solid_color(fill) {
                                 if color != 0 {
-                                    let pattern_id = if let Some(existing) = color_to_pattern.get(&color) {
+                                    let pattern_id = if let Some(existing) =
+                                        color_to_pattern.get(&color)
+                                    {
                                         existing.clone()
                                     } else {
                                         let id = format!("w_{:02}", *pattern_counter);
@@ -655,8 +776,16 @@ fn compute_cell_content_height_raw(cell: &hwp_model::table::TableCell) -> f64 {
     }
     let content_h = max_bottom.map(|b| hwpunit_to_mm(b)).unwrap_or(0.0);
     // 마진 포함: 기본 0.5mm (142 HU = ceil(0.5/25.4*7200))
-    let margin_top_hu = if cell.cell_margin.top != 0 { cell.cell_margin.top + 1 } else { 142 };
-    let margin_bottom_hu = if cell.cell_margin.bottom != 0 { cell.cell_margin.bottom + 1 } else { 142 };
+    let margin_top_hu = if cell.cell_margin.top != 0 {
+        cell.cell_margin.top + 1
+    } else {
+        142
+    };
+    let margin_bottom_hu = if cell.cell_margin.bottom != 0 {
+        cell.cell_margin.bottom + 1
+    } else {
+        142
+    };
     let total_hu = max_bottom.unwrap_or(0) + margin_top_hu + margin_bottom_hu;
     hwpunit_to_mm(total_hu)
 }

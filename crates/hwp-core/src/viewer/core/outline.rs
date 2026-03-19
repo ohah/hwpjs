@@ -809,9 +809,7 @@ fn compute_outline_marker(
 // ─── Document(hwp-model) 기반 numbering 공용 함수 ───
 
 /// hwp_model NumberType2 → HwpDocument NumberType 변환
-pub fn convert_num_format(
-    nf: &hwp_model::types::NumberType2,
-) -> NumberType {
+pub fn convert_num_format(nf: &hwp_model::types::NumberType2) -> NumberType {
     match nf {
         hwp_model::types::NumberType2::Digit => NumberType::Arabic,
         hwp_model::types::NumberType2::CircledDigit => NumberType::CircledDigits,
@@ -846,11 +844,8 @@ pub fn format_with_numbering(
                 && fs.contains('^')
                 && !fs.chars().any(|c| c.is_control() && c != '\t')
             {
-                let formatted = format_numbering_string(
-                    fs,
-                    number,
-                    convert_num_format(&level_info.num_format),
-                );
+                let formatted =
+                    format_numbering_string(fs, number, convert_num_format(&level_info.num_format));
                 return formatted;
             }
         }

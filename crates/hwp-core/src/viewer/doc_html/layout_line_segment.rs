@@ -48,8 +48,14 @@ pub fn render_line_segments_with_marker(
     marker_html: Option<&str>,
 ) -> Vec<String> {
     render_line_segments_full(
-        text, char_shapes, line_segments, resources,
-        para_shape_class, content_left_mm, marker_html, false,
+        text,
+        char_shapes,
+        line_segments,
+        resources,
+        para_shape_class,
+        content_left_mm,
+        marker_html,
+        false,
     )
 }
 
@@ -64,8 +70,18 @@ pub fn render_line_segments_full(
     marker_html: Option<&str>,
     has_objects: bool,
 ) -> Vec<String> {
-    render_line_segments_impl(text, char_shapes, line_segments, resources,
-        para_shape_class, content_left_mm, marker_html, has_objects, &[], &[])
+    render_line_segments_impl(
+        text,
+        char_shapes,
+        line_segments,
+        resources,
+        para_shape_class,
+        content_left_mm,
+        marker_html,
+        has_objects,
+        &[],
+        &[],
+    )
 }
 
 /// hyperlink + wchar_map 포함 라인 세그먼트 렌더링
@@ -92,7 +108,9 @@ pub fn render_line_segments_impl(
     // old viewer body_default_hls 감지:
     // 텍스트가 비어있고, 모든 세그먼트의 line_height가 작은 경우만 적용
     // (큰 line_height는 Chart/Table 등 인라인 오브젝트를 의미)
-    let has_large_segment = line_segments.iter().any(|s| hwpunit_to_mm(s.line_height) > 10.0);
+    let has_large_segment = line_segments
+        .iter()
+        .any(|s| hwpunit_to_mm(s.line_height) > 10.0);
     let is_empty_paragraph = text.trim().is_empty() && !has_large_segment;
 
     for (seg_idx, seg) in line_segments.iter().enumerate() {
@@ -109,7 +127,8 @@ pub fn render_line_segments_impl(
             super::flat_text::map_original_to_extracted(wchar_map, seg.text_start_pos) as usize
         } else {
             seg.text_start_pos as usize
-        }.min(text_len);
+        }
+        .min(text_len);
         let seg_end = if seg_idx + 1 < line_segments.len() {
             let next_pos = line_segments[seg_idx + 1].text_start_pos;
             let mapped = if !wchar_map.is_empty() {
@@ -153,16 +172,26 @@ pub fn render_line_segments_impl(
             String::new()
         } else if !hyperlinks.is_empty() {
             // hyperlink 범위를 seg_start 기준으로 조정
-            let seg_hyperlinks: Vec<super::flat_text::HyperlinkRange> = hyperlinks.iter()
+            let seg_hyperlinks: Vec<super::flat_text::HyperlinkRange> = hyperlinks
+                .iter()
                 .filter(|h| (h.start as usize) < seg_end && (h.end as usize) > seg_start)
                 .map(|h| super::flat_text::HyperlinkRange {
-                    start: if (h.start as usize) > seg_start { h.start - seg_start as u32 } else { 0 },
+                    start: if (h.start as usize) > seg_start {
+                        h.start - seg_start as u32
+                    } else {
+                        0
+                    },
                     end: ((h.end as usize).min(seg_end) - seg_start) as u32,
                     onclick: h.onclick.clone(),
                     char_shape_id: h.char_shape_id,
                 })
                 .collect();
-            render_layout_text_with_hyperlinks(seg_text, &seg_char_shapes, resources, &seg_hyperlinks)
+            render_layout_text_with_hyperlinks(
+                seg_text,
+                &seg_char_shapes,
+                resources,
+                &seg_hyperlinks,
+            )
         } else {
             render_layout_text(seg_text, &seg_char_shapes, resources)
         };
@@ -176,22 +205,14 @@ pub fn render_line_segments_impl(
         // old viewer 동일: body_default_hls 적용
         // 빈 문단(모든 세그먼트가 빈 텍스트): line-height=2.79, height=3.53, top_offset=-0.18
         let (line_height_mm, height_mm, top_mm) = if is_empty_paragraph {
-            (
-                2.79,
-                3.53,
-                round_mm(vertical_pos_mm + (-0.18)),
-            )
+            (2.79, 3.53, round_mm(vertical_pos_mm + (-0.18)))
         } else if has_content {
             // text segment: CSS line-height = line_height, CSS height = text_height
             // top = vertical_pos + (line_height - text_height) / 2
             let lh = round_mm(line_height_raw);
             let th = round_mm(text_height_raw);
             let offset = (lh - th) / 2.0;
-            (
-                lh,
-                th,
-                round_mm(vertical_pos_mm + offset),
-            )
+            (lh, th, round_mm(vertical_pos_mm + offset))
         } else {
             // non-text segment: both use line_height
             let lh = round_mm(line_height_raw);
@@ -209,7 +230,10 @@ pub fn render_line_segments_impl(
         // padding-left 처리 (들여쓰기/내어쓰기)
         let padding_left = if flags.has_indentation {
             if let Some(ps) = resources.para_shapes.get(
-                para_shape_class.strip_prefix("ps").and_then(|s| s.parse::<usize>().ok()).unwrap_or(0)
+                para_shape_class
+                    .strip_prefix("ps")
+                    .and_then(|s| s.parse::<usize>().ok())
+                    .unwrap_or(0),
             ) {
                 let indent_hu = ps.margin.indent.value;
                 if indent_hu != 0 {
@@ -278,14 +302,8 @@ mod tests {
             position: 0,
             shape_id: 0,
         }];
-        let result = render_line_segments(
-            "Hello",
-            &shapes,
-            &segs,
-            &Resources::default(),
-            "ps0",
-            30.0,
-        );
+        let result =
+            render_line_segments("Hello", &shapes, &segs, &Resources::default(), "ps0", 30.0);
         assert_eq!(result.len(), 1);
         assert!(result[0].contains("hls ps0"));
         assert!(result[0].contains("Hello"));

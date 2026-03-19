@@ -69,13 +69,14 @@ pub fn render_paragraph_with_tracker(
                     let level = heading.level + 1;
                     let tracker = number_tracker.entry(heading.id_ref).or_default();
                     let number = tracker.get_and_increment(level);
-                    let num_str =
-                        format_with_numbering(heading.id_ref, level, number, resources);
+                    let num_str = format_with_numbering(heading.id_ref, level, number, resources);
                     let html = format!(
                         "<p class=\"{}number-{}\"><span class=\"{}number\">{}</span> {}</p>",
-                        options.css_class_prefix, level,
                         options.css_class_prefix,
-                        html_escape(&num_str), pc.content
+                        level,
+                        options.css_class_prefix,
+                        html_escape(&num_str),
+                        pc.content
                     );
                     return (html, pc.controls);
                 }
@@ -691,7 +692,10 @@ fn build_cell_style(border_fill_id: u16, resources: &Resources) -> String {
         return String::new();
     }
     // border_fill_id는 1-based
-    let bf = match resources.border_fills.get((border_fill_id as usize).wrapping_sub(1)) {
+    let bf = match resources
+        .border_fills
+        .get((border_fill_id as usize).wrapping_sub(1))
+    {
         Some(bf) => bf,
         None => return String::new(),
     };
@@ -705,12 +709,18 @@ fn build_cell_style(border_fill_id: u16, resources: &Resources) -> String {
             hwp_model::resources::FillBrush::Gradation { colors, .. } => {
                 colors.first().copied().flatten()
             }
-            hwp_model::resources::FillBrush::Combined { win_brush, gradation, .. } => {
+            hwp_model::resources::FillBrush::Combined {
+                win_brush,
+                gradation,
+                ..
+            } => {
                 // Combined: WinBrush의 face_color 우선, 없으면 Gradation 첫 색
                 win_brush
                     .as_ref()
                     .and_then(|wb| {
-                        if let hwp_model::resources::FillBrush::WinBrush { face_color, .. } = wb.as_ref() {
+                        if let hwp_model::resources::FillBrush::WinBrush { face_color, .. } =
+                            wb.as_ref()
+                        {
                             *face_color
                         } else {
                             None
@@ -718,7 +728,9 @@ fn build_cell_style(border_fill_id: u16, resources: &Resources) -> String {
                     })
                     .or_else(|| {
                         gradation.as_ref().and_then(|g| {
-                            if let hwp_model::resources::FillBrush::Gradation { colors, .. } = g.as_ref() {
+                            if let hwp_model::resources::FillBrush::Gradation { colors, .. } =
+                                g.as_ref()
+                            {
                                 colors.first().copied().flatten()
                             } else {
                                 None

@@ -147,7 +147,9 @@ impl HwpDocument {
     ///
     /// # Returns / 반환값
     /// HtmlPages containing CSS string and per-page HTML documents / CSS 문자열과 페이지별 HTML 문서
-    #[deprecated(note = "Old pixel-accurate viewer — will be replaced by doc_to_html with pagination support")]
+    #[deprecated(
+        note = "Old pixel-accurate viewer — will be replaced by doc_to_html with pagination support"
+    )]
     pub fn to_html_pages(
         &self,
         options: &crate::viewer::html::HtmlOptions,
