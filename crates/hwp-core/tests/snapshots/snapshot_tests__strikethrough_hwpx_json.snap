@@ -2440,9 +2440,9 @@ expression: json
           "vertical": "Baseline"
         },
         "heading": {
-          "heading_type": "None",
+          "heading_type": "Outline",
           "id_ref": 0,
-          "level": 0
+          "level": 8
         },
         "break_setting": {
           "break_latin_word": "KeepWord",
@@ -2507,9 +2507,9 @@ expression: json
           "vertical": "Baseline"
         },
         "heading": {
-          "heading_type": "None",
+          "heading_type": "Outline",
           "id_ref": 0,
-          "level": 0
+          "level": 9
         },
         "break_setting": {
           "break_latin_word": "KeepWord",
@@ -2574,9 +2574,9 @@ expression: json
           "vertical": "Baseline"
         },
         "heading": {
-          "heading_type": "None",
+          "heading_type": "Outline",
           "id_ref": 0,
-          "level": 0
+          "level": 7
         },
         "break_setting": {
           "break_latin_word": "KeepWord",
