@@ -5727,7 +5727,67 @@ expression: json
                           "top": 141,
                           "bottom": 141
                         },
-                        "caption": null,
+                        "caption": {
+                          "side": "Top",
+                          "full_size": false,
+                          "width": 8504,
+                          "gap": 850,
+                          "last_width": 51392,
+                          "content": {
+                            "id": 0,
+                            "text_direction": "Horizontal",
+                            "vert_align": "Top",
+                            "link_list_id": null,
+                            "link_list_next_id": null,
+                            "text_width": 0,
+                            "text_height": 0,
+                            "has_text_ref": false,
+                            "has_num_ref": false,
+                            "paragraphs": [
+                              {
+                                "id": 2147483648,
+                                "para_shape_id": 18,
+                                "style_id": 0,
+                                "page_break": false,
+                                "column_break": false,
+                                "merged": false,
+                                "para_tc_id": null,
+                                "meta_tag": null,
+                                "runs": [
+                                  {
+                                    "char_shape_id": 7,
+                                    "contents": [
+                                      {
+                                        "Text": {
+                                          "char_shape_id": null,
+                                          "elements": [
+                                            {
+                                              "Text": "사이버범죄 발생 통계(단위 : %)"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "line_segments": [
+                                  {
+                                    "text_start_pos": 0,
+                                    "vertical_pos": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_pos": 0,
+                                    "segment_width": 51392,
+                                    "flags": 393216
+                                  }
+                                ],
+                                "has_char_shapes": true
+                              }
+                            ]
+                          }
+                        },
                         "comment": null,
                         "meta_tag": null
                       },
@@ -8583,7 +8643,67 @@ expression: json
                           "top": 141,
                           "bottom": 141
                         },
-                        "caption": null,
+                        "caption": {
+                          "side": "Top",
+                          "full_size": false,
+                          "width": 8504,
+                          "gap": 850,
+                          "last_width": 52524,
+                          "content": {
+                            "id": 0,
+                            "text_direction": "Horizontal",
+                            "vert_align": "Top",
+                            "link_list_id": null,
+                            "link_list_next_id": null,
+                            "text_width": 0,
+                            "text_height": 0,
+                            "has_text_ref": false,
+                            "has_num_ref": false,
+                            "paragraphs": [
+                              {
+                                "id": 2147483648,
+                                "para_shape_id": 20,
+                                "style_id": 0,
+                                "page_break": false,
+                                "column_break": false,
+                                "merged": false,
+                                "para_tc_id": null,
+                                "meta_tag": null,
+                                "runs": [
+                                  {
+                                    "char_shape_id": 8,
+                                    "contents": [
+                                      {
+                                        "Text": {
+                                          "char_shape_id": null,
+                                          "elements": [
+                                            {
+                                              "Text": "학부모 정보화 교육 참여 현황(단위 : 명)"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "line_segments": [
+                                  {
+                                    "text_start_pos": 0,
+                                    "vertical_pos": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_pos": 0,
+                                    "segment_width": 52524,
+                                    "flags": 393216
+                                  }
+                                ],
+                                "has_char_shapes": true
+                              }
+                            ]
+                          }
+                        },
                         "comment": null,
                         "meta_tag": null
                       },
@@ -11689,7 +11809,67 @@ expression: json
                           "top": 141,
                           "bottom": 141
                         },
-                        "caption": null,
+                        "caption": {
+                          "side": "Top",
+                          "full_size": false,
+                          "width": 8504,
+                          "gap": 850,
+                          "last_width": 52524,
+                          "content": {
+                            "id": 0,
+                            "text_direction": "Horizontal",
+                            "vert_align": "Top",
+                            "link_list_id": null,
+                            "link_list_next_id": null,
+                            "text_width": 0,
+                            "text_height": 0,
+                            "has_text_ref": false,
+                            "has_num_ref": false,
+                            "paragraphs": [
+                              {
+                                "id": 2147483648,
+                                "para_shape_id": 20,
+                                "style_id": 0,
+                                "page_break": false,
+                                "column_break": false,
+                                "merged": false,
+                                "para_tc_id": null,
+                                "meta_tag": null,
+                                "runs": [
+                                  {
+                                    "char_shape_id": 8,
+                                    "contents": [
+                                      {
+                                        "Text": {
+                                          "char_shape_id": null,
+                                          "elements": [
+                                            {
+                                              "Text": "2015년도 종목별 우승 현황(단위 : 명)"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "line_segments": [
+                                  {
+                                    "text_start_pos": 0,
+                                    "vertical_pos": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_pos": 0,
+                                    "segment_width": 52524,
+                                    "flags": 393216
+                                  }
+                                ],
+                                "has_char_shapes": true
+                              }
+                            ]
+                          }
+                        },
                         "comment": null,
                         "meta_tag": null
                       },
@@ -14601,7 +14781,67 @@ expression: json
                           "top": 141,
                           "bottom": 141
                         },
-                        "caption": null,
+                        "caption": {
+                          "side": "Top",
+                          "full_size": false,
+                          "width": 8504,
+                          "gap": 850,
+                          "last_width": 49694,
+                          "content": {
+                            "id": 0,
+                            "text_direction": "Horizontal",
+                            "vert_align": "Top",
+                            "link_list_id": null,
+                            "link_list_next_id": null,
+                            "text_width": 0,
+                            "text_height": 0,
+                            "has_text_ref": false,
+                            "has_num_ref": false,
+                            "paragraphs": [
+                              {
+                                "id": 2147483648,
+                                "para_shape_id": 18,
+                                "style_id": 0,
+                                "page_break": false,
+                                "column_break": false,
+                                "merged": false,
+                                "para_tc_id": null,
+                                "meta_tag": null,
+                                "runs": [
+                                  {
+                                    "char_shape_id": 8,
+                                    "contents": [
+                                      {
+                                        "Text": {
+                                          "char_shape_id": null,
+                                          "elements": [
+                                            {
+                                              "Text": "지역 및 세션별 참가 현황(단위 : 명)"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "line_segments": [
+                                  {
+                                    "text_start_pos": 0,
+                                    "vertical_pos": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_pos": 0,
+                                    "segment_width": 49692,
+                                    "flags": 393216
+                                  }
+                                ],
+                                "has_char_shapes": true
+                              }
+                            ]
+                          }
+                        },
                         "comment": null,
                         "meta_tag": null
                       },

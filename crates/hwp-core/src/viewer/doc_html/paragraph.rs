@@ -576,6 +576,19 @@ fn render_table_html(
     }
 
     html.push_str("</table>");
+
+    // 캡션 렌더링
+    if let Some(ref caption) = table.common.caption {
+        let cap_content =
+            render_sublist_paragraphs(&caption.content.paragraphs, resources, binaries, options);
+        if !cap_content.is_empty() {
+            html.push_str(&format!(
+                "<div class=\"{}textbox\">{}</div>",
+                options.css_class_prefix, cap_content
+            ));
+        }
+    }
+
     html
 }
 

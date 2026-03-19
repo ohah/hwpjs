@@ -52,7 +52,7 @@ expression: html
 <td style="border-left: 0.1mm solid rgb(0,0,0); border-right: 0.1mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.5mm solid rgb(0,0,0); width: 85.7pt"><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">12.9</span></p>  </td>
 <td style="border-left: 0.1mm solid rgb(0,0,0); border-right: 0.5mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.5mm solid rgb(0,0,0); width: 85.5pt">  </td>
 </tr>
-</table>
+</table><div class="hwp-textbox"><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '돋움'">사이버범죄 발생 통계(단위 : %)</span></p></div>
 <p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><b>유형 2.</b></span></p>
 <p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">&lt;&lt;차트조건&gt;&gt;</span></p>
 <p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">1) 차트 데이터는 표 내용에서 연도별 초등학교, 중학교, 고등학교의 값만 이용할 것</span></p>
@@ -101,7 +101,7 @@ expression: html
 <td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 87.5pt"><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">89,900</span></p>  </td>
 <td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 87.5pt">  </td>
 </tr>
-</table>
+</table><div class="hwp-textbox"><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">학부모 정보화 교육 참여 현황(단위 : 명)</span></p></div>
 <p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><b>유형 3.</b></span></p>
 <p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">&lt;&lt;차트조건&gt;&gt;</span></p>
 <p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">1) 차트 데이터는 표 내용에서 구분별 일자마라톤, 8자마라톤, 스피드, 2단 뛰기의 값만 이용할 것</span></p>
@@ -150,7 +150,7 @@ expression: html
 <td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 87.5pt"><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">464</span></p>  </td>
 <td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 87.5pt">  </td>
 </tr>
-</table>
+</table><div class="hwp-textbox"><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">2015년도 종목별 우승 현황(단위 : 명)</span></p></div>
 <p><span style="font-size: 10.0pt; font-family: '함초롬바탕'"><b>유형 4.</b></span></p>
 <p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">&lt;&lt;차트조건&gt;&gt;</span></p>
 <p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">1) 차트 데이터는 표 내용에서 지역별 기술, 포스터, 논문의 값만 이용할 것</span></p>
@@ -199,5 +199,5 @@ expression: html
 <td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.5mm solid rgb(0,0,0); width: 82.9pt"><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">126</span></p>  </td>
 <td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.5mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.5mm solid rgb(0,0,0); width: 82.6pt">  </td>
 </tr>
-</table>
+</table><div class="hwp-textbox"><p style="text-align: right"><span style="font-size: 10.0pt; font-family: '굴림'">지역 및 세션별 참가 현황(단위 : 명)</span></p></div>
 </div>

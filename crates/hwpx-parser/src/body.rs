@@ -794,6 +794,9 @@ fn parse_table(
                         border_fill_id: attr_u16(e, b"borderFillIDRef").unwrap_or(0),
                     });
                 }
+                b"caption" => {
+                    tbl.common.caption = Some(parse_caption(e, reader)?);
+                }
                 b"tr" => {
                     tbl.rows.push(parse_table_row(reader)?);
                 }
