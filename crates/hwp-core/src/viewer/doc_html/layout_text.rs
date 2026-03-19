@@ -97,7 +97,18 @@ pub fn render_layout_text_with_hyperlinks(
             let class_name = shape_id
                 .map(|id| format!("cs{}", id))
                 .unwrap_or_default();
-            for part in segment_text.split('\t') {
+            // 탭만 있는 세그먼트: htC만 추가 (텍스트 없이)
+            if segment_text.chars().all(|c| c == '\t') {
+                for _ in segment_text.chars() {
+                    result.push_str(
+                        r#"<span class="htC" style="width:12.35mm;height:100%;"></span>"#,
+                    );
+                }
+                continue;
+            }
+            // 텍스트 + 탭 혼합: 텍스트 앞의 htC + 텍스트 + 텍스트 뒤의 htC
+            let parts: Vec<&str> = segment_text.split('\t').collect();
+            for (pi, part) in parts.iter().enumerate() {
                 if !part.is_empty() {
                     let styled = convert_consecutive_spaces(part);
                     if class_name.is_empty() {
@@ -109,14 +120,12 @@ pub fn render_layout_text_with_hyperlinks(
                         ));
                     }
                 }
-                result.push_str(
-                    r#"<span class="htC" style="width:12.35mm;height:100%;"></span>"#,
-                );
-            }
-            // 마지막 여분 htC 제거
-            let htc = r#"<span class="htC" style="width:12.35mm;height:100%;"></span>"#;
-            if result.ends_with(htc) {
-                result.truncate(result.len() - htc.len());
+                // 마지막 부분 뒤에는 htC 안 넣음
+                if pi < parts.len() - 1 {
+                    result.push_str(
+                        r#"<span class="htC" style="width:12.35mm;height:100%;"></span>"#,
+                    );
+                }
             }
             continue;
         }
@@ -139,6 +148,13 @@ pub fn render_layout_text_with_hyperlinks(
         } else {
             result.push_str(&format!(r#"<span class="hrt"{}>{}</span>"#, onclick_attr, text_html));
         }
+    }
+
+    // 연속 htC dedup (CharShape 경계에서 탭이 분리될 때 중복 방지)
+    let htc = r#"<span class="htC" style="width:12.35mm;height:100%;"></span>"#;
+    let double_htc = format!("{}{}", htc, htc);
+    while result.contains(&double_htc) {
+        result = result.replace(&double_htc, htc);
     }
 
     result

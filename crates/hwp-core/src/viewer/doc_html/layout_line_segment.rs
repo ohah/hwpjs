@@ -147,7 +147,8 @@ pub fn render_line_segments_impl(
             })
             .collect();
 
-        // 텍스트 HTML 렌더링 (빈 문단에서는 텍스트 건너뜀 — 탭 등 whitespace 제거)
+        // 텍스트 HTML 렌더링
+        // 빈 문단에서는 건너뜀
         let text_html = if is_empty_paragraph {
             String::new()
         } else if !hyperlinks.is_empty() {
