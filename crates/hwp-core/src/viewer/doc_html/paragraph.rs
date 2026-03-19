@@ -528,7 +528,7 @@ fn render_shape_object_html(
                     parts.push(html);
                 }
             }
-            (parts.join("\n"), true)
+            (parts.join(""), true)
         }
         ShapeObject::Equation(eq) => {
             if eq.script.is_empty() {
