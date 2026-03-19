@@ -508,7 +508,6 @@ fn assemble_runs(
                     size_wchars, code, ..
                 } => {
                     let original_size = *size_wchars as i32;
-                    // 변환 가능한 제어 문자는 clean text에서 1 문자, 아니면 0
                     let clean_size = if bodytext::control_char::ControlChar::is_convertible(*code)
                         && *code != bodytext::control_char::ControlChar::PARA_BREAK
                     {

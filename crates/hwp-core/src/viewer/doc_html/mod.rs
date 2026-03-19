@@ -450,7 +450,7 @@ fn generate_heading_marker(
             // Bullet 리소스에서 문자와 CharShape 가져오기
             let bullet = resources.bullets.iter().find(|b| b.id == heading.id_ref);
             let bullet_char = bullet
-                .map(|b| b.bullet_char)
+                .map(|b| wingdings_to_unicode(b.bullet_char))
                 .filter(|&c| c != '\0' && !c.is_control())
                 .unwrap_or('●');
             let bullet_cs = bullet
@@ -589,6 +589,24 @@ fn render_container_layout(
 
     html.push_str("</div>");
     html
+}
+
+/// Wingdings Private Use Area 문자를 표준 Unicode로 변환
+fn wingdings_to_unicode(ch: char) -> char {
+    match ch as u32 {
+        0xF046 => '★', // star
+        0xF06C | 0xF06E => '●', // bullet/circle
+        0xF06F => '□', // white square
+        0xF070 | 0xF071 | 0xF0A7 => '■', // black square
+        0xF075 | 0xF076 => '◆', // diamond
+        0xF077 => '◇', // white diamond
+        0xF0A1 => '☞', // pointing hand
+        0xF0A4 => '⊙', // circled dot
+        0xF0AB => '❖', // diamond suit
+        0xF0F0 | 0xF0FC => '✓', // checkmark
+        0xF0FE => '☑', // ballot box with check
+        _ => ch, // 매핑 없으면 원본 유지
+    }
 }
 
 /// heading 마커 텍스트 폭 추정 (font metrics 없이 문자 유형별 고정 폭 사용)
