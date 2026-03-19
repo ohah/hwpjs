@@ -495,8 +495,9 @@ fn assemble_runs(
     // 일반 케이스: CharShape 변경점에 따라 Run 분할
     // CharShape position은 원본 WCHAR 위치. Clean text 위치로 변환하여 비교.
     // 먼저 control 문자의 위치 정보를 수집하여 변환에 사용
-    let mut ctrl_delta: i32 = 0; // 원본 위치와 clean text 위치의 차이 누적
-    let mut ctrl_deltas: Vec<(u32, i32)> = Vec::new(); // (원본 위치, 누적 delta)
+    // 제어 문자 범위: (start_pos, end_pos, delta_after_this_control)
+    let mut ctrl_delta: i32 = 0;
+    let mut ctrl_ranges: Vec<(u32, u32, i32)> = Vec::new();
     {
         let mut wchar_pos: u32 = 0;
         for tr in text_runs {
@@ -515,38 +516,58 @@ fn assemble_runs(
                     } else {
                         0i32
                     };
-                    ctrl_deltas.push((wchar_pos, ctrl_delta));
+                    let start = wchar_pos;
                     ctrl_delta += clean_size - original_size;
                     wchar_pos += *size_wchars as u32;
+                    ctrl_ranges.push((start, wchar_pos, ctrl_delta));
                 }
             }
         }
     }
 
-    // CharShape position을 clean text 위치로 변환하는 함수
+    // CharShape position → clean text position 변환
+    // 제어 문자 범위 [start, end)를 고려: original_pos >= end → delta 적용
     let to_clean_pos = |original_pos: u32| -> u32 {
         let mut delta = 0i32;
-        for &(pos, d) in &ctrl_deltas {
-            if pos >= original_pos {
+        for &(_start, end, d) in &ctrl_ranges {
+            if original_pos >= end {
+                delta = d;
+            } else {
                 break;
-            }
-            delta = d;
-        }
-        // ctrl_deltas의 마지막보다 큰 위치면 마지막 delta 사용
-        if !ctrl_deltas.is_empty() {
-            let last = ctrl_deltas.last().unwrap();
-            if original_pos > last.0 {
-                delta = ctrl_delta;
             }
         }
         (original_pos as i32 + delta).max(0) as u32
     };
 
     // CharShape position을 clean text 위치로 변환
-    let clean_char_shapes: Vec<(u32, u32)> = char_shapes
-        .iter()
-        .map(|cs| (to_clean_pos(cs.position), cs.shape_id))
-        .collect();
+    // 같은 clean position에 여러 CharShape가 매핑되면:
+    // - 원본 position이 텍스트 시작(control 끝)에 해당하면 그것을 사용
+    // - 그렇지 않으면 첫 번째 유지 (control 영역 CharShape 상속)
+    // 첫 번째 텍스트 시작 위치: 문단 시작부터 연속된 control 이후
+    let first_text_pos = {
+        let mut pos = 0u32;
+        for tr in text_runs {
+            match tr {
+                ParaTextRun::Control { size_wchars, .. } => pos += *size_wchars as u32,
+                ParaTextRun::Text { .. } => break,
+            }
+        }
+        pos
+    };
+    let mut clean_char_shapes: Vec<(u32, u32)> = Vec::new();
+    for cs in char_shapes {
+        let clean_pos = to_clean_pos(cs.position);
+        if let Some(last) = clean_char_shapes.last_mut() {
+            if last.0 == clean_pos {
+                // 같은 clean position: 텍스트 시작 위치의 CharShape 우선
+                if cs.position >= first_text_pos {
+                    last.1 = cs.shape_id;
+                }
+                continue;
+            }
+        }
+        clean_char_shapes.push((clean_pos, cs.shape_id));
+    }
 
     let mut runs = Vec::new();
     let mut current_pos: u32 = 0; // clean text 위치
