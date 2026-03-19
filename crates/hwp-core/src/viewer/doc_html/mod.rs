@@ -113,10 +113,14 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                         footer_html.as_deref(),
                     );
                 // 각주를 페이지 </div> 앞에 삽입
+                let fn_top = if !footnote_blocks.is_empty() || !endnote_blocks.is_empty() {
+                    Some(layout_page::content_top_abs_mm(page_def) + pag_ctx.current_max_vertical_mm)
+                } else { None };
                 let page_html = append_footnotes_to_page(
                     page_html,
                     &footnote_blocks,
                     &endnote_blocks,
+                    fn_top,
                 );
                 page_number += 1;
                 pages_html.push(page_html);
@@ -329,10 +333,14 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                         header_html.as_deref(),
                         footer_html.as_deref(),
                     );
+            let fn_top_last = if !footnote_blocks.is_empty() || !endnote_blocks.is_empty() {
+                Some(layout_page::content_top_abs_mm(page_def) + pag_ctx.current_max_vertical_mm)
+            } else { None };
             let page_html = append_footnotes_to_page(
                 page_html,
                 &footnote_blocks,
                 &endnote_blocks,
+                fn_top_last,
             );
             page_number += 1;
             pages_html.push(page_html);
@@ -507,6 +515,7 @@ fn append_footnotes_to_page(
     mut page_html: String,
     footnotes: &[(u16, String)],
     endnotes: &[(u16, String)],
+    footnote_top_mm: Option<f64>,
 ) -> String {
     if footnotes.is_empty() && endnotes.is_empty() {
         return page_html;
@@ -515,10 +524,14 @@ fn append_footnotes_to_page(
     let mut footer = String::new();
 
     if !footnotes.is_empty() {
-        // 각주 구분선 (hfS) — old viewer 일치: top 위치는 본문 영역 하단 근처
-        footer.push_str(
-            r#"<div class="hfS" style="left:0mm;width:50.00mm;height:0.11mm;"><svg class="hs" viewBox="-0.12 -0.12 50.23 0.35" style="left:-0.12mm;top:-0.12mm;width:50.23mm;height:0.35mm;left:0;top:0;"><path d="M0,0.06 L50,0.06" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
-        );
+        // 각주 구분선 (hfS)
+        let hfs_top = footnote_top_mm
+            .map(|t| format!("top:{:.2}mm;", styles::round_mm(t)))
+            .unwrap_or_default();
+        footer.push_str(&format!(
+            r#"<div class="hfS" style="left:0mm;{}width:50.00mm;height:0.11mm;"><svg class="hs" viewBox="-0.12 -0.12 50.23 0.35" style="left:-0.12mm;top:-0.12mm;width:50.23mm;height:0.35mm;left:0;top:0;"><path d="M0,0.06 L50,0.06" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
+            hfs_top
+        ));
         for (id, html) in footnotes {
             footer.push_str(&format!(
                 r#"<div class="hcD"><div class="hcI"><div class="haN" style="left:0mm;top:0mm;width:2.93mm;height:3.18mm;"><span class="hrt">{id})</span></div>{html}</div></div>"#,
