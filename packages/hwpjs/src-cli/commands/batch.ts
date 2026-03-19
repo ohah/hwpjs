@@ -3,13 +3,13 @@ import { readdirSync, readFileSync, writeFileSync, statSync, mkdirSync } from 'f
 import { join, extname, basename } from 'path';
 // CLI는 빌드된 NAPI 모듈을 사용합니다
 // @ts-ignore - 런타임에 dist/index.js에서 로드됨 (빌드 후 경로: ../../index)
-const { toJson, toMarkdown, toHtml } = require('../../index');
+const { toJson, toMarkdown, toHtml, hwpxToJson, hwpxToHtml, hwpxToMarkdown, detect } = require('../../index');
 
 export function batchCommand(program: Command) {
   program
     .command('batch')
-    .description('Batch convert HWP files in a directory')
-    .argument('<input-dir>', 'Input directory containing HWP files')
+    .description('Batch convert HWP/HWPX files in a directory')
+    .argument('<input-dir>', 'Input directory containing HWP/HWPX files')
     .option('-o, --output-dir <dir>', 'Output directory (default: ./output)', './output')
     .option('--format <format>', 'Output format (json, markdown, html)', 'json')
     .option('-r, --recursive', 'Process subdirectories recursively')
@@ -35,54 +35,55 @@ export function batchCommand(program: Command) {
           const outputDir = options.outputDir || './output';
           const format = options.format || 'json';
 
-          // Create output directory
           if (!require('fs').existsSync(outputDir)) {
             mkdirSync(outputDir, { recursive: true });
           }
 
-          // Find all HWP files
-          const hwpFiles: string[] = [];
+          // Find all HWP/HWPX files
+          const files: string[] = [];
 
-          function findHwpFiles(dir: string, basePath: string = '') {
+          function findFiles(dir: string) {
             const entries = readdirSync(dir);
-
             for (const entry of entries) {
               const fullPath = join(dir, entry);
               const stat = statSync(fullPath);
-
               if (stat.isDirectory() && options.recursive) {
-                findHwpFiles(fullPath, join(basePath, entry));
-              } else if (stat.isFile() && extname(entry).toLowerCase() === '.hwp') {
-                hwpFiles.push(fullPath);
+                findFiles(fullPath);
+              } else if (stat.isFile()) {
+                const ext = extname(entry).toLowerCase();
+                if (ext === '.hwp' || ext === '.hwpx') {
+                  files.push(fullPath);
+                }
               }
             }
           }
 
-          findHwpFiles(inputDir);
+          findFiles(inputDir);
 
-          if (hwpFiles.length === 0) {
-            console.log('No HWP files found in the specified directory');
+          if (files.length === 0) {
+            console.log('No HWP/HWPX files found in the specified directory');
             return;
           }
 
-          console.log(`Found ${hwpFiles.length} HWP file(s)`);
+          console.log(`Found ${files.length} file(s)`);
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
           let successCount = 0;
           let errorCount = 0;
 
-          // Process each file
-          for (const filePath of hwpFiles) {
+          for (const filePath of files) {
             try {
-              const fileName = basename(filePath, '.hwp');
+              const ext = extname(filePath).toLowerCase();
+              const fileName = basename(filePath, ext);
               const data = readFileSync(filePath);
+              const fileFormat = detect(data);
+              const isHwpx = fileFormat === 'hwpx';
 
-              let outputContent: string | Buffer;
+              let outputContent: string;
               let outputExt: string;
-              let isBinary = false;
 
               if (format === 'json') {
-                const jsonString = toJson(data);
+                const jsonString = isHwpx ? hwpxToJson(data) : toJson(data);
                 if (options.pretty) {
                   const json = JSON.parse(jsonString);
                   outputContent = JSON.stringify(json, null, 2);
@@ -91,7 +92,6 @@ export function batchCommand(program: Command) {
                 }
                 outputExt = 'json';
               } else if (format === 'html') {
-                // Determine image output directory for HTML
                 let imageOutputDir: string | undefined;
                 if (options.imagesDir) {
                   const imagesDir = join(outputDir, options.imagesDir);
@@ -100,24 +100,22 @@ export function batchCommand(program: Command) {
                   }
                   imageOutputDir = imagesDir;
                 }
-                // If imagesDir is not specified, images will be embedded as base64
-                outputContent = toHtml(data, {
-                  image_output_dir: imageOutputDir,
-                  html_output_dir: outputDir,
-                });
+                outputContent = isHwpx
+                  ? hwpxToHtml(data, { image_output_dir: imageOutputDir })
+                  : toHtml(data, { image_output_dir: imageOutputDir, html_output_dir: outputDir });
                 outputExt = 'html';
               } else {
-                const result = toMarkdown(data, {
-                  image: options.includeImages ? 'base64' : 'blob',
-                });
+                const result = isHwpx
+                  ? hwpxToMarkdown(data, {})
+                  : toMarkdown(data, { image: options.includeImages ? 'base64' : 'blob' });
                 outputContent = result.markdown;
                 outputExt = 'md';
               }
 
               const outputPath = join(outputDir, `${fileName}.${outputExt}`);
-              writeFileSync(outputPath, outputContent, isBinary ? undefined : 'utf-8');
+              writeFileSync(outputPath, outputContent, 'utf-8');
 
-              console.log(`✓ ${filePath} → ${outputPath}`);
+              console.log(`✓ ${filePath} (${fileFormat.toUpperCase()}) → ${outputPath}`);
               successCount++;
             } catch (error) {
               console.error(

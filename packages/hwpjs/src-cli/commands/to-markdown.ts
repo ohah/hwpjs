@@ -3,13 +3,13 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname, resolve } from 'path';
 // CLI는 빌드된 NAPI 모듈을 사용합니다
 // @ts-ignore - 런타임에 dist/index.js에서 로드됨 (빌드 후 경로: ../../index)
-const { toMarkdown } = require('../../index');
+const { toMarkdown, hwpxToMarkdown, detect } = require('../../index');
 
 export function toMarkdownCommand(program: Command) {
   program
     .command('to-markdown')
-    .description('Convert HWP file to Markdown')
-    .argument('<input>', 'Input HWP file path')
+    .description('Convert HWP/HWPX file to Markdown')
+    .argument('<input>', 'Input HWP/HWPX file path')
     .option('-o, --output <file>', 'Output Markdown file path (default: stdout)')
     .option('--include-images', 'Include images as base64 data URIs')
     .option('--images-dir <dir>', 'Directory to save images (default: images)')
@@ -29,37 +29,40 @@ export function toMarkdownCommand(program: Command) {
         }
       ) => {
         try {
-          // Read HWP file
           const data = readFileSync(input);
+          const format = detect(data);
 
-          // Convert to Markdown
-          const result = toMarkdown(data, {
-            image: options.includeImages ? 'base64' : 'blob',
-            use_html: options.useHtml,
-            include_version: options.includeVersion,
-            include_page_info: options.includePageInfo,
-          });
+          let result: { markdown: string; images: any[] };
+          if (format === 'hwpx') {
+            result = hwpxToMarkdown(data, {
+              use_html: options.useHtml,
+              include_version: options.includeVersion,
+              include_page_info: options.includePageInfo,
+            });
+          } else {
+            result = toMarkdown(data, {
+              image: options.includeImages ? 'base64' : 'blob',
+              use_html: options.useHtml,
+              include_version: options.includeVersion,
+              include_page_info: options.includePageInfo,
+            });
+          }
 
           let finalMarkdown = result.markdown;
           let imagesSaved = 0;
 
           // Save images to files if not using base64
-          if (!options.includeImages && result.images.length > 0 && options.output) {
-            // Determine images directory
+          if (!options.includeImages && result.images && result.images.length > 0 && options.output) {
             const outputDir = dirname(resolve(options.output));
             const imagesDir = options.imagesDir
               ? resolve(outputDir, options.imagesDir)
               : join(outputDir, 'images');
 
-            // Create images directory if it doesn't exist
             if (!existsSync(imagesDir)) {
               mkdirSync(imagesDir, { recursive: true });
             }
 
-            // Save each image and update markdown references
             for (const image of result.images) {
-              // Generate filename from image ID
-              // image-0 -> BIN0001.jpg (or use original ID if available)
               const fileName = image.id.startsWith('image-')
                 ? `BIN${String(parseInt(image.id.replace('image-', '')) + 1).padStart(4, '0')}.${image.format}`
                 : `${image.id}.${image.format}`;
@@ -68,27 +71,23 @@ export function toMarkdownCommand(program: Command) {
               writeFileSync(imagePath, image.data);
               imagesSaved++;
 
-              // Replace placeholder with relative path
-              // Calculate relative path from markdown file to image
               const relativePath = options.imagesDir
                 ? join(options.imagesDir, fileName).replace(/\\/g, '/')
                 : join('images', fileName).replace(/\\/g, '/');
 
-              // Replace image-0 with actual path
               const placeholder = `![이미지](${image.id})`;
               const replacement = `![이미지](${relativePath})`;
               finalMarkdown = finalMarkdown.replace(placeholder, replacement);
             }
           }
 
-          // Write output
           if (options.output) {
             writeFileSync(options.output, finalMarkdown, 'utf-8');
-            console.log(`✓ Converted to Markdown: ${options.output}`);
+            console.log(`✓ Converted ${format.toUpperCase()} to Markdown: ${options.output}`);
             if (imagesSaved > 0) {
               const imagesDir = options.imagesDir || 'images';
               console.log(`✓ Saved ${imagesSaved} image(s) to: ${imagesDir}/`);
-            } else if (result.images.length > 0 && options.includeImages) {
+            } else if (result.images && result.images.length > 0 && options.includeImages) {
               console.log(`  Note: ${result.images.length} image(s) embedded as base64`);
             }
           } else {
