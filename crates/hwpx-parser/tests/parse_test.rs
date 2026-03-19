@@ -185,7 +185,7 @@ fn parse_border_fills() {
     // leftBorder 확인
     let lb = bf1.left_border.as_ref().unwrap();
     assert_eq!(lb.line_type, LineType3::None);
-    assert_eq!(lb.width, "0.1 mm");
+    assert_eq!(lb.width, "0.1mm");
     assert_eq!(lb.color, Some(0x000000));
 
     // 두 번째: winBrush 채우기
@@ -205,7 +205,7 @@ fn parse_border_fills() {
     let bf3 = &bfs[2];
     let lb3 = bf3.left_border.as_ref().unwrap();
     assert_eq!(lb3.line_type, LineType3::Solid);
-    assert_eq!(lb3.width, "0.12 mm");
+    assert_eq!(lb3.width, "0.12mm");
 
     // 네 번째: 단색 배경 #FF7F3F (BGR) → RGB 0x3F7FFF
     let bf4 = &bfs[3];

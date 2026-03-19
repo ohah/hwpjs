@@ -1080,82 +1080,90 @@ fn parse_text_content(
         elements: Vec::new(),
     };
 
-    let mut buf = Vec::new();
-    loop {
-        match reader.read_event_into(&mut buf)? {
-            Event::Text(ref t) => {
-                let text = t.unescape().unwrap_or_default().to_string();
-                if !text.is_empty() {
-                    tc.elements.push(TextElement::Text(text));
+    let result: Result<(), HwpxError> = (|| {
+        let mut buf = Vec::new();
+        loop {
+            match reader.read_event_into(&mut buf)? {
+                Event::Text(ref t) => {
+                    let text = t.unescape().unwrap_or_default().to_string();
+                    if !text.is_empty() {
+                        tc.elements.push(TextElement::Text(text));
+                    }
                 }
-            }
-            Event::Empty(ref e) => match local_name(e.name().as_ref()) {
-                b"tab" => {
-                    tc.elements.push(TextElement::Tab {
-                        width: attr_i32(e, b"width").unwrap_or(0),
-                        leader: parse_line_type2(&attr_str(e, b"leader").unwrap_or_default()),
-                        tab_type: parse_tab_type(&attr_str(e, b"type").unwrap_or_default()),
-                    });
+                Event::Empty(ref e) => match local_name(e.name().as_ref()) {
+                    b"tab" => {
+                        tc.elements.push(TextElement::Tab {
+                            width: attr_i32(e, b"width").unwrap_or(0),
+                            leader: parse_line_type2(
+                                &attr_str(e, b"leader").unwrap_or_default(),
+                            ),
+                            tab_type: parse_tab_type(
+                                &attr_str(e, b"type").unwrap_or_default(),
+                            ),
+                        });
+                    }
+                    b"lineBreak" => tc.elements.push(TextElement::LineBreak),
+                    b"hyphen" => tc.elements.push(TextElement::Hyphen),
+                    b"nbSpace" => tc.elements.push(TextElement::NbSpace),
+                    b"fwSpace" => tc.elements.push(TextElement::FwSpace),
+                    b"markpenBegin" => {
+                        tc.elements.push(TextElement::MarkpenBegin {
+                            color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
+                        });
+                    }
+                    b"markpenEnd" => tc.elements.push(TextElement::MarkpenEnd),
+                    b"titleMark" => {
+                        tc.elements.push(TextElement::TitleMark {
+                            ignore: attr_bool(e, b"ignore").unwrap_or(false),
+                        });
+                    }
+                    b"insertBegin" => {
+                        tc.elements.push(TextElement::InsertBegin {
+                            id: attr_str(e, b"Id").unwrap_or_default(),
+                            tc_id: attr_str(e, b"TcId"),
+                            para_end: attr_bool(e, b"paraend").unwrap_or(false),
+                        });
+                    }
+                    b"insertEnd" => {
+                        tc.elements.push(TextElement::InsertEnd {
+                            id: attr_str(e, b"Id").unwrap_or_default(),
+                            tc_id: attr_str(e, b"TcId"),
+                            para_end: attr_bool(e, b"paraend").unwrap_or(false),
+                        });
+                    }
+                    b"deleteBegin" => {
+                        tc.elements.push(TextElement::DeleteBegin {
+                            id: attr_str(e, b"Id").unwrap_or_default(),
+                            tc_id: attr_str(e, b"TcId"),
+                            para_end: attr_bool(e, b"paraend").unwrap_or(false),
+                        });
+                    }
+                    b"deleteEnd" => {
+                        tc.elements.push(TextElement::DeleteEnd {
+                            id: attr_str(e, b"Id").unwrap_or_default(),
+                            tc_id: attr_str(e, b"TcId"),
+                            para_end: attr_bool(e, b"paraend").unwrap_or(false),
+                        });
+                    }
+                    _ => {}
+                },
+                Event::End(ref e) => {
+                    if local_name(e.name().as_ref()) == b"t" {
+                        break;
+                    }
                 }
-                b"lineBreak" => tc.elements.push(TextElement::LineBreak),
-                b"hyphen" => tc.elements.push(TextElement::Hyphen),
-                b"nbSpace" => tc.elements.push(TextElement::NbSpace),
-                b"fwSpace" => tc.elements.push(TextElement::FwSpace),
-                b"markpenBegin" => {
-                    tc.elements.push(TextElement::MarkpenBegin {
-                        color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
-                    });
-                }
-                b"markpenEnd" => tc.elements.push(TextElement::MarkpenEnd),
-                b"titleMark" => {
-                    tc.elements.push(TextElement::TitleMark {
-                        ignore: attr_bool(e, b"ignore").unwrap_or(false),
-                    });
-                }
-                b"insertBegin" => {
-                    tc.elements.push(TextElement::InsertBegin {
-                        id: attr_str(e, b"Id").unwrap_or_default(),
-                        tc_id: attr_str(e, b"TcId"),
-                        para_end: attr_bool(e, b"paraend").unwrap_or(false),
-                    });
-                }
-                b"insertEnd" => {
-                    tc.elements.push(TextElement::InsertEnd {
-                        id: attr_str(e, b"Id").unwrap_or_default(),
-                        tc_id: attr_str(e, b"TcId"),
-                        para_end: attr_bool(e, b"paraend").unwrap_or(false),
-                    });
-                }
-                b"deleteBegin" => {
-                    tc.elements.push(TextElement::DeleteBegin {
-                        id: attr_str(e, b"Id").unwrap_or_default(),
-                        tc_id: attr_str(e, b"TcId"),
-                        para_end: attr_bool(e, b"paraend").unwrap_or(false),
-                    });
-                }
-                b"deleteEnd" => {
-                    tc.elements.push(TextElement::DeleteEnd {
-                        id: attr_str(e, b"Id").unwrap_or_default(),
-                        tc_id: attr_str(e, b"TcId"),
-                        para_end: attr_bool(e, b"paraend").unwrap_or(false),
-                    });
-                }
+                Event::Eof => break,
                 _ => {}
-            },
-            Event::End(ref e) => {
-                if local_name(e.name().as_ref()) == b"t" {
-                    break;
-                }
             }
-            Event::Eof => break,
-            _ => {}
+            buf.clear();
         }
-        buf.clear();
-    }
+        Ok(())
+    })();
 
-    // trim_text 복원
+    // 에러 여부와 관계없이 trim_text 복원
     reader.config_mut().trim_text(true);
 
+    result?;
     Ok(tc)
 }
 
