@@ -134,7 +134,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 pag_ctx.current_max_vertical_mm = 0.0;
             }
 
-            // 문단 내 Object/Control 렌더링
+            // 문단 내 Object/Control 수집 (hls 뒤에 배치하기 위해 먼저 수집)
+            let mut obj_blocks: Vec<String> = Vec::new();
             for run in &para.runs {
                 for content in &run.contents {
                     match content {
@@ -174,8 +175,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                 _ => String::new(),
                             };
                             if !obj_html.is_empty() {
-                                current_page_blocks
-                                    .push(layout_page::PageBlock { html: obj_html });
+                                obj_blocks.push(obj_html);
                             }
                         }
                         hwp_model::paragraph::RunContent::Control(ref ctrl) => {
@@ -250,8 +250,12 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 marker_html.as_deref(),
             );
 
+            // old viewer 순서: hls(텍스트) 먼저, Object(테이블/도형) 나중
             for line in hls_lines {
                 current_page_blocks.push(layout_page::PageBlock { html: line });
+            }
+            for obj_html in obj_blocks {
+                current_page_blocks.push(layout_page::PageBlock { html: obj_html });
             }
 
             // 인라인 각주/미주 참조를 마지막 hls에 삽입

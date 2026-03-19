@@ -35,8 +35,9 @@ pub fn render_layout_table(
             .map(|c| round_mm(hwpunit_to_mm(c.gap)))
             .unwrap_or(3.0);
         let htg_height = height_mm + cap_gap + 3.53; // 캡션 높이 근사
+        // old viewer mm 포맷 (정수는 소수점 없이)
         html.push_str(&format!(
-            r#"<div class="htG" style="left:{:.2}mm;width:{:.2}mm;top:{:.2}mm;height:{:.2}mm;">"#,
+            r#"<div class="htG" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">"#,
             x_mm, width_mm, y_mm, htg_height
         ));
     }
@@ -44,8 +45,9 @@ pub fn render_layout_table(
     // htb: 표 본체
     let htb_x = if has_caption { 0.0 } else { x_mm };
     let htb_y = if has_caption { 0.0 } else { y_mm };
+    // old viewer mm 포맷 (정수는 소수점 없이)
     html.push_str(&format!(
-        r#"<div class="htb" style="left:{:.2}mm;width:{:.2}mm;top:{:.2}mm;height:{:.2}mm;">"#,
+        r#"<div class="htb" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">"#,
         htb_x, width_mm, htb_y, height_mm
     ));
 
@@ -55,35 +57,79 @@ pub fn render_layout_table(
         html.push_str(&svg);
     }
 
-    // 셀 절대 좌표 계산을 위한 row/col 누적 위치
-    let mut row_top_mm = 0.0_f64;
+    // 행 위치 계산 (row_span 고려)
+    let row_count = table.rows.len();
+    let mut row_heights: Vec<f64> = vec![0.0; row_count];
 
-    for row in &table.rows {
+    // 1) row_span=1인 셀에서 각 행의 기본 높이 결정
+    for (ri, row) in table.rows.iter().enumerate() {
+        for cell in &row.cells {
+            if cell.row_span <= 1 {
+                let ch = round_mm(hwpunit_to_mm(cell.height));
+                if ch > row_heights[ri] {
+                    row_heights[ri] = ch;
+                }
+            }
+        }
+    }
+
+    // 2) row_positions 누적 (old viewer row_positions와 동일)
+    let mut row_positions: Vec<f64> = vec![0.0; row_count + 1];
+    for ri in 0..row_count {
+        row_positions[ri + 1] = round_mm(row_positions[ri] + row_heights[ri]);
+    }
+
+    // 셀 렌더링
+    for (ri, row) in table.rows.iter().enumerate() {
         let mut col_left_mm = 0.0_f64;
-        let mut max_height_mm = 0.0_f64;
 
         for cell in &row.cells {
             let cell_width_mm = round_mm(hwpunit_to_mm(cell.width));
-            let cell_height_mm = round_mm(hwpunit_to_mm(cell.height));
-            let cell_margin = 0.5; // 기본 셀 내부 마진 (mm)
+            let cell_height_raw = hwpunit_to_mm(cell.height); // hcI 계산용 (반올림 전)
+            let cell_height_mm = round_mm(cell_height_raw);
+            // 셀 마진: 실제 데이터 사용, 없으면 기본 0.5mm
+            let margin_left = if cell.cell_margin.left != 0 {
+                round_mm(hwpunit_to_mm(cell.cell_margin.left))
+            } else { 0.5 };
+            let margin_top = if cell.cell_margin.top != 0 {
+                round_mm(hwpunit_to_mm(cell.cell_margin.top))
+            } else { 0.5 };
+            let margin_bottom = if cell.cell_margin.bottom != 0 {
+                round_mm(hwpunit_to_mm(cell.cell_margin.bottom))
+            } else { 0.5 };
 
-            if cell_height_mm > max_height_mm {
-                max_height_mm = cell_height_mm;
-            }
+            let cell_top = round_mm(row_positions[ri]);
+            let cell_left = round_mm(col_left_mm);
 
-            // hce: 절대 좌표 배치
+            // hce: old viewer mm 포맷 (정수는 소수점 없이)
             html.push_str(&format!(
-                r#"<div class="hce" style="left:{:.2}mm;top:{:.2}mm;width:{:.2}mm;height:{:.2}mm;">"#,
-                round_mm(col_left_mm),
-                round_mm(row_top_mm),
+                r#"<div class="hce" style="left:{}mm;top:{}mm;width:{}mm;height:{}mm;">"#,
+                cell_left,
+                cell_top,
                 cell_width_mm,
                 cell_height_mm
             ));
 
+            // 셀 내 콘텐츠 높이 계산 (세로 정렬용)
+            let content_height_mm = compute_cell_content_height(cell, margin_top, margin_bottom);
+
+            // hcI top 계산 (세로 정렬: Center가 기본)
+            // old viewer: cell_height는 반올림 전 raw 값 사용 (정밀도 일치)
+            let hci_top_mm = if content_height_mm > 0.0 && cell_height_raw > content_height_mm {
+                round_mm((cell_height_raw - content_height_mm) / 2.0)
+            } else {
+                0.0
+            };
+            let hci_style = if hci_top_mm.abs() > 0.01 {
+                format!(r#" style="top:{}mm;""#, round_mm(hci_top_mm))
+            } else {
+                String::new()
+            };
+
             // hcD > hcI 구조 (old viewer와 동일)
             html.push_str(&format!(
-                r#"<div class="hcD" style="left:{:.1}mm;top:{:.1}mm;"><div class="hcI">"#,
-                cell_margin, cell_margin
+                r#"<div class="hcD" style="left:{}mm;top:{}mm;"><div class="hcI"{}>"#,
+                margin_left, margin_top, hci_style
             ));
 
             // 셀 내 문단 렌더링 (텍스트 + Object)
@@ -137,8 +183,6 @@ pub fn render_layout_table(
 
             col_left_mm += cell_width_mm;
         }
-
-        row_top_mm += max_height_mm;
     }
 
     html.push_str("</div>"); // htb
@@ -334,6 +378,38 @@ fn draw_border_line(
     )
     .ok();
     svg.push_str("</path>");
+}
+
+/// 셀 내 콘텐츠 높이 계산 (세로 정렬용)
+/// old viewer cells.rs와 동일: 전체 line_segment 블록 높이 + 셀 마진
+fn compute_cell_content_height(
+    cell: &hwp_model::table::TableCell,
+    margin_top: f64,
+    margin_bottom: f64,
+) -> f64 {
+    let mut min_vp: Option<i32> = None;
+    let mut max_bottom: Option<i32> = None;
+
+    for para in &cell.content.paragraphs {
+        for seg in &para.line_segments {
+            let vp = seg.vertical_pos;
+            let bottom = seg.vertical_pos + seg.line_height;
+            min_vp = Some(min_vp.map(|x: i32| x.min(vp)).unwrap_or(vp));
+            max_bottom = Some(max_bottom.map(|x: i32| x.max(bottom)).unwrap_or(bottom));
+        }
+    }
+
+    if let (Some(min_vp), Some(max_bottom)) = (min_vp, max_bottom) {
+        if max_bottom > min_vp {
+            let content_h = round_mm(hwpunit_to_mm(max_bottom - min_vp));
+            // 마진 포함 (old viewer: content_height + top_margin + bottom_margin)
+            round_mm(content_h + margin_top + margin_bottom)
+        } else {
+            0.0
+        }
+    } else {
+        0.0
+    }
 }
 
 #[cfg(test)]
