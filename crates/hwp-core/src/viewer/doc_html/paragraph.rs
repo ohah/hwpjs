@@ -247,16 +247,24 @@ fn render_run(
 
     let char_shape = resources.char_shapes.get(run.char_shape_id as usize);
 
+    // 연속 TextContent를 합쳐서 한 번에 style 적용 (불필요한 span 분리 방지)
+    let mut text_accum = String::new();
+    let mut flush_text = |buf: &mut String, html: &mut String| {
+        if !buf.is_empty() {
+            let styled = apply_char_style_html(buf, char_shape, resources);
+            html.push_str(&styled);
+            buf.clear();
+        }
+    };
+
     for content in &run.contents {
         match content {
             RunContent::Text(tc) => {
                 let text = render_text_content_html(tc);
-                if !text.is_empty() {
-                    let styled = apply_char_style_html(&text, char_shape, resources);
-                    html_buf.push_str(&styled);
-                }
+                text_accum.push_str(&text);
             }
             RunContent::Control(control) => {
+                flush_text(&mut text_accum, &mut html_buf);
                 // 하이퍼링크
                 if let hwp_model::control::Control::FieldBegin(field) = control {
                     if field.field_type == hwp_model::types::FieldType::Hyperlink {
@@ -309,6 +317,7 @@ fn render_run(
                 }
             }
             RunContent::Object(shape) => {
+                flush_text(&mut text_accum, &mut html_buf);
                 let (obj_html, obj_block) =
                     render_shape_object_html(shape, resources, binaries, options);
                 if obj_block {
@@ -320,6 +329,7 @@ fn render_run(
             }
         }
     }
+    flush_text(&mut text_accum, &mut html_buf);
 
     (html_buf, control_parts, is_block)
 }
