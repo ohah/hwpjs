@@ -1305,10 +1305,22 @@ fn convert_shape_object(
                 // Rectangle + ListHeader → draw_text + fill/line 포함 Rectangle 생성
                 if has_rect {
                     let draw_text = list_header_paras.map(|paras| {
-                        // HWP ListHeader는 첫 paragraph에 기본 텍스트를 포함
-                        // HWPX는 실제 텍스트만 포함하므로 마지막 paragraph만 사용
-                        let effective = if paras.len() >= 2 {
-                            &paras[paras.len() - 1..]
+                        // HWP ListHeader: 중복 paragraph 제거
+                        // - 2개: 첫 번째가 중복이면 마지막만
+                        // - 짝수 N개: 전반부==후반부이면 후반부만 (다단 레이아웃 중복)
+                        let effective = if paras.len() >= 2 && paras.len() % 2 == 0 {
+                            let half = paras.len() / 2;
+                            let is_dup = (0..half).all(|i| {
+                                extract_para_text(&paras[i]) == extract_para_text(&paras[half + i])
+                            });
+                            if is_dup {
+                                &paras[half..]
+                            } else if paras.len() == 2 {
+                                let first = extract_para_text(&paras[0]);
+                                if first.is_empty() { &paras[1..] } else { paras }
+                            } else {
+                                paras
+                            }
                         } else {
                             paras
                         };
@@ -1440,6 +1452,22 @@ fn find_list_header_in_shape_components(records: &[ParagraphRecord]) -> &[bodyte
         }
     }
     &[]
+}
+
+/// HWP Paragraph에서 ParaText 텍스트 추출
+fn extract_para_text(para: &bodytext::Paragraph) -> String {
+    para.records
+        .iter()
+        .filter_map(|r| {
+            if let ParagraphRecord::ParaText { text, .. } = r {
+                Some(text.as_str())
+            } else {
+                None
+            }
+        })
+        .collect::<String>()
+        .trim()
+        .to_string()
 }
 
 fn convert_table_object(
