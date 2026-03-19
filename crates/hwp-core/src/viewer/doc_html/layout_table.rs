@@ -611,7 +611,8 @@ fn draw_border_line(
     svg.push_str("</path>");
 }
 
-/// 셀 콘텐츠 높이 (raw mm, 마진 미포함) — line_segments에서 계산
+/// 셀 콘텐츠 높이 (raw mm, 마진 포함) — line_segments에서 계산
+/// old viewer: cell_attributes.height = content + top_margin + bottom_margin
 fn compute_cell_content_height_raw(cell: &hwp_model::table::TableCell) -> f64 {
     let mut max_bottom: Option<i32> = None;
     for para in &cell.content.paragraphs {
@@ -620,7 +621,12 @@ fn compute_cell_content_height_raw(cell: &hwp_model::table::TableCell) -> f64 {
             max_bottom = Some(max_bottom.map(|x: i32| x.max(bottom)).unwrap_or(bottom));
         }
     }
-    max_bottom.map(|b| hwpunit_to_mm(b)).unwrap_or(0.0)
+    let content_h = max_bottom.map(|b| hwpunit_to_mm(b)).unwrap_or(0.0);
+    // 마진 포함: content + top + bottom을 HwpUnit 레벨에서 합산
+    let margin_top_hu = if cell.cell_margin.top != 0 { cell.cell_margin.top } else { 142 }; // 0.5mm ≈ 142 HU
+    let margin_bottom_hu = if cell.cell_margin.bottom != 0 { cell.cell_margin.bottom } else { 142 };
+    let total_hu = max_bottom.unwrap_or(0) + margin_top_hu + margin_bottom_hu;
+    hwpunit_to_mm(total_hu)
 }
 
 /// 셀 내 콘텐츠 높이 계산 (세로 정렬용)
