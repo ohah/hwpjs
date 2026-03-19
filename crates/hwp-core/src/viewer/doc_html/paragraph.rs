@@ -324,9 +324,13 @@ fn render_text_content_html(tc: &TextContent) -> String {
     for elem in &tc.elements {
         match elem {
             TextElement::Text(s) => {
-                // Tab 제어 문자 뒤에 literal \t가 중복으로 포함되는 경우 제거
-                let cleaned: String = s.chars().filter(|c| *c != '\t').collect();
-                result.push_str(&html_escape(&cleaned));
+                if s.contains('\t') {
+                    // Tab 제어 문자 뒤에 literal \t가 중복으로 포함되는 경우 제거
+                    let cleaned: String = s.chars().filter(|c| *c != '\t').collect();
+                    result.push_str(&html_escape(&cleaned));
+                } else {
+                    result.push_str(&html_escape(s));
+                }
             }
             TextElement::Tab { .. } => result.push_str("&emsp;"),
             TextElement::LineBreak => result.push_str("<br>"),
