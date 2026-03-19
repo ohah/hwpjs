@@ -1504,10 +1504,8 @@ fn convert_table_object(
         rows,
     };
 
-    results.push(RunContent::Object(ShapeObject::Table(Box::new(table))));
-
-    // ctrl_paragraphs 중 표 셀에 속하지 않는 문단 = 캡션
-    // 기존 viewer: instance_id로 표 셀 내 문단을 판별하여 건너뜀
+    // ctrl_paragraphs 중 표 셀에 속하지 않는 문단 = 캡션 → caption.content에 수집
+    let mut caption_paras: Vec<Paragraph> = Vec::new();
     if !ctrl_paragraphs.is_empty() {
         let mut cell_instance_ids: std::collections::HashSet<u32> =
             std::collections::HashSet::new();
@@ -1520,11 +1518,9 @@ fn convert_table_object(
         }
 
         for para in ctrl_paragraphs {
-            // instance_id가 있고 표 셀에 속하면 건너뜀
             let is_cell_para = if para.para_header.instance_id != 0 {
                 cell_instance_ids.contains(&para.para_header.instance_id)
             } else {
-                // instance_id == 0이면 텍스트로 비교
                 let para_text: String = para
                     .records
                     .iter()
@@ -1537,9 +1533,8 @@ fn convert_table_object(
                     })
                     .collect();
                 let trimmed = para_text.trim();
-                // 표 셀에 동일한 텍스트가 있으면 셀 내부로 판단
                 if trimmed.is_empty() {
-                    true // 빈 문단은 건너뜀
+                    true
                 } else {
                     table_data.cells.iter().any(|cell| {
                         cell.paragraphs.iter().any(|cp| {
@@ -1556,7 +1551,6 @@ fn convert_table_object(
             };
 
             if !is_cell_para {
-                // 빈 문단은 건너뜀
                 let has_text = para.records.iter().any(|r| {
                     if let ParagraphRecord::ParaText { text, .. } = r {
                         !text.trim().is_empty()
@@ -1567,23 +1561,32 @@ fn convert_table_object(
                 if !has_text {
                     continue;
                 }
-                let paras = convert_hwp_paragraphs(std::slice::from_ref(para));
-                if !paras.is_empty() {
-                    let mut rect = RectObject {
-                        common: common.clone(),
-                        draw_text: Some(SubList {
-                            paragraphs: paras,
-                            ..Default::default()
-                        }),
-                        ..Default::default()
-                    };
-                    rect.is_caption = true; // TABLE ctrl_paragraphs의 캡션
-                    results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
-                }
+                caption_paras.extend(convert_hwp_paragraphs(std::slice::from_ref(para)));
             }
         }
     }
 
+    // 캡션 paragraph를 table.common.caption.content에 병합
+    let mut table = table;
+    if !caption_paras.is_empty() {
+        if let Some(ref mut cap) = table.common.caption {
+            cap.content.paragraphs = caption_paras;
+        } else {
+            table.common.caption = Some(Caption {
+                side: CaptionSide::Bottom,
+                full_size: false,
+                width: 0,
+                gap: 0,
+                last_width: None,
+                content: SubList {
+                    paragraphs: caption_paras,
+                    ..Default::default()
+                },
+            });
+        }
+    }
+
+    results.push(RunContent::Object(ShapeObject::Table(Box::new(table))));
     results
 }
 
