@@ -442,7 +442,9 @@ fn parse_border_fill(
 fn parse_line_spec(e: &quick_xml::events::BytesStart) -> LineSpec {
     LineSpec {
         line_type: parse_line_type3(&attr_str(e, b"type").unwrap_or_default()),
-        width: attr_str(e, b"width").unwrap_or_default(),
+        width: attr_str(e, b"width")
+            .map(|s| s.replace(' ', ""))
+            .unwrap_or_default(),
         color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
     }
 }

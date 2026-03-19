@@ -398,27 +398,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -441,27 +441,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -3238,7 +3238,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "기준크기10pt"
+                        "Text": " 기준크기10pt"
                       }
                     ]
                   }
@@ -3253,7 +3253,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "한글90%"
+                        "Text": " 한글90%"
                       }
                     ]
                   }
@@ -3268,7 +3268,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "영문80%"
+                        "Text": " 영문80%"
                       }
                     ]
                   }
@@ -3283,7 +3283,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "기타70%"
+                        "Text": " 기타70%"
                       }
                     ]
                   }
@@ -3339,7 +3339,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "한글돋움"
+                        "Text": " 한글돋움"
                       }
                     ]
                   }
@@ -3354,7 +3354,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "영문CourierNew"
+                        "Text": " 영문CourierNew"
                       }
                     ]
                   }
@@ -3369,7 +3369,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "기타قLucidaSansUnicode"
+                        "Text": " 기타قLucidaSansUnicode"
                       }
                     ]
                   }

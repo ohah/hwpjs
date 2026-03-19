@@ -334,27 +334,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -377,27 +377,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -3677,7 +3677,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "|H 글자에 따라"
+                        "Text": "|H 글자에 따라 "
                       }
                     ]
                   }
@@ -3774,7 +3774,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "|H 고정 값"
+                        "Text": "|H 고정 값 "
                       }
                     ]
                   }
@@ -3871,7 +3871,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "|H 여백만 지정"
+                        "Text": "|H 여백만 지정 "
                       }
                     ]
                   }

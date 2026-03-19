@@ -338,27 +338,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -381,27 +381,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -431,27 +431,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -2269,7 +2269,7 @@ expression: json
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단"
+                                                  "Text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 "
                                                 }
                                               ]
                                             }
@@ -2421,7 +2421,7 @@ expression: json
                                           "char_shape_id": null,
                                           "elements": [
                                             {
-                                              "Text": "그림"
+                                              "Text": "그림 "
                                             }
                                           ]
                                         }
@@ -2441,7 +2441,11 @@ expression: json
                                       {
                                         "Text": {
                                           "char_shape_id": null,
-                                          "elements": []
+                                          "elements": [
+                                            {
+                                              "Text": " "
+                                            }
+                                          ]
                                         }
                                       }
                                     ]
@@ -2583,7 +2587,7 @@ expression: json
                                       "char_shape_id": null,
                                       "elements": [
                                         {
-                                          "Text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단"
+                                          "Text": "다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 다단 "
                                         }
                                       ]
                                     }

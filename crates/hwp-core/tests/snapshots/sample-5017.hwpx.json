@@ -334,27 +334,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -377,27 +377,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -420,27 +420,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -470,27 +470,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -513,27 +513,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Dot",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 255
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -556,27 +556,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -606,27 +606,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -2810,7 +2810,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "한글"
+                        "Text": "한글 "
                       }
                     ]
                   }
@@ -2838,7 +2838,11 @@
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": " "
+                      }
+                    ]
                   }
                 }
               ]
@@ -2866,7 +2870,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "파일입니다."
+                        "Text": " 파일입니다."
                       }
                     ]
                   }
@@ -2998,7 +3002,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "본문"
+                        "Text": "본문 "
                       }
                     ]
                   }
@@ -4151,7 +4155,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "본"
+                        "Text": "본 "
                       }
                     ]
                   }

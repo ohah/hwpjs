@@ -147,15 +147,20 @@ fn convert_char_shapes(shapes: &[docinfo::CharShape]) -> Vec<hwp_model::resource
                 bold: a.bold,
                 italic: a.italic,
                 underline: if a.underline_type != 0 {
-                    Some(Underline {
-                        underline_type: match a.underline_type {
-                            2 => UnderlineType::Center,
-                            3 => UnderlineType::Top,
-                            _ => UnderlineType::Bottom,
-                        },
-                        shape: convert_line_type3(a.underline_style),
-                        color: Some(cs.underline_color.to_rgb()),
-                    })
+                    // underline_type=2(Center)는 취소선과 동일 — strikethrough가 이미 있으면 중복 제거
+                    if a.underline_type == 2 && a.strikethrough != 0 {
+                        None
+                    } else {
+                        Some(Underline {
+                            underline_type: match a.underline_type {
+                                2 => UnderlineType::Center,
+                                3 => UnderlineType::Top,
+                                _ => UnderlineType::Bottom,
+                            },
+                            shape: convert_line_type3(a.underline_style),
+                            color: Some(cs.underline_color.to_rgb()),
+                        })
+                    }
                 } else {
                     None
                 },
