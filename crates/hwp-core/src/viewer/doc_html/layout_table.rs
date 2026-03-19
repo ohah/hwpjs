@@ -622,9 +622,9 @@ fn compute_cell_content_height_raw(cell: &hwp_model::table::TableCell) -> f64 {
         }
     }
     let content_h = max_bottom.map(|b| hwpunit_to_mm(b)).unwrap_or(0.0);
-    // 마진 포함: content + top + bottom을 HwpUnit 레벨에서 합산
-    let margin_top_hu = if cell.cell_margin.top != 0 { cell.cell_margin.top } else { 142 }; // 0.5mm ≈ 142 HU
-    let margin_bottom_hu = if cell.cell_margin.bottom != 0 { cell.cell_margin.bottom } else { 142 };
+    // 마진 포함: 기본 0.5mm (142 HU = ceil(0.5/25.4*7200))
+    let margin_top_hu = if cell.cell_margin.top != 0 { cell.cell_margin.top + 1 } else { 142 };
+    let margin_bottom_hu = if cell.cell_margin.bottom != 0 { cell.cell_margin.bottom + 1 } else { 142 };
     let total_hu = max_bottom.unwrap_or(0) + margin_top_hu + margin_bottom_hu;
     hwpunit_to_mm(total_hu)
 }
