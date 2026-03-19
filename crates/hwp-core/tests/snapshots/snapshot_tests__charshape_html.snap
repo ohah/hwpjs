@@ -2,7 +2,7 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
-<div class="body">
+<div class="hwp-body">
 <p><span style="font-size: 10.0pt; font-family: '바탕'">가</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'"><i>기울임</i></span><span style="font-size: 10.0pt; font-family: '바탕'"><b>진하게</b></span></p>
 <p><span style="font-size: 10.0pt; font-family: '굴림'">밑줄없음</span><span style="font-size: 10.0pt; font-family: '바탕'"><u>밑줄</u></span><span style="font-size: 10.0pt; font-family: '바탕'"><del>가운데줄</del></span><span style="font-size: 10.0pt; font-family: '바탕'"><u>윗줄</u></span></p>

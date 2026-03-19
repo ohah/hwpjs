@@ -2,8 +2,8 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
-<div class="body">
-<table class="table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
+<div class="hwp-body">
+<table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
 <tr>
 <td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 37.8pt">  </td>
 <td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 37.8pt">  </td>
