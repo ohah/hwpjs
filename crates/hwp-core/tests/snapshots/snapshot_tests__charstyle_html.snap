@@ -2,6 +2,6 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
-<div class="body">
+<div class="hwp-body">
 
 </div>

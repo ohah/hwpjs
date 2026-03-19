@@ -2,7 +2,7 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
-<div class="body">
+<div class="hwp-body">
 <p><span style="font-size: 10.0pt; font-family: '바탕'">ko바탕en바탕cn바탕jp바탕other바탕symbol바탕user바탕</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">ko</span><span style="font-size: 10.0pt; font-family: '한컴바탕'">한컴바탕</span><span style="font-size: 10.0pt; font-family: '바탕'">en바탕cn바탕jp바탕other바탕symbol바탕user바탕</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">ko</span><span style="font-size: 10.0pt; font-family: '한양신명조'">한양신명조</span><span style="font-size: 10.0pt; font-family: '바탕'">en바탕cn바탕jp바탕other바탕symbol바탕user바탕</span></p>

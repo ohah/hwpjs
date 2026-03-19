@@ -510,7 +510,7 @@ fn test_document_html_snapshot() {
             html_output_dir: None,
             include_version: Some(true),
             include_page_info: Some(true),
-            css_class_prefix: "ohah-hwpjs-".to_string(),
+            css_class_prefix: "hwp-".to_string(),
             layout: false,
         };
         let html = document.to_html(&options);
@@ -562,7 +562,7 @@ fn test_headerfooter_html() {
                         html_output_dir: None,
                         include_version: Some(true),
                         include_page_info: Some(true),
-                        css_class_prefix: "ohah-hwpjs-".to_string(),
+                        css_class_prefix: "hwp-".to_string(),
             layout: false,
                     };
 
@@ -627,7 +627,7 @@ fn test_footnote_endnote_html_snapshot() {
         html_output_dir: None,
         include_version: Some(false),
         include_page_info: Some(false),
-        css_class_prefix: "ohah-hwpjs-".to_string(),
+        css_class_prefix: "hwp-".to_string(),
             layout: false,
     };
     let html = document.to_html(&options);
@@ -691,7 +691,7 @@ fn test_outline_number_in_html_when_document_has_outline() {
             html_output_dir: None,
             include_version: Some(false),
             include_page_info: Some(false),
-            css_class_prefix: "ohah-hwpjs-".to_string(),
+            css_class_prefix: "hwp-".to_string(),
             layout: false,
         };
         let html = document.to_html(&options);
@@ -739,12 +739,7 @@ fn test_all_fixtures_html_snapshots() {
                             html_output_dir: None,
                             include_version: Some(true),
                             include_page_info: Some(true),
-                            // headerfooter는 전용 테스트(test_headerfooter_html)와 동일한 스냅샷을 사용하므로 접두사 일치
-                            css_class_prefix: if file_name == "headerfooter" {
-                                "ohah-hwpjs-".to_string()
-                            } else {
-                                String::new() // table.html과 일치하도록 빈 문자열 사용
-                            },
+                            css_class_prefix: "hwp-".to_string(),
             layout: false,
                         };
                         if file_name == "table" {
@@ -841,7 +836,7 @@ fn test_table2_html_snapshot() {
                         html_output_dir: None,
                         include_version: Some(true),
                         include_page_info: Some(true),
-                        css_class_prefix: String::new(), // table.html과 일치하도록 빈 문자열 사용
+                        css_class_prefix: "hwp-".to_string(),
                         layout: false,
                     };
                     eprintln!("DEBUG: Processing table2.hwp file");
@@ -901,7 +896,7 @@ fn test_table_bug_cell_positions_match_hancom() {
         html_output_dir: None,
         include_version: Some(true),
         include_page_info: Some(true),
-        css_class_prefix: String::new(),
+        css_class_prefix: "hwp-".to_string(),
             layout: false,
     };
     let css_filename = "table-bug_style.css";
@@ -996,7 +991,7 @@ fn test_nested_table_rendering() {
         html_output_dir: None,
         include_version: Some(true),
         include_page_info: Some(true),
-        css_class_prefix: String::new(),
+        css_class_prefix: "hwp-".to_string(),
             layout: false,
     };
     let css_filename = "table-bug_style.css";
@@ -1847,7 +1842,7 @@ fn test_debug_table_bug_page10() {
         html_output_dir: None,
         include_version: Some(true),
         include_page_info: Some(true),
-        css_class_prefix: String::new(),
+        css_class_prefix: "hwp-".to_string(),
             layout: false,
     };
     let css_filename = "table-bug_style.css";

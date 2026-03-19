@@ -2,7 +2,7 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
-<div class="body">
+<div class="hwp-body">
 <p><span style="font-size: 10.0pt; font-family: '바탕'"><u>실선밑줄</u></span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'"><u>대시밑줄</u></span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'"><u>점선밑줄</u></span></p>

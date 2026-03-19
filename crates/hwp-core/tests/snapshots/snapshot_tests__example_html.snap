@@ -2,7 +2,7 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
-<div class="body">
+<div class="hwp-body">
 <p><span style="font-size: 13.0pt; font-family: '맑은 고딕'">삼강오륜</span></p>
 <p><span style="font-size: 13.0pt; font-family: '궁서체'">삼강오륜 은 현재까지도 이어져 일상생활에 깊이 뿌리내린 윤리 도덕이랍니다.</span></p>
 <p><span style="font-size: 13.0pt; font-family: '궁서체'">삼강</span></p>

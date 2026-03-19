@@ -2,7 +2,7 @@
 source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
-<div class="body">
+<div class="hwp-body">
 <p style="line-height: 2000%"><span style="font-size: 10.0pt; font-family: '바탕'"><u>|HHHHHHHHHHHHHH</u></span></p>
 <p style="line-height: 2000%"><span style="font-size: 10.0pt; font-family: '바탕'"><u>|HHHHHHHHHHHHHH</u></span></p>
 <p style="line-height: 150%"><span style="font-size: 10.0pt; font-family: '바탕'"><u>|H 글자에 따라 150%</u></span></p>
