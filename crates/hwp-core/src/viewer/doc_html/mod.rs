@@ -144,10 +144,12 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                         hwp_model::paragraph::RunContent::Object(ref shape) => {
                             let obj_html = match shape {
                                 hwp_model::shape::ShapeObject::Table(ref table) => {
-                                    layout_table::render_layout_table(
+                                    layout_table::render_layout_table_with_offset(
                                         table,
                                         &doc.resources,
                                         &doc.binaries,
+                                        layout_page::content_left_abs_mm(page_def),
+                                        layout_page::content_top_abs_mm(page_def),
                                     )
                                 }
                                 hwp_model::shape::ShapeObject::Picture(ref pic) => {

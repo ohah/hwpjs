@@ -103,6 +103,20 @@ pub fn content_left_mm(page_def: &PageDef) -> f64 {
     0.0 // hcD 내부에서의 상대 좌표이므로 0
 }
 
+/// 페이지 절대 좌표: 콘텐츠 왼쪽 (hcD의 left)
+pub fn content_left_abs_mm(page_def: &PageDef) -> f64 {
+    round_mm(
+        hwpunit_to_mm(page_def.margin.left) + hwpunit_to_mm(page_def.margin.gutter),
+    )
+}
+
+/// 페이지 절대 좌표: 콘텐츠 위쪽 (hcD의 top)
+pub fn content_top_abs_mm(page_def: &PageDef) -> f64 {
+    round_mm(
+        hwpunit_to_mm(page_def.margin.top) + hwpunit_to_mm(page_def.margin.header),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

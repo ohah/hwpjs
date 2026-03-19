@@ -14,18 +14,48 @@ pub fn render_layout_table(
     resources: &Resources,
     _binaries: &BinaryStore,
 ) -> String {
+    render_layout_table_with_offset(table, resources, _binaries, 0.0, 0.0)
+}
+
+/// 페이지 오프셋 포함 테이블 렌더링
+pub fn render_layout_table_with_offset(
+    table: &Table,
+    resources: &Resources,
+    _binaries: &BinaryStore,
+    page_left_mm: f64,
+    page_top_mm: f64,
+) -> String {
     if table.rows.is_empty() {
         return String::new();
     }
 
     // ShapeCommon에서 위치/크기 정보 추출
     let common = &table.common;
-    let width_mm = round_mm(hwpunit_to_mm(common.size.width));
-    let height_mm = round_mm(hwpunit_to_mm(common.size.height));
+    let content_width = round_mm(hwpunit_to_mm(common.size.width));
+    let content_height = round_mm(hwpunit_to_mm(common.size.height));
     let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
     let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
 
+    // 외곽 마진 (old viewer: ObjectCommon.width + margin.left + margin.right)
+    // 반올림 전 raw 값으로 합산 후 최종 반올림 (old viewer 정밀도 일치)
+    let (margin_l_raw, margin_r_raw, margin_t_raw, margin_b_raw) = common.out_margin.as_ref()
+        .map(|m| (
+            hwpunit_to_mm(m.left),
+            hwpunit_to_mm(m.right),
+            hwpunit_to_mm(m.top),
+            hwpunit_to_mm(m.bottom),
+        ))
+        .unwrap_or((0.0, 0.0, 0.0, 0.0));
+
+    // htb 크기: content + margins (old viewer htb_size)
+    let htb_width = round_mm(hwpunit_to_mm(common.size.width) + margin_l_raw + margin_r_raw);
+    let htb_height = round_mm(hwpunit_to_mm(common.size.height) + margin_t_raw + margin_b_raw);
+
     let has_caption = table.common.caption.is_some();
+
+    // htb 절대 좌표: 페이지 오프셋 + 테이블 상대 좌표
+    let abs_x = round_mm(page_left_mm + x_mm);
+    let abs_y = round_mm(page_top_mm + y_mm);
 
     // htG wrapper (캡션 있을 때 — old viewer 구조: htG > htb + hcD)
     let mut html = String::new();
@@ -34,25 +64,23 @@ pub fn render_layout_table(
         let cap_gap = table.common.caption.as_ref()
             .map(|c| round_mm(hwpunit_to_mm(c.gap)))
             .unwrap_or(3.0);
-        let htg_height = height_mm + cap_gap + 3.53; // 캡션 높이 근사
-        // old viewer mm 포맷 (정수는 소수점 없이)
+        let htg_height = htb_height + cap_gap + 3.53; // 캡션 높이 근사
         html.push_str(&format!(
             r#"<div class="htG" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">"#,
-            x_mm, width_mm, y_mm, htg_height
+            abs_x, htb_width, abs_y, htg_height
         ));
     }
 
     // htb: 표 본체
-    let htb_x = if has_caption { 0.0 } else { x_mm };
-    let htb_y = if has_caption { 0.0 } else { y_mm };
-    // old viewer mm 포맷 (정수는 소수점 없이)
+    let htb_x = if has_caption { 0.0 } else { abs_x };
+    let htb_y = if has_caption { 0.0 } else { abs_y };
     html.push_str(&format!(
         r#"<div class="htb" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">"#,
-        htb_x, width_mm, htb_y, height_mm
+        htb_x, htb_width, htb_y, htb_height
     ));
 
-    // SVG 테두리
-    let svg = generate_table_svg_borders(table, width_mm, height_mm, resources);
+    // SVG 테두리 (viewBox는 htb 크기 기반)
+    let svg = generate_table_svg_borders(table, htb_width, htb_height, resources);
     if !svg.is_empty() {
         html.push_str(&svg);
     }
@@ -240,7 +268,7 @@ fn render_caption(
     html
 }
 
-/// 표의 셀 경계를 SVG path로 생성 (셀별 BorderFill 기반)
+/// 표의 셀 경계를 SVG path로 생성 (old viewer 방식: column/row positions 기반 연속선)
 fn generate_table_svg_borders(
     table: &Table,
     width_mm: f64,
@@ -253,95 +281,188 @@ fn generate_table_svg_borders(
     let vb_w = round_mm(width_mm + margin * 2.0);
     let vb_h = round_mm(height_mm + margin * 2.0);
 
+    // SVG viewBox와 style (old viewer: ViewBox 기반)
     let mut svg = format!(
         r#"<svg class="hs" viewBox="-{m} -{m} {w} {h}" style="left:-{m}mm;top:-{m}mm;width:{w}mm;height:{h}mm;">"#,
         m = margin, w = vb_w, h = vb_h,
     );
     svg.push_str("<defs></defs>");
 
-    // 중복 path 방지
-    let mut drawn: std::collections::HashSet<(i32, i32, i32, i32)> =
-        std::collections::HashSet::new();
+    // column_positions 계산 (셀 너비 누적)
+    let col_positions = compute_column_positions(table);
+    // row_positions 계산 (row_span=1 셀 기준)
+    let row_positions = compute_row_positions(table);
 
-    // 셀별 절대 좌표를 계산하여 각 셀의 경계를 그림
-    let mut row_top = 0.0_f64;
+    let content_w = *col_positions.last().unwrap_or(&width_mm);
+    let content_h = *row_positions.last().unwrap_or(&height_mm);
 
-    for row in &table.rows {
-        let mut col_left = 0.0_f64;
-        let mut max_h = 0.0_f64;
+    // 기본 border 정보 (첫 번째 셀의 BorderFill 사용)
+    let default_border = table.rows.first()
+        .and_then(|r| r.cells.first())
+        .and_then(|c| {
+            if c.border_fill_id > 0 {
+                resources.border_fills.get((c.border_fill_id as usize).wrapping_sub(1))
+            } else { None }
+        });
+    let default_stroke_width = default_border
+        .and_then(|bf| bf.left_border.as_ref())
+        .map(|l| {
+            if l.width.is_empty() { 0.12 }
+            else { l.width.trim_end_matches("mm").parse::<f64>().unwrap_or(0.12) }
+        })
+        .unwrap_or(0.12);
+    let overshoot = default_stroke_width / 2.0;
 
-        for cell in &row.cells {
-            let cw = round_mm(hwpunit_to_mm(cell.width));
-            let ch = round_mm(hwpunit_to_mm(cell.height));
-            if ch > max_h {
-                max_h = ch;
+    // 수직 경계선 (column_positions 순회)
+    for &col_x in &col_positions {
+        // covered_ranges: row_span으로 이 열 경계를 가로지르는 셀 영역
+        let mut covered = Vec::new();
+        for row in &table.rows {
+            let mut cx = 0.0_f64;
+            for cell in &row.cells {
+                let cw = round_mm(hwpunit_to_mm(cell.width));
+                let cl = round_mm(cx);
+                let cr = round_mm(cx + cw);
+                // 셀이 이 열 경계를 가로지르는가? (셀 내부에 경계가 있으면 선 생략)
+                if cl + 0.01 < col_x && cr - 0.01 > col_x {
+                    let ri = cell.row as usize;
+                    let rs = if cell.row_span > 0 { cell.row_span as usize } else { 1 };
+                    if ri < row_positions.len() && ri + rs < row_positions.len() {
+                        covered.push((row_positions[ri], row_positions[ri + rs]));
+                    }
+                }
+                cx += cw;
             }
-
-            // 셀의 BorderFill에서 테두리 정보 가져오기
-            let bf = if cell.border_fill_id > 0 {
-                resources
-                    .border_fills
-                    .get((cell.border_fill_id as usize).wrapping_sub(1))
-            } else {
-                None
-            };
-
-            let x1 = round_mm(col_left);
-            let y1 = round_mm(row_top);
-            let x2 = round_mm(col_left + cw);
-            let y2 = round_mm(row_top + ch);
-
-            // 중복 방지: 왼쪽 변과 위쪽 변만 그림
-            // (오른쪽/아래는 인접 셀의 왼쪽/위로 그려짐)
-            // 표 오른쪽/아래 외곽선은 마지막 셀에서 그림
-            if let Some(bf) = bf {
-                // 정규화된 키: 시작점을 항상 작은 쪽으로
-                let mk = |a: f64, b: f64, c: f64, d: f64| {
-                    let (a, b, c, d) = if a > c || (a == c && b > d) {
-                        (c, d, a, b)
-                    } else {
-                        (a, b, c, d)
-                    };
-                    ((a * 100.0) as i32, (b * 100.0) as i32, (c * 100.0) as i32, (d * 100.0) as i32)
-                };
-                // row_span=1 또는 첫 행일 때만 왼쪽/위 변 그림
-                let is_first_row_of_span = cell.row_span <= 1 || cell.row == 0;
-                if is_first_row_of_span {
-                    if let Some(ref line) = bf.left_border {
-                        if drawn.insert(mk(x1, y1, x1, y2)) {
-                            draw_border_line(&mut svg, x1, y1, x1, y2, line);
-                        }
-                    }
-                }
-                if let Some(ref line) = bf.top_border {
-                    if drawn.insert(mk(x1, y1, x2, y1)) {
-                        draw_border_line(&mut svg, x1, y1, x2, y1, line);
-                    }
-                }
-                if (x2 - width_mm).abs() < 0.5 {
-                    if let Some(ref line) = bf.right_border {
-                        if drawn.insert(mk(x2, y1, x2, y2)) {
-                            draw_border_line(&mut svg, x2, y1, x2, y2, line);
-                        }
-                    }
-                }
-                if (y2 - height_mm).abs() < 0.5 {
-                    if let Some(ref line) = bf.bottom_border {
-                        if drawn.insert(mk(x1, y2, x2, y2)) {
-                            draw_border_line(&mut svg, x1, y2, x2, y2, line);
-                        }
-                    }
-                }
-            }
-
-            col_left += cw;
         }
+        covered.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
-        row_top += max_h;
+        // covered 영역을 제외한 segments
+        let mut segments = Vec::new();
+        let mut cur_y = 0.0_f64;
+        for (cs, ce) in &covered {
+            if cur_y < *cs { segments.push((cur_y, *cs)); }
+            cur_y = cur_y.max(*ce);
+        }
+        if cur_y < content_h { segments.push((cur_y, content_h)); }
+
+        for (y0, y1) in &segments {
+            svg_path_v(&mut svg, col_x, *y0, *y1, default_stroke_width, resources, default_border);
+        }
+    }
+
+    // 수평 경계선 (row_positions 순회 + overshoot)
+    for &row_y in &row_positions {
+        // covered_ranges: col_span으로 이 행 경계를 가로지르는 셀 영역
+        let mut covered = Vec::new();
+        for row in &table.rows {
+            let mut cx = 0.0_f64;
+            for cell in &row.cells {
+                let cw = round_mm(hwpunit_to_mm(cell.width));
+                let ri = cell.row as usize;
+                let rs = if cell.row_span > 0 { cell.row_span as usize } else { 1 };
+                if ri < row_positions.len() && ri + rs < row_positions.len() {
+                    let ct = row_positions[ri];
+                    let cb = row_positions[ri + rs];
+                    // 셀이 이 행 경계를 가로지르는가?
+                    if ct < row_y && cb > row_y {
+                        covered.push((round_mm(cx), round_mm(cx + cw)));
+                    }
+                }
+                cx += cw;
+            }
+        }
+        covered.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+
+        let mut segments = Vec::new();
+        let mut cur_x = 0.0_f64;
+        for (cs, ce) in &covered {
+            if cur_x < *cs { segments.push((cur_x, *cs)); }
+            cur_x = cur_x.max(*ce);
+        }
+        if cur_x < content_w { segments.push((cur_x, content_w)); }
+
+        for (x0, x1) in &segments {
+            // overshoot: 수평선 양끝에 stroke-width/2만큼 확장
+            svg_path_h(&mut svg, *x0 - overshoot, *x1 + overshoot, row_y, default_stroke_width, resources, default_border);
+        }
     }
 
     svg.push_str("</svg>");
     svg
+}
+
+/// column_positions 계산
+fn compute_column_positions(table: &Table) -> Vec<f64> {
+    let mut positions = vec![0.0_f64];
+    if let Some(first_row) = table.rows.first() {
+        let mut x = 0.0_f64;
+        for cell in &first_row.cells {
+            x += round_mm(hwpunit_to_mm(cell.width));
+            positions.push(round_mm(x));
+        }
+    }
+    positions
+}
+
+/// row_positions 계산 (row_span=1 셀 기준)
+fn compute_row_positions(table: &Table) -> Vec<f64> {
+    let row_count = table.rows.len();
+    let mut row_heights = vec![0.0_f64; row_count];
+    for (ri, row) in table.rows.iter().enumerate() {
+        for cell in &row.cells {
+            if cell.row_span <= 1 {
+                let ch = round_mm(hwpunit_to_mm(cell.height));
+                if ch > row_heights[ri] { row_heights[ri] = ch; }
+            }
+        }
+    }
+    let mut positions = vec![0.0_f64; row_count + 1];
+    for ri in 0..row_count {
+        positions[ri + 1] = round_mm(positions[ri] + row_heights[ri]);
+    }
+    positions
+}
+
+/// 수직 경계선 path
+fn svg_path_v(
+    svg: &mut String,
+    x: f64, y0: f64, y1: f64,
+    stroke_width: f64,
+    _resources: &Resources,
+    default_border: Option<&hwp_model::resources::BorderFill>,
+) {
+    let color = default_border
+        .and_then(|bf| bf.left_border.as_ref())
+        .and_then(|l| l.color)
+        .map(|c| format!("#{:02X}{:02X}{:02X}", (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF))
+        .unwrap_or_else(|| "#000000".to_string());
+    use std::fmt::Write;
+    write!(svg,
+        r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
+        round_mm(x), round_mm(y0), round_mm(x), round_mm(y1), color, stroke_width
+    ).ok();
+    svg.push_str("</path>");
+}
+
+/// 수평 경계선 path
+fn svg_path_h(
+    svg: &mut String,
+    x0: f64, x1: f64, y: f64,
+    stroke_width: f64,
+    _resources: &Resources,
+    default_border: Option<&hwp_model::resources::BorderFill>,
+) {
+    let color = default_border
+        .and_then(|bf| bf.top_border.as_ref())
+        .and_then(|l| l.color)
+        .map(|c| format!("#{:02X}{:02X}{:02X}", (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF))
+        .unwrap_or_else(|| "#000000".to_string());
+    use std::fmt::Write;
+    write!(svg,
+        r#"<path d="M{},{} L{},{}" style="stroke:{};stroke-linecap:butt;stroke-width:{};">"#,
+        round_mm(x0), round_mm(y), round_mm(x1), round_mm(y), color, stroke_width
+    ).ok();
+    svg.push_str("</path>");
 }
 
 /// SVG path 하나를 그리는 헬퍼
