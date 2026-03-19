@@ -1219,10 +1219,45 @@ fn collect_shape_parts<'a>(
             ParagraphRecord::ShapeComponent {
                 children: nested, ..
             } => {
-                // 재귀 탐색 (draw_info 상위 전파)
-                if let Some(di) = collect_shape_parts(nested, common, results, has_rect, list_header_paras) {
+                // 재귀 탐색: 각 중첩 SC의 Rectangle+ListHeader를 독립적으로 처리
+                let mut nested_rect = false;
+                let mut nested_lh: Option<&'a [bodytext::Paragraph]> = None;
+                if let Some(di) = collect_shape_parts(nested, common, results, &mut nested_rect, &mut nested_lh) {
                     if draw_info.is_none() {
                         draw_info = Some(di);
+                    }
+                }
+                // 중첩 SC가 자체 Rectangle+ListHeader를 가지면 즉시 RectObject 생성
+                if nested_rect && nested_lh.is_some() {
+                    let paras = nested_lh.unwrap();
+                    let effective = if paras.len() == 2 {
+                        &paras[paras.len() - 1..]
+                    } else if paras.len() >= 4 && paras.len() % 2 == 0 {
+                        let half = paras.len() / 2;
+                        let is_dup = (0..half).all(|i| {
+                            extract_para_text(&paras[i]) == extract_para_text(&paras[half + i])
+                        });
+                        if is_dup { &paras[half..] } else { paras }
+                    } else {
+                        paras
+                    };
+                    let converted = convert_hwp_paragraphs(effective);
+                    if !converted.is_empty() {
+                        let rect = RectObject {
+                            common: common.clone(),
+                            draw_text: Some(SubList {
+                                paragraphs: converted,
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        };
+                        results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
+                    }
+                } else {
+                    // 상위로 전파
+                    if nested_rect { *has_rect = true; }
+                    if nested_lh.is_some() && list_header_paras.is_none() {
+                        *list_header_paras = nested_lh;
                     }
                 }
             }
