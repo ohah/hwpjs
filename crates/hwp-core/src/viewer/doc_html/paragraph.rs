@@ -705,6 +705,27 @@ fn build_cell_style(border_fill_id: u16, resources: &Resources) -> String {
             hwp_model::resources::FillBrush::Gradation { colors, .. } => {
                 colors.first().copied().flatten()
             }
+            hwp_model::resources::FillBrush::Combined { win_brush, gradation, .. } => {
+                // Combined: WinBrush의 face_color 우선, 없으면 Gradation 첫 색
+                win_brush
+                    .as_ref()
+                    .and_then(|wb| {
+                        if let hwp_model::resources::FillBrush::WinBrush { face_color, .. } = wb.as_ref() {
+                            *face_color
+                        } else {
+                            None
+                        }
+                    })
+                    .or_else(|| {
+                        gradation.as_ref().and_then(|g| {
+                            if let hwp_model::resources::FillBrush::Gradation { colors, .. } = g.as_ref() {
+                                colors.first().copied().flatten()
+                            } else {
+                                None
+                            }
+                        })
+                    })
+            }
             _ => None,
         };
         if let Some(c) = color {
