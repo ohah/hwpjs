@@ -1305,7 +1305,14 @@ fn convert_shape_object(
                 // Rectangle + ListHeader → draw_text + fill/line 포함 Rectangle 생성
                 if has_rect {
                     let draw_text = list_header_paras.map(|paras| {
-                        let converted = convert_hwp_paragraphs(paras);
+                        // HWP ListHeader는 첫 paragraph에 기본 텍스트를 포함
+                        // HWPX는 실제 텍스트만 포함하므로 마지막 paragraph만 사용
+                        let effective = if paras.len() >= 2 {
+                            &paras[paras.len() - 1..]
+                        } else {
+                            paras
+                        };
+                        let converted = convert_hwp_paragraphs(effective);
                         SubList {
                             paragraphs: converted,
                             ..Default::default()
