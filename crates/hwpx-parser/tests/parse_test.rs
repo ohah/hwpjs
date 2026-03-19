@@ -182,11 +182,8 @@ fn parse_border_fills() {
     assert!(!bf1.shadow);
     assert_eq!(bf1.center_line, CenterLineType::None);
 
-    // leftBorder 확인
-    let lb = bf1.left_border.as_ref().unwrap();
-    assert_eq!(lb.line_type, LineType3::None);
-    assert_eq!(lb.width, "0.1mm");
-    assert_eq!(lb.color, Some(0x000000));
+    // leftBorder: type=NONE → None
+    assert!(bf1.left_border.is_none());
 
     // 두 번째: winBrush 채우기
     let bf2 = &bfs[1];

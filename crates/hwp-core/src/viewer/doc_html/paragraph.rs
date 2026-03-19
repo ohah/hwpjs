@@ -140,6 +140,10 @@ fn render_paragraph_content(
         }
         controls.append(&mut run_controls);
     }
+    // FieldEnd 없이 문단이 끝난 경우 방어적 닫기
+    if in_hyperlink {
+        content.push_str("</a>");
+    }
     let para_style = if has_block || content.is_empty() {
         String::new()
     } else {
