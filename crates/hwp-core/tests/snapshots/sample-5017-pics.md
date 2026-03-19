@@ -6,8 +6,8 @@
 
 
 
-![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)  
-글자취급
+글자취급  
+![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)
 
 ---
 
@@ -36,41 +36,41 @@
 ---
 
 
-![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)  
-자리차지 (왼쪽정렬)
+자리차지 (왼쪽정렬)  
+![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)
 
 ---
 
 
-![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)  
-자리차지 (오른쪽정렬)
+자리차지 (오른쪽정렬)  
+![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)
 
 ---
 
 
-![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)  
-자리차지 (가운데정렬)
+자리차지 (가운데정렬)  
+![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)
 
 ---
 
 
-![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0001.jpg)  
-자리차지 (안쪽정렬)
+자리차지 (안쪽정렬)  
+![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0001.jpg)
 
 ---
 
 
-![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0001.jpg)  
-자리차지 (바깥쪽정렬)
+자리차지 (바깥쪽정렬)  
+![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0001.jpg)
 
 ---
 
 
-![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)  
-글뒤로
+글뒤로  
+![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)
 
 ---
 
 
-![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)  
-글 앞으로
+글 앞으로  
+![이미지]({{SNAPSHOTS_DIR}}/images/sample-5017-pics/BIN0002.jpg)

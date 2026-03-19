@@ -221,9 +221,9 @@ fn convert_paragraph(para: &bodytext::Paragraph) -> Vec<Paragraph> {
         })
         .collect();
 
-    // Object(Table/Shape)가 있으면 Text를 Object 뒤로 재배치
-    // 기존 viewer: ParaText를 마지막에 결합 (Object 먼저 처리)
-    let runs = reorder_text_after_objects(runs);
+    // Object(Table/Shape)가 있으면 Text를 Object 뒤로 재배치 — 비활성화
+    // HWPX는 원본 순서 유지하므로, HWP도 원본 순서 유지하여 일치시킴
+    // let runs = reorder_text_after_objects(runs);
 
     // TABLE이 있으면 셀 텍스트와 중복되는 Rectangle(ListHeader) 제거
     let runs = filter_duplicate_rectangles(runs);
