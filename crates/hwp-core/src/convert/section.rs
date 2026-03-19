@@ -1345,44 +1345,80 @@ fn convert_shape_object(
         return results;
     }
 
-    for child in children {
-        match child {
-            ParagraphRecord::ListHeader {
-                paragraphs: lh_paras,
-                ..
-            } => {
-                let paras = convert_hwp_paragraphs(lh_paras);
-                if !paras.is_empty() {
-                    let rect = RectObject {
-                        common: common.clone(),
-                        draw_text: Some(SubList {
-                            paragraphs: paras,
+    // ctrl_paragraphs가 있으면 직접 ListHeader는 caption과 중복이므로 건너뜀
+    if paragraphs.is_empty() {
+        for child in children {
+            match child {
+                ParagraphRecord::ListHeader {
+                    paragraphs: lh_paras,
+                    ..
+                } => {
+                    let paras = convert_hwp_paragraphs(lh_paras);
+                    if !paras.is_empty() {
+                        let rect = RectObject {
+                            common: common.clone(),
+                            draw_text: Some(SubList {
+                                paragraphs: paras,
+                                ..Default::default()
+                            }),
                             ..Default::default()
-                        }),
-                        ..Default::default()
-                    };
-                    results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
+                        };
+                        results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
+                    }
                 }
+                ParagraphRecord::ShapeComponent { .. } => {}
+                _ => {}
             }
-            // ShapeComponent 내부 ListHeader는 Pass 1에서 이미 처리됨 — 건너뜀
-            ParagraphRecord::ShapeComponent { .. } => {}
-            _ => {}
         }
     }
 
-    // ctrl_paragraphs 처리
+    // ctrl_paragraphs → 기존 shape의 caption.content에 병합
     if !paragraphs.is_empty() {
         let paras = convert_hwp_paragraphs(paragraphs);
         if !paras.is_empty() {
-            let rect = RectObject {
-                common: common.clone(),
-                draw_text: Some(SubList {
-                    paragraphs: paras,
-                    ..Default::default()
-                }),
+            let caption_sub = SubList {
+                paragraphs: paras.clone(),
                 ..Default::default()
             };
-            results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
+            // 기존 shape(Rectangle/Picture)에 caption으로 병합
+            let merged = results.iter_mut().any(|rc| match rc {
+                RunContent::Object(ShapeObject::Rectangle(rect)) => {
+                    if rect.common.caption.is_none() {
+                        rect.common.caption = Some(Caption {
+                            side: CaptionSide::Bottom,
+                            content: caption_sub.clone(),
+                            ..Default::default()
+                        });
+                    } else if let Some(ref mut cap) = rect.common.caption {
+                        cap.content.paragraphs.extend(paras.clone());
+                    }
+                    true
+                }
+                RunContent::Object(ShapeObject::Picture(pic)) => {
+                    if pic.common.caption.is_none() {
+                        pic.common.caption = Some(Caption {
+                            side: CaptionSide::Bottom,
+                            content: caption_sub.clone(),
+                            ..Default::default()
+                        });
+                    } else if let Some(ref mut cap) = pic.common.caption {
+                        cap.content.paragraphs.extend(paras.clone());
+                    }
+                    true
+                }
+                _ => false,
+            });
+            if !merged {
+                let rect = RectObject {
+                    common: common.clone(),
+                    draw_text: Some(SubList {
+                        paragraphs: paras,
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                };
+                results.push(RunContent::Object(ShapeObject::Rectangle(Box::new(rect))));
+            }
         }
     }
 

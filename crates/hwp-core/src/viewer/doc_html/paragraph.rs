@@ -496,13 +496,26 @@ fn render_shape_object_html(
             if let Some(ref sub_list) = rect.draw_text {
                 let content =
                     render_sublist_paragraphs(&sub_list.paragraphs, resources, binaries, options);
-                (
-                    format!(
-                        "<div class=\"{}textbox\">{}</div>",
-                        options.css_class_prefix, content
-                    ),
-                    true,
-                )
+                let mut html = format!(
+                    "<div class=\"{}textbox\">{}</div>",
+                    options.css_class_prefix, content
+                );
+                // Rectangle 캡션 렌더링
+                if let Some(ref caption) = rect.common.caption {
+                    let cap_content = render_sublist_paragraphs(
+                        &caption.content.paragraphs,
+                        resources,
+                        binaries,
+                        options,
+                    );
+                    if !cap_content.is_empty() {
+                        html.push_str(&format!(
+                            "<div class=\"{}textbox\">{}</div>",
+                            options.css_class_prefix, cap_content
+                        ));
+                    }
+                }
+                (html, true)
             } else {
                 (String::new(), false)
             }
