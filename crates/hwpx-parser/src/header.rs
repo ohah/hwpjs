@@ -910,7 +910,8 @@ fn parse_para_shape(
                         let h = Heading {
                             heading_type: ht,
                             id_ref: attr_u16(e, b"idRef").unwrap_or(0),
-                            level: attr_u8(e, b"level").unwrap_or(0),
+                            // HWP paragraph_level은 0-6 범위 — HWPX level도 clamp
+                            level: attr_u8(e, b"level").unwrap_or(0).min(6),
                         };
                         // epub:switch에서 epub:case(OUTLINE)와 epub:default(NONE)가 모두 나옴
                         // type != NONE이면 우선 적용, 이미 NONE이 아닌 값이 있으면 유지

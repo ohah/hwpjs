@@ -2442,7 +2442,7 @@ expression: json
         "heading": {
           "heading_type": "Outline",
           "id_ref": 0,
-          "level": 8
+          "level": 6
         },
         "break_setting": {
           "break_latin_word": "KeepWord",
@@ -2509,7 +2509,7 @@ expression: json
         "heading": {
           "heading_type": "Outline",
           "id_ref": 0,
-          "level": 9
+          "level": 6
         },
         "break_setting": {
           "break_latin_word": "KeepWord",
@@ -2576,7 +2576,7 @@ expression: json
         "heading": {
           "heading_type": "Outline",
           "id_ref": 0,
-          "level": 7
+          "level": 6
         },
         "break_setting": {
           "break_latin_word": "KeepWord",
