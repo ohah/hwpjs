@@ -413,11 +413,11 @@ fn parse_border_fill(
                         is_counter: attr_bool(e, b"isCounter").unwrap_or(false),
                     });
                 }
-                b"leftBorder" => bf.left_border = Some(parse_line_spec(e)),
-                b"rightBorder" => bf.right_border = Some(parse_line_spec(e)),
-                b"topBorder" => bf.top_border = Some(parse_line_spec(e)),
-                b"bottomBorder" => bf.bottom_border = Some(parse_line_spec(e)),
-                b"diagonal" => bf.diagonal = Some(parse_line_spec(e)),
+                b"leftBorder" => bf.left_border = parse_line_spec(e),
+                b"rightBorder" => bf.right_border = parse_line_spec(e),
+                b"topBorder" => bf.top_border = parse_line_spec(e),
+                b"bottomBorder" => bf.bottom_border = parse_line_spec(e),
+                b"diagonal" => bf.diagonal = parse_line_spec(e),
                 _ => {}
             },
             Event::Start(ref e) => {
@@ -439,14 +439,19 @@ fn parse_border_fill(
     Ok(bf)
 }
 
-fn parse_line_spec(e: &quick_xml::events::BytesStart) -> LineSpec {
-    LineSpec {
-        line_type: parse_line_type3(&attr_str(e, b"type").unwrap_or_default()),
+fn parse_line_spec(e: &quick_xml::events::BytesStart) -> Option<LineSpec> {
+    let line_type = parse_line_type3(&attr_str(e, b"type").unwrap_or_default());
+    // type=NONE이면 border 없음 (HWP 변환과 동일하게 처리)
+    if matches!(line_type, LineType3::None) {
+        return None;
+    }
+    Some(LineSpec {
+        line_type,
         width: attr_str(e, b"width")
             .map(|s| s.replace(' ', ""))
             .unwrap_or_default(),
         color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
-    }
+    })
 }
 
 fn parse_fill_brush(reader: &mut Reader<&[u8]>) -> Result<Option<FillBrush>, HwpxError> {

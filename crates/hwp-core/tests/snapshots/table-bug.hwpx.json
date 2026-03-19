@@ -2420,26 +2420,10 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.1mm",
@@ -2463,26 +2447,10 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.1mm",
@@ -2556,26 +2524,10 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.1mm",
@@ -3123,16 +3075,8 @@
           "width": "0.4mm",
           "color": 0
         },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "right_border": null,
+        "top_border": null,
         "bottom_border": {
           "line_type": "Solid",
           "width": "0.4mm",
@@ -3329,21 +3273,9 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
         "bottom_border": {
           "line_type": "Solid",
           "width": "0.7mm",
@@ -3372,26 +3304,10 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.1mm",
@@ -3415,16 +3331,8 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
+        "left_border": null,
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -3458,16 +3366,8 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -3497,26 +3397,14 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.12mm",
           "color": 6118749
         },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "bottom_border": null,
         "diagonal": null,
         "fill": null
       },
@@ -3536,16 +3424,8 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.7mm",
@@ -3582,26 +3462,10 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.15mm",
-          "color": 5790043
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.4mm",
-          "color": 0
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.1mm",
@@ -3673,11 +3537,7 @@
           "width": "0.12mm",
           "color": 9671571
         },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -3759,11 +3619,7 @@
           "width": "0.12mm",
           "color": 9671571
         },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.3mm",
@@ -3845,11 +3701,7 @@
           "width": "0.12mm",
           "color": 9671571
         },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -3883,11 +3735,7 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "left_border": null,
         "right_border": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -3898,11 +3746,7 @@
           "width": "0.3mm",
           "color": 0
         },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.1mm",
@@ -3926,11 +3770,7 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 6118749
-        },
+        "left_border": null,
         "right_border": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -3969,21 +3809,9 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
         "bottom_border": {
           "line_type": "Solid",
           "width": "0.3mm",
@@ -4227,26 +4055,14 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.5mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.5mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.4mm",
           "color": 0
         },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -4270,26 +4086,10 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.5mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.5mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -4313,26 +4113,14 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.5mm",
-          "color": 0
-        },
+        "left_border": null,
         "right_border": {
           "line_type": "Solid",
           "width": "0.4mm",
           "color": 0
         },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -4356,26 +4144,14 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.5mm",
-          "color": 0
-        },
+        "left_border": null,
         "right_border": {
           "line_type": "Solid",
           "width": "0.4mm",
           "color": 0
         },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.5mm",
-          "color": 0
-        },
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -4628,26 +4404,10 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.1mm",
@@ -4678,26 +4438,10 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.1mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.1mm",
@@ -4771,11 +4515,7 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "left_border": null,
         "right_border": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -4826,11 +4566,7 @@
           "width": "0.12mm",
           "color": 0
         },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.4mm",
@@ -4914,11 +4650,7 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "left_border": null,
         "right_border": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -4969,11 +4701,7 @@
           "width": "0.12mm",
           "color": 0
         },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.1mm",
@@ -5007,26 +4735,14 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.4mm",
           "color": 0
         },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.4mm",
-          "color": 0
-        },
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.1mm",
@@ -5055,11 +4771,7 @@
           "width": "0.12mm",
           "color": 0
         },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "right_border": null,
         "top_border": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -5093,11 +4805,7 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
+        "left_border": null,
         "right_border": {
           "line_type": "Solid",
           "width": "0.12mm",
@@ -5136,21 +4844,9 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.4mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
         "bottom_border": {
           "line_type": "Solid",
           "width": "0.4mm",
@@ -5179,26 +4875,10 @@
           "crooked": false,
           "is_counter": false
         },
-        "left_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
-        "right_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
-        "top_border": {
-          "line_type": "None",
-          "width": "0.12mm",
-          "color": 0
-        },
-        "bottom_border": {
-          "line_type": "None",
-          "width": "0.4mm",
-          "color": 0
-        },
+        "left_border": null,
+        "right_border": null,
+        "top_border": null,
+        "bottom_border": null,
         "diagonal": {
           "line_type": "Solid",
           "width": "0.1mm",

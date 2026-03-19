@@ -288,7 +288,7 @@ expression: html
 <td style="border-left: 0.4mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 46.1pt"><p style="text-align: center; line-height: 130%"><span style="font-size: 11.0pt; font-family: '한컴바탕'">접수</span></p>
 <p style="text-align: center; line-height: 130%"><span style="font-size: 11.0pt; font-family: '한컴바탕'">번호</span></p>  </td>
 <td colspan="4" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.4mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 83.0pt"><p style="line-height: 130%"><span style="font-size: 10.0pt; font-family: '한컴바탕'"> 2026-</span></p>  </td>
-<td colspan="4" style="border-left: 0.4mm solid rgb(0,0,0); border-right: 0.1mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 339.9pt">  </td>
+<td colspan="4" style="border-left: 0.4mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 339.9pt">  </td>
 </tr>
 <tr>
 <td rowspan="5" style="border-left: 0.4mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 46.1pt"><p style="text-align: center; line-height: 130%"><span style="font-size: 11.0pt; font-family: '한컴바탕'">신</span></p>
@@ -345,8 +345,8 @@ expression: html
 <p style="text-align: center; text-indent: 20.0pt"><span style="font-size: 20.0pt; font-family: '한컴바탕'"><u>개인정보 수집 및 활용 동의서</u></span></p>
 <table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
 <tr>
-<td style="background-color: rgb(229,229,229); border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 68.8pt"><p style="text-align: center; line-height: 140%"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b>개인정보의</b></span><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b> 수집 및 이용목적</b></span></p>  </td>
-<td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 410.8pt"><table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
+<td style="background-color: rgb(229,229,229); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 68.8pt"><p style="text-align: center; line-height: 140%"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b>개인정보의</b></span><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b> 수집 및 이용목적</b></span></p>  </td>
+<td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 410.8pt"><table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
 <tr>
 <td style="background-color: rgb(214,214,214); border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 398.7pt"><p style="text-align: center"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b>[개인정보 및 고유 식별정보 수집 항목]</b></span></p>  </td>
 </tr>
@@ -365,9 +365,9 @@ expression: html
 </table>  </td>
 </tr>
 <tr>
-<td style="background-color: rgb(229,229,229); border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 68.8pt"><p style="text-align: center; line-height: 140%"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b>개인정보</b></span></p>
+<td style="background-color: rgb(229,229,229); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 68.8pt"><p style="text-align: center; line-height: 140%"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b>개인정보</b></span></p>
 <p style="text-align: center; line-height: 140%"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b> 제 3자 제공동의</b></span></p>  </td>
-<td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 410.8pt"><table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
+<td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 410.8pt"><table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
 <tr>
 <td style="background-color: rgb(214,214,214); border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 20.9pt">  </td>
 <td style="background-color: rgb(214,214,214); border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 159.2pt"><p style="text-align: center"><span style="font-size: 9.0pt; font-family: '한컴바탕'"><b>개인정보를 제공받는 자</b></span></p>  </td>
@@ -381,35 +381,35 @@ expression: html
 </table>  </td>
 </tr>
 <tr>
-<td style="background-color: rgb(229,229,229); border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 68.8pt"><p style="text-align: center; line-height: 140%"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b>개인정보의</b></span><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b> 보유 및 이용기간</b></span></p>  </td>
-<td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 410.8pt"><p style="text-align: left"><span style="font-size: 11.0pt; font-family: '한컴바탕'">■ 개인정보·고유 식별정보의 보유 및 이용 기간</span></p>
+<td style="background-color: rgb(229,229,229); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 68.8pt"><p style="text-align: center; line-height: 140%"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b>개인정보의</b></span><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b> 보유 및 이용기간</b></span></p>  </td>
+<td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 410.8pt"><p style="text-align: left"><span style="font-size: 11.0pt; font-family: '한컴바탕'">■ 개인정보·고유 식별정보의 보유 및 이용 기간</span></p>
 <p style="text-align: left; text-indent: 11.6pt"><span style="font-size: 11.0pt; font-family: '한컴바탕'">- 1년</span></p>  </td>
 </tr>
 <tr>
-<td style="background-color: rgb(229,229,229); border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 68.8pt"><p style="text-align: center; line-height: 140%"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b>개인정보 제공 동의 거부 권리 및 </b></span></p>
+<td style="background-color: rgb(229,229,229); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 68.8pt"><p style="text-align: center; line-height: 140%"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b>개인정보 제공 동의 거부 권리 및 </b></span></p>
 <p style="text-align: center; line-height: 140%"><span style="font-size: 11.0pt; font-family: '한컴바탕'"><b>그에 따른 제약 사항</b></span></p>  </td>
-<td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 410.8pt"><p style="text-indent: -26.0pt"><span style="font-size: 11.0pt; font-family: '한컴바탕'">■ 개인정보 및 고유 식별정보의 제공 동의를 거부할 권리가 있으며, 동의하지 않는다면 정보를 제공하지 않습니다. </span></p>
+<td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 410.8pt"><p style="text-indent: -26.0pt"><span style="font-size: 11.0pt; font-family: '한컴바탕'">■ 개인정보 및 고유 식별정보의 제공 동의를 거부할 권리가 있으며, 동의하지 않는다면 정보를 제공하지 않습니다. </span></p>
 <p style="text-indent: -26.0pt"><span style="font-size: 11.0pt; font-family: '한컴바탕'">■ </span><span style="font-size: 11.0pt; font-family: '한컴바탕'">개인정보 및 고유 식별정보 미제공 시 자율(전공)동아리 안내 및 관련 내용을</span><span style="font-size: 11.0pt; font-family: '한컴바탕'"> </span><span style="font-size: 11.0pt; font-family: '한컴바탕'">원활하게 </span><span style="font-size: 11.0pt; font-family: '한컴바탕'">받지 못할 수 있습니다.</span></p>  </td>
 </tr>
 <tr>
-<td colspan="3" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 479.6pt"><table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
+<td colspan="3" style="border-top: 0.4mm solid rgb(0,0,0); width: 479.6pt"><table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
 <tr>
-<td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 201.4pt"><p style="line-height: 130%"><span style="font-size: 12.0pt; font-family: '한컴바탕'">1. 개인정보 수집․이용 동의</span></p>  </td>
-<td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 257.5pt"><p style="text-align: center; line-height: 130%"><span style="font-size: 12.0pt; font-family: '한컴바탕'">□ 예          □ 아니요</span></p>  </td>
+<td style="border-left: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 201.4pt"><p style="line-height: 130%"><span style="font-size: 12.0pt; font-family: '한컴바탕'">1. 개인정보 수집․이용 동의</span></p>  </td>
+<td style="border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 257.5pt"><p style="text-align: center; line-height: 130%"><span style="font-size: 12.0pt; font-family: '한컴바탕'">□ 예          □ 아니요</span></p>  </td>
 </tr>
 </table>
 <table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0)">
 <tr>
-<td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 235.4pt"><p style="line-height: 130%"><span style="font-size: 12.0pt; font-family: '한컴바탕'">2. 개인정보 제 3자 제공 및 활용 동의</span></p>  </td>
-<td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 223.6pt"><p style="text-align: center; line-height: 130%"><span style="font-size: 12.0pt; font-family: '한컴바탕'">□ 예          □ 아니요</span></p>  </td>
+<td style="border-left: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 235.4pt"><p style="line-height: 130%"><span style="font-size: 12.0pt; font-family: '한컴바탕'">2. 개인정보 제 3자 제공 및 활용 동의</span></p>  </td>
+<td style="border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 223.6pt"><p style="text-align: center; line-height: 130%"><span style="font-size: 12.0pt; font-family: '한컴바탕'">□ 예          □ 아니요</span></p>  </td>
 </tr>
 </table>
 <p><span style="font-size: 12.0pt; font-family: '한컴바탕'">이하 본인은 개인정보보호법 및 관련 법규에 의거하여 대덕소프트웨어마이스터고등학교 </span><span style="font-size: 11.0pt; font-family: '한컴바탕'">자율(전공)동아리</span><span style="font-size: 12.0pt; font-family: '한컴바탕'">에서 상기 개인정보를</span><span style="font-size: 12.0pt; font-family: '한컴바탕'"> 수집·이용 및 제공</span><span style="font-size: 12.0pt; font-family: '한컴바탕'"><b>·</b></span><span style="font-size: 12.0pt; font-family: '한컴바탕'">활용하는 것에 대해 동의합니다.</span></p>
 <p style="text-align: center"><span style="font-size: 12.0pt; font-family: '한컴바탕'"><b>       2026년        월       일 　</b></span></p>  </td>
 </tr>
 <tr>
-<td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 193.2pt">  </td>
-<td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 286.3pt"><p style="text-align: right"><span style="font-size: 12.0pt; font-family: '한컴바탕'"><b>전공 동아리 멘토                    (서명)</b></span></p>  </td>
+<td colspan="2" style="border-bottom: 0.4mm solid rgb(0,0,0); width: 193.2pt">  </td>
+<td style="border-bottom: 0.4mm solid rgb(0,0,0); width: 286.3pt"><p style="text-align: right"><span style="font-size: 12.0pt; font-family: '한컴바탕'"><b>전공 동아리 멘토                    (서명)</b></span></p>  </td>
 </tr>
 </table>
 <hr class="hwp-page-break">
@@ -568,14 +568,14 @@ expression: html
 <td colspan="7" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.5mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 398.5pt">  </td>
 </tr>
 <tr>
-<td colspan="8" style="border-left: 0.5mm solid rgb(0,0,0); border-right: 0.5mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 468.1pt"><p style="line-height: 150%; text-indent: -81.6pt"><span style="font-size: 13.0pt; font-family: '한컴바탕'">※ 교육이 종료된 후 1일 단위로 작성합니다.(하루 8시간을 멘토링 한 경우 1장으로 작성)</span></p>
+<td colspan="8" style="border-top: 0.4mm solid rgb(0,0,0); width: 468.1pt"><p style="line-height: 150%; text-indent: -81.6pt"><span style="font-size: 13.0pt; font-family: '한컴바탕'">※ 교육이 종료된 후 1일 단위로 작성합니다.(하루 8시간을 멘토링 한 경우 1장으로 작성)</span></p>
 <p style="text-align: right; line-height: 110%"><span style="font-size: 14.0pt; font-family: '한컴바탕'"><b>확인자  :  교사         (인)</b></span></p>  </td>
 </tr>
 <tr>
-<td colspan="8" style="border-left: 0.5mm solid rgb(0,0,0); border-right: 0.5mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 468.1pt">  </td>
+<td colspan="8" style="width: 468.1pt">  </td>
 </tr>
 <tr>
-<td colspan="3" rowspan="2" style="border-left: 0.5mm solid rgb(0,0,0); border-right: 0.4mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 309.8pt">  </td>
+<td colspan="3" rowspan="2" style="border-right: 0.4mm solid rgb(0,0,0); width: 309.8pt">  </td>
 <td colspan="5" style="border-left: 0.4mm solid rgb(0,0,0); border-right: 0.4mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 158.3pt"><p style="text-align: center"><span style="font-size: 13.0pt; font-family: '한컴바탕'">마이스터부</span></p>  </td>
 </tr>
 <tr>
@@ -583,7 +583,7 @@ expression: html
 <td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.4mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 79.2pt"><p style="text-align: center"><span style="font-size: 13.0pt; font-family: '한컴바탕'">부장</span></p>  </td>
 </tr>
 <tr>
-<td colspan="3" style="border-left: 0.5mm solid rgb(0,0,0); border-right: 0.4mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.5mm solid rgb(0,0,0); width: 309.8pt">  </td>
+<td colspan="3" style="border-right: 0.4mm solid rgb(0,0,0); width: 309.8pt">  </td>
 <td colspan="3" style="border-left: 0.4mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 79.2pt">  </td>
 <td colspan="2" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.4mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 79.2pt">  </td>
 </tr>
@@ -592,59 +592,59 @@ expression: html
 <p><span style="font-size: 10.0pt; font-family: '한컴바탕'"><b>[붙임 9]</b></span></p>
 <table class="hwp-table" style="border-collapse: collapse; border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.3mm solid rgb(93,93,93)">
 <tr>
-<td colspan="6" style="border-left: 0.15mm solid rgb(88,89,91); border-right: 0.1mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.1mm solid rgb(0,0,0); width: 459.5pt"><p><span style="font-size: 10.0pt; font-family: '굴림체'">[별지 제12호서식]</span></p>
+<td colspan="6" style="width: 459.5pt"><p><span style="font-size: 10.0pt; font-family: '굴림체'">[별지 제12호서식]</span></p>
 <p style="text-align: center; line-height: 130%"><span style="font-size: 16.0pt; font-family: '한양견고딕'"><b>성범죄 경력 조회 </b></span><span style="font-size: 16.0pt; font-family: '한양견고딕'"><b>및 아동학대 관련 범죄전력조회 동의서</b></span></p>  </td>
 </tr>
 <tr>
-<td colspan="6" style="border-left: 0.1mm solid rgb(0,0,0); border-right: 0.1mm solid rgb(0,0,0); border-top: 0.1mm solid rgb(0,0,0); border-bottom: 0.3mm solid rgb(0,0,0); width: 459.5pt">  </td>
+<td colspan="6" style="border-bottom: 0.3mm solid rgb(0,0,0); width: 459.5pt">  </td>
 </tr>
 <tr>
-<td rowspan="3" style="border-left: 0.12mm solid rgb(93,93,93); border-right: 0.12mm solid rgb(147,147,147); border-top: 0.3mm solid rgb(0,0,0); border-bottom: 0.3mm solid rgb(0,0,0); width: 41.9pt"><p style="text-align: center; line-height: 120%"><span style="font-size: 11.0pt; font-family: '돋움'">대상자</span></p>  </td>
+<td rowspan="3" style="border-right: 0.12mm solid rgb(147,147,147); border-top: 0.3mm solid rgb(0,0,0); border-bottom: 0.3mm solid rgb(0,0,0); width: 41.9pt"><p style="text-align: center; line-height: 120%"><span style="font-size: 11.0pt; font-family: '돋움'">대상자</span></p>  </td>
 <td style="border-left: 0.12mm solid rgb(147,147,147); border-right: 0.12mm solid rgb(147,147,147); border-top: 0.3mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(147,147,147); width: 64.7pt"><p style="text-align: center; line-height: 120%"><span style="font-size: 10.0pt; font-family: '돋움'">성  명</span></p>  </td>
-<td colspan="4" style="border-left: 0.12mm solid rgb(147,147,147); border-right: 0.12mm solid rgb(93,93,93); border-top: 0.3mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(147,147,147); width: 352.9pt">  </td>
+<td colspan="4" style="border-left: 0.12mm solid rgb(147,147,147); border-top: 0.3mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(147,147,147); width: 352.9pt">  </td>
 </tr>
 <tr>
 <td style="border-left: 0.12mm solid rgb(147,147,147); border-right: 0.12mm solid rgb(147,147,147); border-top: 0.12mm solid rgb(147,147,147); border-bottom: 0.12mm solid rgb(147,147,147); width: 64.7pt"><p style="text-align: center; line-height: 120%"><span style="font-size: 10.0pt; font-family: '돋움'">주민등록번호</span></p>
 <p style="text-align: center; line-height: 120%"><span style="font-size: 10.0pt; font-family: '돋움'">(외국인의 경우 생년월일)</span></p>  </td>
 <td style="border-left: 0.12mm solid rgb(147,147,147); border-right: 0.12mm solid rgb(147,147,147); border-top: 0.12mm solid rgb(147,147,147); border-bottom: 0.12mm solid rgb(147,147,147); width: 113.4pt">  </td>
 <td colspan="2" style="border-left: 0.12mm solid rgb(147,147,147); border-right: 0.12mm solid rgb(147,147,147); border-top: 0.12mm solid rgb(147,147,147); border-bottom: 0.12mm solid rgb(147,147,147); width: 104.9pt"><p style="line-height: 120%"><span style="font-size: 9.0pt; font-family: '돋움'">외국인등록번호(외국인인의 경우만 기입)</span></p>  </td>
-<td style="border-left: 0.12mm solid rgb(147,147,147); border-right: 0.12mm solid rgb(93,93,93); border-top: 0.12mm solid rgb(147,147,147); border-bottom: 0.12mm solid rgb(147,147,147); width: 134.6pt">  </td>
+<td style="border-left: 0.12mm solid rgb(147,147,147); border-top: 0.12mm solid rgb(147,147,147); border-bottom: 0.12mm solid rgb(147,147,147); width: 134.6pt">  </td>
 </tr>
 <tr>
 <td style="border-left: 0.12mm solid rgb(147,147,147); border-right: 0.12mm solid rgb(147,147,147); border-top: 0.12mm solid rgb(147,147,147); border-bottom: 0.3mm solid rgb(0,0,0); width: 64.7pt"><p style="text-align: center; line-height: 120%"><span style="font-size: 10.0pt; font-family: '돋움'">연락처</span></p>
 <p style="text-align: center; line-height: 120%"><span style="font-size: 10.0pt; font-family: '돋움'">(휴대폰 등)</span></p>  </td>
-<td colspan="4" style="border-left: 0.12mm solid rgb(147,147,147); border-right: 0.12mm solid rgb(93,93,93); border-top: 0.12mm solid rgb(147,147,147); border-bottom: 0.3mm solid rgb(0,0,0); width: 352.9pt">  </td>
+<td colspan="4" style="border-left: 0.12mm solid rgb(147,147,147); border-top: 0.12mm solid rgb(147,147,147); border-bottom: 0.3mm solid rgb(0,0,0); width: 352.9pt">  </td>
 </tr>
 <tr>
-<td colspan="6" style="border-left: 0.1mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(93,93,93); border-top: 0.3mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(93,93,93); width: 459.5pt">  </td>
+<td colspan="6" style="border-right: 0.12mm solid rgb(93,93,93); border-top: 0.3mm solid rgb(0,0,0); width: 459.5pt">  </td>
 </tr>
 <tr>
-<td colspan="6" style="border-left: 0.12mm solid rgb(93,93,93); border-right: 0.12mm solid rgb(93,93,93); border-top: 0.12mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(93,93,93); width: 459.5pt"><p style="line-height: 200%"><span style="font-size: 10.0pt; font-family: '돋움'">본인은 대덕소프트웨어마이스터고등학교 (시설)(예: 유치원, 어린이집, 아동복지시설, 청소년쉼터, 청소년활동시설, 의료기관 등) 취업자</span><span style="font-size: 10.0pt; font-family: '돋움'">(취업예정자)로서, 「아동ㆍ청소년의 성보호에 관한 법률」 제56조 및 같은 법 시행령 제25조에 따른 성범죄경력</span><span style="font-size: 10.0pt; font-family: '돋움'"> 조회,</span><span style="font-size: 10.0pt; font-family: '돋움'">「</span><span style="font-size: 10.0pt; font-family: '돋움'">아동복지법」 제29조의3에 </span><span style="font-size: 10.0pt; font-family: '돋움'">따른 아동학대 범죄전력 조회 신청에 동의</span><span style="font-size: 10.0pt; font-family: '돋움'">합니다.</span></p>  </td>
+<td colspan="6" style="width: 459.5pt"><p style="line-height: 200%"><span style="font-size: 10.0pt; font-family: '돋움'">본인은 대덕소프트웨어마이스터고등학교 (시설)(예: 유치원, 어린이집, 아동복지시설, 청소년쉼터, 청소년활동시설, 의료기관 등) 취업자</span><span style="font-size: 10.0pt; font-family: '돋움'">(취업예정자)로서, 「아동ㆍ청소년의 성보호에 관한 법률」 제56조 및 같은 법 시행령 제25조에 따른 성범죄경력</span><span style="font-size: 10.0pt; font-family: '돋움'"> 조회,</span><span style="font-size: 10.0pt; font-family: '돋움'">「</span><span style="font-size: 10.0pt; font-family: '돋움'">아동복지법」 제29조의3에 </span><span style="font-size: 10.0pt; font-family: '돋움'">따른 아동학대 범죄전력 조회 신청에 동의</span><span style="font-size: 10.0pt; font-family: '돋움'">합니다.</span></p>  </td>
 </tr>
 <tr>
-<td colspan="6" style="border-left: 0.12mm solid rgb(93,93,93); border-right: 0.12mm solid rgb(93,93,93); border-top: 0.12mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(93,93,93); width: 459.5pt"><p style="text-align: right; line-height: 120%"><span style="font-size: 9.0pt; font-family: '돋움'">  2026년         월         일</span></p>  </td>
+<td colspan="6" style="width: 459.5pt"><p style="text-align: right; line-height: 120%"><span style="font-size: 9.0pt; font-family: '돋움'">  2026년         월         일</span></p>  </td>
 </tr>
 <tr>
-<td colspan="4" style="border-left: 0.12mm solid rgb(93,93,93); border-right: 0.12mm solid rgb(93,93,93); border-top: 0.12mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(93,93,93); width: 270.2pt"><p style="text-align: right; line-height: 120%; margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '돋움'">   동의자</span></p>  </td>
-<td colspan="2" style="border-left: 0.12mm solid rgb(93,93,93); border-right: 0.12mm solid rgb(93,93,93); border-top: 0.12mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(93,93,93); width: 189.2pt"><p style="text-align: center; line-height: 120%"><span style="font-size: 10.0pt; font-family: '돋움'">      </span><span style="font-size: 8.0pt; font-family: '돋움'">(서명 또는 인)</span></p>  </td>
+<td colspan="4" style="width: 270.2pt"><p style="text-align: right; line-height: 120%; margin-left: 20.0pt"><span style="font-size: 10.0pt; font-family: '돋움'">   동의자</span></p>  </td>
+<td colspan="2" style="width: 189.2pt"><p style="text-align: center; line-height: 120%"><span style="font-size: 10.0pt; font-family: '돋움'">      </span><span style="font-size: 8.0pt; font-family: '돋움'">(서명 또는 인)</span></p>  </td>
 </tr>
 <tr>
-<td colspan="6" style="border-left: 0.12mm solid rgb(93,93,93); border-right: 0.12mm solid rgb(93,93,93); border-top: 0.12mm solid rgb(93,93,93); border-bottom: 0.7mm solid rgb(93,93,93); width: 459.5pt"><p style="line-height: 120%"><span style="font-size: 13.0pt; font-family: '돋움'">대전유성</span><span style="font-size: 13.0pt; font-family: '돋움'"><u>경찰서장</u></span><span style="font-size: 13.0pt; font-family: '돋움'"> </span><span style="font-size: 10.0pt; font-family: '돋움'">귀하</span></p>  </td>
+<td colspan="6" style="border-bottom: 0.7mm solid rgb(93,93,93); width: 459.5pt"><p style="line-height: 120%"><span style="font-size: 13.0pt; font-family: '돋움'">대전유성</span><span style="font-size: 13.0pt; font-family: '돋움'"><u>경찰서장</u></span><span style="font-size: 13.0pt; font-family: '돋움'"> </span><span style="font-size: 10.0pt; font-family: '돋움'">귀하</span></p>  </td>
 </tr>
 <tr>
-<td colspan="6" style="border-left: 0.12mm solid rgb(93,93,93); border-right: 0.12mm solid rgb(93,93,93); border-top: 0.12mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(93,93,93); width: 459.5pt">  </td>
+<td colspan="6" style="border-top: 0.12mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(93,93,93); width: 459.5pt">  </td>
 </tr>
 <tr>
-<td colspan="6" style="background-color: rgb(178,178,178); border-left: 0.1mm solid rgb(0,0,0); border-right: 0.1mm solid rgb(0,0,0); border-top: 0.7mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(93,93,93); width: 459.5pt"><p style="text-align: center; line-height: 120%"><span style="font-size: 10.0pt; font-family: '돋움'">유의사항</span></p>  </td>
+<td colspan="6" style="background-color: rgb(178,178,178); border-top: 0.7mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(93,93,93); width: 459.5pt"><p style="text-align: center; line-height: 120%"><span style="font-size: 10.0pt; font-family: '돋움'">유의사항</span></p>  </td>
 </tr>
 <tr>
-<td colspan="6" style="border-left: 0.1mm solid rgb(0,0,0); border-right: 0.1mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(88,89,91); width: 459.5pt"><p style="text-indent: -7.2pt"><span style="font-size: 9.0pt; font-family: '돋움'"> </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">1. 개인정보 수집항목 : </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">*표 항목(성명, 주민등록번호, </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">외국인의 경우 외국인등록번호)</span></p>
+<td colspan="6" style="border-top: 0.12mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(88,89,91); width: 459.5pt"><p style="text-indent: -7.2pt"><span style="font-size: 9.0pt; font-family: '돋움'"> </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">1. 개인정보 수집항목 : </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">*표 항목(성명, 주민등록번호, </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">외국인의 경우 외국인등록번호)</span></p>
 <p style="text-indent: -7.2pt"><span style="font-size: 9.0pt; font-family: '한양중고딕'"> 2. </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">대상자가 외국인의 경우 성명(영문), 외국인등록번호를 적습니다.</span></p>
 <p style="text-indent: -33.7pt"><span style="font-size: 9.0pt; font-family: '한양중고딕'"> 3. </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">개인정보 제공 거부에 따른 제한사항 : </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">귀하는 개인정보 제공 동의를 거부를 권리가 있으나, 동의 거부 시에는 취업에 제한을 받을 수 있습니다.</span></p>
 <p style="text-indent: -33.7pt"><span style="font-size: 9.0pt; font-family: '한양중고딕'"> 4. </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">개인정보의 보유 : </span><span style="font-size: 9.0pt; font-family: '한양중고딕'">수집된 고객의 개인정보는 </span><span style="font-size: 9.0pt; font-family: '한양중고딕'; color: rgb(0,0,255)">성범죄 경력조회 신청 등을 위하여 사용됩니다.</span></p>  </td>
 </tr>
 <tr>
-<td colspan="6" style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(93,93,93); border-bottom: 0.12mm solid rgb(0,0,0); width: 459.5pt"><p style="text-align: right; line-height: 110%"><span style="font-size: 8.0pt; font-family: '돋움'">210㎜×297㎜[백상지 80g/㎡(재활용품)]</span></p>  </td>
+<td colspan="6" style="border-top: 0.12mm solid rgb(93,93,93); width: 459.5pt"><p style="text-align: right; line-height: 110%"><span style="font-size: 8.0pt; font-family: '돋움'">210㎜×297㎜[백상지 80g/㎡(재활용품)]</span></p>  </td>
 </tr>
 </table>
 <hr class="hwp-page-break">
