@@ -775,7 +775,7 @@ fn compute_cell_content_height_raw(cell: &hwp_model::table::TableCell) -> f64 {
             max_bottom = Some(max_bottom.map(|x: i32| x.max(bottom)).unwrap_or(bottom));
         }
     }
-    let _content_h = max_bottom.map(|b| hwpunit_to_mm(b)).unwrap_or(0.0);
+    let _content_h = max_bottom.map(hwpunit_to_mm).unwrap_or(0.0);
     // 마진 포함: 기본 0.5mm (142 HU = ceil(0.5/25.4*7200))
     let margin_top_hu = if cell.cell_margin.top != 0 {
         cell.cell_margin.top + 1
@@ -826,7 +826,6 @@ fn compute_cell_content_height(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hwp_model::table::*;
 
     #[test]
     fn test_empty_table() {

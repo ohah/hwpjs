@@ -103,7 +103,7 @@ fn generate_char_shape_css(
 ) {
     use std::fmt::Write;
 
-    write!(css, ".cs{} {{\n", idx).ok();
+    writeln!(css, ".cs{} {{", idx).ok();
 
     // font-size
     if cs.height != 0 {
@@ -169,7 +169,7 @@ fn generate_char_shape_css(
 fn generate_para_shape_css(css: &mut String, idx: usize, ps: &ParaShape) {
     use std::fmt::Write;
 
-    write!(css, ".ps{} {{\n", idx).ok();
+    writeln!(css, ".ps{} {{", idx).ok();
 
     // 정렬
     let align = match ps.align.horizontal {

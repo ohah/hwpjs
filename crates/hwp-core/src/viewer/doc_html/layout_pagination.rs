@@ -48,6 +48,7 @@ pub fn check_page_break(para: &Paragraph, ctx: &PaginationContext) -> PageBreakR
     // vertical_position 리셋 감지 (이전보다 작아지면 새 페이지)
     if let (Some(prev), Some(current)) = (ctx.prev_vertical_mm, first_vp_mm) {
         let top_region = ctx.content_height_mm * 0.2;
+        #[allow(clippy::nonminimal_bool)]
         if (current < 0.1 || (prev > 0.1 && current < prev - 0.1))
             && (current < 0.1 || current < top_region)
         {
