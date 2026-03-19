@@ -281,17 +281,25 @@ fn generate_table_svg_borders(
     let vb_w = round_mm(width_mm + margin * 2.0);
     let vb_h = round_mm(height_mm + margin * 2.0);
 
+    // column_positions 계산 (셀 너비 누적)
+    let col_positions = compute_column_positions(table);
+    // row_positions 계산 (row_span=1 셀 기준)
+    let row_positions = compute_row_positions(table);
+
+    // SVG fills (배경 패턴) 생성
+    let mut pattern_counter = 0_usize;
+    let mut color_to_pattern: std::collections::HashMap<u32, String> = std::collections::HashMap::new();
+    let (pattern_defs, fill_paths) = generate_table_fills(
+        table, &row_positions, resources, &mut pattern_counter, &mut color_to_pattern,
+    );
+
     // SVG viewBox와 style (old viewer: ViewBox 기반)
     let mut svg = format!(
         r#"<svg class="hs" viewBox="-{m} -{m} {w} {h}" style="left:-{m}mm;top:-{m}mm;width:{w}mm;height:{h}mm;">"#,
         m = margin, w = vb_w, h = vb_h,
     );
-    svg.push_str("<defs></defs>");
-
-    // column_positions 계산 (셀 너비 누적)
-    let col_positions = compute_column_positions(table);
-    // row_positions 계산 (row_span=1 셀 기준)
-    let row_positions = compute_row_positions(table);
+    svg.push_str(&format!("<defs>{}</defs>", pattern_defs));
+    svg.push_str(&fill_paths);
 
     let content_w = *col_positions.last().unwrap_or(&width_mm);
     let content_h = *row_positions.last().unwrap_or(&height_mm);
@@ -466,6 +474,84 @@ fn svg_path_h(
         round_mm(x0), round_mm(y), round_mm(x1), round_mm(y), color, stroke_width
     ).ok();
     svg.push_str("</path>");
+}
+
+/// 배경 패턴 및 면 채우기 생성 (old viewer fills.rs 포팅)
+fn generate_table_fills(
+    table: &Table,
+    row_positions: &[f64],
+    resources: &Resources,
+    pattern_counter: &mut usize,
+    color_to_pattern: &mut std::collections::HashMap<u32, String>,
+) -> (String, String) {
+    let mut pattern_defs = String::new();
+    let mut fill_paths = String::new();
+
+    for row in &table.rows {
+        let mut cx = 0.0_f64;
+        for cell in &row.cells {
+            let cell_left = round_mm(cx);
+            let cell_width = round_mm(hwpunit_to_mm(cell.width));
+            let ri = cell.row as usize;
+            let rs = if cell.row_span > 0 { cell.row_span as usize } else { 1 };
+
+            if ri < row_positions.len() && ri + rs < row_positions.len() {
+                let cell_top = row_positions[ri];
+                let cell_height = row_positions[ri + rs] - cell_top;
+
+                if cell.border_fill_id > 0 {
+                    if let Some(bf) = resources.border_fills.get((cell.border_fill_id as usize).wrapping_sub(1)) {
+                        if let Some(ref fill) = bf.fill {
+                            // Solid 배경색 처리
+                            if let Some(color) = extract_solid_color(fill) {
+                                if color != 0 {
+                                    let pattern_id = if let Some(existing) = color_to_pattern.get(&color) {
+                                        existing.clone()
+                                    } else {
+                                        let id = format!("w_{:02}", *pattern_counter);
+                                        *pattern_counter += 1;
+                                        let r = (color >> 16) & 0xFF;
+                                        let g = (color >> 8) & 0xFF;
+                                        let b = color & 0xFF;
+                                        pattern_defs.push_str(&format!(
+                                            r#"<pattern id="{}" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="rgb({},{},{})" /></pattern>"#,
+                                            id, r, g, b
+                                        ));
+                                        color_to_pattern.insert(color, id.clone());
+                                        id
+                                    };
+
+                                    fill_paths.push_str(&format!(
+                                        r#"<path fill="url(#{})" d="M{},{}L{},{}L{},{}L{},{}L{},{}Z "></path>"#,
+                                        pattern_id,
+                                        round_mm(cell_left), round_mm(cell_top),
+                                        round_mm(cell_left + cell_width), round_mm(cell_top),
+                                        round_mm(cell_left + cell_width), round_mm(cell_top + cell_height),
+                                        round_mm(cell_left), round_mm(cell_top + cell_height),
+                                        round_mm(cell_left), round_mm(cell_top),
+                                    ));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            cx += cell_width;
+        }
+    }
+
+    (pattern_defs, fill_paths)
+}
+
+/// FillBrush에서 Solid 배경색 추출
+fn extract_solid_color(fill: &hwp_model::resources::FillBrush) -> Option<u32> {
+    match fill {
+        hwp_model::resources::FillBrush::WinBrush { face_color, .. } => {
+            face_color.filter(|&c| c != 0xFFFFFF)
+        }
+        _ => None,
+    }
 }
 
 /// SVG path 하나를 그리는 헬퍼
