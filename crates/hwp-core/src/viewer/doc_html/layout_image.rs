@@ -183,7 +183,7 @@ pub fn render_layout_line(line: &hwp_model::shape::LineObject) -> String {
     let y2 = round_mm(hwpunit_to_mm(line.end_pt.y));
 
     format!(
-        r#"<div class="hsL" style="left:{lx:.2}mm;top:{ly:.2}mm;width:{w:.2}mm;height:{h:.2}mm;"><svg class="hs" viewBox="-{m} -{m} {vw} {vh}" style="left:-{m}mm;top:-{m}mm;width:{vw}mm;height:{vh}mm;"><path d="M{x1:.2},{y1:.2} L{x2:.2},{y2:.2}" style="stroke:{sc};stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
+        r#"<div class="hsR" style="top:{ly:.2}mm;left:{lx:.2}mm;width:{w:.2}mm;height:{h:.2}mm;"><svg class="hs" viewBox="-{m} -{m} {vw} {vh}" style="left:-{m}mm;top:-{m}mm;width:{vw}mm;height:{vh}mm;"><path d="M{x1},{y1} L{x2},{y2}" style="stroke:{sc};stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
         lx = x_mm, ly = y_mm, w = width_mm.max(0.3), h = height_mm.max(0.3),
         m = margin, vw = vb_w, vh = vb_h,
         x1 = x1, y1 = y1, x2 = x2, y2 = y2,
