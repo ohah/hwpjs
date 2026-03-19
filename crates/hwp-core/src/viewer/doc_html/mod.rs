@@ -256,11 +256,13 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
             );
 
             // old viewer 순서: hls(텍스트) 먼저, Object(테이블/도형) 나중
+            // hls(텍스트): hcI 내부 (inline)
             for line in hls_lines {
-                current_page_blocks.push(layout_page::PageBlock { html: line });
+                current_page_blocks.push(layout_page::PageBlock { html: line, is_absolute: false });
             }
+            // Object(htb/hsR 등): hpa 직접 (absolute) — old viewer 구조
             for obj_html in obj_blocks {
-                current_page_blocks.push(layout_page::PageBlock { html: obj_html });
+                current_page_blocks.push(layout_page::PageBlock { html: obj_html, is_absolute: true });
             }
 
             // 인라인 각주/미주 참조를 마지막 hls에 삽입

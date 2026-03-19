@@ -6,6 +6,8 @@ use hwp_model::section::PageDef;
 /// 페이지 내 콘텐츠 블록
 pub struct PageBlock {
     pub html: String,
+    /// true이면 hcI 바깥(hpa 직계)에 배치 (htb 등 절대좌표 요소)
+    pub is_absolute: bool,
 }
 
 /// 페이지를 hpa div로 렌더링
@@ -67,19 +69,28 @@ pub fn render_page(
         }
     }
 
-    // 본문 콘텐츠
-    let has_content = blocks.iter().any(|b| !b.html.is_empty());
-    if has_content {
+    // 본문 콘텐츠: inline(hls 등) → hcI 내부, absolute(htb 등) → hpa 직접
+    let inline_blocks: Vec<&PageBlock> = blocks.iter()
+        .filter(|b| !b.is_absolute && !b.html.is_empty())
+        .collect();
+    let absolute_blocks: Vec<&PageBlock> = blocks.iter()
+        .filter(|b| b.is_absolute && !b.html.is_empty())
+        .collect();
+
+    if !inline_blocks.is_empty() {
         html.push_str(&format!(
             r#"<div class="hcD" style="left:{};top:{};"><div class="hcI">"#,
             fmt_mm(left_mm), fmt_mm(top_mm)
         ));
-        for block in blocks {
-            if !block.html.is_empty() {
-                html.push_str(&block.html);
-            }
+        for block in &inline_blocks {
+            html.push_str(&block.html);
         }
         html.push_str("</div></div>");
+    }
+
+    // absolute blocks (htb 등): hpa 직접 자식으로 배치
+    for block in &absolute_blocks {
+        html.push_str(&block.html);
     }
 
     html.push_str("</div>");
@@ -142,6 +153,7 @@ mod tests {
     fn test_render_page_basic() {
         let blocks = vec![PageBlock {
             html: "<div>content</div>".to_string(),
+            is_absolute: false,
         }];
         let html = render_page(&blocks, &a4_page_def(), None, None);
         assert!(html.contains(r#"class="hpa""#));
@@ -154,6 +166,7 @@ mod tests {
     fn test_render_page_with_header_footer() {
         let blocks = vec![PageBlock {
             html: "<div>body</div>".to_string(),
+            is_absolute: false,
         }];
         let html = render_page(
             &blocks,

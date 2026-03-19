@@ -137,11 +137,7 @@ pub fn render_line_segments_with_marker(
             (lh, lh, round_mm(vertical_pos_mm))
         };
 
-        let width_mm = if seg.segment_width > 0 {
-            round_mm(hwpunit_to_mm(seg.segment_width))
-        } else {
-            150.0
-        };
+        let width_mm = round_mm(hwpunit_to_mm(seg.segment_width));
         // column_start_pos > 0이면 다단 내 좌표, 아니면 content_left
         let left_mm = if seg.column_start_pos > 0 {
             round_mm(hwpunit_to_mm(seg.column_start_pos))
