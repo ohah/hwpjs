@@ -123,8 +123,12 @@ pub fn render_line_segments_full(
             })
             .collect();
 
-        // 텍스트 HTML 렌더링
-        let text_html = render_layout_text(seg_text, &seg_char_shapes, resources);
+        // 텍스트 HTML 렌더링 (빈 문단에서는 텍스트 건너뜀 — 탭 등 whitespace 제거)
+        let text_html = if is_empty_paragraph {
+            String::new()
+        } else {
+            render_layout_text(seg_text, &seg_char_shapes, resources)
+        };
 
         // 좌표 계산 (HwpUnit → mm)
         let vertical_pos_mm = hwpunit_to_mm(seg.vertical_pos);
