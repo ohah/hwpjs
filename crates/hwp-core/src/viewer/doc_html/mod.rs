@@ -462,8 +462,8 @@ fn render_container_layout(
     let y_mm = styles::round_mm(styles::hwpunit_to_mm(common.position.vert_offset));
 
     let mut html = format!(
-        r#"<div class="hsC" style="left:{:.2}mm;top:{:.2}mm;width:{:.2}mm;height:{:.2}mm;">"#,
-        x_mm, y_mm, width_mm, height_mm
+        r#"<div class="hsC" style="top:{:.2}mm;left:{:.2}mm;width:{:.2}mm;height:{:.2}mm;">"#,
+        y_mm, x_mm, width_mm, height_mm
     );
 
     for child in &container.children {

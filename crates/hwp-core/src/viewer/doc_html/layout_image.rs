@@ -25,12 +25,12 @@ pub fn render_layout_picture(pic: &Picture, binaries: &BinaryStore) -> String {
             width_mm, height_mm, img_src
         )
     } else {
-        // 절대 좌표 이미지 (hsR div)
+        // 절대 좌표 이미지 (hsR div) — old viewer: top;left 순서
         let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
         let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
         format!(
-            r#"<div class="hsR" style="left:{:.2}mm;top:{:.2}mm;width:{:.2}mm;height:{:.2}mm;background-image:url({});"></div>"#,
-            x_mm, y_mm, width_mm, height_mm, img_src
+            r#"<div class="hsR" style="top:{:.2}mm;left:{:.2}mm;width:{:.2}mm;height:{:.2}mm;background-image:url({});"></div>"#,
+            y_mm, x_mm, width_mm, height_mm, img_src
         )
     }
 }
@@ -205,8 +205,8 @@ pub fn render_layout_textbox(
     let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
 
     let mut html = format!(
-        r#"<div class="hsT" style="left:{:.2}mm;top:{:.2}mm;width:{:.2}mm;height:{:.2}mm;">"#,
-        x_mm, y_mm, width_mm, height_mm
+        r#"<div class="hsT" style="top:{:.2}mm;left:{:.2}mm;width:{:.2}mm;height:{:.2}mm;">"#,
+        y_mm, x_mm, width_mm, height_mm
     );
 
     for para in paragraphs {
