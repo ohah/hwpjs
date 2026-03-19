@@ -208,9 +208,9 @@ fn build_para_style(para: &Paragraph, resources: &Resources, _options: &DocHtmlO
             styles.push(format!("text-align: {}", align));
         }
 
-        // 줄 간격
-        if ps.line_spacing.spacing_type == hwp_model::types::LineSpacingType::Percent
-            && ps.line_spacing.value != 160
+        // 줄 간격 (Percent/Fixed/Between 모두 값을 %로 출력)
+        if ps.line_spacing.value != 160
+            || ps.line_spacing.spacing_type != hwp_model::types::LineSpacingType::Percent
         {
             styles.push(format!("line-height: {}%", ps.line_spacing.value));
         }
