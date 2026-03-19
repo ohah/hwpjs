@@ -39,16 +39,20 @@ pub struct FlatTextResult {
     pub text_len: usize,
     /// 하이퍼링크 범위 목록
     pub hyperlinks: Vec<HyperlinkRange>,
-    /// 건너뛴 WCHAR 수 (Control/Object 등 텍스트에 미포함된 원본 문자)
-    /// text_start_pos 변환: extracted_pos = original_wchar_pos - skipped_wchars
-    pub skipped_wchars: u32,
+    /// 원본 WCHAR → 추출 텍스트 위치 매핑
+    /// 제어 문자(Control/Object)가 원본에서 차지하는 위치를 보정
+    /// (original_wchar_pos, extracted_text_pos) 쌍의 정렬된 목록
+    pub wchar_map: Vec<(u32, u32)>,
 }
 
 /// Paragraph의 Run[]에서 flat text + char_shapes 추출
 pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
     let mut result = FlatTextResult::default();
-    let mut wchar_pos: u32 = 0;
+    let mut wchar_pos: u32 = 0; // 추출 텍스트 내 위치
+    let mut original_wchar_pos: u32 = 0; // 원본 HWP WCHAR 위치 (제어 문자 포함)
     let mut hyperlink_start: Option<(u32, String)> = None; // (start_pos, onclick)
+    // 매핑 초기점
+    result.wchar_map.push((0, 0));
 
     for run in &para.runs {
         // 이 Run의 시작 위치에 CharShape 기록
@@ -63,35 +67,54 @@ pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
                     for elem in &tc.elements {
                         match elem {
                             TextElement::Text(s) => {
+                                let len = s.chars().count() as u32;
                                 result.text.push_str(s);
-                                wchar_pos += s.chars().count() as u32;
+                                wchar_pos += len;
+                                original_wchar_pos += len;
                             }
                             TextElement::Tab { .. } => {
                                 result.text.push('\t');
                                 wchar_pos += 1;
+                                original_wchar_pos += 1;
                             }
                             TextElement::LineBreak => {
                                 result.text.push('\n');
                                 wchar_pos += 1;
+                                original_wchar_pos += 1;
                             }
                             TextElement::NbSpace => {
                                 result.text.push('\u{00a0}');
                                 wchar_pos += 1;
+                                original_wchar_pos += 1;
                             }
                             TextElement::FwSpace => {
                                 result.text.push(' ');
                                 wchar_pos += 1;
+                                original_wchar_pos += 1;
                             }
                             TextElement::Hyphen => {
                                 result.text.push('-');
                                 wchar_pos += 1;
+                                original_wchar_pos += 1;
                             }
-                            _ => {}
+                            _ => {
+                                // 기타 TextElement도 원본 위치 증가 (ColumnBreak 등)
+                                original_wchar_pos += 1;
+                            }
                         }
                     }
                 }
                 RunContent::Control(ctrl) => {
                     use hwp_model::control::Control;
+                    // 제어 문자는 원본에서 WCHAR 차지 (확장 코드 포인트)
+                    // secd/cold 쌍은 16 WCHAR, 기타는 8 WCHAR
+                    let ctrl_wchars = match ctrl {
+                        Control::Column(_) => 16, // secd(8) + cold(8) 쌍
+                        _ => 8,
+                    };
+                    original_wchar_pos += ctrl_wchars;
+                    // 매핑 기록 (원본 위치 → 추출 위치)
+                    result.wchar_map.push((original_wchar_pos, wchar_pos));
                     match ctrl {
                         Control::FieldBegin(field) => {
                             if field.field_type == hwp_model::types::FieldType::Hyperlink {
@@ -115,9 +138,9 @@ pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
                     }
                 }
                 RunContent::Object(_) => {
-                    // Object는 원본에서 WCHAR 위치를 차지하지만 텍스트에 미포함
-                    // (HWP 원본: 확장 문자 코드 + WCHAR 마커)
-                    result.skipped_wchars += 8; // 일반적으로 Object marker = 8 WCHARs
+                    // Object는 원본에서 8 WCHAR 차지
+                    original_wchar_pos += 8;
+                    result.wchar_map.push((original_wchar_pos, wchar_pos));
                 }
             }
         }
@@ -125,6 +148,26 @@ pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
 
     result.text_len = wchar_pos as usize;
     result
+}
+
+/// 원본 WCHAR 위치 → 추출 텍스트 위치 변환
+pub fn map_original_to_extracted(wchar_map: &[(u32, u32)], original_pos: u32) -> u32 {
+    if wchar_map.is_empty() {
+        return original_pos;
+    }
+    // wchar_map에서 original_pos 이하인 가장 큰 엔트리 찾기
+    let mut best_orig = 0u32;
+    let mut best_ext = 0u32;
+    for &(orig, ext) in wchar_map {
+        if orig <= original_pos {
+            best_orig = orig;
+            best_ext = ext;
+        } else {
+            break;
+        }
+    }
+    // 나머지 오프셋은 1:1 매핑
+    best_ext + (original_pos - best_orig)
 }
 
 /// CharShapeInfo에서 주어진 위치의 shape_id를 찾기

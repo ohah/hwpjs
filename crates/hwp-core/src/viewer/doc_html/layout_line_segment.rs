@@ -65,10 +65,10 @@ pub fn render_line_segments_full(
     has_objects: bool,
 ) -> Vec<String> {
     render_line_segments_impl(text, char_shapes, line_segments, resources,
-        para_shape_class, content_left_mm, marker_html, has_objects, &[])
+        para_shape_class, content_left_mm, marker_html, has_objects, &[], &[])
 }
 
-/// hyperlink 포함 라인 세그먼트 렌더링
+/// hyperlink + wchar_map 포함 라인 세그먼트 렌더링
 pub fn render_line_segments_impl(
     text: &str,
     char_shapes: &[FlatCharShapeInfo],
@@ -79,6 +79,7 @@ pub fn render_line_segments_impl(
     marker_html: Option<&str>,
     has_objects: bool,
     hyperlinks: &[super::flat_text::HyperlinkRange],
+    wchar_map: &[(u32, u32)],
 ) -> Vec<String> {
     if line_segments.is_empty() {
         return Vec::new();
@@ -103,16 +104,25 @@ pub fn render_line_segments_impl(
         }
 
         // 이 세그먼트의 텍스트 범위 계산
-        // text_start_pos는 HWP WCHAR 인덱스 — 제어 문자 포함 원본 위치
-        // 추출 텍스트와 오프셋 차이가 있을 수 있으므로, 범위를 클램프
-        let seg_start = (seg.text_start_pos as usize).min(text_len);
+        // text_start_pos는 원본 WCHAR 인덱스 → wchar_map으로 추출 텍스트 위치로 변환
+        let seg_start = if !wchar_map.is_empty() {
+            super::flat_text::map_original_to_extracted(wchar_map, seg.text_start_pos) as usize
+        } else {
+            seg.text_start_pos as usize
+        }.min(text_len);
         let seg_end = if seg_idx + 1 < line_segments.len() {
-            (line_segments[seg_idx + 1].text_start_pos as usize).min(text_len)
+            let next_pos = line_segments[seg_idx + 1].text_start_pos;
+            let mapped = if !wchar_map.is_empty() {
+                super::flat_text::map_original_to_extracted(wchar_map, next_pos) as usize
+            } else {
+                next_pos as usize
+            };
+            mapped.min(text_len)
         } else {
             text_len
         };
-        let seg_end = seg_end.min(text_len);
 
+        let seg_end = seg_end.max(seg_start); // 방어: seg_start > seg_end 방지
         let seg_text: String = text_chars[seg_start..seg_end].iter().collect();
         // trailing newline 제거
         let seg_text = seg_text.trim_end_matches('\n');
