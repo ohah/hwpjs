@@ -1305,22 +1305,17 @@ fn convert_shape_object(
                 // Rectangle + ListHeader → draw_text + fill/line 포함 Rectangle 생성
                 if has_rect {
                     let draw_text = list_header_paras.map(|paras| {
-                        // HWP ListHeader: 중복 paragraph 제거
-                        // - 2개: 첫 번째가 중복이면 마지막만
-                        // - 짝수 N개: 전반부==후반부이면 후반부만 (다단 레이아웃 중복)
-                        let effective = if paras.len() >= 2 && paras.len() % 2 == 0 {
+                        // HWP ListHeader 중복 paragraph 제거:
+                        // 1) 짝수 N개: 전반부==후반부 → 후반부만 (다단 레이아웃 중복)
+                        // 2) 2개: 첫 paragraph가 기본 텍스트 → 마지막만
+                        let effective = if paras.len() >= 4 && paras.len() % 2 == 0 {
                             let half = paras.len() / 2;
                             let is_dup = (0..half).all(|i| {
                                 extract_para_text(&paras[i]) == extract_para_text(&paras[half + i])
                             });
-                            if is_dup {
-                                &paras[half..]
-                            } else if paras.len() == 2 {
-                                let first = extract_para_text(&paras[0]);
-                                if first.is_empty() { &paras[1..] } else { paras }
-                            } else {
-                                paras
-                            }
+                            if is_dup { &paras[half..] } else { paras }
+                        } else if paras.len() == 2 {
+                            &paras[paras.len() - 1..]
                         } else {
                             paras
                         };
