@@ -66,6 +66,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         ..Default::default()
     };
 
+    let mut has_page_number_global = false;
+
     for section in &doc.sections {
         let page_def = if section.definition.page.width > 0 {
             &section.definition.page
@@ -222,6 +224,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                 }
                                 hwp_model::control::Control::PageNumCtrl(_) => {
                                     has_page_number = true;
+                                    has_page_number_global = true;
                                 }
                                 _ => {}
                             }
@@ -298,7 +301,36 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         }
     }
 
-    // TODO: 페이지 번호 렌더링 — footer 내 AutoNumber → 실제 번호 교체
+    // 페이지 번호 렌더링 — hpN div를 각 페이지에 삽입
+    if has_page_number_global {
+        for (idx, page_html) in pages_html.iter_mut().enumerate() {
+            let page_num = idx + 1;
+            // footer 영역 위치에 hpN div 삽입 (hpa 닫기 태그 앞)
+            let page_def_for_num = if doc.sections.first()
+                .map(|s| s.definition.page.width > 0)
+                .unwrap_or(false)
+            {
+                &doc.sections[0].definition.page
+            } else {
+                &default_page_def
+            };
+            let page_w = styles::round_mm(styles::hwpunit_to_mm(page_def_for_num.width));
+            let page_h = styles::round_mm(styles::hwpunit_to_mm(page_def_for_num.height));
+            let hpn_left = styles::round_mm(page_w / 2.0);
+            let hpn_top = styles::round_mm(
+                page_h - styles::hwpunit_to_mm(page_def_for_num.margin.bottom),
+            );
+            let num_text = format!("- {} -", page_num);
+            let hpn_html = format!(
+                r#"<div class="hpN" style="left:{}mm;top:{}mm;width:10.58mm;height:4.23mm;"><span class="hrt cs0">{}</span></div>"#,
+                hpn_left, hpn_top, num_text
+            );
+            // </div> (hpa) 앞에 삽입
+            if let Some(pos) = page_html.rfind("</div>") {
+                page_html.insert_str(pos, &hpn_html);
+            }
+        }
+    }
 
     // HTML 조합 (old viewer와 동일한 헤더 구조)
     let title = doc
