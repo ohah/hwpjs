@@ -343,7 +343,10 @@ fn generate_table_svg_borders(
             if cur_y < *cs { segments.push((cur_y, *cs)); }
             cur_y = cur_y.max(*ce);
         }
-        if cur_y < content_h { segments.push((cur_y, content_h)); }
+        // old viewer: covered가 있으면 마지막 세그먼트도 포함 (zero-length 포함)
+        if !covered.is_empty() || cur_y < content_h {
+            segments.push((cur_y, content_h));
+        }
 
         for (y0, y1) in &segments {
             svg_path_v(&mut svg, col_x, *y0, *y1, default_stroke_width, resources, default_border);
