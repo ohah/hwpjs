@@ -875,7 +875,7 @@ fn test_table_bug_cell_positions_match_hancom() {
     let fixtures_dir = std::path::Path::new(manifest_dir)
         .join("tests")
         .join("fixtures");
-    let snapshots_dir = std::path::Path::new(manifest_dir)
+    let _snapshots_dir = std::path::Path::new(manifest_dir)
         .join("tests")
         .join("snapshots");
 
@@ -972,7 +972,7 @@ fn test_nested_table_rendering() {
     let fixtures_dir = std::path::Path::new(manifest_dir)
         .join("tests")
         .join("fixtures");
-    let snapshots_dir = std::path::Path::new(manifest_dir)
+    let _snapshots_dir = std::path::Path::new(manifest_dir)
         .join("tests")
         .join("snapshots");
 
@@ -1822,7 +1822,7 @@ fn test_debug_table_bug_page10() {
     let fixtures_dir = std::path::Path::new(manifest_dir)
         .join("tests")
         .join("fixtures");
-    let snapshots_dir = std::path::Path::new(manifest_dir)
+    let _snapshots_dir = std::path::Path::new(manifest_dir)
         .join("tests")
         .join("snapshots");
 

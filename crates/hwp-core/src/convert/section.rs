@@ -94,7 +94,7 @@ fn extract_column_def(paragraphs: &[bodytext::Paragraph]) -> Option<hwp_model::s
                         Some(ColumnLine {
                             line_type: Default::default(),
                             width: format!("{}mm", *divider_line_thickness as f64 * 0.1),
-                            color: Some((*divider_line_color).into()),
+                            color: Some(*divider_line_color),
                         })
                     } else {
                         None
@@ -1139,7 +1139,7 @@ fn collect_shape_parts<'a>(
             let fill = convert_fill_info_pub(&doc.fill_info);
             let line = hwp_model::shape::ShapeLineInfo {
                 color: Some(doc.line_info.color.to_rgb()),
-                width: doc.line_info.thickness as i32,
+                width: doc.line_info.thickness,
                 style: match doc.line_info.line_type {
                     HwpLineType::None => hwp_model::types::LineType1::None,
                     HwpLineType::Solid => hwp_model::types::LineType1::Solid,
@@ -1305,7 +1305,7 @@ fn convert_shape_object(
                     let fill = convert_fill_info_pub(&doc.fill_info);
                     let line = hwp_model::shape::ShapeLineInfo {
                         color: Some(doc.line_info.color.to_rgb()),
-                        width: doc.line_info.thickness as i32,
+                        width: doc.line_info.thickness,
                         style: match doc.line_info.line_type {
                             HwpLineType::None => hwp_model::types::LineType1::None,
                             HwpLineType::Solid => hwp_model::types::LineType1::Solid,
