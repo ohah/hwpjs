@@ -21,9 +21,8 @@ export function extractImagesCommand(program: Command) {
         const format = detect(data);
 
         // Convert to Markdown with blob images
-        const result = format === 'hwpx'
-          ? hwpxToMarkdown(data, {})
-          : toMarkdown(data, { image: 'blob' });
+        const result =
+          format === 'hwpx' ? hwpxToMarkdown(data, {}) : toMarkdown(data, { image: 'blob' });
 
         if (!result.images || result.images.length === 0) {
           console.log('No images found in file');

@@ -52,7 +52,12 @@ export function toMarkdownCommand(program: Command) {
           let imagesSaved = 0;
 
           // Save images to files if not using base64
-          if (!options.includeImages && result.images && result.images.length > 0 && options.output) {
+          if (
+            !options.includeImages &&
+            result.images &&
+            result.images.length > 0 &&
+            options.output
+          ) {
             const outputDir = dirname(resolve(options.output));
             const imagesDir = options.imagesDir
               ? resolve(outputDir, options.imagesDir)
