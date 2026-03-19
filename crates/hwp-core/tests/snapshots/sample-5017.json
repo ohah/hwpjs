@@ -787,12 +787,23 @@
           "type": "gradient",
           "gradient_type": 2,
           "angle": 0,
-          "horizontal_center": 25600,
+          "horizontal_center": 100,
           "vertical_center": 0,
-          "spread": 0,
-          "color_count": 0,
+          "spread": 50,
+          "color_count": 2,
           "positions": null,
-          "colors": []
+          "colors": [
+            {
+              "r": 63,
+              "g": 63,
+              "b": 63
+            },
+            {
+              "r": 127,
+              "g": 127,
+              "b": 127
+            }
+          ]
         }
       }
     ],

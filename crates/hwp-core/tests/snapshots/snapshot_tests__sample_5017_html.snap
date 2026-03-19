@@ -12,7 +12,7 @@ expression: html
 <td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.12mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 202.3pt"><p><span style="font-size: 10.0pt; font-family: '바탕'">B0</span></p>  </td>
 </tr>
 <tr>
-<td style="border-left: 0.12mm solid rgb(0,0,0); border-right: 0.4mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 202.3pt"><p><span style="font-size: 10.0pt; font-family: '바탕'">A1</span></p>  </td>
+<td style="background-color: rgb(63,63,63); border-left: 0.12mm solid rgb(0,0,0); border-right: 0.4mm solid rgb(0,0,0); border-top: 0.12mm solid rgb(0,0,0); border-bottom: 0.12mm solid rgb(0,0,0); width: 202.3pt"><p><span style="font-size: 10.0pt; font-family: '바탕'">A1</span></p>  </td>
 <td style="background-color: rgb(153,204,255); border-left: 0.4mm solid rgb(0,0,0); border-right: 0.4mm solid rgb(0,0,0); border-top: 0.4mm solid rgb(0,0,0); border-bottom: 0.4mm solid rgb(0,0,0); width: 202.3pt"><p><span style="font-size: 10.0pt; font-family: '바탕'">B10</span></p>
 <p><span style="font-size: 10.0pt; font-family: '바탕'">B11</span></p>  </td>
 </tr>

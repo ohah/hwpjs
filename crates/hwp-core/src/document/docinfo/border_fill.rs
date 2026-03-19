@@ -356,129 +356,122 @@ impl BorderFill {
         ]);
         offset += 4;
 
-        let fill_type = if fill_type_value == 0x00000000 {
-            FillType::None
-        } else if (fill_type_value & 0x00000001) != 0 {
-            FillType::Solid
-        } else if (fill_type_value & 0x00000002) != 0 {
-            FillType::Image
-        } else if (fill_type_value & 0x00000004) != 0 {
-            FillType::Gradient
-        } else {
+        if fill_type_value == 0x00000000 {
             return Ok(FillInfo::None);
-        };
+        }
 
-        match fill_type {
-            FillType::None => Ok(FillInfo::None),
-            FillType::Solid => {
-                if offset + 12 > data.len() {
-                    return Err(HwpError::insufficient_data(
-                        "Solid fill data",
-                        12,
-                        data.len() - offset,
-                    ));
-                }
-                let background_color = COLORREF(u32::from_le_bytes([
-                    data[offset],
-                    data[offset + 1],
-                    data[offset + 2],
-                    data[offset + 3],
-                ]));
-                offset += 4;
-                let pattern_color = COLORREF(u32::from_le_bytes([
-                    data[offset],
-                    data[offset + 1],
-                    data[offset + 2],
-                    data[offset + 3],
-                ]));
-                offset += 4;
-                let pattern_type = INT32::from_le_bytes([
-                    data[offset],
-                    data[offset + 1],
-                    data[offset + 2],
-                    data[offset + 3],
-                ]);
-                Ok(FillInfo::Solid(SolidFill {
-                    background_color,
-                    pattern_color,
-                    pattern_type,
-                }))
+        let has_solid = (fill_type_value & 0x00000001) != 0;
+        let has_image = (fill_type_value & 0x00000002) != 0;
+        let has_gradient = (fill_type_value & 0x00000004) != 0;
+
+        // 비트 플래그 순서대로 읽기: solid → gradient → image (표 28)
+        let mut solid_fill: Option<SolidFill> = None;
+        let mut gradient_fill: Option<GradientFill> = None;
+
+        // 1. 단색 채우기
+        if has_solid {
+            if offset + 12 > data.len() {
+                return Err(HwpError::insufficient_data(
+                    "Solid fill data",
+                    12,
+                    data.len() - offset,
+                ));
             }
-            FillType::Gradient => {
-                if offset + 12 > data.len() {
-                    return Err(HwpError::insufficient_data(
-                        "Gradient fill data",
-                        12,
-                        data.len() - offset,
-                    ));
-                }
-                let gradient_type = INT16::from_le_bytes([data[offset], data[offset + 1]]);
-                offset += 2;
-                let angle = INT16::from_le_bytes([data[offset], data[offset + 1]]);
-                offset += 2;
-                let horizontal_center = INT16::from_le_bytes([data[offset], data[offset + 1]]);
-                offset += 2;
-                let vertical_center = INT16::from_le_bytes([data[offset], data[offset + 1]]);
-                offset += 2;
-                let spread = INT16::from_le_bytes([data[offset], data[offset + 1]]);
-                offset += 2;
-                let color_count = INT16::from_le_bytes([data[offset], data[offset + 1]]);
-                offset += 2;
+            let background_color = COLORREF(u32::from_le_bytes([
+                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+            ]));
+            offset += 4;
+            let pattern_color = COLORREF(u32::from_le_bytes([
+                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+            ]));
+            offset += 4;
+            let pattern_type = INT32::from_le_bytes([
+                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+            ]);
+            offset += 4;
+            solid_fill = Some(SolidFill { background_color, pattern_color, pattern_type });
+        }
 
-                let positions = if color_count > 2 {
-                    if offset + (4 * color_count as usize) > data.len() {
-                        return Err(HwpError::insufficient_data(
-                            "Gradient positions data",
-                            4 * color_count as usize,
-                            data.len() - offset,
-                        ));
-                    }
-                    let mut pos_vec = Vec::new();
-                    for _ in 0..color_count {
-                        pos_vec.push(INT32::from_le_bytes([
-                            data[offset],
-                            data[offset + 1],
-                            data[offset + 2],
-                            data[offset + 3],
-                        ]));
-                        offset += 4;
-                    }
-                    Some(pos_vec)
-                } else {
-                    None
-                };
+        // 2. 그러데이션 채우기
+        // 실제 바이너리는 DrawingObjectCommon과 동일 형식: BYTE(1) + INT32(4)×5
+        if has_gradient {
+            if offset + 21 > data.len() {
+                return Err(HwpError::insufficient_data(
+                    "Gradient fill data", 21, data.len() - offset,
+                ));
+            }
+            let gradient_type = data[offset] as INT16;
+            offset += 1;
+            let angle = INT32::from_le_bytes([
+                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+            ]) as INT16;
+            offset += 4;
+            let horizontal_center = INT32::from_le_bytes([
+                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+            ]) as INT16;
+            offset += 4;
+            let vertical_center = INT32::from_le_bytes([
+                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+            ]) as INT16;
+            offset += 4;
+            let spread = INT32::from_le_bytes([
+                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+            ]) as INT16;
+            offset += 4;
+            let color_count = INT32::from_le_bytes([
+                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+            ]) as INT16;
+            offset += 4;
 
+            let positions = if color_count > 2 {
                 if offset + (4 * color_count as usize) > data.len() {
                     return Err(HwpError::insufficient_data(
-                        "Gradient colors data",
-                        4 * color_count as usize,
-                        data.len() - offset,
+                        "Gradient positions data", 4 * color_count as usize, data.len() - offset,
                     ));
                 }
-                let mut colors = Vec::new();
+                let mut pos_vec = Vec::new();
+                for _ in 0..color_count {
+                    pos_vec.push(INT32::from_le_bytes([
+                        data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                    ]));
+                    offset += 4;
+                }
+                Some(pos_vec)
+            } else {
+                None
+            };
+
+            let mut colors = Vec::new();
+            if offset + (4 * color_count as usize) <= data.len() {
                 for _ in 0..color_count {
                     colors.push(COLORREF(u32::from_le_bytes([
-                        data[offset],
-                        data[offset + 1],
-                        data[offset + 2],
-                        data[offset + 3],
+                        data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
                     ])));
                     offset += 4;
                 }
-
-                Ok(FillInfo::Gradient(GradientFill {
-                    gradient_type,
-                    angle,
-                    horizontal_center,
-                    vertical_center,
-                    spread,
-                    color_count,
-                    positions,
-                    colors,
-                }))
             }
-            FillType::Image => {
-                // 이미지 채우기는 복잡하므로 기본 구조만 파싱 / Image fill is complex, so only parse basic structure
+
+            gradient_fill = Some(GradientFill {
+                gradient_type, angle, horizontal_center, vertical_center,
+                spread, color_count, positions, colors,
+            });
+        }
+
+        // 그러데이션이 있으면 우선, 없으면 단색
+        if let Some(gf) = gradient_fill {
+            return Ok(FillInfo::Gradient(gf));
+        }
+        if let Some(sf) = solid_fill {
+            if !has_gradient && !has_image {
+                return Ok(FillInfo::Solid(sf));
+            }
+            return Ok(FillInfo::Solid(sf));
+        }
+
+        // 3. 이미지 채우기
+        match has_image {
+            true => {
+                // 이미지 채우기는 복잡하므로 기본 구조만 파싱
                 if offset + 1 > data.len() {
                     return Err(HwpError::insufficient_data(
                         "Image fill type",
@@ -507,6 +500,7 @@ impl BorderFill {
                     additional_attributes: None,
                 }))
             }
+            false => Ok(FillInfo::None),
         }
     }
 }

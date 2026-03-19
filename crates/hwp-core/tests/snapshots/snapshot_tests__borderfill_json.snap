@@ -588,14 +588,25 @@ expression: json
         },
         "fill": {
           "type": "gradient",
-          "gradient_type": 23041,
-          "angle": 0,
+          "gradient_type": 1,
+          "angle": 90,
           "horizontal_center": 0,
           "vertical_center": 0,
-          "spread": 0,
-          "color_count": 0,
+          "spread": 40,
+          "color_count": 2,
           "positions": null,
-          "colors": []
+          "colors": [
+            {
+              "r": 63,
+              "g": 127,
+              "b": 255
+            },
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          ]
         }
       },
       {
@@ -869,18 +880,26 @@ expression: json
           }
         },
         "fill": {
-          "type": "image",
-          "image_fill_type": 1,
-          "image_info": [
-            90,
-            0,
-            0,
-            0,
-            0
-          ],
-          "gradient_spread_center": null,
-          "additional_attributes_length": null,
-          "additional_attributes": null
+          "type": "gradient",
+          "gradient_type": 1,
+          "angle": 90,
+          "horizontal_center": 0,
+          "vertical_center": 0,
+          "spread": 40,
+          "color_count": 2,
+          "positions": null,
+          "colors": [
+            {
+              "r": 63,
+              "g": 127,
+              "b": 255
+            },
+            {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            }
+          ]
         }
       }
     ],
