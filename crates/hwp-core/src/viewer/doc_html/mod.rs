@@ -390,14 +390,13 @@ fn generate_heading_marker(
     };
 
     // Numbering에서 width(text_offset)와 CharShape 추출
-    let marker_width = numbering_level
+    let numbering_text_offset = numbering_level
         .map(|l| styles::round_mm(styles::hwpunit_to_mm(l.text_offset)))
         .filter(|&w| w > 0.0)
         .unwrap_or(5.29);
     let marker_cs = numbering_level
         .and_then(|l| l.char_shape_id)
-        .or_else(|| para.runs.first().map(|r| r.char_shape_id as u32))
-        .unwrap_or(1); // 기본 cs1 (한글 문서 heading 기본)
+        .unwrap_or(1); // 기본 cs1 (한글 문서 heading/numbering 기본)
     // CharShape에서 font-size 가져오기 (height HwpUnit → pt: /100)
     let font_size_style = resources.char_shapes.get(marker_cs as usize)
         .map(|cs| {
@@ -411,6 +410,11 @@ fn generate_heading_marker(
             let level = heading.level + 1;
             let number = outline_tracker.get_and_increment(level);
             let num_str = format_outline_number(level, number);
+            // use_inst_width: 텍스트 기반 폭 계산
+            let font_size_pt = resources.char_shapes.get(marker_cs as usize)
+                .map(|cs| cs.height as f64 / 100.0)
+                .unwrap_or(10.0);
+            let marker_width = styles::round_mm(estimate_marker_text_width(&num_str, font_size_pt));
             Some(format!(
                 r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:{:.2}mm;height:3.53mm;"><span class="hrt cs{}"{}>{}</span></div>"#,
                 marker_width, marker_cs, font_size_style, num_str
@@ -426,7 +430,7 @@ fn generate_heading_marker(
             let bullet_width = bullet
                 .map(|b| styles::round_mm(styles::hwpunit_to_mm(b.para_head.text_offset)))
                 .filter(|&w| w > 0.0)
-                .unwrap_or(marker_width);
+                .unwrap_or(numbering_text_offset);
             let bullet_font_style = resources.char_shapes.get(bullet_cs as usize)
                 .map(|cs| {
                     let pt = styles::round_mm(cs.height as f64 / 100.0);
@@ -443,6 +447,10 @@ fn generate_heading_marker(
             let tracker = number_tracker.entry(heading.id_ref).or_default();
             let number = tracker.get_and_increment(level);
             let num_str = format_with_numbering(heading.id_ref, level, number, resources);
+            let font_size_pt = resources.char_shapes.get(marker_cs as usize)
+                .map(|cs| cs.height as f64 / 100.0)
+                .unwrap_or(10.0);
+            let marker_width = styles::round_mm(estimate_marker_text_width(&num_str, font_size_pt));
             Some(format!(
                 r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:{:.2}mm;height:3.53mm;"><span class="hrt cs{}"{}>{}</span></div>"#,
                 marker_width, marker_cs, font_size_style, num_str
@@ -538,6 +546,33 @@ fn render_container_layout(
 
     html.push_str("</div>");
     html
+}
+
+/// heading 마커 텍스트 폭 추정 (font metrics 없이 문자 유형별 고정 폭 사용)
+/// old viewer fixture 역산: at 10pt → ASCII digit/letter ≈ 2.45mm, Korean ≈ 3.87mm
+fn estimate_marker_text_width(text: &str, font_size_pt: f64) -> f64 {
+    let scale = font_size_pt / 10.0;
+    let has_open_paren = text.contains('(');
+    let mut width = 0.0;
+    for ch in text.chars() {
+        width += if ch == '(' || (ch == ')' && has_open_paren) {
+            2.245 * scale
+        } else if ch == ')' {
+            2.74 * scale
+        } else if ('\u{AC00}'..='\u{D7AF}').contains(&ch) {
+            // 한글 음절
+            3.87 * scale
+        } else if ch == '①' || ch == '②' || ch == '③' || ch == '④' || ch == '⑤'
+            || ch == '⑥' || ch == '⑦' || ch == '⑧' || ch == '⑨' || ch == '⑩'
+            || ch == '⑪' || ch == '⑫' || ch == '⑬' || ch == '⑭' || ch == '⑮'
+        {
+            4.86 * scale
+        } else {
+            // ASCII digit, letter, period, etc.
+            2.45 * scale
+        };
+    }
+    width
 }
 
 /// SubList(머리글/꼬리글 등) 문단을 레이아웃 HTML로 렌더링
