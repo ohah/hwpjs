@@ -137,15 +137,17 @@ fn apply_inline_styles(text: &str, cs: &CharShape) -> String {
     }
 
     // underline: Center(취소선), Bottom/Top(밑줄)
+    let has_center_underline = cs.underline.as_ref()
+        .map(|ul| ul.underline_type == hwp_model::types::UnderlineType::Center)
+        .unwrap_or(false);
     if let Some(ref ul) = cs.underline {
-        if ul.underline_type == hwp_model::types::UnderlineType::Center {
-            result = format!("<s>{}</s>", result);
-        } else if ul.underline_type == hwp_model::types::UnderlineType::Bottom {
+        if ul.underline_type == hwp_model::types::UnderlineType::Bottom {
             result = format!("<u>{}</u>", result);
         }
     }
 
-    if cs.strikeout.is_some() {
+    // strikethrough: strikeout 또는 underline.Center (중복 방지)
+    if cs.strikeout.is_some() || has_center_underline {
         result = format!("<s>{}</s>", result);
     }
 

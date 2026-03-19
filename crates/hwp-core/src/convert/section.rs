@@ -653,21 +653,31 @@ fn assemble_runs(
 }
 
 fn line_seg_tag_to_flags(tag: &bodytext::line_seg::LineSegmentTag) -> u32 {
+    // HWP 5.0 스펙 비트 레이아웃 (decode_flags와 일치해야 함)
     let mut flags = 0u32;
     if tag.is_first_line_of_page {
-        flags |= 1 << 16;
+        flags |= 0x0000_0001; // bit 0
     }
     if tag.is_first_line_of_column {
-        flags |= 1 << 17;
+        flags |= 0x0000_0002; // bit 1
     }
     if tag.is_empty_segment {
-        flags |= 1 << 18;
+        flags |= 0x0001_0000; // bit 16
     }
     if tag.is_first_segment_of_line {
-        flags |= 1 << 19;
+        flags |= 0x0002_0000; // bit 17
     }
     if tag.is_last_segment_of_line {
-        flags |= 1 << 20;
+        flags |= 0x0004_0000; // bit 18
+    }
+    if tag.has_auto_hyphenation {
+        flags |= 0x0008_0000; // bit 19
+    }
+    if tag.has_indentation {
+        flags |= 0x0010_0000; // bit 20
+    }
+    if tag.has_paragraph_header_shape {
+        flags |= 0x0020_0000; // bit 21
     }
     flags
 }

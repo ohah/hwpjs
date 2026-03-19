@@ -55,6 +55,9 @@ pub fn render_line_segments_with_marker(
     let text_len = text_chars.len();
     let mut html_lines: Vec<String> = Vec::new();
 
+    // old viewer body_default_hls 감지: 모든 세그먼트의 텍스트가 비어있으면 (2.79, -0.18) 적용
+    let is_empty_paragraph = text.trim().is_empty();
+
     for (seg_idx, seg) in line_segments.iter().enumerate() {
         let flags = seg.decode_flags();
 
@@ -104,19 +107,36 @@ pub fn render_line_segments_with_marker(
         let text_html = render_layout_text(seg_text, &seg_char_shapes, resources);
 
         // 좌표 계산 (HwpUnit → mm)
-        // old viewer 동일: text segment에 (line_height - text_height) / 2 오프셋 적용
         let vertical_pos_mm = hwpunit_to_mm(seg.vertical_pos);
-        let height_raw = hwpunit_to_mm(seg.line_height);
+        let line_height_raw = hwpunit_to_mm(seg.line_height);
         let text_height_raw = hwpunit_to_mm(seg.text_height);
-        // old viewer: text가 있는 줄만 offset 적용
         let has_content = !seg_text.is_empty();
-        let top_mm = if has_content && height_raw > text_height_raw {
-            round_mm(vertical_pos_mm + (height_raw - text_height_raw) / 2.0)
+
+        // old viewer 동일: body_default_hls 적용
+        // 빈 문단(모든 세그먼트가 빈 텍스트): line-height=2.79, height=3.53, top_offset=-0.18
+        let (line_height_mm, height_mm, top_mm) = if is_empty_paragraph {
+            (
+                2.79,
+                3.53,
+                round_mm(vertical_pos_mm + (-0.18)),
+            )
+        } else if has_content {
+            // text segment: CSS line-height = line_height, CSS height = text_height
+            // top = vertical_pos + (line_height - text_height) / 2
+            let lh = round_mm(line_height_raw);
+            let th = round_mm(text_height_raw);
+            let offset = (lh - th) / 2.0;
+            (
+                lh,
+                th,
+                round_mm(vertical_pos_mm + offset),
+            )
         } else {
-            round_mm(vertical_pos_mm)
+            // non-text segment: both use line_height
+            let lh = round_mm(line_height_raw);
+            (lh, lh, round_mm(vertical_pos_mm))
         };
-        let height_mm = round_mm(height_raw);
-        let line_height_mm = round_mm(text_height_raw);
+
         let width_mm = if seg.segment_width > 0 {
             round_mm(hwpunit_to_mm(seg.segment_width))
         } else {
@@ -129,21 +149,41 @@ pub fn render_line_segments_with_marker(
             round_mm(content_left_mm)
         };
 
+        // padding-left 처리 (들여쓰기/내어쓰기)
+        let padding_left = if flags.has_indentation {
+            if let Some(ps) = resources.para_shapes.get(
+                para_shape_class.strip_prefix("ps").and_then(|s| s.parse::<usize>().ok()).unwrap_or(0)
+            ) {
+                let indent_hu = ps.margin.indent.value;
+                if indent_hu != 0 {
+                    let indent_mm = round_mm(hwpunit_to_mm(indent_hu.abs()) / 2.0);
+                    format!("padding-left:{:.2}mm;", indent_mm)
+                } else {
+                    String::new()
+                }
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        };
+
         // hls div 생성 (첫 줄에 marker 삽입)
         let marker = if html_lines.is_empty() {
             marker_html.unwrap_or("")
         } else {
             ""
         };
-        use super::styles::fmt_mm;
+        // hls는 항상 {:.2}mm 포맷 사용 (old viewer 일치)
         let hls = format!(
-            r#"<div class="hls {}" style="line-height:{};white-space:nowrap;left:{};top:{};height:{};width:{};">{}{}</div>"#,
+            r#"<div class="hls {}" style="line-height:{:.2}mm;white-space:nowrap;left:{:.2}mm;top:{:.2}mm;height:{:.2}mm;width:{:.2}mm;{}">{}{}</div>"#,
             para_shape_class,
-            fmt_mm(line_height_mm),
-            fmt_mm(left_mm),
-            fmt_mm(top_mm),
-            fmt_mm(height_mm),
-            fmt_mm(width_mm),
+            line_height_mm,
+            left_mm,
+            top_mm,
+            height_mm,
+            width_mm,
+            padding_left,
             marker,
             text_html
         );
@@ -192,6 +232,6 @@ mod tests {
         assert_eq!(result.len(), 1);
         assert!(result[0].contains("hls ps0"));
         assert!(result[0].contains("Hello"));
-        assert!(result[0].contains("left:30mm"));
+        assert!(result[0].contains("left:30.00mm"));
     }
 }
