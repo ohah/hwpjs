@@ -3752,7 +3752,130 @@ expression: json
                           "top": 567,
                           "bottom": 1134
                         },
-                        "caption": null,
+                        "caption": {
+                          "side": "Bottom",
+                          "full_size": false,
+                          "width": 8504,
+                          "gap": 850,
+                          "last_width": 40454,
+                          "content": {
+                            "id": 0,
+                            "text_direction": "Horizontal",
+                            "vert_align": "Top",
+                            "link_list_id": null,
+                            "link_list_next_id": null,
+                            "text_width": 0,
+                            "text_height": 0,
+                            "has_text_ref": false,
+                            "has_num_ref": false,
+                            "paragraphs": [
+                              {
+                                "id": 0,
+                                "para_shape_id": 2,
+                                "style_id": 0,
+                                "page_break": false,
+                                "column_break": false,
+                                "merged": false,
+                                "para_tc_id": null,
+                                "meta_tag": null,
+                                "runs": [
+                                  {
+                                    "char_shape_id": 1,
+                                    "contents": [
+                                      {
+                                        "Text": {
+                                          "char_shape_id": null,
+                                          "elements": [
+                                            {
+                                              "Text": "표 "
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      {
+                                        "Control": {
+                                          "AutoNum": {
+                                            "num_type": "Table",
+                                            "number_type": "Digit",
+                                            "num": 3,
+                                            "user_char": null,
+                                            "prefix_char": null,
+                                            "suffix_char": null
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "Text": {
+                                          "char_shape_id": null,
+                                          "elements": [
+                                            {
+                                              "Text": " 2x2짜리표"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "line_segments": [
+                                  {
+                                    "text_start_pos": 0,
+                                    "vertical_pos": 0,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_pos": 0,
+                                    "segment_width": 40452,
+                                    "flags": 393216
+                                  }
+                                ],
+                                "has_char_shapes": true
+                              },
+                              {
+                                "id": 0,
+                                "para_shape_id": 2,
+                                "style_id": 0,
+                                "page_break": false,
+                                "column_break": false,
+                                "merged": false,
+                                "para_tc_id": null,
+                                "meta_tag": null,
+                                "runs": [
+                                  {
+                                    "char_shape_id": 1,
+                                    "contents": [
+                                      {
+                                        "Text": {
+                                          "char_shape_id": null,
+                                          "elements": [
+                                            {
+                                              "Text": "가나다"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "line_segments": [
+                                  {
+                                    "text_start_pos": 0,
+                                    "vertical_pos": 1600,
+                                    "line_height": 1000,
+                                    "text_height": 1000,
+                                    "baseline_distance": 850,
+                                    "line_spacing": 600,
+                                    "column_start_pos": 0,
+                                    "segment_width": 40452,
+                                    "flags": 393216
+                                  }
+                                ],
+                                "has_char_shapes": true
+                              }
+                            ]
+                          }
+                        },
                         "comment": null,
                         "meta_tag": null
                       },
