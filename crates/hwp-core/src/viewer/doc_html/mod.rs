@@ -205,8 +205,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                     footnote_blocks.push((id, note_html));
                                     // 인라인 참조 (hfN)
                                     inline_note_refs.push(format!(
-                                        r#"<span class="hfN" style="top:-1.76mm;"><span class="hrt" style="font-size:5pt;top:-1pt;">{id})</span></span>"#,
-                                        id = id
+                                        r#"<span class="hfN" style="top:-1.76mm;"><span class="hrt cs{cs}" style="font-size:5pt;top:-1pt;">{id})</span></span>"#,
+                                        id = id, cs = run.char_shape_id
                                     ));
                                 }
                                 hwp_model::control::Control::EndNote(note) => {
@@ -218,8 +218,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                     );
                                     endnote_blocks.push((id, note_html));
                                     inline_note_refs.push(format!(
-                                        r#"<span class="hfN" style="top:-1.76mm;"><span class="hrt" style="font-size:5pt;top:-1pt;">{id})</span></span>"#,
-                                        id = id
+                                        r#"<span class="hfN" style="top:-1.76mm;"><span class="hrt cs{cs}" style="font-size:5pt;top:-1pt;">{id})</span></span>"#,
+                                        id = id, cs = run.char_shape_id
                                     ));
                                 }
                                 hwp_model::control::Control::PageNumCtrl(_) => {
