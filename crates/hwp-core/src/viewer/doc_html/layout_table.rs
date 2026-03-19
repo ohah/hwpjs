@@ -25,6 +25,24 @@ pub fn render_layout_table_with_offset(
     page_left_mm: f64,
     page_top_mm: f64,
 ) -> String {
+    let mut pattern_counter = 0_usize;
+    let mut color_to_pattern = std::collections::HashMap::new();
+    render_layout_table_full(
+        table, resources, _binaries, page_left_mm, page_top_mm,
+        &mut pattern_counter, &mut color_to_pattern,
+    )
+}
+
+/// document-level pattern 상태 포함 테이블 렌더링
+pub fn render_layout_table_full(
+    table: &Table,
+    resources: &Resources,
+    _binaries: &BinaryStore,
+    page_left_mm: f64,
+    page_top_mm: f64,
+    doc_pattern_counter: &mut usize,
+    doc_color_to_pattern: &mut std::collections::HashMap<u32, String>,
+) -> String {
     if table.rows.is_empty() {
         return String::new();
     }
@@ -80,7 +98,10 @@ pub fn render_layout_table_with_offset(
     ));
 
     // SVG 테두리 (viewBox는 htb 크기 기반)
-    let svg = generate_table_svg_borders(table, htb_width, htb_height, resources);
+    let svg = generate_table_svg_borders_with_patterns(
+        table, htb_width, htb_height, resources,
+        doc_pattern_counter, doc_color_to_pattern,
+    );
     if !svg.is_empty() {
         html.push_str(&svg);
     }
@@ -290,6 +311,19 @@ fn generate_table_svg_borders(
     height_mm: f64,
     resources: &Resources,
 ) -> String {
+    let mut pc = 0_usize;
+    let mut ctp = std::collections::HashMap::new();
+    generate_table_svg_borders_with_patterns(table, width_mm, height_mm, resources, &mut pc, &mut ctp)
+}
+
+fn generate_table_svg_borders_with_patterns(
+    table: &Table,
+    width_mm: f64,
+    height_mm: f64,
+    resources: &Resources,
+    pattern_counter: &mut usize,
+    color_to_pattern: &mut std::collections::HashMap<u32, String>,
+) -> String {
     use std::fmt::Write;
 
     let margin = 2.5;
@@ -301,11 +335,9 @@ fn generate_table_svg_borders(
     // row_positions 계산 (row_span=1 셀 기준)
     let row_positions = compute_row_positions(table);
 
-    // SVG fills (배경 패턴) 생성
-    let mut pattern_counter = 0_usize;
-    let mut color_to_pattern: std::collections::HashMap<u32, String> = std::collections::HashMap::new();
+    // SVG fills (배경 패턴) 생성 — document level 상태 사용
     let (pattern_defs, fill_paths) = generate_table_fills(
-        table, &row_positions, resources, &mut pattern_counter, &mut color_to_pattern,
+        table, &row_positions, resources, pattern_counter, color_to_pattern,
     );
 
     // SVG viewBox와 style (old viewer: ViewBox 기반)

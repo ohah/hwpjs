@@ -67,6 +67,9 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
     };
 
     let mut has_page_number_global = false;
+    // document-level SVG pattern 상태 (테이블 간 패턴 공유)
+    let mut doc_pattern_counter = 0_usize;
+    let mut doc_color_to_pattern: std::collections::HashMap<u32, String> = std::collections::HashMap::new();
 
     for section in &doc.sections {
         let page_def = if section.definition.page.width > 0 {
@@ -173,12 +176,14 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                     if table_bottom > pag_ctx.current_max_vertical_mm {
                                         pag_ctx.current_max_vertical_mm = table_bottom;
                                     }
-                                    layout_table::render_layout_table_with_offset(
+                                    layout_table::render_layout_table_full(
                                         table,
                                         &doc.resources,
                                         &doc.binaries,
                                         page_left,
                                         table_page_top,
+                                        &mut doc_pattern_counter,
+                                        &mut doc_color_to_pattern,
                                     )
                                 }
                                 hwp_model::shape::ShapeObject::Picture(ref pic) => {
