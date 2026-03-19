@@ -494,22 +494,16 @@ fn assemble_runs(
 
     // 일반 케이스: CharShape 변경점에 따라 Run 분할
     // CharShape position은 원본 WCHAR 위치. Clean text 위치로 변환하여 비교.
-    // 먼저 control 문자의 위치 정보를 수집하여 변환에 사용
-    // 제어 문자 범위: (start_pos, end_pos, delta_after_this_control)
-    // 문단 시작의 연속 control만 delta에 포함
-    // 텍스트 이후의 field_begin/end는 CharShape 매핑에 영향 없음 (old viewer 동작)
+    // 제어 문자 위치 → clean text 위치 매핑용 delta 수집
+    // 변환 가능 제어 문자(TAB 등)는 clean_size=1, 나머지는 0
     let mut ctrl_delta: i32 = 0;
     let mut ctrl_ranges: Vec<(u32, u32, i32)> = Vec::new();
     {
         let mut wchar_pos: u32 = 0;
-        let mut seen_text = false;
         for tr in text_runs {
             match tr {
                 ParaTextRun::Text { text } => {
                     wchar_pos += text.chars().count() as u32;
-                    if !text.is_empty() {
-                        seen_text = true;
-                    }
                 }
                 ParaTextRun::Control {
                     size_wchars, code, ..
@@ -519,14 +513,6 @@ fn assemble_runs(
                         && *code != bodytext::control_char::ControlChar::PARA_BREAK
                     {
                         1i32
-                    } else if seen_text
-                        && *code != bodytext::control_char::ControlChar::FIELD_END
-                        && !(*code >= bodytext::control_char::ControlChar::RESERVED_1_3_START
-                            && *code <= bodytext::control_char::ControlChar::RESERVED_1_3_END)
-                    {
-                        // 텍스트 이후 일반 control: delta에 영향 없음
-                        // 단, FieldBegin(1-3)/FieldEnd(4)는 clean text에서 사라지므로 delta 보정
-                        original_size
                     } else {
                         0i32
                     };
