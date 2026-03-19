@@ -2422,27 +2422,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -2465,27 +2465,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -2515,27 +2515,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -2558,27 +2558,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -2608,27 +2608,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -2651,22 +2651,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -2690,27 +2690,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -2733,27 +2733,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -2776,27 +2776,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -2819,27 +2819,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -2862,27 +2862,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -2905,27 +2905,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -2948,27 +2948,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -2991,27 +2991,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -3034,27 +3034,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -3077,27 +3077,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -3120,27 +3120,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -3163,27 +3163,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -3206,27 +3206,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Dash",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -3249,27 +3249,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Dash",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -3292,22 +3292,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.3 mm",
+          "width": "0.3mm",
           "color": 6118749
         },
         "diagonal": null,
@@ -3331,27 +3331,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.7 mm",
+          "width": "0.7mm",
           "color": 6118749
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3374,27 +3374,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3417,27 +3417,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3460,22 +3460,22 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 5790043
         },
         "diagonal": null,
@@ -3499,22 +3499,22 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -3538,22 +3538,22 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.7 mm",
+          "width": "0.7mm",
           "color": 6118749
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "diagonal": null,
@@ -3584,27 +3584,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 5790043
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3627,27 +3627,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3670,27 +3670,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3713,27 +3713,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.3 mm",
+          "width": "0.3mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3756,27 +3756,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.3 mm",
+          "width": "0.3mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3799,27 +3799,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.3 mm",
+          "width": "0.3mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3842,27 +3842,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.3 mm",
+          "width": "0.3mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3885,27 +3885,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.3 mm",
+          "width": "0.3mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3928,27 +3928,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 6118749
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 9671571
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.3 mm",
+          "width": "0.3mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.3 mm",
+          "width": "0.3mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -3971,27 +3971,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.3 mm",
+          "width": "0.3mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -4014,27 +4014,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4057,27 +4057,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4100,27 +4100,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Dash",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4143,27 +4143,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4186,27 +4186,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4229,27 +4229,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4272,27 +4272,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4315,27 +4315,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4358,27 +4358,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4401,27 +4401,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4444,27 +4444,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4487,27 +4487,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "1.0 mm",
+          "width": "1.0mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "1.0 mm",
+          "width": "1.0mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "1.0 mm",
+          "width": "1.0mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": {
@@ -4537,27 +4537,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "1.0 mm",
+          "width": "1.0mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "1.0 mm",
+          "width": "1.0mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "1.0 mm",
+          "width": "1.0mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": {
@@ -4587,27 +4587,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Dash",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -4630,27 +4630,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -4680,27 +4680,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -4730,27 +4730,27 @@
         },
         "left_border": {
           "line_type": "Dash",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Dash",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Dash",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Dash",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -4773,27 +4773,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -4823,27 +4823,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -4866,27 +4866,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -4916,27 +4916,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -4966,27 +4966,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -5009,27 +5009,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -5052,27 +5052,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -5095,27 +5095,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -5138,27 +5138,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -5181,27 +5181,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -5224,27 +5224,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -5267,27 +5267,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -5310,27 +5310,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -5353,27 +5353,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -5396,27 +5396,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -5439,27 +5439,27 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -24539,7 +24539,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "학번:           이름:"
+                                                  "Text": "학번:           이름:     "
                                                 }
                                               ]
                                             }
@@ -24966,7 +24966,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "학번:           이름:"
+                                                  "Text": "학번:           이름:     "
                                                 }
                                               ]
                                             }
@@ -25279,7 +25279,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "(학번:0000) 홍길동"
+                                                  "Text": "(학번:0000) 홍길동 "
                                                 }
                                               ]
                                             }
@@ -28758,7 +28758,11 @@
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": " "
+                      }
+                    ]
                   }
                 }
               ]
@@ -30947,7 +30951,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "지도교사:"
+                        "Text": "지도교사: "
                       }
                     ]
                   }
@@ -30962,7 +30966,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(서명)"
+                        "Text": "                   (서명)"
                       }
                     ]
                   }
@@ -31224,7 +31228,11 @@
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": "    "
+                      }
+                    ]
                   }
                 }
               ]
@@ -31235,7 +31243,11 @@
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": "                 "
+                      }
+                    ]
                   }
                 }
               ]
@@ -31960,7 +31972,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "담당교사 확인"
+                                                  "Text": "담당교사 확인 "
                                                 }
                                               ]
                                             }
@@ -32259,7 +32271,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "※ 보고서 작성 요령"
+                        "Text": "※ 보고서 작성 요령 "
                       }
                     ]
                   }
@@ -32443,7 +32455,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "1."
+                                                  "Text": "  1."
                                                 }
                                               ]
                                             }
@@ -32484,7 +32496,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "가."
+                                                  "Text": "    가. "
                                                 }
                                               ]
                                             }
@@ -32525,7 +32537,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "1)"
+                                                  "Text": "      1) "
                                                 }
                                               ]
                                             }
@@ -32566,7 +32578,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "가)"
+                                                  "Text": "        가)"
                                                 }
                                               ]
                                             }
@@ -32937,7 +32949,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "※ 위 작성 요령에 준하여 작성, A4 10매 내외 작성"
+                                                  "Text": "  ※ 위 작성 요령에 준하여 작성, A4 10매 내외 작성"
                                                 }
                                               ]
                                             }
@@ -33857,7 +33869,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "월    일 (   )"
+                                                  "Text": "   월    일 (   )"
                                                 }
                                               ]
                                             }
@@ -34188,7 +34200,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "결시자:"
+                                                  "Text": "결시자: "
                                                 }
                                               ]
                                             }
@@ -34282,7 +34294,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "월    일 (   )"
+                                                  "Text": "   월    일 (   )"
                                                 }
                                               ]
                                             }
@@ -34613,7 +34625,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "결시자:"
+                                                  "Text": "결시자: "
                                                 }
                                               ]
                                             }
@@ -34692,7 +34704,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "월    일 (   )"
+                                                  "Text": "   월    일 (   )"
                                                 }
                                               ]
                                             }
@@ -35023,7 +35035,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "결시자:"
+                                                  "Text": "결시자: "
                                                 }
                                               ]
                                             }
@@ -35102,7 +35114,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "월    일 (   )"
+                                                  "Text": "   월    일 (   )"
                                                 }
                                               ]
                                             }
@@ -35433,7 +35445,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "결시자:"
+                                                  "Text": "결시자: "
                                                 }
                                               ]
                                             }
@@ -35512,7 +35524,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "월    일 (   )"
+                                                  "Text": "   월    일 (   )"
                                                 }
                                               ]
                                             }
@@ -35843,7 +35855,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "결시자:"
+                                                  "Text": "결시자: "
                                                 }
                                               ]
                                             }
@@ -36333,7 +36345,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "2026-"
+                                                  "Text": " 2026-"
                                                 }
                                               ]
                                             }
@@ -37501,7 +37513,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "□□□□□"
+                                                  "Text": " □□□□□"
                                                 }
                                               ]
                                             }
@@ -37567,7 +37579,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "연락처 :  (집)                      (핸드폰)"
+                                                  "Text": " 연락처 :  (집)                      (핸드폰)"
                                                 }
                                               ]
                                             }
@@ -37762,7 +37774,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "출신학교"
+                                                  "Text": "출신학교  "
                                                 }
                                               ]
                                             }
@@ -38058,7 +38070,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "본인은"
+                        "Text": "  본인은"
                       }
                     ]
                   }
@@ -38073,7 +38085,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "멘토링 운영 결격사유(성격, 인성, 전과기록, 업무능력, 병력 등)가 발생할 시에 해임 조치하여도 이의가 없으며 2026학년도 SW전문가 멘토링에 소정의 서류를 갖추어 지원합니다."
+                        "Text": " 멘토링 운영 결격사유(성격, 인성, 전과기록, 업무능력, 병력 등)가 발생할 시에 해임 조치하여도 이의가 없으며 2026학년도 SW전문가 멘토링에 소정의 서류를 갖추어 지원합니다."
                       }
                     ]
                   }
@@ -38123,7 +38135,11 @@
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": "  "
+                      }
+                    ]
                   }
                 }
               ]
@@ -38253,7 +38269,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "신 청 자                   (서명)"
+                        "Text": " 신 청 자                   (서명)"
                       }
                     ]
                   }
@@ -38369,7 +38385,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "대덕소프트웨어마이스터고등학교장 귀하"
+                        "Text": "대덕소프트웨어마이스터고등학교장 귀하 "
                       }
                     ]
                   }
@@ -38545,7 +38561,11 @@
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": "     "
+                      }
+                    ]
                   }
                 }
               ]
@@ -38640,7 +38660,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "1. 이력서 1부(별도 양식 없음)"
+                        "Text": "     1. 이력서 1부(별도 양식 없음)"
                       }
                     ]
                   }
@@ -38681,7 +38701,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "2. 멘토링 활동 계획서 1부[붙임4]"
+                        "Text": "     2. 멘토링 활동 계획서 1부[붙임4]"
                       }
                     ]
                   }
@@ -38722,7 +38742,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "3. 재직증명서"
+                        "Text": "     3. 재직증명서"
                       }
                     ]
                   }
@@ -38763,7 +38783,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "4. 개인정보 수집・이용・제공 동의서 1부[붙임5]"
+                        "Text": "     4. 개인정보 수집・이용・제공 동의서 1부[붙임5]"
                       }
                     ]
                   }
@@ -38804,7 +38824,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "5. 통장사본 스캔본(인터넷 뱅킹에서 통장사본 출력, 계좌 개설확인서 등)"
+                        "Text": "     5. 통장사본 스캔본(인터넷 뱅킹에서 통장사본 출력, 계좌 개설확인서 등)"
                       }
                     ]
                   }
@@ -38845,7 +38865,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "예) 농협의 경우 [증명서]-[통장사본출력])"
+                        "Text": "        예) 농협의 경우 [증명서]-[통장사본출력]) "
                       }
                     ]
                   }
@@ -38886,7 +38906,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "6. 성범죄 경력 조회 및 아동학대 관련 범죄전력조회 동의서 1부(스캔본)[붙임7]"
+                        "Text": "     6. 성범죄 경력 조회 및 아동학대 관련 범죄전력조회 동의서 1부(스캔본)[붙임7]"
                       }
                     ]
                   }
@@ -38927,7 +38947,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "7. 거래처 등록을 위한 개인정보 수집・이용・제공 동의서 1부(스캔본)[붙임8]"
+                        "Text": "     7. 거래처 등록을 위한 개인정보 수집・이용・제공 동의서 1부(스캔본)[붙임8]"
                       }
                     ]
                   }
@@ -39192,7 +39212,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "수집 및 이용목적"
+                                                  "Text": " 수집 및 이용목적"
                                                 }
                                               ]
                                             }
@@ -39470,7 +39490,7 @@
                                                                         "char_shape_id": null,
                                                                         "elements": [
                                                                           {
-                                                                            "Text": "1. 개인정보 : 성명, 주소, 연락처, 이메일, 사진, 학력 및 경력사항, 자격 및"
+                                                                            "Text": "1. 개인정보 : 성명, 주소, 연락처, 이메일, 사진, 학력 및 경력사항, 자격 및     "
                                                                           }
                                                                         ]
                                                                       }
@@ -39498,7 +39518,11 @@
                                                                     {
                                                                       "Text": {
                                                                         "char_shape_id": null,
-                                                                        "elements": []
+                                                                        "elements": [
+                                                                          {
+                                                                            "Text": " "
+                                                                          }
+                                                                        ]
                                                                       }
                                                                     }
                                                                   ]
@@ -39788,7 +39812,7 @@
                                                                         "char_shape_id": null,
                                                                         "elements": [
                                                                           {
-                                                                            "Text": "3. 자율(전공)동아리에 활용"
+                                                                            "Text": "3. 자율(전공)동아리에 활용 "
                                                                           }
                                                                         ]
                                                                       }
@@ -39941,7 +39965,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "제 3자 제공동의"
+                                                  "Text": " 제 3자 제공동의"
                                                 }
                                               ]
                                             }
@@ -40619,7 +40643,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "보유 및 이용기간"
+                                                  "Text": " 보유 및 이용기간"
                                                 }
                                               ]
                                             }
@@ -40836,7 +40860,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "개인정보 제공 동의 거부 권리 및"
+                                                  "Text": "개인정보 제공 동의 거부 권리 및 "
                                                 }
                                               ]
                                             }
@@ -40996,7 +41020,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "■ 개인정보 및 고유 식별정보의 제공 동의를 거부할 권리가 있으며, 동의하지 않는다면 정보를 제공하지 않습니다."
+                                                  "Text": "■ 개인정보 및 고유 식별정보의 제공 동의를 거부할 권리가 있으며, 동의하지 않는다면 정보를 제공하지 않습니다. "
                                                 }
                                               ]
                                             }
@@ -41073,7 +41097,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "■"
+                                                  "Text": "■ "
                                                 }
                                               ]
                                             }
@@ -41101,7 +41125,11 @@
                                           {
                                             "Text": {
                                               "char_shape_id": null,
-                                              "elements": []
+                                              "elements": [
+                                                {
+                                                  "Text": " "
+                                                }
+                                              ]
                                             }
                                           }
                                         ]
@@ -41114,7 +41142,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "원활하게"
+                                                  "Text": "원활하게 "
                                                 }
                                               ]
                                             }
@@ -41746,7 +41774,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "이하 본인은 개인정보보호법 및 관련 법규에 의거하여 대덕소프트웨어마이스터고등학교"
+                                                  "Text": "이하 본인은 개인정보보호법 및 관련 법규에 의거하여 대덕소프트웨어마이스터고등학교 "
                                                 }
                                               ]
                                             }
@@ -41791,7 +41819,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "수집·이용 및 제공"
+                                                  "Text": " 수집·이용 및 제공"
                                                 }
                                               ]
                                             }
@@ -41898,7 +41926,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "2026년        월       일 　"
+                                                  "Text": "       2026년        월       일 　"
                                                 }
                                               ]
                                             }
@@ -43237,7 +43265,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "월    일 (   )"
+                                                  "Text": "   월    일 (   )"
                                                 }
                                               ]
                                             }
@@ -43493,7 +43521,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "월    일 (   )"
+                                                  "Text": "   월    일 (   )"
                                                 }
                                               ]
                                             }
@@ -44969,7 +44997,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "❍"
+                        "Text": " ❍ "
                       }
                     ]
                   }
@@ -45157,7 +45185,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "2026학년도 자율(전공)동아리 멘토 활동 일지(  월)"
+                        "Text": "2026학년도 자율(전공)동아리 멘토 활동 일지(  월) "
                       }
                     ]
                   }
@@ -45960,7 +45988,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "[ 교시   :   ~   :  ]"
+                                                  "Text": "[ 교시   :   ~   :  ] "
                                                 }
                                               ]
                                             }
@@ -46129,7 +46157,11 @@
                                           {
                                             "Text": {
                                               "char_shape_id": null,
-                                              "elements": []
+                                              "elements": [
+                                                {
+                                                  "Text": " "
+                                                }
+                                              ]
                                             }
                                           }
                                         ]
@@ -46265,7 +46297,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "[ 교시   :   ~   :  ]"
+                                                  "Text": "[ 교시   :   ~   :  ] "
                                                 }
                                               ]
                                             }
@@ -46558,7 +46590,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "[ 교시   :   ~   :  ]"
+                                                  "Text": "[ 교시   :   ~   :  ] "
                                                 }
                                               ]
                                             }
@@ -46851,7 +46883,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "[ 교시   :   ~   :  ]"
+                                                  "Text": "[ 교시   :   ~   :  ] "
                                                 }
                                               ]
                                             }
@@ -47144,7 +47176,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "[ 교시   :   ~   :  ]"
+                                                  "Text": "[ 교시   :   ~   :  ] "
                                                 }
                                               ]
                                             }
@@ -47437,7 +47469,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "[ 교시   :   ~   :  ]"
+                                                  "Text": "[ 교시   :   ~   :  ] "
                                                 }
                                               ]
                                             }
@@ -47730,7 +47762,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "[ 교시   :   ~   :  ]"
+                                                  "Text": "[ 교시   :   ~   :  ] "
                                                 }
                                               ]
                                             }
@@ -48023,7 +48055,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "[ 교시   :   ~   :  ]"
+                                                  "Text": "[ 교시   :   ~   :  ] "
                                                 }
                                               ]
                                             }
@@ -49066,7 +49098,11 @@
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": " "
+                      }
+                    ]
                   }
                 }
               ]
@@ -49289,7 +49325,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "성범죄 경력 조회"
+                                                  "Text": "성범죄 경력 조회 "
                                                 }
                                               ]
                                             }
@@ -50266,7 +50302,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "조회,"
+                                                  "Text": " 조회,"
                                                 }
                                               ]
                                             }
@@ -50296,7 +50332,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "아동복지법」 제29조의3에"
+                                                  "Text": "아동복지법」 제29조의3에 "
                                                 }
                                               ]
                                             }
@@ -50438,7 +50474,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "2026년         월         일"
+                                                  "Text": "  2026년         월         일"
                                                 }
                                               ]
                                             }
@@ -50517,7 +50553,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "동의자"
+                                                  "Text": "   동의자"
                                                 }
                                               ]
                                             }
@@ -50590,7 +50626,11 @@
                                           {
                                             "Text": {
                                               "char_shape_id": null,
-                                              "elements": []
+                                              "elements": [
+                                                {
+                                                  "Text": "      "
+                                                }
+                                              ]
                                             }
                                           }
                                         ]
@@ -50710,7 +50750,11 @@
                                           {
                                             "Text": {
                                               "char_shape_id": null,
-                                              "elements": []
+                                              "elements": [
+                                                {
+                                                  "Text": " "
+                                                }
+                                              ]
                                             }
                                           }
                                         ]
@@ -51167,7 +51211,11 @@
                                           {
                                             "Text": {
                                               "char_shape_id": null,
-                                              "elements": []
+                                              "elements": [
+                                                {
+                                                  "Text": " "
+                                                }
+                                              ]
                                             }
                                           }
                                         ]
@@ -51180,7 +51228,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "1. 개인정보 수집항목 :"
+                                                  "Text": "1. 개인정보 수집항목 : "
                                                 }
                                               ]
                                             }
@@ -51195,7 +51243,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "*표 항목(성명, 주민등록번호,"
+                                                  "Text": "*표 항목(성명, 주민등록번호, "
                                                 }
                                               ]
                                             }
@@ -51251,7 +51299,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "2."
+                                                  "Text": " 2. "
                                                 }
                                               ]
                                             }
@@ -51307,7 +51355,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "3."
+                                                  "Text": " 3. "
                                                 }
                                               ]
                                             }
@@ -51322,7 +51370,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "개인정보 제공 거부에 따른 제한사항 :"
+                                                  "Text": "개인정보 제공 거부에 따른 제한사항 : "
                                                 }
                                               ]
                                             }
@@ -51389,7 +51437,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "4."
+                                                  "Text": " 4. "
                                                 }
                                               ]
                                             }
@@ -51404,7 +51452,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "개인정보의 보유 :"
+                                                  "Text": "개인정보의 보유 : "
                                                 }
                                               ]
                                             }
@@ -51419,7 +51467,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "수집된 고객의 개인정보는"
+                                                  "Text": "수집된 고객의 개인정보는 "
                                                 }
                                               ]
                                             }
@@ -51824,7 +51872,11 @@
                                           {
                                             "Text": {
                                               "char_shape_id": null,
-                                              "elements": []
+                                              "elements": [
+                                                {
+                                                  "Text": " "
+                                                }
+                                              ]
                                             }
                                           }
                                         ]
@@ -51837,7 +51889,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "지급 관련 거래처 신규 등록을 위해 아래와 같이 개인정보를 수집・이용 및 제공 하고자 합니다. 내용을 자세히 읽으신 후 동의 여부를 결정하여 주시기 바랍니다."
+                                                  "Text": " 지급 관련 거래처 신규 등록을 위해 아래와 같이 개인정보를 수집・이용 및 제공 하고자 합니다. 내용을 자세히 읽으신 후 동의 여부를 결정하여 주시기 바랍니다."
                                                 }
                                               ]
                                             }
@@ -51955,7 +52007,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "1. 수집·이용목적 : 수당, 급여 등 각종 지급을 위한"
+                                                  "Text": "  1. 수집·이용목적 : 수당, 급여 등 각종 지급을 위한 "
                                                 }
                                               ]
                                             }
@@ -52011,7 +52063,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "2. 수집 항목 :"
+                                                  "Text": "  2. 수집 항목 : "
                                                 }
                                               ]
                                             }
@@ -52097,7 +52149,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "3. 이용 및 보유기간 :"
+                                                  "Text": "  3. 이용 및 보유기간 : "
                                                 }
                                               ]
                                             }
@@ -52153,7 +52205,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "4."
+                                                  "Text": "  4. "
                                                 }
                                               ]
                                             }
@@ -52234,7 +52286,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "개인정보 수집·이용 동의"
+                                                  "Text": "개인정보 수집·이용 동의           "
                                                 }
                                               ]
                                             }
@@ -52249,7 +52301,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "□ 예           □ 아니오"
+                                                  "Text": "□ 예           □ 아니오 "
                                                 }
                                               ]
                                             }
@@ -52356,7 +52408,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "1. 제공받는 기관 : 대전광역시교육청 및 산하기관(학교포함)"
+                                                  "Text": "  1. 제공받는 기관 : 대전광역시교육청 및 산하기관(학교포함)"
                                                 }
                                               ]
                                             }
@@ -52397,7 +52449,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "2."
+                                                  "Text": "  2. "
                                                 }
                                               ]
                                             }
@@ -52412,7 +52464,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "제공받는 자의 이용 목적 : 수당, 급여 등 각종 지급을 위한"
+                                                  "Text": "제공받는 자의 이용 목적 : 수당, 급여 등 각종 지급을 위한 "
                                                 }
                                               ]
                                             }
@@ -52468,7 +52520,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "3. 이용 및 보유 기간 :"
+                                                  "Text": "  3. 이용 및 보유 기간 : "
                                                 }
                                               ]
                                             }
@@ -52524,7 +52576,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "4. 제공 항목 :"
+                                                  "Text": "  4. 제공 항목 : "
                                                 }
                                               ]
                                             }
@@ -52595,7 +52647,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "5. 동의를 거부할수 있으며, 거부시 대전광역시교육청 및 산하기관(학교포함)에서 거래처 정보를 이용할 수 없습니다.(해당 기관에서 신규 등록하여 이용 가능함.)"
+                                                  "Text": "  5. 동의를 거부할수 있으며, 거부시 대전광역시교육청 및 산하기관(학교포함)에서 거래처 정보를 이용할 수 없습니다.(해당 기관에서 신규 등록하여 이용 가능함.)"
                                                 }
                                               ]
                                             }
@@ -52672,7 +52724,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "개인정보 제3자 제공 동의"
+                                                  "Text": "개인정보 제3자 제공 동의             "
                                                 }
                                               ]
                                             }
@@ -52794,7 +52846,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "1. 제공받는 기관 : 국세청"
+                                                  "Text": "  1. 제공받는 기관 : 국세청"
                                                 }
                                               ]
                                             }
@@ -52835,7 +52887,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "2. 제공받는 자의 이용 목적 :"
+                                                  "Text": "  2. 제공받는 자의 이용 목적 : "
                                                 }
                                               ]
                                             }
@@ -52891,7 +52943,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "3. 제공 항목 : 이름,"
+                                                  "Text": "  3. 제공 항목 : 이름, "
                                                 }
                                               ]
                                             }
@@ -52947,7 +52999,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "4. 제공 근거 : 「소득세법」 제127조"
+                                                  "Text": "  4. 제공 근거 : 「소득세법」 제127조"
                                                 }
                                               ]
                                             }
@@ -53084,7 +53136,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "「개인정보보호법」 제 24조의2제1항제1호에 따라 정보주체의 동의 없이 주민등록번호를 수집"
+                                                  "Text": "  「개인정보보호법」 제 24조의2제1항제1호에 따라 정보주체의 동의 없이 주민등록번호를 수집"
                                                 }
                                               ]
                                             }
@@ -53293,7 +53345,7 @@
                                                                         "char_shape_id": null,
                                                                         "elements": [
                                                                           {
-                                                                            "Text": "※ 수집된 개인정보는 동의한 목적 외로는 활용하지 않으며"
+                                                                            "Text": " ※ 수집된 개인정보는 동의한 목적 외로는 활용하지 않으며 "
                                                                           }
                                                                         ]
                                                                       }
@@ -53308,7 +53360,7 @@
                                                                         "char_shape_id": null,
                                                                         "elements": [
                                                                           {
-                                                                            "Text": "개인정보처리자에게 정정 또는      삭제 등을 요구할 수"
+                                                                            "Text": "개인정보처리자에게 정정 또는      삭제 등을 요구할 수 "
                                                                           }
                                                                         ]
                                                                       }
@@ -53474,7 +53526,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "이름:"
+                                                  "Text": "이름: "
                                                 }
                                               ]
                                             }
@@ -53532,7 +53584,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "계좌번호:        은행"
+                                                  "Text": "계좌번호:        은행             "
                                                 }
                                               ]
                                             }
@@ -53722,7 +53774,7 @@
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "대덕소프트웨어마이스터고등학교"
+                                                  "Text": "대덕소프트웨어마이스터고등학교 "
                                                 }
                                               ]
                                             }

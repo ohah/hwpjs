@@ -334,27 +334,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -377,27 +377,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -2662,7 +2662,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(1)"
+                        "Text": "(1) "
                       }
                     ]
                   }
@@ -2903,7 +2903,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(1)"
+                        "Text": "(1) "
                       }
                     ]
                   }
@@ -2959,7 +2959,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(2)"
+                        "Text": "                           (2) "
                       }
                     ]
                   }
@@ -3090,7 +3090,11 @@
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": " "
+                      }
+                    ]
                   }
                 },
                 {
@@ -3170,6 +3174,9 @@
                           "leader": "None",
                           "tab_type": "Left"
                         }
+                      },
+                      {
+                        "Text": "  "
                       }
                     ]
                   }
@@ -3197,7 +3204,11 @@
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": " "
+                      }
+                    ]
                   }
                 },
                 {
@@ -3313,7 +3324,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(1)"
+                        "Text": "(1) "
                       }
                     ]
                   }
@@ -3369,7 +3380,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(2)"
+                        "Text": "                        (2) "
                       }
                     ]
                   }
@@ -3487,7 +3498,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(1)"
+                        "Text": "(1) "
                       }
                     ]
                   }
@@ -3543,7 +3554,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(2)"
+                        "Text": "                              (2) "
                       }
                     ]
                   }
@@ -3661,7 +3672,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(1)"
+                        "Text": "(1) "
                       }
                     ]
                   }
@@ -3717,7 +3728,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(2)"
+                        "Text": "                            (2) "
                       }
                     ]
                   }
@@ -3835,7 +3846,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(1)"
+                        "Text": "(1) "
                       }
                     ]
                   }
@@ -3891,7 +3902,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(2)"
+                        "Text": "                     (2) "
                       }
                     ]
                   }
@@ -3945,7 +3956,11 @@
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": " "
+                      }
+                    ]
                   }
                 }
               ]
@@ -4009,7 +4024,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(1)"
+                        "Text": "(1) "
                       }
                     ]
                   }
@@ -4065,7 +4080,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(2)"
+                        "Text": "               (2) "
                       }
                     ]
                   }
@@ -4183,7 +4198,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(1)"
+                        "Text": "(1) "
                       }
                     ]
                   }
@@ -4239,7 +4254,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(2)"
+                        "Text": "                (2) "
                       }
                     ]
                   }
@@ -4357,7 +4372,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(1)"
+                        "Text": "(1) "
                       }
                     ]
                   }
@@ -4413,7 +4428,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(2)"
+                        "Text": "               (2) "
                       }
                     ]
                   }
@@ -4531,7 +4546,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(1)"
+                        "Text": "(1) "
                       }
                     ]
                   }
@@ -4587,7 +4602,7 @@
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(2)"
+                        "Text": "                           (2) "
                       }
                     ]
                   }

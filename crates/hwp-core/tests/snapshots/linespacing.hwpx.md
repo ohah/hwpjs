@@ -46,14 +46,14 @@
 
 |HHHHHHHHHHHHHH
 
-|H 글자에 따라100%
+|H 글자에 따라 100%
 
 |HHHHHHHHHHHHHH
 
-|H 고정 값0pt
+|H 고정 값 0pt
 
 |HHHHHHHHHHHHHH
 
-|H 여백만 지정0pt
+|H 여백만 지정 0pt
 
 |HHHHHHHHHHHHHH

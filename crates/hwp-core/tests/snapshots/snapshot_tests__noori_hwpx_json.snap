@@ -1418,27 +1418,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -1461,27 +1461,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -1511,27 +1511,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -1554,27 +1554,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 1775456
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 1775456
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 1775456
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 1775456
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -1604,27 +1604,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 1775456
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 1775456
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -1647,27 +1647,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 1775456
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 1775456
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -1690,27 +1690,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -1740,22 +1740,22 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -1779,27 +1779,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -1822,27 +1822,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -1865,27 +1865,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -1908,27 +1908,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -1951,22 +1951,22 @@ expression: json
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -1990,27 +1990,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -2033,27 +2033,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -2076,27 +2076,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -2126,27 +2126,27 @@ expression: json
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.15 mm",
+          "width": "0.15mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.4 mm",
+          "width": "0.4mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -2176,27 +2176,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -2226,27 +2226,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -10333,7 +10333,7 @@ expression: json
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "(온라인 9. 3."
+                                                  "Text": "(온라인 9. 3. "
                                                 }
                                               ]
                                             }
@@ -10391,7 +10391,11 @@ expression: json
                                           {
                                             "Text": {
                                               "char_shape_id": null,
-                                              "elements": []
+                                              "elements": [
+                                                {
+                                                  "Text": "  "
+                                                }
+                                              ]
                                             }
                                           }
                                         ]
@@ -10997,7 +11001,7 @@ expression: json
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "용찬재 사무관(02-2110-2428)"
+                                                  "Text": " 용찬재 사무관(02-2110-2428)"
                                                 }
                                               ]
                                             }
@@ -11417,7 +11421,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "□"
+                        "Text": "□ "
                       }
                     ]
                   }
@@ -11462,7 +11466,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "는 우리나라 최초로"
+                        "Text": "는 우리나라 최초로 "
                       }
                     ]
                   }
@@ -11492,7 +11496,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "개발 중인"
+                        "Text": " 개발 중인 "
                       }
                     ]
                   }
@@ -11565,7 +11569,11 @@ expression: json
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": " "
+                      }
+                    ]
                   }
                 }
               ]
@@ -11656,7 +11664,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "o 한국형발사체는 1.5톤급 실용위성을 지구 저궤도(600km~800km)"
+                        "Text": "  o 한국형발사체는 1.5톤급 실용위성을 지구 저궤도(600km~800km)"
                       }
                     ]
                   }
@@ -11701,7 +11709,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "참여하여 2021년 발사를 목표로 개발하고 있다"
+                        "Text": " 참여하여 2021년 발사를 목표로 개발하고 있다"
                       }
                     ]
                   }
@@ -11779,7 +11787,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "o 올해 10월에는 한국형발사체의 핵심부품인 75톤 액체엔진의 비행성능을 확인하기 위해 시험발사체를 발사할 예정이다."
+                        "Text": "  o 올해 10월에는 한국형발사체의 핵심부품인 75톤 액체엔진의 비행성능을 확인하기 위해 시험발사체를 발사할 예정이다."
                       }
                     ]
                   }
@@ -11861,7 +11869,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "과 함께"
+                        "Text": "과 함께 "
                       }
                     ]
                   }
@@ -11891,7 +11899,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "운 이름을 선정하기 위해"
+                        "Text": "운 이름을 선정하기 위해 "
                       }
                     ]
                   }
@@ -11984,7 +11992,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "o"
+                        "Text": "  o"
                       }
                     ]
                   }
@@ -11999,7 +12007,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "4월 27일부터 5월 31일까지 실시한 동 명칭 공모에는"
+                        "Text": " 4월 27일부터 5월 31일까지 실시한 동 명칭 공모에는"
                       }
                     ]
                   }
@@ -12014,7 +12022,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "약 6,300여명의"
+                        "Text": " 약 6,300여명의 "
                       }
                     ]
                   }
@@ -12059,7 +12067,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "관심을 보였다."
+                        "Text": " 관심을 보였다. "
                       }
                     ]
                   }
@@ -12122,7 +12130,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "o 명칭선정절차는 제출된 응모작에 대해"
+                        "Text": "  o 명칭선정절차는 제출된 응모작에 대해 "
                       }
                     ]
                   }
@@ -12152,7 +12160,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "주제와의 적합성, 상징성, 참신성, 발음 및 기억의 용의성 등을 기준으로"
+                        "Text": " 주제와의 적합성, 상징성, 참신성, 발음 및 기억의 용의성 등을 기준으로 "
                       }
                     ]
                   }
@@ -12245,7 +12253,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "o"
+                        "Text": "  o "
                       }
                     ]
                   }
@@ -12275,7 +12283,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "하고 있는 연구자, 산업체 관계자 약"
+                        "Text": "하고 있는 연구자, 산업체 관계자 약 "
                       }
                     ]
                   }
@@ -12372,7 +12380,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "절차를 거쳐 한국형발사체의"
+                        "Text": " 절차를 거쳐 한국형발사체의 "
                       }
                     ]
                   }
@@ -12432,7 +12440,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "‘한국형발사체’의"
+                        "Text": " ‘한국형발사체’의"
                       }
                     ]
                   }
@@ -12447,7 +12455,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "공식 명칭으로 사용"
+                        "Text": " 공식 명칭으로 사용"
                       }
                     ]
                   }
@@ -12525,7 +12533,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "o 동 명칭을 제출한 경상대학교 에너지기계공학과 백승엽 학생은"
+                        "Text": "  o 동 명칭을 제출한 경상대학교 에너지기계공학과 백승엽 학생은 "
                       }
                     ]
                   }
@@ -12570,7 +12578,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "로"
+                        "Text": "로 "
                       }
                     ]
                   }
@@ -12585,7 +12593,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "우주로까지 확장된 새로운 세상을"
+                        "Text": "우주로까지 확장된 새로운 세상을 "
                       }
                     ]
                   }
@@ -12613,7 +12621,11 @@ expression: json
                 {
                   "Text": {
                     "char_shape_id": null,
-                    "elements": []
+                    "elements": [
+                      {
+                        "Text": " "
+                      }
+                    ]
                   }
                 }
               ]
@@ -12656,7 +12668,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "발전을"
+                        "Text": " 발전을 "
                       }
                     ]
                   }
@@ -12745,7 +12757,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "o"
+                        "Text": "  o "
                       }
                     ]
                   }
@@ -12775,7 +12787,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "상금이 수여될 예정이다."
+                        "Text": " 상금이 수여될 예정이다. "
                       }
                     ]
                   }
@@ -12827,7 +12839,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "□"
+                        "Text": "□ "
                       }
                     ]
                   }
@@ -12842,7 +12854,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "과기정통부 거대공공연구정책관은 “명칭 공모전을 통해 우리국민의"
+                        "Text": "과기정통부 거대공공연구정책관은 “명칭 공모전을 통해 우리국민의 "
                       }
                     ]
                   }
@@ -12872,7 +12884,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "할 수 있었다”며 “새로운 이름에 걸맞게 무한한 가능성을 갖고 있는"
+                        "Text": "할 수 있었다”며 “새로운 이름에 걸맞게 무한한 가능성을 갖고 있는 "
                       }
                     ]
                   }
@@ -13688,7 +13700,7 @@ expression: json
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "한국형발사체(누리호)와 시험발사체 비교"
+                                                  "Text": " 한국형발사체(누리호)와 시험발사체 비교"
                                                 }
                                               ]
                                             }
@@ -14628,7 +14640,11 @@ expression: json
                                           {
                                             "Text": {
                                               "char_shape_id": null,
-                                              "elements": []
+                                              "elements": [
+                                                {
+                                                  "Text": " "
+                                                }
+                                              ]
                                             }
                                           }
                                         ]
@@ -15763,7 +15779,7 @@ expression: json
                                               "char_shape_id": null,
                                               "elements": [
                                                 {
-                                                  "Text": "단 수"
+                                                  "Text": "단 수 "
                                                 }
                                               ]
                                             }

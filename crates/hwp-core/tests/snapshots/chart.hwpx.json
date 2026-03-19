@@ -614,27 +614,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -657,27 +657,27 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -707,22 +707,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -746,22 +746,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -792,22 +792,22 @@
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": null,
@@ -838,22 +838,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -877,22 +877,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": null,
@@ -916,22 +916,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -955,22 +955,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -994,22 +994,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -1033,27 +1033,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -1076,22 +1076,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": null,
@@ -1115,27 +1115,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -1158,22 +1158,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -1204,22 +1204,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -1250,22 +1250,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": null,
@@ -1296,22 +1296,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": null,
@@ -1342,22 +1342,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": null,
@@ -1388,22 +1388,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": null,
@@ -1434,22 +1434,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": null,
@@ -1480,22 +1480,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": null,
@@ -1526,22 +1526,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -1572,22 +1572,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -1611,22 +1611,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -1657,22 +1657,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -1696,27 +1696,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -1739,27 +1739,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -1782,22 +1782,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -1828,22 +1828,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -1867,27 +1867,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null
@@ -1910,22 +1910,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -1949,22 +1949,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -1988,22 +1988,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -2034,22 +2034,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -2080,22 +2080,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -2126,22 +2126,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -2172,22 +2172,22 @@
         },
         "left_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -2218,22 +2218,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -2264,22 +2264,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -2303,22 +2303,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "diagonal": null,
@@ -2342,22 +2342,22 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": null,
@@ -2381,27 +2381,27 @@
         },
         "left_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "right_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "top_border": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "DoubleSlim",
-          "width": "0.5 mm",
+          "width": "0.5mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.12 mm",
+          "width": "0.12mm",
           "color": 0
         },
         "fill": null

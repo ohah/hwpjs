@@ -1072,6 +1072,9 @@ fn parse_text_content(
     start: &quick_xml::events::BytesStart,
     reader: &mut Reader<&[u8]>,
 ) -> Result<TextContent, HwpxError> {
+    // <t> 내부 텍스트의 공백을 보존 (trim_text가 leading space를 제거하는 것 방지)
+    reader.config_mut().trim_text(false);
+
     let mut tc = TextContent {
         char_shape_id: attr_u16(start, b"charPrIDRef"),
         elements: Vec::new(),
@@ -1149,6 +1152,9 @@ fn parse_text_content(
         }
         buf.clear();
     }
+
+    // trim_text 복원
+    reader.config_mut().trim_text(true);
 
     Ok(tc)
 }

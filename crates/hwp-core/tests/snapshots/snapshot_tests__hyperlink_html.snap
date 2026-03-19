@@ -3,8 +3,8 @@ source: crates/hwp-core/tests/snapshot_tests.rs
 expression: html
 ---
 <div class="body">
-<p><a href="http://naver.com">http://naver.com<span style="font-size: 10.0pt; font-family: '함초롬바탕'">하이퍼링크 테스</span><span style="font-size: 10.0pt; font-family: '함초롬바탕'; color: rgb(0,0,255)"><u>트</u></span><span style="font-size: 10.0pt; font-family: '함초롬바탕'; color: rgb(0,0,255)"><u> naver.c</u></span><span style="font-size: 10.0pt; font-family: '함초롬바탕'">om</span></p>
-<p><span style="font-size: 10.0pt; font-family: '함초롬바탕'">align.hw</span><span style="font-size: 10.0pt; font-family: '함초롬바탕'; color: rgb(0,0,255)"><u>p</u></span></p>
-<p><a href="#">#<span style="font-size: 10.0pt; font-family: '함초롬바탕'">문서의처음</span></a></p>
-<p><a href="mailto:bookyoon173@gmail.com?subject=전자우편주소제목">mailto:bookyoon173@gmail.com?subject=전자우편주소제목<span style="font-size: 10.0pt; font-family: '함초롬바탕'">전자우편</span></a></p>
+<p><a href="http://naver.com">http://naver.com<span style="font-size: 10.0pt; font-family: '함초롬바탕'; color: rgb(0,0,255)"><u>하이퍼링크 테스트</u></span></a><span style="font-size: 10.0pt; font-family: '함초롬바탕'"> naver.com</span></p>
+<p><a href="file://">file://<span style="font-size: 10.0pt; font-family: '함초롬바탕'; color: rgb(0,0,255)"><u>align.hwp</u></span></a></p>
+<p><a href="#">#<span style="font-size: 10.0pt; font-family: '함초롬바탕'; color: rgb(0,0,255)"><u>문서의처음</u></span></a></p>
+<p><a href="mailto:bookyoon173@gmail.com?subject=전자우편주소제목">mailto:bookyoon173@gmail.com?subject=전자우편주소제목<span style="font-size: 10.0pt; font-family: '함초롬바탕'; color: rgb(0,0,255)"><u>전자우편</u></span></a></p>
 </div>

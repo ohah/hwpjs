@@ -478,27 +478,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": null
@@ -521,27 +521,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -571,27 +571,27 @@ expression: json
         },
         "left_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "right_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "top_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "bottom_border": {
           "line_type": "None",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "diagonal": {
           "line_type": "Solid",
-          "width": "0.1 mm",
+          "width": "0.1mm",
           "color": 0
         },
         "fill": {
@@ -2821,7 +2821,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "①"
+                        "Text": "① "
                       }
                     ]
                   }
@@ -2851,7 +2851,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": ":"
+                        "Text": " : "
                       }
                     ]
                   }
@@ -2892,7 +2892,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "혈액형 : O형"
+                        "Text": " 혈액형 : O형"
                       }
                     ]
                   }
@@ -2933,7 +2933,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "성격 : 자유로운 영혼"
+                        "Text": " 성격 : 자유로운 영혼"
                       }
                     ]
                   }
@@ -2974,7 +2974,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "좌우명 : A sound mind in a sound body."
+                        "Text": " 좌우명 : A sound mind in a sound body."
                       }
                     ]
                   }
@@ -3015,7 +3015,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "소개하는 글"
+                        "Text": " 소개하는 글"
                       }
                     ]
                   }
@@ -3056,7 +3056,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "어린 시절은 변두리 작은 동네에서 꿈 많은 소녀로 자라났습니다. 할머니, 할아버지, 삼촌들까지 대가족 속에서 막내로 귀여움을 받으면서 살았습니다. 가족들은 저에게"
+                        "Text": "어린 시절은 변두리 작은 동네에서 꿈 많은 소녀로 자라났습니다. 할머니, 할아버지, 삼촌들까지 대가족 속에서 막내로 귀여움을 받으면서 살았습니다. 가족들은 저에게 "
                       }
                     ]
                   }
@@ -3149,7 +3149,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "현재 저는 사랑하는 아이들과 남편과 함께"
+                        "Text": "현재 저는 사랑하는 아이들과 남편과 함께 "
                       }
                     ]
                   }
@@ -3179,7 +3179,7 @@ expression: json
                     "char_shape_id": null,
                     "elements": [
                       {
-                        "Text": "(幸福)한 삶을 살아가고 있습니다. 앞으로의 꿈은 아이들이 결혼하고 나면 남편과 시골에서 조그마한 텃밭을 가꾸면서 살아가는 것입니다. 그 꿈을 실현할 수 있기를 바랍니다."
+                        "Text": "(幸福)한 삶을 살아가고 있습니다. 앞으로의 꿈은 아이들이 결혼하고 나면 남편과 시골에서 조그마한 텃밭을 가꾸면서 살아가는 것입니다. 그 꿈을 실현할 수 있기를 바랍니다. "
                       }
                     ]
                   }
