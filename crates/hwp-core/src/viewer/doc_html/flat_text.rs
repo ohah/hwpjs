@@ -39,6 +39,9 @@ pub struct FlatTextResult {
     pub text_len: usize,
     /// 하이퍼링크 범위 목록
     pub hyperlinks: Vec<HyperlinkRange>,
+    /// 건너뛴 WCHAR 수 (Control/Object 등 텍스트에 미포함된 원본 문자)
+    /// text_start_pos 변환: extracted_pos = original_wchar_pos - skipped_wchars
+    pub skipped_wchars: u32,
 }
 
 /// Paragraph의 Run[]에서 flat text + char_shapes 추출
@@ -112,7 +115,9 @@ pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
                     }
                 }
                 RunContent::Object(_) => {
-                    // Object도 텍스트에 포함하지 않음
+                    // Object는 원본에서 WCHAR 위치를 차지하지만 텍스트에 미포함
+                    // (HWP 원본: 확장 문자 코드 + WCHAR 마커)
+                    result.skipped_wchars += 8; // 일반적으로 Object marker = 8 WCHARs
                 }
             }
         }

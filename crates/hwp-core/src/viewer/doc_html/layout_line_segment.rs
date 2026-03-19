@@ -103,16 +103,14 @@ pub fn render_line_segments_impl(
         }
 
         // 이 세그먼트의 텍스트 범위 계산
-        let seg_start = seg.text_start_pos as usize;
+        // text_start_pos는 HWP WCHAR 인덱스 — 제어 문자 포함 원본 위치
+        // 추출 텍스트와 오프셋 차이가 있을 수 있으므로, 범위를 클램프
+        let seg_start = (seg.text_start_pos as usize).min(text_len);
         let seg_end = if seg_idx + 1 < line_segments.len() {
             (line_segments[seg_idx + 1].text_start_pos as usize).min(text_len)
         } else {
             text_len
         };
-
-        if seg_start > text_len {
-            continue;
-        }
         let seg_end = seg_end.min(text_len);
 
         let seg_text: String = text_chars[seg_start..seg_end].iter().collect();
