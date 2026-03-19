@@ -17,7 +17,7 @@ const program = new Command();
 const packageJsonPath = path.join(__dirname, '../../package.json');
 const version =
   (JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { version?: string }).version ?? '0.0.0';
-program.name('hwpjs').description('HWP file parser CLI').version(version);
+program.name('hwpjs').description('HWP/HWPX file parser CLI').version(version);
 
 // Register commands
 toJsonCommand(program);
