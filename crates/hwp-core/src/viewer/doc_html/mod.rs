@@ -646,6 +646,14 @@ fn render_sublist_layout(
     paragraphs: &[hwp_model::paragraph::Paragraph],
     resources: &hwp_model::resources::Resources,
 ) -> String {
+    render_sublist_layout_with_page(paragraphs, resources, None)
+}
+
+fn render_sublist_layout_with_page(
+    paragraphs: &[hwp_model::paragraph::Paragraph],
+    resources: &hwp_model::resources::Resources,
+    page_number: Option<usize>,
+) -> String {
     let mut parts = Vec::new();
     for para in paragraphs {
         let flat = flat_text::extract_flat_text(para);
@@ -661,7 +669,31 @@ fn render_sublist_layout(
             &ps_class,
             0.0,
         );
-        parts.extend(lines);
+        // AutoNum 컨트롤이 있으면 haN div를 마지막 hls에 삽입
+        let has_auto_num = para.runs.iter().any(|r| {
+            r.contents.iter().any(|c| matches!(c,
+                hwp_model::paragraph::RunContent::Control(
+                    hwp_model::control::Control::AutoNum(_)
+                )
+            ))
+        });
+        if has_auto_num {
+            let mut lines = lines;
+            if let Some(last) = lines.last_mut() {
+                let num_text = page_number.map(|n| n.to_string()).unwrap_or_else(|| "1".to_string());
+                let cs_id = para.runs.last().map(|r| r.char_shape_id).unwrap_or(0);
+                let han_html = format!(
+                    r#"<div class="haN" style="left:0mm;top:0mm;width:1.82mm;height:3.17mm;"><span class="hrt cs{}">{}</span></div>"#,
+                    cs_id, num_text
+                );
+                if let Some(pos) = last.rfind("</div>") {
+                    last.insert_str(pos, &han_html);
+                }
+            }
+            parts.extend(lines);
+        } else {
+            parts.extend(lines);
+        }
     }
     parts.join("")
 }
