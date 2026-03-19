@@ -47,6 +47,23 @@ pub fn render_line_segments_with_marker(
     content_left_mm: f64,
     marker_html: Option<&str>,
 ) -> Vec<String> {
+    render_line_segments_full(
+        text, char_shapes, line_segments, resources,
+        para_shape_class, content_left_mm, marker_html, false,
+    )
+}
+
+/// 전체 파라미터 라인 세그먼트 렌더링
+pub fn render_line_segments_full(
+    text: &str,
+    char_shapes: &[FlatCharShapeInfo],
+    line_segments: &[LineSegmentInfo],
+    resources: &Resources,
+    para_shape_class: &str,
+    content_left_mm: f64,
+    marker_html: Option<&str>,
+    has_objects: bool,
+) -> Vec<String> {
     if line_segments.is_empty() {
         return Vec::new();
     }
@@ -55,8 +72,11 @@ pub fn render_line_segments_with_marker(
     let text_len = text_chars.len();
     let mut html_lines: Vec<String> = Vec::new();
 
-    // old viewer body_default_hls 감지: 모든 세그먼트의 텍스트가 비어있으면 (2.79, -0.18) 적용
-    let is_empty_paragraph = text.trim().is_empty();
+    // old viewer body_default_hls 감지:
+    // 텍스트가 비어있고, 모든 세그먼트의 line_height가 작은 경우만 적용
+    // (큰 line_height는 Chart/Table 등 인라인 오브젝트를 의미)
+    let has_large_segment = line_segments.iter().any(|s| hwpunit_to_mm(s.line_height) > 10.0);
+    let is_empty_paragraph = text.trim().is_empty() && !has_large_segment;
 
     for (seg_idx, seg) in line_segments.iter().enumerate() {
         let flags = seg.decode_flags();
