@@ -136,6 +136,15 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 pag_ctx.current_max_vertical_mm = 0.0;
             }
 
+            // vertical position 추적 (Object 위치 계산 전에 업데이트)
+            if let Some(vp) = layout_pagination::last_vertical_pos_mm(para) {
+                let rel_vp = vp - pag_ctx.page_vertical_offset_mm;
+                pag_ctx.prev_vertical_mm = Some(rel_vp);
+                if rel_vp > pag_ctx.current_max_vertical_mm {
+                    pag_ctx.current_max_vertical_mm = rel_vp;
+                }
+            }
+
             // 문단 내 Object/Control 수집 (hls 뒤에 배치하기 위해 먼저 수집)
             let mut obj_blocks: Vec<String> = Vec::new();
             let page_left = layout_page::content_left_abs_mm(page_def);
@@ -146,12 +155,26 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                         hwp_model::paragraph::RunContent::Object(ref shape) => {
                             let obj_html = match shape {
                                 hwp_model::shape::ShapeObject::Table(ref table) => {
+                                    // vert_offset=0인 테이블: 이전 콘텐츠 아래에 배치
+                                    let table_page_top = if table.common.position.vert_offset == 0 {
+                                        page_top + pag_ctx.current_max_vertical_mm
+                                    } else {
+                                        page_top
+                                    };
+                                    // 테이블 높이만큼 vertical position 갱신
+                                    let table_h = styles::round_mm(
+                                        styles::hwpunit_to_mm(table.common.size.height)
+                                    );
+                                    let table_bottom = pag_ctx.current_max_vertical_mm + table_h;
+                                    if table_bottom > pag_ctx.current_max_vertical_mm {
+                                        pag_ctx.current_max_vertical_mm = table_bottom;
+                                    }
                                     layout_table::render_layout_table_with_offset(
                                         table,
                                         &doc.resources,
                                         &doc.binaries,
-                                        layout_page::content_left_abs_mm(page_def),
-                                        layout_page::content_top_abs_mm(page_def),
+                                        page_left,
+                                        table_page_top,
                                     )
                                 }
                                 hwp_model::shape::ShapeObject::Picture(ref pic) => {
@@ -282,14 +305,6 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 inline_note_refs.clear();
             }
 
-            // vertical position 추적
-            if let Some(vp) = layout_pagination::last_vertical_pos_mm(para) {
-                let rel_vp = vp - pag_ctx.page_vertical_offset_mm;
-                pag_ctx.prev_vertical_mm = Some(rel_vp);
-                if rel_vp > pag_ctx.current_max_vertical_mm {
-                    pag_ctx.current_max_vertical_mm = rel_vp;
-                }
-            }
         }
 
         // 마지막 페이지 flush (비어있어도 섹션당 최소 1페이지)
