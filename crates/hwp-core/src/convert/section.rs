@@ -519,8 +519,13 @@ fn assemble_runs(
                         && *code != bodytext::control_char::ControlChar::PARA_BREAK
                     {
                         1i32
-                    } else if seen_text {
-                        // 텍스트 이후 control (field_begin/end 등): delta에 영향 없음
+                    } else if seen_text
+                        && *code != bodytext::control_char::ControlChar::FIELD_END
+                        && !(*code >= bodytext::control_char::ControlChar::RESERVED_1_3_START
+                            && *code <= bodytext::control_char::ControlChar::RESERVED_1_3_END)
+                    {
+                        // 텍스트 이후 일반 control: delta에 영향 없음
+                        // 단, FieldBegin(1-3)/FieldEnd(4)는 clean text에서 사라지므로 delta 보정
                         original_size
                     } else {
                         0i32
