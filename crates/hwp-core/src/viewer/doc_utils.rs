@@ -101,6 +101,10 @@ fn hlk_command_to_url(command: &str) -> Option<String> {
                 Some(format!("#{}", name))
             }
         }
+        "3" => {
+            // 파일 링크
+            Some("file://".to_string())
+        }
         _ => None,
     }
 }
