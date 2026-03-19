@@ -377,21 +377,65 @@ fn generate_heading_marker(
     let ps = resources.para_shapes.get(para.para_shape_id as usize)?;
     let heading = ps.heading.as_ref()?;
 
+    // Numbering 리소스에서 level 정보 가져오기
+    let numbering_level = if heading.id_ref > 0 {
+        resources.numberings
+            .iter()
+            .find(|n| n.id == heading.id_ref)
+            .and_then(|n| n.levels.iter().find(|l| l.level == heading.level))
+    } else {
+        // Outline: id_ref=0이면 첫 번째 Numbering 사용
+        resources.numberings.first()
+            .and_then(|n| n.levels.iter().find(|l| l.level == heading.level))
+    };
+
+    // Numbering에서 width(text_offset)와 CharShape 추출
+    let marker_width = numbering_level
+        .map(|l| styles::round_mm(styles::hwpunit_to_mm(l.text_offset)))
+        .filter(|&w| w > 0.0)
+        .unwrap_or(5.29);
+    let marker_cs = numbering_level
+        .and_then(|l| l.char_shape_id)
+        .or_else(|| para.runs.first().map(|r| r.char_shape_id as u32))
+        .unwrap_or(1); // 기본 cs1 (한글 문서 heading 기본)
+    // CharShape에서 font-size 가져오기 (height HwpUnit → pt: /100)
+    let font_size_style = resources.char_shapes.get(marker_cs as usize)
+        .map(|cs| {
+            let pt = styles::round_mm(cs.height as f64 / 100.0);
+            format!(" style=\"font-size:{}pt;\"", pt)
+        })
+        .unwrap_or_default();
+
     match heading.heading_type {
         HeadingType::Outline => {
             let level = heading.level + 1;
             let number = outline_tracker.get_and_increment(level);
             let num_str = format_outline_number(level, number);
             Some(format!(
-                r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:5.29mm;height:3.53mm;"><span class="hrt cs{}">{}</span></div>"#,
-                para.runs.first().map(|r| r.char_shape_id).unwrap_or(0),
-                num_str
+                r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:{:.2}mm;height:3.53mm;"><span class="hrt cs{}"{}>{}</span></div>"#,
+                marker_width, marker_cs, font_size_style, num_str
             ))
         }
         HeadingType::Bullet => {
+            // Bullet 리소스에서 문자와 CharShape 가져오기
+            let bullet = resources.bullets.iter().find(|b| b.id == heading.id_ref);
+            let bullet_char = bullet.map(|b| b.bullet_char).unwrap_or('●');
+            let bullet_cs = bullet
+                .and_then(|b| b.para_head.char_shape_id)
+                .unwrap_or(marker_cs);
+            let bullet_width = bullet
+                .map(|b| styles::round_mm(styles::hwpunit_to_mm(b.para_head.text_offset)))
+                .filter(|&w| w > 0.0)
+                .unwrap_or(marker_width);
+            let bullet_font_style = resources.char_shapes.get(bullet_cs as usize)
+                .map(|cs| {
+                    let pt = styles::round_mm(cs.height as f64 / 100.0);
+                    format!(" style=\"font-size:{}pt;\"", pt)
+                })
+                .unwrap_or_else(|| " style=\"font-size:3.33pt;\"".to_string());
             Some(format!(
-                r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:5.29mm;height:3.53mm;"><span class="hrt cs{}" style="font-size:3.33pt;">●</span></div>"#,
-                para.runs.first().map(|r| r.char_shape_id).unwrap_or(0),
+                r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:{:.2}mm;height:3.53mm;"><span class="hrt cs{}"{}>{}</span></div>"#,
+                bullet_width, bullet_cs, bullet_font_style, bullet_char
             ))
         }
         HeadingType::Number => {
@@ -400,9 +444,8 @@ fn generate_heading_marker(
             let number = tracker.get_and_increment(level);
             let num_str = format_with_numbering(heading.id_ref, level, number, resources);
             Some(format!(
-                r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:13.16mm;height:3.53mm;"><span class="hrt cs{}" style="font-size:10pt;">{}</span></div>"#,
-                para.runs.first().map(|r| r.char_shape_id).unwrap_or(0),
-                num_str
+                r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:{:.2}mm;height:3.53mm;"><span class="hrt cs{}"{}>{}</span></div>"#,
+                marker_width, marker_cs, font_size_style, num_str
             ))
         }
         _ => None,
