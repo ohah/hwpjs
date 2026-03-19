@@ -26,6 +26,8 @@ pub struct HyperlinkRange {
     pub end: u32,
     /// onclick 스크립트
     pub onclick: String,
+    /// hyperlink CharShape ID (FieldBegin 다음 Run의 char_shape_id)
+    pub char_shape_id: Option<u16>,
 }
 
 /// Run[] → flat text 변환 결과
@@ -50,7 +52,7 @@ pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
     let mut result = FlatTextResult::default();
     let mut wchar_pos: u32 = 0; // 추출 텍스트 내 위치
     let mut original_wchar_pos: u32 = 0; // 원본 HWP WCHAR 위치 (제어 문자 포함)
-    let mut hyperlink_start: Option<(u32, String)> = None; // (start_pos, onclick)
+    let mut hyperlink_start: Option<(u32, String, Option<u16>)> = None; // (start_pos, onclick, next_cs)
     // 매핑 초기점
     result.wchar_map.push((0, 0));
 
@@ -60,6 +62,12 @@ pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
             position: wchar_pos,
             shape_id: run.char_shape_id,
         });
+        // hyperlink 범위 내 첫 번째 텍스트 Run의 CharShape 저장
+        if let Some((_, _, ref mut cs_opt)) = hyperlink_start {
+            if cs_opt.is_none() && run.contents.iter().any(|c| matches!(c, RunContent::Text(_))) {
+                *cs_opt = Some(run.char_shape_id);
+            }
+        }
 
         for content in &run.contents {
             match content {
@@ -120,16 +128,17 @@ pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
                             if field.field_type == hwp_model::types::FieldType::Hyperlink {
                                 let url = crate::viewer::doc_utils::extract_hyperlink_url(field);
                                 let onclick = crate::viewer::doc_utils::url_to_onclick(&url);
-                                hyperlink_start = Some((wchar_pos, onclick));
+                                hyperlink_start = Some((wchar_pos, onclick, None));
                             }
                         }
                         Control::FieldEnd => {
-                            if let Some((start, onclick)) = hyperlink_start.take() {
+                            if let Some((start, onclick, cs_id)) = hyperlink_start.take() {
                                 if !onclick.is_empty() {
                                     result.hyperlinks.push(HyperlinkRange {
                                         start,
                                         end: wchar_pos,
                                         onclick,
+                                        char_shape_id: cs_id,
                                     });
                                 }
                             }

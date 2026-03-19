@@ -132,18 +132,29 @@ pub fn render_layout_text_with_hyperlinks(
 
         let text_html = convert_consecutive_spaces(&segment_text);
 
-        // hyperlink onclick 확인: 이 span의 범위가 hyperlink 내에 있는지
-        let onclick_attr = hyperlinks.iter()
-            .find(|h| start as u32 >= h.start && (start as u32) < h.end)
+        // hyperlink onclick 확인 + CharShape 오버라이드
+        let hyperlink = hyperlinks.iter()
+            .find(|h| start as u32 >= h.start && (start as u32) < h.end);
+        let onclick_attr = hyperlink
             .map(|h| format!(r#" onclick="{}""#, h.onclick))
             .unwrap_or_default();
+        // hyperlink 범위 내에서 CharShape 오버라이드
+        let (effective_cs_opt, effective_class) = if let Some(h) = hyperlink {
+            if let Some(hcs) = h.char_shape_id {
+                let hcs_obj = resources.char_shapes.get(hcs as usize);
+                (hcs_obj, format!("cs{}", hcs))
+            } else {
+                (cs_opt, shape_id.map(|id| format!("cs{}", id)).unwrap_or_default())
+            }
+        } else {
+            (cs_opt, shape_id.map(|id| format!("cs{}", id)).unwrap_or_default())
+        };
 
-        if let Some(cs) = cs_opt {
-            let class_name = format!("cs{}", shape_id.unwrap());
+        if let Some(cs) = effective_cs_opt {
             let styled = apply_inline_styles(&text_html, cs);
             result.push_str(&format!(
                 r#"<span class="hrt {}"{}>{}</span>"#,
-                class_name, onclick_attr, styled
+                effective_class, onclick_attr, styled
             ));
         } else {
             result.push_str(&format!(r#"<span class="hrt"{}>{}</span>"#, onclick_attr, text_html));

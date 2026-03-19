@@ -159,6 +159,7 @@ pub fn render_line_segments_impl(
                     start: if (h.start as usize) > seg_start { h.start - seg_start as u32 } else { 0 },
                     end: ((h.end as usize).min(seg_end) - seg_start) as u32,
                     onclick: h.onclick.clone(),
+                    char_shape_id: h.char_shape_id,
                 })
                 .collect();
             render_layout_text_with_hyperlinks(seg_text, &seg_char_shapes, resources, &seg_hyperlinks)
