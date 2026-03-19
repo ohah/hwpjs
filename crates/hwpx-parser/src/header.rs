@@ -904,9 +904,7 @@ fn parse_para_shape(
                         };
                     }
                     b"heading" => {
-                        let ht = parse_heading_type(
-                            &attr_str(e, b"type").unwrap_or_default(),
-                        );
+                        let ht = parse_heading_type(&attr_str(e, b"type").unwrap_or_default());
                         let h = Heading {
                             heading_type: ht,
                             // HWPX idRef는 0-based, Document model은 1-based → +1
@@ -917,8 +915,11 @@ fn parse_para_shape(
                         // epub:switch에서 epub:case(OUTLINE)와 epub:default(NONE)가 모두 나옴
                         // type != NONE이면 우선 적용, 이미 NONE이 아닌 값이 있으면 유지
                         match &ps.heading {
-                            Some(existing) if !matches!(existing.heading_type, HeadingType::None) => {}
-                            _ => { ps.heading = Some(h); }
+                            Some(existing)
+                                if !matches!(existing.heading_type, HeadingType::None) => {}
+                            _ => {
+                                ps.heading = Some(h);
+                            }
                         }
                     }
                     b"breakSetting" => {

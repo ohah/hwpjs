@@ -1097,12 +1097,8 @@ fn parse_text_content(
                     b"tab" => {
                         tc.elements.push(TextElement::Tab {
                             width: attr_i32(e, b"width").unwrap_or(0),
-                            leader: parse_line_type2(
-                                &attr_str(e, b"leader").unwrap_or_default(),
-                            ),
-                            tab_type: parse_tab_type(
-                                &attr_str(e, b"type").unwrap_or_default(),
-                            ),
+                            leader: parse_line_type2(&attr_str(e, b"leader").unwrap_or_default()),
+                            tab_type: parse_tab_type(&attr_str(e, b"type").unwrap_or_default()),
                         });
                     }
                     b"lineBreak" => tc.elements.push(TextElement::LineBreak),

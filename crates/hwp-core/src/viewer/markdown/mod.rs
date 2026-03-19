@@ -91,7 +91,9 @@ impl MarkdownOptions {
 ///
 /// # Returns / 반환값
 /// Markdown string representation of the document / 문서의 마크다운 문자열 표현
-#[deprecated(note = "Use doc_to_markdown() instead — HwpDocument::to_markdown() already uses the new viewer internally")]
+#[deprecated(
+    note = "Use doc_to_markdown() instead — HwpDocument::to_markdown() already uses the new viewer internally"
+)]
 pub fn to_markdown(document: &HwpDocument, options: &MarkdownOptions) -> String {
     let mut lines = Vec::new();
 

@@ -94,9 +94,7 @@ pub fn render_layout_text_with_hyperlinks(
 
         // 탭 문자 처리
         if segment_text.contains('\t') {
-            let class_name = shape_id
-                .map(|id| format!("cs{}", id))
-                .unwrap_or_default();
+            let class_name = shape_id.map(|id| format!("cs{}", id)).unwrap_or_default();
             // 탭만 있는 세그먼트: htC만 추가 (텍스트 없이)
             if segment_text.chars().all(|c| c == '\t') {
                 for _ in segment_text.chars() {
@@ -133,7 +131,8 @@ pub fn render_layout_text_with_hyperlinks(
         let text_html = convert_consecutive_spaces(&segment_text);
 
         // hyperlink onclick 확인 + CharShape 오버라이드
-        let hyperlink = hyperlinks.iter()
+        let hyperlink = hyperlinks
+            .iter()
             .find(|h| start as u32 >= h.start && (start as u32) < h.end);
         let onclick_attr = hyperlink
             .map(|h| format!(r#" onclick="{}""#, h.onclick))
@@ -144,10 +143,16 @@ pub fn render_layout_text_with_hyperlinks(
                 let hcs_obj = resources.char_shapes.get(hcs as usize);
                 (hcs_obj, format!("cs{}", hcs))
             } else {
-                (cs_opt, shape_id.map(|id| format!("cs{}", id)).unwrap_or_default())
+                (
+                    cs_opt,
+                    shape_id.map(|id| format!("cs{}", id)).unwrap_or_default(),
+                )
             }
         } else {
-            (cs_opt, shape_id.map(|id| format!("cs{}", id)).unwrap_or_default())
+            (
+                cs_opt,
+                shape_id.map(|id| format!("cs{}", id)).unwrap_or_default(),
+            )
         };
 
         if let Some(cs) = effective_cs_opt {
@@ -157,7 +162,10 @@ pub fn render_layout_text_with_hyperlinks(
                 effective_class, onclick_attr, styled
             ));
         } else {
-            result.push_str(&format!(r#"<span class="hrt"{}>{}</span>"#, onclick_attr, text_html));
+            result.push_str(&format!(
+                r#"<span class="hrt"{}>{}</span>"#,
+                onclick_attr, text_html
+            ));
         }
     }
 
@@ -180,7 +188,9 @@ fn apply_inline_styles(text: &str, cs: &CharShape) -> String {
     }
 
     // underline: Center(취소선), Bottom/Top(밑줄)
-    let has_center_underline = cs.underline.as_ref()
+    let has_center_underline = cs
+        .underline
+        .as_ref()
         .map(|ul| ul.underline_type == hwp_model::types::UnderlineType::Center)
         .unwrap_or(false);
     if let Some(ref ul) = cs.underline {

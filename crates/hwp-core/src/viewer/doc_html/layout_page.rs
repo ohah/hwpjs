@@ -27,18 +27,14 @@ pub fn render_page(
     };
 
     // hcD 위치: 여백 기준
-    let left_mm = round_mm(
-        hwpunit_to_mm(page_def.margin.left) + hwpunit_to_mm(page_def.margin.gutter),
-    );
-    let top_mm = round_mm(
-        hwpunit_to_mm(page_def.margin.top) + hwpunit_to_mm(page_def.margin.header),
-    );
+    let left_mm =
+        round_mm(hwpunit_to_mm(page_def.margin.left) + hwpunit_to_mm(page_def.margin.gutter));
+    let top_mm =
+        round_mm(hwpunit_to_mm(page_def.margin.top) + hwpunit_to_mm(page_def.margin.header));
 
     let header_top_mm = round_mm(hwpunit_to_mm(page_def.margin.top));
     let footer_top_mm = round_mm(
-        height_mm
-            - hwpunit_to_mm(page_def.margin.bottom)
-            - hwpunit_to_mm(page_def.margin.footer),
+        height_mm - hwpunit_to_mm(page_def.margin.bottom) - hwpunit_to_mm(page_def.margin.footer),
     );
 
     let mut html = format!(
@@ -54,7 +50,9 @@ pub fn render_page(
         if !h.is_empty() {
             html.push_str(&format!(
                 r#"<div class="hcD" style="left:{};top:{};"><div class="hcI">{}</div></div>"#,
-                fmt_mm(left_mm), fmt_mm(header_top_mm), h
+                fmt_mm(left_mm),
+                fmt_mm(header_top_mm),
+                h
             ));
         }
     }
@@ -64,23 +62,28 @@ pub fn render_page(
         if !f.is_empty() {
             html.push_str(&format!(
                 r#"<div class="hcD" style="left:{};top:{};"><div class="hcI">{}</div></div>"#,
-                fmt_mm(left_mm), fmt_mm(footer_top_mm), f
+                fmt_mm(left_mm),
+                fmt_mm(footer_top_mm),
+                f
             ));
         }
     }
 
     // 본문 콘텐츠: inline(hls 등) → hcI 내부, absolute(htb 등) → hpa 직접
-    let inline_blocks: Vec<&PageBlock> = blocks.iter()
+    let inline_blocks: Vec<&PageBlock> = blocks
+        .iter()
         .filter(|b| !b.is_absolute && !b.html.is_empty())
         .collect();
-    let absolute_blocks: Vec<&PageBlock> = blocks.iter()
+    let absolute_blocks: Vec<&PageBlock> = blocks
+        .iter()
         .filter(|b| b.is_absolute && !b.html.is_empty())
         .collect();
 
     if !inline_blocks.is_empty() {
         html.push_str(&format!(
             r#"<div class="hcD" style="left:{};top:{};"><div class="hcI">"#,
-            fmt_mm(left_mm), fmt_mm(top_mm)
+            fmt_mm(left_mm),
+            fmt_mm(top_mm)
         ));
         for block in &inline_blocks {
             html.push_str(&block.html);
@@ -116,16 +119,12 @@ pub fn content_left_mm(page_def: &PageDef) -> f64 {
 
 /// 페이지 절대 좌표: 콘텐츠 왼쪽 (hcD의 left)
 pub fn content_left_abs_mm(page_def: &PageDef) -> f64 {
-    round_mm(
-        hwpunit_to_mm(page_def.margin.left) + hwpunit_to_mm(page_def.margin.gutter),
-    )
+    round_mm(hwpunit_to_mm(page_def.margin.left) + hwpunit_to_mm(page_def.margin.gutter))
 }
 
 /// 페이지 절대 좌표: 콘텐츠 위쪽 (hcD의 top)
 pub fn content_top_abs_mm(page_def: &PageDef) -> f64 {
-    round_mm(
-        hwpunit_to_mm(page_def.margin.top) + hwpunit_to_mm(page_def.margin.header),
-    )
+    round_mm(hwpunit_to_mm(page_def.margin.top) + hwpunit_to_mm(page_def.margin.header))
 }
 
 #[cfg(test)]
@@ -137,9 +136,9 @@ mod tests {
             width: 59528,  // A4: 210mm = 59528 HwpUnit
             height: 84188, // A4: 297mm
             margin: hwp_model::section::PageMargin {
-                left: 8504,  // 30mm
+                left: 8504, // 30mm
                 right: 8504,
-                top: 5669,   // 20mm
+                top: 5669, // 20mm
                 bottom: 4252,
                 header: 4252,
                 footer: 4252,

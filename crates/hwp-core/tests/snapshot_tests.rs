@@ -563,7 +563,7 @@ fn test_headerfooter_html() {
                         include_version: Some(true),
                         include_page_info: Some(true),
                         css_class_prefix: "hwp-".to_string(),
-            layout: false,
+                        layout: false,
                     };
 
                     let html = document.to_html(&options);
@@ -628,7 +628,7 @@ fn test_footnote_endnote_html_snapshot() {
         include_version: Some(false),
         include_page_info: Some(false),
         css_class_prefix: "hwp-".to_string(),
-            layout: false,
+        layout: false,
     };
     let html = document.to_html(&options);
 
@@ -740,7 +740,7 @@ fn test_all_fixtures_html_snapshots() {
                             include_version: Some(true),
                             include_page_info: Some(true),
                             css_class_prefix: "hwp-".to_string(),
-            layout: false,
+                            layout: false,
                         };
                         if file_name == "table" {
                             eprintln!("DEBUG: Processing table.hwp file");
@@ -897,7 +897,7 @@ fn test_table_bug_cell_positions_match_hancom() {
         include_version: Some(true),
         include_page_info: Some(true),
         css_class_prefix: "hwp-".to_string(),
-            layout: false,
+        layout: false,
     };
     let css_filename = "table-bug_style.css";
     #[allow(deprecated)]
@@ -992,7 +992,7 @@ fn test_nested_table_rendering() {
         include_version: Some(true),
         include_page_info: Some(true),
         css_class_prefix: "hwp-".to_string(),
-            layout: false,
+        layout: false,
     };
     let css_filename = "table-bug_style.css";
     #[allow(deprecated)]
@@ -1843,7 +1843,7 @@ fn test_debug_table_bug_page10() {
         include_version: Some(true),
         include_page_info: Some(true),
         css_class_prefix: "hwp-".to_string(),
-            layout: false,
+        layout: false,
     };
     let css_filename = "table-bug_style.css";
     #[allow(deprecated)]

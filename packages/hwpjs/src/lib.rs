@@ -354,10 +354,7 @@ pub fn hwpx_to_markdown(
 
     let md_options = hwp_core::viewer::doc_markdown::DocMarkdownOptions {
         image_output_dir: options.as_ref().and_then(|o| o.image_output_dir.clone()),
-        use_html: options
-            .as_ref()
-            .and_then(|o| o.use_html)
-            .unwrap_or(false),
+        use_html: options.as_ref().and_then(|o| o.use_html).unwrap_or(false),
         include_version: options.as_ref().and_then(|o| o.include_version),
         include_page_info: options.as_ref().and_then(|o| o.include_page_info),
     };
@@ -380,9 +377,7 @@ fn detect_format(data: &[u8]) -> &'static str {
 }
 
 /// 자동 감지 후 Document 모델로 파싱하는 공용 헬퍼
-fn parse_to_document(
-    data: &[u8],
-) -> Result<hwp_model::document::Document, napi::Error> {
+fn parse_to_document(data: &[u8]) -> Result<hwp_model::document::Document, napi::Error> {
     match detect_format(data) {
         "hwp" => {
             let parser = HwpParser::new();
@@ -461,10 +456,7 @@ pub fn convert_to_markdown(
     let document = parse_to_document(&data_vec)?;
     let md_options = hwp_core::viewer::doc_markdown::DocMarkdownOptions {
         image_output_dir: options.as_ref().and_then(|o| o.image_output_dir.clone()),
-        use_html: options
-            .as_ref()
-            .and_then(|o| o.use_html)
-            .unwrap_or(false),
+        use_html: options.as_ref().and_then(|o| o.use_html).unwrap_or(false),
         include_version: options.as_ref().and_then(|o| o.include_version),
         include_page_info: options.as_ref().and_then(|o| o.include_page_info),
     };

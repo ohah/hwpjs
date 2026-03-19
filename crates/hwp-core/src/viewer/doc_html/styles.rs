@@ -11,7 +11,9 @@ pub fn generate_layout_css(doc: &Document) -> String {
     let mut css = String::with_capacity(8192);
 
     // ── 기본 레이아웃 클래스 (noori_style.css) ──
-    css.push_str("body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}\n");
+    css.push_str(
+        "body {margin:0;padding-left:0;padding-right:0;padding-bottom:0;padding-top:2mm;}\n",
+    );
     css.push_str(".hce {margin:0;padding:0;position:absolute;overflow:hidden;}\n");
     css.push_str(".hme {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hhe {margin:0;padding:0;position:relative;}\n");
@@ -25,7 +27,9 @@ pub fn generate_layout_css(doc: &Document) -> String {
     css.push_str(".hmB {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hmO {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hmT {margin:0;padding:0;position:absolute;}\n");
-    css.push_str(".hpN {display:inline-block;margin:0;padding:0;position:relative;white-space:nowrap;}\n");
+    css.push_str(
+        ".hpN {display:inline-block;margin:0;padding:0;position:relative;white-space:nowrap;}\n",
+    );
     css.push_str(".htC {display:inline-block;margin:0;padding:0;position:relative;vertical-align:top;overflow:hidden;}\n");
     css.push_str(".haN {display:inline-block;margin:0;padding:0;position:relative;}\n");
     css.push_str(".hdu {margin:0;padding:0;position:relative;}\n");
@@ -64,7 +68,9 @@ pub fn generate_layout_css(doc: &Document) -> String {
     css.push_str(".hpa {position:relative;padding:0;overflow:hidden;margin-left:2mm;margin-right:0mm;margin-bottom:2mm;margin-top:0mm;border:1px black solid;box-shadow:1mm 1mm 0 #AAAAAA;}\n");
     css.push_str(".hpa::after {content:'';position:absolute;margin:0;padding:0;left:0;right:0;top:0;bottom:0;background-color:white;z-index:-2;}\n");
     css.push_str(".hrt {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;vertical-align:middle;line-height:1.1;}\n");
-    css.push_str(".hco {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;}\n");
+    css.push_str(
+        ".hco {display:inline-block;margin:0;padding:0;position:relative;white-space:inherit;}\n",
+    );
     css.push_str(".hcc {margin:0;padding:0;position:absolute;}\n");
     css.push_str(".hls {clear:both;}\n");
     css.push_str("[onclick] {cursor:pointer;}\n");
@@ -208,7 +214,8 @@ pub fn generate_css(doc: &Document, prefix: &str) -> String {
         if !props.is_empty() {
             css.push_str(&format!(
                 ".{}cs-{} {{ {} }}\n",
-                prefix, idx,
+                prefix,
+                idx,
                 props.join("; ")
             ));
         }

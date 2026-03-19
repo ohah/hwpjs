@@ -55,7 +55,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         width: 59528,  // 210mm
         height: 84188, // 297mm
         margin: hwp_model::section::PageMargin {
-            left: 8504,   // 30mm
+            left: 8504, // 30mm
             right: 8504,
             top: 5669,    // 20mm
             bottom: 4252, // 15mm
@@ -69,7 +69,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
     let mut has_page_number_global = false;
     // document-level SVG pattern 상태 (테이블 간 패턴 공유)
     let mut doc_pattern_counter = 0_usize;
-    let mut doc_color_to_pattern: std::collections::HashMap<u32, String> = std::collections::HashMap::new();
+    let mut doc_color_to_pattern: std::collections::HashMap<u32, String> =
+        std::collections::HashMap::new();
 
     for section in &doc.sections {
         let page_def = if section.definition.page.width > 0 {
@@ -108,23 +109,22 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
             let break_result = layout_pagination::check_page_break(para, &pag_ctx);
             if break_result.should_break && !current_page_blocks.is_empty() {
                 // 현재 페이지 flush
-                let page_html =
-                    layout_page::render_page(
-                        &current_page_blocks,
-                        page_def,
-                        header_html.as_deref(),
-                        footer_html.as_deref(),
-                    );
+                let page_html = layout_page::render_page(
+                    &current_page_blocks,
+                    page_def,
+                    header_html.as_deref(),
+                    footer_html.as_deref(),
+                );
                 // 각주를 페이지 </div> 앞에 삽입
                 let fn_top = if !footnote_blocks.is_empty() || !endnote_blocks.is_empty() {
-                    Some(layout_page::content_top_abs_mm(page_def) + pag_ctx.current_max_vertical_mm)
-                } else { None };
-                let page_html = append_footnotes_to_page(
-                    page_html,
-                    &footnote_blocks,
-                    &endnote_blocks,
-                    fn_top,
-                );
+                    Some(
+                        layout_page::content_top_abs_mm(page_def) + pag_ctx.current_max_vertical_mm,
+                    )
+                } else {
+                    None
+                };
+                let page_html =
+                    append_footnotes_to_page(page_html, &footnote_blocks, &endnote_blocks, fn_top);
                 page_number += 1;
                 pages_html.push(page_html);
                 current_page_blocks.clear();
@@ -169,9 +169,9 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                         page_top
                                     };
                                     // 테이블 높이만큼 vertical position 갱신
-                                    let table_h = styles::round_mm(
-                                        styles::hwpunit_to_mm(table.common.size.height)
-                                    );
+                                    let table_h = styles::round_mm(styles::hwpunit_to_mm(
+                                        table.common.size.height,
+                                    ));
                                     let table_bottom = pag_ctx.current_max_vertical_mm + table_h;
                                     if table_bottom > pag_ctx.current_max_vertical_mm {
                                         pag_ctx.current_max_vertical_mm = table_bottom;
@@ -272,7 +272,12 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
             }
 
             // heading 마커 생성 (outline/bullet/number)
-            let marker_html = generate_heading_marker(para, &doc.resources, &mut outline_tracker, &mut number_tracker);
+            let marker_html = generate_heading_marker(
+                para,
+                &doc.resources,
+                &mut outline_tracker,
+                &mut number_tracker,
+            );
 
             // 텍스트 렌더링 (빈 문단도 line_segments가 있으면 빈 hls 생성)
             let flat = flat_text::extract_flat_text(para);
@@ -297,11 +302,17 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
             // old viewer 순서: hls(텍스트) 먼저, Object(테이블/도형) 나중
             // hls(텍스트): hcI 내부 (inline)
             for line in hls_lines {
-                current_page_blocks.push(layout_page::PageBlock { html: line, is_absolute: false });
+                current_page_blocks.push(layout_page::PageBlock {
+                    html: line,
+                    is_absolute: false,
+                });
             }
             // Object(htb/hsR 등): hpa 직접 (absolute) — old viewer 구조
             for obj_html in obj_blocks {
-                current_page_blocks.push(layout_page::PageBlock { html: obj_html, is_absolute: true });
+                current_page_blocks.push(layout_page::PageBlock {
+                    html: obj_html,
+                    is_absolute: true,
+                });
             }
 
             // 인라인 각주/미주 참조를 마지막 hls에 삽입
@@ -315,26 +326,23 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 }
                 inline_note_refs.clear();
             }
-
         }
 
         // 마지막 페이지 flush (비어있어도 섹션당 최소 1페이지)
         if !current_page_blocks.is_empty() || pages_html.is_empty() {
             let page_html = layout_page::render_page(
-                        &current_page_blocks,
-                        page_def,
-                        header_html.as_deref(),
-                        footer_html.as_deref(),
-                    );
+                &current_page_blocks,
+                page_def,
+                header_html.as_deref(),
+                footer_html.as_deref(),
+            );
             let fn_top_last = if !footnote_blocks.is_empty() || !endnote_blocks.is_empty() {
                 Some(layout_page::content_top_abs_mm(page_def) + pag_ctx.current_max_vertical_mm)
-            } else { None };
-            let page_html = append_footnotes_to_page(
-                page_html,
-                &footnote_blocks,
-                &endnote_blocks,
-                fn_top_last,
-            );
+            } else {
+                None
+            };
+            let page_html =
+                append_footnotes_to_page(page_html, &footnote_blocks, &endnote_blocks, fn_top_last);
             page_number += 1;
             pages_html.push(page_html);
         }
@@ -345,7 +353,9 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         for (idx, page_html) in pages_html.iter_mut().enumerate() {
             let page_num = idx + 1;
             // footer 영역 위치에 hpN div 삽입 (hpa 닫기 태그 앞)
-            let page_def_for_num = if doc.sections.first()
+            let page_def_for_num = if doc
+                .sections
+                .first()
                 .map(|s| s.definition.page.width > 0)
                 .unwrap_or(false)
             {
@@ -356,9 +366,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
             let page_w = styles::round_mm(styles::hwpunit_to_mm(page_def_for_num.width));
             let page_h = styles::round_mm(styles::hwpunit_to_mm(page_def_for_num.height));
             let hpn_left = styles::round_mm(page_w / 2.0);
-            let hpn_top = styles::round_mm(
-                page_h - styles::hwpunit_to_mm(page_def_for_num.margin.bottom),
-            );
+            let hpn_top =
+                styles::round_mm(page_h - styles::hwpunit_to_mm(page_def_for_num.margin.bottom));
             let num_text = format!("- {} -", page_num);
             let hpn_html = format!(
                 r#"<div class="hpN" style="left:{}mm;top:{}mm;width:10.58mm;height:4.23mm;"><span class="hrt cs0">{}</span></div>"#,
@@ -372,11 +381,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
     }
 
     // HTML 조합 (old viewer와 동일한 헤더 구조)
-    let title = doc
-        .meta
-        .title
-        .as_deref()
-        .unwrap_or("");
+    let title = doc.meta.title.as_deref().unwrap_or("");
     let mut html = String::new();
     html.push_str("<!DOCTYPE html>\n<html>\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">\n\n<head>\n");
     html.push_str(&format!("  <title>{}</title>\n", title));
@@ -409,13 +414,16 @@ fn generate_heading_marker(
 
     // Numbering 리소스에서 level 정보 가져오기
     let numbering_level = if heading.id_ref > 0 {
-        resources.numberings
+        resources
+            .numberings
             .iter()
             .find(|n| n.id == heading.id_ref)
             .and_then(|n| n.levels.iter().find(|l| l.level == heading.level))
     } else {
         // Outline: id_ref=0이면 첫 번째 Numbering 사용
-        resources.numberings.first()
+        resources
+            .numberings
+            .first()
             .and_then(|n| n.levels.iter().find(|l| l.level == heading.level))
     };
 
@@ -428,8 +436,10 @@ fn generate_heading_marker(
         .and_then(|l| l.char_shape_id)
         .filter(|&id| id < 0xFFFF) // 0xFFFFFFFF 등 무효값 필터
         .unwrap_or(1); // 기본 cs1 (한글 문서 heading/numbering 기본)
-    // CharShape에서 font-size 가져오기 (height HwpUnit → pt: /100)
-    let font_size_style = resources.char_shapes.get(marker_cs as usize)
+                       // CharShape에서 font-size 가져오기 (height HwpUnit → pt: /100)
+    let font_size_style = resources
+        .char_shapes
+        .get(marker_cs as usize)
         .map(|cs| {
             let pt = styles::round_mm(cs.height as f64 / 100.0);
             format!(" style=\"font-size:{}pt;\"", pt)
@@ -442,7 +452,9 @@ fn generate_heading_marker(
             let number = outline_tracker.get_and_increment(level);
             let num_str = format_outline_number(level, number);
             // use_inst_width: 텍스트 기반 폭 계산
-            let font_size_pt = resources.char_shapes.get(marker_cs as usize)
+            let font_size_pt = resources
+                .char_shapes
+                .get(marker_cs as usize)
                 .map(|cs| cs.height as f64 / 100.0)
                 .unwrap_or(10.0);
             let marker_width = styles::round_mm(estimate_marker_text_width(&num_str, font_size_pt));
@@ -468,9 +480,13 @@ fn generate_heading_marker(
                 .unwrap_or(numbering_text_offset);
             // Bullet font-size: bullet 전용 CharShape 또는 기본 3.33pt
             let bullet_font_style = {
-                let valid_cs = bullet.and_then(|b| b.para_head.char_shape_id).filter(|&id| id < 0xFFFF);
+                let valid_cs = bullet
+                    .and_then(|b| b.para_head.char_shape_id)
+                    .filter(|&id| id < 0xFFFF);
                 if let Some(cs_id) = valid_cs {
-                    resources.char_shapes.get(cs_id as usize)
+                    resources
+                        .char_shapes
+                        .get(cs_id as usize)
                         .map(|cs| {
                             let pt = styles::round_mm(cs.height as f64 / 100.0);
                             format!(" style=\"font-size:{}pt;\"", pt)
@@ -490,7 +506,9 @@ fn generate_heading_marker(
             let tracker = number_tracker.entry(heading.id_ref).or_default();
             let number = tracker.get_and_increment(level);
             let num_str = format_with_numbering(heading.id_ref, level, number, resources);
-            let font_size_pt = resources.char_shapes.get(marker_cs as usize)
+            let font_size_pt = resources
+                .char_shapes
+                .get(marker_cs as usize)
                 .map(|cs| cs.height as f64 / 100.0)
                 .unwrap_or(10.0);
             let marker_width = styles::round_mm(estimate_marker_text_width(&num_str, font_size_pt));
@@ -599,18 +617,18 @@ fn render_container_layout(
 /// Wingdings Private Use Area 문자를 표준 Unicode로 변환
 fn wingdings_to_unicode(ch: char) -> char {
     match ch as u32 {
-        0xF046 => '★', // star
-        0xF06C | 0xF06E => '●', // bullet/circle
-        0xF06F => '□', // white square
+        0xF046 => '★',                   // star
+        0xF06C | 0xF06E => '●',          // bullet/circle
+        0xF06F => '□',                   // white square
         0xF070 | 0xF071 | 0xF0A7 => '■', // black square
-        0xF075 | 0xF076 => '◆', // diamond
-        0xF077 => '◇', // white diamond
-        0xF0A1 => '☞', // pointing hand
-        0xF0A4 => '⊙', // circled dot
-        0xF0AB => '❖', // diamond suit
-        0xF0F0 | 0xF0FC => '✓', // checkmark
-        0xF0FE => '☑', // ballot box with check
-        _ => ch, // 매핑 없으면 원본 유지
+        0xF075 | 0xF076 => '◆',          // diamond
+        0xF077 => '◇',                   // white diamond
+        0xF0A1 => '☞',                   // pointing hand
+        0xF0A4 => '⊙',                   // circled dot
+        0xF0AB => '❖',                   // diamond suit
+        0xF0F0 | 0xF0FC => '✓',          // checkmark
+        0xF0FE => '☑',                   // ballot box with check
+        _ => ch,                         // 매핑 없으면 원본 유지
     }
 }
 
@@ -628,9 +646,21 @@ fn estimate_marker_text_width(text: &str, font_size_pt: f64) -> f64 {
         } else if ('\u{AC00}'..='\u{D7AF}').contains(&ch) {
             // 한글 음절
             3.87 * scale
-        } else if ch == '①' || ch == '②' || ch == '③' || ch == '④' || ch == '⑤'
-            || ch == '⑥' || ch == '⑦' || ch == '⑧' || ch == '⑨' || ch == '⑩'
-            || ch == '⑪' || ch == '⑫' || ch == '⑬' || ch == '⑭' || ch == '⑮'
+        } else if ch == '①'
+            || ch == '②'
+            || ch == '③'
+            || ch == '④'
+            || ch == '⑤'
+            || ch == '⑥'
+            || ch == '⑦'
+            || ch == '⑧'
+            || ch == '⑨'
+            || ch == '⑩'
+            || ch == '⑪'
+            || ch == '⑫'
+            || ch == '⑬'
+            || ch == '⑭'
+            || ch == '⑮'
         {
             4.86 * scale
         } else {
@@ -671,16 +701,21 @@ fn render_sublist_layout_with_page(
         );
         // AutoNum 컨트롤이 있으면 haN div를 마지막 hls에 삽입
         let has_auto_num = para.runs.iter().any(|r| {
-            r.contents.iter().any(|c| matches!(c,
-                hwp_model::paragraph::RunContent::Control(
-                    hwp_model::control::Control::AutoNum(_)
+            r.contents.iter().any(|c| {
+                matches!(
+                    c,
+                    hwp_model::paragraph::RunContent::Control(
+                        hwp_model::control::Control::AutoNum(_)
+                    )
                 )
-            ))
+            })
         });
         if has_auto_num {
             let mut lines = lines;
             if let Some(last) = lines.last_mut() {
-                let num_text = page_number.map(|n| n.to_string()).unwrap_or_else(|| "1".to_string());
+                let num_text = page_number
+                    .map(|n| n.to_string())
+                    .unwrap_or_else(|| "1".to_string());
                 let cs_id = para.runs.last().map(|r| r.char_shape_id).unwrap_or(0);
                 let han_html = format!(
                     r#"<div class="haN" style="left:0mm;top:0mm;width:1.82mm;height:3.17mm;"><span class="hrt cs{}">{}</span></div>"#,
@@ -725,7 +760,10 @@ fn doc_to_html_semantic(doc: &Document, options: &DocHtmlOptions) -> String {
     for (section_idx, section) in doc.sections.iter().enumerate() {
         // 섹션 간 구분선
         if section_idx > 0 && !body_parts.is_empty() {
-            body_parts.push(format!("<hr class=\"{}section-break\">", options.css_class_prefix));
+            body_parts.push(format!(
+                "<hr class=\"{}section-break\">",
+                options.css_class_prefix
+            ));
         }
 
         for para in &section.paragraphs {

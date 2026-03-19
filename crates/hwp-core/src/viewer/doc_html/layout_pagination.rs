@@ -41,10 +41,9 @@ pub fn check_page_break(para: &Paragraph, ctx: &PaginationContext) -> PageBreakR
     }
 
     // 2. LineSegment vertical_position 기반 판단
-    let first_vp_mm = first_vertical_pos_mm(&para.line_segments)
-        .map(|v| v - ctx.page_vertical_offset_mm);
-    let last_end_mm = last_end_pos_mm(&para.line_segments)
-        .map(|v| v - ctx.page_vertical_offset_mm);
+    let first_vp_mm =
+        first_vertical_pos_mm(&para.line_segments).map(|v| v - ctx.page_vertical_offset_mm);
+    let last_end_mm = last_end_pos_mm(&para.line_segments).map(|v| v - ctx.page_vertical_offset_mm);
 
     // vertical_position 리셋 감지 (이전보다 작아지면 새 페이지)
     if let (Some(prev), Some(current)) = (ctx.prev_vertical_mm, first_vp_mm) {

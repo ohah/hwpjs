@@ -378,18 +378,31 @@ impl BorderFill {
                 ));
             }
             let background_color = COLORREF(u32::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
             ]));
             offset += 4;
             let pattern_color = COLORREF(u32::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
             ]));
             offset += 4;
             let pattern_type = INT32::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
             ]);
             offset += 4;
-            solid_fill = Some(SolidFill { background_color, pattern_color, pattern_type });
+            solid_fill = Some(SolidFill {
+                background_color,
+                pattern_color,
+                pattern_type,
+            });
         }
 
         // 2. 그러데이션 채우기
@@ -397,42 +410,64 @@ impl BorderFill {
         if has_gradient {
             if offset + 21 > data.len() {
                 return Err(HwpError::insufficient_data(
-                    "Gradient fill data", 21, data.len() - offset,
+                    "Gradient fill data",
+                    21,
+                    data.len() - offset,
                 ));
             }
             let gradient_type = data[offset] as INT16;
             offset += 1;
             let angle = INT32::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
             ]) as INT16;
             offset += 4;
             let horizontal_center = INT32::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
             ]) as INT16;
             offset += 4;
             let vertical_center = INT32::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
             ]) as INT16;
             offset += 4;
             let spread = INT32::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
             ]) as INT16;
             offset += 4;
             let color_count = INT32::from_le_bytes([
-                data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
             ]) as INT16;
             offset += 4;
 
             let positions = if color_count > 2 {
                 if offset + (4 * color_count as usize) > data.len() {
                     return Err(HwpError::insufficient_data(
-                        "Gradient positions data", 4 * color_count as usize, data.len() - offset,
+                        "Gradient positions data",
+                        4 * color_count as usize,
+                        data.len() - offset,
                     ));
                 }
                 let mut pos_vec = Vec::new();
                 for _ in 0..color_count {
                     pos_vec.push(INT32::from_le_bytes([
-                        data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                        data[offset],
+                        data[offset + 1],
+                        data[offset + 2],
+                        data[offset + 3],
                     ]));
                     offset += 4;
                 }
@@ -445,15 +480,24 @@ impl BorderFill {
             if offset + (4 * color_count as usize) <= data.len() {
                 for _ in 0..color_count {
                     colors.push(COLORREF(u32::from_le_bytes([
-                        data[offset], data[offset + 1], data[offset + 2], data[offset + 3],
+                        data[offset],
+                        data[offset + 1],
+                        data[offset + 2],
+                        data[offset + 3],
                     ])));
                     offset += 4;
                 }
             }
 
             gradient_fill = Some(GradientFill {
-                gradient_type, angle, horizontal_center, vertical_center,
-                spread, color_count, positions, colors,
+                gradient_type,
+                angle,
+                horizontal_center,
+                vertical_center,
+                spread,
+                color_count,
+                positions,
+                colors,
             });
         }
 
