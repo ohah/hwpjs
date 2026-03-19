@@ -560,7 +560,8 @@ fn assemble_runs(
         if let Some(last) = clean_char_shapes.last_mut() {
             if last.0 == clean_pos {
                 // 같은 clean position: 텍스트 시작 위치의 CharShape 우선
-                if cs.position >= first_text_pos {
+                // 단, 뒤에 더 다른 CharShape가 있을 때만 (중간값 우선)
+                if cs.position >= first_text_pos && cs.position < char_shapes.last().map(|c| c.position).unwrap_or(0) {
                     last.1 = cs.shape_id;
                 }
                 continue;
@@ -572,7 +573,7 @@ fn assemble_runs(
     let mut runs = Vec::new();
     let mut current_pos: u32 = 0; // clean text 위치
     let mut shape_idx = 0;
-    let mut current_shape_id = char_shapes.first().map(|cs| cs.shape_id).unwrap_or(0);
+    let mut current_shape_id = clean_char_shapes.first().map(|&(_, id)| id).unwrap_or(0);
 
     let mut current_run = Run {
         char_shape_id: current_shape_id as u16,
