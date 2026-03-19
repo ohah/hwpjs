@@ -909,7 +909,8 @@ fn parse_para_shape(
                         );
                         let h = Heading {
                             heading_type: ht,
-                            id_ref: attr_u16(e, b"idRef").unwrap_or(0),
+                            // HWPX idRef는 0-based, Document model은 1-based → +1
+                            id_ref: attr_u16(e, b"idRef").unwrap_or(0) + 1,
                             // HWP paragraph_level은 0-6 범위 — HWPX level도 clamp
                             level: attr_u8(e, b"level").unwrap_or(0).min(6),
                         };
