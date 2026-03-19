@@ -82,7 +82,7 @@ pub fn render_layout_table_full(
         let cap_gap = table.common.caption.as_ref()
             .map(|c| round_mm(hwpunit_to_mm(c.gap)))
             .unwrap_or(3.0);
-        let htg_height = htb_height + cap_gap + 3.53; // 캡션 높이 근사
+        let htg_height = round_mm(htb_height + cap_gap + 3.53); // 캡션 높이 근사
         html.push_str(&format!(
             r#"<div class="htG" style="left:{}mm;width:{}mm;top:{}mm;height:{}mm;">"#,
             abs_x, htb_width, abs_y, htg_height
