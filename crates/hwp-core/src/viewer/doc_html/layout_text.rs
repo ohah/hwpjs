@@ -40,6 +40,16 @@ pub fn render_layout_text(
     char_shapes: &[FlatCharShapeInfo],
     resources: &Resources,
 ) -> String {
+    render_layout_text_with_hyperlinks(text, char_shapes, resources, &[])
+}
+
+/// hyperlink onclick 포함 텍스트 렌더링
+pub fn render_layout_text_with_hyperlinks(
+    text: &str,
+    char_shapes: &[FlatCharShapeInfo],
+    resources: &Resources,
+    hyperlinks: &[super::flat_text::HyperlinkRange],
+) -> String {
     if text.is_empty() {
         return String::new();
     }
@@ -113,15 +123,21 @@ pub fn render_layout_text(
 
         let text_html = convert_consecutive_spaces(&segment_text);
 
+        // hyperlink onclick 확인: 이 span의 범위가 hyperlink 내에 있는지
+        let onclick_attr = hyperlinks.iter()
+            .find(|h| start as u32 >= h.start && (start as u32) < h.end)
+            .map(|h| format!(r#" onclick="{}""#, h.onclick))
+            .unwrap_or_default();
+
         if let Some(cs) = cs_opt {
             let class_name = format!("cs{}", shape_id.unwrap());
             let styled = apply_inline_styles(&text_html, cs);
             result.push_str(&format!(
-                r#"<span class="hrt {}">{}</span>"#,
-                class_name, styled
+                r#"<span class="hrt {}"{}>{}</span>"#,
+                class_name, onclick_attr, styled
             ));
         } else {
-            result.push_str(&format!(r#"<span class="hrt">{}</span>"#, text_html));
+            result.push_str(&format!(r#"<span class="hrt"{}>{}</span>"#, onclick_attr, text_html));
         }
     }
 

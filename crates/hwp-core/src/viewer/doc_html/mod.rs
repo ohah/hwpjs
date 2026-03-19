@@ -272,16 +272,30 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
             let content_left = layout_page::content_left_mm(page_def);
 
             let has_objects = !obj_blocks.is_empty();
-            let hls_lines = layout_line_segment::render_line_segments_full(
-                &flat.text,
-                &flat.char_shapes,
-                &para.line_segments,
-                &doc.resources,
-                &para_shape_class,
-                content_left,
-                marker_html.as_deref(),
-                has_objects,
-            );
+            let hls_lines = if !flat.hyperlinks.is_empty() {
+                layout_line_segment::render_line_segments_impl(
+                    &flat.text,
+                    &flat.char_shapes,
+                    &para.line_segments,
+                    &doc.resources,
+                    &para_shape_class,
+                    content_left,
+                    marker_html.as_deref(),
+                    has_objects,
+                    &flat.hyperlinks,
+                )
+            } else {
+                layout_line_segment::render_line_segments_full(
+                    &flat.text,
+                    &flat.char_shapes,
+                    &para.line_segments,
+                    &doc.resources,
+                    &para_shape_class,
+                    content_left,
+                    marker_html.as_deref(),
+                    has_objects,
+                )
+            };
 
             // old viewer 순서: hls(텍스트) 먼저, Object(테이블/도형) 나중
             // hls(텍스트): hcI 내부 (inline)

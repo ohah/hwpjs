@@ -48,6 +48,24 @@ pub fn extract_hyperlink_url(field: &Field) -> String {
     String::new()
 }
 
+/// URL을 onclick 스크립트로 변환 (old viewer 형식)
+pub fn url_to_onclick(url: &str) -> String {
+    if url.is_empty() {
+        return String::new();
+    }
+    if url.starts_with("http://") || url.starts_with("https://") {
+        format!("window.open('{}', '_newtab')", url)
+    } else if url.starts_with("mailto:") {
+        format!("location.href='{}'", url)
+    } else if url.starts_with('#') {
+        "location.href='#'".to_string()
+    } else if url.starts_with("file://") || url.starts_with('/') {
+        "location.href='file://'".to_string()
+    } else {
+        format!("window.open('{}', '_newtab')", url)
+    }
+}
+
 /// HWP %hlk command 문자열에서 URL 추출
 /// 형식: "URL;타입" (타입: 0=북마크, 1=URL, 2=이메일)
 fn hlk_command_to_url(command: &str) -> Option<String> {

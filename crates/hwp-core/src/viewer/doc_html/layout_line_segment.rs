@@ -1,7 +1,7 @@
 /// Document 기반 라인 세그먼트 레이아웃 (old viewer line_segment.rs 포팅)
 /// 각 줄을 mm 절대 좌표의 hls div로 배치
 use super::flat_text::FlatCharShapeInfo;
-use super::layout_text::render_layout_text;
+use super::layout_text::{render_layout_text, render_layout_text_with_hyperlinks};
 use super::styles::{hwpunit_to_mm, round_mm};
 use hwp_model::hints::LineSegmentInfo;
 use hwp_model::resources::Resources;
@@ -63,6 +63,22 @@ pub fn render_line_segments_full(
     content_left_mm: f64,
     marker_html: Option<&str>,
     has_objects: bool,
+) -> Vec<String> {
+    render_line_segments_impl(text, char_shapes, line_segments, resources,
+        para_shape_class, content_left_mm, marker_html, has_objects, &[])
+}
+
+/// hyperlink 포함 라인 세그먼트 렌더링
+pub fn render_line_segments_impl(
+    text: &str,
+    char_shapes: &[FlatCharShapeInfo],
+    line_segments: &[LineSegmentInfo],
+    resources: &Resources,
+    para_shape_class: &str,
+    content_left_mm: f64,
+    marker_html: Option<&str>,
+    has_objects: bool,
+    hyperlinks: &[super::flat_text::HyperlinkRange],
 ) -> Vec<String> {
     if line_segments.is_empty() {
         return Vec::new();
@@ -126,6 +142,17 @@ pub fn render_line_segments_full(
         // 텍스트 HTML 렌더링 (빈 문단에서는 텍스트 건너뜀 — 탭 등 whitespace 제거)
         let text_html = if is_empty_paragraph {
             String::new()
+        } else if !hyperlinks.is_empty() {
+            // hyperlink 범위를 seg_start 기준으로 조정
+            let seg_hyperlinks: Vec<super::flat_text::HyperlinkRange> = hyperlinks.iter()
+                .filter(|h| (h.start as usize) < seg_end && (h.end as usize) > seg_start)
+                .map(|h| super::flat_text::HyperlinkRange {
+                    start: if (h.start as usize) > seg_start { h.start - seg_start as u32 } else { 0 },
+                    end: ((h.end as usize).min(seg_end) - seg_start) as u32,
+                    onclick: h.onclick.clone(),
+                })
+                .collect();
+            render_layout_text_with_hyperlinks(seg_text, &seg_char_shapes, resources, &seg_hyperlinks)
         } else {
             render_layout_text(seg_text, &seg_char_shapes, resources)
         };

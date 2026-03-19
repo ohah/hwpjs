@@ -17,6 +17,17 @@ pub struct FlatCharShapeInfo {
     pub shape_id: u16,
 }
 
+/// 하이퍼링크 범위 정보
+#[derive(Debug, Clone)]
+pub struct HyperlinkRange {
+    /// 텍스트 시작 위치 (WCHAR offset)
+    pub start: u32,
+    /// 텍스트 끝 위치 (WCHAR offset)
+    pub end: u32,
+    /// onclick 스크립트
+    pub onclick: String,
+}
+
 /// Run[] → flat text 변환 결과
 #[derive(Debug, Default)]
 pub struct FlatTextResult {
@@ -26,12 +37,15 @@ pub struct FlatTextResult {
     pub char_shapes: Vec<FlatCharShapeInfo>,
     /// 현재 텍스트의 WCHAR 길이
     pub text_len: usize,
+    /// 하이퍼링크 범위 목록
+    pub hyperlinks: Vec<HyperlinkRange>,
 }
 
 /// Paragraph의 Run[]에서 flat text + char_shapes 추출
 pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
     let mut result = FlatTextResult::default();
     let mut wchar_pos: u32 = 0;
+    let mut hyperlink_start: Option<(u32, String)> = None; // (start_pos, onclick)
 
     for run in &para.runs {
         // 이 Run의 시작 위치에 CharShape 기록
@@ -73,9 +87,29 @@ pub fn extract_flat_text(para: &Paragraph) -> FlatTextResult {
                         }
                     }
                 }
-                RunContent::Control(_) => {
-                    // 제어 문자는 텍스트에 포함하지 않지만 위치 추적
-                    // (old viewer에서는 ControlCharPosition으로 별도 관리)
+                RunContent::Control(ctrl) => {
+                    use hwp_model::control::Control;
+                    match ctrl {
+                        Control::FieldBegin(field) => {
+                            if field.field_type == hwp_model::types::FieldType::Hyperlink {
+                                let url = crate::viewer::doc_utils::extract_hyperlink_url(field);
+                                let onclick = crate::viewer::doc_utils::url_to_onclick(&url);
+                                hyperlink_start = Some((wchar_pos, onclick));
+                            }
+                        }
+                        Control::FieldEnd => {
+                            if let Some((start, onclick)) = hyperlink_start.take() {
+                                if !onclick.is_empty() {
+                                    result.hyperlinks.push(HyperlinkRange {
+                                        start,
+                                        end: wchar_pos,
+                                        onclick,
+                                    });
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
                 }
                 RunContent::Object(_) => {
                     // Object도 텍스트에 포함하지 않음
