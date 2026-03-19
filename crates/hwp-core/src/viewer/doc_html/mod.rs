@@ -420,13 +420,13 @@ fn append_footnotes_to_page(
     let mut footer = String::new();
 
     if !footnotes.is_empty() {
-        // 각주 구분선
+        // 각주 구분선 (hfS) — old viewer 일치: top 위치는 본문 영역 하단 근처
         footer.push_str(
             r#"<div class="hfS" style="left:0mm;width:50.00mm;height:0.11mm;"><svg class="hs" viewBox="-0.12 -0.12 50.23 0.35" style="left:-0.12mm;top:-0.12mm;width:50.23mm;height:0.35mm;left:0;top:0;"><path d="M0,0.06 L50,0.06" style="stroke:#000000;stroke-linecap:butt;stroke-width:0.12;"></path></svg></div>"#,
         );
         for (id, html) in footnotes {
             footer.push_str(&format!(
-                r#"<div class="hcD"><div class="hcI"><div class="haN"><span class="hrt">{id})</span></div>{html}</div></div>"#,
+                r#"<div class="hcD"><div class="hcI"><div class="haN" style="left:0mm;top:0mm;width:2.93mm;height:3.18mm;"><span class="hrt">{id})</span></div>{html}</div></div>"#,
                 id = id,
                 html = html
             ));
@@ -436,7 +436,7 @@ fn append_footnotes_to_page(
     if !endnotes.is_empty() {
         for (id, html) in endnotes {
             footer.push_str(&format!(
-                r#"<div class="hcD"><div class="hcI"><div class="haN"><span class="hrt">{id})</span></div>{html}</div></div>"#,
+                r#"<div class="hcD"><div class="hcI"><div class="haN" style="left:0mm;top:0mm;width:2.93mm;height:3.18mm;"><span class="hrt">{id})</span></div>{html}</div></div>"#,
                 id = id,
                 html = html
             ));
