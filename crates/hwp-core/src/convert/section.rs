@@ -1518,7 +1518,10 @@ fn convert_table_object(
         }
 
         for para in ctrl_paragraphs {
-            let is_cell_para = if para.para_header.instance_id != 0 {
+            // instance_id가 0x80000000(더미)이 아닌 유효한 값이면 id로 매칭
+            let is_cell_para = if para.para_header.instance_id != 0
+                && para.para_header.instance_id != 0x80000000
+            {
                 cell_instance_ids.contains(&para.para_header.instance_id)
             } else {
                 let para_text: String = para
