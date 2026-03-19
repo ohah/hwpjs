@@ -5,7 +5,7 @@
 /// - text: &str (전체 문단 텍스트, 컨트롤 문자 제거)
 /// - char_shapes: &[CharShapeInfo] (position, shape_id)
 /// - control_char_positions: &[ControlCharPosition] (제어 문자 위치)
-use hwp_model::paragraph::{Paragraph, Run, RunContent, TextElement};
+use hwp_model::paragraph::{Paragraph, RunContent, TextElement};
 
 /// old viewer의 CharShapeInfo 호환 구조
 #[derive(Debug, Clone)]

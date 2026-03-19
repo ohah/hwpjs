@@ -113,7 +113,7 @@ pub fn content_width_mm(page_def: &PageDef) -> f64 {
 }
 
 /// 콘텐츠 영역 좌측 오프셋 (mm)
-pub fn content_left_mm(page_def: &PageDef) -> f64 {
+pub fn content_left_mm(_page_def: &PageDef) -> f64 {
     0.0 // hcD 내부에서의 상대 좌표이므로 0
 }
 

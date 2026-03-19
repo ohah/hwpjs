@@ -250,7 +250,7 @@ fn render_run(
 
     // 연속 TextContent를 합쳐서 한 번에 style 적용 (불필요한 span 분리 방지)
     let mut text_accum = String::new();
-    let mut flush_text = |buf: &mut String, html: &mut String| {
+    let flush_text = |buf: &mut String, html: &mut String| {
         if !buf.is_empty() {
             let styled = apply_char_style_html(buf, char_shape, resources);
             html.push_str(&styled);

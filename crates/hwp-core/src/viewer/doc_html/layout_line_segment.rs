@@ -93,7 +93,7 @@ pub fn render_line_segments_impl(
     para_shape_class: &str,
     content_left_mm: f64,
     marker_html: Option<&str>,
-    has_objects: bool,
+    _has_objects: bool,
     hyperlinks: &[super::flat_text::HyperlinkRange],
     wchar_map: &[(u32, u32)],
 ) -> Vec<String> {

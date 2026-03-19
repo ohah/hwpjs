@@ -92,8 +92,8 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
         let mut header_html: Option<String> = None;
         let mut footer_html: Option<String> = None;
         let mut footnote_blocks: Vec<(u16, String)> = Vec::new();
-        let mut has_page_number = false;
-        let mut page_number: usize = 0;
+        let mut _has_page_number = false;
+        let mut _page_number: usize = 0;
         let mut endnote_blocks: Vec<(u16, String)> = Vec::new();
         let mut inline_note_refs: Vec<String> = Vec::new();
         let mut footnote_counter: u16 = 0;
@@ -125,7 +125,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                 };
                 let page_html =
                     append_footnotes_to_page(page_html, &footnote_blocks, &endnote_blocks, fn_top);
-                page_number += 1;
+                _page_number += 1;
                 pages_html.push(page_html);
                 current_page_blocks.clear();
                 footnote_blocks.clear();
@@ -260,7 +260,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
                                     ));
                                 }
                                 hwp_model::control::Control::PageNumCtrl(_) => {
-                                    has_page_number = true;
+                                    _has_page_number = true;
                                     has_page_number_global = true;
                                 }
                                 _ => {}
@@ -343,7 +343,7 @@ fn doc_to_html_layout(doc: &Document, _options: &DocHtmlOptions) -> String {
             };
             let page_html =
                 append_footnotes_to_page(page_html, &footnote_blocks, &endnote_blocks, fn_top_last);
-            page_number += 1;
+            _page_number += 1;
             pages_html.push(page_html);
         }
     }

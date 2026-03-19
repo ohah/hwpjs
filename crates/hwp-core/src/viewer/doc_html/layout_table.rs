@@ -54,8 +54,8 @@ pub fn render_layout_table_full(
 
     // ShapeCommon에서 위치/크기 정보 추출
     let common = &table.common;
-    let content_width = round_mm(hwpunit_to_mm(common.size.width));
-    let content_height = round_mm(hwpunit_to_mm(common.size.height));
+    let _content_width = round_mm(hwpunit_to_mm(common.size.width));
+    let _content_height = round_mm(hwpunit_to_mm(common.size.height));
     let x_mm = round_mm(hwpunit_to_mm(common.position.horz_offset));
     let y_mm = round_mm(hwpunit_to_mm(common.position.vert_offset));
 
@@ -350,6 +350,7 @@ fn generate_table_svg_borders_with_patterns(
     pattern_counter: &mut usize,
     color_to_pattern: &mut std::collections::HashMap<u32, String>,
 ) -> String {
+    #[allow(unused_imports)]
     use std::fmt::Write;
 
     let margin = 2.5;
@@ -774,7 +775,7 @@ fn compute_cell_content_height_raw(cell: &hwp_model::table::TableCell) -> f64 {
             max_bottom = Some(max_bottom.map(|x: i32| x.max(bottom)).unwrap_or(bottom));
         }
     }
-    let content_h = max_bottom.map(|b| hwpunit_to_mm(b)).unwrap_or(0.0);
+    let _content_h = max_bottom.map(|b| hwpunit_to_mm(b)).unwrap_or(0.0);
     // 마진 포함: 기본 0.5mm (142 HU = ceil(0.5/25.4*7200))
     let margin_top_hu = if cell.cell_margin.top != 0 {
         cell.cell_margin.top + 1
