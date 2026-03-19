@@ -469,14 +469,29 @@ fn render_shape_object_html(
 ) -> (String, bool) {
     match shape {
         ShapeObject::Table(table) => (render_table_html(table, resources, binaries, options), true),
-        ShapeObject::Picture(pic) => (
-            render_picture_html(
+        ShapeObject::Picture(pic) => {
+            let mut html = render_picture_html(
                 &pic.img.binary_item_id,
                 binaries,
                 options.image_output_dir.as_deref(),
-            ),
-            true,
-        ),
+            );
+            // Picture 캡션 렌더링
+            if let Some(ref caption) = pic.common.caption {
+                let cap_content = render_sublist_paragraphs(
+                    &caption.content.paragraphs,
+                    resources,
+                    binaries,
+                    options,
+                );
+                if !cap_content.is_empty() {
+                    html.push_str(&format!(
+                        "<div class=\"{}textbox\">{}</div>",
+                        options.css_class_prefix, cap_content
+                    ));
+                }
+            }
+            (html, true)
+        }
         ShapeObject::Rectangle(rect) => {
             if let Some(ref sub_list) = rect.draw_text {
                 let content =
