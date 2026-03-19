@@ -411,6 +411,7 @@ fn generate_heading_marker(
         .unwrap_or(5.29);
     let marker_cs = numbering_level
         .and_then(|l| l.char_shape_id)
+        .filter(|&id| id < 0xFFFF) // 0xFFFFFFFF 등 무효값 필터
         .unwrap_or(1); // 기본 cs1 (한글 문서 heading/numbering 기본)
     // CharShape에서 font-size 가져오기 (height HwpUnit → pt: /100)
     let font_size_style = resources.char_shapes.get(marker_cs as usize)
@@ -438,20 +439,32 @@ fn generate_heading_marker(
         HeadingType::Bullet => {
             // Bullet 리소스에서 문자와 CharShape 가져오기
             let bullet = resources.bullets.iter().find(|b| b.id == heading.id_ref);
-            let bullet_char = bullet.map(|b| b.bullet_char).unwrap_or('●');
+            let bullet_char = bullet
+                .map(|b| b.bullet_char)
+                .filter(|&c| c != '\0' && !c.is_control())
+                .unwrap_or('●');
             let bullet_cs = bullet
                 .and_then(|b| b.para_head.char_shape_id)
-                .unwrap_or(marker_cs);
+                .filter(|&id| id < 0xFFFF)
+                .unwrap_or(0); // bullet은 기본 cs0
             let bullet_width = bullet
                 .map(|b| styles::round_mm(styles::hwpunit_to_mm(b.para_head.text_offset)))
                 .filter(|&w| w > 0.0)
                 .unwrap_or(numbering_text_offset);
-            let bullet_font_style = resources.char_shapes.get(bullet_cs as usize)
-                .map(|cs| {
-                    let pt = styles::round_mm(cs.height as f64 / 100.0);
-                    format!(" style=\"font-size:{}pt;\"", pt)
-                })
-                .unwrap_or_else(|| " style=\"font-size:3.33pt;\"".to_string());
+            // Bullet font-size: bullet 전용 CharShape 또는 기본 3.33pt
+            let bullet_font_style = {
+                let valid_cs = bullet.and_then(|b| b.para_head.char_shape_id).filter(|&id| id < 0xFFFF);
+                if let Some(cs_id) = valid_cs {
+                    resources.char_shapes.get(cs_id as usize)
+                        .map(|cs| {
+                            let pt = styles::round_mm(cs.height as f64 / 100.0);
+                            format!(" style=\"font-size:{}pt;\"", pt)
+                        })
+                        .unwrap_or_else(|| " style=\"font-size:3.33pt;\"".to_string())
+                } else {
+                    " style=\"font-size:3.33pt;\"".to_string()
+                }
+            };
             Some(format!(
                 r#"<div class="hhe" style="display:inline-block;margin-left:0mm;width:{:.2}mm;height:3.53mm;"><span class="hrt cs{}"{}>{}</span></div>"#,
                 bullet_width, bullet_cs, bullet_font_style, bullet_char
