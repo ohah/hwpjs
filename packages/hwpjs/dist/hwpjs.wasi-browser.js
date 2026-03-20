@@ -56,7 +56,14 @@ const {
   },
 })
 export default __napiModule.exports
+export const convertToHtml = __napiModule.exports.convertToHtml
+export const convertToMarkdown = __napiModule.exports.convertToMarkdown
+export const detect = __napiModule.exports.detect
 export const fileHeader = __napiModule.exports.fileHeader
+export const hwpxToHtml = __napiModule.exports.hwpxToHtml
+export const hwpxToJson = __napiModule.exports.hwpxToJson
+export const hwpxToMarkdown = __napiModule.exports.hwpxToMarkdown
+export const parse = __napiModule.exports.parse
 export const toHtml = __napiModule.exports.toHtml
 export const toJson = __napiModule.exports.toJson
 export const toMarkdown = __napiModule.exports.toMarkdown

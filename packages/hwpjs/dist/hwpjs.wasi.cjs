@@ -108,7 +108,14 @@ const { instance: __napiInstance, module: __wasiModule, napiModule: __napiModule
   },
 })
 module.exports = __napiModule.exports
+module.exports.convertToHtml = __napiModule.exports.convertToHtml
+module.exports.convertToMarkdown = __napiModule.exports.convertToMarkdown
+module.exports.detect = __napiModule.exports.detect
 module.exports.fileHeader = __napiModule.exports.fileHeader
+module.exports.hwpxToHtml = __napiModule.exports.hwpxToHtml
+module.exports.hwpxToJson = __napiModule.exports.hwpxToJson
+module.exports.hwpxToMarkdown = __napiModule.exports.hwpxToMarkdown
+module.exports.parse = __napiModule.exports.parse
 module.exports.toHtml = __napiModule.exports.toHtml
 module.exports.toJson = __napiModule.exports.toJson
 module.exports.toMarkdown = __napiModule.exports.toMarkdown
