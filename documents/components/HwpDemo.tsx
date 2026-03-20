@@ -33,27 +33,39 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
       const arrayBuffer = await file.arrayBuffer();
       const data = new Uint8Array(arrayBuffer);
 
+      // 파일 포맷 자동 감지
+      const format = hwpjs.detect(data);
+      const isHwpx = format === 'hwpx';
+
       // 마크다운 변환 (이미지는 base64로 임베드됨)
-      const markdownResult = hwpjs.toMarkdown(data, {
-        image: 'base64',
-        useHtml: false,
-        includeVersion: false,
-        includePageInfo: false,
-      });
+      const markdownResult = isHwpx
+        ? hwpjs.hwpxToMarkdown(data, {
+            useHtml: false,
+            includeVersion: false,
+            includePageInfo: false,
+          })
+        : hwpjs.toMarkdown(data, {
+            image: 'base64',
+            useHtml: false,
+            includeVersion: false,
+            includePageInfo: false,
+          });
       setMarkdown(markdownResult.markdown);
 
       // JSON 변환
-      const jsonString = hwpjs.toJson(data);
+      const jsonString = isHwpx ? hwpjs.hwpxToJson(data) : hwpjs.toJson(data);
       setJson(jsonString);
 
       // HTML 변환 (이미지는 base64로 임베드됨)
-      const htmlString = hwpjs.toHtml(data, {
-        includeVersion: false,
-        includePageInfo: false,
-      });
+      const htmlString = isHwpx
+        ? hwpjs.hwpxToHtml(data, {})
+        : hwpjs.toHtml(data, {
+            includeVersion: false,
+            includePageInfo: false,
+          });
       setHtml(htmlString);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'HWP 파일 파싱 실패';
+      const errorMessage = err instanceof Error ? err.message : '파일 파싱 실패';
       setError(errorMessage);
       console.error('Error parsing HWP file:', err);
     } finally {
@@ -68,7 +80,8 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
         const response = await fetch(hwpPath);
         if (response.ok) {
           const blob = await response.blob();
-          const file = new File([blob], 'noori.hwp', { type: 'application/x-hwp' });
+          const fileName = hwpPath.split('/').pop() || 'document.hwp';
+          const file = new File([blob], fileName);
           await processHwpFile(file);
         }
       } catch {
@@ -160,7 +173,7 @@ export function HwpDemo({ hwpPath = '/hwpjs/demo/noori.hwp' }: HwpDemoProps) {
             <input
               id="hwp-file"
               type="file"
-              accept=".hwp"
+              accept=".hwp,.hwpx"
               onChange={handleFileSelect}
               className="file-input"
             />

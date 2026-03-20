@@ -1,0 +1,61 @@
+import { HwpDemoWrapper } from '../../components/HwpDemoWrapper';
+
+# HWPX 데모
+
+HWPX(한글 문서 XML) 파일을 파싱한 결과를 확인할 수 있습니다.
+
+## noori.hwpx
+
+한국형발사체 "누리호" 관련 보도자료의 HWPX 버전입니다. HWP 데모와 동일한 문서를 HWPX 형식으로 변환한 파일입니다.
+
+- 표 (Table)
+- 이미지
+- 문단 서식
+- 페이지 레이아웃
+
+## 인터랙티브 데모
+
+<HwpDemoWrapper hwpPath="/hwpjs/demo/noori.hwpx" />
+
+## 사용 방법
+
+```typescript
+import { readFileSync } from 'fs';
+import { hwpxToMarkdown, hwpxToHtml, hwpxToJson, detect } from '@ohah/hwpjs';
+
+// HWPX 파일 읽기
+const fileBuffer = readFileSync('./noori.hwpx');
+const data = new Uint8Array(fileBuffer);
+
+// 자동 감지
+const format = detect(data); // 'hwpx'
+
+// 마크다운 변환
+const result = hwpxToMarkdown(data, {
+  useHtml: true,
+  includeVersion: true,
+});
+console.log(result.markdown);
+
+// HTML 변환
+const html = hwpxToHtml(data, {});
+console.log(html);
+
+// JSON 변환
+const json = hwpxToJson(data);
+console.log(json);
+```
+
+## HWP vs HWPX
+
+| 항목 | HWP | HWPX |
+|------|-----|------|
+| 형식 | 바이너리 (OLE) | XML (ZIP) |
+| 확장자 | .hwp | .hwpx |
+| 파싱 | 바이너리 파서 | XML 파서 |
+| 자동 감지 | `detect()` → `'hwp'` | `detect()` → `'hwpx'` |
+
+## 파일 정보
+
+- **원본 파일**: `crates/hwp-core/tests/fixtures/noori.hwpx`
+- **형식**: HWPX (KS X 6101:2024)
