@@ -1,1 +1,1 @@
-export * from '@ohah/hwpjs-wasm32-wasi'
+export * from './hwpjs.wasi-browser.js'
