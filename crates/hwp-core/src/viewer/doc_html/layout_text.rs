@@ -187,20 +187,30 @@ fn apply_inline_styles(text: &str, cs: &CharShape) -> String {
         result = format!("<em>{}</em>", result);
     }
 
-    // underline: Center(취소선), Bottom/Top(밑줄)
+    // underline: Center(취소선), Bottom/Top(밑줄) — shape이 None이면 무시
     let has_center_underline = cs
         .underline
         .as_ref()
-        .map(|ul| ul.underline_type == hwp_model::types::UnderlineType::Center)
+        .map(|ul| {
+            ul.shape != hwp_model::types::LineType3::None
+                && ul.underline_type == hwp_model::types::UnderlineType::Center
+        })
         .unwrap_or(false);
     if let Some(ref ul) = cs.underline {
-        if ul.underline_type == hwp_model::types::UnderlineType::Bottom {
+        if ul.shape != hwp_model::types::LineType3::None
+            && ul.underline_type == hwp_model::types::UnderlineType::Bottom
+        {
             result = format!("<u>{}</u>", result);
         }
     }
 
-    // strikethrough: strikeout 또는 underline.Center (중복 방지)
-    if cs.strikeout.is_some() || has_center_underline {
+    // strikethrough: strikeout 또는 underline.Center (중복 방지) — shape이 None이면 무시
+    let has_strikeout = cs
+        .strikeout
+        .as_ref()
+        .map(|st| st.shape != hwp_model::types::LineType3::None)
+        .unwrap_or(false);
+    if has_strikeout || has_center_underline {
         result = format!("<s>{}</s>", result);
     }
 

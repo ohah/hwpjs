@@ -304,23 +304,31 @@ fn parse_char_shape(
                 b"supscript" => cs.superscript = true,
                 b"subscript" => cs.subscript = true,
                 b"underline" => {
-                    cs.underline = Some(Underline {
-                        underline_type: attr_str(e, b"type")
-                            .map(|s| parse_underline_type(&s))
-                            .unwrap_or_default(),
-                        shape: attr_str(e, b"shape")
-                            .map(|s| parse_line_type3(&s))
-                            .unwrap_or_default(),
-                        color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
-                    });
+                    // type="NONE"이면 밑줄 없음 — underline 설정하지 않음
+                    let ul_type = attr_str(e, b"type");
+                    if ul_type.as_deref() != Some("NONE") {
+                        cs.underline = Some(Underline {
+                            underline_type: ul_type
+                                .map(|s| parse_underline_type(&s))
+                                .unwrap_or_default(),
+                            shape: attr_str(e, b"shape")
+                                .map(|s| parse_line_type3(&s))
+                                .unwrap_or_default(),
+                            color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
+                        });
+                    }
                 }
                 b"strikeout" => {
-                    cs.strikeout = Some(Strikeout {
-                        shape: attr_str(e, b"shape")
-                            .map(|s| parse_line_type3(&s))
-                            .unwrap_or_default(),
-                        color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
-                    });
+                    // shape="NONE"이면 취소선 없음
+                    let st_shape = attr_str(e, b"shape")
+                        .map(|s| parse_line_type3(&s))
+                        .unwrap_or_default();
+                    if st_shape != LineType3::None {
+                        cs.strikeout = Some(Strikeout {
+                            shape: st_shape,
+                            color: attr_str(e, b"color").and_then(|s| parse_color(&s)),
+                        });
+                    }
                 }
                 b"outline" => {
                     cs.outline = Some(
