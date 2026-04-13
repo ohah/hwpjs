@@ -224,7 +224,7 @@ fn build_para_style(para: &Paragraph, resources: &Resources, _options: &DocHtmlO
             styles.push(format!("text-indent: {:.1}pt", indent_pt));
             // 음수 indent(내어쓰기)에 left margin이 부족하면 padding-left로 보정
             if indent_hwp < 0 {
-                let abs_indent = (-indent_hwp) as i32;
+                let abs_indent = -indent_hwp;
                 if left_hwp < abs_indent {
                     let pad_pt = (abs_indent - left_hwp) as f64 / 100.0;
                     styles.push(format!("padding-left: {:.1}pt", pad_pt));
