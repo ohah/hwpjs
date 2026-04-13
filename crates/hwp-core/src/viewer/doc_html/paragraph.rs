@@ -218,11 +218,19 @@ fn build_para_style(para: &Paragraph, resources: &Resources, _options: &DocHtmlO
 
         // 여백
         let indent_hwp = ps.margin.indent.value;
+        let left_hwp = ps.margin.left.value;
         if indent_hwp != 0 {
             let indent_pt = indent_hwp as f64 / 100.0;
             styles.push(format!("text-indent: {:.1}pt", indent_pt));
+            // 음수 indent(내어쓰기)에 left margin이 부족하면 padding-left로 보정
+            if indent_hwp < 0 {
+                let abs_indent = (-indent_hwp) as i32;
+                if left_hwp < abs_indent {
+                    let pad_pt = (abs_indent - left_hwp) as f64 / 100.0;
+                    styles.push(format!("padding-left: {:.1}pt", pad_pt));
+                }
+            }
         }
-        let left_hwp = ps.margin.left.value;
         if left_hwp != 0 {
             let left_pt = left_hwp as f64 / 100.0;
             styles.push(format!("margin-left: {:.1}pt", left_pt));
@@ -384,18 +392,22 @@ fn apply_char_style_html(
         close_tags.insert_str(0, "</i>");
     }
     if let Some(ref ul) = cs.underline {
-        if ul.underline_type == hwp_model::types::UnderlineType::Center {
-            // 가운데줄(Center)은 취소선으로 렌더링
-            open_tags.push_str("<del>");
-            close_tags.insert_str(0, "</del>");
-        } else {
-            open_tags.push_str("<u>");
-            close_tags.insert_str(0, "</u>");
+        if ul.shape != hwp_model::types::LineType3::None {
+            if ul.underline_type == hwp_model::types::UnderlineType::Center {
+                // 가운데줄(Center)은 취소선으로 렌더링
+                open_tags.push_str("<del>");
+                close_tags.insert_str(0, "</del>");
+            } else {
+                open_tags.push_str("<u>");
+                close_tags.insert_str(0, "</u>");
+            }
         }
     }
-    if cs.strikeout.is_some() {
-        open_tags.push_str("<del>");
-        close_tags.insert_str(0, "</del>");
+    if let Some(ref st) = cs.strikeout {
+        if st.shape != hwp_model::types::LineType3::None {
+            open_tags.push_str("<del>");
+            close_tags.insert_str(0, "</del>");
+        }
     }
     if cs.superscript {
         open_tags.push_str("<sup>");
