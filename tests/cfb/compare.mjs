@@ -46,8 +46,8 @@ function check(name, bytes) {
       new TextDecoder().decode(
         new Uint8Array(
           wasm.memory.buffer,
-          wasm.cfb_error_ptr(),
-          wasm.cfb_error_len(),
+          wasm.cfb_error_code_ptr(),
+          wasm.cfb_error_code_len(),
         ),
       ),
     );
@@ -106,6 +106,11 @@ function check(name, bytes) {
       else assert.equal(ticks, 0n);
     }
     if (e.type === 2) {
+      assert.equal(
+        value(i, 11),
+        Number(Object.hasOwn(e, "content")),
+        name + ": content presence",
+      );
       assert.deepEqual(
         field(i, 2),
         Buffer.from(e.content ?? []),
@@ -236,8 +241,8 @@ function reject(name, bytes, expectedError) {
       new TextDecoder().decode(
         new Uint8Array(
           wasm.memory.buffer,
-          wasm.cfb_error_ptr(),
-          wasm.cfb_error_len(),
+          wasm.cfb_error_code_ptr(),
+          wasm.cfb_error_code_len(),
         ),
       ),
       expectedError,

@@ -1,5 +1,5 @@
 // Generated from js/abi-schema.mjs by tools/generate-abi.mjs. Do not edit.
-pub const version: u32 = 3;
+pub const version: u32 = 4;
 pub const Field = enum(u32) {
     name = 0,
     path = 1,
@@ -19,5 +19,6 @@ pub const Value = enum(u32) {
     start = 8,
     size = 9,
     uses_fat = 10,
+    has_content = 11,
     _,
 };

@@ -3,6 +3,7 @@ import { decodeEntry } from "./cfb-entry.mjs";
 import { createFinder } from "./cfb-find.mjs";
 import { validateAbi } from "./abi.mjs";
 import { inputBytes, decodeInput } from "./input.mjs";
+import { outputBytes } from "./output-bytes.mjs";
 
 /** Browser/Node CFB memory API. Returned arrays own their data. */
 export async function createCfbReader(source) {
@@ -16,7 +17,8 @@ export async function createCfbReader(source) {
   const find = createFinder(wasm, memory);
   let loaded;
   function parse(data, options = {}) {
-    const rawRequested = Boolean(options.raw);
+    const rawRequested = Boolean(options?.raw);
+    const output = outputBytes(data);
     const bytes = inputBytes(data);
     loaded = undefined;
     memory.withBytes(bytes, (ptr, size) => {
@@ -24,13 +26,13 @@ export async function createCfbReader(source) {
     });
     const result = { FileIndex: [], FullPaths: [] };
     for (let i = 0; i < wasm.cfb_count(); i++) {
-      const decoded = decodeEntry(wasm, memory, i);
+      const decoded = decodeEntry(wasm, memory, i, output);
       result.FileIndex.push(decoded.entry);
       result.FullPaths.push(decoded.path);
     }
     if (rawRequested) {
       const raw = (id) =>
-        memory.copy(wasm.cfb_raw_ptr(id), wasm.cfb_raw_len(id));
+        output.raw(memory.copy(wasm.cfb_raw_ptr(id), wasm.cfb_raw_len(id)));
       result.raw = {
         header: raw(-1),
         sectors: Array.from({ length: wasm.cfb_sector_count() }, (_, i) =>
@@ -42,7 +44,7 @@ export async function createCfbReader(source) {
     return result;
   }
   function read(data, options = {}) {
-    const type = options.type ?? "base64";
+    const type = options?.type || "base64";
     if (type === "file")
       throw new Error("Use cfb-node.mjs for filesystem input");
     return parse(decodeInput(data, type), options);

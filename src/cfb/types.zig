@@ -21,4 +21,5 @@ pub const Entry = struct {
     start: u32,
     size: u64,
     content: []const u8 = "",
+    has_content: bool = false,
 };

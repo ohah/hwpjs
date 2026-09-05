@@ -24,6 +24,7 @@
 | `src/wasm/cfb_entries.zig`, `cfb_raw.zig` | 엔트리 필드 및 raw 바이트 ABI |
 | `js/wasm-memory.mjs` | JS/WASM 복사와 임시 메모리 정리 |
 | `js/input.mjs` | 입력 타입·바이트 범위 검사, 실행 컨텍스트에 독립적인 버퍼 판별 |
+| `js/output-bytes.mjs`, `blob-cursor.mjs` | 호스트별 출력 바이트 표현 및 복사본의 레거시 커서 메서드 |
 | `src/wasm/cfb_search.zig`, `search_snapshot.zig` | 보관된 검색 메타데이터의 경계 검사·코어 검색 연결 |
 | `js/abi-schema.mjs`, `src/wasm/abi_schema.zig` | ABI 기준 스키마와 생성된 Zig 선언 |
 | `js/abi.mjs` | ABI 버전·필수 export·메모리 검사 |
@@ -53,11 +54,11 @@ reader.close();
 
 JS 어댑터는 WASM i64 반환을 unsigned로 해석한 뒤 FILETIME을 변환하며, 이름 앞의 U+FEFF도 보존합니다. JS Date는 밀리초 정밀도이고, 전체 FILETIME 비트는 native/직접 ABI에서 확인합니다.
 
-WASM 인스턴스당 열린 CFB는 하나입니다. 새 read는 이전 내부 CFB를 해제하지만, JS 결과는 복사본이므로 계속 사용할 수 있습니다. 결과 객체는 읽기 전용으로 취급합니다. 직접 ABI를 사용할 때 입력 포인터·크기는 호출자가 할당한 유효한 영역이어야 하며, 엔트리 포인터는 다음 open/close까지 유효합니다. 병렬 문서에는 별도 reader 인스턴스를 사용합니다.
+WASM 인스턴스당 열린 CFB는 하나입니다. 새 read는 이전 내부 CFB를 해제하지만, JS 결과는 복사본이므로 계속 사용할 수 있습니다. 이름·경로 메타데이터는 읽기 전용으로 취급합니다. `content`의 커서와 바이트는 수정할 수 있지만 내부 CFB나 입력 원본에 반영되지 않으며, CFB 저장 기능을 의미하지 않습니다. 직접 ABI를 사용할 때 입력 포인터·크기는 호출자가 할당한 유효한 영역이어야 하며, 엔트리 포인터는 다음 open/close까지 유효합니다. 병렬 문서에는 별도 reader 인스턴스를 사용합니다.
 
 검색 규칙은 `src/cfb/find.zig` 한곳에 있습니다. 현재 문서는 내부 엔트리를, 보관된 결과는 이름·경로를 직렬화한 메타데이터를 같은 함수에 전달합니다. 보관된 결과의 메타데이터는 WeakMap에 캐시하고 호출 동안 WASM에 복사합니다. 다른 문서를 열거나 열기에 실패하거나 `close()`한 뒤에도 검색할 수 있으며, 현재 열린 문서를 교체하지 않습니다. JS 검색 문자열에 단독 surrogate가 있으면 대체문자로 변환하지 않고 `null`을 반환합니다.
 
-현재 ABI는 **3**입니다. JS 초기화는 다른 버전과 필수 export/메모리 누락을 거부합니다. `js/abi-schema.mjs`가 필드 번호·버전의 기준이며 `node tools/generate-abi.mjs`가 Zig 선언을 출력합니다. 모든 빌드 및 네이티브 테스트에서 `--check`로 생성 파일의 일치를 검사합니다. 비교 테스트의 독립적인 숫자 필드 기대값은 스키마에서 생성하지 않습니다. ABI 3의 `uses_fat` 필드는 코어의 분류 결과를 전달합니다. JS에 4096바이트 분기 규칙을 중복 정의하지 않습니다. 검색 snapshot의 wire 형식은 ABI 2에서 바뀌지 않았습니다.
+현재 ABI는 **4**입니다. JS 초기화는 다른 버전과 필수 export/메모리 누락을 거부합니다. `js/abi-schema.mjs`가 필드 번호·버전의 기준이며 `node tools/generate-abi.mjs`가 Zig 선언을 출력합니다. 모든 빌드 및 네이티브 테스트에서 `--check`로 생성 파일의 일치를 검사합니다. `uses_fat`와 `has_content`는 코어의 분류 및 content 존재 여부를 전달합니다. JS에 FAT 분류나 MiniFAT 존재 조건을 중복 정의하지 않습니다. 검색 snapshot 형식은 ABI 2부터 동일합니다. `cfb_error_ptr/len`은 메시지, `cfb_error_code_ptr/len`은 네이티브 오류 이름을 반환합니다. 헤더 진단은 `Header.parseDiagnostic`의 검증 분기에서 만들어 JS에서 별도로 헤더를 파싱하지 않습니다.
 
 ## 호환성과 의도적 차이
 
@@ -69,9 +70,9 @@ WASM 인스턴스당 열린 CFB는 하나입니다. 새 read는 이전 내부 CF
 - 사용 중인 일반/MiniFAT 스트림의 FREESECT 마커, 루트의 형제 참조, 스트림의 자식 참조, 활성 엔트리의 잘못된 색상·이름 종료·금지 문자를 거부합니다. UTF-16 유효성은 NUL 제거 전에 검사합니다. 이는 트리의 모든 정렬·red-black 균형 조건을 검증한다는 의미는 아닙니다.
 - 기본 제한: 입력/개별 스트림 256 MiB, 합계 스트림 512 MiB, 엔트리 100만 개, 경로 합계 64 MiB. Zig Options에서 조정할 수 있습니다. 전체 힙 사용량은 테이블·입력 복사·경로·추출 데이터 때문에 이 제한들과 별개입니다.
 - CFB 스트림은 **원시 바이트**입니다. HWP 압축 해제·암호 해제·문단 해석은 다음 계층입니다.
-- 레거시 모듈의 ZIP/MIME 자동 감지, 쓰기·수정 유틸리티, content에 붙는 JS 전용 `read_shift` 메서드는 이 CFB 읽기 API에 포함하지 않습니다. 바이트 해석에는 별도 리더를 사용합니다.
+- 레거시 모듈의 ZIP/MIME 자동 감지, CFB 쓰기·수정 유틸리티는 이번 범위에 포함하지 않습니다. `content`에는 레거시의 `l`, `read_shift`, `chk`, `write_shift`를 제공합니다. 커서 메서드는 JS 복사본에만 작용합니다.
 - v4 크기는 u64로 읽습니다. 레거시의 하위 32비트 읽기 오류를 복제하지 않으며, 대용량 파일은 설정한 메모리 제한을 따릅니다.
-- 빈 스트림은 빈 `Uint8Array`를 반환합니다. 레거시는 해당 `content` 속성을 생략할 수 있습니다. 바이트 의미의 동일성과 JS 객체의 속성까지 동일한 것은 구분합니다. 현재 API는 모든 입력·객체 형태에서 레거시와 100% 동일하지 않습니다.
+- `content`의 존재 여부는 레거시처럼 미니 스트림 backing과 시작 섹터에 따라 결정하며, 빈 스트림이라고 일괄 생략하거나 빈 배열을 붙이지 않습니다. 스토리지·미사용 엔트리에도 빈 `content`가 있을 수 있습니다. Node Buffer 입력의 내용은 Buffer, 비-Buffer 입력의 내용은 배열입니다. 빈 content 할당은 Node에서 Buffer, 브라우저에서 배열을 사용합니다. raw는 입력의 Buffer/배열/Uint8Array 표현을 따릅니다.
 
 ## 검증
 
@@ -104,7 +105,7 @@ CFB_MUTATION_SEED=305419896 node tests/cfb/mutations.mjs
 ### 테스트 공백 보강 및 SSOT (2026-09-05)
 
 - 네이티브 14개, Node/WASM 28개: `zig build audit`에 모두 연결합니다.
-- 독립 encoder로 v3/v4 × 연속/역순 MiniFAT × 12개 크기(0~4095) × 16개 payload 변형 = 768개를 생성합니다. 파서와 독립적인 기대 바이트 전체를 Zig/WASM 및 레거시 출력과 비교합니다. 빈 스트림의 레거시 속성 생략은 위 차이에 따라 명시적으로 빈 바이트로 비교합니다.
+- 독립 encoder로 v3/v4 × 연속/역순 MiniFAT × 12개 크기(0~4095) × 16개 payload 변형 = 768개를 생성합니다. 파서와 독립적인 기대 바이트 전체를 Zig/WASM 및 레거시 출력과 비교합니다. 빈 스트림 fixture는 content 속성의 부재를 직접 검증합니다.
 - 16 MiB 데이터의 실제 2개 이상 DIFAT 연결·전체 바이트·순환/범위 밖 링크 오류 및 실패 후 복구를 확인합니다. 네이티브 할당 실패 주입에는 별도의 작은 비최소 FAT 배치(237 FAT + 2 DIFAT)를 사용합니다.
 - 모든 자원 제한에 비영(非零) 한도−1/한도/한도+1, 2개 스트림의 합산, 20단계 경로 및 미사용 엔트리 경로 합산을 검사합니다. 루트 mini stream의 용량 제한도 별도로 확인합니다.
 - 일반 스트림·중첩 디렉터리·다중 DIFAT·검색 별칭 fallback·보관 검색 snapshot에서 할당 실패 전수 주입을 수행합니다. 일반/MiniFAT 공유 섹터의 정확한 오류도 검사합니다.
@@ -112,3 +113,5 @@ CFB_MUTATION_SEED=305419896 node tests/cfb/mutations.mjs
 - 제품 규칙의 SSOT와 테스트 정답의 독립성을 구분합니다. 테스트 encoder와 숫자 기대값은 제품 코드에서 생성하지 않습니다. 브라우저 검증은 `agent-browser`로 실제 Chromium에서 기존 HWP·수명·BOM/FILETIME/다른 realm 경계를 실행합니다.
 
 명세: [MS-CFB](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cfb/53989ce4-7b05-4f8d-829b-d08d6148375b). 제3자 코드 고지는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 있습니다.
+
+소스 대조 회차의 함수 대응표, 엄격 비교 범위와 승인 대기 차이는 [cfb-compatibility.md](cfb-compatibility.md)를 확인합니다. 앞선 회차의 테스트 개수는 당시 결과이며, 현재 테스트 목록은 `build.zig`의 audit에 연결되어 있습니다.

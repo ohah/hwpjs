@@ -13,6 +13,10 @@ pub fn read(a: std.mem.Allocator, allocation: *Allocation, entries: []types.Entr
     @memset(mini_used, false);
     var total: usize = 0;
     for (entries) |*entry| {
+        // read_directory in CFB 1.2.0 attaches content by allocation availability,
+        // not just by entry kind or nonzero size (including unused/storage slots).
+        entry.has_content = entry.kind != 5 and (format.usesFat(entry.size) or
+            (root.start != h.end and root.start < allocation.sectors.count() and entry.start != h.end));
         if (entry.kind != 2) continue;
         if (entry.size > options.max_stream_bytes or entry.size > options.max_total_stream_bytes -| total)
             return error.LimitExceeded;

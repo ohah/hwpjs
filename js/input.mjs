@@ -1,3 +1,4 @@
+import { nodeBuffer } from "./output-bytes.mjs";
 // Native brand checks work across realms and do not trust Symbol.toStringTag.
 const bufferLength = Object.getOwnPropertyDescriptor(
   ArrayBuffer.prototype,
@@ -34,7 +35,7 @@ export function inputBytes(data) {
 }
 
 export function decodeInput(data, type) {
-  if (type === "buffer" || type === "array") return inputBytes(data);
+  if (type === "buffer" || type === "array") return data;
   if (type !== "base64" && type !== "binary")
     throw new TypeError(`Unsupported CFB input type: ${type}`);
   if (typeof data !== "string")
@@ -46,5 +47,5 @@ export function decodeInput(data, type) {
     if (value > 255) throw new TypeError(`Invalid binary byte at index ${i}`);
     bytes[i] = value;
   }
-  return bytes;
+  return nodeBuffer ? nodeBuffer.from(bytes) : Array.from(bytes);
 }

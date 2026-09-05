@@ -5,6 +5,15 @@ pub const free: u32 = 0xffffffff;
 pub const fat_sector: u32 = 0xfffffffd;
 pub const difat_sector: u32 = 0xfffffffc;
 
+pub const Diagnostic = struct {
+    buffer: [256]u8 = undefined,
+    message: []const u8 = "",
+
+    fn note(self: ?*Diagnostic, comptime fmt: []const u8, args: anytype) void {
+        if (self) |d| d.message = std.fmt.bufPrint(&d.buffer, fmt, args) catch "";
+    }
+};
+
 pub fn int(comptime T: type, bytes: []const u8, offset: usize) error{Truncated}!T {
     if (offset > bytes.len or @sizeOf(T) > bytes.len - offset) return error.Truncated;
     return std.mem.readInt(T, bytes[offset..][0..@sizeOf(T)], .little);
@@ -25,20 +34,53 @@ pub const Header = struct {
     difat_count: u32,
 
     pub fn parse(bytes: []const u8) !Header {
-        if (bytes.len < 512) return error.Truncated;
-        if (!std.mem.eql(u8, bytes[0..8], &.{ 0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1 }))
+        return parseDiagnostic(bytes, null);
+    }
+
+    /// The same validation branches produce native error codes and JS diagnostics.
+    pub fn parseDiagnostic(bytes: []const u8, diagnostic: ?*Diagnostic) !Header {
+        if (diagnostic) |d| d.message = "";
+        if (bytes.len < 512) {
+            Diagnostic.note(diagnostic, "CFB file size {d} < 512", .{bytes.len});
+            return error.Truncated;
+        }
+        if (!std.mem.eql(u8, bytes[0..8], &.{ 0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1 })) {
+            Diagnostic.note(diagnostic, "Header Signature: Expected d0cf11e0a1b11ae1 saw {s}", .{std.fmt.bytesToHex(bytes[0..8].*, .lower)});
             return error.InvalidSignature;
+        }
         const major = try int(u16, bytes, 26);
         const shift: u16 = switch (major) {
             3 => 9,
             4 => 12,
-            else => return error.UnsupportedVersion,
+            else => {
+                Diagnostic.note(diagnostic, "Major Version: Expected 3 or 4 saw {d}", .{major});
+                return error.UnsupportedVersion;
+            },
         };
-        if (try int(u16, bytes, 30) != shift or try int(u16, bytes, 32) != format.mini_sector_shift)
+        const actual_shift = try int(u16, bytes, 30);
+        if (actual_shift != shift) {
+            if (actual_shift == 9 or actual_shift == 12)
+                Diagnostic.note(diagnostic, "Sector Shift: Expected {d} saw {d}", .{ actual_shift, actual_shift })
+            else
+                Diagnostic.note(diagnostic, "Sector Shift: Expected 9 or 12 saw {d}", .{actual_shift});
             return error.InvalidSectorSize;
-        if (!std.mem.allEqual(u8, bytes[34..40], 0) or try int(u32, bytes, 56) != format.mini_stream_cutoff)
+        }
+        if (try int(u16, bytes, 32) != format.mini_sector_shift) {
+            Diagnostic.note(diagnostic, "Mini Sector Shift: Expected 0600 saw {s}", .{std.fmt.bytesToHex(bytes[32..34].*, .lower)});
+            return error.InvalidSectorSize;
+        }
+        if (!std.mem.allEqual(u8, bytes[34..40], 0)) {
+            Diagnostic.note(diagnostic, "Reserved: Expected 000000000000 saw {s}", .{std.fmt.bytesToHex(bytes[34..40].*, .lower)});
             return error.InvalidHeader;
-        if (major == 3 and try int(u32, bytes, 40) != 0) return error.InvalidHeader;
+        }
+        if (major == 3 and try int(u32, bytes, 40) != 0) {
+            Diagnostic.note(diagnostic, "# Directory Sectors: Expected 0 saw {d}", .{try int(i32, bytes, 40)});
+            return error.InvalidHeader;
+        }
+        if (try int(u32, bytes, 56) != format.mini_stream_cutoff) {
+            Diagnostic.note(diagnostic, "Mini Stream Cutoff Size: Expected 00100000 saw {s}", .{std.fmt.bytesToHex(bytes[56..60].*, .lower)});
+            return error.InvalidHeader;
+        }
         const size: usize = if (major == 3) 512 else 4096;
         if (bytes.len < size) return error.Truncated;
         // Match legacy cfb.js: preserve rather than reject noncanonical minor/BOM/CLSID.

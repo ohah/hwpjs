@@ -37,6 +37,7 @@ export fn cfb_value(index: usize, key: u32) u64 {
         .start => e.start,
         .size => e.size,
         .uses_fat => @intFromBool(@import("../cfb/format.zig").usesFat(e.size)),
+        .has_content => @intFromBool(e.has_content),
         else => 0,
     };
 }

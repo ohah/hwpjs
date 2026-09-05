@@ -1,6 +1,6 @@
 // Authoritative ABI schema. tools/generate-abi.mjs derives the Zig declarations.
 // Breaking changes require a version bump and an independently pinned contract test.
-export const ABI_VERSION = 3;
+export const ABI_VERSION = 4;
 export const FIELD = Object.freeze({ name: 0, path: 1, content: 2, clsid: 3 });
 export const VALUE = Object.freeze({
   kind: 0,
@@ -14,6 +14,7 @@ export const VALUE = Object.freeze({
   start: 8,
   size: 9,
   uses_fat: 10,
+  has_content: 11,
 });
 export const REQUIRED_FUNCTIONS = Object.freeze([
   "hwpjs_abi_version",
@@ -23,6 +24,8 @@ export const REQUIRED_FUNCTIONS = Object.freeze([
   "cfb_close",
   "cfb_error_ptr",
   "cfb_error_len",
+  "cfb_error_code_ptr",
+  "cfb_error_code_len",
   "cfb_count",
   "cfb_find",
   "cfb_find_snapshot",

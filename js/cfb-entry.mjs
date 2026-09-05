@@ -1,7 +1,8 @@
 import { FIELD, VALUE } from "./abi-schema.mjs";
+import { attachCursor } from "./blob-cursor.mjs";
 
 /** Decode the numeric ABI into the legacy FileIndex/FullPaths representation. */
-export function decodeEntry(wasm, memory, index) {
+export function decodeEntry(wasm, memory, index, output) {
   const field = (key) =>
     memory.copy(wasm.cfb_field_ptr(index, key), wasm.cfb_field_len(index, key));
   const unsigned = (key) => BigInt.asUintN(64, wasm.cfb_value(index, key));
@@ -37,6 +38,7 @@ export function decodeEntry(wasm, memory, index) {
       );
   }
   if (e.type !== 5) e.storage = number(VALUE.uses_fat) ? "fat" : "minifat";
-  if (e.type === 2) e.content = field(FIELD.content);
+  if (number(VALUE.has_content))
+    e.content = attachCursor(output.content(field(FIELD.content)));
   return { entry: e, path: decoder.decode(field(FIELD.path)) };
 }

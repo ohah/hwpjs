@@ -7,7 +7,7 @@ export async function createNodeCfbReader(source) {
   return {
     ...reader,
     read(data, options = {}) {
-      return options.type === "file"
+      return options?.type === "file"
         ? reader.parse(readFileSync(data), options)
         : reader.read(data, options);
     },

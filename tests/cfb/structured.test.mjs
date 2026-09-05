@@ -39,26 +39,31 @@ for (const version of [3, 4]) {
               salt,
             );
             const result = api.parse(bytes, { raw: true });
-            assert.deepEqual(
-              Buffer.from(api.find(result, "Data").content),
-              expected,
-            );
+            const stream = api.find(result, "Data");
+            if (size === 0)
+              assert.equal(Object.hasOwn(stream, "content"), false);
+            else assert.deepEqual(Buffer.from(stream.content), expected);
             assert.equal(result.FileIndex[1].storage, "minifat");
-            // Legacy omits content for an empty stream; compare its byte meaning.
-            assert.deepEqual(
-              Buffer.from(CFB.find(CFB.parse(bytes), "Data").content ?? []),
-              expected,
-            );
+            const reference = CFB.find(CFB.parse(bytes), "Data");
+            if (size === 0)
+              assert.equal(Object.hasOwn(reference, "content"), false);
+            else assert.deepEqual(Buffer.from(reference.content), expected);
             assert.deepEqual(
               Buffer.from(result.raw.header),
               bytes.subarray(0, version === 3 ? 512 : 4096),
             );
             api.close();
             assert.equal(api.find(result, "/data"), result.FileIndex[1]);
-            assert.deepEqual(
-              Buffer.from(result.FileIndex[1].content),
-              expected,
-            );
+            if (size === 0)
+              assert.equal(
+                Object.hasOwn(result.FileIndex[1], "content"),
+                false,
+              );
+            else
+              assert.deepEqual(
+                Buffer.from(result.FileIndex[1].content),
+                expected,
+              );
           }
         }
       } finally {

@@ -7,6 +7,7 @@
 import {createCfbReader} from '/cfb.mjs';
 import {checkSearchLifecycle} from '/search-lifecycle.mjs';
 import {checkBrowserBoundaries} from '/browser-boundaries.mjs';
+import {assertExactResult} from '/exact-result.mjs';
 try {
   const reader=await createCfbReader(await (await fetch('/hwpjs.wasm')).arrayBuffer());
   const names=await (await fetch('/fixtures')).json();
@@ -14,6 +15,7 @@ try {
   for(const name of names) {
     const bytes=new Uint8Array(await (await fetch('/fixture/'+encodeURIComponent(name))).arrayBuffer());
     const expected=CFB.read(bytes,{type:'buffer'}),actual=reader.read(bytes,{type:'buffer'});
+    assertExactResult(actual,expected,name);
     if(JSON.stringify(actual.FullPaths)!==JSON.stringify(expected.FullPaths))throw Error(name+': paths');
     if(actual.FileIndex.length!==expected.FileIndex.length)throw Error(name+': entry count');
     for(let i=0;i<actual.FileIndex.length;i++) {
@@ -22,15 +24,31 @@ try {
         if(JSON.stringify(a[key])!==JSON.stringify(e[key]))throw Error(name+': '+key+' at '+i);
       }
       if(e.type!==2)continue;
-      const content=e.content??[];
-      if(a.content.length!==content.length || a.content.some((b,j)=>b!==content[j]))throw Error(name+': stream '+e.name);
       if(actual.FileIndex.indexOf(reader.find(actual,e.name.toLowerCase()))!==expected.FileIndex.indexOf(CFB.find(expected,e.name.toLowerCase())))throw Error(name+': search');
       streams++;
     }
   }
   reader.close();
+  let exactSynthetic=0;
+  for(const size of [0,1,63,64,65,4095,4096,4097]) {
+    const container=CFB.utils.cfb_new();
+    CFB.utils.cfb_add(container,'/Data',Array.from({length:size},(_,i)=>i%251));
+    const encoded=CFB.write(container,{type:'array'});
+    for(const bytes of [Array.from(encoded),new Uint8Array(encoded)]) {
+      const expected=CFB.parse(bytes,{raw:true}),actual=reader.parse(bytes,{raw:true});
+      assertExactResult(actual,expected,'synthetic '+size);
+      const a=reader.find(actual,'Data'),e=CFB.find(expected,'Data');
+      if(e.content) {
+        for(const n of [1,2,4]) {
+          if(!Object.is(a.content.read_shift(n),e.content.read_shift(n)))throw Error('cursor '+size);
+          if(a.content.l!==e.content.l)throw Error('cursor offset '+size);
+        }
+      }
+      exactSynthetic++;
+    }
+  }
   const lifecycleSearches=checkSearchLifecycle(CFB,reader);
   const boundaries=await checkBrowserBoundaries(CFB,reader);
-  document.querySelector('#result').textContent=JSON.stringify({files:names.length,streams,lifecycleSearches,boundaries,passed:true});
+  document.querySelector('#result').textContent=JSON.stringify({files:names.length,streams,exactSynthetic,lifecycleSearches,boundaries,passed:true});
 } catch(error) {document.querySelector('#result').textContent='FAIL: '+error.stack;}
 </script>
