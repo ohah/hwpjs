@@ -9,6 +9,7 @@ import {
 } from "node:zlib";
 import { createCfbReader } from "../../js/cfb.mjs";
 import { checkDocinfo, checkDocinfoEdges } from "./docinfo.mjs";
+import { resourceEdges, resourceActual } from "./resources.mjs";
 
 const module = await WebAssembly.compile(readFileSync(process.argv[2]));
 assert.equal(WebAssembly.Module.imports(module).length, 0);
@@ -79,6 +80,7 @@ function oracle(bytes) {
 const rounds = [];
 let begin = checks;
 checkDocinfoEdges(call);
+resourceEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -196,6 +198,13 @@ let files = 0,
   totalBytes = 0;
 const versions = new Set(),
   unsupported = [];
+const resources = {
+  binData: 0,
+  faceNames: 0,
+  decoded: 0,
+  mismatches: [],
+  missing: [],
+};
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
     cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
@@ -225,8 +234,15 @@ try {
         `${name}/${entry.name}`,
       );
       const framed = call(2, plain);
-      if (entry.name === "DocInfo")
+      if (entry.name === "DocInfo") {
         checkDocinfo(call, hdr.readUInt32LE(32), plain);
+        const result = resourceActual(call, hdr, plain, cfb);
+        for (const key of ["binData", "faceNames", "decoded"])
+          resources[key] += result[key];
+        if (result.mismatch) resources.mismatches.push(name);
+        for (const path of result.missing)
+          resources.missing.push({ file: name, path });
+      }
       assert.deepEqual(framed, oracle(plain), `${name}/${entry.name}`);
       streams++;
       records += framed.length / 20;
@@ -239,6 +255,13 @@ try {
 assert.equal(files, 48);
 assert.ok(streams >= 90);
 assert.equal(unsupported.length, 3);
+assert.deepEqual(resources, {
+  binData: 13,
+  faceNames: 861,
+  decoded: 13,
+  mismatches: [],
+  missing: [],
+});
 rounds.push({
   round: 4,
   checks: checks - begin,
@@ -248,6 +271,7 @@ rounds.push({
   totalBytes,
   unsupported,
   versions: [...versions].sort(),
+  resources,
 });
 begin = checks;
 // Round 5: deterministic hostile mutations, bounded output and recovery after every attempt.

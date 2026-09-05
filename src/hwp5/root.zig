@@ -5,3 +5,5 @@ pub const Version = @import("version.zig").Version;
 pub const record = @import("record.zig");
 pub const stream = @import("stream.zig");
 pub const docinfo = @import("docinfo/reader.zig");
+pub const resources = @import("docinfo/resources.zig");
+pub const bin_data_stream = @import("bin_data_stream.zig");

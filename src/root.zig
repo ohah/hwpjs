@@ -9,6 +9,7 @@ test {
     _ = @import("hwp5/header_tests.zig");
     _ = @import("hwp5/record_tests.zig");
     _ = @import("hwp5/docinfo/tests.zig");
+    _ = @import("hwp5/docinfo/resource_tests.zig");
     _ = @import("hwp5/compression_tests.zig");
     _ = @import("cfb/tests.zig");
     _ = @import("cfb/mutation_tests.zig");
