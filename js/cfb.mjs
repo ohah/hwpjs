@@ -4,6 +4,8 @@ import { createFinder } from "./cfb-find.mjs";
 import { validateAbi } from "./abi.mjs";
 import { inputBytes, decodeInput } from "./input.mjs";
 import { outputBytes } from "./output-bytes.mjs";
+import { encodeDocument, decodeDocument } from "./cfb-document.mjs";
+export { removeNode } from "./cfb-document.mjs";
 
 /** Browser/Node CFB memory API. Returned arrays own their data. */
 export async function createCfbReader(source) {
@@ -22,7 +24,8 @@ export async function createCfbReader(source) {
     const bytes = inputBytes(data);
     loaded = undefined;
     memory.withBytes(bytes, (ptr, size) => {
-      if (!wasm.cfb_open(ptr, size)) throw memory.error();
+      const open = options?.strict ? wasm.cfb_open_strict : wasm.cfb_open;
+      if (!open(ptr, size)) throw memory.error();
     });
     const result = { FileIndex: [], FullPaths: [] };
     for (let i = 0; i < wasm.cfb_count(); i++) {
@@ -50,12 +53,42 @@ export async function createCfbReader(source) {
     return parse(decodeInput(data, type), options);
   }
   return {
+    write(document) {
+      return memory.withBytes(encodeDocument(document), (ptr, size) => {
+        try {
+          if (!wasm.cfb_write(ptr, size)) throw memory.error();
+          return memory.copy(wasm.cfb_output_ptr(), wasm.cfb_output_len());
+        } finally {
+          wasm.cfb_output_free();
+        }
+      });
+    },
+    document() {
+      try {
+        if (!wasm.cfb_document()) throw memory.error();
+        return decodeDocument(
+          memory.copy(wasm.cfb_output_ptr(), wasm.cfb_output_len()),
+        );
+      } finally {
+        wasm.cfb_output_free();
+      }
+    },
+    findExact(path) {
+      if (typeof path !== "string" || !path.isWellFormed())
+        throw new TypeError("InvalidName");
+      return memory.withBytes(new TextEncoder().encode(path), (ptr, size) => {
+        const index = wasm.cfb_find_exact(ptr, size);
+        if (index === -2) throw memory.error();
+        return index < 0 ? null : loaded.FileIndex[index];
+      });
+    },
     parse,
     read,
     find(container, path) {
       return find(container, path, container === loaded);
     },
     close() {
+      wasm.cfb_output_free();
       wasm.cfb_close();
       loaded = undefined;
     },

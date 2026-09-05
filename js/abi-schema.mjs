@@ -1,6 +1,19 @@
 // Authoritative ABI schema. tools/generate-abi.mjs derives the Zig declarations.
 // Breaking changes require a version bump and an independently pinned contract test.
-export const ABI_VERSION = 4;
+export const ABI_VERSION = 5;
+export const DOCUMENT = Object.freeze({
+  header_bytes: 8,
+  node_bytes: 56,
+  parent: 0,
+  kind: 4,
+  name_len: 8,
+  content_len: 12,
+  state: 16,
+  reserved: 20,
+  created: 24,
+  modified: 32,
+  clsid: 40,
+});
 export const FIELD = Object.freeze({ name: 0, path: 1, content: 2, clsid: 3 });
 export const VALUE = Object.freeze({
   kind: 0,
@@ -21,6 +34,13 @@ export const REQUIRED_FUNCTIONS = Object.freeze([
   "cfb_alloc",
   "cfb_free",
   "cfb_open",
+  "cfb_open_strict",
+  "cfb_find_exact",
+  "cfb_write",
+  "cfb_document",
+  "cfb_output_ptr",
+  "cfb_output_len",
+  "cfb_output_free",
   "cfb_close",
   "cfb_error_ptr",
   "cfb_error_len",

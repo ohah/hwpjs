@@ -9,6 +9,7 @@ pub fn read(a: std.mem.Allocator, allocation: *Allocation, entries: []types.Entr
     if (root.size > options.max_stream_bytes) return error.LimitExceeded;
     const mini_stream = try allocation.chain(root.start, @intCast(root.size));
     const mini_bytes = if (header.mini_count == 0) &.{} else try allocation.chain(header.mini_start, @as(usize, header.mini_count) * header.sector_size);
+    if (options.strict and header.mini_count != 0 and allocation.last_chain_sectors != header.mini_count) return error.InvalidMiniCount;
     const mini_used = try a.alloc(bool, mini_stream.len / format.mini_sector_size + @intFromBool(mini_stream.len % format.mini_sector_size != 0));
     @memset(mini_used, false);
     var total: usize = 0;
@@ -42,6 +43,14 @@ pub fn read(a: std.mem.Allocator, allocation: *Allocation, entries: []types.Entr
             }
             if (id != h.end) return error.InvalidMiniChain;
             entry.content = out;
+        }
+    }
+    if (options.strict) {
+        if (root.size % format.mini_sector_size != 0) return error.InvalidMiniChain;
+        if (mini_used.len > mini_bytes.len / 4) return error.InvalidMiniChain;
+        for (0..mini_bytes.len / 4) |i| {
+            const value = try h.int(u32, mini_bytes, i * 4);
+            if ((i >= mini_used.len or !mini_used[i]) and value != h.free) return error.UnclaimedMiniSector;
         }
     }
 }

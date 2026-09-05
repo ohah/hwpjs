@@ -1,6 +1,6 @@
 # CFB 1.2.0 소스 대조
 
-기준은 저장소 `legacy/cfb.js`입니다. ZIP/MIME 감지와 CFB writer는 이번 범위 밖입니다. 제품에서 레거시 JS 파서를 호출하지 않습니다. 라이선스는 저장소 고지에 따라 Apache-2.0이며, 커서 메서드 이식도 `THIRD_PARTY_NOTICES.md`에 기록합니다.
+이 문서의 초기 소스 대조 기준은 저장소 `legacy/cfb.js`이며 읽기 호환성에 한정됩니다. 후속 strict 검증·CFB writer 구현 상태는 아래 마지막 절과 [현재 API](cfb-reader.md)를 확인하세요. 제품에서 레거시 JS 파서를 호출하지 않습니다. 라이선스는 저장소 고지에 따라 Apache-2.0이며, 커서 메서드 이식도 `THIRD_PARTY_NOTICES.md`에 기록합니다.
 
 ## 함수·분기 대응
 
@@ -45,7 +45,7 @@ SSOT는 제품의 규칙에 적용합니다. content 존재 여부·FAT 분류·
 
 따라서 이번 변경은 반환 형태와 확인한 읽기 분기 호환성을 높인 작업이며, 모든 가능한 입력에 대한 100% 호환 완료 선언이 아닙니다.
 
-## 공식 MS-CFB 대조 — 2026-09-05
+## 공식 MS-CFB 대조 — 2026-09-05, 수정 전 기준
 
 기준은 Microsoft가 게시한 [MS-CFB revision 12.0, 2024-04-23](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cfb/53989ce4-7b05-4f8d-829b-d08d6148375b)과 해당 페이지의 [공식 PDF](https://winprotocoldocs-bhdugrdyduf5h2e4.b02.azurefd.net/MS-CFB/%5BMS-CFB%5D.pdf)입니다. 제품 코드 기준은 `eb74d53e`이며, 이번 변경은 재현 fixture와 문서만 수정합니다.
 
@@ -110,3 +110,13 @@ Node 24 / 실제 WASM `createCfbReader().parse()`에서 아래 17건이 모두 �
 `zig build audit -Doptimize=ReleaseSafe --summary all`: 네이티브 14개, Node/WASM 38개 통과. 컨테이너 60개·스트림 483개·검색 5496건 차등 비교 실패 0, 변이 12000건 trap 0. 실제 HWP 48개에 대한 반환 형태·스트림 바이트 비교도 통과했습니다. 이는 HWP 레코드/화면 렌더링 비교가 아니며 전체 명세 적합성의 증명도 아닙니다.
 
 후속 구현은 메타데이터·할당표·이름 비교 각각의 코어 책임 안에서 진행해야 합니다. 엄격 검증과 레거시 호환의 충돌을 명시한 뒤 정책을 정하고, 같은 검사를 JS에 재구현하지 않습니다. 이번 비교만으로 기본 API의 거부 범위를 변경하지 않았습니다.
+
+## 대조 후 구현 결과
+
+위 표는 `eb74d53e` 시점의 관측입니다. 후속 요청으로 strict 읽기·명세 이름 비교·CFB v3/v4 생성/재저장을 추가했습니다. `tests/cfb/writer.test.mjs`는 위 17건이 기본 호환 읽기에서는 기존처럼 처리되고 strict에서는 거부되는 것을 재현합니다. `ß`/`SS`, Greek simple 대문자, supplementary surrogate 비교도 별도로 검사합니다.
+
+`name_order.zig`는 명세 비교를 strict 트리 검증·writer 정렬/중복 검사·exact 검색에 공통 제공하며, `entry_rules.zig`는 읽기·쓰기 메타데이터 검사를 공유합니다. 기존 `find.zig`는 레거시 API의 별도 호환 정책입니다. ABI 5는 strict open·exact lookup·편집 모델·writer 출력을 추가하며 wire 레이아웃도 기존 ABI 스키마에서 생성합니다.
+
+저장 후 실제 HWP 48개 × v3/v4의 모든 활성 모델 필드와 904개 stream 바이트가 보존됐고, 독립 JS 파서도 출력 stream을 동일하게 읽었습니다. 네이티브 20개와 Node/WASM 46개에는 생성·수정·삭제·이름/부모 관계, 다중 DIFAT, strict 위반, wire 손상, 할당 실패 및 복구 테스트가 포함됩니다. 명세용 생성과 검증이 서로 같은 오류를 숨기지 않도록 독립 파서/직접 바이트 변이를 함께 사용합니다.
+
+Range Lock은 배치 예약·체인 참조 금지·마커 검사와 경계 계산 테스트를 추가했습니다. 실제 2 GiB 초과 파일 왕복이나 16 TiB 전체 크기 지원을 실측한 것은 아닙니다. 기본 자원 제한은 유지됩니다. 물리 바이트 동일 저장, 파일시스템 제자리 수정/트랜잭션, HWP 본문 인코더는 이 CFB API가 제공하지 않습니다. 따라서 이 변경도 모든 입력 공간의 무결함 또는 전체 HWP 구현 완료 선언은 아닙니다.

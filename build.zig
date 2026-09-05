@@ -31,7 +31,7 @@ pub fn build(b: *std.Build) void {
     compare.step.dependOn(b.getInstallStep());
     const compare_step = b.step("compare", "Compare CFB reading against legacy JS and validate ABI contracts");
     compare_step.dependOn(&compare.step);
-    const contracts = b.addSystemCommand(&.{ "node", "--test", "tests/cfb/contracts.test.mjs", "tests/cfb/adversarial.test.mjs", "tests/cfb/structured.test.mjs", "tests/cfb/exact.test.mjs", "tests/cfb/exceptions.test.mjs" });
+    const contracts = b.addSystemCommand(&.{ "node", "--test", "tests/cfb/contracts.test.mjs", "tests/cfb/adversarial.test.mjs", "tests/cfb/structured.test.mjs", "tests/cfb/exact.test.mjs", "tests/cfb/exceptions.test.mjs", "tests/cfb/writer.test.mjs" });
     contracts.step.dependOn(b.getInstallStep());
     compare_step.dependOn(&contracts.step);
     const mutations = b.addSystemCommand(&.{ "node", "tests/cfb/mutations.mjs" });

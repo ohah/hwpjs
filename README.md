@@ -1,7 +1,7 @@
 # hwpjs
 
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig/WASM 프로젝트입니다.
-현재 CFB 컨테이너 읽기를 지원합니다. **HWP/HWPX 문서 의미 해석·편집·저장은 아직 구현되지 않았습니다.**
+현재 CFB v3/v4 읽기·명세 검증·스트림 편집 후 새 컨테이너 저장을 지원합니다. **HWP/HWPX 문서 의미 해석·본문 편집·저장은 아직 구현되지 않았습니다.**
 
 ## 시작하기
 
@@ -14,15 +14,15 @@ zig build compare -Doptimize=ReleaseSafe
 zig fmt --check build.zig src
 ```
 
-`zig-out/bin/hwpjs.wasm`은 외부 import 없이 CFB 읽기를 제공합니다. JS 비교 검증에는 Node 24를 사용합니다.
-Zig/JS API와 검증 범위는 [CFB 읽기](docs/cfb-reader.md)를 참고하세요.
+`zig-out/bin/hwpjs.wasm`은 외부 import 없이 CFB 읽기·쓰기를 제공합니다. JS 비교 검증에는 Node 24를 사용합니다.
+Zig/JS API와 자원 제한·검증 범위는 [CFB 읽기·쓰기](docs/cfb-reader.md)를 참고하세요.
 
 ## 디렉터리
 
 | 경로 | 역할 |
 |---|---|
 | `src/` | 신규 Zig 구현과 WASM 진입점 |
-| `js/` | 브라우저/Node 읽기 API, 메모리·엔트리 변환 어댑터 |
+| `js/` | 브라우저/Node 읽기·쓰기 API, 메모리·엔트리·편집 모델 변환 어댑터 |
 | `tests/cfb/` | 레거시 JS 비교와 브라우저 검증 |
 | `docs/` | 현재 설계·개발 안내 |
 | `legacy/rust/` | 이전 Rust 코어, JS/RN 래퍼, 예제, 문서, 테스트, 실험 |

@@ -1,4 +1,5 @@
 pub const Options = struct {
+    strict: bool = false,
     max_input_bytes: usize = 256 * 1024 * 1024,
     max_stream_bytes: usize = 256 * 1024 * 1024,
     max_total_stream_bytes: usize = 512 * 1024 * 1024,
@@ -7,6 +8,7 @@ pub const Options = struct {
 };
 
 pub const Entry = struct {
+    parent: u32 = 0xffffffff,
     name: []const u8,
     path: []const u8 = "",
     kind: u8,

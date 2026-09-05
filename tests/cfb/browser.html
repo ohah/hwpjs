@@ -8,6 +8,7 @@ import {createCfbReader} from '/cfb.mjs';
 import {checkSearchLifecycle} from '/search-lifecycle.mjs';
 import {checkBrowserBoundaries} from '/browser-boundaries.mjs';
 import {assertExactResult} from '/exact-result.mjs';
+import {checkBrowserWriter} from '/browser-writer.mjs';
 try {
   const reader=await createCfbReader(await (await fetch('/hwpjs.wasm')).arrayBuffer());
   const names=await (await fetch('/fixtures')).json();
@@ -49,6 +50,7 @@ try {
   }
   const lifecycleSearches=checkSearchLifecycle(CFB,reader);
   const boundaries=await checkBrowserBoundaries(CFB,reader);
-  document.querySelector('#result').textContent=JSON.stringify({files:names.length,streams,exactSynthetic,lifecycleSearches,boundaries,passed:true});
+  const writerCases=checkBrowserWriter(reader,CFB);
+  document.querySelector('#result').textContent=JSON.stringify({files:names.length,streams,exactSynthetic,lifecycleSearches,boundaries,writerCases,passed:true});
 } catch(error) {document.querySelector('#result').textContent='FAIL: '+error.stack;}
 </script>

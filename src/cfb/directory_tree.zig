@@ -17,6 +17,7 @@ pub fn build(a: std.mem.Allocator, entries: []Entry, max_path_bytes: usize) !voi
         if (seen[node.id]) return error.CyclicDirectory;
         seen[node.id] = true;
         const e = &entries[node.id];
+        e.parent = node.parent;
         if (e.kind != 1 and e.kind != 2) return error.InvalidDirectory;
         const parent = entries[node.parent].path;
         e.path = try paths.make(parent, e.name, e.kind == 1);

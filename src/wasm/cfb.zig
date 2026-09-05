@@ -18,8 +18,14 @@ export fn cfb_close() void {
     active = null;
 }
 export fn cfb_open(ptr: [*]const u8, size: usize) u32 {
+    return open(ptr, size, false);
+}
+export fn cfb_open_strict(ptr: [*]const u8, size: usize) u32 {
+    return open(ptr, size, true);
+}
+fn open(ptr: [*]const u8, size: usize, strict: bool) u32 {
     cfb_close();
-    active = cfb.File.open(allocator, ptr[0..size], .{}) catch |err| {
+    active = cfb.File.open(allocator, ptr[0..size], .{ .strict = strict }) catch |err| {
         last_error = @errorName(err);
         last_code = @errorName(err);
         // Reuse core validation, never reimplement header checks in the JS adapter.
@@ -52,5 +58,10 @@ export fn cfb_count() usize {
 export fn cfb_find(ptr: [*]const u8, size: usize) i32 {
     const file = if (active) |*f| f else return -1;
     const found = file.find(allocator, ptr[0..size]) catch |err| return fail(err);
+    return if (found) |index| @intCast(index) else -1;
+}
+export fn cfb_find_exact(ptr: [*]const u8, size: usize) i32 {
+    const file = if (active) |*f| f else return -1;
+    const found = file.findExact(ptr[0..size]) catch |err| return fail(err);
     return if (found) |index| @intCast(index) else -1;
 }

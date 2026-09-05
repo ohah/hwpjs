@@ -1,6 +1,8 @@
-# CFB 읽기
+# CFB 읽기·검증·쓰기
 
 기준 구현은 저장소의 `legacy/cfb.js` (SheetJS CFB 1.2.0)입니다. 범위는 **CFB 바이너리 컨테이너 읽기**이며, 같은 파일의 디렉터리 순서·경로·스트림 바이트·메타데이터·검색 결과·raw 헤더와 섹터를 비교합니다.
+
+위 기준은 레거시 읽기 호환성에 적용합니다. strict 검증과 v3/v4 writer의 기준은 공식 MS-CFB 12.0입니다. 컨테이너 생성·스트림 추가/교체·이름/부모 변경·삭제 후 재저장을 지원하지만, HWP 본문 파싱·압축·암호 해제 기능은 아닙니다.
 
 ## 책임 분리
 
@@ -19,6 +21,11 @@
 | `src/cfb/uppercase.zig` | 생성된 Unicode 대문자 매핑 데이터 |
 | `src/cfb/types.zig` | 엔트리·자원 제한 옵션 |
 | `src/cfb/reader.zig` | 공개 File API, 소유권·처리 순서 조립 |
+| `src/cfb/strict.zig`, `entry_rules.zig` | strict 헤더/디렉터리 검사, 읽기·쓰기 공통 메타데이터 규칙 |
+| `src/cfb/name_order.zig`, `simple_uppercase.zig` | 명세 이름 유효성·비교·검색, Unicode 17 simple 대문자 데이터 |
+| `src/cfb/writer_directory.zig` | 편집 모델 검증·부모 관계·중복 검사·형제 트리·엔트리 직렬화 |
+| `src/cfb/writer_layout.zig`, `writer.zig` | 섹터 배치·Range Lock 예약·FAT/DIFAT 크기 계산, 컨테이너 직렬화 |
+| `src/wasm/cfb_writer.zig`, `document_wire.zig`, `js/cfb-document.mjs` | 저장 결과 수명과 편집 모델의 ABI 경계 변환 |
 | `src/wasm/memory.zig` | WASM 임시 입력 메모리 할당·해제 |
 | `src/wasm/cfb.zig` | 열린 CFB 수명·오류·검색 |
 | `src/wasm/cfb_entries.zig`, `cfb_raw.zig` | 엔트리 필드 및 raw 바이트 ABI |
@@ -58,9 +65,42 @@ WASM 인스턴스당 열린 CFB는 하나입니다. 새 read는 이전 내부 CF
 
 검색 규칙은 `src/cfb/find.zig` 한곳에 있습니다. 현재 문서는 내부 엔트리를, 보관된 결과는 이름·경로를 직렬화한 메타데이터를 같은 함수에 전달합니다. 보관된 결과의 메타데이터는 WeakMap에 캐시하고 호출 동안 WASM에 복사합니다. 다른 문서를 열거나 열기에 실패하거나 `close()`한 뒤에도 검색할 수 있으며, 현재 열린 문서를 교체하지 않습니다. JS 검색 문자열에 단독 surrogate가 있으면 대체문자로 변환하지 않고 `null`을 반환합니다.
 
-현재 ABI는 **4**입니다. JS 초기화는 다른 버전과 필수 export/메모리 누락을 거부합니다. `js/abi-schema.mjs`가 필드 번호·버전의 기준이며 `node tools/generate-abi.mjs`가 Zig 선언을 출력합니다. 모든 빌드 및 네이티브 테스트에서 `--check`로 생성 파일의 일치를 검사합니다. `uses_fat`와 `has_content`는 코어의 분류 및 content 존재 여부를 전달합니다. JS에 FAT 분류나 MiniFAT 존재 조건을 중복 정의하지 않습니다. 검색 snapshot 형식은 ABI 2부터 동일합니다. `cfb_error_ptr/len`은 메시지, `cfb_error_code_ptr/len`은 네이티브 오류 이름을 반환합니다. 헤더 진단은 `Header.parseDiagnostic`의 검증 분기에서 만들어 JS에서 별도로 헤더를 파싱하지 않습니다.
+현재 ABI는 **5**입니다. JS 초기화는 다른 버전과 필수 export/메모리 누락을 거부합니다. `js/abi-schema.mjs`가 필드 번호·버전·편집 모델 wire 형식의 기준이며 `node tools/generate-abi.mjs`가 Zig 선언을 출력합니다. 모든 빌드 및 네이티브 테스트에서 `--check`로 생성 파일의 일치를 검사합니다. `uses_fat`와 `has_content`는 코어의 분류 및 content 존재 여부를 전달합니다. JS에 FAT 분류나 MiniFAT 존재 조건을 중복 정의하지 않습니다. 검색 snapshot 형식은 ABI 2부터 동일합니다. `cfb_error_ptr/len`은 메시지, `cfb_error_code_ptr/len`은 네이티브 오류 이름을 반환합니다. 헤더 진단은 `Header.parseDiagnostic`의 검증 분기에서 만들어 JS에서 별도로 헤더를 파싱하지 않습니다.
 
-## 호환성과 의도적 차이
+## Strict 검증과 저장 API
+
+```js
+import { createCfbReader, removeNode } from './js/cfb.mjs';
+const reader = await createCfbReader(wasmBytes);
+reader.parse(hwpBytes, { strict: true });
+const document = reader.document();
+const index = document.nodes.findIndex(n => n.kind === 2 && n.name === 'Section0');
+// 실제 Section0 교체에는 별도의 HWP 레코드 인코딩·압축이 필요합니다.
+document.nodes[index].content = replacementStreamBytes;
+const saved = reader.write(document); // Uint8Array, 원본을 덮어쓰지 않음
+reader.parse(saved, { strict: true });
+console.log(reader.findExact('/BodyText/Section0')?.size);
+reader.close();
+```
+
+새 파일은 `reader.write({version:3, nodes:[{name:'Root Entry',kind:5}, {name:'Data',parent:0,content:new Uint8Array([1,2,3])}]})`로 만듭니다. version은 3 또는 4이며 기본값은 3입니다.
+
+- `document()`는 현재 열린 파일의 독립적인 편집 모델을 반환합니다. `nodes[0]`은 root(kind=5), 나머지는 storage(kind=1) 또는 stream(kind=2)이며 `parent`는 nodes 배열 인덱스입니다. 이름/부모 변경, content 교체, nodes.push로 추가한 뒤 `write()`합니다. 부모가 자식보다 앞에 있을 필요는 없습니다.
+- 삭제는 `removeNode(document,index)`로 subtree와 자식들을 제거하고 부모 인덱스를 재매핑합니다. 새 모델을 반환하며 남은 바이트 버퍼는 공유합니다. 배열을 직접 splice하면 parent 인덱스도 호출자가 수정해야 합니다.
+- `clsid`는 파일 표현 그대로의 16바이트, `state`는 u32, `created`/`modified`는 raw FILETIME u64 **BigInt**입니다. JS Date를 경유하지 않아 정밀도를 잃지 않습니다. 생략한 메타데이터는 0입니다. 명세상 금지된 메타데이터는 조용히 버리지 않고 오류로 반환합니다.
+- `findExact(path)`는 **현재 열린 파일**의 루트 상대 계층 검색입니다. `/`는 root입니다. 명세의 길이 우선·UTF-16 단위 simple 대문자 비교를 사용하며, 레거시 find의 basename/제어문자 별칭은 적용하지 않습니다. 정렬되지 않은 비표준 파일은 먼저 strict로 검증해야 합니다.
+- Zig는 `cfb.writer.write(allocator,nodes,options)`와 `File.findExact(path)`, `File.toNodes(allocator)`를 제공합니다. write의 반환 바이트와 toNodes의 배열은 호출자가 free합니다. toNodes의 이름/내용은 File에서 빌리므로 File의 수명 안에서 사용합니다. writer는 입력을 변경하지 않습니다.
+- direct ABI의 `cfb_write`/`cfb_document` 결과는 `cfb_output_ptr/len`으로 접근하고 `cfb_output_free`로 해제합니다. 다음 write/document 호출은 이전 출력도 해제합니다. JS는 즉시 복사·해제합니다. write 실패는 열려 있던 reader를 변경하지 않습니다.
+
+strict는 헤더 CLSID/BOM/v4 패딩, 최소/전체 섹터 크기, FAT/DIFAT 목록·종료·EOF 이후 항목·할당 소유권, MiniFAT 개수·소유권, storage/stream/root/unused 필드, 중복 이름·전역 정렬·연속 red, Range Lock 참조를 검사합니다. v3 size high DWORD는 호환 요구에 따라 무시하며 minor의 SHOULD 값은 강제하지 않습니다. 기본 parse/read는 기존 호환 모드를 유지합니다.
+
+저장 시 정상 필드·이름·부모 계층·모든 stream 바이트를 보존합니다. 물리 섹터 배치·unused 엔트리·여유 공간·헤더 minor/transaction signature·트리 색상은 정규화/재생성하므로 **파일 전체 바이트가 원본과 같다는 보장은 아닙니다.** 제자리 수정·동시 접근·트랜잭션 API는 제공하지 않습니다.
+
+자원 제한은 여전히 적용됩니다. WASM은 전체 메모리 기반이며 입력/출력과 편집 wire 각각 기본 256 MiB 한도가 있습니다. 네이티브 Options는 한도를 조정할 수 있지만 실제 메모리·usize 한계도 적용됩니다. Range Lock 배치/제외는 구현하고 2 GiB 경계 계산을 테스트했으나, 실제 2 GiB 초과 파일이나 명세 최대 16 TiB 파일을 왕복 실측한 것은 아닙니다.
+
+이번 검증: 네이티브 20개·Node/WASM 46개, 실제 HWP 48개 × v3/v4 재저장(스트림 904개)과 모든 편집 모델 필드, 16 MiB 다중 DIFAT, 생성 계층 64개, strict 변이 2,048건, 할당 실패 전수 주입, 손상된 wire·실패 후 복구를 검사합니다. Chromium에서는 기존 읽기 비교 외에 생성·수정 14조합을 확인합니다. HWP 본문 의미/렌더링의 검증은 아닙니다.
+
+## 레거시 읽기 호환성과 의도적 차이
 
 - v3(512), v4(4096), MiniFAT(64), 4096바이트 컷오프, 확장 DIFAT, 빈 스트림·중첩 스토리지 지원.
 - find는 전체 경로·루트 상대 경로·이름, Unicode 대문자 비교, NUL 제거·제어문자 1~6의 `!` 별칭을 처리합니다. Unicode 테이블은 생성 당시 Node 버전에 고정됩니다.
@@ -70,7 +110,7 @@ WASM 인스턴스당 열린 CFB는 하나입니다. 새 read는 이전 내부 CF
 - 사용 중인 일반/MiniFAT 스트림의 FREESECT 마커, 루트의 형제 참조, 스트림의 자식 참조, 활성 엔트리의 잘못된 색상·이름 종료·금지 문자를 거부합니다. UTF-16 유효성은 NUL 제거 전에 검사합니다. 이는 트리의 모든 정렬·red-black 균형 조건을 검증한다는 의미는 아닙니다.
 - 기본 제한: 입력/개별 스트림 256 MiB, 합계 스트림 512 MiB, 엔트리 100만 개, 경로 합계 64 MiB. Zig Options에서 조정할 수 있습니다. 전체 힙 사용량은 테이블·입력 복사·경로·추출 데이터 때문에 이 제한들과 별개입니다.
 - CFB 스트림은 **원시 바이트**입니다. HWP 압축 해제·암호 해제·문단 해석은 다음 계층입니다.
-- 레거시 모듈의 ZIP/MIME 자동 감지, CFB 쓰기·수정 유틸리티는 이번 범위에 포함하지 않습니다. `content`에는 레거시의 `l`, `read_shift`, `chk`, `write_shift`를 제공합니다. 커서 메서드는 JS 복사본에만 작용합니다.
+- 레거시 모듈의 ZIP/MIME 자동 감지 및 writer API의 동일한 반환 형태는 지원하지 않습니다. 새 CFB writer는 위의 별도 편집 모델 API입니다. `content`에는 레거시의 `l`, `read_shift`, `chk`, `write_shift`를 제공합니다. 커서 메서드는 JS 복사본에만 작용합니다.
 - v4 크기는 u64로 읽습니다. 레거시의 하위 32비트 읽기 오류를 복제하지 않으며, 대용량 파일은 설정한 메모리 제한을 따릅니다.
 - `content`의 존재 여부는 레거시처럼 미니 스트림 backing과 시작 섹터에 따라 결정하며, 빈 스트림이라고 일괄 생략하거나 빈 배열을 붙이지 않습니다. 스토리지·미사용 엔트리에도 빈 `content`가 있을 수 있습니다. Node Buffer 입력의 내용은 Buffer, 비-Buffer 입력의 내용은 배열입니다. 빈 content 할당은 Node에서 Buffer, 브라우저에서 배열을 사용합니다. raw는 입력의 Buffer/배열/Uint8Array 표현을 따릅니다.
 

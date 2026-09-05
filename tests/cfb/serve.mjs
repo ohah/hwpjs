@@ -6,6 +6,8 @@ const names = readdirSync(fixtures).filter((n) => n.endsWith(".hwp"));
 const routes = {
   "/": ["tests/cfb/browser.html", "text/html; charset=utf-8"],
   "/cfb.mjs": ["js/cfb.mjs", "text/javascript"],
+  "/cfb-document.mjs": ["js/cfb-document.mjs", "text/javascript"],
+  "/browser-writer.mjs": ["tests/cfb/browser-writer.mjs", "text/javascript"],
   "/input.mjs": ["js/input.mjs", "text/javascript"],
   "/output-bytes.mjs": ["js/output-bytes.mjs", "text/javascript"],
   "/blob-cursor.mjs": ["js/blob-cursor.mjs", "text/javascript"],

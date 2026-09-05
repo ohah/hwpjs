@@ -1,5 +1,13 @@
 # Third-party notices
 
+## Unicode character database
+
+`src/cfb/simple_uppercase.zig` derives the BMP simple uppercase mappings from
+[UnicodeData.txt, Unicode 17.0.0](https://www.unicode.org/Public/17.0.0/ucd/UnicodeData.txt),
+field 12. Generator: `tools/generate-simple-uppercase.mjs`.
+Copyright © 1991-2026 Unicode, Inc. License: [Unicode License V3](licenses/Unicode-3.0.txt).
+Surrogate units are unchanged, as required by MS-CFB §2.6.4.
+
 ## SheetJS CFB
 
 `legacy/cfb.js` identifies itself as SheetJS CFB 1.2.0, Copyright (C) 2013-present SheetJS.

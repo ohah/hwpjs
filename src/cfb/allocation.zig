@@ -8,11 +8,14 @@ pub const Allocation = struct {
     sectors: Sectors,
     fat: []u32 = &.{},
     used: []Role = &.{},
+    strict: bool = false,
+    last_chain_sectors: usize = 0,
     fn sector(self: *Allocation, id: u32) ![]const u8 {
         return self.sectors.get(id);
     }
     fn claim(self: *Allocation, id: u32, role: Role) !void {
         if (id >= self.used.len) return error.InvalidSector;
+        if (self.strict and id == @import("strict.zig").rangeLock(self.sectors.header.sector_size)) return error.InvalidRangeLock;
         if (self.used[id] != .unclaimed) return error.CyclicOrSharedSector;
         self.used[id] = role;
     }
@@ -21,16 +24,19 @@ pub const Allocation = struct {
         var list: std.ArrayList(u8) = .empty;
         var id = start;
         var remaining = expected;
+        self.last_chain_sectors = 0;
         while (id != h.end and id != h.free) {
             if (id >= self.fat.len) return error.InvalidSector;
             if (self.fat[id] == h.free) return error.UnallocatedSector;
             try self.claim(id, .stream);
+            self.last_chain_sectors += 1;
             const part = try self.sector(id);
             const count = if (remaining) |r| @min(r, part.len) else part.len;
             try list.appendSlice(self.a, part[0..count]);
             if (remaining) |r| remaining = r - count;
             id = self.fat[id];
         }
+        if (self.strict and id != h.end) return error.InvalidChain;
         if (remaining) |r| if (r != 0) return error.TruncatedStream;
         return list.toOwnedSlice(self.a);
     }
@@ -38,6 +44,7 @@ pub const Allocation = struct {
     pub fn init(self: *Allocation) !void {
         const header = self.sectors.header;
         const n = self.sectors.count();
+        if (self.strict and @as(u64, header.fat_count) * (header.sector_size / 4) < n) return error.InvalidFat;
         if (header.fat_count > n or header.difat_count > n or header.mini_count > n)
             return error.InvalidHeader;
         self.used = try self.a.alloc(Role, n);
@@ -45,6 +52,13 @@ pub const Allocation = struct {
         var fats: std.ArrayList(u32) = .empty;
         for (0..109) |i| {
             const id = try h.int(u32, self.sectors.bytes, 76 + 4 * i);
+            if (self.strict) {
+                if (i < header.fat_count) {
+                    if (id > 0xfffffffa) return error.InvalidDifat;
+                    try fats.append(self.a, id);
+                } else if (id != h.free) return error.InvalidDifat;
+                continue;
+            }
             if (id >= h.difat_sector) break;
             try fats.append(self.a, id);
         }
@@ -55,11 +69,19 @@ pub const Allocation = struct {
             if (part.len != header.sector_size) return error.Truncated;
             for (0..header.sector_size / 4 - 1) |i| {
                 const id = try h.int(u32, part, i * 4);
+                if (self.strict) {
+                    if (fats.items.len < header.fat_count) {
+                        if (id > 0xfffffffa) return error.InvalidDifat;
+                        try fats.append(self.a, id);
+                    } else if (id != h.free) return error.InvalidDifat;
+                    continue;
+                }
                 if (id < h.difat_sector) try fats.append(self.a, id);
             }
             difat = try h.int(u32, part, part.len - 4);
         }
         if (difat != h.end and difat != h.free) return error.InvalidDifat;
+        if (self.strict and difat != h.end) return error.InvalidDifat;
         if (fats.items.len != header.fat_count) return error.InvalidFat;
         self.fat = try self.a.alloc(u32, n);
         @memset(self.fat, h.free);
@@ -69,7 +91,10 @@ pub const Allocation = struct {
             if (part.len != header.sector_size) return error.Truncated;
             for (0..part.len / 4) |j| {
                 const dest = index * (part.len / 4) + j;
-                if (dest >= n) break;
+                if (dest >= n) {
+                    if (self.strict and try h.int(u32, part, j * 4) != h.free) return error.InvalidFat;
+                    continue;
+                }
                 self.fat[dest] = try h.int(u32, part, j * 4);
             }
         }
@@ -79,5 +104,15 @@ pub const Allocation = struct {
             .difat => if (marker != h.difat_sector) return error.InvalidDifat,
             else => {},
         };
+    }
+
+    pub fn validateOwnership(self: *const Allocation) !void {
+        const lock = @import("strict.zig").rangeLock(self.sectors.header.sector_size);
+        for (self.used, self.fat, 0..) |role, marker, id| {
+            if (id == lock) {
+                const expected = if (self.sectors.bytes.len > 0x80000000) h.end else h.free;
+                if (role != .unclaimed or marker != expected) return error.InvalidRangeLock;
+            } else if (role == .unclaimed and marker != h.free) return error.UnclaimedSector;
+        }
     }
 };
