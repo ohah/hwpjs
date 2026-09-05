@@ -4,3 +4,4 @@ pub const Flag = @import("file_header.zig").Flag;
 pub const Version = @import("version.zig").Version;
 pub const record = @import("record.zig");
 pub const stream = @import("stream.zig");
+pub const docinfo = @import("docinfo/reader.zig");

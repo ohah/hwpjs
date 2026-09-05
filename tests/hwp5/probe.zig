@@ -60,6 +60,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
             const h = try core.hwp5.Header.parse(bytes[0..256]);
             return core.hwp5.stream.decode(a, &h, bytes[256..], limit);
         },
+        4 => return @import("docinfo-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

@@ -7,7 +7,7 @@ src/
   binary/      경계 검사·정수 읽기 (현재 구현)
   cfb/         컨테이너 읽기·검증·새 컨테이너 쓰기 (구현)
   compression/ bounded raw DEFLATE·MIT 디코더 경계 수정본 (구현)
-  hwp5/        FileHeader·버전·압축 스트림·레코드 경계 읽기 (구현), 의미 해석/쓰기 (예정)
+  hwp5/        FileHeader·버전·압축·레코드 경계·DocInfo 문서 속성/ID 매핑 (구현), 나머지 의미 해석/쓰기 (예정)
   hwpx/        ZIP/XML 읽기·쓰기 (예정)
   model/       문서 공통 모델과 원본 정보 보존 (예정)
   root.zig     라이브러리 진입점

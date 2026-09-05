@@ -8,6 +8,7 @@ import {
   constants,
 } from "node:zlib";
 import { createCfbReader } from "../../js/cfb.mjs";
+import { checkDocinfo, checkDocinfoEdges } from "./docinfo.mjs";
 
 const module = await WebAssembly.compile(readFileSync(process.argv[2]));
 assert.equal(WebAssembly.Module.imports(module).length, 0);
@@ -77,6 +78,7 @@ function oracle(bytes) {
 }
 const rounds = [];
 let begin = checks;
+checkDocinfoEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -223,6 +225,8 @@ try {
         `${name}/${entry.name}`,
       );
       const framed = call(2, plain);
+      if (entry.name === "DocInfo")
+        checkDocinfo(call, hdr.readUInt32LE(32), plain);
       assert.deepEqual(framed, oracle(plain), `${name}/${entry.name}`);
       streams++;
       records += framed.length / 20;
