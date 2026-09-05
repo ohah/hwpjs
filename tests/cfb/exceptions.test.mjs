@@ -26,6 +26,31 @@ const module = await WebAssembly.compile(
   readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)),
 );
 
+test("directory fixtures have zero storage starts and no unused allocated sector", () => {
+  for (const cycle of [false, true]) {
+    const bytes = directoryOrder(cycle);
+    assert.equal(bytes.length, 3 * 4096);
+    assert.equal(bytes.readUInt32LE(4096), 0xfffffffd);
+    assert.equal(bytes.readUInt32LE(4100), 0xfffffffe);
+    for (let offset = 4104; offset < 8192; offset += 4)
+      assert.equal(bytes.readUInt32LE(offset), 0xffffffff);
+    let storages = 0;
+    for (let offset = 8192; offset < bytes.length; offset += 128) {
+      if (bytes[offset + 66] === 0) {
+        const expected = Buffer.alloc(128);
+        for (const field of [68, 72, 76])
+          expected.writeUInt32LE(0xffffffff, field);
+        assert.deepEqual(bytes.subarray(offset, offset + 128), expected);
+      }
+      if (bytes[offset + 66] !== 1) continue;
+      storages++;
+      assert.equal(bytes.readUInt32LE(offset + 116), 0);
+      assert.equal(bytes.readBigUInt64LE(offset + 120), 0n);
+    }
+    assert.equal(storages, cycle ? 2 : 1);
+  }
+});
+
 test("pending exception: parent after siblings gives different paths", async () => {
   const bytes = directoryOrder();
   const api = await createCfbReader(module);

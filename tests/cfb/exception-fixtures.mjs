@@ -1,7 +1,13 @@
 import { v4File } from "./contract-fixtures.mjs";
 
 export function directoryOrder(cycle = false) {
-  const bytes = v4File();
+  // Only the header, FAT and directory are needed: all streams are empty.
+  const bytes = Buffer.from(v4File().subarray(0, 3 * 4096));
+  bytes.writeUInt32LE(0xffffffff, 4096 + 2 * 4);
+  // MS-CFB 2.6.3: unused entries are zero except for their NOSTREAM links.
+  for (let offset = 8192; offset < bytes.length; offset += 128)
+    for (const field of [68, 72, 76])
+      bytes.writeUInt32LE(0xffffffff, offset + field);
   function entry(index, name, type, left, right, child) {
     const o = 8192 + index * 128;
     bytes.fill(0, o, o + 128);
@@ -14,7 +20,8 @@ export function directoryOrder(cycle = false) {
       [68, left],
       [72, right],
       [76, child],
-      [116, 0xfffffffe],
+      // MS-CFB 2.6.1: storage objects (not the root) must use a zero start.
+      [116, type === 1 ? 0 : 0xfffffffe],
     ])
       bytes.writeUInt32LE(value, o + field);
   }
