@@ -6,6 +6,7 @@
 <script type="module">
 import {createCfbReader} from '/cfb.mjs';
 import {checkSearchLifecycle} from '/search-lifecycle.mjs';
+import {checkBrowserBoundaries} from '/browser-boundaries.mjs';
 try {
   const reader=await createCfbReader(await (await fetch('/hwpjs.wasm')).arrayBuffer());
   const names=await (await fetch('/fixtures')).json();
@@ -29,6 +30,7 @@ try {
   }
   reader.close();
   const lifecycleSearches=checkSearchLifecycle(CFB,reader);
-  document.querySelector('#result').textContent=JSON.stringify({files:names.length,streams,lifecycleSearches,passed:true});
+  const boundaries=await checkBrowserBoundaries(CFB,reader);
+  document.querySelector('#result').textContent=JSON.stringify({files:names.length,streams,lifecycleSearches,boundaries,passed:true});
 } catch(error) {document.querySelector('#result').textContent='FAIL: '+error.stack;}
 </script>

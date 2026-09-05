@@ -6,6 +6,7 @@ const names = readdirSync(fixtures).filter((n) => n.endsWith(".hwp"));
 const routes = {
   "/": ["tests/cfb/browser.html", "text/html; charset=utf-8"],
   "/cfb.mjs": ["js/cfb.mjs", "text/javascript"],
+  "/input.mjs": ["js/input.mjs", "text/javascript"],
   "/wasm-memory.mjs": ["js/wasm-memory.mjs", "text/javascript"],
   "/cfb-entry.mjs": ["js/cfb-entry.mjs", "text/javascript"],
   "/cfb-find.mjs": ["js/cfb-find.mjs", "text/javascript"],
@@ -17,6 +18,10 @@ const routes = {
     "text/javascript",
   ],
   "/legacy.js": ["legacy/cfb.js", "text/javascript"],
+  "/browser-boundaries.mjs": [
+    "tests/cfb/browser-boundaries.mjs",
+    "text/javascript",
+  ],
   "/hwpjs.wasm": ["zig-out/bin/hwpjs.wasm", "application/wasm"],
 };
 createServer((req, res) => {

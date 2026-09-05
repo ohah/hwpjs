@@ -65,7 +65,7 @@ fn allocationCase(a: std.mem.Allocator) !void {
     try std.testing.expectEqualStrings("x", try file.readStream(a, "x"));
 }
 
-fn miniFile() [2560]u8 {
+pub fn miniFile() [2560]u8 {
     var bytes = [_]u8{0} ** 2560;
     const base = emptyFile();
     @memcpy(bytes[0..1536], &base);

@@ -37,6 +37,7 @@ zig fmt --check build.zig src
 zig build test
 zig build -Doptimize=ReleaseSafe
 zig build compare -Doptimize=ReleaseSafe
+zig build audit -Doptimize=ReleaseSafe
 ```
 
 파서·writer 변경에는 정상 입력뿐 아니라 잘림·잘못된 참조·크기 경계 테스트를 추가합니다. WASM ABI 변경은 실제 WebAssembly 인스턴스에서 확인합니다. 문서만 변경한 경우 관련 링크·경로·내용 검증으로 충분합니다.

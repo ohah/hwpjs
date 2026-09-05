@@ -35,7 +35,7 @@ pub fn read(a: std.mem.Allocator, allocation: *Allocation, entries: []types.Entr
                 offset += count;
                 id = try h.int(u32, mini_bytes, @as(usize, id) * 4);
             }
-            if (id != h.end and id != h.free) return error.InvalidMiniChain;
+            if (id != h.end) return error.InvalidMiniChain;
             entry.content = out;
         }
     }

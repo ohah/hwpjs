@@ -23,6 +23,7 @@ pub const Allocation = struct {
         var remaining = expected;
         while (id != h.end and id != h.free) {
             if (id >= self.fat.len) return error.InvalidSector;
+            if (self.fat[id] == h.free) return error.UnallocatedSector;
             try self.claim(id, .stream);
             const part = try self.sector(id);
             const count = if (remaining) |r| @min(r, part.len) else part.len;

@@ -118,3 +118,20 @@ test("extended DIFAT role must agree with its FAT marker", async () => {
     api.close();
   }
 });
+
+test("an allocated MiniFAT chain cannot terminate in FREESECT", async () => {
+  const source = CFB.utils.cfb_new();
+  CFB.utils.cfb_add(source, "/Data", Buffer.from([65]));
+  const bytes = Buffer.from(CFB.write(source, { type: "buffer" }));
+  const parsed = CFB.read(bytes, { type: "buffer" });
+  const start = CFB.find(parsed, "Data").start;
+  const offset = (bytes.readUInt32LE(60) + 1) * 512 + start * 4;
+  assert.equal(bytes.readUInt32LE(offset), 0xfffffffe);
+  bytes.writeUInt32LE(0xffffffff, offset);
+  const api = await createCfbReader(module);
+  try {
+    assert.throws(() => api.parse(bytes), /InvalidMiniChain/);
+  } finally {
+    api.close();
+  }
+});

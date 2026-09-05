@@ -2,6 +2,7 @@ import { createMemory } from "./wasm-memory.mjs";
 import { decodeEntry } from "./cfb-entry.mjs";
 import { createFinder } from "./cfb-find.mjs";
 import { validateAbi } from "./abi.mjs";
+import { inputBytes, decodeInput } from "./input.mjs";
 
 /** Browser/Node CFB memory API. Returned arrays own their data. */
 export async function createCfbReader(source) {
@@ -15,12 +16,8 @@ export async function createCfbReader(source) {
   const find = createFinder(wasm, memory);
   let loaded;
   function parse(data, options = {}) {
-    const bytes =
-      data instanceof Uint8Array
-        ? data
-        : data instanceof ArrayBuffer
-          ? new Uint8Array(data)
-          : Uint8Array.from(data);
+    const rawRequested = Boolean(options.raw);
+    const bytes = inputBytes(data);
     loaded = undefined;
     memory.withBytes(bytes, (ptr, size) => {
       if (!wasm.cfb_open(ptr, size)) throw memory.error();
@@ -31,7 +28,7 @@ export async function createCfbReader(source) {
       result.FileIndex.push(decoded.entry);
       result.FullPaths.push(decoded.path);
     }
-    if (options.raw) {
+    if (rawRequested) {
       const raw = (id) =>
         memory.copy(wasm.cfb_raw_ptr(id), wasm.cfb_raw_len(id));
       result.raw = {
@@ -48,11 +45,7 @@ export async function createCfbReader(source) {
     const type = options.type ?? "base64";
     if (type === "file")
       throw new Error("Use cfb-node.mjs for filesystem input");
-    if (type === "base64")
-      data = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
-    else if (type === "binary")
-      data = Uint8Array.from(data, (c) => c.charCodeAt(0) & 255);
-    return parse(data, options);
+    return parse(decodeInput(data, type), options);
   }
   return {
     parse,

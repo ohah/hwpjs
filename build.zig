@@ -31,7 +31,13 @@ pub fn build(b: *std.Build) void {
     compare.step.dependOn(b.getInstallStep());
     const compare_step = b.step("compare", "Compare CFB reading against legacy JS and validate ABI contracts");
     compare_step.dependOn(&compare.step);
-    const contracts = b.addSystemCommand(&.{ "node", "--test", "tests/cfb/contracts.test.mjs" });
+    const contracts = b.addSystemCommand(&.{ "node", "--test", "tests/cfb/contracts.test.mjs", "tests/cfb/adversarial.test.mjs" });
     contracts.step.dependOn(b.getInstallStep());
     compare_step.dependOn(&contracts.step);
+    const mutations = b.addSystemCommand(&.{ "node", "tests/cfb/mutations.mjs" });
+    mutations.step.dependOn(b.getInstallStep());
+    const audit = b.step("audit", "Run regression contracts and deterministic malformed-input sweeps");
+    audit.dependOn(&mutations.step);
+    audit.dependOn(&run_tests.step);
+    audit.dependOn(compare_step);
 }

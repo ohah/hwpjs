@@ -4,8 +4,10 @@ import { FIELD, VALUE } from "./abi-schema.mjs";
 export function decodeEntry(wasm, memory, index) {
   const field = (key) =>
     memory.copy(wasm.cfb_field_ptr(index, key), wasm.cfb_field_len(index, key));
-  const number = (key) => Number(wasm.cfb_value(index, key));
-  const decoder = new TextDecoder();
+  const unsigned = (key) => BigInt.asUintN(64, wasm.cfb_value(index, key));
+  const number = (key) => Number(unsigned(key));
+  // Names are UTF-8 fields, not standalone text files; U+FEFF is part of the name.
+  const decoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
   const e = {
     name: decoder.decode(field(FIELD.name)),
     type: number(VALUE.kind),
@@ -25,7 +27,7 @@ export function decodeEntry(wasm, memory, index) {
     [VALUE.created, "ct"],
     [VALUE.modified, "mt"],
   ]) {
-    const ticks = wasm.cfb_value(index, key);
+    const ticks = unsigned(key);
     if (ticks)
       e[name] = new Date(
         ((Number(ticks >> 32n) / 1e7) * 2 ** 32 +

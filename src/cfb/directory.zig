@@ -10,19 +10,8 @@ pub fn parse(a: std.mem.Allocator, directory: []const u8, header: h.Header, max_
     const entries = try a.alloc(Entry, directory.len / 128);
     for (entries, 0..) |*entry, i| {
         const data = directory[i * 128 ..][0..128];
-        const name_len = try h.int(u16, data, 64);
-        if (name_len > 64 or name_len % 2 != 0) return error.InvalidName;
-        var units: [32]u16 = undefined;
-        var unit_count: usize = 0;
-        for (0..name_len / 2) |j| {
-            const unit = try h.int(u16, data, j * 2);
-            if (unit != 0) {
-                units[unit_count] = unit;
-                unit_count += 1;
-            }
-        }
         entry.* = .{
-            .name = try std.unicode.utf16LeToUtf8Alloc(a, units[0..unit_count]),
+            .name = try @import("directory_name.zig").decode(a, data, data[66] != 0),
             .kind = data[66],
             .color = data[67],
             .left = try h.int(u32, data, 68),
@@ -37,6 +26,10 @@ pub fn parse(a: std.mem.Allocator, directory: []const u8, header: h.Header, max_
         };
         if (entry.kind != 0 and entry.kind != 1 and entry.kind != 2 and entry.kind != 5)
             return error.InvalidDirectory;
+        if (entry.kind != 0 and entry.color > 1) return error.InvalidDirectory;
+        if (entry.kind == 2 and entry.child != h.free) return error.InvalidDirectoryReference;
+        if (entry.kind == 5 and (entry.left != h.free or entry.right != h.free))
+            return error.InvalidDirectoryReference;
     }
 
     if (entries[0].kind != 5) return error.InvalidRoot;
