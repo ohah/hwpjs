@@ -9,12 +9,12 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return core.hwp5.bin_data_stream.decode(a, &header, item, bytes[r.offset..], limit);
 }
 
-fn int(a: std.mem.Allocator, out: *std.ArrayList(u8), comptime T: type, value: T) !void {
+pub fn int(a: std.mem.Allocator, out: *std.ArrayList(u8), comptime T: type, value: T) !void {
     var b: [@sizeOf(T)]u8 = undefined;
     std.mem.writeInt(T, &b, value, .little);
     try out.appendSlice(a, &b);
 }
-fn string(a: std.mem.Allocator, out: *std.ArrayList(u8), bytes: []const u8) !void {
+pub fn string(a: std.mem.Allocator, out: *std.ArrayList(u8), bytes: []const u8) !void {
     try int(a, out, u16, @intCast(bytes.len / 2));
     try out.appendSlice(a, bytes);
 }

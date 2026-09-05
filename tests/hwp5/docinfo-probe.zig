@@ -21,11 +21,14 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
                 for (0..@min(m.count(), 18)) |i| try word(a, &out, @bitCast(m.get(@enumFromInt(i)).?));
                 try out.appendSlice(a, m.extra());
             },
-            .bin_data, .face_name => {
+            .bin_data, .face_name, .tab_def, .numbering, .bullet, .style => {
                 try word(a, &out, @intCast(record.framing.raw.len));
                 const header_len = record.framing.raw.len - record.framing.payload.len;
                 try out.appendSlice(a, record.framing.raw[0..header_len]);
-                try @import("resource-probe.zig").payload(a, &out, record.value);
+                switch (record.value) {
+                    .bin_data, .face_name => try @import("resource-probe.zig").payload(a, &out, record.value),
+                    else => try @import("formatting-probe.zig").payload(a, &out, record.value),
+                }
             },
             .unknown => {
                 try word(a, &out, @intCast(record.framing.raw.len));

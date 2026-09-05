@@ -10,6 +10,11 @@ import {
 import { createCfbReader } from "../../js/cfb.mjs";
 import { checkDocinfo, checkDocinfoEdges } from "./docinfo.mjs";
 import { resourceEdges, resourceActual } from "./resources.mjs";
+import {
+  formattingEdges,
+  formattingCounts,
+  formattingMutations,
+} from "./formatting.mjs";
 
 const module = await WebAssembly.compile(readFileSync(process.argv[2]));
 assert.equal(WebAssembly.Module.imports(module).length, 0);
@@ -81,6 +86,7 @@ const rounds = [];
 let begin = checks;
 checkDocinfoEdges(call);
 resourceEdges(call);
+formattingEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -205,6 +211,7 @@ const resources = {
   mismatches: [],
   missing: [],
 };
+const formatting = { tabDef: 0, numbering: 0, bullet: 0, style: 0 };
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
     cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
@@ -236,6 +243,8 @@ try {
       const framed = call(2, plain);
       if (entry.name === "DocInfo") {
         checkDocinfo(call, hdr.readUInt32LE(32), plain);
+        for (const [key, count] of Object.entries(formattingCounts(plain)))
+          formatting[key] += count;
         const result = resourceActual(call, hdr, plain, cfb);
         for (const key of ["binData", "faceNames", "decoded"])
           resources[key] += result[key];
@@ -253,6 +262,12 @@ try {
   cfb.close();
 }
 assert.equal(files, 48);
+assert.deepEqual(formatting, {
+  tabDef: 138,
+  numbering: 50,
+  bullet: 25,
+  style: 700,
+});
 assert.ok(streams >= 90);
 assert.equal(unsupported.length, 3);
 assert.deepEqual(resources, {
@@ -272,6 +287,7 @@ rounds.push({
   unsupported,
   versions: [...versions].sort(),
   resources,
+  formatting,
 });
 begin = checks;
 // Round 5: deterministic hostile mutations, bounded output and recovery after every attempt.
@@ -306,4 +322,11 @@ rounds.push({
   rejected,
   recoveries: 2000,
 });
-console.log(JSON.stringify({ rounds, checks, imports: 0 }, null, 2));
+const formattingMutationResults = formattingMutations(call);
+console.log(
+  JSON.stringify(
+    { rounds, formattingMutationResults, checks, imports: 0 },
+    null,
+    2,
+  ),
+);

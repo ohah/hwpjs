@@ -5,8 +5,12 @@ pub const IdMappings = @import("id_mappings.zig").IdMappings;
 pub const MappingField = @import("id_mappings.zig").Field;
 pub const BinData = @import("bin_data.zig").BinData;
 pub const FaceName = @import("face_name.zig").FaceName;
-pub const Tag = enum(u10) { document_properties = 16, id_mappings = 17, bin_data = 18, face_name = 19 };
-pub const Value = union(enum) { properties: Properties, id_mappings: IdMappings, bin_data: BinData, face_name: FaceName, unknown };
+pub const TabDef = @import("tab_def.zig").TabDef;
+pub const Numbering = @import("numbering.zig").Numbering;
+pub const Bullet = @import("bullet.zig").Bullet;
+pub const Style = @import("style.zig").Style;
+pub const Tag = enum(u10) { document_properties = 16, id_mappings = 17, bin_data = 18, face_name = 19, tab_def = 22, numbering = 23, bullet = 24, style = 26 };
+pub const Value = union(enum) { properties: Properties, id_mappings: IdMappings, bin_data: BinData, face_name: FaceName, tab_def: TabDef, numbering: Numbering, bullet: Bullet, style: Style, unknown };
 pub const Record = struct { framing: framing.Record, value: Value };
 
 /// Incremental semantic decoding; all records retain their exact raw framing.
@@ -28,11 +32,15 @@ pub const Iterator = struct {
             @intFromEnum(Tag.id_mappings) => .{ .id_mappings = try IdMappings.parse(r.payload, self.version) },
             @intFromEnum(Tag.bin_data) => .{ .bin_data = try BinData.parse(r.payload) },
             @intFromEnum(Tag.face_name) => .{ .face_name = try FaceName.parse(r.payload) },
+            @intFromEnum(Tag.tab_def) => .{ .tab_def = try TabDef.parse(r.payload) },
+            @intFromEnum(Tag.numbering) => .{ .numbering = try Numbering.parse(r.payload, self.version) },
+            @intFromEnum(Tag.bullet) => .{ .bullet = try Bullet.parse(r.payload) },
+            @intFromEnum(Tag.style) => .{ .style = try Style.parse(r.payload) },
             else => .unknown,
         };
         const expected_level: ?u10 = switch (value) {
             .properties, .id_mappings => 0,
-            .bin_data, .face_name => 1,
+            .bin_data, .face_name, .tab_def, .numbering, .bullet, .style => 1,
             .unknown => null,
         };
         if (expected_level) |level| if (r.level != level) return error.InvalidDocInfoLevel;

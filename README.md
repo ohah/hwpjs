@@ -3,7 +3,7 @@
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig/WASM 프로젝트입니다.
 현재 CFB v3/v4 읽기·명세 검증·스트림 편집 후 새 컨테이너 저장을 지원합니다. **HWP/HWPX 본문 의미 해석·본문 편집·저장은 아직 구현되지 않았습니다.**
 
-HWP5 FileHeader·압축 스트림·레코드 경계 읽기와 DocInfo 문서 속성·ID 매핑·BinData·글꼴 해석, BinData/글꼴 개수 검증은 Zig 코어에 구현했습니다.
+HWP5 FileHeader·압축 스트림·레코드 경계 읽기와 DocInfo 문서 속성·ID 매핑·BinData·글꼴·탭 정의·문단 번호·글머리표·스타일 해석, BinData/글꼴 개수 검증은 Zig 코어에 구현했습니다.
 지원 범위와 적대적 검증 5회 기록은 [HWP5 기반 구현](docs/hwp5-foundation.md)을 참고하세요.
 아직 제품 JS/WASM 공개 API에 HWP 문서 파싱 기능을 추가한 단계는 아닙니다.
 
