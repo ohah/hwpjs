@@ -91,6 +91,7 @@ reader.close();
 - `findExact(path)`는 **현재 열린 파일**의 루트 상대 계층 검색입니다. `/`는 root입니다. 명세의 길이 우선·UTF-16 단위 simple 대문자 비교를 사용하며, 레거시 find의 basename/제어문자 별칭은 적용하지 않습니다. 정렬되지 않은 비표준 파일은 먼저 strict로 검증해야 합니다.
 - Zig는 `cfb.writer.write(allocator,nodes,options)`와 `File.findExact(path)`, `File.toNodes(allocator)`를 제공합니다. write의 반환 바이트와 toNodes의 배열은 호출자가 free합니다. toNodes의 이름/내용은 File에서 빌리므로 File의 수명 안에서 사용합니다. writer는 입력을 변경하지 않습니다.
 - direct ABI의 `cfb_write`/`cfb_document` 결과는 `cfb_output_ptr/len`으로 접근하고 `cfb_output_free`로 해제합니다. 다음 write/document 호출은 이전 출력도 해제합니다. JS는 즉시 복사·해제합니다. write 실패는 열려 있던 reader를 변경하지 않습니다.
+- JS parse/read는 native open 전의 입력·옵션 getter·입력 버퍼 할당 실패에는 기존 문서를 보존합니다. native open을 시작한 뒤 열기 또는 JS 결과 변환이 실패하면 JS/WASM 양쪽 문서를 닫습니다. 이때 document()는 NoDocument, findExact()는 null이며, 보관된 결과의 find는 계속 사용할 수 있습니다.
 
 strict는 헤더 CLSID/BOM/v4 패딩, 최소/전체 섹터 크기, FAT/DIFAT 목록·종료·EOF 이후 항목·할당 소유권, MiniFAT 개수·소유권, storage/stream/root/unused 필드, 중복 이름·전역 정렬·연속 red, Range Lock 참조를 검사합니다. v3 size high DWORD는 호환 요구에 따라 무시하며 minor의 SHOULD 값은 강제하지 않습니다. 기본 parse/read는 기존 호환 모드를 유지합니다.
 
@@ -98,7 +99,9 @@ strict는 헤더 CLSID/BOM/v4 패딩, 최소/전체 섹터 크기, FAT/DIFAT 목
 
 자원 제한은 여전히 적용됩니다. WASM은 전체 메모리 기반이며 입력/출력과 편집 wire 각각 기본 256 MiB 한도가 있습니다. 네이티브 Options는 한도를 조정할 수 있지만 실제 메모리·usize 한계도 적용됩니다. Range Lock 배치/제외는 구현하고 2 GiB 경계 계산을 테스트했으나, 실제 2 GiB 초과 파일이나 명세 최대 16 TiB 파일을 왕복 실측한 것은 아닙니다.
 
-이번 검증: 네이티브 20개·Node/WASM 46개, 실제 HWP 48개 × v3/v4 재저장(스트림 904개)과 모든 편집 모델 필드, 16 MiB 다중 DIFAT, 생성 계층 64개, strict 변이 2,048건, 할당 실패 전수 주입, 손상된 wire·실패 후 복구를 검사합니다. Chromium에서는 기존 읽기 비교 외에 생성·수정 14조합을 확인합니다. HWP 본문 의미/렌더링의 검증은 아닙니다.
+네이티브 max_entries는 읽기/쓰기 모두 섹터 패딩의 미사용 디렉터리 슬롯까지 셉니다. max_path_bytes 역시 미사용 슬롯의 `/` 경로를 포함하며, 같은 경로 생성기로 계산합니다. 루트만 있는 파일의 최소 한도는 v3에서 엔트리 4개·경로 14바이트, v4에서 32개·42바이트입니다.
+
+이번 검증: 네이티브 21개·Node/WASM 47개, 실제 HWP 48개 × v3/v4 재저장(스트림 904개)과 모든 편집 모델 필드, 16 MiB 다중 DIFAT, 생성 계층 64개, strict 변이 2,048건, 할당 실패 전수 주입, 손상된 wire·실패 후 복구를 검사합니다. 추가 회귀 테스트는 v3/v4 제한값 경계 120조합과 JS 옵션 getter·입력 오류·할당/결과 변환 실패 주입 후 상태 일치를 확인합니다. 이전 Chromium 검증에서는 기존 읽기 비교 외에 생성·수정 14조합을 확인했습니다. HWP 본문 의미/렌더링의 검증은 아닙니다.
 
 ## 레거시 읽기 호환성과 의도적 차이
 

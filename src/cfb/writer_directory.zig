@@ -34,10 +34,27 @@ fn tree(entries: []Entry, ids: []const u32) u32 {
     return id;
 }
 
-pub fn prepare(a: std.mem.Allocator, nodes: []const Node, options: @import("types.zig").Options) ![]Entry {
+pub fn prepare(a: std.mem.Allocator, nodes: []const Node, slots: usize, options: @import("types.zig").Options) ![]Entry {
     if (nodes.len == 0 or nodes[0].kind != 5 or nodes[0].parent != h.free) return error.InvalidRoot;
-    if (nodes.len > options.max_entries or nodes.len > 0xfffffffa) return error.LimitExceeded;
-    const entries = try a.alloc(Entry, nodes.len);
+    if (slots < nodes.len) return error.InvalidDirectory;
+    if (slots > options.max_entries or slots > 0xfffffffa) return error.LimitExceeded;
+    // Match the reader's directory, including physical padding slots. Feed these
+    // through the same tree/path builder instead of duplicating its budget rules.
+    const entries = try a.alloc(Entry, slots);
+    for (entries[nodes.len..]) |*entry| entry.* = .{
+        .name = "",
+        .kind = 0,
+        .color = 0,
+        .left = h.free,
+        .right = h.free,
+        .child = h.free,
+        .clsid = @splat(0),
+        .state = 0,
+        .created = 0,
+        .modified = 0,
+        .start = 0,
+        .size = 0,
+    };
     const keys = try a.alloc(names.Name, nodes.len);
     const ids = try a.alloc(u32, nodes.len - 1);
     var total: usize = 0;
@@ -66,7 +83,7 @@ pub fn prepare(a: std.mem.Allocator, nodes: []const Node, options: @import("type
         first = last;
     }
     try @import("directory_tree.zig").build(a, entries, options.max_path_bytes);
-    return entries;
+    return entries[0..nodes.len];
 }
 
 pub fn encode(out: []u8, entry: Entry) !void {

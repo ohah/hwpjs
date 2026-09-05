@@ -23,6 +23,77 @@ runInNewContext(
 const legacy = ctx.module.exports;
 const root = () => ({ name: "Root Entry", kind: 5 });
 
+test("parse failures preserve or close both JS and WASM state at the open boundary", async () => {
+  const instantiate = WebAssembly.instantiate;
+  let failAllocation = false,
+    failDecode = false;
+  let api;
+  try {
+    WebAssembly.instantiate = async (...args) => {
+      const instance = await instantiate(...args);
+      const w = instance.exports;
+      return {
+        exports: {
+          ...w,
+          cfb_alloc: (size) => (failAllocation ? 0 : w.cfb_alloc(size)),
+          cfb_value: (...values) => {
+            if (failDecode) throw new Error("decode failed");
+            return w.cfb_value(...values);
+          },
+        },
+      };
+    };
+    api = await createCfbReader(module);
+  } finally {
+    WebAssembly.instantiate = instantiate;
+  }
+  try {
+    const bytes = api.write({ nodes: [root(), { name: "Data", parent: 0 }] });
+    const result = api.parse(bytes);
+    const preserved = () => {
+      assert.equal(api.document().nodes[1].name, "Data");
+      assert.equal(api.findExact("/Data"), result.FileIndex[1]);
+    };
+    for (const key of ["raw", "strict"]) {
+      let calls = 0;
+      assert.throws(
+        () =>
+          api.parse(bytes, {
+            get [key]() {
+              calls++;
+              throw Error("option failed");
+            },
+          }),
+        { message: "option failed" },
+      );
+      assert.equal(calls, 1);
+      preserved();
+    }
+    assert.throws(() => api.parse([256]), TypeError);
+    preserved();
+    failAllocation = true;
+    assert.throws(() => api.parse(bytes), { message: "OutOfMemory" });
+    failAllocation = false;
+    preserved();
+    failDecode = true;
+    assert.throws(() => api.parse(bytes), { message: "decode failed" });
+    failDecode = false;
+    assert.throws(() => api.document(), { message: "NoDocument" });
+    assert.equal(api.findExact("/Data"), null);
+    api.parse(bytes);
+    const damaged = bytes.slice();
+    damaged[0] = 0;
+    assert.throws(() => api.parse(damaged));
+    assert.throws(() => api.document(), { message: "NoDocument" });
+    assert.equal(api.findExact("/Data"), null);
+    api.parse(bytes, { strict: true });
+    assert.equal(api.findExact("/Data").name, "Data");
+    assert.equal(api.find(result, "Data"), result.FileIndex[1]);
+  } finally {
+    api.close();
+  }
+});
+
 test("WASM writer bridge rejects truncated/invalid models and preserves the active reader", async () => {
   const { exports: w } = await WebAssembly.instantiate(module, {});
   const wire = encodeDocument({

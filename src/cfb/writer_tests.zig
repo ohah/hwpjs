@@ -87,3 +87,45 @@ test "writer rejects duplicate names, cycles and invalid metadata" {
     try std.testing.expectError(error.LimitExceeded, writer.write(a, &nodes, .{ .limits = .{ .max_stream_bytes = 1 } }));
     try std.testing.expectError(error.LimitExceeded, writer.write(a, &nodes, .{ .limits = .{ .max_total_stream_bytes = 1 } }));
 }
+
+test "writer budgets include padded slots and every reader path at exact boundaries" {
+    for ([_]u16{ 3, 4 }) |version| {
+        const per_sector: usize = if (version == 3) 4 else 32;
+        for ([_]usize{ 1, 2, 3, 4, 5, 31, 32, 33, 64, 65 }) |count| {
+            var arena = std.heap.ArenaAllocator.init(a);
+            defer arena.deinit();
+            const backing = arena.allocator();
+            const nodes = try backing.alloc(writer.Node, count);
+            nodes[0] = .{ .name = "Root Entry", .kind = 5 };
+            const slots = ((count + per_sector - 1) / per_sector) * per_sector;
+            var path_bytes: usize = 11 + slots - count; // root plus '/' for each unused slot
+            for (1..count) |i| {
+                const name = try std.fmt.allocPrint(backing, "N{d}", .{i});
+                nodes[i] = .{ .name = name, .parent = 0 };
+                path_bytes += 11 + name.len;
+            }
+            for (0..2) |budget| {
+                const boundary = if (budget == 0) slots else path_bytes;
+                for ([_]usize{ boundary - 1, boundary, boundary + 1 }) |limit| {
+                    var limits: @import("types.zig").Options = .{ .strict = true };
+                    if (budget == 0) limits.max_entries = limit else limits.max_path_bytes = limit;
+                    if (limit < boundary) {
+                        if (writer.write(a, nodes, .{ .version = version, .limits = limits })) |unexpected| {
+                            a.free(unexpected);
+                            return error.ExpectedLimitExceeded;
+                        } else |err| try std.testing.expectEqual(error.LimitExceeded, err);
+                    } else {
+                        const bytes = try writer.write(a, nodes, .{ .version = version, .limits = limits });
+                        defer a.free(bytes);
+                        var file = try File.open(a, bytes, limits);
+                        defer file.deinit();
+                        try std.testing.expectEqual(slots, file.entries.len);
+                        var actual_paths: usize = 0;
+                        for (file.entries) |entry| actual_paths += entry.path.len;
+                        try std.testing.expectEqual(path_bytes, actual_paths);
+                    }
+                }
+            }
+        }
+    }
+}

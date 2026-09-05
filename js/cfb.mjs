@@ -22,29 +22,41 @@ export async function createCfbReader(source) {
     const rawRequested = Boolean(options?.raw);
     const output = outputBytes(data);
     const bytes = inputBytes(data);
-    loaded = undefined;
-    memory.withBytes(bytes, (ptr, size) => {
-      const open = options?.strict ? wasm.cfb_open_strict : wasm.cfb_open;
-      if (!open(ptr, size)) throw memory.error();
-    });
-    const result = { FileIndex: [], FullPaths: [] };
-    for (let i = 0; i < wasm.cfb_count(); i++) {
-      const decoded = decodeEntry(wasm, memory, i, output);
-      result.FileIndex.push(decoded.entry);
-      result.FullPaths.push(decoded.path);
+    const open = options?.strict ? wasm.cfb_open_strict : wasm.cfb_open;
+    let beganOpen = false;
+    try {
+      memory.withBytes(bytes, (ptr, size) => {
+        // Before this boundary, preparation/allocation failures preserve both states.
+        beganOpen = true;
+        loaded = undefined;
+        if (!open(ptr, size)) throw memory.error();
+      });
+      const result = { FileIndex: [], FullPaths: [] };
+      for (let i = 0; i < wasm.cfb_count(); i++) {
+        const decoded = decodeEntry(wasm, memory, i, output);
+        result.FileIndex.push(decoded.entry);
+        result.FullPaths.push(decoded.path);
+      }
+      if (rawRequested) {
+        const raw = (id) =>
+          output.raw(memory.copy(wasm.cfb_raw_ptr(id), wasm.cfb_raw_len(id)));
+        result.raw = {
+          header: raw(-1),
+          sectors: Array.from({ length: wasm.cfb_sector_count() }, (_, i) =>
+            raw(i),
+          ),
+        };
+      }
+      loaded = result;
+      return result;
+    } catch (error) {
+      // Open or JS result conversion failed: never leave a native-only document.
+      if (beganOpen) {
+        wasm.cfb_close();
+        loaded = undefined;
+      }
+      throw error;
     }
-    if (rawRequested) {
-      const raw = (id) =>
-        output.raw(memory.copy(wasm.cfb_raw_ptr(id), wasm.cfb_raw_len(id)));
-      result.raw = {
-        header: raw(-1),
-        sectors: Array.from({ length: wasm.cfb_sector_count() }, (_, i) =>
-          raw(i),
-        ),
-      };
-    }
-    loaded = result;
-    return result;
   }
   function read(data, options = {}) {
     const type = options?.type || "base64";

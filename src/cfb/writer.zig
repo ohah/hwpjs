@@ -14,13 +14,14 @@ pub fn write(backing: std.mem.Allocator, nodes: []const Node, options: Options) 
     var arena = std.heap.ArenaAllocator.init(backing);
     defer arena.deinit();
     const a = arena.allocator();
-    const entries = try directory.prepare(a, nodes, options.limits);
     const s: usize = switch (options.version) {
         3 => 512,
         4 => 4096,
         else => return error.UnsupportedVersion,
     };
-    const dirs = ceil(entries.len, s / 128);
+    const dirs = ceil(nodes.len, s / 128);
+    const slots = try std.math.mul(usize, dirs, s / 128);
+    const entries = try directory.prepare(a, nodes, slots, options.limits);
     var minis: usize = 0;
     var regular: usize = 0;
     for (entries) |e| {
