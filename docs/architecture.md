@@ -6,7 +6,8 @@
 src/
   binary/      경계 검사·정수 읽기 (현재 구현)
   cfb/         컨테이너 읽기·검증·새 컨테이너 쓰기 (구현)
-  hwp5/        레코드 읽기·쓰기와 버전별 필드 처리 (예정)
+  compression/ bounded raw DEFLATE·MIT 디코더 경계 수정본 (구현)
+  hwp5/        FileHeader·버전·압축 스트림·레코드 경계 읽기 (구현), 의미 해석/쓰기 (예정)
   hwpx/        ZIP/XML 읽기·쓰기 (예정)
   model/       문서 공통 모델과 원본 정보 보존 (예정)
   root.zig     라이브러리 진입점
@@ -14,9 +15,12 @@ src/
   wasm.zig     ABI 모듈 등록과 버전
 js/            읽기·쓰기 API·메모리 복사·엔트리/편집 모델 변환·검색·Node 파일 입력
 tests/cfb/     독립 JS 기준 구현과 비교, 브라우저 검증
+tests/hwp5/    테스트 전용 WASM bridge·독립 zlib/레코드 oracle·적대적 검증 5회
 ```
 
 CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계·브라우저 API에 직접 의존하지 않는 메모리 기반 읽기·쓰기를 우선합니다.
+
+HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.
 
 저장은 문서 모델 → HWP 레코드 → 압축된 스트림 목록 → 새 CFB 생성 순서로 구현합니다. 기존 파일의 섹터를 제자리 수정하는 기능은 초기 범위에 포함하지 않습니다.
 

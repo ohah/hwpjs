@@ -40,4 +40,25 @@ pub fn build(b: *std.Build) void {
     audit.dependOn(&mutations.step);
     audit.dependOn(&run_tests.step);
     audit.dependOn(compare_step);
+
+    const hwp_probe = b.addExecutable(.{
+        .name = "hwp5-probe",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/hwp5/probe.zig"),
+            .target = wasm.root_module.resolved_target.?,
+            .optimize = optimize,
+        }),
+    });
+    hwp_probe.root_module.addImport("hwpjs", b.createModule(.{
+        .root_source_file = b.path("src/root.zig"),
+        .target = wasm.root_module.resolved_target.?,
+        .optimize = optimize,
+    }));
+    hwp_probe.entry = .disabled;
+    hwp_probe.rdynamic = true;
+    const hwp_check = b.addSystemCommand(&.{ "node", "tests/hwp5/audit.mjs" });
+    hwp_check.addArtifactArg(hwp_probe);
+    hwp_check.step.dependOn(b.getInstallStep());
+    b.step("hwp5-audit", "Verify HWP5 foundation in WASM against independent byte oracles").dependOn(&hwp_check.step);
+    audit.dependOn(&hwp_check.step);
 }

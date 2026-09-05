@@ -1,5 +1,17 @@
 # Third-party notices
 
+## Zig DEFLATE decoder
+
+`src/compression/flate/Decompress.zig` and `token.zig` are adapted from Zig 0.16.0
+(`lib/std/compress/flate/`), Copyright (c) Zig contributors.
+License: [MIT](licenses/Zig-MIT.txt). The local decoder uses `@import("std")` and
+fixes `tossBitsShort` to subtract consumed bits from available bits, preventing
+truncated dynamic blocks from reading beyond EOF or trapping while aligning.
+The token tables and self-contained upstream tests are retained; tests requiring
+testdata absent from the installed Zig distribution are omitted. Project tests
+generate independent zlib fixtures and malformed streams. `raw_deflate.zig` is the sole
+product entrypoint; it adds output limits, ownership, and trailing-data rejection.
+
 ## Unicode character database
 
 `src/cfb/simple_uppercase.zig` derives the BMP simple uppercase mappings from

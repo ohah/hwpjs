@@ -1,0 +1,281 @@
+import assert from "node:assert/strict";
+import { readFileSync, readdirSync } from "node:fs";
+import {
+  deflateRawSync,
+  inflateRawSync,
+  deflateSync,
+  gzipSync,
+  constants,
+} from "node:zlib";
+import { createCfbReader } from "../../js/cfb.mjs";
+
+const module = await WebAssembly.compile(readFileSync(process.argv[2]));
+assert.equal(WebAssembly.Module.imports(module).length, 0);
+const { exports: w } = await WebAssembly.instantiate(module, {});
+let checks = 0;
+function call(mode, bytes, limit = 64 * 1024 * 1024) {
+  const ptr = w.alloc(bytes.length);
+  assert.ok(ptr);
+  try {
+    new Uint8Array(w.memory.buffer, ptr, bytes.length).set(bytes);
+    checks++;
+    if (!w.probe(mode, ptr, bytes.length, limit)) {
+      throw Error(
+        Buffer.from(w.memory.buffer, w.error_ptr(), w.error_len()).toString(),
+      );
+    }
+    return Buffer.from(
+      new Uint8Array(w.memory.buffer, w.result_ptr(), w.result_len()),
+    );
+  } finally {
+    w.free(ptr, bytes.length);
+  }
+}
+function header(version = 0x05000307, flags = 0) {
+  const b = Buffer.alloc(256);
+  b.write("HWP Document File");
+  b.writeUInt32LE(version, 32);
+  b.writeUInt32LE(flags, 36);
+  return b;
+}
+function record(tag, level, payload, extended = payload.length >= 4095) {
+  const b = Buffer.alloc((extended ? 8 : 4) + payload.length);
+  b.writeUInt32LE(
+    (tag | (level << 10) | ((extended ? 4095 : payload.length) << 20)) >>> 0,
+  );
+  if (extended) b.writeUInt32LE(payload.length, 4);
+  payload.copy(b, extended ? 8 : 4);
+  return b;
+}
+// Independent framing oracle: direct integer division, no Zig helpers.
+function oracle(bytes) {
+  const rows = [];
+  let pos = 0;
+  while (pos < bytes.length) {
+    assert.ok(bytes.length - pos >= 4);
+    const start = pos,
+      word = bytes.readUInt32LE(pos);
+    pos += 4;
+    let size = Math.floor(word / 1048576);
+    if (size === 4095) {
+      size = bytes.readUInt32LE(pos);
+      pos += 4;
+    }
+    assert.ok(size <= bytes.length - pos);
+    rows.push(
+      word % 1024,
+      Math.floor(word / 1024) % 1024,
+      start,
+      pos - start + size,
+      size,
+    );
+    pos += size;
+  }
+  const out = Buffer.alloc(rows.length * 4);
+  rows.forEach((v, i) => out.writeUInt32LE(v, i * 4));
+  return out;
+}
+const rounds = [];
+let begin = checks;
+// Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
+for (let n = 0; n < 256; n++)
+  assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
+assert.throws(() => call(0, Buffer.alloc(257)), /InvalidHeaderSize/);
+for (let i = 0; i < 32; i++) {
+  const b = header();
+  b[i] ^= 1;
+  assert.throws(() => call(0, b), /InvalidSignature/);
+}
+for (let bit = 0; bit < 32; bit++) {
+  const b = header(0x05000307, (2 ** bit) >>> 0);
+  b.writeUInt32LE(0x80000007, 40);
+  b.writeUInt32LE(4, 44);
+  b[48] = 15;
+  b[255] = 123;
+  const out = call(0, b);
+  assert.deepEqual(
+    [...new Uint32Array(out.buffer, out.byteOffset, 5)],
+    [0x05000307, (2 ** bit) >>> 0, 0x80000007, 4, 15],
+  );
+}
+for (const v of [0x04000000, 0x05020000, 0x06000000])
+  assert.throws(() => call(3, header(v)), /UnsupportedVersion/);
+for (const [flag, error] of [
+  [2, "Encryption"],
+  [4, "Distribution"],
+  [16, "Drm"],
+  [256, "Encryption"],
+  [1024, "Drm"],
+])
+  assert.throws(
+    () =>
+      call(3, Buffer.concat([header(0x05000000, flag | 1), Buffer.from([7])])),
+    new RegExp("Unsupported" + error),
+  );
+rounds.push({ round: 1, checks: checks - begin });
+begin = checks;
+// Round 2: stored/fixed/dynamic streams, window-size crossings, exact quotas, wrappers, tails.
+let compressionCases = 0;
+for (const n of [0, 1, 2, 3, 63, 64, 4095, 4096, 32767, 32768, 32769, 131072]) {
+  const plain = Buffer.alloc(n);
+  for (let i = 0; i < n; i++) plain[i] = (i * 17 + (i >> 7)) & 255;
+  for (const options of [
+    { level: 0 },
+    { strategy: constants.Z_FIXED },
+    { level: 9 },
+  ]) {
+    const compressed = deflateRawSync(plain, options);
+    compressionCases++;
+    assert.deepEqual(call(1, compressed, n), plain);
+    assert.deepEqual(call(1, compressed, n + 1), plain);
+    if (n) assert.throws(() => call(1, compressed, n - 1), /LimitExceeded/);
+    assert.throws(
+      () => call(1, Buffer.concat([compressed, Buffer.from([0])]), n),
+      /TrailingData/,
+    );
+    for (const cut of new Set([
+      0,
+      1,
+      Math.floor(compressed.length / 2),
+      compressed.length - 1,
+    ]))
+      if (cut < compressed.length)
+        assert.throws(
+          () => call(1, compressed.subarray(0, cut), n),
+          /InvalidDeflate/,
+          JSON.stringify({
+            n,
+            options,
+            cut,
+            hex: compressed.subarray(0, cut).toString("hex"),
+          }),
+        );
+  }
+}
+for (const b of [
+  Buffer.from([7]),
+  deflateSync(Buffer.from("abc")),
+  gzipSync(Buffer.from("abc")),
+])
+  assert.throws(() => call(1, b), /InvalidDeflate|TrailingData/);
+rounds.push({ round: 2, checks: checks - begin, compressionCases });
+begin = checks;
+// Round 3: every tag/level value, extended size boundaries and truncation.
+for (let i = 0; i < 1024; i++) {
+  const b = record(i, 1023 - i, Buffer.from([i & 255]), i % 2 === 0);
+  assert.deepEqual(call(2, b), oracle(b));
+}
+for (const n of [0, 1, 4094, 4095, 4096, 65536]) {
+  const b = record(16, 0, Buffer.alloc(n, 77));
+  assert.deepEqual(call(2, b, 1), oracle(b));
+  assert.throws(() => call(2, b, 0), /LimitExceeded/);
+  for (let cut = 1; cut < Math.min(b.length, 12); cut++)
+    assert.throws(() => call(2, b.subarray(0, cut)), /UnexpectedEnd/);
+  for (let tail = 1; tail <= 3; tail++)
+    assert.throws(
+      () => call(2, Buffer.concat([b, Buffer.alloc(tail)])),
+      /UnexpectedEnd/,
+    );
+}
+assert.throws(() => call(2, Buffer.alloc(8, 255)), /UnexpectedEnd/);
+rounds.push({ round: 3, checks: checks - begin });
+begin = checks;
+// Round 4: actual HWP CFB -> header -> DocInfo/BodyText -> raw framing vs Node zlib.
+const cfb = await createCfbReader(
+  readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)),
+);
+const fixtures = new URL(
+  "../../legacy/rust/crates/hwp-core/tests/fixtures/",
+  import.meta.url,
+);
+let files = 0,
+  streams = 0,
+  records = 0,
+  totalBytes = 0;
+const versions = new Set(),
+  unsupported = [];
+try {
+  for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
+    cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
+    const hdr = Buffer.from(cfb.findExact("/FileHeader").content);
+    assert.deepEqual(call(0, hdr).subarray(0, 16), hdr.subarray(32, 48));
+    versions.add(hdr.readUInt32LE(32).toString(16));
+    files++;
+    if (hdr.readUInt32LE(36) & (2 | 4 | 16 | 256 | 1024)) {
+      assert.throws(
+        () => call(3, hdr),
+        /UnsupportedEncryption|UnsupportedDistribution|UnsupportedDrm/,
+      );
+      unsupported.push(name);
+      continue;
+    }
+    for (const entry of cfb.document().nodes) {
+      if (
+        entry.kind !== 2 ||
+        !(entry.name === "DocInfo" || /^Section\d+$/.test(entry.name))
+      )
+        continue;
+      const b = Buffer.from(entry.content);
+      const plain = hdr.readUInt32LE(36) & 1 ? inflateRawSync(b) : b;
+      assert.deepEqual(
+        call(3, Buffer.concat([hdr, b]), plain.length),
+        plain,
+        `${name}/${entry.name}`,
+      );
+      const framed = call(2, plain);
+      assert.deepEqual(framed, oracle(plain), `${name}/${entry.name}`);
+      streams++;
+      records += framed.length / 20;
+      totalBytes += plain.length;
+    }
+  }
+} finally {
+  cfb.close();
+}
+assert.equal(files, 48);
+assert.ok(streams >= 90);
+assert.equal(unsupported.length, 3);
+rounds.push({
+  round: 4,
+  checks: checks - begin,
+  files,
+  streams,
+  records,
+  totalBytes,
+  unsupported,
+  versions: [...versions].sort(),
+});
+begin = checks;
+// Round 5: deterministic hostile mutations, bounded output and recovery after every attempt.
+let seed = 0xc0ffee,
+  accepted = 0,
+  rejected = 0;
+const next = () => {
+  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+  return seed;
+};
+const base = deflateRawSync(Buffer.alloc(4096, 65));
+for (let i = 0; i < 2000; i++) {
+  const b = Buffer.from(base);
+  b[next() % b.length] ^= 1 << (next() % 8);
+  try {
+    const out = call(1, b, 65536);
+    assert.deepEqual(out, inflateRawSync(b));
+    accepted++;
+  } catch (e) {
+    if (!/^(InvalidDeflate|TrailingData|LimitExceeded)$/.test(e.message))
+      throw e;
+    rejected++;
+  }
+  assert.deepEqual(call(1, Buffer.from([3, 0]), 0), Buffer.alloc(0));
+}
+w.close();
+rounds.push({
+  round: 5,
+  checks: checks - begin,
+  mutations: 2000,
+  accepted,
+  rejected,
+  recoveries: 2000,
+});
+console.log(JSON.stringify({ rounds, checks, imports: 0 }, null, 2));
