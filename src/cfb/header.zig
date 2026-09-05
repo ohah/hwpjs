@@ -1,4 +1,5 @@
 const std = @import("std");
+const format = @import("format.zig");
 pub const end: u32 = 0xfffffffe;
 pub const free: u32 = 0xffffffff;
 pub const fat_sector: u32 = 0xfffffffd;
@@ -33,9 +34,9 @@ pub const Header = struct {
             4 => 12,
             else => return error.UnsupportedVersion,
         };
-        if (try int(u16, bytes, 30) != shift or try int(u16, bytes, 32) != 6)
+        if (try int(u16, bytes, 30) != shift or try int(u16, bytes, 32) != format.mini_sector_shift)
             return error.InvalidSectorSize;
-        if (!std.mem.allEqual(u8, bytes[34..40], 0) or try int(u32, bytes, 56) != 4096)
+        if (!std.mem.allEqual(u8, bytes[34..40], 0) or try int(u32, bytes, 56) != format.mini_stream_cutoff)
             return error.InvalidHeader;
         if (major == 3 and try int(u32, bytes, 40) != 0) return error.InvalidHeader;
         const size: usize = if (major == 3) 512 else 4096;

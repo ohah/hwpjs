@@ -225,36 +225,54 @@ try {
 
 // Malformed files are never passed to the legacy parser (some malformed chains can hang it).
 let rejected = 0;
-function reject(name, bytes) {
+function reject(name, bytes, expectedError) {
   const ptr = wasm.cfb_alloc(bytes.length);
   assert.ok(ptr);
   new Uint8Array(wasm.memory.buffer, ptr, bytes.length).set(bytes);
   try {
     assert.equal(wasm.cfb_open(ptr, bytes.length), 0, name);
     assert.equal(wasm.cfb_count(), 0, name);
+    assert.equal(
+      new TextDecoder().decode(
+        new Uint8Array(
+          wasm.memory.buffer,
+          wasm.cfb_error_ptr(),
+          wasm.cfb_error_len(),
+        ),
+      ),
+      expectedError,
+      name,
+    );
     rejected++;
   } finally {
     wasm.cfb_free(ptr, bytes.length);
     wasm.cfb_close();
   }
 }
-for (const length of [0, 8, 511, 4095, 8192, 10000])
-  reject("truncated-" + length, v4.subarray(0, length));
-for (const [name, offset, value] of [
-  ["bad-signature", 0, 0],
-  ["bad-sector-shift", 30, 9],
-  ["bad-cutoff", 56, 64],
-  ["bad-fat-location", 76, 9999],
-  ["directory-cycle", 4100, 1],
-  ["directory-child-cycle", 8192 + 76, 0],
-  ["directory-child-oob", 8192 + 76, 99999],
-  ["stream-size-high", 8320 + 124, 1],
-  ["stream-cycle", 4104, 2],
-  ["stream-oob", 8320 + 116, 99999],
+for (const [length, error] of [
+  [0, "Truncated"],
+  [8, "Truncated"],
+  [511, "Truncated"],
+  [4095, "Truncated"],
+  [8192, "InvalidSector"],
+  [10000, "InvalidDirectoryCount"],
+])
+  reject("truncated-" + length, v4.subarray(0, length), error);
+for (const [name, offset, value, error] of [
+  ["bad-signature", 0, 0, "InvalidSignature"],
+  ["bad-sector-shift", 30, 9, "InvalidSectorSize"],
+  ["bad-cutoff", 56, 64, "InvalidHeader"],
+  ["bad-fat-location", 76, 9999, "InvalidSector"],
+  ["directory-cycle", 4100, 1, "CyclicOrSharedSector"],
+  ["directory-child-cycle", 8192 + 76, 0, "CyclicDirectory"],
+  ["directory-child-oob", 8192 + 76, 99999, "InvalidDirectoryReference"],
+  ["stream-size-high", 8320 + 124, 1, "LimitExceeded"],
+  ["stream-cycle", 4104, 2, "CyclicOrSharedSector"],
+  ["stream-oob", 8320 + 116, 99999, "InvalidSector"],
 ]) {
   const bytes = Buffer.from(v4);
   bytes.writeUInt32LE(value, offset);
-  reject(name, bytes);
+  reject(name, bytes, error);
 }
 
 // Exercise the public JS memory API against the reference, including retained results.

@@ -57,13 +57,18 @@ test("invalid byte values and unsupported encodings are not silently coerced", a
 test("cross-realm ArrayBuffer and byte views preserve their bytes", async () => {
   const api = await createCfbReader(module);
   try {
-    const bytes = Array.from(v4File());
+    const source = v4File();
+    for (let i = 12288; i < source.length; i++) source[i] = i % 251;
+    const bytes = Array.from(source);
     for (const expression of [
       "Uint8Array.from(bytes).buffer",
       "Uint8Array.from(bytes)",
     ]) {
       const foreign = runInNewContext(expression, { bytes });
-      assert.equal(api.parse(foreign).FileIndex[1].content.length, 4096);
+      assert.deepEqual(
+        Buffer.from(api.parse(foreign).FileIndex[1].content),
+        source.subarray(12288),
+      );
     }
   } finally {
     api.close();
@@ -99,19 +104,44 @@ test("a leading U+FEFF in root and stream names is data, not a text transport BO
   }
 });
 
-for (const [name, mutate] of [
-  ["used stream marked free", (b) => b.writeUInt32LE(0xffffffff, 4104)],
-  ["stream child references root", (b) => b.writeUInt32LE(0, 8320 + 76)],
-  ["root sibling references itself", (b) => b.writeUInt32LE(0, 8192 + 68)],
+for (const [name, mutate, message] of [
+  [
+    "used stream marked free",
+    (b) => b.writeUInt32LE(0xffffffff, 4104),
+    "UnallocatedSector",
+  ],
+  [
+    "stream child references root",
+    (b) => b.writeUInt32LE(0, 8320 + 76),
+    "InvalidDirectoryReference",
+  ],
+  [
+    "root sibling references itself",
+    (b) => b.writeUInt32LE(0, 8192 + 68),
+    "InvalidDirectoryReference",
+  ],
   [
     "directory color outside its domain",
     (b) => {
       b[8320 + 67] = 2;
     },
+    "InvalidDirectory",
   ],
-  ["missing name terminator", (b) => b.writeUInt16LE(2, 8320 + 64)],
-  ["live entry without a name field", (b) => b.writeUInt16LE(0, 8320 + 64)],
-  ["slash in a single entry name", (b) => b.writeUInt16LE(47, 8320)],
+  [
+    "missing name terminator",
+    (b) => b.writeUInt16LE(2, 8320 + 64),
+    "InvalidName",
+  ],
+  [
+    "live entry without a name field",
+    (b) => b.writeUInt16LE(0, 8320 + 64),
+    "InvalidName",
+  ],
+  [
+    "slash in a single entry name",
+    (b) => b.writeUInt16LE(47, 8320),
+    "InvalidName",
+  ],
   [
     "NUL separating an invalid surrogate pair",
     (b) => {
@@ -121,6 +151,7 @@ for (const [name, mutate] of [
       b.writeUInt16LE(0, 8326);
       b.writeUInt16LE(8, 8320 + 64);
     },
+    "ExpectedSecondSurrogateHalf",
   ],
 ])
   test(`reject ${name} and recover on the next open`, async () => {
@@ -128,10 +159,7 @@ for (const [name, mutate] of [
     try {
       const bytes = v4File();
       mutate(bytes);
-      assert.throws(
-        () => api.parse(bytes),
-        (e) => e instanceof Error && !(e instanceof WebAssembly.RuntimeError),
-      );
+      assert.throws(() => api.parse(bytes), { name: "Error", message });
       assert.equal(api.parse(v4File()).FileIndex[1].content.length, 4096);
     } finally {
       api.close();

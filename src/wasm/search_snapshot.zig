@@ -40,6 +40,10 @@ test "snapshot bounds, UTF-8 and independent lookup" {
 fn allocationCase(a: std.mem.Allocator) !void {
     const bytes = "\x01\x00\x00\x00\x01\x00\x00\x00R\x02\x00\x00\x00R/";
     try std.testing.expectEqual(@as(?usize, 0), try find(a, bytes, "/"));
+    const nested = "\x02\x00\x00\x00\x01\x00\x00\x00R\x02\x00\x00\x00R/" ++
+        "\x01\x00\x00\x00\x01\x03\x00\x00\x00R/\x01";
+    try std.testing.expectEqual(@as(?usize, 1), try find(a, nested, "/!"));
+    try std.testing.expectEqual(@as(?usize, null), try find(a, nested, "absent"));
 }
 
 test "snapshot lookup releases allocations on failure" {

@@ -115,12 +115,9 @@ test "allocation failures release all parser and lookup allocations" {
 
 test "truncation, header validation, resource bounds and cyclic directory chain" {
     var bytes = emptyFile();
-    for ([_]usize{ 0, 7, 511, 512, 1024, 1400 }) |size| {
-        if (cfb.File.open(std.testing.allocator, bytes[0..size], .{})) |parsed| {
-            var file = parsed;
-            file.deinit();
-            return error.ExpectedRejection;
-        } else |_| {}
+    const errors = [_]anyerror{ error.Truncated, error.Truncated, error.Truncated, error.InvalidHeader, error.InvalidSector, error.InvalidDirectory };
+    for ([_]usize{ 0, 7, 511, 512, 1024, 1400 }, errors) |size, expected| {
+        try std.testing.expectError(expected, cfb.File.open(std.testing.allocator, bytes[0..size], .{}));
     }
     try std.testing.expectError(error.LimitExceeded, cfb.File.open(std.testing.allocator, &bytes, .{ .max_input_bytes = 100 }));
     put(u32, &bytes, 516, 1);

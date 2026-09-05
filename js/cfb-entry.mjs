@@ -36,7 +36,7 @@ export function decodeEntry(wasm, memory, index) {
           1000,
       );
   }
-  if (e.type !== 5) e.storage = e.size >= 4096 ? "fat" : "minifat";
+  if (e.type !== 5) e.storage = number(VALUE.uses_fat) ? "fat" : "minifat";
   if (e.type === 2) e.content = field(FIELD.content);
   return { entry: e, path: decoder.decode(field(FIELD.path)) };
 }
