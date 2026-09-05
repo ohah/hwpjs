@@ -1,6 +1,7 @@
 import { createMemory } from "./wasm-memory.mjs";
 import { decodeEntry } from "./cfb-entry.mjs";
-import { findEntry } from "./cfb-find.mjs";
+import { createFinder } from "./cfb-find.mjs";
+import { validateAbi } from "./abi.mjs";
 
 /** Browser/Node CFB memory API. Returned arrays own their data. */
 export async function createCfbReader(source) {
@@ -9,7 +10,9 @@ export async function createCfbReader(source) {
       ? source
       : await WebAssembly.compile(source);
   const { exports: wasm } = await WebAssembly.instantiate(module, {});
+  validateAbi(wasm);
   const memory = createMemory(wasm);
+  const find = createFinder(wasm, memory);
   let loaded;
   function parse(data, options = {}) {
     const bytes =
@@ -55,13 +58,7 @@ export async function createCfbReader(source) {
     parse,
     read,
     find(container, path) {
-      if (container !== loaded) return findEntry(container, path);
-      const index = memory.withBytes(
-        new TextEncoder().encode(path),
-        (ptr, size) => wasm.cfb_find(ptr, size),
-      );
-      if (index === -2) throw memory.error();
-      return index < 0 ? null : container.FileIndex[index];
+      return find(container, path, container === loaded);
     },
     close() {
       wasm.cfb_close();

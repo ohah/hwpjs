@@ -2,6 +2,9 @@ const std = @import("std");
 const h = @import("header.zig");
 const Entry = @import("types.zig").Entry;
 pub fn parse(a: std.mem.Allocator, directory: []const u8, header: h.Header, max_entries: usize) ![]Entry {
+    if (header.major == 4 and (directory.len % header.sector_size != 0 or
+        directory.len / header.sector_size != header.directory_count))
+        return error.InvalidDirectoryCount;
     if (directory.len == 0 or directory.len % 128 != 0) return error.InvalidDirectory;
     if (directory.len / 128 > max_entries) return error.LimitExceeded;
     const entries = try a.alloc(Entry, directory.len / 128);

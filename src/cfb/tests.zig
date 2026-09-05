@@ -35,6 +35,28 @@ fn emptyFile() [1536]u8 {
     return data;
 }
 
+test "path budget includes unused directory slots at exact boundaries" {
+    const bytes = emptyFile();
+    // Root Entry/ = 11 bytes, plus three unused '/' paths = 14 bytes.
+    for ([_]usize{ 11, 13 }) |limit| {
+        if (cfb.File.open(std.testing.allocator, &bytes, .{ .max_path_bytes = limit })) |parsed| {
+            var file = parsed;
+            defer file.deinit();
+            var total: usize = 0;
+            for (file.entries) |entry| total += entry.path.len;
+            std.debug.print("path limit={d}, actual={d}\n", .{ limit, total });
+            return error.ExpectedLimitExceeded;
+        } else |err| try std.testing.expectEqual(error.LimitExceeded, err);
+    }
+    for ([_]usize{ 14, 15 }) |limit| {
+        var file = try cfb.File.open(std.testing.allocator, &bytes, .{ .max_path_bytes = limit });
+        defer file.deinit();
+        var total: usize = 0;
+        for (file.entries) |entry| total += entry.path.len;
+        try std.testing.expectEqual(@as(usize, 14), total);
+    }
+}
+
 fn allocationCase(a: std.mem.Allocator) !void {
     const bytes = miniFile();
     var file = try cfb.File.open(a, &bytes, .{});

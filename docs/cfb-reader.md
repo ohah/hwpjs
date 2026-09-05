@@ -11,6 +11,7 @@
 | `src/cfb/allocation.zig` | FAT/DIFAT 구성, 일반 섹터 체인·중복 점유 검사 |
 | `src/cfb/directory.zig` | 128바이트 엔트리·UTF-16 이름·메타데이터 해석 |
 | `src/cfb/directory_tree.zig` | 계층·전체 경로·순환 참조 검사 |
+| `src/cfb/path_builder.zig` | 활성/미사용 엔트리 전체의 경로 생성·공통 예산 집계 |
 | `src/cfb/streams.zig` | 일반/MiniFAT 스트림 추출·크기 제한 |
 | `src/cfb/find.zig` | 이름·경로 검색과 호환 정규화 |
 | `src/cfb/uppercase.zig` | 생성된 Unicode 대문자 매핑 데이터 |
@@ -20,7 +21,10 @@
 | `src/wasm/cfb.zig` | 열린 CFB 수명·오류·검색 |
 | `src/wasm/cfb_entries.zig`, `cfb_raw.zig` | 엔트리 필드 및 raw 바이트 ABI |
 | `js/wasm-memory.mjs` | JS/WASM 복사와 임시 메모리 정리 |
-| `js/cfb-entry.mjs`, `cfb-find.mjs` | 엔트리 변환 및 보관된 JS 결과 검색 |
+| `src/wasm/cfb_search.zig`, `search_snapshot.zig` | 보관된 검색 메타데이터의 경계 검사·코어 검색 연결 |
+| `js/abi-schema.mjs`, `src/wasm/abi_schema.zig` | ABI 기준 스키마와 생성된 Zig 선언 |
+| `js/abi.mjs` | ABI 버전·필수 export·메모리 검사 |
+| `js/cfb-entry.mjs`, `cfb-find.mjs`, `cfb-search-snapshot.mjs` | 엔트리 변환·검색 호출·메타데이터 직렬화 |
 | `js/cfb.mjs`, `cfb-node.mjs` | 읽기 API 및 Node 전용 파일 입력 |
 
 ## API
@@ -44,12 +48,17 @@ reader.close();
 
 WASM 인스턴스당 열린 CFB는 하나입니다. 새 read는 이전 내부 CFB를 해제하지만, JS 결과는 복사본이므로 계속 사용할 수 있습니다. 결과 객체는 읽기 전용으로 취급합니다. 직접 ABI를 사용할 때 입력 포인터·크기는 호출자가 할당한 유효한 영역이어야 하며, 엔트리 포인터는 다음 open/close까지 유효합니다. 병렬 문서에는 별도 reader 인스턴스를 사용합니다.
 
+검색 규칙은 `src/cfb/find.zig` 한곳에 있습니다. 현재 문서는 내부 엔트리를, 보관된 결과는 이름·경로를 직렬화한 메타데이터를 같은 함수에 전달합니다. 보관된 결과의 메타데이터는 WeakMap에 캐시하고 호출 동안 WASM에 복사합니다. 다른 문서를 열거나 열기에 실패하거나 `close()`한 뒤에도 검색할 수 있으며, 현재 열린 문서를 교체하지 않습니다. JS 검색 문자열에 단독 surrogate가 있으면 대체문자로 변환하지 않고 `null`을 반환합니다.
+
+현재 ABI는 **2**입니다. JS 초기화는 다른 버전과 필수 export/메모리 누락을 거부합니다. `js/abi-schema.mjs`가 필드 번호·버전의 기준이며 `node tools/generate-abi.mjs`가 Zig 선언을 출력합니다. 모든 빌드 및 네이티브 테스트에서 `--check`로 생성 파일의 일치를 검사합니다. 비교 테스트의 독립적인 숫자 필드 기대값은 스키마에서 생성하지 않습니다.
+
 ## 호환성과 의도적 차이
 
 - v3(512), v4(4096), MiniFAT(64), 4096바이트 컷오프, 확장 DIFAT, 빈 스트림·중첩 스토리지 지원.
 - find는 전체 경로·루트 상대 경로·이름, Unicode 대문자 비교, NUL 제거·제어문자 1~6의 `!` 별칭을 처리합니다. Unicode 테이블은 생성 당시 Node 버전에 고정됩니다.
 - 레거시가 허용하는 비표준 minor/BOM/헤더 CLSID는 보존합니다. 섹터 크기·예약 영역·컷오프는 검사합니다.
 - 사이클·공유 섹터·고아 활성 엔트리·잘린 데이터·잘못된 UTF-16은 오류로 거부합니다. 레거시의 손상 입력 무한 루프나 조용한 잘림을 재현하지 않습니다.
+- v4 디렉터리 섹터 개수는 실제 체인과 대조하며, DIFAT에서 확인한 FAT/DIFAT 섹터 역할은 FAT 마커와 대조합니다. 모순되면 오류로 거부합니다.
 - 기본 제한: 입력/개별 스트림 256 MiB, 합계 스트림 512 MiB, 엔트리 100만 개, 경로 합계 64 MiB. Zig Options에서 조정할 수 있습니다. 전체 힙 사용량은 테이블·입력 복사·경로·추출 데이터 때문에 이 제한들과 별개입니다.
 - CFB 스트림은 **원시 바이트**입니다. HWP 압축 해제·암호 해제·문단 해석은 다음 계층입니다.
 - 레거시 모듈의 ZIP/MIME 자동 감지, 쓰기·수정 유틸리티, content에 붙는 JS 전용 `read_shift` 메서드는 이 CFB 읽기 API에 포함하지 않습니다. 바이트 해석에는 별도 리더를 사용합니다.
@@ -65,6 +74,8 @@ node tests/cfb/serve.mjs
 ```
 
 2026-09-05 결과: HWP 48개 + 합성 12개 = 60개, 스트림 483개, 검색 5,496건 일치. 합성 입력에는 Unicode 경로·0/1/63/64/65/4095/4096/4097바이트·8 MiB 확장 DIFAT·v4·일반/MiniFAT 단편화 스트림·CLSID·상태·타임스탬프가 포함됩니다. 손상 입력 16개를 WASM에서 거부합니다. 네이티브 테스트는 할당 실패 전수 주입, 미니 스트림, 제한 및 오류 경로를 검사합니다. Chromium에서 HWP 48개·스트림 452개를 레거시 JS와 비교합니다.
+
+SSOT 회귀 검증: 수정 전 경로 제한 11바이트에 실제 14바이트가 반환되었고, 검색 수명 불일치·v4 개수 모순·FAT 역할 모순·ABI 미검증의 5개 Node 테스트가 실패했습니다. 수정 후 네이티브 9개와 Node 계약 테스트 9개가 통과합니다. 계약 테스트에는 DIFAT 역할 모순, 지원 버전의 필수 export/메모리 누락도 포함합니다. Node와 Chromium 양쪽에서 Unicode·제어문자·경로 검색 264건을 열림/다른 문서 열림/열기 실패/닫힘 상태에 걸쳐 레거시와 비교합니다. `zig build compare`는 레거시 비교와 계약 테스트를 함께 실행합니다.
 
 이는 테스트된 범위의 호환성 증거이며, 모든 가능한 CFB 파일이나 공격 입력에 대한 완전성 보증은 아닙니다.
 

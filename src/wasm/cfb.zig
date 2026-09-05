@@ -2,6 +2,10 @@ const cfb = @import("../cfb/reader.zig");
 const allocator = @import("memory.zig").allocator;
 var active: ?cfb.File = null;
 var last_error: []const u8 = "";
+pub fn fail(err: anyerror) i32 {
+    last_error = @errorName(err);
+    return -2;
+}
 pub fn get() ?*cfb.File {
     return if (active) |*file| file else null;
 }
@@ -30,9 +34,6 @@ export fn cfb_count() usize {
 
 export fn cfb_find(ptr: [*]const u8, size: usize) i32 {
     const file = if (active) |*f| f else return -1;
-    const found = file.find(allocator, ptr[0..size]) catch |err| {
-        last_error = @errorName(err);
-        return -2;
-    };
+    const found = file.find(allocator, ptr[0..size]) catch |err| return fail(err);
     return if (found) |index| @intCast(index) else -1;
 }

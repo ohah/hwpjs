@@ -9,6 +9,13 @@ const routes = {
   "/wasm-memory.mjs": ["js/wasm-memory.mjs", "text/javascript"],
   "/cfb-entry.mjs": ["js/cfb-entry.mjs", "text/javascript"],
   "/cfb-find.mjs": ["js/cfb-find.mjs", "text/javascript"],
+  "/cfb-search-snapshot.mjs": ["js/cfb-search-snapshot.mjs", "text/javascript"],
+  "/abi.mjs": ["js/abi.mjs", "text/javascript"],
+  "/abi-schema.mjs": ["js/abi-schema.mjs", "text/javascript"],
+  "/search-lifecycle.mjs": [
+    "tests/cfb/search-lifecycle.mjs",
+    "text/javascript",
+  ],
   "/legacy.js": ["legacy/cfb.js", "text/javascript"],
   "/hwpjs.wasm": ["zig-out/bin/hwpjs.wasm", "application/wasm"],
 };

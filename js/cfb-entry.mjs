@@ -1,3 +1,5 @@
+import { FIELD, VALUE } from "./abi-schema.mjs";
+
 /** Decode the numeric ABI into the legacy FileIndex/FullPaths representation. */
 export function decodeEntry(wasm, memory, index) {
   const field = (key) =>
@@ -5,23 +7,23 @@ export function decodeEntry(wasm, memory, index) {
   const number = (key) => Number(wasm.cfb_value(index, key));
   const decoder = new TextDecoder();
   const e = {
-    name: decoder.decode(field(0)),
-    type: number(0),
-    color: number(1),
-    L: number(2) | 0,
-    R: number(3) | 0,
-    C: number(4) | 0,
-    clsid: Array.from(field(3), (b) => b.toString(16).padStart(2, "0")).join(
-      "",
-    ),
-    state: number(5) | 0,
-    start: number(8) | 0,
-    size: number(9),
+    name: decoder.decode(field(FIELD.name)),
+    type: number(VALUE.kind),
+    color: number(VALUE.color),
+    L: number(VALUE.left) | 0,
+    R: number(VALUE.right) | 0,
+    C: number(VALUE.child) | 0,
+    clsid: Array.from(field(FIELD.clsid), (b) =>
+      b.toString(16).padStart(2, "0"),
+    ).join(""),
+    state: number(VALUE.state) | 0,
+    start: number(VALUE.start) | 0,
+    size: number(VALUE.size),
   };
   // Match legacy FILETIME -> JS Date conversion, including floating-point rounding.
   for (const [key, name] of [
-    [6, "ct"],
-    [7, "mt"],
+    [VALUE.created, "ct"],
+    [VALUE.modified, "mt"],
   ]) {
     const ticks = wasm.cfb_value(index, key);
     if (ticks)
@@ -33,6 +35,6 @@ export function decodeEntry(wasm, memory, index) {
       );
   }
   if (e.type !== 5) e.storage = e.size >= 4096 ? "fat" : "minifat";
-  if (e.type === 2) e.content = field(2);
-  return { entry: e, path: decoder.decode(field(1)) };
+  if (e.type === 2) e.content = field(FIELD.content);
+  return { entry: e, path: decoder.decode(field(FIELD.path)) };
 }

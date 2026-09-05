@@ -10,6 +10,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - `src/binary/`: 경계 검사와 바이너리 읽기.
 - `src/cfb/`: 헤더·섹터·할당 테이블·디렉터리·스트림·검색을 파일별로 분리한 CFB 리더.
 - `src/wasm/`, `js/`: WASM 메모리·문서 수명·엔트리 변환별 어댑터.
+- ABI 필드·버전은 `js/abi-schema.mjs`에서 정의합니다. `tools/generate-abi.mjs`의 Zig 출력과 일치해야 하며 빌드에서 검사합니다. 검색 규칙은 `src/cfb/find.zig`에만 둡니다.
 - `src/root.zig`: Zig 라이브러리 진입점.
 - `src/wasm.zig`: 브라우저용 WASM ABI 진입점.
 - `build.zig`: 빌드·테스트 정의.

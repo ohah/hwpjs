@@ -1,6 +1,5 @@
 const std = @import("std");
 const uppercase = @import("uppercase.zig");
-const Entry = @import("types.zig").Entry;
 
 fn upper(a: std.mem.Allocator, bytes: []const u8) ![]const u8 {
     var out: std.ArrayList(u8) = .empty;
@@ -22,7 +21,7 @@ fn normalize(a: std.mem.Allocator, bytes: []const u8, controls: bool) ![]const u
 }
 
 /// Matches CFB.find: root-relative/full/basename, JS uppercase, NUL/control fallback.
-pub fn find(backing: std.mem.Allocator, entries: []const Entry, path: []const u8) !?usize {
+pub fn find(backing: std.mem.Allocator, entries: anytype, path: []const u8) !?usize {
     if (entries.len == 0) return null;
     var arena = std.heap.ArenaAllocator.init(backing);
     defer arena.deinit();
