@@ -23,4 +23,8 @@ pub fn build(b: *std.Build) void {
     wasm.entry = .disabled;
     wasm.rdynamic = true;
     b.installArtifact(wasm);
+
+    const compare = b.addSystemCommand(&.{ "node", "tests/cfb/compare.mjs" });
+    compare.step.dependOn(b.getInstallStep());
+    b.step("compare", "Compare CFB reading against legacy JS in WebAssembly").dependOn(&compare.step);
 }

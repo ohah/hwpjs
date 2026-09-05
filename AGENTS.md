@@ -3,11 +3,13 @@
 ## 프로젝트
 
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라이브러리입니다.
-현재는 바이트 리더와 WASM ABI 버전 함수만 구현되어 있습니다. 지원 범위는 구현·테스트로 확인하고, 예정 기능을 완료된 기능처럼 설명하지 않습니다.
+현재는 바이트 리더와 CFB 컨테이너 읽기가 구현되어 있습니다. HWP/HWPX 문서 파싱·편집·저장은 미구현입니다. 지원 범위는 구현·테스트로 확인하고, 예정 기능을 완료된 기능처럼 설명하지 않습니다.
 
 ## 구조와 참고 자료
 
 - `src/binary/`: 경계 검사와 바이너리 읽기.
+- `src/cfb/`: 헤더·섹터·할당 테이블·디렉터리·스트림·검색을 파일별로 분리한 CFB 리더.
+- `src/wasm/`, `js/`: WASM 메모리·문서 수명·엔트리 변환별 어댑터.
 - `src/root.zig`: Zig 라이브러리 진입점.
 - `src/wasm.zig`: 브라우저용 WASM ABI 진입점.
 - `build.zig`: 빌드·테스트 정의.
@@ -33,6 +35,7 @@ HWP5 구현 시 `legacy/rust/documents/docs/spec/hwp-5.0.md`와 `legacy/rust/.cl
 zig fmt --check build.zig src
 zig build test
 zig build -Doptimize=ReleaseSafe
+zig build compare -Doptimize=ReleaseSafe
 ```
 
 파서·writer 변경에는 정상 입력뿐 아니라 잘림·잘못된 참조·크기 경계 테스트를 추가합니다. WASM ABI 변경은 실제 WebAssembly 인스턴스에서 확인합니다. 문서만 변경한 경우 관련 링크·경로·내용 검증으로 충분합니다.

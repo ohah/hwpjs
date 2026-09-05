@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CFB compatibility check</title>
+<pre id="result">Running…</pre>
+<script src="/legacy.js"></script>
+<script type="module">
+import {createCfbReader} from '/cfb.mjs';
+try {
+  const reader=await createCfbReader(await (await fetch('/hwpjs.wasm')).arrayBuffer());
+  const names=await (await fetch('/fixtures')).json();
+  let streams=0;
+  for(const name of names) {
+    const bytes=new Uint8Array(await (await fetch('/fixture/'+encodeURIComponent(name))).arrayBuffer());
+    const expected=CFB.read(bytes,{type:'buffer'}),actual=reader.read(bytes,{type:'buffer'});
+    if(JSON.stringify(actual.FullPaths)!==JSON.stringify(expected.FullPaths))throw Error(name+': paths');
+    if(actual.FileIndex.length!==expected.FileIndex.length)throw Error(name+': entry count');
+    for(let i=0;i<actual.FileIndex.length;i++) {
+      const a=actual.FileIndex[i],e=expected.FileIndex[i];
+      for(const key of ['name','type','color','L','R','C','clsid','state','start','size','storage','ct','mt']) {
+        if(JSON.stringify(a[key])!==JSON.stringify(e[key]))throw Error(name+': '+key+' at '+i);
+      }
+      if(e.type!==2)continue;
+      const content=e.content??[];
+      if(a.content.length!==content.length || a.content.some((b,j)=>b!==content[j]))throw Error(name+': stream '+e.name);
+      if(actual.FileIndex.indexOf(reader.find(actual,e.name.toLowerCase()))!==expected.FileIndex.indexOf(CFB.find(expected,e.name.toLowerCase())))throw Error(name+': search');
+      streams++;
+    }
+  }
+  reader.close();
+  document.querySelector('#result').textContent=JSON.stringify({files:names.length,streams,passed:true});
+} catch(error) {document.querySelector('#result').textContent='FAIL: '+error.stack;}
+</script>
