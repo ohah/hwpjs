@@ -157,3 +157,8 @@ legacy/libhwp/
 legacy/hwplib/
 legacy/ruby-hwp/
 reference/
+
+# Zig and relocated build output
+.zig-cache/
+zig-out/
+legacy/rust/examples/**/dist/

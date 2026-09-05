@@ -1,138 +1,38 @@
-# HWPJS
+# hwpjs
 
-한글과컴퓨터의 한/글 문서 파일(.hwp)을 읽고 파싱하는 라이브러리입니다.
+HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig/WASM 프로젝트입니다.
+현재는 전환 초기 단계이며 **Zig 문서 파서·편집·저장 API는 아직 구현되지 않았습니다.**
 
-본 제품은 한글과컴퓨터의 한/글 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.
-[공개 문서 다운로드](https://www.hancom.com/etc/hwpDownload.do)
+## 시작하기
 
-## 주요 기능
+Zig 0.16.0을 사용합니다 (`mise install` 또는 별도 설치).
 
-- **JSON 변환**: HWP 문서 구조를 JSON으로 추출
-- **Markdown 변환**: 텍스트, 테이블, 이미지를 포함한 Markdown 변환
-- **HTML 변환**: CSS 스타일링이 적용된 완전한 HTML 문서 생성
-- **CLI 도구**: 단일 파일 변환, 배치 처리, 이미지 추출
-- **멀티 플랫폼**: Node.js, Web(WASM), React Native 지원
-
-## 프로젝트 구조
-
-이 프로젝트는 Bun 워크스페이스를 사용한 모노레포 구조입니다.
-
-```
-hwpjs/
-├── crates/
-│   └── hwp-core/          # 공유 Rust 라이브러리 (핵심 HWP 파싱 로직)
-├── packages/
-│   └── hwpjs/             # 멀티 플랫폼 패키지 (Node.js, Web, React Native)
-├── examples/              # 사용 예제
-│   ├── node/              # Node.js 예제
-│   ├── web/               # Web 예제 (React + Vite)
-│   ├── react-native/      # React Native 예제
-│   └── cli/               # CLI 사용 예제
-├── documents/             # 문서 사이트 (Rspress)
-└── e2e/                   # E2E 테스트 (Playwright)
+```sh
+zig build test
+zig build -Doptimize=ReleaseSafe
+zig fmt --check build.zig src
 ```
 
-## 기술 스택
+`zig-out/bin/hwpjs.wasm`은 현재 `hwpjs_abi_version()`만 제공하는 빌드 검증용 모듈입니다.
 
-- **Rust**: 핵심 파싱/변환 로직
-- **NAPI-RS**: Node.js 네이티브 모듈
-- **Craby**: React Native 바인딩
-- **Bun**: 워크스페이스 관리
-- **Rspress**: 문서 사이트
+## 디렉터리
 
-## 사용법
+| 경로 | 역할 |
+|---|---|
+| `src/` | 신규 Zig 구현과 WASM 진입점 |
+| `docs/` | 현재 설계·개발 안내 |
+| `legacy/rust/` | 이전 Rust 코어, JS/RN 래퍼, 예제, 문서, 테스트, 실험 |
+| `legacy/`의 기존 파일 | 초기 JS 구현 — 기존 위치 유지 |
+| `reference/` | 외부 참고 소스, Git 추적 제외, 제품 의존성 아님 |
 
-### 설치
+Rust 구현 실행은 `cd legacy/rust` 후 기존 Cargo/Bun 명령을 사용합니다.
+자세한 이동 내역과 CI 변경은 [전환 기록](docs/migration.md), 새 구조는 [설계](docs/architecture.md)를 참고하세요.
 
-```bash
-npm install @ohah/hwpjs
-```
+## 개발 원칙
 
-### API 사용
+- CFB 컨테이너와 HWP 레코드 해석을 분리합니다.
+- 읽기·쓰기 모두 설계하되, 저장은 새 컨테이너 생성부터 시작합니다.
+- GPL/LGPL 의존성은 채택하지 않습니다. 참고 소스도 라이선스 확인 없이 이식하지 않습니다.
+- 기존 fixture와 Rust 구현은 호환성 검증 기준으로 활용합니다.
 
-```typescript
-import { toJson, toMarkdown, toHtml, fileHeader } from '@ohah/hwpjs';
-import { readFileSync } from 'fs';
-
-const data = readFileSync('./document.hwp');
-
-// JSON 변환
-const json = toJson(data);
-
-// Markdown 변환
-const { markdown, images } = toMarkdown(data, {
-  image: 'base64',
-  useHtml: true,
-});
-
-// HTML 변환
-const html = toHtml(data, {
-  includeVersion: true,
-});
-
-// 파일 헤더 추출
-const header = fileHeader(data);
-```
-
-### CLI 사용
-
-```bash
-# 전역 설치
-npm install -g @ohah/hwpjs
-
-# JSON 변환
-hwpjs to-json document.hwp -o output.json --pretty
-
-# Markdown 변환
-hwpjs to-markdown document.hwp -o output.md --include-images
-
-# HTML 변환
-hwpjs to-html document.hwp -o output.html
-
-# 파일 정보 확인
-hwpjs info document.hwp
-
-# 이미지 추출
-hwpjs extract-images document.hwp -o ./images
-
-# 배치 변환
-hwpjs batch ./documents -o ./output --format json --recursive
-```
-
-더 자세한 내용은 [CLI 가이드](https://ohah.github.io/hwpjs/guide/cli)를 참고하세요.
-
-## 개발 시작하기
-
-### 환경 설정
-
-mise(미즈)를 사용하여 필요한 도구를 설치합니다:
-
-```bash
-mise install
-```
-
-### 스크립트
-
-- `bun run test:rust` - Rust 테스트 실행
-- `bun run test:node` - Node.js 테스트 실행
-- `bun run dev:docs` - 문서 사이트 개발 서버
-- `bun run dev:web` - Web 예제 개발 서버
-- `bun run lint` - 린트 검사
-- `bun run format` - 코드 포맷팅
-- `bun run build` - 전체 빌드
-
-## 참고한 프로젝트
-
-- [pyhwp](https://github.com/mete0r/pyhwp)
-- [hwpjs](https://github.com/hahnlee/hwp.js)
-- [ruby-hwp](https://github.com/mete0r/ruby-hwp)
-- [libhwp](https://github.com/accforaus/libhwp)
-- [hwplib](https://github.com/neolord0/hwplib)
-
-## 이슈 제안 및 건의
-
-해당 깃허브에 남겨주세요.
-
-## 라이센스
-
-이 프로젝트는 [MIT 라이센스](LICENSE)를 따릅니다.
+라이선스: [MIT](LICENSE).

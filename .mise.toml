@@ -1,9 +1,2 @@
 [tools]
-rust = "stable"
-bun = "latest"
-node = "24.11.1"
-ruby = "3.3"
-zig = "0.15.1"
-
-[env]
-RUST_BACKTRACE = "1"
+zig = "0.16.0"

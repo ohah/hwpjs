@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CFB WASM check</title>
+<pre id="result">Running…</pre>
+<script type="module">
+try {
+  const bytes = await (await fetch('/probe.wasm')).arrayBuffer();
+  const module = await WebAssembly.compile(bytes);
+  const imports = WebAssembly.Module.imports(module);
+  if (imports.length) throw new Error('Expected no imports');
+  const { exports: wasm } = await WebAssembly.instantiate(module, {});
+  wasm._initialize();
+  const files = await (await fetch('/fixtures')).json();
+  const output = wasm.malloc(32 * 1024 * 1024);
+  if (!output) throw new Error('Output allocation failed');
+  let streams = 0;
+  for (const name of files) {
+    const inputBytes = new Uint8Array(await (await fetch('/fixture/' + encodeURIComponent(name))).arrayBuffer());
+    const input = wasm.malloc(inputBytes.length);
+    if (!input) throw new Error('Input allocation failed');
+    new Uint8Array(wasm.memory.buffer, input, inputBytes.length).set(inputBytes);
+    for (const path of ['FileHeader', 'DocInfo']) {
+      const encoded = new TextEncoder().encode(path + '\0');
+      const ptr = wasm.malloc(encoded.length);
+      if (!ptr) throw new Error('Path allocation failed');
+      new Uint8Array(wasm.memory.buffer, ptr, encoded.length).set(encoded);
+      const size = wasm.extract_stream(input, inputBytes.length, ptr, output, 32 * 1024 * 1024);
+      if (size <= 0) throw new Error(name + ': ' + path + ' failed');
+      if (path === 'FileHeader' && (size !== 256 || new TextDecoder().decode(new Uint8Array(wasm.memory.buffer, output, 17)) !== 'HWP Document File'))
+        throw new Error(name + ': invalid header');
+      wasm.free(ptr);
+      streams++;
+    }
+    wasm.free(input);
+  }
+  wasm.free(output);
+  document.querySelector('#result').textContent = JSON.stringify({ passed: files.length, streams, imports, wasmBytes: bytes.byteLength });
+} catch (error) {
+  document.querySelector('#result').textContent = 'FAIL: ' + error.stack;
+}
+</script>
