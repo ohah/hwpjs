@@ -8,9 +8,9 @@ import {
 } from "./document-report-wire.mjs";
 export function reportWireEdges() {
   assert.equal(documentPrefixBytes, 132);
-  assert.equal(sectionReportBytes, 512);
+  assert.equal(sectionReportBytes, 516);
   assert.equal(sectionFieldOffset(0, "header_footer"), 280);
-  assert.equal(sectionFieldOffset(1, "number_controls", 2), 820);
+  assert.equal(sectionFieldOffset(1, "number_controls", 2), 824);
   for (const index of [-1, 1.5, NaN, Infinity, 65536])
     assert.throws(() => reportBytes(index), RangeError);
   for (const [group, field] of [

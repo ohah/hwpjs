@@ -1549,3 +1549,21 @@ drawing_styles는 supported/unsupported/unselected/parsed/unknown/extra_bytes �
 이미지 채우기 참조 검증, 스타일 후반부 6바이트 의미, 미지원 도형 종류별 payload, 배치 자동 선택과 조판은 남아 있습니다. 기본 null 정책을 전체 스타일 자동 검증 완료로 설명하지 않습니다.
 
 최종 실제 5파일의 스타일 56개 검사, 스타일 제거 변이 56개 거부, 구역 순서 반전 5건 통과. Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 189/189, Node 47/47, HWP5 WASM 202,112회 검사 통과. CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-style-document-{debug,safe,fast}.log`입니다.
+
+## 도형 이미지 채우기의 BinData 참조 범위 (2026-09-06)
+
+공식 표 28/32의 이미지 채우기 Picture.bin_data_id를 기존 DocInfo Fill과 동일한 reference_rules.one_based로 검사합니다. document가 실측 counts.bin_data_count를 shape_validation.inspectDetailed에 전달하고, 스타일 진단은 이미 파싱된 Fill.image를 사용합니다. ID 디코딩·참조 기준·DocInfo 개수 계산을 별도 구현하지 않습니다.
+
+ID 0과 count 초과는 InvalidShapeImageReference입니다. 참조 실패 시 스타일 보고서가 부분 증가하지 않습니다. known Fill에서 image가 존재하는 경우에만 검사하며 unselected/unknown/unsupported는 이미지 ID처럼 보이는 원문이 있어도 참조를 추측하지 않습니다. 새 image_references는 성공한 활성 참조 개수이고 나머지 진단을 완료로 상쇄하지 않습니다. 구역 wire에는 7번째 스타일 진단을 추가해 stride가 516바이트가 됐습니다.
+
+### 구현 후 적대적 검증
+
+1. 네이티브에서 두 tail 배치 × BinData 수 0/1/2/65535 × ID 0/1/2/3/65534/65535의 48조합을 검사했습니다. 직접 기대 조건 `id != 0 && id <= count`와 대조하며 제품 resolver로 기대값을 만들지 않았습니다. 실패 뒤 보고서는 초기 상태를 유지합니다.
+2. 배치 미선택·미지 Fill 비트·그림 종류 미지원은 이미지 참조 검사 완료로 계상하지 않습니다. 기존 이미지 없는 known Fill은 BinData가 0개여도 통과합니다. Fill/그림 정보 파서와 DocInfo 참조 검사는 수정하지 않았습니다.
+3. 전체 조사에서 이미지 채우기는 `basic/BookReview.hwp`의 Section1에 3개, 원본 ID 순서 1/3/2였습니다. 이 파일을 명시적 스타일 문서/CFB 회귀 집합에 추가했습니다. 전체 문서 검사상 유효하며 스타일 10개, 활성 이미지 참조 3개를 검사했습니다.
+4. 각 실제 참조를 0/count+1/65535로 바꾼 9개 문서 입력과 9개 재작성 CFB가 InvalidShapeImageReference를 반환했습니다. CFB는 해당 Section만 재압축하고 나머지 노드를 유지합니다. 각 오류 뒤 원본을 재검사했습니다. 미선택 문서 입력은 image_references=0이며 이를 유효한 참조로 표시하지 않습니다.
+5. 각 실제 ID를 1/count로 바꾼 유효 경계값 6개는 같은 검사 보고서를 반환합니다. 스타일 이미지 offset은 기존 독립 JS Fill 계산에서 전달해 변이 테스트에 필드 파서를 복제하지 않았습니다. 두 구역의 서로 다른 unknown 진단/순서 반전 및 기본 보고서 위치 검증도 유지했습니다.
+
+이번 단계는 DocInfo BinData 목록에 대한 참조 범위 검사입니다. 참조 대상의 그림 코덱 지원·시각적 일치·그림/OLE 개체의 다른 참조 체계를 완료로 주장하지 않습니다. 원본 파일은 수정하지 않았습니다. 전체 문서 검증은 계속 진행 중입니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 190/190, Node 47/47, HWP5 WASM 202,206회 검사. 선택적 스타일 문서/CFB 집합은 6파일·66스타일이며 스타일 제거 변이 66건·구역 순서 반전 6건도 통과했습니다. CFB 12,000회 변이 trap 0, 포맷·JS 구문·diff 검사 통과. 로그는 `/tmp/hwpjs-style-image-{debug,safe,fast}.log`입니다.

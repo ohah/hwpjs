@@ -1,6 +1,7 @@
 const component = @import("shape_component.zig");
 const style = @import("drawing_style.zig");
 const rules = @import("control_rules.zig");
+const references = @import("../docinfo/reference_rules.zig");
 pub const Options = struct {
     border: @import("shape_border.zig").Layout = .observed13,
     tail: style.TailLayout,
@@ -12,7 +13,8 @@ pub const Report = struct {
     parsed: usize = 0,
     unknown: usize = 0,
     extra_bytes: usize = 0,
-    pub fn add(self: *Report, p: component.Component, options: ?Options) !void {
+    image_references: usize = 0,
+    pub fn add(self: *Report, p: component.Component, options: ?Options, bin_data_count: usize) !void {
         const supported = switch (p.id) {
             rules.id("$lin"), rules.id("$rec"), rules.id("$ell"), rules.id("$arc"), rules.id("$pol"), rules.id("$cur") => true,
             else => false,
@@ -27,6 +29,15 @@ pub const Report = struct {
             return;
         };
         const parsed = try style.Style.parseWithTail(p.extra, selected.border, selected.tail);
+        var images: usize = 0;
+        switch (parsed.fill.data) {
+            .unknown => {},
+            .known => |fill| if (fill.image) |image| {
+                if (references.resolve(.one_based, image.picture.bin_data_id, bin_data_count) != .ordinal) return error.InvalidShapeImageReference;
+                images = 1;
+            },
+        }
+        self.image_references += images;
         self.supported += 1;
         switch (parsed.tail) {
             .unknown => |raw| {

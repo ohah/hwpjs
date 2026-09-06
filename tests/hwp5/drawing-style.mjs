@@ -5,11 +5,11 @@ export function drawingStyleActual(call,b,mode=1) {
   const wide=(mode&1)!==0,fillOnly=(mode&2)!==0;
   const width=wide?13:11,flags=b.readUInt32LE(width),known=(flags&~7)===0;
   const fields=[known?(fillOnly?2:1):0,flags,b.readUInt32LE(0),wide?b.readInt32LE(4):b.readInt16LE(4),b.readUInt32LE(wide?8:6),b[width-1]];
-  let at=width+4;
+  let at=width+4,imageId=null,imageOffset=null;
   if(known){
     if(flags&1)at+=12;
     if(flags&4){const count=b.readUInt32LE(at+17);at+=21+count*(count>2?8:4);}
-    if(flags&2)at+=6;
+    if(flags&2){imageOffset=at+4;imageId=b.readUInt16LE(imageOffset);at+=6;}
     at+=4+b.readUInt32LE(at);
     if(!fillOnly){
       for(const bit of [1,4,2])fields.push(flags&bit?b[at++]:256);
@@ -18,7 +18,7 @@ export function drawingStyleActual(call,b,mode=1) {
   }
   assert.ok(at<=b.length);
   assert.deepEqual(run(call,b,mode),Buffer.concat([...fields.map(w),w(b.length-at),b.subarray(at)]));
-  return {known,flags,consumed:at,extra:b.length-at};
+  return {known,flags,consumed:at,extra:b.length-at,imageId,imageOffset};
 }
 export function drawingStyleEdges(call){
   let accepted=0,rejected=0;

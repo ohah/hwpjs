@@ -17,6 +17,7 @@ export function drawingStyleSurvey(call, cfb) {
   ]);
   out.fillOnly = { parsed: 0, rejectedPrefixes: 0 };
   out.versions = {};
+  out.images = [];
   const drawingIds = new Set(["$lin", "$rec", "$ell", "$arc", "$pol", "$cur"]);
   for (const name of readdirSync(root, { recursive: true }).filter(n => n.endsWith(".hwp")).sort()) {
     out.files++;
@@ -84,6 +85,7 @@ export function drawingStyleSurvey(call, cfb) {
             }
             if (result) {
               const parsed = drawingStyleActual(call, style);
+              if (parsed.imageId !== null) out.images.push({ name, section: section.name, offset: record.offset, id: parsed.imageId });
               stats[parsed.known ? "known" : "unknown"]++;
               versionStats[parsed.known ? "full" : "unknown"]++;
               stats.flags[parsed.flags] = (stats.flags[parsed.flags] ?? 0) + 1;

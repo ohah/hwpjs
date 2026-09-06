@@ -3,16 +3,19 @@ import { existsSync, readFileSync } from "node:fs";
 import { documentRecords, decodedDocumentInput } from "./documents.mjs";
 import { sectionFieldOffset } from "./document-report-wire.mjs";
 import { drawingStyleActual } from "./drawing-style.mjs";
+import { imageReferenceEdges } from "./drawing-style-image.mjs";
+import { deflateRawSync } from "node:zlib";
 const ids = new Set([0x246c696e,0x24726563,0x24656c6c,0x24617263,0x24706f6c,0x24637572]);
 export function unselectedStyles(bytes) {
   let supported=0,unsupported=0;
   for(const r of documentRecords(bytes))if(r.tag===76){if(ids.has(bytes.readUInt32LE(r.start)))supported++;else unsupported++;}
-  return [supported,unsupported,supported,0,0,0];
+  return [supported,unsupported,supported,0,0,0,0];
 }
-export function styleDocumentActual(call,h,doc,sections,mode=1) {
+export function styleDocumentActual(call,h,doc,sections,mode=1,checkCfbMutation=null) {
   const input=decodedDocumentInput(h,doc,sections);
   const baseline=call(24,input),expected=Buffer.from(baseline);
   let parsed=0,rejected=0,ordering=0,variant=null;
+  const images=[];
   for(const s of sections){
     const stats=unselectedStyles(s.bytes);stats[2]=0;
     const stack=[];
@@ -23,6 +26,8 @@ export function styleDocumentActual(call,h,doc,sections,mode=1) {
         const payload=drawingStyleActual(call,p.subarray(end),mode);
         stats[payload.known?3:4]++;parsed++;
         stats[5]+=payload.extra;
+        stats[6]+=Number(payload.imageId!==null);
+        if(payload.imageOffset!==null)images.push(imageReferenceEdges(call,h,doc,sections,s,r.start+end+payload.imageOffset,mode,checkCfbMutation));
         if(!variant){
           const changed=Buffer.from(s.bytes);
           changed.writeUInt32LE(0x80000000,r.start+end+(mode&1?13:11));
@@ -52,11 +57,11 @@ export function styleDocumentActual(call,h,doc,sections,mode=1) {
     assert.equal(canonical.readUInt32LE(sectionFieldOffset(1,"drawing_styles",4)),1);
     ordering++;
   }
-  return {parsed,rejected,ordering};
+  return {parsed,rejected,ordering,images};
 }
 export function styleDocumentReference(call,cfb){
   const files=[],skipped=[];
-  for(const [name,mode] of [["shape-group-02.hwp",1],["group-drawing-02.hwp",1],["shape-001.hwp",1],["issue2559/1341000_research_report_footnotes.hwp",3],["issue5714/1490000-200800034_vietnam_labor_report.hwp",3]]){
+  for(const [name,mode] of [["shape-group-02.hwp",1],["group-drawing-02.hwp",1],["shape-001.hwp",1],["issue2559/1341000_research_report_footnotes.hwp",3],["issue5714/1490000-200800034_vietnam_labor_report.hwp",3],["basic/BookReview.hwp",1]]){
     const url=new URL(`../../reference/rhwp/samples/${name}`,import.meta.url);
     if(!existsSync(url)){skipped.push(name);continue;}
     const rawFile=readFileSync(url);
@@ -65,8 +70,20 @@ export function styleDocumentReference(call,cfb){
     const decode=raw=>call(3,Buffer.concat([h,Buffer.from(raw)]));
     const doc=decode(cfb.findExact('/DocInfo').content),nodes=cfb.document().nodes,body=nodes.findIndex(n=>n.parent===0&&n.name==='BodyText');
     const sections=nodes.filter(n=>n.parent===body&&/^Section\d+$/.test(n.name)).map(n=>({index:Number(n.name.slice(7)),bytes:decode(n.content)}));
-    files.push({name,...styleDocumentActual(call,h,doc,sections,mode)});
     const cap=Buffer.alloc(4);cap.writeUInt32LE(64*1024*1024);
+    let cfbRejected=0;
+    const checkCfbMutation=(index,changed,error)=>{
+      const altered=nodes.map(n=>n.parent===body&&n.name===`Section${index}`?{...n,content:h.readUInt32LE(36)&1?deflateRawSync(changed):changed}:n);
+      const file=cfb.write({nodes:altered});
+      assert.throws(()=>call(55,Buffer.concat([Buffer.from([mode]),cap,Buffer.from(file)])),error);cfbRejected++;
+      call(55,Buffer.concat([Buffer.from([mode]),cap,rawFile]));
+    };
+    const result=styleDocumentActual(call,h,doc,sections,mode,checkCfbMutation);
+    if(name==="basic/BookReview.hwp"){
+      assert.deepEqual(result.images.map(v=>v.id),[1,3,2]);
+      assert.equal(cfbRejected,9);
+    }
+    files.push({name,...result,cfbRejected});
     const baseline=call(25,Buffer.concat([cap,rawFile]));
     const selected=call(54,Buffer.concat([Buffer.from([mode]),decodedDocumentInput(h,doc,sections)]));
     assert.deepEqual(call(55,Buffer.concat([Buffer.from([mode]),cap,rawFile])),Buffer.concat([selected,baseline.subarray(selected.length)]));
