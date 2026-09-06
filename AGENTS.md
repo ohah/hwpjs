@@ -21,6 +21,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - `list_groups.zig`는 같은 부모의 리스트 헤더 사이에서 직접 문단을 묶고 count_raw와 대조합니다. 중간 표/개체 레코드가 있다고 그룹을 닫지 않으며, Tree의 부모를 변경하지 않습니다. 그룹 범위/개수 검증과 셀/캡션 속성 검증은 구분합니다.
 - `control_rules.zig`는 공식 ID/코드 대응과 MAKE_4CHID의 SSOT, `control_type_validation.zig`는 연결 결과의 종류 검증을 소유합니다. 미지 ID는 deferred로 남기며 접두사나 잘못된 요약 별칭으로 자동 분류하지 않습니다.
 - `object_common.zig`는 tbl/gso/eqed 헤더의 공통 속성만 해석합니다. ID는 control_rules를 공유하고 UTF-16 길이 검사는 utf16_string을 재사용합니다. 설명 부재/빈 값, signed 위치와 unsigned 크기, 원시 플래그/꼬리를 보존하며 캡션·셀·도형 자식 레코드를 인라인 속성으로 소비하지 않습니다.
+- `table.zig`·`table_cell.zig`·`caption.zig`는 payload, `table_zone.zig`는 원시 좌표/명시적 열-행 또는 행-열 view, `table_lists.zig`는 TABLE 전후 직접 형제의 캡션/셀 역할을 소유합니다. `table_validation.zig`는 부모·중복·셀 수·병합 범위·영역/참조를 검사합니다. list/zone 배치는 호출자가 선택하며 길이로 자동 추정하지 않습니다. 셀 겹침/격자 채움/행별 배분 및 확장 꼬리 의미는 별도 미검증 범위입니다.
 - `src/hwp5/docinfo/`: 문서 속성·ID 매핑·BinData·FaceName·TabDef·Numbering·Bullet·Style payload와 태그 dispatch·리소스 개수 검증을 분리합니다. 번호/글머리표의 공통 머리 정보는 `paragraph_head.zig`가 소유합니다. 실제 필드 부재(null)와 값 0, 버전상 기대 슬롯 수를 구분합니다. BinData/글꼴 개수 검증과 전체 문서 조립/참조 검증을 혼동하지 않습니다.
 - `src/compression/`: bounded raw DEFLATE와 MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.
 - `src/hwp5/docinfo/resources.zig`: 주요 리소스 실측 개수와 ID 매핑 비교. `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 순회·진단을 소유합니다. `validateKnown()` 성공을 전체 문서 유효성으로 해석하지 말고 deferred/unknown_records와 미검증 범위를 확인합니다.

@@ -34,6 +34,8 @@ CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계�
 
 `object_common.zig`는 표/그리기/수식 헤더의 공통 필드와 선택 설명을 해석합니다. ControlHeader는 계속 ID/원본 속성을 보유하고, 호출자가 supports/Properties.parse로 추가 해석합니다. UTF-16 길이 읽기는 기존 utf16_string, 컨트롤 ID는 control_rules가 소유합니다. 개체의 캡션·셀·도형 자식 구조 검증과 렌더링은 이 파서에 넣지 않습니다.
 
+`table.zig`는 태그 77의 버전별 Row Size/영역 배열, `table_cell.zig`와 `caption.zig`는 명시적 리스트 view 이후의 payload를 해석합니다. 배열 경계는 record_array를 재사용하며 zone의 두 좌표 배치는 table_zone에 한정합니다. `table_lists`는 TABLE 마커 전후의 직접 리스트를 구분하고 중첩 표/미지 레코드를 보존합니다. `table_validation.inspect`는 호출자가 정한 두 배치와 테두리 개수로 소유권·총 셀 수·병합 경계·영역과 참조를 검사합니다. 셀 간 겹침/행별 분포/전체 격자 채움·확장 꼬리·시각적 배치까지 검사했다는 뜻은 아닙니다.
+
 태그 dispatch는 용지 73·각주/미주 모양 74·쪽 테두리 75도 포함합니다. `section_def.zig`·`page_def.zig`·`note_shape.zig`·`page_border.zig`는 각 payload 배치를 소유하고 `section_validation.zig`는 트리 기반 구역 소유권/개수/참조를 검증합니다. 구역 정의 본체와 하위 레코드를 섞지 않습니다. 각주 구분선 길이는 관측 i32 배치를 기본으로 하며 spec26은 명시적으로만 선택합니다. 주석 컨트롤 연결 및 번호 ID 0은 아직 남아 있습니다.
 
 HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.

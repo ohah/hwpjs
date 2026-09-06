@@ -73,7 +73,7 @@ export function listEdges(call) {
     return frame(72, level, b);
   };
   const para = frame(66, 2, Buffer.alloc(24));
-  const good = Buffer.concat([h, ctrl, list(1), frame(77, 2), para, list(0)]);
+  const good = Buffer.concat([h, ctrl, list(1), frame(900, 2), para, list(0)]);
   assert.deepEqual(listsActual(call, version, good), [2, 1, 1]);
   const run = (b) => call(15, Buffer.concat([word(version), b]));
   for (const [bytes, error] of [

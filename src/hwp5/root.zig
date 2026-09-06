@@ -15,4 +15,6 @@ pub const control_links = @import("body/control_links.zig");
 pub const list_groups = @import("body/list_groups.zig");
 pub const control_rules = @import("body/control_rules.zig");
 pub const control_type_validation = @import("body/control_type_validation.zig");
+pub const table_lists = @import("body/table_lists.zig");
+pub const table_validation = @import("body/table_validation.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");

@@ -23,6 +23,7 @@ import { columnEdges, columnPair } from "./columns.mjs";
 import { listsActual, listEdges } from "./list-groups.mjs";
 import { typeActual, typeEdges } from "./control-types.mjs";
 import { objectActual, objectEdges } from "./objects.mjs";
+import { tablesActual, tableEdges, tableZonePair } from "./tables.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -112,6 +113,9 @@ const columnEdgeResults = columnEdges(call);
 const listEdgeResults = listEdges(call);
 const typeEdgeResults = typeEdges(call);
 const objectEdgeResults = objectEdges(call);
+const tableEdgeResults = tableEdges(call);
+const tableReport = [0, 0, 0, 0];
+let tableZonePairResult;
 const objectCounts = [0, 0, 0, 0, 0, 0, 0];
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
@@ -301,6 +305,13 @@ try {
       );
       const framed = call(2, plain);
       if (/^Section\d+$/.test(entry.name)) {
+        if (name === "borderfill.hwp" && entry.name === "Section0")
+          tableZonePairResult = tableZonePair(
+            call,
+            hdr.readUInt32LE(32),
+            plain,
+            readFileSync(new URL("borderfill.hwpx", fixtures)),
+          );
         objectActual(plain).forEach((n, i) => {
           objectCounts[i] += n;
         });
@@ -324,6 +335,14 @@ try {
             readFileSync(new URL("footnote-endnote.hwpx", fixtures)),
           );
         const counts = formattingCounts(docPlain);
+        tablesActual(
+          call,
+          hdr.readUInt32LE(32),
+          counts.borderFill,
+          plain,
+        ).forEach((n, i) => {
+          tableReport[i] += n;
+        });
         sectionActual(
           call,
           hdr.readUInt32LE(32),
@@ -369,7 +388,7 @@ try {
   cfb.close();
 }
 assert.equal(files, 48);
-assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 194]);
+assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 134]);
 assert.deepEqual(sectionReport, [47, 47, 141, 1, 94, 68]);
 assert.ok(notePairResult);
 assert.equal(linkedControls, 313);
@@ -472,6 +491,8 @@ const formattingMutationResults = formattingMutations(call);
 const shapeMutationResults = shapeMutations(call);
 const bodyMutationResults = bodyMutations(call);
 assert.deepEqual(objectCounts, [60, 53, 20, 42, 82, 9, 5]);
+assert.deepEqual(tableReport, [60, 578, 29, 2]);
+assert.deepEqual(tableZonePairResult, [0, 0, 2, 0]);
 console.log(
   JSON.stringify(
     {
@@ -490,6 +511,9 @@ console.log(
       typeEdgeResults,
       objectEdgeResults,
       objectCounts,
+      tableEdgeResults,
+      tableReport,
+      tableZonePairResult,
       checks,
       imports: 0,
     },

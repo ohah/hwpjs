@@ -13,12 +13,16 @@ pub const ListHeader = list_header.Header;
 pub const section_def = @import("section_def.zig");
 pub const column_def = @import("column_def.zig");
 pub const object_common = @import("object_common.zig");
+pub const table = @import("table.zig");
+pub const Table = table.Table;
+pub const Cell = @import("table_cell.zig").Cell;
+pub const Caption = @import("caption.zig").Caption;
 pub const PageDefinition = @import("page_def.zig").Definition;
 pub const PageBorder = @import("page_border.zig").Border;
 pub const note_shape = @import("note_shape.zig");
 pub const NoteShape = note_shape.Shape;
-pub const Tag = enum(u10) { paragraph_header = 66, paragraph_text = 67, char_runs = 68, line_segments = 69, range_tags = 70, control_header = 71, list_header = 72, page_definition = 73, note_shape = 74, page_border = 75 };
-pub const Value = union(enum) { header: Header, text: Text, char_runs: Runs, line_segments: Segments, range_tags: Ranges, control_header: ControlHeader, list_header: ListHeader, page_definition: PageDefinition, note_shape: NoteShape, page_border: PageBorder, unknown };
+pub const Tag = enum(u10) { paragraph_header = 66, paragraph_text = 67, char_runs = 68, line_segments = 69, range_tags = 70, control_header = 71, list_header = 72, page_definition = 73, note_shape = 74, page_border = 75, table = 77 };
+pub const Value = union(enum) { header: Header, text: Text, char_runs: Runs, line_segments: Segments, range_tags: Ranges, control_header: ControlHeader, list_header: ListHeader, page_definition: PageDefinition, note_shape: NoteShape, page_border: PageBorder, table: Table, unknown };
 pub const Record = struct { framing: framing.Record, value: Value };
 /// Payload decoding only. Nested paragraphs keep their original levels.
 /// Ownership/order/count/DocInfo references need a separate section assembler.
@@ -42,6 +46,7 @@ pub const Iterator = struct {
             @intFromEnum(Tag.list_header) => .{ .list_header = try ListHeader.parse(r.payload) },
             @intFromEnum(Tag.page_definition) => .{ .page_definition = try PageDefinition.parse(r.payload) },
             @intFromEnum(Tag.note_shape) => .{ .note_shape = try NoteShape.parse(r.payload) },
+            @intFromEnum(Tag.table) => .{ .table = try Table.parse(r.payload, self.version) },
             @intFromEnum(Tag.page_border) => .{ .page_border = try PageBorder.parse(r.payload) },
             else => .unknown,
         };

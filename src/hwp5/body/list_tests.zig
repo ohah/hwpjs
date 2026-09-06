@@ -5,7 +5,7 @@ const Groups = @import("list_groups.zig").Groups;
 fn fixture() [92]u8 {
     var bytes = [_]u8{0} ** 92;
     const offsets = [_]usize{ 0, 28, 36, 48, 52, 80 };
-    const words = [_]u32{ 66 | (24 << 20), 71 | (1 << 10) | (4 << 20), 72 | (2 << 10) | (8 << 20), 77 | (2 << 10), 66 | (2 << 10) | (24 << 20), 72 | (2 << 10) | (8 << 20) };
+    const words = [_]u32{ 66 | (24 << 20), 71 | (1 << 10) | (4 << 20), 72 | (2 << 10) | (8 << 20), 900 | (2 << 10), 66 | (2 << 10) | (24 << 20), 72 | (2 << 10) | (8 << 20) };
     for (offsets, words) |p, w| std.mem.writeInt(u32, bytes[p..][0..4], w, .little);
     bytes[40] = 1;
     return bytes;

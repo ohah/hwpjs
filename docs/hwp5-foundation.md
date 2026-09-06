@@ -584,3 +584,27 @@ while (try it.next()) |record| {
 이 단계는 개체 공통 payload 읽기입니다. 셀·캡션·개별 도형·표 내부 참조·레이아웃·전체 문서 통합 검사와 제품 HWP JS API는 아직 남아 있습니다. controls_pending를 완료로 바꾸지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 93/93, Node 47/47, HWP5 WASM 56,849회 검사(모드별). CFB 60컨테이너/483스트림/5,496검색 비교 및 12,000회 변이도 통과했습니다. `zig fmt --check build.zig src tests/hwp5`, 변경 JS 포맷과 `git diff --check`도 확인했습니다.
+
+## 표 본체·셀·캡션과 구조 경계 검증
+
+2026-09-06. 공식 revision 1.3 PDF 표 72/75~80과 로컬 4.3.9.1 절을 대조하고, 지원 실제 문서의 표 60개를 추가 해석했습니다.
+
+- `table.zig`: 태그 77의 flags, 행/열 수, signed 간격/안쪽 여백, 행별 Row Size, 테두리 ID를 읽습니다. 5.0.1.0 이전은 zones=null, 이후는 u16 count가 필수이며 count=0은 빈 배열입니다. 알려지지 않은 꼬리는 extra로 보존하고, 버전 경계를 길이 fallback으로 대체하지 않습니다. Row Size/zone은 기존 record_array의 borrowed 배열입니다.
+- `table_zone.zig`: 공식 표 78은 열-행 순서지만 `borderfill.hwp`의 3행×1열 영역 바이트는 행-열 순서입니다. 원시 4좌표를 보존하고 spec_column_first/observed_row_first view를 명시적으로 선택합니다. 테스트 WASM에서 해석한 `[startRow,startCol,endRow,endCol]=[0,0,2,0]`을 짝 `borderfill.hwpx`의 cellzone과 대조했습니다. 변환 시 테두리 리소스 번호는 다를 수 있어 HWPX 테두리 ID까지 동일하다고 주장하지 않습니다.
+- `table_cell.zig`는 리스트 view 뒤 26바이트(주소·병합 수·크기·signed 여백·테두리 ID), `caption.zig`는 14바이트(flags·폭·signed 간격·최대 텍스트 폭)를 해석합니다. 공식 표 71의 요약 길이 12와 표 72의 필드 합 14가 충돌하여 표 72/실제 바이트 기준을 사용했습니다. 셀/캡션 뒤 확장 바이트는 보존하되 의미를 추정하지 않습니다.
+- `table_lists.Iterator`는 표 컨트롤의 직접 자식 TABLE 마커를 정확히 하나 요구하고, 마커 이전 직접 리스트는 캡션, 이후는 셀로 분류합니다. 길이로 구분하지 않고, 중첩 표는 해당 부모에게 남기며 미지 레코드가 있다고 마커를 바꾸지 않습니다.
+- `table_validation.inspect`는 호출자가 list_layout/zone_layout/border_count를 지정합니다. 표 컨트롤의 문단 부모, TABLE 소유권/누락/중복, 0이 아닌 행열 수, 영역 순서/경계, 셀의 0이 아닌 병합 수와 표 안 경계, Row Size 총합과 실제 셀 수를 검사합니다. 테두리 ID는 기존 optional_one_based 규칙을 공유해 0을 부재로 허용하고 nonzero 범위를 확인합니다. 문단 수/링크 검증은 기존 별도 검증기를 유지합니다.
+
+실측: 표 60, 셀 578, 캡션 29, 영역 2. 정규 audit에서 집계를 고정 assert하고, 표의 각 필드와 선택된 셀/캡션의 모든 기본 필드·꼬리를 각각 재직렬화해 원본과 비교했습니다. 명세 6바이트와 관측 8바이트 리스트 view는 서로 다른 주소를 읽는 합성 사례로 명시적 선택을 검증하며 실제 fixture에는 observed8을 사용합니다. 태그 77의 60개가 unknown에서 빠져 문단 보고서 unknown_records는 194→134입니다. controls_pending/lists_pending를 전체 의미 검증 완료로 간주해 줄이지 않았습니다.
+
+### 구현 후 적대적 검증
+
+1. 구/신 버전의 모든 payload 잘림 위치, 필수 zone count와 65,535행/65,535영역의 최대 배열 및 마지막 바이트 잘림을 검사했습니다. 기본 길이와 곱셈은 usize로 승격한 u16 개수로 계산하며 WASM에서도 확장 framing을 사용합니다.
+2. 표 합성 payload 전체 비트 변이 288개 중 258개 원본 왕복, 길이 초과 30개 거부, 매 변이 뒤 288회 정상 복구를 확인했습니다. 문자열/좌표를 추정 보정하지 않습니다.
+3. 부모 없는 표 컨트롤/TABLE, TABLE 누락/중복, 총 셀 수 불일치, 0/최대 span, 영역 시작-끝 역전/범위 초과, 표·셀·영역 테두리 참조 초과를 거부했습니다. 표/셀/캡션의 signed 극값·서로 다른 필드 위치·borrowed 꼬리를 네이티브에서 검사했습니다.
+4. 캡션을 셀과 같은 긴 길이로 만들어도 역할은 마커 순서로 유지되며, 미지 형제와 중첩 표를 삽입해도 외부 표의 마커/개수에 섞이지 않습니다. Tree 생성의 모든 할당 실패와 해석 후 늦은 span 오류의 정리도 네이티브에서 확인했습니다.
+5. SSOT 재검토: 역할 선택은 table_lists에서 validation/probe가 공유하고, 배열 경계·컨트롤 ID·참조 규칙은 기존 공통 모듈을 재사용합니다. 일반 리스트 테스트가 사용하던 빈 태그 77은 이제 잘못된 알려진 TABLE이므로 미지 태그 900으로 바꿨고, 실제 TABLE 중간 형제의 리스트 보존은 실제 fixture audit에서 계속 검사합니다.
+
+남은 범위: 셀 간 겹침·전체 격자 채움·행별 Row Size 분포, 셀/캡션 확장 꼬리 필드, 그리기/수식 소유 캡션, 개별 도형·표 레이아웃과 전체 문서/제품 API 통합입니다. 이 검증 성공은 완전한 표 또는 전체 HWP 유효성 판정이 아닙니다. 다음 파트는 셀 격자/행별 분포와 확장 필드의 명세·실제 값 대조입니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 98/98, Node 47/47, HWP5 WASM 57,621회 검사(모드별). 기존 CFB 비교 60컨테이너/483스트림/5,496검색과 12,000회 변이도 통과했습니다. Zig/JS 포맷·diff 검사, 파일 책임/SSOT 검토를 완료했습니다.
