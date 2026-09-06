@@ -61,6 +61,10 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
                 }
             },
             .unknown => try out.appendSlice(a, f.payload),
+            .memo_list => |m| {
+                try int(a, &out, u32, m.memo_index);
+                try out.appendSlice(a, m.extra);
+            },
             .table => |t| try @import("table-probe.zig").payload(a, &out, t),
             .page_definition, .page_border, .note_shape => try @import("section-probe.zig").payload(a, &out, record.value),
             .control_header => |h| {

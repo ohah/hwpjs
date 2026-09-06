@@ -2128,3 +2128,17 @@ hwplib는 마지막 DWORD를 unknown으로 보존합니다. rhwp의 HWPX 변환�
 최초 전체 Debug audit에서 기존 고정 fixture 집계의 unknown_records 기대값 70이 실제 69와 달라 실패했습니다. legacy fixture의 DocInfo를 독립 Node zlib/framing 경로로 다시 조사해 software.hwp에 메모 레코드가 정확히 1개 있음을 확인하고 기대값을 69로 수정했습니다. 개별 파일의 references 기대값도 태그 92를 알려진 레코드로 분류하며 제품 오류 검사를 완화하지 않았습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 230/230, Node 47/47, HWP5 WASM 1,291,041회 검사 통과했습니다. 신규 메모 연결 합성 성공 12/거부 162와 실제 문서의 세 경로 거부 90을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-memo-resource-{debug,safe,fast}.log`입니다. payload·level·선택 슬롯 개수 연결까지 완료했으며 본문 MEMO_LIST 및 필드 명령과의 연결은 다음 범위입니다.
+
+## 본문 메모 리스트 payload와 실제 번호 대조
+
+2026-09-07. 공식 PDF §3.2.3/표 5는 MEMO_LIST의 4바이트/level 1과 마지막 구역 끝의 메모 정보를 명시합니다. 로컬 요약의 가변 길이 표기 대신 공식 표를 참조했습니다. [hwplib ForMemoList](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/reader/bodytext/memo/ForMemoList.java)는 memoIndex를 unsigned 4바이트로 읽습니다. 로컬 rhwp serializer도 같은 폭을 기록합니다. 레거시 Rust MemoList는 원문 보관만 합니다. 외부 코드 이식·의존성 추가는 없습니다.
+
+memo_list.Header.parse는 u32 memo_index와 borrowed extra를 반환합니다. body reader의 Tag는 payload 모듈의 태그 상수를 공유하며 Iterator는 실패 시 이전 상태를 유지합니다. 본문 typed dispatch에서 호출하므로 잘린 payload는 Tree/문서/CFB 검사에 전파됩니다. 문단 검사기의 exhaustive switch도 새 typed 레코드를 처리합니다. 번호의 0/비연속/상위 비트·꼬리를 보존하며 DocInfo memo_shape ordinal로 해석하거나 후속 문단 수로 사용하지 않습니다.
+
+실제 aift Section2(2개), issue5169_viewtext_changetracking Section0(2개), basic/NewYear_s_Day Section0(9개), basic/english Section0(15개), issue5866/memo_field_hwp5 Section0(1개), task2287/1342000_edu_curriculum_map Section33(1개)의 합계 30개를 테스트 WASM typed 필드 재인코딩과 원시 바이트로 대조합니다. 모두 길이 4/level 1이며 바로 다음 태그는 LIST_HEADER입니다. issue5169의 번호는 1/3, task2287은 4이므로 연속/1 시작 규칙을 강제하지 않습니다.
+
+그중 같은 구역의 MEMO/65535/번호/ 문자열 및 필드 꼬리 DWORD와 대조 가능한 27개는 번호가 일치합니다. 이는 테스트 관측이며 제품에 문자열 정규식이나 명령 실행을 넣지 않습니다. 나머지 3개는 구역 간 연결·변경 추적 등을 더 조사해야 하므로 고아라고 판정하지 않습니다. 같은 구역에 없는 필드를 같은 구역 검색만으로 오류 처리하지 않습니다.
+
+적대적 검증은 네이티브의 0/UINT32_MAX/상위 비트·모든 0~3바이트 잘림·extra 수명, Iterator 반복 실패, WASM의 세 버전/일반·확장 framing/7바이트 전체 위치 비트 변이로 구성합니다. 실제 issue5866 문서의 메모를 각 prefix로 잘라 decoded 문서와 메모리에서 재생성한 CFB에서 거부하고 원본으로 복구를 확인합니다. 원본 fixture는 수정하지 않습니다. 후속 LIST_HEADER 확장·문단 소유권·본문 메모 필드의 전역 연결은 아직 미구현이며 payload가 알려진 레코드가 된 것을 전체 메모 지원 완료로 해석하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 232/232, Node 47/47, HWP5 WASM 1,293,479회 검사 통과했습니다. 메모 리스트 합성 성공 372/거부 1,488, 실제 30개/필수 prefix 거부 120, 같은 구역 필드 번호 대조 27개와 decoded 문서/CFB 거부 8건을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-memo-list-{debug,safe,fast}.log`입니다.
