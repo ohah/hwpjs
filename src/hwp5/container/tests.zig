@@ -6,6 +6,7 @@ const writer = @import("../../cfb/writer.zig");
 const opts: c.Options = .{ .document = .{ .list_layout = .observed8, .zone_layout = .observed_row_first, .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty } } };
 fn fixture(a: std.mem.Allocator, late_failure: bool) ![]u8 {
     const h = f.header();
+    const summary = @import("../summary/tests.zig").fixture();
     const doc = try f.docInfo(a, if (late_failure) 2 else 1);
     defer a.free(doc);
     const section = try f.section(a);
@@ -17,9 +18,10 @@ fn fixture(a: std.mem.Allocator, late_failure: bool) ![]u8 {
         .{ .name = "BodyText", .parent = 0, .kind = 1 },
         .{ .name = "Section0", .parent = 3, .content = section },
         .{ .name = "PrvText", .parent = 0, .content = &.{ 0xff, 0xfe, 'A', 0 } },
+        .{ .name = "\x05HwpSummaryInformation", .parent = 0, .content = &summary },
         .{ .name = "Section1", .parent = 3, .content = &.{} },
     };
-    return writer.write(a, nodes[0..if (late_failure) 7 else 6], .{});
+    return writer.write(a, nodes[0..if (late_failure) 8 else 7], .{});
 }
 fn success(a: std.mem.Allocator, bytes: []const u8) !void {
     var report = try c.inspect(a, bytes, opts);
@@ -27,6 +29,7 @@ fn success(a: std.mem.Allocator, bytes: []const u8) !void {
     try t.expectEqual(1, report.document.sections.len);
     try t.expectEqual(0, report.uninspected_streams);
     try t.expectEqual(1, report.preview_text.?.bom_units);
+    try t.expectEqual(2, report.summary_information.?.properties);
     try t.expectEqual(0xa5, report.document.doc_info.properties.extra[0]);
 }
 fn failure(a: std.mem.Allocator, bytes: []const u8) !void {
@@ -44,6 +47,30 @@ fn malformedPreview(a: std.mem.Allocator, bytes: []const u8) !void {
     };
     defer report.deinit(a);
     return error.ExpectedPreviewFailure;
+}
+fn malformedSummary(a: std.mem.Allocator, bytes: []const u8) !void {
+    var report = c.inspect(a, bytes, opts) catch |err| switch (err) {
+        error.DuplicateSummaryProperty => return,
+        else => return err,
+    };
+    defer report.deinit(a);
+    return error.ExpectedSummaryFailure;
+}
+test "late summary failure releases earlier document, preview and partial property allocations" {
+    const good = try fixture(t.allocator, false);
+    defer t.allocator.free(good);
+    var file = try @import("../../cfb/reader.zig").File.open(t.allocator, good, .{ .strict = true });
+    defer file.deinit();
+    const nodes = try file.toNodes(t.allocator);
+    defer t.allocator.free(nodes);
+    var summary = @import("../summary/tests.zig").fixture();
+    f.put(&summary, 64, u32, 14);
+    for (nodes) |*node| if (std.mem.eql(u8, node.name, "\x05HwpSummaryInformation")) {
+        node.content = &summary;
+    };
+    const bad = try writer.write(t.allocator, nodes, .{});
+    defer t.allocator.free(bad);
+    try t.checkAllAllocationFailures(t.allocator, malformedSummary, .{bad});
 }
 test "late malformed preview cleans successful document and every allocation failure" {
     const good = try fixture(t.allocator, false);
@@ -78,7 +105,7 @@ test "container report outlives input CFB and respects independent encoded limit
     try t.expectEqual(0xa5, report.document.doc_info.properties.extra[0]);
     try t.expectEqual(1, report.document.doc_info.resources.count(.style));
     try t.expectEqual(1, report.document.sections[0].control_types.checked);
-    try t.expectEqual(report.document.total_bytes + 4, report.total_decoded_bytes);
+    try t.expectEqual(report.document.total_bytes + 4 + 92, report.total_decoded_bytes);
     try t.expectEqual(2, report.preview_text.?.scalar_values);
 }
 test "canonical section namespace and bounded UTF16 BinData paths" {

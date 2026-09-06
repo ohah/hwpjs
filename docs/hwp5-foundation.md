@@ -804,3 +804,34 @@ Report는 document Report와 DocInfo backing을 소유하므로 입력 파일 �
 현재 실제 미검사 스트림은 **225개**입니다. 이전 270개 중 PrvText 45개의 구조/진단 경로만 추가한 것이며, 다른 스트림까지 완료 처리하지 않았습니다. 전체 소비량 합계는 미리보기 포함 1,533,246바이트입니다. 다음 대상은 요약 정보와 나머지 미검사 스트림의 형식/필드 검증이며, 전체 문서 목표는 계속 진행 중입니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 124/124, Node 47/47, HWP5 WASM 161,907회 검사(모드별). 기존 CFB 비교 60컨테이너/483스트림/5,496검색 및 12,000회 변이(trap 0), Zig/JS 포맷·diff 검사도 통과했습니다.
+
+## HWP 요약 정보의 단일 property-set 검증
+
+2026-09-06. 선택적인 루트 `/\u0005HwpSummaryInformation`을 HWP 단일 property-set 프로파일로 읽고 파일 검사에 연결했습니다. 일반 MS-OLEPS의 모든 FMTID/다중 set/타입을 구현한 단계는 아닙니다.
+
+명세 근거는 HWP 3.2.4 표 7과 Microsoft의 [PropertySetStream](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/6e65d6fa-6044-4e23-ae71-d65d1e3b1249), [PropertySet](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/aefcbddf-f299-4f5e-a9da-65ce4ca55075), [PropertyIdentifierAndOffset](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/f59e6c94-a0ae-4d1b-85d3-f01c35779a22), [UnicodeString](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/9660cb24-953a-4e60-adf2-37cc0e779d19)입니다. 원문과 실측을 구분했습니다.
+
+- 실제 HWP summary의 FMTID wire bytes는 `60b6a29f6110d411b4c6006097c09d8c`, set 수는 1, 시작 offset은 48이었습니다. 헤더 version 0/1과 해당 FMTID만 지원하며 다른 형식/다중 set은 명시적 Unsupported 오류입니다. system identifier/CLSID는 원문 보존하고 문서 의미로 추정하지 않습니다.
+- 공식 HWP 표에는 문자열이 VT_LPSTR로 적혀 있으나 실제 지원 corpus는 VT_LPWSTR(31)입니다. 이번 typed value 지원은 VT_LPWSTR·VT_I4(3)·VT_FILETIME(64)입니다. LPSTR/코드페이지를 임의 UTF-8로 읽지 않고 unsupported 타입으로 보류합니다.
+- 속성 디렉터리는 ID 순서가 아니라 offset 증가 순서입니다. 실제 PID 20이 5보다 앞에 있고 PID 0은 마지막입니다. offset은 set 기준이며 디렉터리 영역과 겹치지 않고 4바이트 정렬/단조 증가/범위 내에 있어야 합니다. ID 중복은 별도 검사합니다.
+- 마지막 PID 0은 dictionary입니다. 실제 값이 `01 00 00 00`으로 시작해도 VT_NULL 등 일반 TypedPropertyValue로 해석하지 않습니다. 전체 원문을 dictionary_deferred로 보존하며 내부 dictionary 의미는 후속 범위입니다. 전체 set 길이가 홀수인 관측 파일도 있으므로 속성 시작 정렬 조건을 전체 길이 정렬로 확대하지 않았습니다.
+
+책임은 `summary/header.zig`(프로파일/envelope), `parser.zig`(디렉터리/할당/범위), `value.zig`(typed wire 값), `rules.zig`(HWP ID별 기대 타입)로 나눴습니다. 알려진 ID에 해석 가능한 잘못된 타입이 오면 InvalidSummaryPropertyType, 해석하지 못하는 타입이면 unsupported 진단입니다. 미지 ID도 원문과 unknown_ids로 남습니다. 다른 속성 타입/새 ID를 추측해 문자열로 강제하지 않습니다.
+
+문자열의 길이는 u32 UTF-16 코드 유닛 수이며 종결 NUL을 포함합니다. 0길이와 NUL 하나인 문자열은 다르게 보존합니다. 선언 길이를 남은 바이트와 나눗셈으로 대조한 후 곱해 wasm32 오버플로를 피하며, 종결과 필요한 4바이트 경계 패딩을 검사합니다. 내부 NUL/고립 서로게이트는 원문에서 제거하지 않습니다. 모든 문자열이 정상 Unicode라는 증명은 아닙니다. 정수는 i32 부호, FILETIME은 전체 u64를 유지하며 JS Number/지역 시간으로 강제 변환하지 않습니다.
+
+Document는 속성 배열만 소유하며 raw stream/header/속성 값/extra는 입력을 빌립니다. Header 뒤·디렉터리 뒤의 gap, 알려진 값 뒤 extra, stream 뒤 바이트도 보존하고 trailing_bytes에 집계합니다. 이 보류 바이트를 정상 패딩이라고 단정하지 않습니다. 속성 수는 실제 디렉터리 바이트와 호출자 한도로 제한하며 container 기본 `max_summary_properties`는 4096입니다. 0은 빈 set만 허용하는 한도입니다.
+
+`container/summary.zig`는 제어문자 0x05를 포함한 정확한 루트 경로만 사용합니다. 접두사가 빠진 동명 스트림으로 fallback하지 않고, 원문은 재압축 해제하지 않습니다. 파싱된 통계만 container Report에 복사하고 임시 속성 배열을 해제합니다. summary 소비량도 기존 전역 바이트 한도에 포함합니다.
+
+### 구현 후 적대적 검증
+
+1. **실제 파일/typed 왕복**: 지원 45파일의 summary 21,381바이트·630속성을 대조했습니다. typed 값으로 재직렬화한 속성 원문이 입력과 같으며 문자열 360/FILETIME 135/정수 90/dictionary 보류 45입니다. 미지원 타입/미지 ID/남은 바이트는 이 실제 corpus에서 0이지만 일반 형식 지원 완료를 뜻하지 않습니다.
+2. **경계/배치**: 합성 정상 스트림의 모든 잘림 prefix, 잘못된 byte order/version/FMTID/set 수·크기·offset·속성 수, 디렉터리 침범·중복/역순/미정렬 offset·중복 ID를 거부했습니다. 명시적 오류 140건 각각 뒤에 정상 문서를 다시 파싱해 회복을 확인했습니다.
+3. **값/부재/보류**: u32 최대 문자열 길이, 누락 종결·잘못된 패딩·known ID의 잘못된 타입을 검사했습니다. 0길이/NUL 하나/고립 서로게이트/미지 타입·ID/dictionary·extra 원문을 구분하고, i32 -1/u64 최댓값도 손실 없이 대조했습니다. 적법한 비정렬 ID 순서를 정렬하거나 거부하지 않습니다.
+4. **파일 연결**: 정확한 루트 이름, 0x05가 빠진 alias의 미소비 처리, 잘못된 kind/손상 summary, 정확한 전체 바이트 한도 성공/한 바이트 부족 실패를 검사했습니다. optional summary 부재와 검사 결과의 존재를 구분합니다.
+5. **할당/수명/SSOT**: 정상 summary와 중복 ID 실패의 모든 할당 실패를 주입했습니다. summary를 포함한 파일 전체의 성공 및 문서·미리보기 검사 후 summary에서 실패하는 모든 할당 실패 지점도 검사했습니다. 입력 CFB 해제 후 통계는 유효하며 해제된 raw 포인터를 container 보고서에 남기지 않습니다. 기존 CFB lookup/Reader/문서 검사기를 재사용하고 타입/ID 규칙은 분리했습니다.
+
+현재 미검사 스트림은 **180개**이며 summary 내부의 dictionary 보류 **45개**는 별도로 남아 있습니다. 전체 소비량 합계는 1,554,627바이트입니다. 다음 작업은 dictionary/코드페이지와 미지원 요약 타입을 명세에 따라 확장하는 것이며, 미리보기 이미지·스크립트·문서 옵션·나머지 본문 컨트롤/도형·HWPX 등 전체 목표는 계속 남아 있습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 128/128, Node 47/47, HWP5 WASM 162,245회 검사(모드별). 기존 CFB 비교 60컨테이너/483스트림/5,496검색·12,000회 변이(trap 0), Zig/JS 포맷·diff 검사도 통과했습니다.

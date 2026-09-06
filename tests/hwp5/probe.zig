@@ -88,6 +88,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         24 => return @import("document-probe.zig").run(a, bytes, limit),
         25 => return @import("container-probe.zig").run(a, bytes, limit),
         26 => return @import("preview-probe.zig").run(a, bytes),
+        27 => return @import("summary-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { documentActual, documentEdges } from "./documents.mjs";
 import { containerActual, containerEdges } from "./containers.mjs";
 import { previewEdges } from "./preview.mjs";
+import { summaryEdges } from "./summary.mjs";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
@@ -296,8 +297,9 @@ let pairedColumns = 0;
 const listReport = [0, 0, 0];
 const typeReport = [0, 0];
 const documentReport = [0, 0, 0, 0];
-const containerReport = Array(10).fill(0);
+const containerReport = Array(19).fill(0);
 const previewEdgeResults = previewEdges(call);
+const summaryEdgeResults = summaryEdges(call);
 const containerEdgeResults = containerEdges(call, cfb);
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
@@ -477,7 +479,10 @@ assert.equal(files, 48);
 assert.deepEqual(documentReport, [45, 47, 482195, 10425]);
 assert.deepEqual(
   containerReport,
-  [45, 13, 1028155, 225, 45, 11448, 11448, 0, 0, 0],
+  [
+    45, 13, 1028155, 180, 45, 11448, 11448, 0, 0, 0, 45, 630, 360, 135, 90, 45,
+    0, 0, 0,
+  ],
 );
 assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 134]);
 assert.deepEqual(sectionReport, [47, 47, 141, 1, 94, 68]);
@@ -623,6 +628,7 @@ console.log(
       documentReport,
       containerReport,
       previewEdgeResults,
+      summaryEdgeResults,
       containerEdgeResults,
       documentEdgeResults,
       tableReport,

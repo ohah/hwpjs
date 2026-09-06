@@ -17,6 +17,9 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     try out.appendSlice(a, doc);
+    try int(a, &out, u32, @intFromBool(report.summary_information != null));
+    const summary = report.summary_information orelse core.hwp5.summary_information.Stats{};
+    inline for (std.meta.fields(@TypeOf(summary))) |f| try int(a, &out, u32, @intCast(@field(summary, f.name)));
     try int(a, &out, u32, @intFromBool(report.preview_text != null));
     const preview = report.preview_text orelse core.hwp5.preview_text.Stats{};
     inline for (std.meta.fields(@TypeOf(preview))) |f| try int(a, &out, u32, @intCast(@field(preview, f.name)));

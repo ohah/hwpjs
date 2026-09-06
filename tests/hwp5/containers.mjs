@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { decodedDocumentInput, documentRecords } from "./documents.mjs";
 import { previewActual } from "./preview.mjs";
+import { summaryActual, summaryFixture } from "./summary.mjs";
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -55,6 +56,14 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     used.add(path.toLowerCase());
   }
   const nodes = cfb.document().nodes;
+  const summaryEntry = cfb.findExact("/\x05HwpSummaryInformation");
+  const summaryBytes = summaryEntry
+    ? Buffer.from(summaryEntry.content)
+    : Buffer.alloc(0);
+  const summary = summaryEntry
+    ? [1, ...summaryActual(call, summaryBytes)]
+    : Array(9).fill(0);
+  if (summaryEntry) used.add("/\x05hwpsummaryinformation");
   const previewEntry = cfb.findExact("/PrvText");
   const previewBytes = previewEntry
     ? Buffer.from(previewEntry.content)
@@ -68,15 +77,20 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
   const uninspected = nodes.filter(
     (n, i) => n.kind === 2 && !used.has(path(i).toLowerCase()),
   ).length;
-  const total = expected.readUInt32LE(12) + stats[2] + previewBytes.length;
+  const total =
+    expected.readUInt32LE(12) +
+    stats[2] +
+    previewBytes.length +
+    summaryBytes.length;
   const want = Buffer.concat([
     expected,
+    ...summary.map(w),
     ...preview.map(w),
     ...[...stats, total, uninspected].map(w),
   ]);
   assert.deepEqual(run(call, bytes, total, expected.readUInt32LE(16)), want);
   assert.throws(() => run(call, bytes, total - 1), /LimitExceeded/);
-  return [1, stats[1], stats[2], uninspected, ...preview];
+  return [1, stats[1], stats[2], uninspected, ...preview, ...summary];
 }
 export function containerEdges(call, cfb) {
   const h = Buffer.alloc(256);
@@ -235,6 +249,37 @@ export function containerEdges(call, cfb) {
   assert.equal(external.at(-1), 1); // Unused BIN stream remains uninspected.
   const unknown = words(run(call, write(nodes(h, u(15)))));
   assert.deepEqual(unknown.slice(-7, -2), [1, 0, 0, 0, 1]);
+  const summary = summaryFixture([[14, Buffer.concat([w(3), w(7)])]]);
+  const summaryNode = {
+    name: "\x05HwpSummaryInformation",
+    parent: 0,
+    content: summary,
+  };
+  const summaryFile = write([...nodes(), summaryNode]);
+  assert.deepEqual(
+    words(run(call, summaryFile, total + summary.length)).slice(-22, -13),
+    [1, 1, 0, 0, 1, 0, 0, 0, 0],
+  );
+  assert.throws(
+    () => run(call, summaryFile, total + summary.length - 1),
+    /LimitExceeded/,
+  );
+  reject(
+    [...nodes(), { ...summaryNode, content: summary.subarray(0, -1) }],
+    /InvalidSummarySize/,
+  );
+  reject(
+    [...nodes(), { ...summaryNode, kind: 1, content: Buffer.alloc(0) }],
+    /InvalidHwpEntryKind/,
+  );
+  const alias = words(
+    run(
+      call,
+      write([...nodes(), { ...summaryNode, name: "HwpSummaryInformation" }]),
+    ),
+  );
+  assert.equal(alias.at(-22), 0);
+  assert.equal(alias.at(-1), 1);
   for (const raw of [
     Buffer.alloc(0),
     Buffer.from("\ufeffA\0😀\ud800", "utf16le"),

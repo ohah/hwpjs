@@ -7,6 +7,7 @@ const binaries = @import("binaries.zig");
 pub const Options = struct {
     document: d.Options,
     cfb: @import("../../cfb/types.zig").Options = .{ .strict = true },
+    max_summary_properties: usize = 4096,
 };
 /// Owns DocInfo backing bytes and the document report. Does NOT own the input CFB.
 /// Decoded binary bytes are checked for compression integrity, not image/OLE semantics.
@@ -14,6 +15,7 @@ pub const Report = struct {
     document: d.Report,
     binary_data: binaries.Report,
     preview_text: ?@import("../preview/text.zig").Stats,
+    summary_information: ?@import("../summary/parser.zig").Stats,
     total_decoded_bytes: usize,
     uninspected_streams: usize,
     doc_info_backing: []const u8,
@@ -50,9 +52,10 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     errdefer report.deinit(a);
     const bins = try binaries.inspect(a, &file, &header, doc, options.document.framing, used, &remaining);
     const preview = try @import("preview.zig").inspect(&file, used, &remaining);
+    const summary = try @import("summary.zig").inspect(a, &file, used, &remaining, options.max_summary_properties);
     var uninspected: usize = 0;
     for (file.entries, used) |entry, consumed| if (entry.kind == 2 and !consumed) {
         uninspected += 1;
     };
-    return .{ .document = report, .binary_data = bins, .preview_text = preview, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
+    return .{ .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
 }
