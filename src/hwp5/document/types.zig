@@ -6,6 +6,7 @@ pub const DrawingStyleOptions = @import("../body/drawing_style_validation.zig").
 pub const Section = struct { index: u16, bytes: []const u8 };
 pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
 pub const Options = struct {
+    forbidden_chars: @import("../docinfo/forbidden_validation.zig").Layout = .preserve_raw,
     picture: @import("../body/picture_validation.zig").Options = .{},
     curve_layout: @import("../body/shape_curve.zig").Layout = .observed_i32_points,
     polygon_layout: @import("../body/shape_polygon.zig").Layout = .observed_i32_points,
@@ -34,6 +35,7 @@ pub fn parameterOptions(options: Options, count: usize) sources.Options {
     return .{ .parameters = options.parameters, .list_layout = options.list_layout, .bin_data_count = count, .framing = options.framing };
 }
 pub const DocInfo = struct {
+    forbidden_chars: @import("../docinfo/forbidden_validation.zig").Report = .{},
     properties: @import("../docinfo/properties.zig").Properties,
     resources: resources.Report,
     references: @import("../docinfo/references.zig").Report,

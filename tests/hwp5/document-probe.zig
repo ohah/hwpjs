@@ -3,6 +3,8 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub const Selection = struct {
+    forbidden_report: bool = false,
+    forbidden_layout: @FieldType(core.hwp5.document_validation.Options, "forbidden_chars") = .preserve_raw,
     memo_report: bool = false,
     memo_end_report: bool = false,
     memo_range_report: bool = false,
@@ -17,6 +19,12 @@ fn fields(a: std.mem.Allocator, out: *std.ArrayList(u8), value: anytype) !void {
 }
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return configured(a, bytes, limit, .{});
+}
+pub fn forbidden(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const mode = try r.readInt(u8);
+    if (mode > 1) return error.InvalidMode;
+    return configured(a, bytes[r.offset..], limit, .{ .forbidden_report = true, .forbidden_layout = @enumFromInt(mode) });
 }
 pub fn memo(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return configured(a, bytes, limit, .{ .memo_report = true });
@@ -95,6 +103,7 @@ fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: 
     }
     if (r.offset != bytes.len) return error.TrailingDocumentInput;
     var report = try d.inspectDecoded(a, .{ .header = header, .doc_info = doc, .sections = sections }, .{
+        .forbidden_chars = selection.forbidden_layout,
         .drawing_style = selection.style,
         .arc_layout = selection.arc,
         .polygon_layout = selection.polygon,
@@ -109,6 +118,12 @@ fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: 
         .framing = .{ .max_records = limit },
     });
     defer report.deinit(a);
+    if (selection.forbidden_report) {
+        var out: std.ArrayList(u8) = .empty;
+        errdefer out.deinit(a);
+        try fields(a, &out, report.doc_info.forbidden_chars);
+        return out.toOwnedSlice(a);
+    }
     if (selection.memo_report or selection.memo_end_report or selection.memo_range_report) {
         var out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(a);

@@ -8,9 +8,11 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
     var it = try d.Iterator.init(bytes, version, options.framing);
     var properties: ?d.Properties = null;
     var records: usize = 0;
+    var forbidden: @import("../docinfo/forbidden_validation.zig").Report = .{};
     var compatibility: @import("../docinfo/compatibility_owner.zig").State = .{};
     while (try it.next()) |r| {
         try compatibility.observe(r);
+        try forbidden.observe(r.framing.tag, r.framing.level, r.framing.payload, options.forbidden_chars);
         records += 1;
         if (r.value == .properties) {
             if (properties != null) return error.DuplicateDocumentProperties;
@@ -22,5 +24,5 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
     try counts.validateKnownCounts();
     const refs = try references.inspect(bytes, version, options.framing);
     try refs.validateKnown();
-    return .{ .properties = props, .resources = counts, .references = refs, .parameters = try sources.inspectDocInfo(a, bytes, types.parameterOptions(options, counts.bin_data_count)), .records = records };
+    return .{ .properties = props, .resources = counts, .references = refs, .parameters = try sources.inspectDocInfo(a, bytes, types.parameterOptions(options, counts.bin_data_count)), .records = records, .forbidden_chars = forbidden };
 }

@@ -16,7 +16,19 @@
 
 원문·NUL·고립 서로게이트·공백·목록 순서를 보존하고, 마지막 미해석 바이트는 extra로 빌립니다. 홀수 길이 extra도 삭제하지 않습니다. 입력 버퍼는 반환 뷰보다 오래 살아야 합니다. 빈 목록을 기본 금칙 문자나 공백으로 채우지 않습니다.
 
-테스트 mode 95는 이 명시적 뷰를 wasm32에서 호출하며, 목록별 코드 유닛 수/원본 바이트와 extra 길이/바이트를 반환합니다. 태그 dispatch·레벨/소유권·문서 진단·행 나눔은 이 함수의 책임이 아닙니다. **기본 DocInfo reader는 아직 태그 94를 unknown/raw로 유지합니다.** 관측 배치 선택 정책과 문서 통합이 남아 있으며, 이 payload 코어를 전체 금칙 처리 지원으로 세지 않습니다.
+테스트 mode 95는 이 명시적 뷰를 wasm32에서 호출하며, 목록별 코드 유닛 수/원본 바이트와 extra 길이/바이트를 반환합니다. 태그 dispatch·레벨/소유권·문서 진단·행 나눔은 이 함수의 책임이 아닙니다. 기본 DocInfo reader는 태그 94를 unknown/raw로 유지하며, 문서 조립의 명시적 선택 정책은 아래에서 관리합니다. 이 payload 코어를 전체 금칙 처리 지원으로 세지 않습니다.
+
+## 문서 선택 정책과 보고서
+
+`document.Options.forbidden_chars`의 기본값은 `preserve_raw`입니다. 태그 94의 개수와 레벨 분포를 보고하되 payload 해석은 deferred로 남깁니다. `observed_lists`를 선택하면 기존 parseObserved를 호출하고 길이 부족을 전파합니다. 이 선택에서는 명세 레벨 0/관측 레벨 1을 허용하고 다른 레벨을 `InvalidForbiddenCharLevel`로 거부합니다. 레벨을 변환하거나 관측 부모 17/27만 허용하는 규칙은 만들지 않습니다.
+
+`preserve_raw`는 입력 payload를 해석/변환하지 않는다는 의미입니다. scalar 보고서가 원문 전체를 보관하거나 무손실 재저장을 제공하는 것은 아닙니다. 원문 보관 수명은 호출자/별도 문서 모델의 책임입니다.
+
+`docinfo/forbidden_validation.zig`는 정책·9개 scalar 집계를 소유합니다. document/docinfo는 기존 레코드 순회의 framing을 전달하며 payload나 문자열 길이를 재구현하지 않습니다. 실패 시 집계는 원자적으로 보존합니다. `DocInfo.forbidden_chars`는 records/parsed/deferred, 레벨 0/1/기타 개수, 전체 목록 코드 유닛 수/비어 있지 않은 목록 수/extra 바이트 수입니다. 문서 반환 후 원문을 빌리는 포인터를 남기지 않습니다.
+
+기존 reference 진단의 unknown_records는 감소시키지 않습니다. 관측 배치의 구조 성공이 목록 의미/금칙 행 나눔 검증의 성공은 아닙니다. 기존 문서 wire는 유지하며 테스트 mode 96만 선택 바이트(0 preserve_raw, 1 observed_lists)+기존 decoded 문서 입력을 받아 이 보고서를 반환합니다.
+
+`tests/hwp5/forbidden-document.mjs`는 실제 issue5866 문서의 레코드를 변형해 두 레벨, 빈 레코드부터 15바이트까지 잘림, 레벨 2/1023, 선택값 오류, 부재와 빈 목록/공백 목록 및 extra를 검사합니다. 기본 보존 모드의 통과와 선택 모드의 거부를 구분하고 매번 원본으로 복구합니다. 기존 mode 24 기본 검증도 유지합니다. 네이티브에서는 정책 실패 뒤 집계 불변을 별도로 검사합니다.
 
 ## 실제 표본 조사
 
@@ -44,3 +56,7 @@
 Debug/ReleaseSafe/ReleaseFast 전체 audit가 각각 네이티브 252/252, Node 47/47, HWP5 WASM 1,371,775건을 통과했습니다. 금칙 문자 합성 정상·복구 429건/거부 159건, 실제 레코드 420개 및 대응 HWPX 비교를 포함합니다. CFB 변형 12,000건은 trap 0입니다. Zig 포맷·변경 JS 문법·문서 링크·diff 검사도 통과했습니다.
 
 실행 로그는 `/tmp/hwpjs-forbidden-chars-{debug,safe,fast}.log`입니다. 이 결과는 명시적 관측 배치의 경계·보존 검증이며 전체 금칙 처리 의미, 자동 문서 연결 또는 HWPX 제품 파서의 완료 증거가 아닙니다.
+
+### 문서 선택 정책 연결 후 검증
+
+Debug/ReleaseSafe/ReleaseFast audit 모두 네이티브 253/253, Node 47/47, HWP5 WASM 1,371,918건을 통과했습니다. 새 문서 정책 테스트는 정상 5건/거부 35건과 기본 모드·원본 복구 대조를 포함합니다. CFB 변형 12,000건/trap 0, 포맷·JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-forbidden-document-{debug,safe,fast}.log`입니다. 이 단계는 선택 정책과 집계의 문서 연결을 검증하며 목록의 언어별 의미·행 나눔·무손실 저장은 여전히 범위 밖입니다.

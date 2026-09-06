@@ -10,6 +10,7 @@ import {memoFieldEdges,memoFieldReference,memoFieldDocument} from "./memo-field.
 import {memoReferencesActual,memoReferenceDocument} from "./memo-references.mjs";
 import {memoRangesActual,memoRangeMutations} from "./memo-ranges.mjs";
 import {forbiddenCharEdges,forbiddenCharActual} from "./forbidden-chars.mjs";
+import {forbiddenDocument} from "./forbidden-document.mjs";
 import {revisionDeleteEdges} from "./revision-delete.mjs";
 import {memoEndEdges,memoEndActual} from "./memo-end.mjs";
 import {paragraphFlowEdges,paragraphFlowActual} from "./paragraph-flows.mjs";
@@ -447,6 +448,7 @@ const memoFieldResults = {edges:memoFieldEdges(call),reference:memoFieldReferenc
 const memoReferenceResults = {actual:memoReferencesActual(call,cfb),document:memoReferenceDocument(call,cfb)};
 const memoRangeResults = {actual:memoRangesActual(call,cfb),mutations:memoRangeMutations(call,cfb)};
 const forbiddenCharResults = {edges:forbiddenCharEdges(call),actual:forbiddenCharActual(call,cfb)};
+const forbiddenDocumentResults = forbiddenDocument(call,cfb);
 const revisionDeleteResults = revisionDeleteEdges(call);
 const memoEndResults = {edges:memoEndEdges(call),actual:memoEndActual(call,cfb)};
 const paragraphFlowResults = {edges:paragraphFlowEdges(call),actual:paragraphFlowActual(call,cfb)};
@@ -947,6 +949,7 @@ console.log(
       memoReferenceResults,
       memoRangeResults,
       forbiddenCharResults,
+      forbiddenDocumentResults,
       revisionDeleteResults,
       memoEndResults,
       paragraphFlowResults,
