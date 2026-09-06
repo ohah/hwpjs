@@ -1862,3 +1862,23 @@ rhwp는 개수를 남은 좌표 바이트에 맞춰 줄이고 구간이 부족�
 이 단계는 곡선 payload/소유권의 연결입니다. 실제 보간·닫힘·조판, 그림/연결선 등 남은 도형, 전체 문서 모델·HWPX·편집/저장은 계속 남아 있습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과했습니다. 모드별 네이티브 210/210, Node 47/47, HWP5 WASM 402,115회 검사입니다. 곡선 소유권 합성 성공 90/거부 77, 실제 문서 오류 전파 18/정렬 1, 명시적 두 배치 문서 검사 거부 29/정렬 2를 포함합니다. 기존 실제 곡선 8개/짝 HWPX 4개·838구간 대조도 유지합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-curve-owner-{debug,safe,fast}.log`입니다.
+
+## 그림 payload 공통 필드와 명시적 고정 확장
+
+2026-09-07. 공식 PDF 표 107, 로컬 명세 4.3.9.4, 로컬 MIT rhwp `src/parser/control/shape.rs`의 parse_picture를 대조했습니다. 코드를 이식하지 않고 기존 Points.read, docinfo.picture_info.Picture.read, line_attributes를 조립했습니다. 표 106의 상위 개체 공통 필드를 태그 85 payload에서 다시 읽지 않습니다.
+
+`shape_picture.Picture.parse(bytes, layout, prefix)`의 고정 필드는 테두리 색(u32)/두께(i32)/속성(u32), 4점, 자르기 left/top/right/bottom(i32), 여백 left/right/top/bottom(i16), 그림 정보 5바이트입니다. 좌표는 명시적 separate_axes/interleaved이며 앞선 사각형과 점 배열 코어를 공유합니다. 고정 prefix는 base73, with_opacity74, with_instance78입니다. 투명도/instance ID의 부재는 null, 실제 0은 값으로 구분합니다. 이후 효과/추가 속성 바이트는 extra로 빌리며 아직 해석 완료로 세지 않습니다.
+
+실제 레퍼런스 조사에서 그림은 1,947개이며 길이 분포는 73:32, 74:2, 78:14, 82:97, 86:1, 90:195, 91:1,573, 138:32, 147:1입니다. 73바이트 표본에는 5.0.0.6, 74/78바이트 표본에는 동일한 5.0.2.4가 있습니다. 따라서 단일 버전 임계값이나 78바이트 최소값을 모든 입력에 강제하지 않습니다. 테스트는 세 prefix를 각각 명시적으로 실험하며 제품 자동 선택 로직이 아닙니다. 전체 조사에서 컨테이너/계층 실패 102개와 보안 보류 4개는 기존 목록에 남아 있습니다.
+
+실제 필드 의미 검증:
+
+- 복학원서 Section0 2개, 행정업무 편람 Section0 2개/Section3 22개, 총 26개를 짝 HWPX와 비교합니다. XY 교차 배치가 모든 점과 일치하고 축별 배치는 26개 모두 달랐습니다. 자르기·안쪽 여백·그림 효과 종류·해당 fixture의 imageN ID도 대조합니다. ID 문자열 규칙을 제품 참조 해결 규칙으로 일반화하지 않습니다.
+- 밝기/명암의 비영 값 3개는 각각 (contrast=-50, brightness=70), (0,8), (0,-5)로 기존 공통 Picture.read 순서와 일치합니다. 이로써 앞선 기본값 0뿐인 표본의 의미 검증 한계를 그림 개체에서 보완했습니다. 로컬 rhwp는 첫 바이트를 brightness로 이름 붙이고 축별 좌표로 읽으므로 이를 그대로 채택하지 않습니다. 그림자/렌더링 결과까지 비교한 것은 아닙니다.
+- 최초 Section3 HWP 22개/HWPX 본문 21개 차이는 누락으로 넘기지 않았습니다. section3.xml의 정확한 masterpage3 참조를 확인하고 masterpage3.xml의 image356 그림 1개까지 포함하니 22개가 일치했습니다. 테스트 ZIP/XML helper는 section/masterpage의 명시적 정수 인덱스와 정확한 경로를 공유하며 임의 basename 탐색이나 제품 HWPX 지원이 아닙니다.
+
+적대적 검증은 (1) 두 좌표 배치×세 prefix의 모든 필수 prefix 잘림, (2) 모든 위치에 0/128/255 변이 및 signed 극값/미지 효과/색상 상위 비트, (3) null과 0·borrowed 좌표/꼬리·선택하지 않은 확장 보존, (4) 실제 1,947개 원문/필수 잘림과 불가능한 확장 선택의 오류, (5) 위 26개 짝 필드와 바탕쪽 위치 편향을 포함합니다. 실제 기본 prefix의 필수 잘림 거부는 142,131회이며 with_opacity74/with_instance78 선택 가능 표본은 각각 1,915/1,913개입니다. 불가능한 확장 선택 66건은 UnexpectedEnd로 거부합니다.
+
+현재는 고정 prefix 코어와 테스트 WASM 모드 74입니다. 표 108~116의 효과/색상/추가 크기·투명도, 문서 소유권·BinData 참조·조판은 다음 단계이며 전체 그림 지원 완료로 주장하지 않습니다. 원본 파일은 수정하지 않았습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 211/211, Node 47/47, HWP5 WASM 676,099회 검사입니다. 그림 합성 성공 1,560/거부 116,978, 실제 1,947개/필수 잘림 142,131, 바탕쪽 포함 짝 26개 필드 대조를 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-picture-{debug,safe,fast}.log`입니다.

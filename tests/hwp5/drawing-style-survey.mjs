@@ -15,6 +15,7 @@ import { polygonActual } from "./shape-polygon.mjs";
 import { polygonOwnerActual } from "./polygon-validation.mjs";
 import { curveActual } from "./shape-curve.mjs";
 import { curveOwnerActual } from "./curve-validation.mjs";
+import { pictureActual, pictureRun } from "./shape-picture.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -27,6 +28,7 @@ export function drawingStyleSurvey(call, cfb) {
     ["issue5714/1490000-200800034_vietnam_labor_report.hwp", { count: 1, bytes: 51, version: "5000006" }],
   ]);
   out.fillOnly = { parsed: 0, rejectedPrefixes: 0 };
+  out.pictures = { parsed: 0, rejected: 0, lengths: {}, selectedPrefixes: [0,0,0], unavailablePrefixes: 0, nonzeroAdjustments: [] };
   out.versions = {};
   out.images = [];
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
@@ -74,6 +76,18 @@ export function drawingStyleSurvey(call, cfb) {
       curveOwnerActual(call,header.readUInt32LE(32),bytes);
       const stack = [];
       for (const record of records) {
+        if(record.tag===85){
+          const p=bytes.subarray(record.start,record.end),stats=pictureActual(call,p);
+          out.pictures.parsed++;out.pictures.rejected+=stats.rejected;
+          out.pictures.lengths[p.length]=(out.pictures.lengths[p.length]??0)+1;
+          out.pictures.selectedPrefixes[0]++;
+          // Each prefix is a separate explicit experiment, never product auto-selection.
+          for(const [prefix,size] of [[1,74],[2,78]]){
+            if(p.length<size){assert.throws(()=>pictureRun(call,p,1,prefix),/UnexpectedEnd/);out.pictures.unavailablePrefixes++;}
+            else {pictureActual(call,p,1,prefix,false);out.pictures.selectedPrefixes[prefix]++;}
+          }
+          if(stats.contrast||stats.brightness)out.pictures.nonzeroAdjustments.push({name,section:section.name,offset:record.offset,contrast:stats.contrast,brightness:stats.brightness});
+        }
         const level = bytes.readUInt32LE(record.offset) >>> 10 & 1023;
         stack.length = level;
         if(record.tag===83){
