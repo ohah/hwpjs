@@ -5,6 +5,7 @@ import { headerFooterActual } from "./header-footer.mjs";
 import { numberControlActual } from "./number-controls.mjs";
 import { reportBytes } from "./document-report-wire.mjs";
 import { pageNumberActual } from "./page-number.mjs";
+import { indexMarkActual } from "./index-mark.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -117,6 +118,7 @@ export function documentActual(call, h, doc, sections) {
       ...headerFooterActual(call, v, b).map(w),
       ...numberControlActual(call, b).map(w),
       ...pageNumberActual(call, b).map(w),
+      ...indexMarkActual(call, v, b).map(w),
     );
   }
   const want = Buffer.concat(expected);

@@ -35,4 +35,6 @@ pub const number_control = @import("body/number_control.zig");
 pub const number_control_validation = @import("body/number_control_validation.zig");
 pub const page_number = @import("body/page_number.zig");
 pub const page_number_validation = @import("body/page_number_validation.zig");
+pub const index_mark = @import("body/index_mark.zig");
+pub const index_mark_validation = @import("body/index_mark_validation.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");

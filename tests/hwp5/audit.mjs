@@ -14,6 +14,7 @@ import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
 import { numberControlEdges } from "./number-controls.mjs";
 import { numberDocumentEdges } from "./number-control-document.mjs";
 import { pageNumberEdges, pageNumberDocumentEdges } from "./page-number.mjs";
+import { indexMarkEdges } from "./index-mark.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -323,6 +324,7 @@ const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
 const pageNumberEdgeResults = pageNumberEdges(call);
+const indexMarkEdgeResults = indexMarkEdges(call);
 let pageNumberDocumentChecks = 0;
 let numberDocumentChecks = 0;
 reportWireEdges();
@@ -704,6 +706,7 @@ console.log(
       headerFooterEdgeResults,
       numberControlEdgeResults,
       pageNumberEdgeResults,
+      indexMarkEdgeResults,
       pageNumberDocumentChecks,
       numberDocumentChecks,
       reportOrderingChecks,

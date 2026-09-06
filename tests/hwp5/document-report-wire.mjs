@@ -12,6 +12,7 @@ const groups = Object.freeze({
   header_footer: 5,
   number_controls: 4,
   page_number: 4,
+  index_marks: 4,
 });
 export const documentPrefixBytes = 33 * 4;
 export const sectionReportBytes = Object.values(groups).reduce(

@@ -1032,3 +1032,19 @@ document-probe가 각 구역의 header_footer 다섯 수치를 직렬화하도�
 5. SSOT는 기존 control_rules ID, payload 모듈, 구역 집계 모듈, 테스트 기대 형식으로 분리했습니다. 모양 값의 전체 의미·페이지 안/바깥 배치·표시 문자열 생성은 구현했다고 주장하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 153/153, Node 47/47, HWP5 WASM 164,546회 검사 통과. CFB 기존 비교·12,000회 변이(trap 0), 포맷·diff 검사도 통과했습니다. 실제 페이지 조판 및 장식 문자의 표시 의미는 후속 범위입니다.
+
+## 찾아보기 표식 키워드 경계 (2026-09-06)
+
+명세 스킬 4.3.10.10과 공식 표 149를 대조했습니다. 두 u16 코드 유닛 길이와 UTF-16 배열, 마지막 u16 dummy로 구성되며 최소 6바이트입니다. ID는 기존 공식 control_rules의 idxm이고 로컬 요약의 bkmk를 별칭으로 해석하지 않습니다. 현재 지원 corpus에서는 해당 컨트롤을 찾지 못했으므로 실제 양성 검증이라고 주장하지 않습니다.
+
+`index_mark.zig`는 공통 utf16_string.read로 두 키워드를 빌리고 dummy와 extra를 보존합니다. 키워드 대소문자/정렬/Unicode 정규화·NUL 제거를 하지 않습니다. `index_mark_validation.zig`는 controls/first_units/second_units/extra_bytes를 집계해 SectionReport.index_marks로 연결합니다. 문서/컨테이너 보고서 직렬화와 독립 기대 형식도 함께 확장했습니다. 테스트 전용 구역 행은 212바이트입니다.
+
+### 구현 후 적대적 검증
+
+1. 첫/둘째 키워드 및 마지막 dummy를 자르는 모든 prefix와, 입력이 부족한 두 위치의 최대 길이 선언을 거부했습니다. 오류 뒤 정상 입력을 재호출했습니다.
+2. 두 위치를 각각 독립적으로 0/1/127/32,768/65,535 코드 유닛으로 채우고, 두 키워드 모두 최대 길이인 입력도 검사했습니다. 큰 payload는 extended record framing을 통해 실제 WASM Tree/집계 경로로 전달했습니다.
+3. NUL·고립 서로게이트·BOM, dummy 0/1/0x8000/0xffff, 홀수 extra를 typed 필드로 재구성했습니다. dummy의 허용값은 명세에 정의되지 않아 0 조건을 발명하지 않았습니다.
+4. 한 구역 내 여러 idxm의 집계와 미지 bkmk ID 무분류를 확인했습니다. 합성 WASM 성공 31건·거부 14건입니다. 네이티브에서는 Tree 할당 실패를 정상/짧은 dummy 경로에 모두 주입해 정리 여부를 확인했습니다.
+5. SSOT 검토: 문자열 경계는 기존 리더, ID는 기존 control_rules, payload와 구역 집계는 별도 모듈입니다. 기존 실제 47개 구역의 0개 결과와 나머지 진단을 문서/파일 단위에서 함께 비교했습니다. 0개 결과를 실제 양성 지원 증명으로 계상하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 156/156, Node 47/47, HWP5 WASM 164,639회 검사 통과. CFB 기존 비교·12,000회 변이(trap 0), 포맷·diff 검사도 통과했습니다. 실제 찾아보기 컨트롤 표본, 키워드 정렬/병합과 페이지 연결·찾아보기 생성은 남았습니다.
