@@ -7,6 +7,7 @@ import { drawingStyleActual } from "./drawing-style.mjs";
 import { lineActual } from "./shape-line.mjs";
 import { groupInfoActual } from "./group-info.mjs";
 import {groupActual} from "./group-validation.mjs";
+import {memoShapeActual} from "./memo-shape.mjs";
 import { connectorActual } from "./shape-connector.mjs";
 import { lineOwnerActual } from "./line-validation.mjs";
 import { rectangleActual } from "./shape-rectangle.mjs";
@@ -43,6 +44,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.connectors = { parsed: 0, rejected: 0, points: 0, kinds: {}, extras: {}, files: {} };
   out.groupInfo = { parsed: 0, ids: 0, rejected: 0, selectedInstances: 0, unavailableInstances: 0, extras: {}, files: {}, identityMismatches: [] };
   out.videoRecords = [];
+  out.memoShapes = {parsed:0,rejected:0,kinds:{},widths:{},unknown:{},extras:{},files:{}};
   out.versions = {};
   out.images = [];
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
@@ -60,6 +62,11 @@ export function drawingStyleSurvey(call, cfb) {
       header = Buffer.from(cfb.findExact("/FileHeader").content);
       if (header.readUInt32LE(36) & (2 | 4 | 16 | 256 | 1024)) { out.security++; continue; }
       const info=call(3,Buffer.concat([header,Buffer.from(cfb.findExact('/DocInfo').content)]));
+      for(const r of documentRecords(info).filter(r=>r.tag===92)){
+        const p=memoShapeActual(call,info.subarray(r.start,r.end));out.memoShapes.parsed++;out.memoShapes.rejected+=p.rejected;
+        for(const [key,value] of [['kinds',p.kind],['widths',p.width],['unknown',p.unknown],['extras',p.extra]])out.memoShapes[key][value]=(out.memoShapes[key][value]??0)+1;
+        out.memoShapes.files[name]=(out.memoShapes.files[name]??0)+1;
+      }
       binItems=documentRecords(info).filter(r=>r.tag===18).map(r=>info.subarray(r.start,r.end));
       const nodes = cfb.document().nodes;
       const body = nodes.findIndex(n => n.parent === 0 && n.name === "BodyText");

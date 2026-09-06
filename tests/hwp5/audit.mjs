@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import {videoEdges} from "./video-data.mjs";
+import {memoShapeEdges} from "./memo-shape.mjs";
+import {memoShapePair} from "./memo-shape-pair.mjs";
 import {groupInfoEdges} from "./group-info.mjs";
 import {groupInfoPair} from "./group-info-pair.mjs";
 import {groupOwnerEdges,groupDocumentReference} from "./group-validation.mjs";
@@ -424,6 +426,8 @@ const curveEdgeResults = curveEdges(call);
 const connectorEdgeResults = connectorEdges(call);
 const groupInfoEdgeResults = groupInfoEdges(call);
 const videoEdgeResults = videoEdges(call);
+const memoShapeEdgeResults = memoShapeEdges(call);
+const memoShapePairResults = memoShapePair(call,cfb);
 const groupInfoPairResults = groupInfoPair(call,cfb);
 const groupOwnerEdgeResults = groupOwnerEdges(call);
 const groupDocumentResults = groupDocumentReference(call,cfb);
@@ -910,6 +914,8 @@ console.log(
       connectorEdgeResults,
       groupInfoEdgeResults,
       videoEdgeResults,
+      memoShapeEdgeResults,
+      memoShapePairResults,
       groupInfoPairResults,
       groupOwnerEdgeResults,
       groupDocumentResults,

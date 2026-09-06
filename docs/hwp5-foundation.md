@@ -2094,3 +2094,25 @@ video_data.Video.parse는 Data tagged union으로 로컬/웹을 구분합니다.
 현재는 명세 payload 코어입니다. 문서 소유권·실제 로컬/웹 wire 배치·BinData ID 의미/부재 규칙·미지 확장·썸네일/미디어 디코딩·외부 URL과 재생은 별도입니다. 원본 fixture와 외부 파일은 수정하거나 실행하지 않았습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 226/226, Node 47/47, HWP5 WASM 1,284,403회 검사 통과했습니다. 동영상 합성 성공 296/거부 50, 실제 동영상 표본 0을 구분해 보고합니다. 기존 CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-video-data-{debug,safe,fast}.log`입니다.
+
+## 메모 모양 payload 코어
+
+2026-09-07. hwp-spec의 DocInfo 레코드 목록과 공식 표 13에서 태그 92(MEMO_SHAPE)를 확인했습니다. 이 목록은 상세 필드 배치를 정의하지 않습니다. 독립 [hwplib ForMemoShape](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/reader/docinfo/ForMemoShape.java)의 필드 순서와 실제 DocInfo 51개 레코드(모두 22바이트)를 대조했습니다. 폭 u32, 선 종류/굵기 각 1바이트, 선/채우기/활성 색상 각 u32, 마지막 미확정 u32입니다. 신규 외부 코드 이식·의존성 추가는 없습니다.
+
+memo_shape.Shape.parse는 원시 필드와 extra를 보존합니다. 6바이트 테두리 읽기는 border_line.Border.read로 분리하고 기존 border_fill.Border를 같은 타입의 별칭으로 유지했습니다. 공유하는 것은 wire 읽기와 경계/커서 원자성이며 enum 의미나 색상 변환 규칙이 아닙니다. byte 상위 비트와 COLORREF 전체 DWORD를 보존하고 폭을 일정한 기본값으로 정규화하지 않습니다.
+
+hwplib는 마지막 DWORD를 unknown으로 보존합니다. rhwp의 HWPX 변환기는 이 위치에 memo_type을 쓰지만 parse_memo_type은 모든 문자열을 0으로 반환합니다. 실제 hwpctl_ParameterSetID_Item_v1.2.hwp에는 2, issue5727/156732636_inline_logo_cell.hwp에는 1이 있으므로 이를 0으로 바꾸지 않습니다. 이 두 파일의 짝 HWPX는 확보하지 못해 1/2의 의미를 확정하지 않습니다. 신규 필드는 unknown_raw입니다.
+
+적대적 검증:
+
+1. 네이티브에서 서로 다른 폭·종류·굵기·세 색상·미확정 DWORD의 이름 있는 기대값을 확인합니다. 상위 비트/최댓값을 포함해 단순 왕복 비교만으로 필드 바뀜을 놓치지 않도록 합니다.
+2. 모든 22개 필수 prefix 잘림을 거부하고, 0~3바이트 extra와 borrowed 주소를 보존합니다.
+3. 각 필드/꼬리 바이트×8비트 변이와 정상 원문 복구를 WASM 모드 87로 검사합니다. 종류·굵기·색상 예약값을 기본 enum으로 바꾸지 않습니다.
+4. 실제 51개를 독립 바이트 oracle로 대조하며 폭/종류/마지막 DWORD/extra를 별도 집계합니다. 실제 문서 전체 파싱 완료나 메모 내용·작성자·소유권 완료를 뜻하지 않습니다.
+5. hwpx_sample2 1개, rowbreak-problem-pages 2개, [2027] 온새미로 1 본교재 4개의 폭·선 굵기·SOLID 종류 및 RGB 세 색상을 테스트 WASM과 HWPX header.xml memoPr에서 대조합니다. 원시 COLORREF 바이트 순서를 독립적으로 비교합니다. 마지막 DWORD와 memoType은 관측 쌍으로만 보고하며 미확정 비영 값의 의미를 추정하지 않습니다.
+
+테스트 fixture-xml에 headerXml을 추가하고 section/masterpage와 ZIP 엔트리 읽기를 공유했습니다. 이 helper는 테스트 전용이며 제품 HWPX 파서가 아닙니다. 공통 Border.read 변경은 모든 border_fill 회귀를 전체 audit로 확인합니다. DocInfo dispatch/ID 매핑 개수·본문 메모 모양 참조·미확정 DWORD 의미는 다음 범위이며 원본 fixture는 수정하지 않았습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit는 각 모드에서 네이티브 228/228, Node 47/47, HWP5 WASM 1,290,581회 검사를 통과했습니다. 메모 모양 합성 성공 206/잘린 입력 거부 4,532, 실제 51개/필수 prefix 거부 1,122와 HWP/HWPX 짝 7개 대조를 포함합니다. CFB 12,000회 변이에서 trap 0이며 Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-memo-shape-{debug,safe,fast}.log`입니다. 이는 payload 코어 검증이며 메모의 문서 연결·편집·저장 완료를 뜻하지 않습니다.
+
+실제 51개는 선 종류 1이 47개/3이 4개, 폭 15590이 1개/15591이 50개입니다. 마지막 DWORD는 0이 49개/1과 2가 각 1개이며 extra는 모두 0바이트입니다. 실제 폭의 1단위 차이를 반올림하거나 기본값으로 보정하지 않습니다. 짝 비교 7개는 종류 1/SOLID와 마지막 값 0/NOMAL만 대조했으며 다른 종류의 의미까지 실측했다고 주장하지 않습니다.

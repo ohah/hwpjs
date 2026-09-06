@@ -9,8 +9,14 @@ export function sectionXml(hwpx, section = 0) {
 export function masterPageXml(hwpx, index) {
   return indexedXml(hwpx, 'masterpage', index);
 }
+export function headerXml(hwpx) {
+  return xmlEntry(hwpx, 'header.xml');
+}
 function indexedXml(hwpx, kind, indexNumber) {
   assert.ok(Number.isInteger(indexNumber) && indexNumber >= 0 && indexNumber <= 65535);
+  return xmlEntry(hwpx, `${kind}${indexNumber}.xml`);
+}
+function xmlEntry(hwpx, filename) {
   const context = {
     module: { exports: {} },
     require: createRequire(import.meta.url),
@@ -24,7 +30,7 @@ function indexedXml(hwpx, kind, indexNumber) {
   );
   const zip = context.module.exports.read(hwpx, { type: "buffer" });
   const index = zip.FullPaths.findIndex((path) =>
-    path.endsWith(`/Contents/${kind}${indexNumber}.xml`),
+    path.endsWith(`/Contents/${filename}`),
   );
   assert.ok(index >= 0);
   return Buffer.from(zip.FileIndex[index].content).toString("utf8");
