@@ -12,6 +12,10 @@ pub const Options = struct {
     max_sections: usize = 4096,
     max_total_bytes: usize = 64 * 1024 * 1024,
     max_total_records: usize = 1000000,
+    pub fn validate(self: Options) !void {
+        try self.parameters.validate();
+        if (self.max_sections == 0 or self.max_total_bytes == 0 or self.max_total_records == 0) return error.InvalidDocumentLimit;
+    }
 };
 pub fn parameterOptions(options: Options, count: usize) sources.Options {
     return .{ .parameters = options.parameters, .list_layout = options.list_layout, .bin_data_count = count, .framing = options.framing };

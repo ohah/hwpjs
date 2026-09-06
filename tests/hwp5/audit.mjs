@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { documentActual, documentEdges } from "./documents.mjs";
+import { containerActual, containerEdges } from "./containers.mjs";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
@@ -294,10 +295,13 @@ let pairedColumns = 0;
 const listReport = [0, 0, 0];
 const typeReport = [0, 0];
 const documentReport = [0, 0, 0, 0];
+const containerReport = [0, 0, 0, 0];
+const containerEdgeResults = containerEdges(call, cfb);
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
-    cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
+    const fileBytes = readFileSync(new URL(name, fixtures));
+    cfb.parse(fileBytes, { strict: true });
     const hdr = Buffer.from(cfb.findExact("/FileHeader").content);
     assert.deepEqual(call(0, hdr).subarray(0, 16), hdr.subarray(32, 48));
     versions.add(hdr.readUInt32LE(32).toString(16));
@@ -443,6 +447,14 @@ try {
       records += framed.length / 20;
       totalBytes += plain.length;
     }
+    containerActual(
+      call,
+      fileBytes,
+      cfb,
+      hdr,
+      docPlain,
+      decodedSections,
+    ).forEach((n, i) => (containerReport[i] += n));
     documentActual(call, hdr, docPlain, decodedSections).forEach(
       (n, i) => (documentReport[i] += n),
     );
@@ -461,6 +473,7 @@ try {
 }
 assert.equal(files, 48);
 assert.deepEqual(documentReport, [45, 47, 482195, 10425]);
+assert.deepEqual(containerReport, [45, 13, 1028155, 270]);
 assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 134]);
 assert.deepEqual(sectionReport, [47, 47, 141, 1, 94, 68]);
 assert.ok(notePairResult);
@@ -603,6 +616,8 @@ console.log(
       parameterSourceEdgeResults,
       parameterSourceReport,
       documentReport,
+      containerReport,
+      containerEdgeResults,
       documentEdgeResults,
       tableReport,
       tableZonePairResult,

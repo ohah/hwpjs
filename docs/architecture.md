@@ -50,6 +50,10 @@ CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계�
 
 `document/types.zig`의 Report는 인덱스 순서의 구역 보고서 배열을 소유하며 deinit으로 해제합니다. DocInfo 속성 extra와 ID 매핑 raw는 입력 DocInfo를 빌리므로 해당 입력의 수명을 유지해야 합니다. 임시 Tree/링크/리스트/파라미터 노드는 호출 안에서 해제하며 부분 실패에는 보고서를 반환하지 않습니다. 개별 검사기의 pending/unknown/opaque 수치를 다른 축의 성공 개수로 상쇄하지 않습니다.
 
+`container/validation.zig`는 파일 바이트를 strict CFB로 열고 이 decoded 진입점을 호출하는 상위 어댑터입니다. CFB 원본/스트림 한도와 HWP 압축 해제 합계 한도는 별도입니다. `paths.zig`는 정확한 계층 조회와 이름 생성, `sections.zig`는 BodyText 직접 자식 수집/해제, `binaries.zig`는 DocInfo 항목으로 내부 스트림을 찾고 기존 BinData 압축 정책을 호출합니다. 이름 길이/금지 문자/대소문자 동등성은 CFB name_order를 재사용합니다. 외부 링크는 실행하지 않고 보류합니다. 모든 데이터가 raw DEFLATE라는 가정이나 손상 후 원본 fallback을 넣지 않습니다.
+
+container Report는 document Report와 그 DocInfo backing을 소유합니다. 입력 CFB와 임시 구역/바이너리 데이터는 반환 뒤 필요하지 않습니다. 미소비 CFB 스트림은 uninspected_streams로 보고하며 이미지/OLE 콘텐츠 해석이나 미지원 스트림의 유효성을 주장하지 않습니다. 동일 BinData 스트림을 여러 항목이 참조하면 각 항목의 압축 정책으로 검사하고 총 decode 한도도 항목별로 계산합니다.
+
 HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.
 
 DocInfo 리소스는 BinData·글꼴·탭·번호·글머리표·스타일·테두리/배경·글자 모양·문단 모양까지 해석합니다. `border_fill.zig`는 선 배열, `fill.zig`는 채우기 조합, `picture_info.zig`는 이미지 속성 공통 배치를 소유합니다. 문단 모양의 구/신 줄 간격을 임의로 하나로 합치지 않습니다. `resources.zig`는 주요 리소스 개수, `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 진단을 분리합니다. 알려진 본문 참조는 decoded 문서 진입점에 연결했으며, 외부 스트림 연결·구역 번호 fallback 및 미지원 리소스의 참조는 후속 단계입니다.

@@ -746,3 +746,30 @@ Report는 구역 보고서 배열만 소유합니다. 헤더는 값 복사, DocI
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 117/117, Node 47/47, HWP5 WASM 95,305회 검사(모드별), CFB 60컨테이너/483스트림/5,496검색 비교 및 12,000회 변이(trap 0). 정상 파일 대조에 더해 오류/후속 정상 호출을 수행한 수치이며, 테스트 수가 포맷 지원률을 뜻하지 않습니다.
 
 **남은 범위**: CFB에서 정규 경로로 필수 스트림/구역을 수집하고 압축을 해제하는 파일 단위 진입점, BinData 실물 연결, 번호 ID 0/fallback, ControlData 소유권·개별 컨트롤 의미, 미지 DocInfo/셀·캡션 꼬리, 나머지 도형/필드/HWPX/공개 JS API는 아직 남아 있습니다. 기존 opaque 셀 확장 507개와 각 검사기의 pending/unknown은 다른 검사기의 성공 수로 상쇄하지 않았습니다. 전체 문서 모델·렌더링·편집·저장 완료가 아닙니다.
+
+## CFB 파일 단위 검증·내부 BinData 연결
+
+2026-09-06. `hwp5.container_validation.inspect(allocator, file_bytes, options)`를 추가했습니다. 파일 바이트를 strict CFB로 열고 `/FileHeader`, `/DocInfo`, `/BodyText`의 정확한 경로와 kind를 확인합니다. DocInfo와 BodyText 직접 자식의 Section 스트림을 압축 해제한 후 기존 decoded 문서 검증기를 호출합니다. 같은 이름의 루트/다른 저장소 스트림으로 대신하지 않습니다.
+
+공식 구조 3.1/3.2.3/3.2.5와 BinData 표 17·18을 참조했습니다. 표 18의 default/compressed/uncompressed 설정은 기존 `bin_data_stream.decode`를 재사용합니다. `BINhhhh[.extension]` 이름은 기존 레퍼런스·실제 corpus에서 관측한 규칙이며 공식 문서가 모든 파일 변형의 이름을 보장한다고 해석하지 않습니다. 로컬 요약에 적힌 다중 fallback 경로/압축 실패 후 원본 사용은 채택하지 않았습니다.
+
+- `container/paths.zig`: CFB의 findExact로 계층 조회, kind 대조, 정규 `Section`+10진수 인덱스, `BinData/BIN`+4자리 16진수 ID와 선택 확장자 생성. CFB의 대소문자 비교·이름 제한을 재사용합니다. 01 같은 인덱스 별칭, 음수·비숫자·u16 초과, 확장자 경로 구분자/NUL/잘못된 UTF-16·길이 초과를 거부합니다. 원래 DocInfo 파서는 해당 raw를 보존하며 경로 소비 단계에서만 오류를 냅니다.
+- `container/sections.zig`: BodyText 직접 자식만 수집하고 압축 해제된 구역 배열/바이트 수명을 소유합니다. 다른 저장소의 Section은 문서 구역으로 세지 않습니다. 미지 이름은 강제로 구역으로 추정하지 않습니다.
+- `container/binaries.zig`: DocInfo BinData의 저장 ID/확장자로 스트림을 찾고 항목별 압축 정책으로 해석합니다. BinData 리소스의 1-based 참조 번호와 CFB 저장 ID를 혼동하지 않습니다. LINK는 외부 접근 없이 집계하고 미지 타입도 보류합니다. 알려진 내부 항목의 누락/잘못된 kind/예약 압축/손상/한도 초과는 오류입니다.
+- `container/validation.zig`: strict CFB·압축 해제·기존 문서 검증 연결과 반환 보고서 수명. CFB 원본/추출 스트림 한도는 `options.cfb`, HWP 헤더+DocInfo+구역+내부 BinData의 decode 합계 한도는 `options.document.max_total_bytes`입니다. CFB strict 검사는 항상 켜며 `options.cfb.strict=false`로 우회하지 않습니다. document Options.validate를 공유해 잘못된 설정을 파일 할당 전에 거부합니다.
+
+Report는 document Report와 DocInfo backing을 소유하므로 입력 파일 바이트를 반환 직후 해제해도 유효합니다. 임시 CFB/구역/바이너리 바이트는 내부에서 해제하며 결과의 deinit은 report 배열과 DocInfo backing을 정리합니다. `binary_data`는 items/decoded/decoded_bytes/external_links/unsupported_types를, `uninspected_streams`는 소비하지 않은 모든 CFB 스트림 수를 보고합니다. 미리보기·요약·스크립트·이력 등의 스트림을 유효한 HWP로 검증했다는 뜻이 아닙니다. 그림/OLE 바이트의 압축 무결성 확인과 이미지/OLE 내부 형식 검증도 구분합니다.
+
+동일 바이너리 스트림을 여러 DocInfo 항목이 가리킬 수 있습니다. 각 항목의 압축 정책으로 검사하며 decoded_bytes와 총 한도도 항목별 소비량으로 셉니다. uninspected는 스트림별로 세므로 중복 참조가 있어도 음수가 되거나 다른 미검사 스트림을 상쇄하지 않습니다. CFB 힙 사용량과 압축 해제 합계는 별도 지표이며 이 한도가 최대 힙 메모리를 그대로 보장하지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 실제 지원 파일 **45개·47개 구역**, 내부 BinData **13항목/1,028,155 decoded 바이트**를 검사했습니다. 파일 진입점의 document 보고서는 decoded 진입점과 모든 필드가 같고, 바이너리 크기는 Node raw DEFLATE 결과와 대조했습니다. 헤더 포함 전체 소비량 합계는 **1,510,350바이트**입니다. 실제 미검사 스트림 **270개**는 정규 audit에 고정해 완료로 숨기지 않았습니다.
+2. 정상 CFB writer로 만든 손상 HWP에서 필수 항목 누락/잘못된 kind·동명 항목의 잘못된 부모·정규 Section 이름 경계·확장자 경로 삽입/잘못된 UTF-16·미지원 보안 헤더를 거부했습니다. 대소문자가 다른 정상 경로는 CFB 규칙에 따라 같은 데이터에 연결됩니다. 이 테스트는 파괴된 CFB만 거부하고 HWP 계층 검사를 건너뛰는 편향을 피합니다.
+3. 문서 기본 압축 2종×항목별 압축 3종의 **6정책**과 예약 압축 거부, DocInfo/BinData 압축 손상 후 fallback 금지를 확인했습니다. 바이너리 길이 0·4095·4096·4097 각각 압축/비압축 **8경계**에서 정확한 총 한도 성공/1바이트 부족 실패를 검사했습니다. STORAGE 형식의 확장자 없는 이름과 같은 스트림의 중복 항목 소비량도 검사했습니다.
+4. 네이티브에서 정상 문서·후반 구역 실패·문서 검사 성공 후 바이너리 경로 성공/누락의 **모든 할당 실패 지점**을 주입했습니다. v3/v4 CFB, 입력 해제 후 반환 DocInfo 참조 수명, 독립 CFB 입력 한도와 UTF-16 이름 최대 길이도 검사했습니다. 외부 링크는 실제 접근 없이 집계하고 미사용 BIN 스트림은 uninspected로 남습니다.
+5. SSOT/책임 재검토: CFB 파서/strict/이름 규칙, stream 지원 정책, BinData 압축 정책, decoded 문서 검사기를 재사용합니다. 경로 규칙·구역 수집·바이너리 연결·보고서 수명을 분리했고 제품 JS ABI는 변경하지 않았습니다. 테스트 전용 WASM mode 25는 기존 문서 보고서 serializer를 공유합니다.
+
+**남은 범위**: 270개 미검사 스트림의 종류별 검증, 구역 번호 fallback, ControlData 소유권과 개별 컨트롤/도형 의미, 미지원 DocInfo와 셀/캡션 꼬리, 그림/OLE 내용, HWPX·공개 HWP JS API·편집/저장은 아직 남아 있습니다. 이 단계는 파일 조립과 알려진 검증 경로 연결이며 전체 목표 완료가 아닙니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 121/121, Node 47/47, HWP5 WASM 95,536회 검사(모드별), 새 파일 단위 명시적 오류/회복 32쌍. 기존 CFB 60컨테이너/483스트림/5,496검색 비교·12,000회 변이(trap 0), Zig/JS 포맷·diff 검사도 통과했습니다.

@@ -32,6 +32,9 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
         .framing = .{ .max_records = limit },
     });
     defer report.deinit(a);
+    return serialize(a, report);
+}
+pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Report) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     const info = report.doc_info;

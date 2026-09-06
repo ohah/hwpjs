@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { formattingCounts } from "./formatting.mjs";
 import { objectActual } from "./objects.mjs";
+export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);

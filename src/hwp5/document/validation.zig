@@ -6,8 +6,7 @@ pub const Report = types.Report;
 /// Caller decodes DocInfo/sections using hwp5.stream first. Never decompress twice.
 /// Only the provided streams are covered; CFB/BinData/other storage checks are external.
 pub fn inspectDecoded(a: std.mem.Allocator, input: Input, options: Options) !Report {
-    try options.parameters.validate();
-    if (options.max_sections == 0 or options.max_total_bytes == 0 or options.max_total_records == 0) return error.InvalidDocumentLimit;
+    try options.validate();
     if (input.sections.len > options.max_sections) return error.LimitExceeded;
     var remaining = options.max_total_bytes;
     try charge(&remaining, input.header.len);
