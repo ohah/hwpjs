@@ -162,6 +162,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         98 => return @import("container-probe.zig").viewText(a, bytes, limit),
         99 => return @import("distribution-probe.zig").run(a, bytes),
         100 => return @import("revision-projection-probe.zig").run(a, bytes),
+        101 => return @import("revision-groups-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

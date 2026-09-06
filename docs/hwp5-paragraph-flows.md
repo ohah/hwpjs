@@ -2,6 +2,8 @@
 
 [본문 계약](hwp5-body-contracts.md) · [모듈 인덱스](hwp5-modules.md)
 
+[변경 추적 병합 인덱스](hwp5-revision-groups.md)는 이 문단 흐름을 재사용해 같은 흐름의 관측 병합 묶음을 만듭니다. 흐름 소유권과 변경 추적 표식 해석은 별도 책임입니다.
+
 ## 현재 계약
 
 - `paragraph_flows.Flows`는 같은 Tree/Groups의 문단 소속을 매핑합니다. root 문단은 scope 0, 나머지는 직접 소유 LIST_HEADER 노드 인덱스이며 키는 구역 내부에서만 유효합니다. Group.begin/end와 subtree_end를 재사용해 중첩 자손을 바깥 리스트에 포함하지 않고, 같은 부모의 별개 리스트를 합치지 않습니다. payload·선언 문단 수를 다시 읽지 않으며 누락/중복 소속은 오류입니다. 원시 Tree는 변경하지 않습니다. mode 93에서 문단 노드/흐름 키를 검증하며 문서 필드 범위 검사 연결은 별도입니다.
