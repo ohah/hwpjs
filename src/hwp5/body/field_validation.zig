@@ -7,13 +7,16 @@ pub fn inspect(tree: Tree) !Report {
 }
 pub fn inspectCollected(tree: Tree, collector: ?@import("../memo_references.zig").Collector) !Report {
     var report: Report = .{};
-    for (tree.nodes) |node| {
+    for (tree.nodes, 0..) |node, node_index| {
         if (node.record.value != .control_header) continue;
         const h = node.record.value.control_header;
         if (!field.supports(h.id)) continue;
         const p = try field.Properties.parse(h.properties);
         if (try @import("memo_field.zig").fromField(h.id, p)) |reference| {
-            if (collector) |c| try c.index.addField(c.allocator, reference.index, c.section);
+            if (collector) |c| {
+                try c.index.addField(c.allocator, reference.index, c.section);
+                if (c.ranges) |ranges| try ranges.addStart(c.allocator, node_index, reference.index);
+            }
         }
         report.controls += 1;
         report.command_units += p.command.len / 2;

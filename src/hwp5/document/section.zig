@@ -23,6 +23,7 @@ pub fn inspectCollected(a: std.mem.Allocator, bytes: []const u8, version: @impor
     var groups = try Groups.build(a, tree);
     defer groups.deinit(a);
     _ = try @import("../body/memo_validation.zig").inspect(tree, groups.items);
+    const range_begin = if (collector) |c| if (c.ranges) |r| r.events.items.len else 0 else 0;
     if (collector) |c| try @import("../body/memo_end_collection.zig").collect(tree, c);
     if (collector) |c| for (groups.items) |group| {
         if (group.memo) |memo| try c.index.addList(c.allocator, tree.nodes[memo.node].record.value.memo_list.memo_index, c.section);
@@ -64,7 +65,13 @@ pub fn inspectCollected(a: std.mem.Allocator, bytes: []const u8, version: @impor
         .notes = try @import("../body/note_validation.zig").inspect(tree, groups.items, options.note_layout, options.list_layout),
         .hidden_comments = try @import("../body/hidden_comment.zig").inspect(tree, groups.items, options.list_layout),
         .ruby = try @import("../body/ruby_validation.zig").inspect(tree),
-        .fields = try @import("../body/field_validation.zig").inspectCollected(tree, collector),
+        .fields = field_report: {
+            const report = try @import("../body/field_validation.zig").inspectCollected(tree, collector);
+            if (collector) |c| if (c.ranges) |r| {
+                try r.resolveSection(a, c.section, range_begin, tree, groups.items, links.items);
+            };
+            break :field_report report;
+        },
         .observed_field_links = links.observedCount(),
         .char_overlap = char_overlap,
         .bookmarks = parameter_report.bookmarks,

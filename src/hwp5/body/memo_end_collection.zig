@@ -9,6 +9,7 @@ pub fn collect(tree: Tree, c: Collector) !void {
             if (token.value != .control or token.value.control.code != 4) continue;
             if (try @import("memo_end.zig").parse(token.value.control.data)) |end| {
                 try c.index.addEnd(c.allocator, end.memo_index, c.section);
+                if (c.ranges) |ranges| try ranges.addEnd(c.allocator, c.section, node.parent orelse return error.OrphanParagraphRecord, token.start_unit, end.memo_index);
             }
         }
     }

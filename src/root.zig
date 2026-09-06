@@ -78,6 +78,7 @@ test {
     _ = @import("hwp5/body/memo_end_tests.zig");
     _ = @import("hwp5/body/paragraph_flow_tests.zig");
     _ = @import("hwp5/body/memo_range_tests.zig");
+    _ = @import("hwp5/body/memo_range_collection_tests.zig");
     _ = @import("hwp5/body/revision_delete_tests.zig");
     _ = @import("hwp5/body/cell_extension_tests.zig");
     _ = @import("hwp5/parameters/tests.zig");

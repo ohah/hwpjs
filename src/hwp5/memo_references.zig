@@ -16,7 +16,7 @@ pub const Report = struct {
         if (self.ambiguous_fields != 0) return error.AmbiguousMemoTarget;
     }
 };
-pub const Collector = struct { index: *Index, allocator: std.mem.Allocator, section: usize };
+pub const Collector = struct { index: *Index, allocator: std.mem.Allocator, section: usize, ranges: ?*@import("body/memo_range_collection.zig").Collection = null };
 pub const EndReport = struct {
     ends: usize,
     lists: usize,

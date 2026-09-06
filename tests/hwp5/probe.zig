@@ -155,6 +155,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         91 => return @import("memo-end-probe.zig").run(a, bytes),
         92 => return @import("document-probe.zig").memoEnd(a, bytes, limit),
         93 => return @import("list-probe.zig").runFlows(a, bytes, limit),
+        94 => return @import("document-probe.zig").memoRange(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

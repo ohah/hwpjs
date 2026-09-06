@@ -80,6 +80,7 @@ pub const SectionReport = struct {
 pub const Report = struct {
     memo_references: @import("../memo_references.zig").Report = .{},
     memo_end_references: @import("../memo_references.zig").EndReport,
+    memo_ranges: @import("../body/memo_ranges.zig").Report,
     header: Header,
     doc_info: DocInfo,
     sections: []SectionReport,

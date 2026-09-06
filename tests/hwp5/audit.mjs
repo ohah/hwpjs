@@ -8,6 +8,7 @@ import {memoListGroupEdges} from "./memo-list-groups.mjs";
 import {memoOwnerEdges} from "./memo-owner.mjs";
 import {memoFieldEdges,memoFieldReference,memoFieldDocument} from "./memo-field.mjs";
 import {memoReferencesActual,memoReferenceDocument} from "./memo-references.mjs";
+import {memoRangesActual,memoRangeMutations} from "./memo-ranges.mjs";
 import {revisionDeleteEdges} from "./revision-delete.mjs";
 import {memoEndEdges,memoEndActual} from "./memo-end.mjs";
 import {paragraphFlowEdges,paragraphFlowActual} from "./paragraph-flows.mjs";
@@ -443,6 +444,7 @@ const memoListGroupResults = memoListGroupEdges(call);
 const memoOwnerResults = memoOwnerEdges(call);
 const memoFieldResults = {edges:memoFieldEdges(call),reference:memoFieldReference(call,cfb),document:memoFieldDocument(call,cfb)};
 const memoReferenceResults = {actual:memoReferencesActual(call,cfb),document:memoReferenceDocument(call,cfb)};
+const memoRangeResults = {actual:memoRangesActual(call,cfb),mutations:memoRangeMutations(call,cfb)};
 const revisionDeleteResults = revisionDeleteEdges(call);
 const memoEndResults = {edges:memoEndEdges(call),actual:memoEndActual(call,cfb)};
 const paragraphFlowResults = {edges:paragraphFlowEdges(call),actual:paragraphFlowActual(call,cfb)};
@@ -941,6 +943,7 @@ console.log(
       memoOwnerResults,
       memoFieldResults,
       memoReferenceResults,
+      memoRangeResults,
       revisionDeleteResults,
       memoEndResults,
       paragraphFlowResults,

@@ -5,6 +5,7 @@ const int = @import("resource-probe.zig").int;
 pub const Selection = struct {
     memo_report: bool = false,
     memo_end_report: bool = false,
+    memo_range_report: bool = false,
     picture: core.hwp5.picture_validation.Options = .{},
     style: ?core.hwp5.document_validation.types.DrawingStyleOptions = null,
     arc: ?core.hwp5.shape_arc.Layout = null,
@@ -22,6 +23,9 @@ pub fn memo(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 }
 pub fn memoEnd(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return configured(a, bytes, limit, .{ .memo_end_report = true });
+}
+pub fn memoRange(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return configured(a, bytes, limit, .{ .memo_range_report = true });
 }
 pub fn styled(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
@@ -105,10 +109,10 @@ fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: 
         .framing = .{ .max_records = limit },
     });
     defer report.deinit(a);
-    if (selection.memo_report or selection.memo_end_report) {
+    if (selection.memo_report or selection.memo_end_report or selection.memo_range_report) {
         var out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(a);
-        if (selection.memo_end_report) try fields(a, &out, report.memo_end_references) else try fields(a, &out, report.memo_references);
+        if (selection.memo_range_report) try fields(a, &out, report.memo_ranges) else if (selection.memo_end_report) try fields(a, &out, report.memo_end_references) else try fields(a, &out, report.memo_references);
         return out.toOwnedSlice(a);
     }
     return serialize(a, report);
