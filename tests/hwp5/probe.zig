@@ -137,6 +137,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         73 => return @import("container-probe.zig").curved(a, bytes, limit),
         74 => return @import("shape-picture-probe.zig").run(a, bytes),
         75 => return @import("picture-color-probe.zig").run(a, bytes),
+        76 => return @import("picture-effects-probe.zig").run(a, bytes),
         else => return error.InvalidMode,
     }
 }

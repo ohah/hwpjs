@@ -17,6 +17,7 @@ import { curveActual } from "./shape-curve.mjs";
 import { curveOwnerActual } from "./curve-validation.mjs";
 import { pictureActual, pictureRun } from "./shape-picture.mjs";
 import { colorActual } from "./picture-color.mjs";
+import { effectsActual } from "./picture-effects.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -31,6 +32,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.fillOnly = { parsed: 0, rejectedPrefixes: 0 };
   out.pictures = { parsed: 0, rejected: 0, lengths: {}, selectedPrefixes: [0,0,0], unavailablePrefixes: 0, nonzeroAdjustments: [] };
   out.pictureColors = { parsed: 0, rejected: 0, files: {}, values: {}, counts: {}, extra: {} };
+  out.pictureEffects = { parsed: 0, rejected: 0, flags: {}, extra: {} };
   out.versions = {};
   out.images = [];
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
@@ -81,6 +83,12 @@ export function drawingStyleSurvey(call, cfb) {
         if(record.tag===85){
           const p=bytes.subarray(record.start,record.end),stats=pictureActual(call,p);
           out.pictures.parsed++;out.pictures.rejected+=stats.rejected;
+          // Explicit experiment for present effect headers, not a version fallback.
+          if(p.length>=82){
+            const effect=effectsActual(call,p.subarray(78));out.pictureEffects.parsed++;out.pictureEffects.rejected+=effect.rejected;
+            out.pictureEffects.flags[effect.flags]=(out.pictureEffects.flags[effect.flags]??0)+1;
+            out.pictureEffects.extra[effect.extra]=(out.pictureEffects.extra[effect.extra]??0)+1;
+          }
           // Explicit observed shadow-only experiment; other effect layouts stay pending.
           if(p.length>=82&&p.readUInt32LE(78)===1){
             assert.ok(p.length>=138);

@@ -61,6 +61,7 @@ pub const shape_polygon = @import("body/shape_polygon.zig");
 pub const shape_curve = @import("body/shape_curve.zig");
 pub const shape_picture = @import("body/shape_picture.zig");
 pub const picture_color = @import("body/picture_color.zig");
+pub const picture_effects = @import("body/picture_effects.zig");
 pub const curve_validation = @import("body/curve_validation.zig");
 pub const polygon_validation = @import("body/polygon_validation.zig");
 pub const arc_validation = @import("body/arc_validation.zig");

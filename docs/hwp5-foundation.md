@@ -1904,3 +1904,25 @@ rhwp는 개수를 남은 좌표 바이트에 맞춰 줄이고 구간이 부족�
 실제 색상 블록은 aift.hwp 1개와 basic/Worldcup_FIFA2010_32.hwp 32개로 총 33개입니다. 모두 type/value/count가 0이며 실제 색상 효과 항목은 없습니다. 따라서 비영 색상·효과 배열은 합성 검증 범위임을 구분합니다. 필수 prefix 거부는 396회, 뒤에 남은 바이트는 32개가 0바이트/1개가 9바이트이고 이 단계에서는 후속 의미를 해석하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 213/213, Node 47/47, HWP5 WASM 684,483회 검사입니다. 색상 합성 성공 367/거부 7,188, 실제 33개/필수 prefix 거부 396을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-picture-color-{debug,safe,fast}.log`입니다.
+
+## 그림자·네온·부드러운 가장자리·반사 효과 조립
+
+2026-09-07. 공식 표 108~112와 위 고정 리비전의 ForPictureEffect 및 [PictureEffectProperty](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/object/bodytext/control/gso/shapecomponenteach/picture/PictureEffectProperty.java)를 대조했습니다. flags bit 0/1/2/3의 그림자/네온/soft edge/반사 순서로 읽습니다. 다른 비트는 UnsupportedPictureEffects이며 길이를 추정해 건너뛰지 않습니다.
+
+picture_effect_fields는 이름 있는 고정 필드(그림자 44, 네온 8, 반사 56바이트), picture_effects는 선택 블록·읽기 순서·실패 원자성을 소유합니다. 그림자/네온 색상은 기존 Color.read를 호출하며 색상 배열을 복제하지 않습니다. soft edge는 원시 float DWORD 하나입니다. optional 블록의 부재와 0값을 구분하고 style/정렬/회전 스타일을 enum이나 bool로 축소하지 않습니다. float 필드는 `_bits` u32로 보존합니다.
+
+표 112는 4바이트 필드 14개를 나열하면서 총길이를 53으로 적습니다. 독립 리더도 각 필드를 읽으므로 필드 합계 56바이트를 구현했습니다. 53바이트에서 성공시키거나 빠진 세 바이트를 0으로 채우지 않습니다. 실제 반사 표본의 실측 배치로 입증한 것은 아니며 명세 필드 목록/독립 리더에 근거한 구현입니다.
+
+적대적 검증:
+
+1. flags 0~15 전체 조합에서 개별/복합 블록과 원문 꼬리를 검증합니다. 두 색상 모두 실제 항목이 있는 합성 배열을 넣어 다음 블록 시작 위치를 검사합니다.
+2. 각 조합의 모든 필수 prefix 잘림, 비제어 데이터 위치의 0/128/255 변이, 미지 flags bit 4~31, 두 색상의 미지원 타입·u32 최대 count를 검사하고 정상 입력으로 회복을 확인합니다.
+3. offset 1에서 중간 색상/두 번째 배열/반사까지 실패해도 외부 커서를 보존합니다. 모든 효과가 있는 최소 140바이트와 추가 꼬리, 효과 없음의 4바이트/optional null도 검사합니다.
+4. 테스트 serializer와 product reader의 대칭 오류를 방지하기 위해 네이티브에서 그림자·네온·반사의 모든 필드를 이름별 독립 기대값으로 확인합니다. signed 미지 선택값, NaN payload/음의 0/무한대의 원시 비트도 확인합니다.
+5. 실제 그림 payload에서 78바이트 고정 prefix 뒤 효과 헤더가 존재하는 배치를 명시적으로 선택해 독립 JS 경계 계산과 WASM typed 재인코딩을 비교합니다. 앞선 73/74/78바이트 표본에 없는 효과 헤더를 강제로 생성하지 않으며 제품의 버전/길이 fallback은 없습니다.
+
+현재는 효과 조립 코어와 테스트 WASM 모드 76입니다. 추가 이미지 크기/투명도, 그림 소유권·BinData 참조·문서 연결과 효과 조판은 남아 있습니다. 미확정 색상 타입도 계속 명시적으로 미지원이며 원본 파일은 수정하지 않았습니다.
+
+실제 효과 헤더 1,899개는 flags=0(없음) 1,865개, flags=1(그림자) 33개, flags=4(soft edge) 1개입니다. 필수 prefix 거부 9,448회를 검사했습니다. extra는 0바이트 130개/8바이트 195개/9바이트 1,574개로 보존합니다. 실제 네온·반사 및 복합 효과 표본은 없으므로 이들은 합성 검증 범위입니다. 그림자 색상 33개의 type/value/count=0과 독립 효과 의미 미검증 한계도 그대로 유지합니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 215/215, Node 47/47, HWP5 WASM 1,148,545회 검사입니다. 효과 조합 합성 성공 4,304/거부 442,208, 실제 1,899개/필수 prefix 거부 9,448을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-picture-effects-{debug,safe,fast}.log`입니다.
