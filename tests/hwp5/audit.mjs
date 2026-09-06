@@ -50,6 +50,8 @@ import { rectanglePair } from "./rectangle-pair.mjs";
 import { rectangleOwnerEdges } from "./rectangle-validation.mjs";
 import { rectangleDocumentReference } from "./rectangle-document.mjs";
 import { ellipseEdges } from "./shape-ellipse.mjs";
+import { arcEdges } from "./shape-arc.mjs";
+import { arcSurvey } from "./arc-survey.mjs";
 import { ellipsePair } from "./ellipse-pair.mjs";
 import { ellipseOwnerEdges } from "./ellipse-validation.mjs";
 import { ellipseDocumentReference } from "./ellipse-document.mjs";
@@ -388,6 +390,8 @@ const lineOwnerEdgeResults = lineOwnerEdges(call);
 const rectangleEdgeResults = rectangleEdges(call);
 const rectangleOwnerEdgeResults = rectangleOwnerEdges(call);
 const ellipseEdgeResults = ellipseEdges(call);
+const arcEdgeResults = arcEdges(call);
+const arcSurveyResults = arcSurvey(call,cfb);
 const ellipseOwnerEdgeResults = ellipseOwnerEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
@@ -841,6 +845,8 @@ console.log(
       rectangleEdgeResults,
       rectangleOwnerEdgeResults,
       ellipseEdgeResults,
+      arcEdgeResults,
+      arcSurveyResults,
       ellipseOwnerEdgeResults,
       shapeBorderReferenceResults,
       drawingStyleSurveyResults,

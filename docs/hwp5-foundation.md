@@ -1725,3 +1725,29 @@ needsIntervalUpdate는 bit 0, isArc는 bit 1, arcKindRaw는 bit 2~9의 8비트 �
 이 단계는 그라데이션 외 프레젠테이션 채우기·다른 Set의 ID 0 의미, 실제 프레젠테이션 렌더링을 검증한 것이 아닙니다. 두 표본의 전체 검사는 현재 연결된 검사기의 성공이며 unknown/opaque/deferred 및 미지원 도형이 없어졌다는 뜻은 아닙니다. HWPX 제품 파서·문서 편집/저장도 계속 남아 있습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 201/201, Node 47/47, HWP5 WASM 339,200회 검사 통과. 새 문맥 합성 성공 29/거부 25, 실제 두 파일의 문서·CFB 성공, 이미지 활성 변이 거부 6 및 prefix 잘림 거부 560을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-presentation-reference-{debug,safe,fast}.log`입니다.
+
+## 호 payload의 명세/레퍼런스 배치 분리 (2026-09-06)
+
+공식 PDF 표 100~101은 호 태그 HWPTAG_BEGIN+65(81)의 속성을 UINT32와 세 signed XY Point로 정의하며 총 28바이트입니다. PDF의 표 100은 속성을 표 96으로, 표 101은 속성 비트를 표 92로 연결하는 상호 참조 불일치가 있습니다. 로컬 요약은 이를 표 101/97로 바꿔 적고 있으므로 요약을 근거로 타원 비트 의미를 그대로 이식하지 않았습니다.
+
+로컬 rhwp `src/parser/control/shape.rs:1082`의 parse_arc_shape_data는 u8 arc_type + 세 Point, 총 25바이트를 읽습니다. 필드가 잘리면 unwrap_or(0)으로 채우지만 신규 코어는 모든 필수 필드 잘림을 오류로 처리합니다. 코드 이식이나 제품 의존성 추가는 없습니다.
+
+`shape_arc.Arc.parse(bytes, layout)`는 specified_u32/reference_u8를 필수 인자로 받습니다. Header tagged union이 32비트 속성과 8비트 원시 종류를 구분하고 headerRaw는 손실 없는 수치 view만 제공합니다. center/axis1/axis2는 기존 shape_point.Point.read를 공유하며 꼬리는 borrowed extra입니다. 길이·파일 버전·헤더 수치로 배치를 자동 선택하지 않습니다. 0xff/0xffffffff나 음수 좌표를 거부/정규화하지 않고 종류 enum의 기본값으로 축소하지 않습니다.
+
+### 실제 표본 조사와 한계
+
+독립 framing 조사 `arc-survey.mjs`는 그리기 계층 검사 성공 여부와 무관하게 참조 HWP의 BodyText 레코드를 조사합니다. strict CFB·HWP stream.decode와 독립 JS 레코드 경계를 사용하며 컨테이너/스트림 실패 및 보안 제외를 별도 보고합니다. 조사된 구역에서 태그 81이 없으므로 reference_u8를 observed 배치라고 부르지 않습니다. 새 호 fixture가 들어오면 조사 assertion이 실패해 명시적 배치·좌표 대조를 요구합니다. 무표본을 실제 파서 검증 성공으로 집계하지 않습니다.
+
+현재 536개 파일 중 framing 조사 완료 430개, 실패 102개, 보안 제외 4개이며 읽은 구역은 555개이고 발견한 태그 81은 0개입니다. 실패 파일 내부에도 호가 없다고 주장하지 않습니다. 검사 완료는 framing 조사 완료이며 파일 전체 의미 검증 완료가 아닙니다.
+
+### 구현 후 적대적 검증
+
+1. 두 배치에서 서로 다른 signed 최소/최대/-1/0/양수/음수 좌표와 최대 폭 헤더를 네이티브에서 대조합니다. 세 Point 순서와 extra의 내용·borrowed 포인터를 확인합니다.
+2. 필수 길이 28/25의 모든 prefix를 거부합니다. WASM에서는 각 필수 바이트에 1/128/255를 주입하고 독립 header 확장·좌표 읽기·extra 경계와 비교한 뒤 모든 prefix를 다시 검사합니다.
+3. 동일한 28바이트 입력을 두 배치로 읽을 때 헤더·좌표·extra가 달라짐을 확인합니다. 25바이트 배치에 꼬리가 있다고 28바이트 배치로 자동 전환하지 않습니다.
+4. 모드 2/255와 모드 바이트 부재를 거부하고, 각 payload 오류 뒤 정상 입력을 재호출합니다. 32비트 상위 속성과 8비트 255를 enum/boolean으로 줄이지 않습니다.
+5. 실제 파일 조사 실패/보안 제외/진입 가능한 구역 수를 보고서로 남기며 현재 실제 호 payload는 0개임을 명시합니다. 일반 선·사각형·타원과 공유하는 Point.read의 기존 회귀 테스트도 전체 audit에서 실행합니다.
+
+현재는 호 payload 코어와 테스트용 WASM 모드 62입니다. 호의 문서 소유권·누락·중복 검사, 실제 호/HWPX 짝 좌표 비교, 호 종류·시작각·끝각·조판 의미 및 나머지 도형은 아직 남아 있습니다. 제품 HWPX·편집·저장 완료를 의미하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 203/203, Node 47/47, HWP5 WASM 344,362회 검사 통과. 호 합성 성공 161/거부 4,283이며 실제 호 payload 검증은 0개입니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-arc-{debug,safe,fast}.log`입니다.
