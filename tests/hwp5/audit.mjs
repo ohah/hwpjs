@@ -38,6 +38,7 @@ import { storageEdges } from "./storage-extension.mjs";
 import { oleReferenceEvidence } from "./ole-reference-evidence.mjs";
 import { shapeComponentEdges, shapeComponentReference } from "./shape-component.mjs";
 import { shapeValidationEdges } from "./shape-validation.mjs";
+import { shapeBorderEdges, shapeBorderReference } from "./shape-border.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -364,6 +365,7 @@ const oleValidationEdgeResults = oleValidationEdges(call);
 const storageEdgeResults = storageEdges(call);
 const shapeComponentEdgeResults = shapeComponentEdges(call);
 const shapeValidationEdgeResults = shapeValidationEdges(call);
+const shapeBorderEdgeResults = shapeBorderEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -386,6 +388,7 @@ const equationReferenceResults = equationReference(call, cfb);
 const oleReferenceResults = oleReference(call, cfb);
 const oleReferenceEvidenceResults = await oleReferenceEvidence(call, cfb);
 const shapeComponentReferenceResults = shapeComponentReference(call, cfb);
+const shapeBorderReferenceResults = shapeBorderReference(call, cfb);
 const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
@@ -799,6 +802,8 @@ console.log(
       storageEdgeResults,
       shapeComponentEdgeResults,
       shapeValidationEdgeResults,
+      shapeBorderEdgeResults,
+      shapeBorderReferenceResults,
       shapeComponentReferenceResults,
       oleReferenceResults,
       oleReferenceEvidenceResults,

@@ -34,6 +34,7 @@ test {
     _ = @import("hwp5/body/ole_tests.zig");
     _ = @import("hwp5/docinfo/storage_tests.zig");
     _ = @import("hwp5/body/shape_component_tests.zig");
+    _ = @import("hwp5/body/shape_border_tests.zig");
     _ = @import("hwp5/body/tree_tests.zig");
     _ = @import("hwp5/body/section_tests.zig");
     _ = @import("hwp5/body/note_tests.zig");

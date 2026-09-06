@@ -38,4 +38,7 @@ pub const Properties = struct {
     pub fn objectKind(self: Properties) ?u6 {
         return if (self.layout == .spec24) null else @truncate(self.attributes >> 16);
     }
+    pub fn borderAttributes(self: Properties) @import("line_attributes.zig").Attributes {
+        return .{ .raw = self.border_attributes };
+    }
 };

@@ -52,6 +52,7 @@ pub const ole = @import("body/ole.zig");
 pub const ole_validation = @import("body/ole_validation.zig");
 pub const shape_component = @import("body/shape_component.zig");
 pub const shape_validation = @import("body/shape_validation.zig");
+pub const shape_border = @import("body/shape_border.zig");
 pub const control_identity = @import("body/control_identity.zig");
 pub const char_overlap = @import("body/char_overlap.zig");
 pub const char_overlap_validation = @import("body/char_overlap_validation.zig");

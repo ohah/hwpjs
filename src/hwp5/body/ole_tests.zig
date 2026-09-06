@@ -16,6 +16,8 @@ test "OLE layouts preserve signed fields and separate BinData from border color"
         try t.expectEqual(0x12345678, p.border_color);
         try t.expectEqual(-1, p.border_thickness);
         try t.expectEqual(0xffffffff, p.border_attributes);
+        try t.expectEqual(0xffffffff, p.borderAttributes().raw);
+        try t.expect(p.borderAttributes().endFilled());
         try t.expectEqual(255, p.drawingAspect());
         try t.expect(p.hasMoniker());
         try t.expectEqual(127, p.baselineRaw());
