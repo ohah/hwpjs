@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
 import { documentRecords } from "./documents.mjs";
+import { drawingStyleActual } from "./drawing-style.mjs";
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 const run=(call,b,mode)=>call(52,Buffer.concat([Buffer.from([mode]),b]));
 function check(call,b,mode) {
@@ -19,7 +20,7 @@ export function shapeBorderEdges(call) {
   return {accepted,rejected};
 }
 export function shapeBorderReference(call,cfb) {
-  const files=[],skipped=[];let borders=0,rejected=0;
+  const files=[],skipped=[];let borders=0,rejected=0,styleRejected=0;
   for(const [name,expected] of [["shape-group-02.hwp",2],["group-drawing-02.hwp",34],["shape-001.hwp",2]]) {
     const path=new URL(`../../reference/rhwp/samples/${name}`,import.meta.url);
     if(!existsSync(path)){skipped.push(name);continue;}
@@ -35,6 +36,10 @@ export function shapeBorderReference(call,cfb) {
         const parent=stack[level-1];assert.ok(parent);assert.ok([71,76].includes(parent.tag));
         const p=b.subarray(r.start,r.end),start=(parent.tag===71?8:4)+42,end=start+50+p.readUInt16LE(start)*96;
         const border=p.subarray(end);assert.ok(border.length>=13);check(call,border,1);
+        const style=drawingStyleActual(call,border);
+        assert.equal(style.known,true);
+        for(let n=0;n<style.consumed;n++){assert.throws(()=>call(53,Buffer.concat([Buffer.from([1]),border.subarray(0,n)])),/UnexpectedEnd/);styleRejected++;}
+        drawingStyleActual(call,border);
         for(let n=0;n<13;n++){assert.throws(()=>run(call,border.subarray(0,n),1),/UnexpectedEnd/);rejected++;}
         check(call,border,1);count++;borders++;
       }
@@ -42,5 +47,5 @@ export function shapeBorderReference(call,cfb) {
     }
     assert.equal(count,expected);files.push({name,count});
   }
-  return {borders,rejected,files,skipped};
+  return {borders,rejected,styleRejected,files,skipped};
 }

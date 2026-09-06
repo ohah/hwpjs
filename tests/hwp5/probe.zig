@@ -114,6 +114,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         50 => return @import("shape-component-probe.zig").run(a, bytes),
         51 => return @import("shape-validation-probe.zig").run(a, bytes, limit),
         52 => return @import("shape-border-probe.zig").run(a, bytes),
+        53 => return @import("drawing-style-probe.zig").run(a, bytes),
         else => return error.InvalidMode,
     }
 }

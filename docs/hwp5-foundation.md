@@ -1438,3 +1438,23 @@ line_attributes.Attributes는 표 87의 선 종류(0~5), 선 끝(6~9), 시작 �
 이번 단계는 테두리 전용 파서와 공통 속성 view입니다. 도형 종류별 테두리 파서 선택·문서 검사 연결, 채우기/그림자/글상자 꼬리, 선 모양·화살표 렌더링 의미는 남았습니다. 실제 payload 대조를 전체 테두리 의미나 해당 파일의 추가 문서 검증 완료로 계상하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 184/184, Node 47/47, HWP5 WASM 191,191회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
+
+## 관측 도형 스타일의 채우기 경계·종류별 alpha·그림자 (2026-09-06)
+
+공식 표 81은 그리기 공통 속성에 테두리·채우기 정보를 포함합니다. rhwp parser/doc_info.rs 및 parser/control/shape.rs와 실제 원문을 대조하면 채우기 additional 블록 뒤에 활성 종류별 바이트가 pattern→gradient→image 순서로 있으며, 이어서 그림자 kind(u32), color(u32), offset_x/y(i32)의 16바이트가 있습니다. 명세에 충분히 정의되지 않은 부분은 관측 배치로 한정합니다.
+
+`drawing_style.Style.parse`는 shape_border.Border.read와 기존 docinfo.Fill.parse를 재사용합니다. 기본 채우기 필드·gradient 배열·image 정보를 별도 구현하지 않습니다. 기존 Fill의 known.extra에서 fill_alpha.Alpha가 활성 종류별 원시 바이트를 읽고 shadow.Shadow가 다음 16바이트를 읽습니다. 이후 instance/예약/투명도 등의 미지 바이트는 extra로 남깁니다. 이 명명은 관측 해석이며 모든 버전의 의미나 조판 결과를 보장하지 않습니다.
+
+Alpha의 pattern/gradient/image는 각각 ?u8이며 부재/null과 값 0을 구분합니다. 한 종류의 값이 0이라고 다른 종류의 값을 가져와 합치지 않습니다. 알 수 없는 Fill 비트는 후속 필드 순서를 바꿀 수 있으므로 Style.tail.unknown으로 전체 나머지를 보존하고 alpha/그림자를 추측하지 않습니다. 반대로 알려진 Fill에서 필수 바이트가 잘리면 오류이고 unknown으로 후퇴하지 않습니다. Fill의 원래 extra view는 유지하며 스타일을 조립한 이후의 미지 영역은 Style.tail.known.extra로 구분합니다.
+
+### 구현 후 적대적 검증
+
+1. 채우기 8가지 조합에서 pattern/gradient/image 바이트 순서와 부재를 네이티브로 대조했습니다. 첫 값 0과 뒤의 다른 값들이 별도로 보존됩니다. Alpha/Shadow의 모든 중간 잘림에서 Reader cursor가 그대로입니다.
+2. 그림자 kind/색의 u32 상위 비트와 signed 좌표 최솟값·최댓값, 미지 꼬리를 대조했습니다. 미지 Fill 뒤에는 유효해 보이는 그림자 바이트가 있어도 해석하지 않으며 빈 unknown tail도 허용합니다.
+3. WASM에서 두 테두리 배치 × 채우기 8가지 조합을 검사했습니다. additional 길이를 3으로 두어 한 바이트만 읽는 가정을 배제했고 image/gradient/pattern 조합의 alpha와 그림자를 독립 기대값에 대조했습니다. 합성 성공 36건·필수 prefix 잘림 거부 960건입니다.
+4. 기존 실제 테두리 표본 38개에서 그 이후 채우기·alpha·그림자 경계도 추가 검증했습니다. 각 필수 영역의 잘림 1,866건을 거부하고 정상 재호출했습니다. 독립 JS 계산은 원문 길이/플래그에서 다음 필드 위치를 구하며 제품 보고서로 기대값을 생성하지 않습니다.
+5. 기존 DocInfo Fill 파서와 BinData 참조 회귀를 함께 실행합니다. 새 코드가 Fill 기본 필드를 복제하거나 기존 parse 결과를 변경하지 않는 구조를 확인했습니다. 원본 파일은 변경하지 않았으며 실제 표본 부재는 skipped입니다.
+
+이번 단계는 관측 도형 스타일 파서입니다. 종류별 파서 선택·문서 검사 연결·이미지 채우기의 참조 검증, 후반부 instance/예약 필드와 조판 효과는 남았습니다. 실제 스타일 payload 대조를 해당 파일의 추가 스타일 문서 검증 완료로 계상하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 186/186, Node 47/47, HWP5 WASM 194,145회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 Zig 포맷·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-drawing-style-{debug,safe,fast}.log`입니다.

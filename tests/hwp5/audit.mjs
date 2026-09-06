@@ -39,6 +39,7 @@ import { oleReferenceEvidence } from "./ole-reference-evidence.mjs";
 import { shapeComponentEdges, shapeComponentReference } from "./shape-component.mjs";
 import { shapeValidationEdges } from "./shape-validation.mjs";
 import { shapeBorderEdges, shapeBorderReference } from "./shape-border.mjs";
+import { drawingStyleEdges } from "./drawing-style.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -366,6 +367,7 @@ const storageEdgeResults = storageEdges(call);
 const shapeComponentEdgeResults = shapeComponentEdges(call);
 const shapeValidationEdgeResults = shapeValidationEdges(call);
 const shapeBorderEdgeResults = shapeBorderEdges(call);
+const drawingStyleEdgeResults = drawingStyleEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -803,6 +805,7 @@ console.log(
       shapeComponentEdgeResults,
       shapeValidationEdgeResults,
       shapeBorderEdgeResults,
+      drawingStyleEdgeResults,
       shapeBorderReferenceResults,
       shapeComponentReferenceResults,
       oleReferenceResults,
