@@ -7,6 +7,7 @@ import { drawingStyleActual } from "./drawing-style.mjs";
 import { lineActual } from "./shape-line.mjs";
 import { lineOwnerActual } from "./line-validation.mjs";
 import { rectangleActual } from "./shape-rectangle.mjs";
+import { rectangleOwnerActual } from "./rectangle-validation.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -56,6 +57,7 @@ export function drawingStyleSurvey(call, cfb) {
         failed = true; continue;
       }
       lineOwnerActual(call,header.readUInt32LE(32),bytes);
+      rectangleOwnerActual(call,header.readUInt32LE(32),bytes);
       const stack = [];
       for (const record of records) {
         const level = bytes.readUInt32LE(record.offset) >>> 10 & 1023;

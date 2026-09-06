@@ -41,6 +41,7 @@ test {
     _ = @import("hwp5/body/shape_line_tests.zig");
     _ = @import("hwp5/body/line_validation_tests.zig");
     _ = @import("hwp5/body/shape_rectangle_tests.zig");
+    _ = @import("hwp5/body/rectangle_validation_tests.zig");
     _ = @import("hwp5/body/tree_tests.zig");
     _ = @import("hwp5/body/section_tests.zig");
     _ = @import("hwp5/body/note_tests.zig");

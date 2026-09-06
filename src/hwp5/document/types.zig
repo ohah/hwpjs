@@ -7,6 +7,7 @@ pub const Section = struct { index: u16, bytes: []const u8 };
 pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
 pub const Options = struct {
     drawing_style: ?DrawingStyleOptions = null,
+    rectangle_layout: @import("../body/shape_rectangle.zig").Layout = .observed_points,
     ole_layout: @import("../body/ole.zig").Layout = .observed26,
     equation_layout: @import("../body/equation.zig").Layout = .version_only,
     note_layout: @import("../body/note_control.zig").Layout = .observed12,
@@ -36,6 +37,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    rectangles: @import("../body/rectangle_validation.zig").Report = .{},
     lines: @import("../body/line_validation.zig").Report = .{},
     drawing_styles: @import("../body/drawing_style_validation.zig").Report = .{},
     shapes: @import("../body/shape_validation.zig").Report = .{},

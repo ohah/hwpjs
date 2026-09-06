@@ -19,6 +19,7 @@ import { oleActual } from "./ole-validation.mjs";
 import { shapeActual } from "./shape-validation.mjs";
 import { unselectedStyles } from "./drawing-style-document.mjs";
 import { lineOwnerActual } from "./line-validation.mjs";
+import { rectangleOwnerActual } from "./rectangle-validation.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -150,6 +151,7 @@ export function documentActual(call, h, doc, sections) {
       ...shapeActual(call, v, b).map(w),
       ...unselectedStyles(b).map(w),
       ...lineOwnerActual(call,v,b).map(w),
+      ...rectangleOwnerActual(call,v,b).map(w),
     );
   }
   const want = Buffer.concat(expected);

@@ -1643,3 +1643,21 @@ rhwp `parser/control/shape.rs:parse_line_shape_data`도 일반 선에서 u16을 
 사각형의 문서 직접 소유권·누락·중복 검사 연결과 round_rate의 실제 조판 효과는 남아 있습니다. 타원/호/다각형/곡선/연결선 등 나머지 payload와 전체 문서 검증도 계속 진행합니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 196/196, Node 47/47, HWP5 WASM 316,078회 검사 통과. CFB 12,000회 변이 trap 0, 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-rectangle-{debug,safe,fast}.log`입니다.
+
+## 사각형 소유권·문서 검사 연결 (2026-09-06)
+
+`rectangle_validation.inspect`는 첫 ID $rec인 구성요소에 직접 태그 79 레코드 한 개를 요구합니다. 직접 검색은 owned_record.find, ID 해석은 shape_component.identity, payload는 기존 Rectangle.parse를 재사용합니다. 누락/중복/고아는 MissingRectangle/DuplicateRectangle/OrphanRectangle이며 손자의 사각형이나 다른 형제의 레코드로 대신하지 않습니다.
+
+문서 옵션 rectangle_layout은 observed_points가 기본이며 specified_axes도 명시적으로 선택할 수 있습니다. 이 기본값은 앞선 HWP/HWPX 비교에 근거한 관측 배치 선택이지 버전별 자동 추정이 아닙니다. 문서/CFB 보고서의 rectangles에는 rectangles/out_of_range_rounding/extra_bytes 세 진단을 추가했고 구역 wire stride는 544바이트입니다. 100 초과 곡률은 보존·진단만 하며 오류나 보정값으로 바꾸지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 네이티브에서 두 배치의 정상/누락/중복/고아 및 모든 Tree 할당 실패 경로를 검사했습니다. 기존 Tree 수명 규칙을 지키며 실패 시 누수가 없습니다. 곡률 255가 보존된 채 진단으로 보고되는지도 확인했습니다.
+2. WASM 모드 59에서 두 배치의 잘못된 부모·손자/형제 대체·중복·고아·33개 필수 prefix 잘림을 검사합니다. 곡률 0/20/50/100은 진단 0, 101/255는 진단 1이며 입력을 거부하지 않습니다. extra와 잘못된 모드도 검사합니다.
+3. 전체 참조 조사의 진입 가능한 모든 구역에 사각형 소유권 대조를 추가했습니다. 실제 2,175개 payload/짝 HWPX 좌표 비교는 유지하며, 독립 JS가 직접 부모·자식 수와 진단 기대값을 계산합니다. 진입 실패/보안 제외를 완료로 세지 않습니다.
+4. group-drawing-02.hwp의 사각형 30개에서 누락·중복·잘림 90개 변이를 만들고, 루트 고아 1개도 추가했습니다. 독립/decoded 문서/재작성 CFB 세 경로에서 273건 오류를 확인하고 매 오류 뒤 원본을 재검사합니다. 원본 파일은 수정하지 않았습니다.
+5. 두 구역 중 두 번째 사각형의 곡률만 101로 바꿔 진단이 0/1로 나뉘는지, 구역 입력 순서를 뒤집어도 같은 결과인지 확인합니다. `owned-shape-document.mjs`로 선/사각형의 문서·CFB 변이 및 순서 검증을 공유하고, 각 모듈에는 태그·기대 개수·필수 길이·오류·진단 변이만 남겼습니다. 선의 기존 39건 오류 회귀도 유지합니다.
+
+사각형 좌표/곡률의 실제 조판 의미와 타원/호/다각형/곡선/연결선 payload 등은 남아 있습니다. 이번 구현은 사각형의 필드·소유권 검사이며 전체 문서/도형 구현 완료가 아닙니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 197/197, Node 47/47, HWP5 WASM 317,363회 검사. CFB 12,000회 변이 trap 0, 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-rectangle-owner-{debug,safe,fast}.log`입니다.

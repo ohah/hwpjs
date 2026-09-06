@@ -47,6 +47,8 @@ import { lineOwnerEdges } from "./line-validation.mjs";
 import { lineDocumentReference } from "./line-document.mjs";
 import { rectangleEdges } from "./shape-rectangle.mjs";
 import { rectanglePair } from "./rectangle-pair.mjs";
+import { rectangleOwnerEdges } from "./rectangle-validation.mjs";
+import { rectangleDocumentReference } from "./rectangle-document.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -378,6 +380,7 @@ const drawingStyleEdgeResults = drawingStyleEdges(call);
 const lineEdgeResults = lineEdges(call);
 const lineOwnerEdgeResults = lineOwnerEdges(call);
 const rectangleEdgeResults = rectangleEdges(call);
+const rectangleOwnerEdgeResults = rectangleOwnerEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -405,6 +408,7 @@ const drawingStyleSurveyResults = drawingStyleSurvey(call, cfb);
 const styleDocumentReferenceResults = styleDocumentReference(call, cfb);
 const lineDocumentReferenceResults = lineDocumentReference(call, cfb);
 const rectanglePairResults = rectanglePair(call,cfb);
+const rectangleDocumentReferenceResults = rectangleDocumentReference(call,cfb);
 const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
@@ -823,11 +827,13 @@ console.log(
       lineEdgeResults,
       lineOwnerEdgeResults,
       rectangleEdgeResults,
+      rectangleOwnerEdgeResults,
       shapeBorderReferenceResults,
       drawingStyleSurveyResults,
       styleDocumentReferenceResults,
       lineDocumentReferenceResults,
       rectanglePairResults,
+      rectangleDocumentReferenceResults,
       shapeComponentReferenceResults,
       oleReferenceResults,
       oleReferenceEvidenceResults,
