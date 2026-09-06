@@ -66,6 +66,7 @@ pub const memo_shape = @import("docinfo/memo_shape.zig");
 pub const memo_references = @import("memo_references.zig");
 pub const memo_end = @import("body/memo_end.zig");
 pub const paragraph_flows = @import("body/paragraph_flows.zig");
+pub const memo_ranges = @import("body/memo_ranges.zig");
 pub const shape_picture = @import("body/shape_picture.zig");
 pub const picture_color = @import("body/picture_color.zig");
 pub const picture_effects = @import("body/picture_effects.zig");
