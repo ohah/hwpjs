@@ -58,6 +58,7 @@ pub const shape_rectangle = @import("body/shape_rectangle.zig");
 pub const shape_ellipse = @import("body/shape_ellipse.zig");
 pub const shape_arc = @import("body/shape_arc.zig");
 pub const shape_polygon = @import("body/shape_polygon.zig");
+pub const polygon_validation = @import("body/polygon_validation.zig");
 pub const arc_validation = @import("body/arc_validation.zig");
 pub const ellipse_validation = @import("body/ellipse_validation.zig");
 pub const rectangle_validation = @import("body/rectangle_validation.zig");

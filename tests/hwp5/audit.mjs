@@ -53,6 +53,9 @@ import { ellipseEdges } from "./shape-ellipse.mjs";
 import { arcEdges } from "./shape-arc.mjs";
 import { polygonEdges } from "./shape-polygon.mjs";
 import { polygonPair } from "./polygon-pair.mjs";
+import { polygonOwnerEdges } from "./polygon-validation.mjs";
+import { polygonDocumentReference } from "./polygon-document.mjs";
+import { polygonLayoutDocument } from "./polygon-layout-document.mjs";
 import { arcOwnerEdges } from "./arc-validation.mjs";
 import { arcDocumentEdges } from "./arc-document.mjs";
 import { arcSurvey } from "./arc-survey.mjs";
@@ -396,6 +399,9 @@ const rectangleOwnerEdgeResults = rectangleOwnerEdges(call);
 const ellipseEdgeResults = ellipseEdges(call);
 const arcEdgeResults = arcEdges(call);
 const polygonEdgeResults = polygonEdges(call);
+const polygonOwnerEdgeResults = polygonOwnerEdges(call);
+const polygonDocumentReferenceResults = polygonDocumentReference(call,cfb);
+const polygonLayoutDocumentResults = polygonLayoutDocument(call,cfb);
 const polygonPairResults = polygonPair(call,cfb);
 const arcOwnerEdgeResults = arcOwnerEdges(call);
 const arcDocumentEdgeResults = arcDocumentEdges(call,cfb);
@@ -855,6 +861,9 @@ console.log(
       ellipseEdgeResults,
       arcEdgeResults,
       polygonEdgeResults,
+      polygonOwnerEdgeResults,
+      polygonDocumentReferenceResults,
+      polygonLayoutDocumentResults,
       polygonPairResults,
       arcOwnerEdgeResults,
       arcDocumentEdgeResults,

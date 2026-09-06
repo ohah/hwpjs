@@ -1798,3 +1798,23 @@ needsIntervalUpdate는 bit 0, isArc는 bit 1, arcKindRaw는 bit 2~9의 8비트 �
 현재는 다각형 payload 코어와 테스트용 WASM 모드 66입니다. 다각형의 직접 소유권·누락·중복·문서 연결, 곡선/그림/연결선 등 남은 도형, 전체 문서 모델·HWPX·편집/저장은 계속 남아 있습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 206/206, Node 47/47, HWP5 WASM 370,818회 검사 통과. 다각형 합성 성공 244/거부 4,981, 실제 146개 및 필수 prefix 거부 17,544, 짝 HWPX 25개/177점 일치를 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-polygon-{debug,safe,fast}.log`입니다.
+
+## 다각형 직접 소유권·문서/CFB 검증 (2026-09-07)
+
+`polygon_validation.inspect`를 구역 검사에 연결했습니다. $pol 구성요소의 직접 태그 82 자식 하나를 요구하고 MissingPolygon/DuplicatePolygon/OrphanPolygon을 구분합니다. owned_record.componentChild를 기존 사각형/타원/호와 공유하며 count/좌표 읽기는 Polygon.parse가 계속 소유합니다.
+
+문서 polygon_layout 기본값은 실제 필드/HWPX 짝 대조한 observed_i32_points입니다. specified_i16_axes도 명시적으로 선택할 수 있고 버전·길이 fallback은 없습니다. 보고서는 polygons/points/short_point_sets/extra_bytes 네 항목이며 short_point_sets는 0/1/2점 도형 수를 보고하는 진단이지 오류가 아닙니다. 기존 원문 반복점·미지 꼬리를 보존합니다.
+
+테스트 wire의 구역 stride는 600바이트이며 document-report-wire.mjs를 갱신했습니다. 프로브 67은 소유권, 68/69는 명시적 문서/CFB 배치 선택입니다. 반복되는 style/arc/polygon 위치 인자를 document-probe.Selection 구조로 묶어 문서/CFB 프로브에서 공유하고 readPolygon을 세 경로가 재사용합니다. 제품 JS ABI는 변경하지 않았습니다.
+
+### 구현 후 적대적 검증
+
+1. 두 배치에서 누락·중복·루트 고아·다른 부모·손자/형제 차용을 거부합니다. 중간 미지 레코드와 정상 소유자 두 개는 허용하며, 모든 필수 prefix·음수·과대 개수를 검사하고 오류 뒤 정상 입력을 독립 기대값과 비교합니다. 0/1/2점은 short_point_sets로만 보고합니다.
+2. 네이티브 checkAllAllocationFailures로 두 배치 × 정상/누락/중복/고아/음수 개수/좌표 잘림 여섯 경로의 Tree 정리를 확인합니다. 본문 소유권과 payload 오류를 같은 조건으로 혼동하지 않습니다.
+3. 원본 shape-001.hwp의 다각형 두 개에서 삭제·복제·필수 좌표 잘림·음수/개수+1 및 루트 고아를 만들어 단독/decoded 문서/재압축 CFB에서 거부합니다. 정상 원본 문서와 CFB를 매 오류 후 재검사합니다. shared owned-shape-document harness에 가변 최소 길이와 추가 잘못된 입력 생성 hook만 확장하며 기존 도형 검사를 복제하지 않았습니다.
+4. 같은 파일의 다각형만 명세 i16/축별 좌표 배치로 바꾼 메모리 합성본을 별도로 검사합니다. 이 입력을 실제 명세 배치 표본으로 세지 않습니다. 관측 배치 재인코딩은 원본 Section0과 바이트 단위로 일치하며, 두 명시적 선택 모두 기대 보고서 [2,8,0,8]과 문서/CFB 결과를 대조합니다. 잘림·음수·과대 개수 및 잘못된 모드 2/255도 거부합니다.
+5. 원본에 잘못된 명시적 명세 배치를 적용해도 길이상 읽힐 수 있으며, 이 경우 extra 합계가 8이 아닌 12로 달라집니다. 이 차이를 검사해 자동 배치 전환이 없음을 확인합니다. 서로 다른 short_point_sets를 가진 두 구역을 역순으로 입력해 동일한 정렬 결과를 확인합니다. 전체 참조 조사의 진입 가능한 구역에는 독립 부모·자식 기대값 대조를 추가하고 실제 146개/짝 HWPX 25개 검증도 유지합니다.
+
+원본 파일은 수정하지 않았습니다. 이 단계는 다각형 payload와 소유권 검사의 연결이며 곡선/그림/연결선, 도형 기하·조판, 전체 문서 모델·HWPX·편집/저장 목표는 계속 남아 있습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 207/207, Node 47/47, HWP5 WASM 371,767회 검사 통과. 소유권 합성 성공 86/거부 73, 실제 문서·CFB 변이 거부 33, 명시적 배치·잘못된 모드 거부 40, 구역 순서 비교 3건을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-polygon-owner-{debug,safe,fast}.log`입니다.

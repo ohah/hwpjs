@@ -2,16 +2,21 @@
 const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
+pub const Selection = struct {
+    style: ?core.hwp5.document_validation.types.DrawingStyleOptions = null,
+    arc: ?core.hwp5.shape_arc.Layout = null,
+    polygon: core.hwp5.shape_polygon.Layout = .observed_i32_points,
+};
 fn fields(a: std.mem.Allocator, out: *std.ArrayList(u8), value: anytype) !void {
     inline for (std.meta.fields(@TypeOf(value))) |f| try int(a, out, u32, @intCast(@field(value, f.name)));
 }
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
-    return configured(a, bytes, limit, null, null);
+    return configured(a, bytes, limit, .{});
 }
 pub fn styled(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const style = try readStyle(&r);
-    return configured(a, bytes[r.offset..], limit, style, null);
+    return configured(a, bytes[r.offset..], limit, .{ .style = style });
 }
 pub fn readArc(r: *core.Reader) !?core.hwp5.shape_arc.Layout {
     const mode = try r.readInt(u8);
@@ -21,14 +26,24 @@ pub fn readArc(r: *core.Reader) !?core.hwp5.shape_arc.Layout {
 pub fn arced(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const arc = try readArc(&r);
-    return configured(a, bytes[r.offset..], limit, null, arc);
+    return configured(a, bytes[r.offset..], limit, .{ .arc = arc });
+}
+pub fn readPolygon(r: *core.Reader) !core.hwp5.shape_polygon.Layout {
+    const mode = try r.readInt(u8);
+    if (mode > 1) return error.InvalidMode;
+    return @enumFromInt(mode);
+}
+pub fn polygoned(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const polygon = try readPolygon(&r);
+    return configured(a, bytes[r.offset..], limit, .{ .polygon = polygon });
 }
 pub fn readStyle(r: *core.Reader) !core.hwp5.document_validation.types.DrawingStyleOptions {
     const mode = try r.readInt(u8);
     if (mode > 5) return error.InvalidMode;
     return .{ .border = @enumFromInt(mode & 1), .tail = if (mode >= 4) .alpha_shadow_metadata else if (mode & 2 != 0) .fill_only else .alpha_shadow };
 }
-fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, style: ?core.hwp5.document_validation.types.DrawingStyleOptions, arc: ?core.hwp5.shape_arc.Layout) ![]u8 {
+fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: Selection) ![]u8 {
     const d = core.hwp5.document_validation;
     var r: core.Reader = .{ .bytes = bytes };
     const max_bytes = try r.readInt(u32);
@@ -46,8 +61,9 @@ fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, style: ?cor
     }
     if (r.offset != bytes.len) return error.TrailingDocumentInput;
     var report = try d.inspectDecoded(a, .{ .header = header, .doc_info = doc, .sections = sections }, .{
-        .drawing_style = style,
-        .arc_layout = arc,
+        .drawing_style = selection.style,
+        .arc_layout = selection.arc,
+        .polygon_layout = selection.polygon,
         .list_layout = .observed8,
         .zone_layout = .observed_row_first,
         .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty },
@@ -96,6 +112,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try fields(a, &out, s.rectangles);
         try fields(a, &out, s.ellipses);
         try fields(a, &out, s.arcs);
+        try fields(a, &out, s.polygons);
     }
     return out.toOwnedSlice(a);
 }

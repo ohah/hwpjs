@@ -33,8 +33,9 @@ export function ownedShapeDocument(call,cfb,config){
     const before=b.subarray(0,r.offset),after=b.subarray(r.end),record=b.subarray(r.offset,r.end);
     reject(Buffer.concat([before,after]),config.missing);
     reject(Buffer.concat([before,record,record,after]),config.duplicate);
-    const short=config.minimum-1,header=w((b.readUInt32LE(r.offset)&0xfffff)|(short<<20));
+    const short=(typeof config.minimum==='function'?config.minimum(b,r):config.minimum)-1,header=w((b.readUInt32LE(r.offset)&0xfffff)|(short<<20));
     reject(Buffer.concat([before,header,b.subarray(r.start,r.start+short),after]),/UnexpectedEnd/);
+    for(const mutation of config.invalidMutations?.(b,r)??[])reject(mutation.bytes,mutation.error);
   }
   const orphan=b.subarray(records[0].start,records[0].end);
   reject(Buffer.concat([b,w(config.tag|(orphan.length<<20)),orphan]),config.orphan);

@@ -6,6 +6,7 @@ pub const DrawingStyleOptions = @import("../body/drawing_style_validation.zig").
 pub const Section = struct { index: u16, bytes: []const u8 };
 pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
 pub const Options = struct {
+    polygon_layout: @import("../body/shape_polygon.zig").Layout = .observed_i32_points,
     arc_layout: ?@import("../body/shape_arc.zig").Layout = null,
     drawing_style: ?DrawingStyleOptions = null,
     rectangle_layout: @import("../body/shape_rectangle.zig").Layout = .observed_points,
@@ -38,6 +39,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    polygons: @import("../body/polygon_validation.zig").Report = .{},
     arcs: @import("../body/arc_validation.zig").Report = .{},
     ellipses: @import("../body/ellipse_validation.zig").Report = .{},
     rectangles: @import("../body/rectangle_validation.zig").Report = .{},

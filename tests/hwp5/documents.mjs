@@ -22,6 +22,7 @@ import { lineOwnerActual } from "./line-validation.mjs";
 import { rectangleOwnerActual } from "./rectangle-validation.mjs";
 import { ellipseOwnerActual } from "./ellipse-validation.mjs";
 import { arcOwnerActual } from "./arc-validation.mjs";
+import { polygonOwnerActual } from "./polygon-validation.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -156,6 +157,7 @@ export function documentActual(call, h, doc, sections) {
       ...rectangleOwnerActual(call,v,b).map(w),
       ...ellipseOwnerActual(call,v,b).map(w),
       ...arcOwnerActual(call,v,b).map(w),
+      ...polygonOwnerActual(call,v,b).map(w),
     );
   }
   const want = Buffer.concat(expected);
