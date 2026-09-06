@@ -5,6 +5,8 @@ import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
 import { codepageEdges } from "./codepage.mjs";
 import { scriptEdges } from "./scripts.mjs";
+import { xmlTemplateEdges } from "./xml-template.mjs";
+import { optionalSurvey } from "./optional-survey.mjs";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
@@ -304,6 +306,8 @@ const previewEdgeResults = previewEdges(call);
 const summaryEdgeResults = summaryEdges(call);
 const codepageEdgeResults = codepageEdges(call);
 const scriptEdgeResults = scriptEdges(call);
+const xmlTemplateEdgeResults = xmlTemplateEdges(call);
+const optionalStreamObservations = Array(6).fill(0);
 const containerEdgeResults = containerEdges(call, cfb);
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
@@ -455,6 +459,7 @@ try {
       records += framed.length / 20;
       totalBytes += plain.length;
     }
+    optionalSurvey(cfb).forEach((n, i) => (optionalStreamObservations[i] += n));
     containerActual(
       call,
       fileBytes,
@@ -480,6 +485,7 @@ try {
   cfb.close();
 }
 assert.equal(files, 48);
+assert.deepEqual(optionalStreamObservations, [45, 23580, 45, 45, 1, 0]);
 assert.deepEqual(documentReport, [45, 47, 482195, 10425]);
 assert.deepEqual(
   containerReport,
@@ -634,6 +640,8 @@ console.log(
       previewEdgeResults,
       summaryEdgeResults,
       scriptEdgeResults,
+      xmlTemplateEdgeResults,
+      optionalStreamObservations,
       codepageEdgeResults,
       containerEdgeResults,
       documentEdgeResults,

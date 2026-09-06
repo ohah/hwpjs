@@ -879,3 +879,31 @@ Document는 속성 배열만 소유하며 raw stream/header/속성 값/extra는 
 5. SSOT/수명 검토: 파일·압축 정책은 기존 계층을 공유하고, payload 문법은 scripts만 소유합니다. summary 문자열은 종료/패딩 문법이 달라 억지로 합치지 않았습니다. 컨테이너 보고서에 해제된 payload slice를 남기지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 135/135, Node 47/47, HWP5 WASM 162,900회 검사. 기존 CFB 60컨테이너/483스트림/5,496검색 비교와 12,000회 변이(trap 0), Zig/JS 포맷·diff 검사도 통과했습니다. 다음 범위는 DocOptions/_LinkDoc 등 남은 선택 스트림입니다. 전체 HWP/HWPX 구현 완료를 의미하지 않습니다.
+
+## DocOptions 조사와 XMLTemplate decoded 문자열 (2026-09-06)
+
+### 명세·표본 근거와 미확정 부분
+
+공식 revision 1.3의 3.2.8절과 로컬 명세 스킬을 확인했습니다. `_LinkDoc`는 연결된 문서 경로를 저장한다고만 명시되어 있고 필드 배치·인코딩·길이·패딩 규칙은 없습니다. 지원 표본 45개는 모두 524바이트(합계 23,580바이트), 첫 16비트 값 0이며 그중 1개만 전체가 0입니다. 그러므로 전체 버퍼를 NUL 종결 문자열로 읽어 빈 경로로 처리하거나, 524바이트를 필수 길이로 규정하지 않았습니다. 경로/기타 바이트의 의미를 확정할 양성 표본과 생산 프로그램의 변경 전후 비교가 더 필요합니다.
+
+rhwp의 `src/parser/hwpx/contract_streams.rs`는 HWPX 변환 시 대응 데이터가 없는 `_LinkDoc`에 `blank2010_assets/doc_options_link_doc.bin` 정적 fallback을 넣습니다. 이는 관측 바이트의 재사용이지 필드 배치 검증 근거가 아니므로 제품에 복사하지 않았습니다. `tests/hwp5/optional-survey.mjs`에 위 corpus 관측값만 회귀 검사로 남겼고, 파일 경로 내용을 출력하지 않습니다. `_LinkDoc`는 여전히 uninspected이며 원본 CFB를 통해 보존됩니다.
+
+XMLTemplate은 공식 3.2.10절 표 10~12와 로컬 명세를 대조했습니다. `_SchemaName`, `Schema`, `Instance`는 각각 DWORD 코드 유닛 수 + WCHAR 배열입니다. 기존 지원 표본 45개에는 XMLTemplate이 없습니다. 추가로 `rg --files reference legacy`에서 찾은 HWP 경로 788개를 조사했고 strict CFB 읽기에 성공한 599개에도 XMLTemplate이 없었습니다. 실패한 189개는 내부 존재 여부를 확인하지 못했으므로 부재로 계산하지 않습니다. 이 조사는 고유 파일/전체 버전 지원 수가 아닙니다.
+
+### 구현과 책임
+
+- `xml_template/string.zig`: decoded 단일 문자열의 value/extra를 빌립니다. Unicode 치환·NUL 제거·패딩 가정을 하지 않습니다.
+- `xml_template/template.zig`: decoded 선택 입력 세 개, 전체 바이트 한도와 extra 합계만 조립합니다. 입력 부재(null), 존재하는 빈 문자열(길이 DWORD 0), 잘린 0바이트 스트림을 구분합니다. 전체 길이의 unchecked 덧셈 대신 남은 한도에서 차감합니다.
+- `utf16_string.zig`: 기존 u16 read와 신규 u32 read32가 공통 counted reader를 사용합니다. 남은 길이/2 비교 후 곱하며 실패 시 커서를 보존합니다. Scripts도 read32를 재사용합니다. summary 문자열은 종결/패딩 규칙이 달라 이 함수에 합치지 않았습니다.
+
+컨테이너 압축 정책은 표본 없이 추정 연결하지 않았습니다. 따라서 이 단계는 decoded 코어이며 파일 단위 검증에서 XMLTemplate을 소비하지 않습니다. XML 문법·DTD·스키마 검증·외부 엔터티 접근도 하지 않습니다. HWPX ZIP/XML 파서를 구현한 단계가 아닙니다.
+
+### 구현 후 적대적 검증
+
+1. 세 입력 위치 각각 모든 잘림 prefix, 0x7fffffff·0x80000000·0xffffffff 선언 길이를 검사했습니다. 정상 회복 호출을 포함한 WASM 테스트는 성공 77건·거부 121건이며 거부에는 한도 부족도 포함됩니다.
+2. 존재/부재 8조합과 전체 부재의 0 한도, 존재하지만 빈 문자열, 각 위치의 1·127·32,768·65,536 코드 유닛, 3바이트 미지 꼬리를 재구성했습니다. 정확한 총 한도는 통과하고 1바이트 부족하면 실패합니다.
+3. BOM·내부 NUL·고립 서로게이트, XML처럼 보이는 문자열, 잘못된 XML과 외부 DTD 문자열도 원문으로만 반환했습니다. 테스트 WASM은 import 0으로 외부 엔터티를 불러오지 않습니다. 바이너리 경계 통과를 XML 유효성으로 보고하지 않습니다.
+4. 공통 reader의 u16/u32 양쪽에서 과대 길이와 잘못된 커서 실패 후 위치 보존을 네이티브로 확인했습니다. borrowed 슬라이스의 실제 입력 포인터와 value/extra 범위도 확인했습니다.
+5. SSOT 재검토 후 Scripts의 독립 u32 문자열 함수를 제거했습니다. 기존 DocInfo/본문/u16 문자열과 실제 Scripts 90개를 포함한 전체 audit를 재실행했습니다. XMLTemplate에는 실제 양성 표본이 없으므로 합성 검증이라고 명시합니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 138/138, Node 47/47, HWP5 WASM 163,098회 검사 통과. CFB 기존 비교와 12,000회 변이(trap 0), 포맷·diff 검사도 통과했습니다. corpus 미검사 스트림 90개는 감소시키지 않았습니다. `_LinkDoc` 필드 확정, XMLTemplate 실제 컨테이너/문법 검증을 남겨 두고 다른 명세상 미구현 파트의 검증을 계속합니다.

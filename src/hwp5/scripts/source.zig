@@ -1,4 +1,5 @@
 const Reader = @import("../../binary/reader.zig").Reader;
+const string = @import("../utf16_string.zig").read32;
 /// Four borrowed UTF-16LE fields, without assumed NUL termination or transcoding.
 /// This validates the binary envelope, never JavaScript syntax or execution safety.
 pub const Source = struct {
@@ -17,9 +18,3 @@ pub const Source = struct {
         return .{ .header = header, .source = source, .pre = pre, .post = post, .extra = bytes[r.offset..] };
     }
 };
-fn string(r: *Reader) ![]const u8 {
-    const units = try r.readInt(u32);
-    // Check before multiplying, including on wasm32.
-    if (units > (r.bytes.len - r.offset) / 2) return error.UnexpectedEnd;
-    return r.take(@as(usize, units) * 2);
-}

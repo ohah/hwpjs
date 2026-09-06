@@ -90,6 +90,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         26 => return @import("preview-probe.zig").run(a, bytes),
         27 => return @import("summary-probe.zig").run(a, bytes, limit),
         28 => return @import("scripts-probe.zig").run(a, bytes),
+        29 => return @import("xml-template-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
