@@ -523,3 +523,22 @@ while (try it.next()) |record| {
 다음은 컨트롤 코드/ID 종류 규칙과 논리적 리스트 문맥입니다. 단 설정의 실제 페이지 폭/레이아웃 효과, 각 개체 payload, 구역 ID 0과 개요 fallback을 포함한 전체 문서 의미 검증은 여전히 진행 중입니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 86/86, Node 47/47, HWP5 WASM 52,740회 검사. 기존 CFB 비교·12,000회 변이도 통과했습니다. 포맷/diff 검사와 SSOT/파일 책임 분리 재검토까지 마쳤습니다.
+
+## 후속 구현: 논리적 리스트 그룹과 문단 수
+
+2026-09-06. hwp-spec §3.2.3의 리스트 헤더 뒤 문단 직렬화 설명, §4.3.7의 문단 수 및 실제 레코드 계층을 대조했습니다.
+
+- `list_groups.Groups.build(allocator, tree)`는 동일 부모 아래 LIST_HEADER부터 다음 형제 LIST_HEADER 또는 부모 끝까지를 논리적 그룹으로 표시합니다. 원래 Tree의 부모를 바꾸지 않습니다. 그룹 안의 직접 문단만 세며 중첩 문단은 자체 리스트에 속합니다.
+- `Group`은 header_node/parent_node/begin/end/paragraph_count/intervening_records를 가집니다. begin/end는 원본 노드 범위이며 중간 표/개체 레코드도 포함하므로 연속 문단 배열로 해석하지 않습니다. items 순서는 부모 노드 순서, 같은 부모 안에서는 헤더 순서입니다. 그룹 배열만 할당/해제하고 원래 Tree는 바꾸지 않습니다.
+- 이 단계는 관측 unsigned 16비트 `count_raw`와 실제 문단 수를 대조합니다. 기존 signedCount 접근자와 6/8바이트 속성 view는 그대로 유지합니다. 속성 배치나 셀/캡션/텍스트박스 의미를 추측해 count를 보정하지 않습니다.
+- root LIST_HEADER는 OrphanListHeader, 앞선 형제 LIST_HEADER가 없는 중첩 문단은 OrphanListParagraph, 선언/실제 수 불일치는 ListParagraphCountMismatch입니다. root 문단은 리스트 헤더를 요구하지 않습니다. 빈 리스트를 문단 1개로 자동 생성하지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 실제 643개 리스트에 중첩 문단 792개가 대응하며 선언 수가 모두 일치합니다. 문단 사이에 낀 직접 형제 레코드는 57개(태그 76:2, 77:29, 79:26)입니다. 문단이 아닌 레코드를 만나면 즉시 그룹을 닫는 방식은 채택하지 않았습니다.
+2. JS 독립 부모 탐색/그룹 범위 계산으로 각 그룹의 모든 인덱스·문단 수·중간 레코드 수를 대조했습니다. `[643,792,57]`은 정규 audit의 고정 assert입니다.
+3. 빈 그룹/스트림, root 문단, 누락·중복 리스트, 잘못된 깊이, 중첩 개체 안 별도 리스트, count 16개 비트 변이를 검사했습니다. 변이 후 정상 입력을 다시 읽습니다. 네이티브에서는 모든 할당 실패와 마지막 리스트의 count 65535 오류 시 부분 결과 해제를 검사했습니다.
+
+이 검사는 **그룹 범위와 수**에 대한 것이며 각 리스트가 표 셀인지 캡션인지, 해당 속성의 참조·크기·행/열 관계가 유효한지는 아직 검사하지 않습니다. `paragraphs.Report.lists_pending`도 개체별 의미 검증 대상으로 유지합니다. 다음은 컨트롤 코드/ID 규칙 및 표/개체 속성 검증입니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 88/88, Node 47/47, HWP5 WASM 52,835회 검사. 기존 CFB 비교·12,000회 변이도 통과했습니다. 포맷/diff 검사와 SSOT/파일 책임 검토를 완료했습니다.

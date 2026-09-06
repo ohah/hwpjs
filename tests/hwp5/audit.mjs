@@ -20,6 +20,7 @@ import { sectionActual, sectionEdges } from "./sections.mjs";
 import { notePair } from "./note-pair.mjs";
 import { linksActual, linkEdges } from "./links.mjs";
 import { columnEdges, columnPair } from "./columns.mjs";
+import { listsActual, listEdges } from "./list-groups.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -106,6 +107,7 @@ const treeEdgeResults = treeEdges(call);
 const sectionEdgeResults = sectionEdges(call);
 const linkEdgeResults = linkEdges(call);
 const columnEdgeResults = columnEdges(call);
+const listEdgeResults = listEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -258,6 +260,7 @@ const sectionReport = [0, 0, 0, 0, 0, 0];
 let notePairResult;
 let linkedControls = 0;
 let pairedColumns = 0;
+const listReport = [0, 0, 0];
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
     cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
@@ -292,6 +295,9 @@ try {
       );
       const framed = call(2, plain);
       if (/^Section\d+$/.test(entry.name)) {
+        listsActual(call, hdr.readUInt32LE(32), plain).forEach(
+          (n, i) => (listReport[i] += n),
+        );
         if (name === "multicolumns-widths.hwp" && entry.name === "Section0")
           pairedColumns += columnPair(
             call,
@@ -356,6 +362,7 @@ assert.deepEqual(sectionReport, [47, 47, 141, 1, 94, 68]);
 assert.ok(notePairResult);
 assert.equal(linkedControls, 313);
 assert.equal(pairedColumns, 3);
+assert.deepEqual(listReport, [643, 792, 57]);
 assert.deepEqual(metadata, {
   paragraphs: 1481,
   runs: 1740,
@@ -411,6 +418,7 @@ rounds.push({
   notePairResult,
   linkedControls,
   pairedColumns,
+  listReport,
   formatting,
 });
 begin = checks;
@@ -463,6 +471,7 @@ console.log(
       sectionEdgeResults,
       linkEdgeResults,
       columnEdgeResults,
+      listEdgeResults,
       checks,
       imports: 0,
     },
