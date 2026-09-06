@@ -1605,3 +1605,23 @@ rhwp `parser/control/shape.rs:parse_line_shape_data`도 일반 선에서 u16을 
 이번 단계는 일반 선 payload 파서입니다. 문서의 직접 소유권·누락·중복 검사 연결, 선 후반부 2바이트 의미, 연결선 payload 및 조판은 남아 있습니다. 기존 전체 문서 검사 성공을 신규 선 개체의 모든 의미 검증으로 계상하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 193/193, Node 47/47, HWP5 WASM 232,038회 검사 통과. CFB 12,000회 변이 trap 0, 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-shape-line-{debug,safe,fast}.log`입니다.
+
+## 일반 선의 소유권·문서 검사 연결 (2026-09-06)
+
+`line_validation.inspect`는 첫 ID가 $lin인 SHAPE_COMPONENT마다 직접 태그 78 자식 하나를 요구합니다. 직접 검색은 수식/OLE와 동일한 owned_record.find를 재사용하고, 첫 ID는 shape_component.identity로 읽습니다. 형제·손자의 선을 대신 가져오지 않습니다. 누락/중복/고아는 MissingLine/DuplicateLine/OrphanLine, 필수 payload 잘림은 UnexpectedEnd입니다.
+
+문서 구역 검사에 lines 보고서(lines/deferred_connectors/nonboolean_attributes/extra_bytes)를 추가했습니다. 값 1 초과 속성을 boolean으로 축소하거나 거부하지 않고 진단만 증가합니다. 부모 $col인 태그 78은 연결선의 배치/개수/참조 의미가 미구현이므로 deferred_connectors로 구분합니다. 현재 연결선 payload 검증을 통과했다고 표현하지 않습니다.
+
+테스트 모드 57은 선 소유권 검사이며 기존 문서/CFB 모드도 새 보고서를 반환합니다. 독립 report-wire는 구역 stride 532바이트로 갱신했습니다. 스타일 검사 옵션을 지정하지 않아도 일반 선 소유권 검사는 수행합니다.
+
+### 구현 후 적대적 검증
+
+1. 네이티브에서 정상/누락/중복/고아의 Tree 할당 실패 경로를 모두 검사했습니다. 기존 Tree 수명 규칙을 재사용하고 실패 시 누수가 없습니다. 속성 0x8000이 오류 없이 nonboolean 진단에 남는지도 검사했습니다.
+2. WASM 합성 입력은 잘못된 부모·중복·형제의 선 빌려오기·손자의 선 빌려오기·모든 payload prefix 잘림을 거부합니다. 연결선의 빈 payload는 성공한 일반 선이 아니라 deferred_connectors=1입니다. 오류마다 정상 입력을 재검사했습니다.
+3. 전체 참조 조사에서 계층 진입에 성공한 구역마다 독립 JS 부모/자식 계산과 mode 57 보고서를 대조했습니다. 기존 실제 일반 선 266개/연결선 32개와 signed/원값 payload 회귀를 유지합니다.
+4. group-drawing-02.hwp의 실제 선 4개 각각에서 누락·중복·잘림을 만들고, 루트 고아 선도 추가했습니다. 독립 검사·decoded 문서·재작성 CFB 세 경로에서 같은 오류를 요구하며 매 오류 뒤 원본 문서/CFB를 재검사합니다. 원본 파일은 변경하지 않았습니다.
+5. 같은 실제 구역을 두 개로 만들되 두 번째 구역의 선 속성만 2로 변경했습니다. nonboolean 진단이 구역 0/1에서 0/1이고 입력 순서를 뒤집어도 보고서가 일치합니다. 모든 기본 문서 보고서와 CFB 길이/내용 회귀도 함께 검사합니다.
+
+일반 선의 조판 방향·후반부 2바이트 의미·연결선 및 다른 도형 payload는 남아 있습니다. 소유권과 명세 필드 검사 성공을 전체 도형 렌더링이나 문서 전체 의미 검증 완료로 해석하지 않습니다.
+
+최종 실제 파일 변이 13개를 독립/문서/CFB 경로에서 검사해 39건을 거부했고 순서 반전 검증도 통과했습니다. Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 194/194, Node 47/47, HWP5 WASM 232,811회 검사 통과. CFB 12,000회 변이 trap 0, 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-line-owner-{debug,safe,fast}.log`입니다.

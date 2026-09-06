@@ -54,6 +54,7 @@ pub const shape_component = @import("body/shape_component.zig");
 pub const shape_validation = @import("body/shape_validation.zig");
 pub const shape_border = @import("body/shape_border.zig");
 pub const shape_line = @import("body/shape_line.zig");
+pub const line_validation = @import("body/line_validation.zig");
 pub const drawing_style = @import("body/drawing_style.zig");
 pub const control_identity = @import("body/control_identity.zig");
 pub const char_overlap = @import("body/char_overlap.zig");

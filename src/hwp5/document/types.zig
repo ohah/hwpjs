@@ -36,6 +36,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    lines: @import("../body/line_validation.zig").Report = .{},
     drawing_styles: @import("../body/drawing_style_validation.zig").Report = .{},
     shapes: @import("../body/shape_validation.zig").Report = .{},
     ole: @import("../body/ole_validation.zig").Report = .{},

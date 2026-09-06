@@ -43,6 +43,8 @@ import { drawingStyleEdges } from "./drawing-style.mjs";
 import { drawingStyleSurvey } from "./drawing-style-survey.mjs";
 import { styleDocumentReference } from "./drawing-style-document.mjs";
 import { lineEdges } from "./shape-line.mjs";
+import { lineOwnerEdges } from "./line-validation.mjs";
+import { lineDocumentReference } from "./line-document.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -372,6 +374,7 @@ const shapeValidationEdgeResults = shapeValidationEdges(call);
 const shapeBorderEdgeResults = shapeBorderEdges(call);
 const drawingStyleEdgeResults = drawingStyleEdges(call);
 const lineEdgeResults = lineEdges(call);
+const lineOwnerEdgeResults = lineOwnerEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -397,6 +400,7 @@ const shapeComponentReferenceResults = shapeComponentReference(call, cfb);
 const shapeBorderReferenceResults = shapeBorderReference(call, cfb);
 const drawingStyleSurveyResults = drawingStyleSurvey(call, cfb);
 const styleDocumentReferenceResults = styleDocumentReference(call, cfb);
+const lineDocumentReferenceResults = lineDocumentReference(call, cfb);
 const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
@@ -813,9 +817,11 @@ console.log(
       shapeBorderEdgeResults,
       drawingStyleEdgeResults,
       lineEdgeResults,
+      lineOwnerEdgeResults,
       shapeBorderReferenceResults,
       drawingStyleSurveyResults,
       styleDocumentReferenceResults,
+      lineDocumentReferenceResults,
       shapeComponentReferenceResults,
       oleReferenceResults,
       oleReferenceEvidenceResults,

@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { documentRecords } from "./documents.mjs";
 import { drawingStyleActual } from "./drawing-style.mjs";
 import { lineActual } from "./shape-line.mjs";
+import { lineOwnerActual } from "./line-validation.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -52,6 +53,7 @@ export function drawingStyleSurvey(call, cfb) {
         out.failures.push({ name, section: section.name, stage: "shape hierarchy", error: e.message });
         failed = true; continue;
       }
+      lineOwnerActual(call,header.readUInt32LE(32),bytes);
       const stack = [];
       for (const record of records) {
         const level = bytes.readUInt32LE(record.offset) >>> 10 & 1023;
