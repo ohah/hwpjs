@@ -31,6 +31,7 @@ import {
 } from "./tables.mjs";
 import { cellPair, cellEdges } from "./cell-extensions.mjs";
 import { gridEdges } from "./grid.mjs";
+import { parameterActual, parameterEdges } from "./parameters.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -123,6 +124,8 @@ const objectEdgeResults = objectEdges(call);
 const tableEdgeResults = tableEdges(call);
 const gridEdgeResults = gridEdges(call);
 const cellEdgeResults = cellEdges(call);
+const parameterEdgeResults = parameterEdges(call);
+const parameterReport = [0, 0, 0, 0, 0, 0, 0, 0];
 const cellPairResults = [0, 0, 0, 0, 0];
 let cellPairs = 0;
 const cellTails = [0, 0, 0];
@@ -316,6 +319,11 @@ try {
         `${name}/${entry.name}`,
       );
       const framed = call(2, plain);
+      parameterActual(call, plain, entry.name === "DocInfo" ? 27 : 87).forEach(
+        (n, i) => {
+          parameterReport[i] += n;
+        },
+      );
       if (/^Section\d+$/.test(entry.name)) {
         const rawCells = tableCellLists(plain);
         for (const raw of rawCells) {
@@ -525,6 +533,7 @@ assert.deepEqual(tableReport, [60, 578, 29, 2]);
 assert.equal(cellPairs, 11);
 assert.deepEqual(cellPairResults, [532, 96, 0, 0, 0]);
 assert.deepEqual(cellTails, [71, 507, 0]);
+assert.deepEqual(parameterReport, [2, 20, 4, 0, 16, 0, 0, 0]);
 assert.deepEqual(tableZonePairResult, [0, 0, 2, 0]);
 console.log(
   JSON.stringify(
@@ -550,6 +559,8 @@ console.log(
       cellPairResults,
       cellPairs,
       cellTails,
+      parameterEdgeResults,
+      parameterReport,
       tableReport,
       tableZonePairResult,
       checks,

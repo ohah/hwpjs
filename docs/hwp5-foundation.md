@@ -652,3 +652,28 @@ while (try it.next()) |record| {
 다음은 공통 ParameterSet 파서와 이를 사용하는 셀 필드명/컨트롤 임의 데이터입니다. 캡션 미지 꼬리, 관측 8바이트 리스트의 상위 문단 count 슬롯 의미, 그리기/수식 캡션과 전체 문서 조립도 남아 있습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 104/104, Node 47/47, HWP5 WASM 87,593회 검사(모드별). 기존 CFB 비교·12,000회 변이도 통과했습니다. Zig/JS 포맷·diff 검사와 SSOT/파일 책임 검토를 완료했습니다.
+
+## 공통 ParameterSet 파서와 셀 필드명 소비자
+
+2026-09-06. 공식 표 50~52, DocData/ControlData 절과 [hwplib의 ParameterSet 리더](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/reader/bodytext/paragraph/control/bookmark/ForParameterSet.java)를 대조했습니다. 외부 코드를 이식하거나 의존성으로 추가하지 않았습니다.
+
+- `parameters/types.zig`는 헤더 배치(spec4/observed6), NULL 배치(spec_u32/observed_empty), 노드/값/제한을 정의합니다. 관측 헤더의 추가 u16은 reserved 원값으로 보존하며 0으로 강제하지 않습니다. Set/array 개수는 명세의 signed i16 기준으로 읽어 음수를 거부합니다. 추가 슬롯을 대형 count의 상위 비트로 확정한 것은 아닙니다.
+- 정수 타입 2~9는 타입에 관계없이 4바이트 wire storage를 보존합니다. 작은 논리 정수형이라는 이유로 1/2바이트만 읽거나 상위 비트를 버리지 않습니다. 문자열은 기존 utf16_string의 u16 길이/UTF-16 원문 경계를 재사용하고, Bindata는 u16을 읽습니다. NULL은 선택한 0/4바이트 배치를 따릅니다.
+- Set은 중첩하고 배열은 관측 `i16 count + (비어 있지 않으면 공유 item ID u16) + 반복(type u16,value)` 형식입니다. 배열 안의 item ID는 상속되며 ID를 매번 읽지 않습니다. 명세의 ParameterArray 설명만으로 별도 배열 배치를 확정하지 않았습니다. 헤더/NULL 선택이 전체 명세 배열 형식 지원을 뜻하지 않습니다.
+- `Document.parse`는 한 Set의 prefix를 파싱해 consumed/extra와 전위 노드 배열을 반환합니다. 노드에는 parent/subtree_end, item ID/wire type/ID의 wire 존재 여부, raw와 typed 값이 있습니다. 노드 배열만 소유하고 raw·문자열·extra는 입력을 빌립니다. 재귀 append 뒤에는 인덱스로 다시 접근해 재할당 전 포인터를 보관하지 않습니다.
+- 기본 깊이 32, 허용 상한 64와 기본 노드 100,000개 제한을 적용합니다. 음수 count, 깊이/노드 초과, 잘림, 미지 타입을 명시적 오류로 반환합니다. 미지 타입의 길이를 추정할 수 없으므로 UnsupportedParameterType으로 중단하며 호출자가 가진 원본을 삭제하지 않습니다. prefix 성공은 extra까지 검증했다는 뜻이 아닙니다.
+- `cell_field.inspect`는 marker 0xff인 경우 이 공통 파서를 호출합니다. root Set 0x021b의 직접 item 0x4000을 문자열로 요구하며, 비문자열/중복은 오류입니다. 앞에 다른 항목이 있어도 이름을 찾고 중첩 Set의 동명 항목은 선택하지 않습니다. 빈 UTF-16 이름과 누락을 구분합니다. 다른 root Set은 recognized_set=false로 반환하며 임시 노드는 성공/실패 모두 해제합니다.
+
+실제 fixture의 DocData는 noori.hwp와 table-bug.hwp의 80바이트 레코드 2개였습니다. 노드 20개(Set 4, 정수 16)를 해석하고 소비 길이/원본 재직렬화를 정규 audit에서 대조했습니다. 실제 ControlData(tag 87), ParameterArray, BSTR, BinData 및 marker 0xff 셀 이름 사례는 이 fixture 집합에 없습니다. 해당 타입의 근거는 공개 배치와 합성 검증이며 실문서 완성도를 과장하지 않습니다. 현재 flat DocInfo/Body dispatch는 이 할당형 트리를 자동 생성하지 않아 기존 unknown 집계는 그대로입니다.
+
+### 구현 후 적대적 검증
+
+1. 두 헤더/NULL 선택에서 모든 타입과 중첩 배열/Set을 구성하고 모든 prefix 잘림을 거부했습니다. 전체 비트 변이 2,032개 중 1,386개는 선택 배치로 왕복, 646개는 경계/타입/count 오류로 거부, 매 변이 뒤 2,032회 정상 복구했습니다. 꼬리는 원본 보존하므로 선언 개수가 줄어든 입력은 prefix 뒤 extra로 남을 수 있습니다.
+2. WASM 최대 배열 32,767항목, 최대 문자열 65,535 UTF-16 단위, 기본 깊이 32 통과/33 거부, 노드 제한을 검사했습니다. 네이티브에서는 상한 깊이 64 통과/63 설정 초과 거부와 허용 상한 밖 옵션 거부를 확인했습니다.
+3. item ID와 Set ID, 배열 shared ID, parent/subtree_end 및 원시 signed/unsigned 정수 storage를 네이티브에서 assert했습니다. NUL·고립 surrogate를 포함한 UTF-16과 nonzero reserved를 보존합니다.
+4. 모든 할당 실패와 여러 번의 노드 재할당 뒤 미지 타입 오류, 셀 필드명 타입 오류에서 메모리 정리를 검사합니다. 잘린/누락된 marker 0xff Set은 이제 명시적 cell_field 검사에서 거부됩니다. 기본 Extension 뷰와 이 검사를 혼동하지 않습니다.
+5. 이름 앞에 다른 항목 추가, 중복 이름, 잘못된 타입, 빈 이름, 다른 root, 중첩 동명 항목, 뒤 8바이트 보존을 검사했습니다. 고정 offset 15/17의 문자열 추출을 사용하지 않습니다. 모델/파서/소비자/probe를 분리하고 기존 UTF-16 읽기를 공유해 SSOT를 유지합니다.
+
+남은 작업은 DocData/ControlData/셀 확장의 문서 조립 호출과 참조/unknown 집계, 더 다양한 실제 파라미터 샘플, 캡션 꼬리 및 나머지 컨트롤입니다. table_validation은 아직 별도 cell_field 호출을 자동 포함하지 않습니다. 전체 문서 검증은 계속 진행 중입니다.
+
+마지막 검토에서 배열 안의 배열/서로 다른 shared ID 사례를 추가했습니다. 실제 80바이트 샘플 2개는 동일한 payload라 두 종류의 형식을 입증한 것은 아닙니다. 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 110/110, Node 47/47, HWP5 WASM 91,934회 검사(모드별). 기존 CFB 비교·12,000회 변이, Zig/JS 포맷·diff 검사도 통과했습니다.

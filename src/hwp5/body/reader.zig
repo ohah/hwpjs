@@ -18,6 +18,7 @@ pub const Table = table.Table;
 pub const Cell = @import("table_cell.zig").Cell;
 pub const CellAttributes = @import("cell_attributes.zig").Attributes;
 pub const CellExtension = @import("cell_extension.zig").Extension;
+pub const cell_field = @import("cell_field.zig");
 pub const Caption = @import("caption.zig").Caption;
 pub const PageDefinition = @import("page_def.zig").Definition;
 pub const PageBorder = @import("page_border.zig").Border;
