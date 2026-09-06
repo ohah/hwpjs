@@ -10,6 +10,7 @@ import { visibilityActual } from "./page-visibility.mjs";
 import { bookmarkActual } from "./bookmarks.mjs";
 import { overlapActual } from "./char-overlap.mjs";
 import { identityActual } from "./links.mjs";
+import { fieldsActual } from "./fields.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -132,6 +133,7 @@ export function documentActual(call, h, doc, sections) {
         records(doc).filter((r) => r.tag === 21).length,
       ).map(w),
       w(identityActual(call, v, b)),
+      ...fieldsActual(call, v, b).map(w),
     );
   }
   const want = Buffer.concat(expected);

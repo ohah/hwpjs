@@ -40,6 +40,7 @@ pub const index_mark_validation = @import("body/index_mark_validation.zig");
 pub const page_visibility = @import("body/page_visibility.zig");
 pub const bookmark = @import("body/bookmark.zig");
 pub const field_start = @import("body/field_start.zig");
+pub const field_validation = @import("body/field_validation.zig");
 pub const control_identity = @import("body/control_identity.zig");
 pub const char_overlap = @import("body/char_overlap.zig");
 pub const char_overlap_validation = @import("body/char_overlap_validation.zig");

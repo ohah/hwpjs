@@ -22,6 +22,8 @@ import { bookmarkReference } from "./bookmark-reference.mjs";
 import { overlapEdges } from "./char-overlap.mjs";
 import { overlapReference } from "./char-overlap-reference.mjs";
 import { memoEdges } from "./memo-identity.mjs";
+import { fieldEdges } from "./fields.mjs";
+import { fieldDocumentEdges } from "./field-document.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -336,6 +338,13 @@ const visibilityEdgeResults = visibilityEdges(call);
 const bookmarkEdgeResults = bookmarkEdges(call);
 const overlapEdgeResults = overlapEdges(call);
 const memoEdgeResults = memoEdges(call);
+const fieldEdgeResults = fieldEdges(call);
+const fieldDocumentResults = {
+  total: Array(6).fill(0),
+  rejected: 0,
+  diagnostics: 0,
+  containerRejected: 0,
+};
 let pageNumberDocumentChecks = 0;
 let numberDocumentChecks = 0;
 reportWireEdges();
@@ -509,6 +518,17 @@ try {
       docPlain,
       decodedSections,
     );
+    const fieldDoc = fieldDocumentEdges(
+      call,
+      hdr,
+      docPlain,
+      decodedSections,
+      cfb,
+    );
+    fieldDoc.total.forEach((n, i) => (fieldDocumentResults.total[i] += n));
+    fieldDocumentResults.rejected += fieldDoc.rejected;
+    fieldDocumentResults.diagnostics += fieldDoc.diagnostics;
+    fieldDocumentResults.containerRejected += fieldDoc.containerRejected;
     numberDocumentChecks += numberDocumentEdges(
       call,
       hdr,
@@ -726,6 +746,8 @@ console.log(
       bookmarkEdgeResults,
       overlapEdgeResults,
       memoEdgeResults,
+      fieldEdgeResults,
+      fieldDocumentResults,
       overlapReferenceResults,
       bookmarkReferenceResults,
       visibilityReferenceResults,

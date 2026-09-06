@@ -50,6 +50,11 @@ const cases = [
   [23, ["tcps", "tdut"]],
 ];
 const extended = [1, 2, 3, 11, 12, 14, 15, 16, 17, 18, 21, 22, 23];
+export const fieldIds = new Set(
+  cases
+    .find(([code]) => code === 3)[1]
+    .map((name) => Buffer.from(name, "latin1").readUInt32BE()),
+);
 const word = (v) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(v >>> 0);

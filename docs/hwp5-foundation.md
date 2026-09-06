@@ -1144,3 +1144,21 @@ Link.id는 원본 토큰 ID이고 header_id도 원본 그대로 저장합니다.
 앞 단계의 aift ControlIdMismatch pending은 이 관측 계약과 검증으로 해소됐습니다. 단, 이를 모든 %unk/다른 필드 불일치에 대한 허용 규칙이나 메모의 전체 의미 검증으로 일반화하지 않습니다. 모든 필드의 속성 검사 연결, 명령 종류별 해석, 전역 instance ID 의미와 메모 편집/조판은 남았습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 165/165, Node 47/47, HWP5 WASM 165,425회 검사 통과(참조 표본 존재 환경). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
+
+## 알려진 필드 공통 속성의 전체 구역 연결 (2026-09-06)
+
+명세 스킬 4.3.10.15와 이전에 대조한 공식 표 128/152/153을 기준으로 필드 공통 검사를 확장했습니다. `field_start.supports`는 control_rules의 code 3 목록만 사용하며 현재 34개 ID를 포함합니다. '%' 접두사나 로컬 요약의 '%%%%'를 wildcard로 해석하지 않습니다. 알 수 없는 ID는 기존 raw/deferred 정책에 남습니다.
+
+기존 `field_start.Properties.parse`를 재사용해 attributes/other/counted UTF-16 command/instance_id/extra를 해석합니다. editableReadOnly는 bit 0, updateKind는 bit 11~14, modified는 bit 15이고 unknownBits는 이 범위 밖 원값입니다. updateKind의 모든 조합을 실제 하이퍼링크 상태로 판정하거나 미지 비트를 0으로 정규화하지 않습니다. `field_validation.zig`는 controls/command_units/editable_readonly/modified/unknown_bits/extra_bytes를 집계하며 section이 이를 연결합니다. 테스트용 구역 기대 wire SSOT는 316바이트입니다.
+
+### 구현 후 적대적 검증
+
+1. 공식 ID 34종 각각에 문자열과 필수 instance ID를 자르는 모든 짧은 prefix를 주입하고 정상 재호출했습니다. 합성 WASM 성공 652건·거부 578건입니다. 최대 65,535 코드 유닛과 NUL·고립 서로게이트·BOM·기타 속성·0xffffffff ID·추가 꼬리를 typed 재구성으로 대조했습니다.
+2. 속성 32비트를 하나씩 켜 native view와 독립 JS 진단을 비교했습니다. 미지 '%%%%'/'%zzz' 및 다른 종류 tcps는 공통 필드로 분류하지 않습니다. 문자열 길이/ID/기타 속성과 알려진 비트가 아닌 값의 의미를 발명하지 않았습니다.
+3. 기존 corpus의 실제 필드는 22개, command 합계 667 UTF-16 단위, modified 6개, 미지 속성 비트 진단 0개입니다. 모두 4바이트 extra를 가져 합계 88바이트이며 별도 읽기 조사로 폭 분포도 확인했습니다. 이를 모든 필드에 필수인 padding이나 memo index로 추정하지 않았습니다.
+4. 실제 필드 22개에서 extra 전체와 필수 instance ID 마지막 바이트를 제거한 뒤 framing을 재작성해 decoded document가 UnexpectedEnd로 거부함을 확인했습니다. 필드가 있는 구역별 첫 사례의 CFB 재작성에서도 4건 모두 거부했고 정상 재호출은 원래 보고서와 같았습니다. 원본 파일은 수정하지 않았습니다.
+5. 실제 각 필드의 읽기 전용 수정/수정됨/미지 비트 여부를 반전해 보고서의 해당 구역 해당 값만 정확히 +1/-1 되는지 비교했습니다(66건). 네이티브 Tree의 정상/잘린 필드 경로에 모든 할당 실패를 주입했습니다. ID는 control_rules, 바이트 경계는 field_start/utf16_string, 집계는 field_validation, 문서 조립은 section, 테스트 기대 필드 위치는 공통 wire 정의를 사용합니다.
+
+aift 및 찾아보기/책갈피 추가 표본의 문서·CFB 대조도 새 필드 집계를 포함합니다. 이 구현은 공통 envelope 검사이지 각 필드 command 문법·하이퍼링크 접근/상태·전역 instance ID 유일성·본문 필드 시작/끝 범위 의미 검증을 완료한 것이 아닙니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 167/167, Node 47/47, HWP5 WASM 166,921회 검사 통과(참조 표본 존재 환경). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
