@@ -30,6 +30,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    bookmarks: @import("../body/bookmark.zig").Report = .{},
     page_visibility: @import("../body/page_visibility_validation.zig").Report = .{},
     index_marks: @import("../body/index_mark_validation.zig").Report = .{},
     page_number: @import("../body/page_number_validation.zig").Report = .{},

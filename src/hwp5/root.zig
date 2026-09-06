@@ -38,5 +38,6 @@ pub const page_number_validation = @import("body/page_number_validation.zig");
 pub const index_mark = @import("body/index_mark.zig");
 pub const index_mark_validation = @import("body/index_mark_validation.zig");
 pub const page_visibility = @import("body/page_visibility.zig");
+pub const bookmark = @import("body/bookmark.zig");
 pub const page_visibility_validation = @import("body/page_visibility_validation.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");

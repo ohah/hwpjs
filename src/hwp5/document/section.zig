@@ -37,5 +37,6 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
         _ = try object.Properties.parse(h.properties);
         objects += 1;
     }
-    return .{ .page_visibility = page_visibility, .index_marks = index_marks, .page_number = page_number, .number_controls = number_controls, .header_footer = header_footer, .records = tree.nodes.len, .paragraphs = paras, .definition = definition, .control_types = controls, .lists = lists, .tables = try tables.inspect(a, tree, .{ .list_layout = options.list_layout, .zone_layout = options.zone_layout, .border_count = counts.count(.border_fill) }), .parameters = try sources.inspectBody(a, tree, types.parameterOptions(options, counts.bin_data_count)), .object_properties = objects };
+    const parameter_report = try sources.inspectBodyDetailed(a, tree, types.parameterOptions(options, counts.bin_data_count));
+    return .{ .bookmarks = parameter_report.bookmarks, .page_visibility = page_visibility, .index_marks = index_marks, .page_number = page_number, .number_controls = number_controls, .header_footer = header_footer, .records = tree.nodes.len, .paragraphs = paras, .definition = definition, .control_types = controls, .lists = lists, .tables = try tables.inspect(a, tree, .{ .list_layout = options.list_layout, .zone_layout = options.zone_layout, .border_count = counts.count(.border_fill) }), .parameters = parameter_report.parameters, .object_properties = objects };
 }

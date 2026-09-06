@@ -17,6 +17,8 @@ import { pageNumberEdges, pageNumberDocumentEdges } from "./page-number.mjs";
 import { indexMarkEdges } from "./index-mark.mjs";
 import { indexMarkReference } from "./index-mark-reference.mjs";
 import { visibilityEdges, visibilityReference } from "./page-visibility.mjs";
+import { bookmarkEdges } from "./bookmarks.mjs";
+import { bookmarkReference } from "./bookmark-reference.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -328,6 +330,7 @@ const numberControlEdgeResults = numberControlEdges(call);
 const pageNumberEdgeResults = pageNumberEdges(call);
 const indexMarkEdgeResults = indexMarkEdges(call);
 const visibilityEdgeResults = visibilityEdges(call);
+const bookmarkEdgeResults = bookmarkEdges(call);
 let pageNumberDocumentChecks = 0;
 let numberDocumentChecks = 0;
 reportWireEdges();
@@ -336,6 +339,7 @@ const headerFooterReport = [0, 0, 0, 0, 0];
 const headerFooterDocumentReport = { controls: 0, rejected: 0 };
 const historyActualResults = historyActual(call, cfb);
 const indexMarkReferenceResults = indexMarkReference(call, cfb);
+const bookmarkReferenceResults = bookmarkReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
 const containerEdgeResults = containerEdges(call, cfb);
@@ -713,6 +717,8 @@ console.log(
       pageNumberEdgeResults,
       indexMarkEdgeResults,
       visibilityEdgeResults,
+      bookmarkEdgeResults,
+      bookmarkReferenceResults,
       visibilityReferenceResults,
       pageNumberDocumentChecks,
       numberDocumentChecks,

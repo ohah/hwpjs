@@ -1080,3 +1080,23 @@ document-probe가 각 구역의 header_footer 다섯 수치를 직렬화하도�
 홀짝 조정 실제 양성 표본과 감추기 spec16 실제 표본은 아직 확보하지 못했습니다. 페이지 숨김 적용·홀짝 페이지 삽입·조판은 미구현이며, 본 변경은 속성 해석과 진단에 한정됩니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 158/158, Node 47/47, HWP5 WASM 164,896회 검사 통과(참조 표본 존재 환경). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
+
+## 책갈피 이름과 ControlData 소유 관계 (2026-09-06)
+
+명세 스킬 4.3.10.11/4.3.8과 공식 표 127 및 책갈피 설명을 대조했습니다. 공식 ID는 bokm이며 로컬 통합 요약의 bkmk가 아닙니다. 명세는 이름을 HWPTAG_CTRL_DATA의 ParameterSet에 저장한다고 설명하지만 Set/항목 ID는 정의하지 않습니다. 레퍼런스와 fixture 조사에서 읽은 본문 710구역에서 책갈피 136건을 찾았습니다. 파일 헤더/보안 필터를 통과한 경로는 581개이며 처리 실패 189건은 CFB 및 이후 decode/framing 실패가 섞인 값이므로 부재로 판정하지 않습니다.
+
+관측 이름 구조는 Set 0x021b의 직접 항목 0x4000, 타입 1의 counted UTF-16입니다. 이 구조는 기존 셀 이름과 같아 `parameters/field_name.zig`로 추출 규칙을 공통화했습니다. cell_field는 기존 오류 이름을 유지하는 어댑터입니다. `body/bookmark.zig`는 직접 부모가 bokm인 태그 87만 연결하며, 앞 컨트롤/가장 가까운 조상/CTRL_HEADER 자체에서 이름을 추정하지 않습니다. rhwp 소스를 참고 조사했지만 고정 offset 이름 읽기나 헤더 문자열 fallback을 도입하지 않았습니다.
+
+`sources.inspectBodyDetailed`가 ParameterSet을 한 번 파싱한 결과로 기존 바이너리 참조·꼬리 검사와 책갈피 이름 검사를 수행합니다. SectionReport.bookmarks의 여덟 수치는 controls/control_data/names/name_units/missing_names/unknown_sets/unsupported/header_extra_bytes입니다. missing_names는 알려진 Set 내부의 이름 항목 부재이며 CTRL_DATA 자체의 부재와 다릅니다. 후자는 controls와 control_data로 관측할 수 있으나 여러 CTRL_DATA가 가능하므로 차이를 정확한 누락 개수로 단정하지 않습니다. 미지 타입은 전체 원문 보류 정책을 유지합니다. 테스트 구역 행은 264바이트입니다.
+
+### 구현 후 적대적 검증
+
+1. 이름 부재와 빈 문자열을 구분하고 NUL·고립 서로게이트·BOM 및 extra를 보존했습니다. 모든 짧은 prefix와 32,768/65,535 코드 유닛 이름의 마지막 바이트 잘림을 거부하고 정상 재호출했습니다.
+2. 다른 항목이 먼저 오는 경우와 중첩된 같은 ID를 검사했습니다. 루트 직접 항목만 이름으로 읽으며 잘못된 이름 타입과 중복 이름 항목은 거부합니다. 미지 Set/타입을 성공한 이름으로 세지 않습니다.
+3. 형제 CTRL_DATA, 잘못된 bkmk 별칭, 다른 컨트롤 밑의 후손은 책갈피 이름으로 연결하지 않습니다. 여러 책갈피·누락된 CTRL_DATA·이름 없는 Set을 각각 검사합니다.
+4. `reference/rhwp/samples/HWP5-nopassword-123456.hwp`의 실제 책갈피 11개, 이름 합계 122 UTF-16 단위를 독립 계층/ParameterSet oracle와 비교하고 decoded document 및 CFB container의 새 구역 보고서도 대조했습니다. 각 실제 이름의 타입을 정수로 바꿔 세 검사 경로에서 모두 InvalidNamedFieldType으로 거부했습니다(33건). 원본 파일은 수정하지 않았으며 표본이 없는 환경은 skipped를 보고합니다.
+5. 네이티브에서 정상/잘린 ParameterSet의 모든 할당 실패와 Tree+공통 조립의 할당 실패를 주입했습니다. SSOT는 ID/control_rules, ParameterSet/parser, 이름/field_name, 소유 관계/bookmark, 조립/sources, 독립 wire 기대 정의로 구분합니다. 기존 셀 테스트도 그대로 통과해야 합니다.
+
+이름의 전역 유일성·문서 내 이동 위치·책갈피 편집/저장 의미는 미구현입니다. 관측 Set ID를 공식 명세가 보장한 값으로 표현하지 않으며, 조사된 136건 모두를 전체 문서 검증했다고 주장하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 160/160, Node 47/47, HWP5 WASM 165,076회 검사 통과(참조 표본 존재 환경). 책갈피 합성 성공 39건·거부 23건이며 CFB 12,000회 변이에서 trap 0입니다. 포맷·diff 검사도 통과했습니다.

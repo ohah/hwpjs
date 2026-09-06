@@ -23,6 +23,7 @@ test {
     _ = @import("hwp5/body/page_number_tests.zig");
     _ = @import("hwp5/body/index_mark_tests.zig");
     _ = @import("hwp5/body/page_visibility_tests.zig");
+    _ = @import("hwp5/body/bookmark_tests.zig");
     _ = @import("hwp5/body/tree_tests.zig");
     _ = @import("hwp5/body/section_tests.zig");
     _ = @import("hwp5/body/note_tests.zig");

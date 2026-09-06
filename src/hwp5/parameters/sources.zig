@@ -6,6 +6,7 @@ const body = @import("../body/reader.zig");
 const Tree = @import("../body/tree.zig").Tree;
 const lists = @import("../body/table_lists.zig");
 const table_id = @import("../body/control_rules.zig").table_id;
+const bookmark = @import("../body/bookmark.zig");
 pub const Options = struct { parameters: parameters.Options, list_layout: body.list_header.Layout, bin_data_count: usize, framing: record.Options = .{} };
 /// Independent diagnostic axes: do not sum these into a "complete" count.
 pub const Report = struct {
@@ -24,7 +25,7 @@ pub const Report = struct {
     trailing_bytes: usize = 0,
 };
 const Role = enum { document, control, cell };
-fn consume(a: std.mem.Allocator, bytes: []const u8, role: Role, options: Options, report: *Report) !void {
+fn consume(a: std.mem.Allocator, bytes: []const u8, role: Role, options: Options, report: *Report, bookmarks: ?*bookmark.Report) !void {
     switch (role) {
         .document => report.doc_payloads += 1,
         .control => report.control_payloads += 1,
@@ -35,10 +36,12 @@ fn consume(a: std.mem.Allocator, bytes: []const u8, role: Role, options: Options
         // No per-item length exists for an unknown type; retain the whole source.
         report.unsupported += 1;
         report.unsupported_bytes += bytes.len;
+        if (bookmarks) |b| b.unsupported += 1;
         return;
     };
     defer doc.deinit(a);
     report.binary_refs += try references.validate(doc, options.bin_data_count);
+    if (bookmarks) |b| try bookmark.consume(b, doc);
     if (role == .cell) {
         const field = try body.cell_field.fromDocument(doc);
         if (!field.recognized_set) report.unknown_cell_sets += 1;
@@ -56,16 +59,30 @@ pub fn inspectDocInfo(a: std.mem.Allocator, bytes: []const u8, options: Options)
     try options.parameters.validate();
     var report: Report = .{};
     var it = record.Iterator.init(bytes, options.framing);
-    while (try it.next()) |r| if (r.tag == 27) try consume(a, r.payload, .document, options, &report);
+    while (try it.next()) |r| if (r.tag == 27) try consume(a, r.payload, .document, options, &report, null);
     return report;
 }
 /// Uses a validated tree and selected list layout with the observed cell prefix.
-/// ControlData ownership and control-specific Set IDs are NOT proven here.
+/// Only direct bookmark ControlData gets named-field semantics. Other control
+/// ownership/Set IDs remain deferred; a missing ControlData is not a fake name.
 pub fn inspectBody(a: std.mem.Allocator, tree: Tree, options: Options) !Report {
+    return (try inspectBodyDetailed(a, tree, options)).parameters;
+}
+pub const BodyReport = struct { parameters: Report, bookmarks: bookmark.Report };
+pub fn inspectBodyDetailed(a: std.mem.Allocator, tree: Tree, options: Options) !BodyReport {
     try options.parameters.validate();
     var report: Report = .{};
+    var bookmarks: bookmark.Report = .{};
     for (tree.nodes, 0..) |node, index| {
-        if (node.record.framing.tag == 87) try consume(a, node.record.framing.payload, .control, options, &report);
+        if (bookmark.isControl(node)) {
+            bookmarks.controls += 1;
+            bookmarks.header_extra_bytes += node.record.value.control_header.properties.len;
+        }
+        if (node.record.framing.tag == 87) {
+            const owned = bookmark.owns(tree, index);
+            if (owned) bookmarks.control_data += 1;
+            try consume(a, node.record.framing.payload, .control, options, &report, if (owned) &bookmarks else null);
+        }
         if (node.record.value != .control_header or node.record.value.control_header.id != table_id) continue;
         var it = try lists.Iterator.init(tree, index);
         while (it.next()) |entry| {
@@ -74,11 +91,11 @@ pub fn inspectBody(a: std.mem.Allocator, tree: Tree, options: Options) !Report {
             const cell = try body.Cell.parse(view.extra);
             const ext = try body.CellExtension.parse(cell.extra);
             if (ext.parameterSetMarked()) {
-                try consume(a, ext.remaining, .cell, options, &report);
+                try consume(a, ext.remaining, .cell, options, &report, null);
             } else if (ext.remaining.len > 0 or (ext.marker != null and ext.marker.? != 0)) {
                 report.opaque_cell_extensions += 1;
             }
         }
     }
-    return report;
+    return .{ .parameters = report, .bookmarks = bookmarks };
 }
