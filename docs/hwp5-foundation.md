@@ -1625,3 +1625,21 @@ rhwp `parser/control/shape.rs:parse_line_shape_data`도 일반 선에서 u16을 
 일반 선의 조판 방향·후반부 2바이트 의미·연결선 및 다른 도형 payload는 남아 있습니다. 소유권과 명세 필드 검사 성공을 전체 도형 렌더링이나 문서 전체 의미 검증 완료로 해석하지 않습니다.
 
 최종 실제 파일 변이 13개를 독립/문서/CFB 경로에서 검사해 39건을 거부했고 순서 반전 검증도 통과했습니다. Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 194/194, Node 47/47, HWP5 WASM 232,811회 검사 통과. CFB 12,000회 변이 trap 0, 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-line-owner-{debug,safe,fast}.log`입니다.
+
+## 사각형 payload와 좌표 배열 배치 대조 (2026-09-06)
+
+공식 표 93/94를 기준으로 태그 79의 `shape_rectangle.Rectangle`을 추가했습니다. 최소 33바이트는 round_rate u8과 signed i32 좌표 8개입니다. 명세 표기의 X[4] 다음 Y[4]는 specified_axes, rhwp parse_rect_shape_data와 실제 표본의 XY 쌍 반복은 observed_points로 명시적으로 구분합니다. 입력 길이·대칭 좌표·버전으로 배치를 자동 추정하지 않습니다.
+
+결과는 round_rate와 Point 4개, 원문 extra입니다. round_rate를 0/20/50으로 제한하거나 100에서 잘라내지 않으며 좌표를 정렬·반전·정규화하지 않습니다. `shape_point.Point.read`의 signed XY 읽기와 실패 시 커서 보존을 일반 선/사각형에서 공유합니다. 이 변경으로 일반 선의 필드/API/바이트 해석은 바뀌지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 네이티브에서 태그 79와 서로 다른 i32 최소/최대/음수/0/양수 좌표를 두 배치에서 대조했습니다. round_rate 255와 extra 원문을 보존하고 모든 필수 33개 prefix 잘림을 거부합니다. Point의 커서 시작점 3에서 모든 부분 XY 읽기를 실패시켜 rollback을 확인했습니다.
+2. WASM 모드 58은 명시적 배치를 받아 canonical XY 쌍으로 출력합니다. 두 배치 × 33바이트 × 1/128/255 변이 198개를 독립 바이트 위치 계산과 대조합니다. 각 입력의 모든 필수 prefix 잘림과 오류 뒤 정상 재호출, 잘못된 모드도 검사합니다.
+3. 전체 참조 조사에서 직접 부모 $rec인 사각형 2,175개를 typed 필드 재구성과 대조했습니다. 모두 payload 33바이트이며 extra=0, 필수 prefix 잘림 71,775건을 거부했습니다. group-drawing-02.hwp의 사각형 30개는 필수 회귀 assertion입니다. 진입 실패 파일을 사각형 부재로 세지 않습니다.
+4. `shapecontainer-2.hwp/.hwpx`의 그룹 사각형 3개를 순서대로 비교했습니다. 네 꼭짓점과 round_rate가 observed_points/WASM 및 HWPX hc:pt0~3/ratio에서 모두 일치합니다. specified_axes로 같은 원문을 읽으면 세 개 모두 HWPX와 불일치합니다. 제품 serializer로 XML 기대값을 만들지 않습니다.
+5. HWPX 비교는 기존 테스트 전용 ZIP/XML helper를 재사용했습니다. 제품 HWPX 파서를 구현한 것은 아니며 이번에 한글 프로그램을 직접 실행한 결과도 아닙니다. 사각형 배치 의미를 독립 비교한 표본은 위 3개이고 전체 2,175개의 시각적/조판 일치를 주장하지 않습니다. 원본 파일은 수정하지 않았습니다.
+
+사각형의 문서 직접 소유권·누락·중복 검사 연결과 round_rate의 실제 조판 효과는 남아 있습니다. 타원/호/다각형/곡선/연결선 등 나머지 payload와 전체 문서 검증도 계속 진행합니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 196/196, Node 47/47, HWP5 WASM 316,078회 검사 통과. CFB 12,000회 변이 trap 0, 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-rectangle-{debug,safe,fast}.log`입니다.
