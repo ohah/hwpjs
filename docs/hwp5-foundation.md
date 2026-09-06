@@ -1968,3 +1968,27 @@ picture_validation은 기존 owned_record.componentChild, Picture.parse, Tail.re
 이번 단계는 그림 공통 필드·소유권·선택 확장의 문서 연결입니다. 이미지 BinData 참조 해결·미확정 색상 타입·조판/편집 의미와 나머지 미지원 레코드는 계속 남아 있습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 218/218, Node 47/47, HWP5 WASM 1,215,218회 검사입니다. 그림 소유권 합성 성공 1,102/거부 1,068, 기본 실제 문서 거부 21/정렬 1, 선택 확장 문서 거부 76/정렬 6/미선택 보존 16을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-picture-owner-{debug,safe,fast}.log`입니다.
+
+## 그림 BinData 항목 범위와 참조 부재
+
+2026-09-07. 그림 정보의 ID와 DocInfo BinData의 저장 ID가 다른 실제 표본을 조사했습니다. pic-crop-01은 그림 ID가 모두 1이지만 첫 BinData 항목의 storage ID는 3입니다. 독립 [hwplib BinDataAdder](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/tool/paragraphadder/docinfo/BinDataAdder.java)는 sourceId=0을 부재로 처리하고 비영 ID에는 DocInfo 목록의 sourceId-1을 사용한 뒤 별도의 저장 ID로 데이터를 복사합니다. 로컬 rhwp model/document.rs와 renderer/layout/utils.rs도 순번과 저장 ID를 구분합니다. 범위 밖에서 저장 ID로 검색하는 rhwp의 fallback은 채택하지 않습니다.
+
+실제 task1749/saved_bounds_cumulative_page_break의 그림 ID는 [0,1]이고 짝 HWPX의 image 참조는 [빈 문자열,image1]입니다. 따라서 그림에 한정해 0을 부재로 보존합니다. 기존 활성 그리기 채우기·다른 컨트롤의 one_based 규칙을 optional로 바꾸지 않습니다. 빈 참조가 있는 그림의 시각적 표시 의미는 검증하지 않았습니다.
+
+picture_validation.inspect에 선택적 BinData 항목 개수를 전달합니다. 독립 소유권 검사는 개수가 없으면 기존 pending_references를 유지합니다. 문서 section은 DocInfo의 실제 항목 개수를 전달하고 기존 reference_rules.optional_one_based로 비영 범위 내 ID를 ordinal_references, 0을 absent_references로 집계합니다. 범위 밖은 InvalidPictureImageReference가 문서/CFB까지 전달됩니다. pictures=pending+ordinal+absent이며 ordinal은 항목 범위 검증입니다. LINK의 외부 파일 접근, 미지원 BinData 종류의 내용 해석, PNG/JPEG 디코딩 등을 완료로 세지 않습니다.
+
+테스트 WASM 모드 82는 버전/실제 항목 수/그림 옵션/본문을 받는 참조 검사입니다. 보고서 9항목과 구역 stride 660바이트는 공통 JS schema에 반영했습니다. 저장 경로와 압축 검사는 기존 container.binaries의 DocInfo 항목→target ID/확장자→정확한 CFB 경로 책임을 유지합니다.
+
+적대적 검증:
+
+1. count 0/1/2/65534/65535와 ID 0/1/2/3/65535의 25조합에서 부재·정상 순번·초과를 구분합니다. 네이티브는 각 조합의 모든 할당 실패를 주입합니다.
+2. 위 두 실제 파일에서 ID를 2/65535로 바꾼 경우 단독·문서·CFB 3경로 모두 거부하며 정상 원문으로 회복합니다. 원본 파일은 수정하지 않습니다.
+3. 최초 테스트는 pic-crop-01에 BIN0001이 없다고 가정했으나 실패했습니다. 실제 BIN0001/2/3의 압축 해제 바이트는 동일하며 SHA-256은 모두 12c915cab099857f388d9e70db615d6b0c52299e4d2dddbfa9614be9bdc556b0입니다. 그러므로 이 파일의 이미지 내용만으로 순번 의미를 입증했다고 주장하지 않습니다. 명세/독립 리더와 항목 메타데이터를 함께 대조합니다.
+4. 메모리상의 CFB 변형에서 실제 DocInfo가 지정한 BIN0003만 BIN0004로 이름을 바꾸고 BIN0001은 남깁니다. MissingHwpEntry로 거부되는지 확인하여 그림 ID를 스트림 이름으로 바로 쓰는 우회가 없음을 검사합니다. 이는 우리 컨테이너 경로 검증이며 한글 프로그램에서 변형 파일을 실행한 결과가 아닙니다.
+5. 전체 그림 조사에 DocInfo 항목 개수와 독립 JS 범위 검사를 연결하고 순번과 저장 ID가 다른 표본을 별도 집계합니다. ID=0 표본을 오류로 숨기거나 모든 참조를 resolved로 바꾸지 않습니다.
+
+이번 단계는 그림 참조의 부재/DocInfo 항목 범위 검증입니다. 미지원 BinData 내용·외부 이미지·이미지 디코딩·조판 의미와 나머지 문서 포맷 검증은 계속 남아 있습니다.
+
+실제 그림 1,947개 중 비영 항목 참조는 1,946개, 부재 ID 0은 1개입니다. 순번과 저장 ID가 다른 그림은 8개 파일의 60개입니다: BlogForm_Recipe 10, NewYear_s_Day 1, Worldcup_FIFA2010_32 29, interview 1, exam_social 2, evaluation_form_200dpi_scan 1, pic-crop-01 2, table-in-tbox 14. 이 차이를 오류나 ID 자동 치환으로 처리하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 219/219, Node 47/47, HWP5 WASM 1,216,280회 검사입니다. 참조 경계 합성 성공 15/거부 10, 실제 문서의 잘못된 ID·누락 저장 경로 거부 25회를 포함합니다. CFB 12,000회 변이 trap 0이며, 로그는 `/tmp/hwpjs-picture-reference-{debug,safe,fast}.log`입니다. 참조 규칙은 기존 reference_rules, 저장 경로·압축은 container 계층, 보고서 위치는 테스트 공통 schema를 재사용했습니다.

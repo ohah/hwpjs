@@ -10,8 +10,8 @@ pub const Options = struct {
         if (self.tail != null and self.prefix != .with_instance78) return error.InvalidPictureOptions;
     }
 };
-pub const Report = struct { pictures: usize = 0, unknown_image_effects: usize = 0, pending_references: usize = 0, parsed_tails: usize = 0, additional_properties: usize = 0, alpha_values: usize = 0, extra_bytes: usize = 0 };
-pub fn inspect(tree: Tree, options: Options) !Report {
+pub const Report = struct { pictures: usize = 0, unknown_image_effects: usize = 0, pending_references: usize = 0, parsed_tails: usize = 0, additional_properties: usize = 0, alpha_values: usize = 0, extra_bytes: usize = 0, ordinal_references: usize = 0, absent_references: usize = 0 };
+pub fn inspect(tree: Tree, options: Options, bin_data_count: ?usize) !Report {
     try options.validate();
     var report: Report = .{};
     for (0..tree.nodes.len) |index| {
@@ -24,7 +24,13 @@ pub fn inspect(tree: Tree, options: Options) !Report {
         const p = try picture.Picture.parse(tree.nodes[child].record.framing.payload, options.layout, options.prefix);
         report.pictures += 1;
         report.unknown_image_effects += @intFromBool(p.image.effect > 3);
-        report.pending_references += 1;
+        if (bin_data_count) |count| {
+            switch (@import("../docinfo/reference_rules.zig").resolve(.optional_one_based, p.image.bin_data_id, count)) {
+                .ordinal => report.ordinal_references += 1,
+                .absent => report.absent_references += 1,
+                .invalid => return error.InvalidPictureImageReference,
+            }
+        } else report.pending_references += 1;
         var r: @import("../../binary/reader.zig").Reader = .{ .bytes = p.extra };
         if (options.tail) |selection| {
             const parsed = try tail.Tail.read(&r, selection.additional);

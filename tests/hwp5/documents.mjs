@@ -161,7 +161,7 @@ export function documentActual(call, h, doc, sections) {
       ...arcOwnerActual(call,v,b).map(w),
       ...polygonOwnerActual(call,v,b).map(w),
       ...curveOwnerActual(call,v,b).map(w),
-      ...pictureOwnerActual(call,v,b).map(w),
+      ...pictureOwnerActual(call,v,b,0,bins).map(w),
     );
   }
   const want = Buffer.concat(expected);

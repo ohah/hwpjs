@@ -36,6 +36,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.pictureColors = { parsed: 0, rejected: 0, files: {}, values: {}, counts: {}, extra: {} };
   out.pictureEffects = { parsed: 0, rejected: 0, flags: {}, extra: {} };
   out.pictureAdditional = { selected: [0,0], rejected: 0, unavailable: 0, alpha: {} };
+  out.pictureReferences = { ordinals: 0, absent: 0, nonidentity: {} };
   out.versions = {};
   out.images = [];
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
@@ -47,11 +48,13 @@ export function drawingStyleSurvey(call, cfb) {
   const drawingIds = new Set(["$lin", "$rec", "$ell", "$arc", "$pol", "$cur"]);
   for (const name of readdirSync(root, { recursive: true }).filter(n => n.endsWith(".hwp")).sort()) {
     out.files++;
-    let sections, header;
+    let sections, header, binItems;
     try {
       cfb.parse(readFileSync(join(fileURLToPath(root), name)), { strict: true });
       header = Buffer.from(cfb.findExact("/FileHeader").content);
       if (header.readUInt32LE(36) & (2 | 4 | 16 | 256 | 1024)) { out.security++; continue; }
+      const info=call(3,Buffer.concat([header,Buffer.from(cfb.findExact('/DocInfo').content)]));
+      binItems=documentRecords(info).filter(r=>r.tag===18).map(r=>info.subarray(r.start,r.end));
       const nodes = cfb.document().nodes;
       const body = nodes.findIndex(n => n.parent === 0 && n.name === "BodyText");
       assert.ok(body >= 0, "missing BodyText");
@@ -82,6 +85,12 @@ export function drawingStyleSurvey(call, cfb) {
       polygonOwnerActual(call,header.readUInt32LE(32),bytes);
       curveOwnerActual(call,header.readUInt32LE(32),bytes);
       pictureOwnerActual(call,header.readUInt32LE(32),bytes);
+      const imageRefs=pictureOwnerActual(call,header.readUInt32LE(32),bytes,0,binItems.length);
+      out.pictureReferences.ordinals+=imageRefs[7];out.pictureReferences.absent+=imageRefs[8];
+      for(const r of records.filter(r=>r.tag===85)){
+        const id=bytes.readUInt16LE(r.start+71),item=binItems[id-1];
+        if(id&&item.length>=4&&[1,2].includes(item.readUInt16LE()&15)&&item.readUInt16LE(2)!==id)out.pictureReferences.nonidentity[name]=(out.pictureReferences.nonidentity[name]??0)+1;
+      }
       const stack = [];
       for (const record of records) {
         if(record.tag===85){

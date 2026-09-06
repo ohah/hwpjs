@@ -49,7 +49,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
         .arcs = try @import("../body/arc_validation.zig").inspect(tree, options.arc_layout),
         .polygons = try @import("../body/polygon_validation.zig").inspect(tree, options.polygon_layout),
         .curves = try @import("../body/curve_validation.zig").inspect(tree, options.curve_layout),
-        .pictures = try @import("../body/picture_validation.zig").inspect(tree, options.picture),
+        .pictures = try @import("../body/picture_validation.zig").inspect(tree, options.picture, counts.bin_data_count),
         .ole = try @import("../body/ole_validation.zig").inspect(tree, options.ole_layout),
         .equations = try @import("../body/equation_validation.zig").inspect(tree, options.equation_layout),
         .notes = try @import("../body/note_validation.zig").inspect(tree, groups.items, options.note_layout, options.list_layout),
