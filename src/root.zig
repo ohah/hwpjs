@@ -10,6 +10,7 @@ test {
     _ = @import("hwp5/record_tests.zig");
     _ = @import("hwp5/docinfo/tests.zig");
     _ = @import("hwp5/docinfo/compatibility_tests.zig");
+    _ = @import("hwp5/docinfo/compatibility_owner_tests.zig");
     _ = @import("hwp5/docinfo/resource_tests.zig");
     _ = @import("hwp5/docinfo/formatting_tests.zig");
     _ = @import("hwp5/docinfo/shape_tests.zig");

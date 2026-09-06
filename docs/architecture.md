@@ -64,6 +64,8 @@ container Report는 document Report와 그 DocInfo backing을 소유합니다. �
 
 DocInfo `compatible_document.zig`와 `layout_compatibility.zig`는 각각 표 54~55의 대상 프로그램(u32 enum, 미지 값 포함), 표 56의 글자/문단/구역/개체/필드 DWORD를 해석하고 extra를 빌립니다. 공통 reader가 tag 30/31 및 level 0/1을 검사하므로 document/container에서도 같은 길이 오류가 전파됩니다. 이 두 레코드는 리소스 ID 참조를 포함하지 않아 references의 unknown_records에서는 제외되지만, 레이아웃 비트 의미·대상별 렌더링·호환성 전환은 구현하지 않았습니다.
 
+`docinfo/compatibility_owner.zig`는 문서 조립용 상태로 가장 최근 level 0 루트만 추적합니다. layout은 compatible_document 그룹에 있어야 하며 다른 알려진/미지 루트가 나오면 해당 그룹은 끝납니다. 하위 미지 레코드는 그룹을 끝내지 않습니다. document/docinfo가 payload Iterator의 결과를 전달하므로 길이/레벨 규칙을 재구현하지 않습니다. 독립 payload 해석과 문서 전체 소유권 검사 API의 범위를 구분합니다.
+
 `summary/header.zig`는 HWP FMTID의 단일 property-set envelope만 해석하고, `parser.zig`는 set 크기·속성 디렉터리와 증가/정렬/범위/중복을 검사합니다. 속성 배열만 할당하며 원문 전체·문자열·dictionary·미지원 값·extra는 입력을 빌립니다. `value.zig`는 알려진 typed value, `rules.zig`는 HWP ID별 기대 타입을 소유합니다. 문자열 길이 u32 및 패딩은 DocInfo의 u16 문자열 문법과 다르며 혼용하지 않습니다. PID 0은 별도 dictionary 원문으로 보존하고 일반 태그 1로 읽지 않습니다. container/summary는 optional 정확한 루트 스트림을 소비하고 scalar 통계만 반환하므로 임시 파서/CFB를 모두 해제합니다. 다중 set·다른 FMTID·문자 변환·dictionary 이름 의미 검증은 후속 범위입니다.
 
 요약 파서는 디렉터리 확인 후 PID1을 먼저 읽고 나서 값들을 해석합니다. 선택적인 code_page는 signed VT_I2의 16비트 원형을 보존하고, 문자열보다 뒤에 있다는 이유로 누락하지 않습니다. value는 VT_I2/LPSTR도 지원하며 LPSTR은 코드페이지 식별자와 원시 bytes를 함께 반환합니다. `strings.zig`에서 길이/단위/종결/패딩만 공유하고 문자를 변환하지 않습니다. CP1200 LPSTR도 바이트 길이이며 dictionary는 CP1200이면 UTF-16 유닛 길이와 항목별 패딩, 그 외에는 바이트 길이와 무패딩 항목입니다. dictionary의 Iterator는 raw 이름을 빌리고 실패 시 위치/잔여 개수를 유지합니다. inspect는 ID 범위/중복과 마지막 정렬 바이트를 확인하며 dictionary_structure를 반환합니다. 코드페이지 부재·문자 변환·이름 의미 검증은 아직 별도이며 dictionaries_deferred를 구조 검사 성공만으로 감소시키지 않습니다.

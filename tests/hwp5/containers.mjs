@@ -189,6 +189,23 @@ export function containerEdges(call, cfb) {
   for (const i of [1, 2, 3, 4, 5]) mixed[i].name = mixed[i].name.toLowerCase();
   assert.deepEqual(run(call, write(mixed)), output);
   const total = 256 + doc(binary()).length + 3;
+  const orphanLayout = nodes();
+  orphanLayout[2].content = Buffer.concat([
+    orphanLayout[2].content,
+    frame(31, Buffer.alloc(20), 1),
+  ]);
+  reject(orphanLayout, /InvalidCompatibilityOwner/);
+  for (const level of [0, 1, 2]) {
+    const grouped = nodes();
+    grouped[2].content = Buffer.concat([
+      grouped[2].content,
+      frame(30, w(0)),
+      frame(999, Buffer.alloc(0), level),
+      frame(31, Buffer.alloc(20), 1),
+    ]);
+    if (level === 0) reject(grouped, /InvalidCompatibilityOwner/);
+    else assert.doesNotThrow(() => run(call, write(grouped)));
+  }
   // New typed compatibility records must be checked by the file-level path too.
   for (const [tag, size, level] of [
     [30, 4, 0],

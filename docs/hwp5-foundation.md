@@ -946,3 +946,13 @@ XMLTemplate은 공식 3.2.10절 표 10~12와 로컬 명세를 대조했습니다
 5. SSOT 검토: payload별 타입/필드는 두 모듈, 태그·레벨은 reader, 참조 통계는 기존 references를 사용합니다. 테스트 재구성은 실제 typed 값을 사용하며 단순 raw 복사를 새 타입 검증으로 대신하지 않습니다. synthetic WASM 성공 254건·거부 54건에 파일 단위 오류 검증을 별도로 추가했습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 144/144, Node 47/47, HWP5 WASM 163,855회 검사. CFB 비교·12,000회 변이(trap 0), Zig/JS 포맷·diff 검사도 통과했습니다. 대상별 실제 레이아웃 동작, 레코드 간 호환성 의미/소유권 검증은 남았으며 전체 문서 목표는 계속 진행 중입니다.
+
+## 호환성 레코드 소유권 재검증 및 수정 (2026-09-06)
+
+명세 스킬 4.1절의 레벨 계층 규칙과 공식 표 4의 compatible_document(level 0)/layout_compatibility(level 1)를 다시 확인했습니다. 실제 지원 표본의 layout 34개 모두 가장 가까운 level 0 루트가 tag 30이었습니다. 하지만 기존 구현은 개별 level만 검사했기 때문에 ID_MAPPINGS 루트 그룹 끝에 layout을 추가해도 파일 단위 검사에서 통과했습니다.
+
+수정 전 CFB 합성 사례를 먼저 추가해 `Missing expected exception`으로 재현했습니다(`/tmp/hwpjs-owner-before.log`). `docinfo/compatibility_owner.zig`의 작은 상태 검사기를 document/docinfo 순회에 연결했습니다. 최근 level 0 루트가 compatible_document인 경우에만 layout을 허용하며, 다른 루트가 나오면 그룹을 닫습니다. payload/level 해석은 기존 reader에서만 수행합니다. 이름이나 단순히 과거에 tag 30이 있었는지만 보고 연결하지 않습니다.
+
+구현 후 적대적 검증에서는 부모 없는 layout, 이전 compatible_document 뒤에 미지 level 0 루트가 끼어 있는 layout을 거부했습니다. 반대로 미지 level 1/2 레코드가 끼어 있는 경우에는 원래 그룹이 유지되어 통과했습니다. 네이티브 상태 검사와 실제 CFB 파일 단위 오류·회복을 모두 확인했고, 기존 실제 34개 레이아웃과 전체 corpus가 계속 통과했습니다. 중복/필수 개수나 대상별 의미까지 이번 상태 검사에서 임의 규정하지 않았습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 145/145, Node 47/47, HWP5 WASM 163,861회 검사 통과. CFB 기존 비교·12,000회 변이(trap 0), 포맷·diff 검사 통과. 호환성 소유권 누락 한 건을 재현·수정한 것이며 전체 DocInfo 계층/레이아웃 의미 검증 완료를 주장하지 않습니다.

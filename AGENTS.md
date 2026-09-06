@@ -36,6 +36,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - `parameters/references.zig`는 중첩 PIT_BINDATA의 1-based 참조, `sources.zig`는 DocData/ControlData/표 셀 확장 순회와 진단 집계를 소유합니다. `cell_field.fromDocument`를 재사용해 같은 Set을 다시 파싱하지 않습니다. UnsupportedParameterType만 보류로 바꾸고 잘림·한도·참조·셀 이름 오류는 전파합니다. parsed/unsupported/opaque/trailing을 전체 완료 수로 합산하지 않습니다.
 - `src/hwp5/docinfo/`: 문서 속성·ID 매핑·BinData·FaceName·TabDef·Numbering·Bullet·Style payload와 태그 dispatch·리소스 개수 검증을 분리합니다. 번호/글머리표의 공통 머리 정보는 `paragraph_head.zig`가 소유합니다. 실제 필드 부재(null)와 값 0, 버전상 기대 슬롯 수를 구분합니다. BinData/글꼴 개수 검증과 전체 문서 조립/참조 검증을 혼동하지 않습니다.
 - `docinfo/compatible_document.zig`는 대상 프로그램 원값/미지 enum, `layout_compatibility.zig`는 다섯 DWORD와 꼬리를 소유합니다. reader의 태그 30/31 dispatch와 레벨 0/1 검사가 SSOT입니다. 레이아웃 비트 의미는 명세에 정의되지 않아 자동 보정하거나 유효값 마스크를 추정하지 않습니다.
+- `docinfo/compatibility_owner.zig`는 최근 level 0 루트가 compatible_document인지 추적합니다. document/docinfo가 이를 연결해 고아 layout을 거부합니다. 중간 level 1/2 레코드를 새 루트로 오인하지 않으며 개별 payload reader에 문서 전체 상태를 넣지 않습니다.
 - `src/compression/`: bounded raw DEFLATE와 MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.
 - `src/hwp5/docinfo/resources.zig`: 주요 리소스 실측 개수와 ID 매핑 비교. `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 순회·진단을 소유합니다. `validateKnown()` 성공을 전체 문서 유효성으로 해석하지 말고 deferred/unknown_records와 미검증 범위를 확인합니다.
 - `src/hwp5/docinfo/border_fill.zig`, `fill.zig`, `char_shape.zig`, `para_shape.zig`: 테두리·채우기·글자·문단 모양을 분리합니다. 그림 정보의 5바이트 배치는 `picture_info.zig`에서 글머리표와 공유합니다. 미지의 채우기 비트는 후속 필드 순서를 추정하지 않고 원본 보존합니다.

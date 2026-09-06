@@ -8,7 +8,9 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
     var it = try d.Iterator.init(bytes, version, options.framing);
     var properties: ?d.Properties = null;
     var records: usize = 0;
+    var compatibility: @import("../docinfo/compatibility_owner.zig").State = .{};
     while (try it.next()) |r| {
+        try compatibility.observe(r);
         records += 1;
         if (r.value == .properties) {
             if (properties != null) return error.DuplicateDocumentProperties;
