@@ -1,3 +1,5 @@
+const std = @import("std");
+const grid = @import("table_grid.zig");
 const Tree = @import("tree.zig").Tree;
 const body = @import("reader.zig");
 const lists = @import("table_lists.zig");
@@ -9,9 +11,10 @@ fn border(id: u16, count: usize) !void {
     if (rules.resolve(.optional_one_based, id, count) == .invalid) return error.InvalidResourceReference;
 }
 /// Ownership, payload bounds, span bounds, total count and known border references.
-/// Does not prove cell non-overlap, grid coverage, row distribution or tail semantics.
+/// Also checks row distribution, non-overlap and complete logical grid coverage.
+/// Does not interpret extension tails or visual layout.
 /// Paragraph/list counts and control links have their own validators.
-pub fn inspect(tree: Tree, options: Options) !Report {
+pub fn inspect(a: std.mem.Allocator, tree: Tree, options: Options) !Report {
     var report: Report = .{};
     for (tree.nodes, 0..) |n, index| {
         if (n.record.value == .table) {
@@ -35,7 +38,8 @@ pub fn inspect(tree: Tree, options: Options) !Report {
         };
         var declared: usize = 0;
         for (0..t.rows.count()) |i| declared += t.rows.get(i).?.size;
-        var cells: usize = 0;
+        var rectangles: std.ArrayList(grid.Rectangle) = .empty;
+        defer rectangles.deinit(a);
         while (it.next()) |entry| {
             const view = try tree.nodes[entry.node].record.value.list_header.view(options.list_layout);
             switch (entry.kind) {
@@ -45,15 +49,16 @@ pub fn inspect(tree: Tree, options: Options) !Report {
                 },
                 .cell => {
                     const c = try body.Cell.parse(view.extra);
-                    if (c.row_span == 0 or c.column_span == 0 or c.row >= t.row_count or c.column >= t.column_count or
-                        c.row_span > t.row_count - c.row or c.column_span > t.column_count - c.column) return error.InvalidCellSpan;
+                    const rectangle: grid.Rectangle = .{ .row = c.row, .column = c.column, .row_span = c.row_span, .column_span = c.column_span };
+                    try rectangle.validate(t.row_count, t.column_count);
                     try border(c.border_fill_id, options.border_count);
-                    cells += 1;
+                    try rectangles.append(a, rectangle);
                 },
             }
         }
-        if (cells != declared) return error.TableCellCountMismatch;
-        report.cells += cells;
+        if (rectangles.items.len != declared) return error.TableCellCountMismatch;
+        try grid.validate(a, t.row_count, t.column_count, t.rows, rectangles.items);
+        report.cells += rectangles.items.len;
         report.tables += 1;
     }
     return report;

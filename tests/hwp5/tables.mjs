@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { checkBody } from "./body.mjs";
 import { sectionXml } from "./fixture-xml.mjs";
+import { checkGrid } from "./grid.mjs";
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -47,14 +48,28 @@ export function tablesActual(call, v, borders, bytes) {
     const marker = records.findIndex((r) => r.parent === i && r.tag === 77);
     assert.ok(marker >= 0);
     const table = records[marker].raw;
+    const cells = [];
     report[3] += table.readUInt16LE(20 + table.readUInt16LE(4) * 2);
     records.forEach((r, index) => {
       if (r.parent !== i || r.tag !== 72) return;
       const kind = index < marker ? 0 : 1;
       report[kind ? 1 : 2]++;
       const raw = r.raw.subarray(8);
+      if (kind)
+        cells.push([
+          raw.readUInt16LE(2),
+          raw.readUInt16LE(0),
+          raw.readUInt16LE(6),
+          raw.readUInt16LE(4),
+        ]);
       expected.push(word(index), word(kind), word(raw.length), raw);
     });
+    const rows = table.readUInt16LE(4),
+      columns = table.readUInt16LE(6);
+    const sizes = Array.from({ length: rows }, (_, j) =>
+      table.readUInt16LE(18 + j * 2),
+    );
+    assert.equal(checkGrid(call, rows, columns, sizes, cells), null);
   }
   const out = call(17, Buffer.concat([word(v), word(borders), bytes]));
   assert.deepEqual(out, Buffer.concat([...report.map(word), ...expected]));

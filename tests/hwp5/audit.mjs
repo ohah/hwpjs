@@ -24,6 +24,7 @@ import { listsActual, listEdges } from "./list-groups.mjs";
 import { typeActual, typeEdges } from "./control-types.mjs";
 import { objectActual, objectEdges } from "./objects.mjs";
 import { tablesActual, tableEdges, tableZonePair } from "./tables.mjs";
+import { gridEdges } from "./grid.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -114,6 +115,7 @@ const listEdgeResults = listEdges(call);
 const typeEdgeResults = typeEdges(call);
 const objectEdgeResults = objectEdges(call);
 const tableEdgeResults = tableEdges(call);
+const gridEdgeResults = gridEdges(call);
 const tableReport = [0, 0, 0, 0];
 let tableZonePairResult;
 const objectCounts = [0, 0, 0, 0, 0, 0, 0];
@@ -512,6 +514,7 @@ console.log(
       objectEdgeResults,
       objectCounts,
       tableEdgeResults,
+      gridEdgeResults,
       tableReport,
       tableZonePairResult,
       checks,

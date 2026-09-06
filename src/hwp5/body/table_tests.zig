@@ -102,7 +102,7 @@ fn validationCase(a: std.mem.Allocator) !void {
     defer tree.deinit(a);
     const inspect = @import("table_validation.zig").inspect;
     const options: @import("table_validation.zig").Options = .{ .list_layout = .observed8, .zone_layout = .observed_row_first, .border_count = 0 };
-    const report = try inspect(tree, options);
+    const report = try inspect(a, tree, options);
     try t.expectEqual(1, report.tables);
     try t.expectEqual(1, report.cells);
     var it = try @import("table_lists.zig").Iterator.init(tree, 1);
@@ -115,7 +115,12 @@ fn validationCase(a: std.mem.Allocator) !void {
     try t.expectError(error.InvalidTableOwner, @import("table_lists.zig").Iterator.init(tree, 0));
     // Mutate borrowed payload after a successful pass; late validation must not leak.
     b[80] = 0;
-    try t.expectError(error.InvalidCellSpan, inspect(tree, options));
+    _ = inspect(a, tree, options) catch |err| {
+        if (err == error.OutOfMemory) return err;
+        try t.expectEqual(error.InvalidCellSpan, err);
+        return;
+    };
+    return error.TestExpectedError;
 }
 test "table owner traversal and all tree allocation failures clean up" {
     try t.checkAllAllocationFailures(t.allocator, validationCase, .{});

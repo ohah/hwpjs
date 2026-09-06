@@ -25,7 +25,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const borders = try r.readInt(u32);
     var tree = try core.hwp5.body_tree.Tree.parse(a, bytes[r.offset..], version, .{ .max_records = limit });
     defer tree.deinit(a);
-    const report = try core.hwp5.table_validation.inspect(tree, .{ .list_layout = .observed8, .zone_layout = .observed_row_first, .border_count = borders });
+    const report = try core.hwp5.table_validation.inspect(a, tree, .{ .list_layout = .observed8, .zone_layout = .observed_row_first, .border_count = borders });
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     inline for (std.meta.fields(@TypeOf(report))) |f| try int(a, &out, u32, @intCast(@field(report, f.name)));
