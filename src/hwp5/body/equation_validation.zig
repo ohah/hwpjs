@@ -13,23 +13,15 @@ pub fn inspect(tree: Tree, layout: equation.Layout) !Report {
             if (!isOwner(tree.nodes[parent])) return error.OrphanEquation;
         }
         if (!isOwner(node)) continue;
-        var child = index + 1;
-        var found = false;
-        while (child < node.subtree_end) : (child = tree.nodes[child].subtree_end) {
-            const record = tree.nodes[child].record.framing;
-            if (record.tag != equation.tag) continue;
-            if (found) return error.DuplicateEquation;
-            found = true;
-            const p = try equation.Properties.parse(record.payload, layout);
-            report.script_units += p.script.len / 2;
-            report.version_units += p.version_info.len / 2;
-            report.font_units += if (p.font_name) |f| f.len / 2 else 0;
-            report.line_mode += @intFromBool(p.lineMode());
-            report.unknown_attributes += @intFromBool(p.attributes & ~@as(u32, 1) != 0);
-            report.unknown_words += @intFromBool(p.unknown != 0);
-            report.extra_bytes += p.extra.len;
-        }
-        if (!found) return error.MissingEquation;
+        const child = (@import("owned_record.zig").find(tree, index, equation.tag) catch return error.DuplicateEquation) orelse return error.MissingEquation;
+        const p = try equation.Properties.parse(tree.nodes[child].record.framing.payload, layout);
+        report.script_units += p.script.len / 2;
+        report.version_units += p.version_info.len / 2;
+        report.font_units += if (p.font_name) |f| f.len / 2 else 0;
+        report.line_mode += @intFromBool(p.lineMode());
+        report.unknown_attributes += @intFromBool(p.attributes & ~@as(u32, 1) != 0);
+        report.unknown_words += @intFromBool(p.unknown != 0);
+        report.extra_bytes += p.extra.len;
         report.controls += 1;
     }
     return report;

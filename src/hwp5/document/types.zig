@@ -5,6 +5,7 @@ const sources = @import("../parameters/sources.zig");
 pub const Section = struct { index: u16, bytes: []const u8 };
 pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
 pub const Options = struct {
+    ole_layout: @import("../body/ole.zig").Layout = .observed26,
     equation_layout: @import("../body/equation.zig").Layout = .version_only,
     note_layout: @import("../body/note_control.zig").Layout = .observed12,
     overlap_layout: @import("../body/char_overlap.zig").Layout = .full,
@@ -33,6 +34,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    ole: @import("../body/ole_validation.zig").Report = .{},
     equations: @import("../body/equation_validation.zig").Report = .{},
     notes: @import("../body/note_validation.zig").Report = .{},
     hidden_comments: @import("../body/hidden_comment.zig").Report = .{},

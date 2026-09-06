@@ -1322,3 +1322,25 @@ payload 해석은 equation.Properties, ID는 control_rules.equation_id, 태그 �
 이번 단계는 OLE payload 파서와 전용 WASM 검사입니다. 그리기 개체 소유권, BinData 리소스 참조 및 저장 스트림 연결, 문서 검사기 통합, 임베디드 OLE/차트 내부 형식·표시/편집은 남았습니다. 외부 moniker나 임베디드 프로그램에 접근·실행하지 않았습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 177/177, Node 47/47, HWP5 WASM 174,940회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
+
+## OLE 직접 소유권·보류 참조와 문서 검사 연결 (2026-09-06)
+
+명세의 그리기 개체 항목도 확인하고 실제 두 OLE 표본의 전체 level 계층을 측정했습니다. OLE(tag 84)의 직접 부모는 gso CTRL_HEADER가 아니라 SHAPE_COMPONENT(tag 76)이며 첫 ID는 $ole입니다. 두 표본의 경로는 문단 → gso → $ole SHAPE_COMPONENT → OLE입니다. 이번 검사기는 구성요소의 첫 ID와 직접 payload 관계만 검증하며 도형의 전체 속성이나 상위 gso/묶음 계층을 완성된 것으로 판정하지 않습니다.
+
+`ole_validation.inspect`는 $ole 구성요소당 직접 OLE 하나를 요구합니다. 고아·중복·부재는 OrphanOle/DuplicateOle/MissingOle이고 다른 부모의 후손/이후 형제 payload를 가져오지 않습니다. `owned_record.find`로 직접 자식 검색을 분리해 수식 검사도 공유합니다. 구조상 중복을 payload 해석보다 먼저 판정하며 기존 DuplicateEquation/MissingEquation 오류 이름은 유지합니다. Tree의 parent/subtree_end가 계층 SSOT이고 추가 그래프나 할당은 없습니다.
+
+보고서는 objects/pending_references/monikers/reserved_aspects/reserved_baselines/reserved_kinds/extra_bytes입니다. BinData 순번과 storage ID는 두 표본에서 모두 1이므로 구별되지 않습니다. 이 근거로 특정 해석을 단정하지 않고 OLE마다 pending_references를 1 증가시킵니다. 기존 컨테이너의 DocInfo BinData 스트림 검사는 계속 수행하지만 그것을 OLE 참조 해석 성공으로 세지 않습니다. moniker 플래그는 데이터 진단일 뿐 외부 접근을 허가하지 않습니다.
+
+문서 ole_layout 기본값은 observed26입니다. 독립 구역 보고서에 7필드를 추가해 행 크기는 456바이트가 됐습니다. SHAPE_COMPONENT는 첫 ID만 읽으므로 전체 도형 속성의 길이·중복 ID·기하 검증은 남습니다.
+
+### 구현 후 적대적 검증
+
+1. 두 속성 배치의 모든 필수 prefix 잘림, SHAPE_COMPONENT ID 잘림, 다른 종류의 부모, 루트 OLE, 중복/누락, 후손·이후 형제 차용을 거부했습니다. 중첩 $ole 구성요소는 각자의 직접 payload만 집계합니다.
+2. 예약 aspect/baseline/kind, moniker 및 미지 꼬리 진단을 독립 원시 바이트 기대값과 대조했습니다. 미지 값은 정규화하지 않고 참조 보류를 성공과 별도 계상합니다.
+3. Tree의 성공·MissingOle 경로에 모든 할당 실패를 주입했습니다. 공유 직접 자식 검색으로 바뀐 수식 검사의 실제 문서·고아·중복·누락·잘림 회귀도 함께 실행했습니다.
+4. 한셀OLE.hwp와 issue5724/2689441_wmf_contents_ole.hwp의 독립 소유권 보고서와 전체 decoded document는 통과했습니다. 실제 CFB 경로에서는 추가 누락을 발견했습니다. DocInfo BinData 원문 0200010003004f004c004500은 storage형 뒤에 OLE 문자열을 갖고 실제 스트림은 BIN0001.OLE입니다. 현재 container는 확장자 없는 BIN0001을 찾아 MissingHwpEntry로 실패합니다. 이 실패와 두 정확한 경로의 부재/존재를 별도 회귀로 고정했으며 CFB 성공으로 계상하지 않습니다. 각 실제 OLE의 누락/중복은 전용 검사와 decoded document 양쪽에서 거부하며 정상 소유권 검사로 복구합니다. 원본은 변경하지 않습니다.
+5. 각 실제 파일에서 moniker 비트만 뒤집은 별도 합성 구역을 만들고 원본 구역과 함께 정순/역순·총량 한도로 대조합니다. 두 번째 구역의 필드 위치와 서로 다른 진단값을 검증해 위치 편향을 방지합니다. 외부 참조 표본이 없으면 skipped입니다.
+
+직접 OLE payload 소유권과 문서 연결은 추가됐지만 BinData 참조 해석·storage형 확장자와 컨테이너 경로·상위 도형 전체 계층/기하·임베디드 OLE/차트 내부 형식·표시/편집은 남았습니다. 다음 단계는 실제 CFB 실패를 만드는 storage 확장자 계약입니다. pending_references를 해소하지 않은 채 전체 OLE 지원 완료라고 판단하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 178/178, Node 47/47, HWP5 WASM 175,295회 검사 통과(참조 표본 존재). OLE 소유권 합성 성공 64건·거부 60건입니다. CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다. 이 수치는 두 OLE 원본의 MissingHwpEntry 예상 실패 검사를 포함하며 두 원본의 전체 CFB 성공을 의미하지 않습니다.

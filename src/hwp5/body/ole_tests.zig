@@ -29,3 +29,17 @@ test "OLE layouts preserve signed fields and separate BinData from border color"
         try t.expectEqual(0, zero.bin_data_id);
     }
 }
+fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
+    var raw = [_]u8{0} ** 38;
+    std.mem.writeInt(u32, raw[0..4], 76 | (4 << 20), .little);
+    std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").id("$ole"), .little);
+    std.mem.writeInt(u32, raw[8..12], 84 | (1 << 10) | (26 << 20), .little);
+    var tree = try @import("tree.zig").Tree.parse(a, raw[0..if (bad) 8 else 38], .{ .raw = 0x05010001 }, .{});
+    defer tree.deinit(a);
+    const result = @import("ole_validation.zig").inspect(tree, .observed26);
+    if (bad) try t.expectError(error.MissingOle, result) else try t.expectEqual(1, (try result).pending_references);
+}
+test "OLE direct-owner allocation cleanup with missing payload" {
+    try t.checkAllAllocationFailures(t.allocator, allocationCase, .{false});
+    try t.checkAllAllocationFailures(t.allocator, allocationCase, .{true});
+}

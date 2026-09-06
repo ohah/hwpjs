@@ -108,6 +108,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         44 => return @import("equation-probe.zig").run(a, bytes),
         45 => return @import("equation-validation-probe.zig").run(a, bytes, limit),
         46 => return @import("ole-probe.zig").run(a, bytes),
+        47 => return @import("ole-validation-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
