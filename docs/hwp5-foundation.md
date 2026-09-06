@@ -2206,3 +2206,19 @@ field_validation은 이미 읽은 Properties로 이 검사를 호출하므로 �
 추가 읽기 전용 실측에서는 위 6개 원본 CFB 전체를 Debug mode 25에 전달해 모두 통과했습니다. 동일한 task2287 원본을 이전 메모 리스트 헤더 단계의 캐시 WASM(c8ee6a2269399f48409e98148260e08c)과 이번 Debug WASM(e8e8bbec64bdb2efee3fbec57d04c9ed)에 전달하면 각각 ControlIdMismatch/성공입니다. 이 6개 CFB 검사는 별도 실행이며 정규 audit 횟수에 더하지 않습니다. decoded 전역 보고서/역순 구역 검사와 issue5866 CFB 변이 검사는 정규 audit에 포함되어 있습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 240/240, Node 47/47, HWP5 WASM 1,294,226회 검사 통과했습니다. CFB 12,000회 변이 trap 0이며 Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-memo-references-{debug,safe,fast}.log`입니다. 책임별 파일/파싱 결과 공유와 오류 경로 수명도 검토했으며, 이 결과를 남은 명령/변경 추적/편집·저장 범위의 완료로 세지 않습니다.
+
+## 메모 인라인 끝 토큰의 원값 해석과 문단 경계 실측
+
+2026-09-07. 공식 본문 표 6과 문단 텍스트 표 60의 code 3 시작/4 끝 및 8 UTF-16 유닛 폭을 유지하면서, 메모 끝의 내부 12바이트는 관측 배치로 분리했습니다. 기존 Text.Iterator가 토큰 경계·종결자·원본 유닛 위치를 검증하고 memo_end.parse는 호출자가 선택한 code 4의 data만 읽습니다. data 길이는 정확히 12바이트이고 짧으면 UnexpectedEnd, 길면 InvalidMemoEndSize입니다. 첫 DWORD가 관측 0x00256d65일 때만 가운데 DWORD middle_raw와 마지막 DWORD memo_index를 읽고, 다른 표식은 null로 남깁니다. 끝 토큰의 표식을 %%me CTRL_HEADER ID나 공통 필드 instance_id로 해석하지 않습니다.
+
+6개 실제 파일의 전체 구역/34,588개 PARA_TEXT를 독립 JS 스캐너와 제품 Text.Iterator+memo_end를 쓰는 WASM mode 91로 대조했습니다. 메모 시작 28개는 ID 이후 8바이트가 모두 0입니다. 메모 끝 28개의 번호는 같은 구역 MEMO 명령의 번호/공통 필드 꼬리 번호와 대응합니다. 가운데 DWORD는 0x00000001이 16개, 0x00FFFF01이 11개, 0x00FFFF05가 1개입니다. 하위 바이트/상위 16비트의 의미나 DocInfo 모양 참조를 확정하지 않고 그대로 보존합니다.
+
+issue5866의 메모 시작과 끝은 서로 다른 문단에 있습니다. 나머지 27개는 같은 문단입니다. 따라서 문단마다 스택을 초기화하면서 끝 누락을 오류로 강제할 수 없습니다. rhwp parser/body_text.rs도 문단을 넘는 일반 필드 끝을 별도 보존하지만, 종료 토큰에서 직접 begin instance ID를 얻는 것으로 처리하지 않습니다. 이번 실측은 메모 번호 대응이지 모든 필드의 중첩/문단 범위 복구를 입증한 것이 아닙니다.
+
+적대적 검증은 네이티브의 모든 data prefix 잘림/과대 길이/다른 표식의 모든 비트, 가운데 값과 번호의 0/상위 비트/UINT32_MAX 조합을 포함합니다. WASM에서는 토큰의 홀수·짝수 잘림, 종결자 불일치, 중간/번호의 64개 단일 비트 변이, 표식의 32개 변이, 동일 payload를 code 3으로 넣은 오분류 방지, 서로게이트 쌍 뒤 연속 두 토큰의 원본 유닛 위치와 실패 후 복구를 검사합니다. 합성 성공/복구 120회, 거부 16회입니다.
+
+초기 테스트에서 기존 documentRecords helper가 level을 반환한다고 잘못 가정해 28개 모두 문단 간 사례로 집계했습니다. 레코드 헤더에서 level을 독립적으로 읽어 직접 부모를 구하도록 수정했고 실제 문단 간 1개를 재확인했습니다. 파서 출력을 기대값으로 복제하거나 기대 개수를 28로 바꾸지 않았습니다.
+
+이 단계는 끝 토큰 payload 코어입니다. 기존 문서 전역 메모 인덱스는 아직 필드 헤더/리스트를 비교하며 끝 토큰을 수집하지 않습니다. 명령 전체 문법·다중 문단/중첩 범위와 시작/끝 번호의 문서 오류 전파는 다음 작업입니다. 원본 fixture를 수정하지 않았고 HWPX나 편집·저장 지원 완료로 세지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 241/241, Node 47/47, HWP5 WASM 1,328,991회 검사 통과했습니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-memo-end-{debug,safe,fast}.log`입니다. SSOT 검토에서는 토큰 폭/종결자 파서를 복제하지 않고 공통 Text.Iterator와 Reader를 재사용한 것을 확인했습니다.
