@@ -2222,3 +2222,19 @@ issue5866의 메모 시작과 끝은 서로 다른 문단에 있습니다. 나�
 이 단계는 끝 토큰 payload 코어입니다. 기존 문서 전역 메모 인덱스는 아직 필드 헤더/리스트를 비교하며 끝 토큰을 수집하지 않습니다. 명령 전체 문법·다중 문단/중첩 범위와 시작/끝 번호의 문서 오류 전파는 다음 작업입니다. 원본 fixture를 수정하지 않았고 HWPX나 편집·저장 지원 완료로 세지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 241/241, Node 47/47, HWP5 WASM 1,328,991회 검사 통과했습니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-memo-end-{debug,safe,fast}.log`입니다. SSOT 검토에서는 토큰 폭/종결자 파서를 복제하지 않고 공통 Text.Iterator와 Reader를 재사용한 것을 확인했습니다.
+
+## 메모 끝 번호의 문서 전역 대상 검증
+
+2026-09-07. memo_end_collection은 section에서 이미 만든 Tree의 텍스트를 공통 Iterator로 순회하고, code 4 중 memo_end가 식별한 번호/구역만 Index.ends에 수집합니다. 필드 헤더와 끝 토큰의 출처 목록은 분리하지만 대상 리스트 목록은 한 개만 보유합니다. 기존 정렬/그룹별 대조를 inspectRows로 추출하여 fields와 ends가 공유합니다. 별도 번호 크기 기반 배열이나 두 번째 리스트 파서/사본은 없습니다.
+
+document.validation은 모든 구역 검사 후 기존 필드→리스트 검사, 끝→리스트 검사를 차례로 수행합니다. 끝 번호의 대상이 없으면 MissingMemoEndTarget, 여러 리스트면 AmbiguousMemoEndTarget입니다. EndReport는 ends/lists/matched_ends/cross_section_ends/missing_targets/ambiguous_ends/unreferenced_lists/duplicate_end_ids/duplicate_list_ids의 scalar 9개이며 기존 문서 Report 수명에 추가 할당을 남기지 않습니다. 테스트 mode 92에서 노출하고 mode 24/25/90의 wire는 변경하지 않습니다. 미참조 리스트와 중복 끝 번호 자체는 진단이며 번호 0/UINT32_MAX는 존재하는 값입니다.
+
+실제 6개 파일의 모든 구역에서 끝 28개→리스트 30개의 대조를 검사했습니다. 구역 간 연결 1개, 미참조 리스트 2개이며 구역 입력을 역순으로 전달해도 같습니다. issue5866의 문단 간 끝과 task2287의 Section1→Section33 연결을 제품 문서 경로에서 검사합니다. 문단마다 스택을 닫거나 끝 토큰을 다른 구역으로 옮기지 않습니다.
+
+적대적 검증은 공유 인덱스의 모든 할당 실패, fields/ends 검사의 교차 반복으로 인한 정렬 상태 영향, 누락과 모호함 동시 발생, 중복 끝 번호, 0/UINT32_MAX, 필드 번호 부재와 끝 번호 존재의 구분을 포함합니다. 실제 issue5866 끝 번호만 0/2/65536/상위 비트/UINT32_MAX로 바꾼 입력을 거부하고 복구합니다. 기존 필드·리스트 두 번호만 0/UINT32_MAX로 바꾸는 사례도 끝 번호가 남아 있으므로 이제 거부하며, 세 번호를 함께 바꾼 경우만 참조 계층의 성공 사례로 검사합니다. 선택 필드 번호를 제거하더라도 끝→리스트는 계속 검사하고, 이 상태에서 리스트를 중복하면 끝의 모호함 오류가 전파됩니다. 합성 편집은 메모리에서만 수행합니다.
+
+같은 실제 변형 입력을 이전 WASM(655e9280fc9b8ab20ffd84049b38c441)과 수정 Debug WASM(9ef722415950e3fbf309f4e8b512786d)에 넣어 mode 24/25 각각 이전 성공→MissingMemoEndTarget을 재현했습니다. 정규 문서 변이 검사는 성공 3/거부 45입니다. 이전 성공 기대값을 단순 삭제하지 않고 두 번호만 바꾼 입력의 거부와 세 번호를 일치시킨 성공을 분리했습니다.
+
+이는 끝 토큰 번호의 **대상 존재/모호함** 검증입니다. 서로 다른 유효 메모 번호를 가진 시작·끝을 잘못 짝지은 경우, 닫힘 누락/중복, 순서·중첩·문단 범위, 명령 전체 문법은 아직 별도입니다. 이 제한을 전체 필드 범위 검증 완료로 세지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 242/242, Node 47/47, HWP5 WASM 1,335,570회 검사 통과했습니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-memo-end-refs-{debug,safe,fast}.log`입니다. SSOT/수명 검토에서는 단일 대상 목록·대조 함수 공유, 수집기와 payload 책임 분리, 모든 임시 배열의 성공/실패 시 해제를 확인했습니다.

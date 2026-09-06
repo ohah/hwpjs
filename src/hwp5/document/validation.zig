@@ -39,7 +39,9 @@ pub fn inspectDecoded(a: std.mem.Allocator, input: Input, options: Options) !Rep
     }
     const memo_report = memos.inspect();
     try memo_report.validateKnown();
-    return .{ .header = header, .doc_info = doc, .sections = sections, .total_bytes = options.max_total_bytes - remaining, .total_records = records, .memo_references = memo_report };
+    const memo_end_report = memos.inspectEnds();
+    try memo_end_report.validateKnown();
+    return .{ .header = header, .doc_info = doc, .sections = sections, .total_bytes = options.max_total_bytes - remaining, .total_records = records, .memo_references = memo_report, .memo_end_references = memo_end_report };
 }
 fn charge(remaining: *usize, count: usize) !void {
     if (count > remaining.*) return error.LimitExceeded;

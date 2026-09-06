@@ -79,6 +79,7 @@ pub const SectionReport = struct {
 /// Owns sections only; DocInfo property/mapping slices still borrow input.doc_info.
 pub const Report = struct {
     memo_references: @import("../memo_references.zig").Report = .{},
+    memo_end_references: @import("../memo_references.zig").EndReport,
     header: Header,
     doc_info: DocInfo,
     sections: []SectionReport,

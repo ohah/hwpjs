@@ -23,6 +23,7 @@ pub fn inspectCollected(a: std.mem.Allocator, bytes: []const u8, version: @impor
     var groups = try Groups.build(a, tree);
     defer groups.deinit(a);
     _ = try @import("../body/memo_validation.zig").inspect(tree, groups.items);
+    if (collector) |c| try @import("../body/memo_end_collection.zig").collect(tree, c);
     if (collector) |c| for (groups.items) |group| {
         if (group.memo) |memo| try c.index.addList(c.allocator, tree.nodes[memo.node].record.value.memo_list.memo_index, c.section);
     };
