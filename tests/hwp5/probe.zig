@@ -132,6 +132,9 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         68 => return @import("document-probe.zig").polygoned(a, bytes, limit),
         69 => return @import("container-probe.zig").polygoned(a, bytes, limit),
         70 => return @import("shape-curve-probe.zig").run(a, bytes),
+        71 => return @import("curve-validation-probe.zig").run(a, bytes, limit),
+        72 => return @import("document-probe.zig").curved(a, bytes, limit),
+        73 => return @import("container-probe.zig").curved(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

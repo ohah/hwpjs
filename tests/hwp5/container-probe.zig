@@ -19,8 +19,13 @@ pub fn arced(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 }
 pub fn polygoned(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
-    const polygon = try @import("document-probe.zig").readPolygon(&r);
+    const polygon = try @import("document-probe.zig").readCounted(&r);
     return inspect(a, bytes[r.offset..], limit, false, .{ .polygon = polygon });
+}
+pub fn curved(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const layout = try @import("document-probe.zig").readCounted(&r);
+    return inspect(a, bytes[r.offset..], limit, false, .{ .curve = layout });
 }
 fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: bool, selection: @import("document-probe.zig").Selection) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
@@ -29,6 +34,7 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: boo
         .drawing_style = selection.style,
         .arc_layout = selection.arc,
         .polygon_layout = selection.polygon,
+        .curve_layout = selection.curve,
         .list_layout = .observed8,
         .zone_layout = .observed_row_first,
         .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty },

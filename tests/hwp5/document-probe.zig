@@ -6,6 +6,7 @@ pub const Selection = struct {
     style: ?core.hwp5.document_validation.types.DrawingStyleOptions = null,
     arc: ?core.hwp5.shape_arc.Layout = null,
     polygon: core.hwp5.shape_polygon.Layout = .observed_i32_points,
+    curve: core.hwp5.shape_curve.Layout = .observed_i32_points,
 };
 fn fields(a: std.mem.Allocator, out: *std.ArrayList(u8), value: anytype) !void {
     inline for (std.meta.fields(@TypeOf(value))) |f| try int(a, out, u32, @intCast(@field(value, f.name)));
@@ -28,15 +29,20 @@ pub fn arced(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const arc = try readArc(&r);
     return configured(a, bytes[r.offset..], limit, .{ .arc = arc });
 }
-pub fn readPolygon(r: *core.Reader) !core.hwp5.shape_polygon.Layout {
+pub fn readCounted(r: *core.Reader) !core.hwp5.shape_polygon.Layout {
     const mode = try r.readInt(u8);
     if (mode > 1) return error.InvalidMode;
     return @enumFromInt(mode);
 }
 pub fn polygoned(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
-    const polygon = try readPolygon(&r);
+    const polygon = try readCounted(&r);
     return configured(a, bytes[r.offset..], limit, .{ .polygon = polygon });
+}
+pub fn curved(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const layout = try readCounted(&r);
+    return configured(a, bytes[r.offset..], limit, .{ .curve = layout });
 }
 pub fn readStyle(r: *core.Reader) !core.hwp5.document_validation.types.DrawingStyleOptions {
     const mode = try r.readInt(u8);
@@ -64,6 +70,7 @@ fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: 
         .drawing_style = selection.style,
         .arc_layout = selection.arc,
         .polygon_layout = selection.polygon,
+        .curve_layout = selection.curve,
         .list_layout = .observed8,
         .zone_layout = .observed_row_first,
         .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty },
@@ -113,6 +120,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try fields(a, &out, s.ellipses);
         try fields(a, &out, s.arcs);
         try fields(a, &out, s.polygons);
+        try fields(a, &out, s.curves);
     }
     return out.toOwnedSlice(a);
 }

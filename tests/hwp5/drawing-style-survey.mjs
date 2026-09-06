@@ -14,6 +14,7 @@ import { arcOwnerActual } from "./arc-validation.mjs";
 import { polygonActual } from "./shape-polygon.mjs";
 import { polygonOwnerActual } from "./polygon-validation.mjs";
 import { curveActual } from "./shape-curve.mjs";
+import { curveOwnerActual } from "./curve-validation.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -70,6 +71,7 @@ export function drawingStyleSurvey(call, cfb) {
       ellipseOwnerActual(call,header.readUInt32LE(32),bytes);
       arcOwnerActual(call,header.readUInt32LE(32),bytes);
       polygonOwnerActual(call,header.readUInt32LE(32),bytes);
+      curveOwnerActual(call,header.readUInt32LE(32),bytes);
       const stack = [];
       for (const record of records) {
         const level = bytes.readUInt32LE(record.offset) >>> 10 & 1023;

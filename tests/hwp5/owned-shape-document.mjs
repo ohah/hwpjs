@@ -16,7 +16,7 @@ export function ownedShapeDocument(call,cfb,config){
   const original=call(24,input(b));
   const expected=config.actual(call,v,b);assert.equal(expected[0],config.count);
   expected.forEach((n,i)=>assert.equal(original.readUInt32LE(sectionFieldOffset(0,config.group,i)),n));
-  const cap=w(64*1024*1024),container=call(25,Buffer.concat([cap,file]));
+  const cap=w(config.maxDecodedBytes??64*1024*1024),container=call(25,Buffer.concat([cap,file]));
   assert.deepEqual(container.subarray(0,original.length),original);
   const records=documentRecords(b).filter(r=>r.tag===config.tag);assert.equal(records.length,config.count);
   let rejected=0;
