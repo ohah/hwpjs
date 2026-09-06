@@ -15,8 +15,8 @@ pub fn styled(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 }
 pub fn readStyle(r: *core.Reader) !core.hwp5.document_validation.types.DrawingStyleOptions {
     const mode = try r.readInt(u8);
-    if (mode > 3) return error.InvalidMode;
-    return .{ .border = @enumFromInt(mode & 1), .tail = if (mode & 2 != 0) .fill_only else .alpha_shadow };
+    if (mode > 5) return error.InvalidMode;
+    return .{ .border = @enumFromInt(mode & 1), .tail = if (mode >= 4) .alpha_shadow_metadata else if (mode & 2 != 0) .fill_only else .alpha_shadow };
 }
 fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, style: ?core.hwp5.document_validation.types.DrawingStyleOptions) ![]u8 {
     const d = core.hwp5.document_validation;

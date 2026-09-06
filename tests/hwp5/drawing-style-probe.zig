@@ -3,9 +3,8 @@ const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub fn run(a: std.mem.Allocator, bytes: []const u8) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
-    const mode = try r.readInt(u8);
-    if (mode > 3) return error.InvalidMode;
-    const p = try core.hwp5.drawing_style.Style.parseWithTail(bytes[r.offset..], @enumFromInt(mode & 1), if (mode & 2 != 0) .fill_only else .alpha_shadow);
+    const options = try @import("document-probe.zig").readStyle(&r);
+    const p = try core.hwp5.drawing_style.Style.parseWithTail(bytes[r.offset..], options.border, options.tail);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     try int(a, &out, u32, switch (p.tail) {
@@ -27,6 +26,11 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8) ![]u8 {
             try int(a, &out, u32, k.shadow.color);
             try int(a, &out, i32, k.shadow.offset_x);
             try int(a, &out, i32, k.shadow.offset_y);
+            if (k.metadata) |m| {
+                try int(a, &out, u32, m.instance_id);
+                try int(a, &out, u32, m.reserved);
+                try int(a, &out, u32, m.shadow_alpha);
+            }
             break :blk k.extra;
         },
     };

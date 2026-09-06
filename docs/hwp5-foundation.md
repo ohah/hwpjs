@@ -1567,3 +1567,23 @@ ID 0과 count 초과는 InvalidShapeImageReference입니다. 참조 실패 시 �
 이번 단계는 DocInfo BinData 목록에 대한 참조 범위 검사입니다. 참조 대상의 그림 코덱 지원·시각적 일치·그림/OLE 개체의 다른 참조 체계를 완료로 주장하지 않습니다. 원본 파일은 수정하지 않았습니다. 전체 문서 검증은 계속 진행 중입니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 190/190, Node 47/47, HWP5 WASM 202,206회 검사. 선택적 스타일 문서/CFB 집합은 6파일·66스타일이며 스타일 제거 변이 66건·구역 순서 반전 6건도 통과했습니다. CFB 12,000회 변이 trap 0, 포맷·JS 구문·diff 검사 통과. 로그는 `/tmp/hwpjs-style-image-{debug,safe,fast}.log`입니다.
+
+## 관측 도형 스타일의 instance·예약 바이트·그림자 alpha (2026-09-06)
+
+rhwp `parser/control/shape.rs`의 그림자 다음 읽기와 실제 원문을 대조해 6바이트 후반부를 별도 `drawing_metadata.Metadata`로 해석합니다. instance_id는 u32, reserved와 shadow_alpha는 각각 u8입니다. 참조 구현이 예약 바이트를 건너뛰는 것과 달리 원값을 보존합니다. 읽기는 Reader 사본에서 수행해 어떤 필드가 잘려도 원래 커서가 유지됩니다.
+
+명시적 tail 배치 alpha_shadow_metadata를 추가했습니다. 이 배치에서 known.metadata는 값이 있고 필수 6바이트가 잘리면 오류입니다. 기존 alpha_shadow는 metadata=null과 기존 전체 extra를 유지합니다. fill_only 동작도 바꾸지 않았습니다. 같은 0바이트 값을 읽었다고 부재로 처리하지 않으며 미지 Fill 비트에서 metadata 위치를 추측하지 않습니다. 문서/CFB의 기존 명시적 배치 옵션으로 연결되며 새 기본값이나 자동 버전 cutoff는 없습니다.
+
+### 구현 후 적대적 검증
+
+1. 네이티브에서 u32 최대 instance ID, 비영 reserved, 최대 alpha를 대조했습니다. 커서 시작점을 3으로 두고 모든 6개 prefix 잘림에서 원래 3으로 유지되는지 검사했습니다.
+2. 동일 바이트를 기존/신규 배치로 읽어 null과 값 0, 후반부 extra 범위의 차이를 검증했습니다. 6바이트 일부만 존재할 때 신규 배치는 거부하고 기존 배치는 이를 raw extra로 보존합니다. 새 배치를 기존 배치로 자동 재시도하지 않습니다.
+3. WASM에서 두 테두리 폭 × 세 꼬리 배치 × Fill 8조합을 검증합니다. 신규 메타데이터의 최대/비영 값, 모든 필수 prefix 잘림, 미지 Fill, 남은 extra 및 잘못된 모드를 독립 JS 기대값에 대조합니다. 테스트 payload/document/CFB의 배치 모드 해석은 공유합니다.
+4. 전체 참조 조사에서 기존 alpha_shadow 성공 2,716개 모두 후반부 6바이트를 해석했고 새 extra는 0입니다. 메타데이터 영역의 필수 prefix 잘림 16,296건을 거부했습니다. reserved 비영은 2개, shadow_alpha 비영은 0개입니다. 따라서 예약 바이트 0 강제는 관측과 맞지 않으며 실제 비영 alpha의 조판 효과는 입증하지 못했습니다.
+5. 문서/CFB 표본의 신형 48개를 신규 배치로 검사했습니다. 마지막 1~6바이트를 각각 제거한 288개 문서 입력이 UnexpectedEnd를 내고, 같은 입력을 기존 배치로 명시적으로 검사하면 raw extra로 남습니다. 구형 18개는 fill_only 유지, 이미지 참조/구역 순서/CFB 보고서 회귀도 유지합니다.
+
+instance_id의 문서 전역 유일성·다른 ID와의 대응, reserved 비트 의미, alpha/그림자 렌더링은 미검증 범위입니다. 이 단계는 관측 필드의 경계와 원값 보존이며 조판 의미나 전체 도형 구현 완료를 뜻하지 않습니다.
+
+비영 reserved의 구체적 사례는 `table-vpos-01.hwp` Section0의 구성요소 레코드 offset 21714/26849이며 둘 다 255입니다. 이 위치·값을 조사 로그에 남겼습니다. 파일 오프셋이 아니라 압축 해제된 구역 내 레코드 오프셋입니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 192/192, Node 47/47, HWP5 WASM 225,618회 검사. CFB 12,000회 변이 trap 0이며 포맷·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-drawing-metadata-{debug,safe,fast}.log`입니다.

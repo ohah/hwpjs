@@ -14,7 +14,7 @@ export function unselectedStyles(bytes) {
 export function styleDocumentActual(call,h,doc,sections,mode=1,checkCfbMutation=null) {
   const input=decodedDocumentInput(h,doc,sections);
   const baseline=call(24,input),expected=Buffer.from(baseline);
-  let parsed=0,rejected=0,ordering=0,variant=null;
+  let parsed=0,rejected=0,ordering=0,metadataRejected=0,variant=null;
   const images=[];
   for(const s of sections){
     const stats=unselectedStyles(s.bytes);stats[2]=0;
@@ -27,6 +27,17 @@ export function styleDocumentActual(call,h,doc,sections,mode=1,checkCfbMutation=
         stats[payload.known?3:4]++;parsed++;
         stats[5]+=payload.extra;
         stats[6]+=Number(payload.imageId!==null);
+        if(mode>=4){
+          assert.equal(payload.extra,0);
+          for(let removed=1;removed<=6;removed++){
+            const short=p.subarray(0,p.length-removed),frame=Buffer.alloc(4);
+            frame.writeUInt32LE(76|(level<<10)|(short.length<<20));
+            const changed=Buffer.concat([s.bytes.subarray(0,r.offset),frame,short,s.bytes.subarray(r.end)]);
+            const input=decodedDocumentInput(h,doc,sections.map(v=>v.index===s.index?{...v,bytes:changed}:v));
+            assert.throws(()=>call(54,Buffer.concat([Buffer.from([mode]),input])),/UnexpectedEnd/);metadataRejected++;
+            call(54,Buffer.concat([Buffer.from([mode&1]),input]));
+          }
+        }
         if(payload.imageOffset!==null)images.push(imageReferenceEdges(call,h,doc,sections,s,r.start+end+payload.imageOffset,mode,checkCfbMutation));
         if(!variant){
           const changed=Buffer.from(s.bytes);
@@ -57,11 +68,11 @@ export function styleDocumentActual(call,h,doc,sections,mode=1,checkCfbMutation=
     assert.equal(canonical.readUInt32LE(sectionFieldOffset(1,"drawing_styles",4)),1);
     ordering++;
   }
-  return {parsed,rejected,ordering,images};
+  return {parsed,rejected,ordering,metadataRejected,images};
 }
 export function styleDocumentReference(call,cfb){
   const files=[],skipped=[];
-  for(const [name,mode] of [["shape-group-02.hwp",1],["group-drawing-02.hwp",1],["shape-001.hwp",1],["issue2559/1341000_research_report_footnotes.hwp",3],["issue5714/1490000-200800034_vietnam_labor_report.hwp",3],["basic/BookReview.hwp",1]]){
+  for(const [name,mode] of [["shape-group-02.hwp",5],["group-drawing-02.hwp",5],["shape-001.hwp",5],["issue2559/1341000_research_report_footnotes.hwp",3],["issue5714/1490000-200800034_vietnam_labor_report.hwp",3],["basic/BookReview.hwp",5]]){
     const url=new URL(`../../reference/rhwp/samples/${name}`,import.meta.url);
     if(!existsSync(url)){skipped.push(name);continue;}
     const rawFile=readFileSync(url);

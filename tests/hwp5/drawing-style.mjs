@@ -14,6 +14,7 @@ export function drawingStyleActual(call,b,mode=1) {
     if(!fillOnly){
       for(const bit of [1,4,2])fields.push(flags&bit?b[at++]:256);
       for(let i=0;i<4;i++){fields.push(b.readUInt32LE(at));at+=4;}
+      if(mode>=4){fields.push(b.readUInt32LE(at),b[at+4],b[at+5]);at+=6;}
     }
   }
   assert.ok(at<=b.length);
@@ -22,7 +23,7 @@ export function drawingStyleActual(call,b,mode=1) {
 }
 export function drawingStyleEdges(call){
   let accepted=0,rejected=0;
-  for(const mode of [0,1,2,3])for(let flags=0;flags<8;flags++){
+  for(const mode of [0,1,2,3,4,5])for(let flags=0;flags<8;flags++){
     const border=Buffer.alloc(mode&1?13:11),parts=[border,w(flags)];
     if(flags&1)parts.push(Buffer.alloc(12));
     if(flags&4)parts.push(Buffer.alloc(21));
@@ -31,6 +32,7 @@ export function drawingStyleEdges(call){
     if(!(mode&2)){
       let alpha=0;for(const bit of [1,4,2])if(flags&bit)parts.push(Buffer.from([alpha++*127]));
       const shadow=Buffer.alloc(16,255);shadow.writeInt32LE(-2147483648,8);parts.push(shadow);
+      if(mode>=4)parts.push(Buffer.from([0xff,0xff,0xff,0xff,0x80,0xff]));
     }
     const raw=Buffer.concat(parts);drawingStyleActual(call,raw,mode);accepted++;
     for(let n=0;n<raw.length;n++){assert.throws(()=>run(call,raw.subarray(0,n),mode),/UnexpectedEnd/);rejected++;}
@@ -38,10 +40,10 @@ export function drawingStyleEdges(call){
     drawingStyleActual(call,raw,mode);
     if(mode&2){assert.throws(()=>run(call,raw,mode&1),/UnexpectedEnd/);rejected++;}
   }
-  for(const mode of [0,1,2,3]){
+  for(const mode of [0,1,2,3,4,5]){
     const border=Buffer.alloc(mode&1?13:11);
     for(const tail of [Buffer.alloc(0),Buffer.from([1,2,3])]){drawingStyleActual(call,Buffer.concat([border,w(0x80000001),tail]),mode);accepted++;}
   }
-  assert.throws(()=>run(call,Buffer.alloc(21),4),/InvalidMode/);rejected++;
+  assert.throws(()=>run(call,Buffer.alloc(21),6),/InvalidMode/);rejected++;
   return {accepted,rejected};
 }

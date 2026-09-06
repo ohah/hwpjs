@@ -18,6 +18,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.fillOnly = { parsed: 0, rejectedPrefixes: 0 };
   out.versions = {};
   out.images = [];
+  out.metadata = { parsed: 0, rejected: 0, reservedNonzero: 0, alphaNonzero: 0, reservedExamples: [] };
   const drawingIds = new Set(["$lin", "$rec", "$ell", "$arc", "$pol", "$cur"]);
   for (const name of readdirSync(root, { recursive: true }).filter(n => n.endsWith(".hwp")).sort()) {
     out.files++;
@@ -85,6 +86,20 @@ export function drawingStyleSurvey(call, cfb) {
             }
             if (result) {
               const parsed = drawingStyleActual(call, style);
+              if(parsed.known){
+                const full=drawingStyleActual(call,style,5);
+                assert.equal(full.consumed,parsed.consumed+6);
+                assert.equal(full.extra,0);
+                out.metadata.parsed++;
+                out.metadata.reservedNonzero+=Number(style[parsed.consumed+4]!==0);
+                if(style[parsed.consumed+4]!==0)out.metadata.reservedExamples.push({name,section:section.name,offset:record.offset,value:style[parsed.consumed+4]});
+                out.metadata.alphaNonzero+=Number(style[parsed.consumed+5]!==0);
+                for(let n=0;n<6;n++){
+                  assert.throws(()=>call(53,Buffer.concat([Buffer.from([5]),style.subarray(0,parsed.consumed+n)])),/UnexpectedEnd/);
+                  out.metadata.rejected++;
+                }
+                drawingStyleActual(call,style,5);
+              }
               if (parsed.imageId !== null) out.images.push({ name, section: section.name, offset: record.offset, id: parsed.imageId });
               stats[parsed.known ? "known" : "unknown"]++;
               versionStats[parsed.known ? "full" : "unknown"]++;
