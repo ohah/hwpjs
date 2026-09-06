@@ -51,6 +51,8 @@ import { rectangleOwnerEdges } from "./rectangle-validation.mjs";
 import { rectangleDocumentReference } from "./rectangle-document.mjs";
 import { ellipseEdges } from "./shape-ellipse.mjs";
 import { arcEdges } from "./shape-arc.mjs";
+import { polygonEdges } from "./shape-polygon.mjs";
+import { polygonPair } from "./polygon-pair.mjs";
 import { arcOwnerEdges } from "./arc-validation.mjs";
 import { arcDocumentEdges } from "./arc-document.mjs";
 import { arcSurvey } from "./arc-survey.mjs";
@@ -393,6 +395,8 @@ const rectangleEdgeResults = rectangleEdges(call);
 const rectangleOwnerEdgeResults = rectangleOwnerEdges(call);
 const ellipseEdgeResults = ellipseEdges(call);
 const arcEdgeResults = arcEdges(call);
+const polygonEdgeResults = polygonEdges(call);
+const polygonPairResults = polygonPair(call,cfb);
 const arcOwnerEdgeResults = arcOwnerEdges(call);
 const arcDocumentEdgeResults = arcDocumentEdges(call,cfb);
 const arcSurveyResults = arcSurvey(call,cfb);
@@ -850,6 +854,8 @@ console.log(
       rectangleOwnerEdgeResults,
       ellipseEdgeResults,
       arcEdgeResults,
+      polygonEdgeResults,
+      polygonPairResults,
       arcOwnerEdgeResults,
       arcDocumentEdgeResults,
       arcSurveyResults,

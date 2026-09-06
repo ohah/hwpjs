@@ -127,6 +127,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         63 => return @import("arc-validation-probe.zig").run(a, bytes, limit),
         64 => return @import("document-probe.zig").arced(a, bytes, limit),
         65 => return @import("container-probe.zig").arced(a, bytes, limit),
+        66 => return @import("shape-polygon-probe.zig").run(a, bytes),
         else => return error.InvalidMode,
     }
 }

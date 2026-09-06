@@ -10,15 +10,8 @@ pub const Rectangle = struct {
         var r: Reader = .{ .bytes = bytes };
         const round_rate = try r.readInt(u8);
         var points: [4]Point = undefined;
-        switch (layout) {
-            .specified_axes => {
-                for (&points) |*p| p.x = try r.readInt(i32);
-                for (&points) |*p| p.y = try r.readInt(i32);
-            },
-            .observed_points => for (&points) |*p| {
-                p.* = try Point.read(&r);
-            },
-        }
+        const view = try @import("shape_points.zig").Points.read(&r, points.len, if (layout == .specified_axes) .separate_axes else .interleaved);
+        for (&points, 0..) |*p, i| p.* = view.get(i).?;
         return .{ .round_rate = round_rate, .points = points, .extra = bytes[r.offset..] };
     }
 };

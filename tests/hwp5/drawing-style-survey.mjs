@@ -11,6 +11,7 @@ import { rectangleOwnerActual } from "./rectangle-validation.mjs";
 import { ellipseActual } from "./shape-ellipse.mjs";
 import { ellipseOwnerActual } from "./ellipse-validation.mjs";
 import { arcOwnerActual } from "./arc-validation.mjs";
+import { polygonActual } from "./shape-polygon.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -28,6 +29,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
   out.rectangles = { parsed: 0, rejected: 0, groupDrawingRects: 0, rounds: {}, extras: {}, deferredOwners: {} };
   out.ellipses = { parsed: 0, rejected: 0, attributes: {}, extras: {}, files: {}, deferredOwners: {} };
+  out.polygons = { parsed: 0, rejected: 0, counts: {}, extras: {}, tails: {}, files: {}, deferredOwners: {} };
   out.metadata = { parsed: 0, rejected: 0, reservedNonzero: 0, alphaNonzero: 0, reservedExamples: [] };
   const drawingIds = new Set(["$lin", "$rec", "$ell", "$arc", "$pol", "$cur"]);
   for (const name of readdirSync(root, { recursive: true }).filter(n => n.endsWith(".hwp")).sort()) {
@@ -68,6 +70,18 @@ export function drawingStyleSurvey(call, cfb) {
       for (const record of records) {
         const level = bytes.readUInt32LE(record.offset) >>> 10 & 1023;
         stack.length = level;
+        if(record.tag===82){
+          const parent=stack[level-1];
+          const owner=parent?.tag===76?Buffer.from(bytes.subarray(parent.start,parent.start+4)).reverse().toString("latin1"):"other";
+          if(owner==="$pol"){
+            const polygon=polygonActual(call,bytes.subarray(record.start,record.end));
+            out.polygons.parsed++;out.polygons.rejected+=polygon.rejected;
+            out.polygons.files[name]=(out.polygons.files[name]??0)+1;
+            out.polygons.counts[polygon.count]=(out.polygons.counts[polygon.count]??0)+1;
+            out.polygons.extras[polygon.extra]=(out.polygons.extras[polygon.extra]??0)+1;
+            out.polygons.tails[polygon.tail]=(out.polygons.tails[polygon.tail]??0)+1;
+          }else out.polygons.deferredOwners[owner]=(out.polygons.deferredOwners[owner]??0)+1;
+        }
         if(record.tag===80){
           const parent=stack[level-1];
           const owner=parent?.tag===76?Buffer.from(bytes.subarray(parent.start,parent.start+4)).reverse().toString("latin1"):"other";
@@ -180,6 +194,7 @@ export function drawingStyleSurvey(call, cfb) {
   if(existsSync(join(fileURLToPath(root),"group-drawing-02.hwp")))assert.equal(out.lines.groupDrawingLines,4);
   if(existsSync(join(fileURLToPath(root),"group-drawing-02.hwp")))assert.equal(out.rectangles.groupDrawingRects,30);
   if(existsSync(join(fileURLToPath(root),"basic/KTX.hwp")))assert.equal(out.ellipses.files["basic/KTX.hwp"],19);
+  if(existsSync(join(fileURLToPath(root),"basic/KTX.hwp")))assert.equal(out.polygons.files["basic/KTX.hwp"],21);
   const versions = Object.values(out.versions);
   const kinds = Object.values(out.kinds);
   for (const [versionField, kindField] of [["full", "known"], ["unknown", "unknown"]]) {
