@@ -19,14 +19,8 @@ pub fn inspectDecoded(a: std.mem.Allocator, input: Input, options: Options) !Rep
     const doc = try @import("docinfo.zig").inspect(a, input.doc_info, header.version(), local);
     if (doc.properties.section_count != input.sections.len) return error.SectionCountMismatch;
     // Allocate from checked supplied sections, never only from a declared count.
-    const order = try a.alloc(usize, input.sections.len);
+    const order = try @import("section_order.zig").build(a, input.sections);
     defer a.free(order);
-    @memset(order, std.math.maxInt(usize));
-    for (input.sections, 0..) |s, i| {
-        if (s.index >= order.len) return error.InvalidSectionIndex;
-        if (order[s.index] != std.math.maxInt(usize)) return error.DuplicateSectionIndex;
-        order[s.index] = i;
-    }
     const sections = try a.alloc(types.SectionReport, input.sections.len);
     errdefer a.free(sections);
     var records = doc.records;

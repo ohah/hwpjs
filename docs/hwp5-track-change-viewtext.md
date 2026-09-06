@@ -1,8 +1,8 @@
-# 변경 추적 payload·ViewText 조사
+# 변경 추적 ViewText 경계 검증·payload 조사
 
 [내용·정보 계약](hwp5-track-changes.md) · [작성자 계약](hwp5-track-authors.md) · [컨테이너 계약](hwp5-document-contracts.md)
 
-이 문서는 확인된 근거와 다음 구현에 필요한 누락을 기록합니다. ViewText 검증이나 변경 추적 필드 해석을 구현 완료한 문서가 아닙니다.
+이 문서는 ViewText의 압축·framing·구역 경계 검증과 아직 미완료인 의미 검증을 구분합니다. 전체 변경 추적 필드 해석을 구현 완료한 문서가 아닙니다.
 
 ## 공개 답변으로 확인한 역할
 
@@ -12,9 +12,19 @@
 
 ## 현재 코드의 검증 경계
 
-`src/hwp5/container/sections.zig`는 `/BodyText`의 직접 Section 자식만 압축 해제합니다. `container/validation.zig`는 그 배열을 문서 검증에 전달하며 사용하지 않은 스트림을 `uninspected_streams`로 집계합니다. `/ViewText` 검증은 아직 연결되어 있지 않습니다. DocInfo의 내용·작성자 개수 검사가 성공해도 ViewText가 유효하다는 뜻이 아닙니다.
+`src/hwp5/container/sections.zig`는 BodyText와 ViewText의 직접 Section 자식에 같은 bounded decode를 제공합니다. BodyText는 기존 문서 의미 검사기로 보내고, ViewText는 `container/view_text.zig`에서 별도 framing 검사를 수행합니다. 기본 경로에서 실행하며 압축 실패를 BodyText나 원시 바이트로 대체하지 않습니다.
 
-ReleaseFast 테스트 bridge(mode 25)로 `issue5169_viewtext_changetracking.hwp` 원본의 보고서를 얻은 뒤, CFB writer로 **메모리 안에서만** `/ViewText/Section0` 내용을 한 바이트 `ff`로 교체했습니다. 변경 CFB도 검증에 성공하고 원본과 보고서 바이트가 같았습니다. 손상 압축이 허용된 것이 아니라 해당 스트림을 읽지 않은 결과입니다. 이 동작을 향후에도 유지해야 하는 정상 회귀 기대값으로 고정하지 않습니다.
+ViewText가 있으면 변경 추적 플래그와 무관하게 검사합니다. 지원하는 컨테이너 계약상 변경 추적 플래그가 있는데 ViewText가 없으면 `MissingViewText`입니다. 저장소 종류, Section 이름, DocInfo/BodyText와 같은 구역 수, 연속 인덱스, 비어 있지 않은 구역을 확인합니다. 이 지원 계약을 모든 미관측 버전의 완전한 명세라고 주장하지 않습니다. 배포용·암호화/DRM 지원 정책은 기존 `stream.requireSupported`가 계속 소유합니다.
+
+`document/section_order.zig`는 BodyText와 ViewText의 인덱스 정렬·중복/범위 검사 단일 출처입니다. 배열은 선언값이 아닌 이미 공급된 구역 수로 할당합니다. 압축 해제는 공통 `stream.decode`, 레코드 경계는 `record.Iterator`, Section 이름은 `container/paths.zig`를 재사용합니다.
+
+ViewText 해제 바이트는 `max_total_bytes`의 공유 예산을 소비하며 DocInfo/BodyText에서 사용한 뒤 남은 `max_total_records` 안에서 검사합니다. 구역마다 전체 레코드 예산을 다시 부여하지 않습니다. 실패 시 전체 컨테이너 검증을 종료하고 문서 보고서·임시 해제 버퍼·구역 순서 배열을 정리합니다. 성공 보고서는 ViewText 원문 포인터를 남기지 않습니다.
+
+`Report.view_text`는 declared/present, sections, records, decoded_bytes, deferred_records를 제공합니다. 모든 ViewText 레코드는 아직 의미 검증 전이므로 deferred_records는 records와 같습니다. framing을 검사한 스트림은 uninspected_streams에서 빠지지만, 이를 payload 검증 완료로 해석하지 않습니다. 기존 BodyText 보고서와 섞지 않으며 총 decode 바이트에는 ViewText를 포함합니다. 테스트 mode 98은 위 여섯 값을 반환하고 mode 25도 같은 기본 검증을 수행합니다.
+
+## 수정 전 누락 재현
+
+연결 전 ReleaseFast 테스트 bridge(mode 25)로 `issue5169_viewtext_changetracking.hwp` 원본의 보고서를 얻은 뒤, CFB writer로 **메모리 안에서만** `/ViewText/Section0` 내용을 한 바이트 `ff`로 교체했습니다. 당시에는 변경 CFB도 검증에 성공하고 원본과 보고서 바이트가 같았습니다. 현재 테스트는 이 변형을 mode 25/98 모두 거부하도록 검사합니다.
 
 ## 실제 두 문서의 스트림 차이
 
@@ -28,6 +38,14 @@ ReleaseFast 테스트 bridge(mode 25)로 `issue5169_viewtext_changetracking.hwp`
 | task2070 ViewText/Section0 | 8,015,903 | 265,451 | 53,448 | 809,400 |
 
 task2070의 전체 파일명은 `task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp`입니다. 문단 수가 같아도 레코드와 텍스트 바이트는 다르므로 스트림을 같은 본문으로 간주하거나 합쳐서 검증하지 않습니다. 위 수치는 framing 통계이지 문단·필드 의미 규칙의 성공 판정이 아닙니다.
+
+430개 읽기 가능한 컨테이너의 추가 조사에서 플래그와 ViewText가 모두 없는 것은 427개, 모두 있는 것은 위 2개였습니다. `20250130-hongbo.hwp`는 플래그가 꺼져 있어도 ViewText/Section0이 있습니다. 따라서 플래그만으로 존재하는 스트림의 검사를 생략하지 않습니다.
+
+다만 실제 `20250130-hongbo.hwp`의 ViewText는 현재 디코딩 경로에서 `InvalidDeflate`입니다. 첫 DWORD는 태그 28·레벨 0·256바이트 길이의 배포용 데이터 레코드 형태(`1c000010`)이며, Node raw DEFLATE도 실패했습니다. FileHeader의 배포용 비트는 꺼져 있습니다. 따라서 이 파일은 새 컨테이너 검증에서 거부되며, 일반 ViewText 지원 성공 사례로 세지 않습니다. 이 사실만으로 파일 전체 손상이나 이 스트림의 암호 방식까지 확정하지 않습니다. 공개 CFB 읽기·쓰기 API는 그대로 사용할 수 있습니다.
+
+task2070을 전체 컨테이너 mode 98로 검사하면 기존 BodyText 의미 검사에서 `ControlIdMismatch`로 먼저 실패합니다. 이 파일의 ViewText 수치는 독립 framing 조사 결과이지 신규 컨테이너 경로의 전체 성공 증거가 아닙니다. issue5169는 실제 컨테이너 검증 및 변조 테스트를 통과한 표본입니다.
+
+기존 decoded 문서 의미 검사기에 두 ViewText를 직접 공급하면 각각 `InvalidLinePosition`, `ControlIdMismatch`가 발생했습니다. 이를 피하려고 기존 BodyText 규칙을 완화하지 않았습니다. 다음 단계는 이 차이의 원인과 ViewText 전용 규칙의 근거를 조사하는 것입니다.
 
 ## payload 해석 근거의 한계
 
@@ -43,13 +61,21 @@ node tests/hwp5/track-change-survey.mjs zig-out/bin/hwpjs.wasm
 
 스크립트는 CFB 제품 reader, Node 압축 해제, 독립 레코드 순회와 기존 테스트용 ZIP/XML 추출기를 사용합니다. 제품 HWPX 파서를 추가하지 않으며 파일·표본을 수정하지 않습니다.
 
-조사 스크립트 실행·JS 구문 검사·주제 문서 링크와 diff 공백 검사를 완료했습니다. 이 조사에서는 제품 코드를 바꾸거나 전체 3모드 감사를 다시 실행하지 않았습니다. 스트림 손상 재현에는 직전 전체 감사를 통과한 ReleaseFast probe를 사용했습니다.
+최초 조사에서는 제품 코드 변경 없이 통계를 확인했습니다. 이후 경계 검증 연결의 회귀 검사는 아래와 구분합니다.
+
+## 경계 검증의 적대적 테스트
+
+`src/hwp5/container/view_text_tests.zig`는 성공·늦은 framing 실패의 모든 할당 실패, 플래그와 저장소 존재의 구분, 바이트/레코드 정확한 한도와 한 단위 부족을 검사합니다. 두 ViewText 구역의 누적 레코드 한도와 두 번째 구역에서 발생한 실패의 정리도 확인합니다.
+
+`tests/hwp5/view-text.mjs`는 실제 issue5169의 2,814레코드/105,182바이트 보고서를 독립 framing 결과와 대조합니다. 잘못된 압축, 빈 구역, 잘린 일반/확장 헤더·payload, 최대 길이, 저장소 누락, 이름/인덱스 오류, 추가 구역, 플래그 해제, 정확한 공유 한도를 검사합니다. 매 변형 후 같은 인스턴스에서 원본 결과로 복구하는지도 확인합니다. 임의 unknown 레코드가 framing은 통과하되 전부 deferred로 보고되는 경계도 검사합니다. 스냅샷이나 디스크 표본은 변경하지 않습니다.
+
+Debug/ReleaseSafe/ReleaseFast 순차 전체 audit는 모두 성공했으며 각 모드에서 Node 47/47, WASM 1,381,128회를 통과했습니다. Debug 전체 감사의 네이티브는 260/260이었고, 다구역 테스트 추가 후 최종 Debug 네이티브 재실행 및 Safe/Fast 전체 감사에서 261/261을 확인했습니다. ViewText 전용 실제 문서 테스트는 정상 4건·거부 24건이며 오류 후 원본 복구를 별도 포함합니다. 포맷·JS 구문·문서 링크·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-view-text-{debug,safe,fast}.log`, `/tmp/hwpjs-view-text-final-native-debug.log`입니다. 전체 감사의 성공은 위에서 명시한 미지원 실파일이나 deferred 의미 검증의 성공을 뜻하지 않습니다.
 
 ## 다음 구현 순서와 완료 조건
 
-1. 컨테이너의 BodyText/ViewText 선택 책임을 분리하고 기본 본문 결과와 변경 추적 결과를 별도로 보고합니다. 배포용·암호화 정책은 유지합니다.
-2. 선택된 ViewText의 정확한 경로·구역 인덱스·총 해제 한도·실패 시 메모리 해제를 검증합니다. framing 성공과 의미 검증을 구분합니다.
-3. 실제 ViewText에서 변경 추적 필드·범위와 DocInfo 참조를 조사합니다. BodyText의 문단·필드 규칙을 검증 없이 그대로 적용하지 않습니다.
-4. 잘못된 압축, 빠진/중복 구역, 범위·참조 손상, 한도 초과와 오류 후 복구를 실제 문서 변조로 검사합니다.
+1. `InvalidLinePosition`/`ControlIdMismatch`의 실제 위치·원인과 ViewText 표현 차이를 확인합니다.
+2. 변경 추적 필드·범위와 DocInfo의 내용·작성자 참조를 연결합니다. BodyText의 규칙을 검증 없이 그대로 적용하지 않습니다.
+3. 범위·참조 손상을 실제 ViewText 변조로 검사하고 deferred 감소의 근거를 남깁니다.
+4. 플래그가 꺼진 채 남아 있는 배포용 형태 ViewText의 인코딩·보존 정책을 조사합니다. 압축 실패를 원문이나 BodyText로 자동 대체하지 않습니다.
 
 위 경로가 검증되기 전까지 전체 변경 추적 검증은 미완료입니다. 현재의 작은 표본만으로 payload 필드를 확정하는 작업보다 이 누락을 우선합니다.

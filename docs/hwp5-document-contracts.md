@@ -4,11 +4,11 @@
 
 이 문서는 해당 주제의 현재 책임·소유권·미지원 경계를 소유합니다. 계약과 새 검증 결과는 해당 주제에서 관리하고, 내용이 커지면 별도 문서로 분리하여 연결합니다.
 
-- [변경 추적 ViewText 조사](hwp5-track-change-viewtext.md)는 현재 BodyText 검증에서 제외된 스트림의 실측·재현 근거와 다음 구현 조건을 관리합니다.
+- [변경 추적 ViewText 계약·조사](hwp5-track-change-viewtext.md)는 별도 압축·framing·구역 경계 검증, 공유 한도와 미완료 의미 검증을 관리합니다.
 
 - `src/hwp5/document/`: types는 입력/소유권/보고서, docinfo는 리소스 검증 연결, section은 기존 본문 검사기 조립, validation은 헤더 지원 정책·구역 수/인덱스·전역 한도를 소유합니다. inspectDecoded 입력은 이미 압축 해제된 스트림이며 CFB를 검색하지 않습니다. 구역 보고서는 인덱스 순서로 소유하고 DocInfo 원문 슬라이스는 빌립니다. 레벨·ID·구역 정의 첫 문단 조건 등 기존 의미 규칙을 이 계층에 복제하지 않습니다.
 
-- `src/hwp5/container/`: paths는 CFB 계층 조회와 정규 Section/BinData 이름, sections는 직접 BodyText 자식의 bounded decode, binaries는 항목별 압축/외부 링크 보류, validation은 파일 단위 수명과 총 decode 한도를 소유합니다. strict CFB와 findExact만 사용하며 동명 basename fallback·외부 링크 접근·압축 실패 후 원본 fallback을 금지합니다. 반환 보고서는 DocInfo backing을 소유하므로 입력 CFB를 해제해도 유효합니다. uninspected 스트림은 완료로 세지 않습니다.
+- `src/hwp5/container/`: paths는 CFB 계층 조회와 정규 Section/BinData 이름, sections는 직접 Section 자식의 bounded decode, binaries는 항목별 압축/외부 링크 보류, validation은 파일 단위 수명과 총 decode 한도를 소유합니다. strict CFB와 findExact만 사용하며 동명 basename fallback·외부 링크 접근·압축 실패 후 원본 fallback을 금지합니다. 반환 보고서는 DocInfo backing을 소유하므로 입력 CFB를 해제해도 유효합니다. uninspected 및 별도 deferred 진단을 완료로 세지 않습니다.
 
 - `hwp5/preview/text.zig`는 길이 접두사 없는 raw UTF-16LE 미리보기 뷰/진단, `container/preview.zig`는 선택 루트 PrvText 조회와 전체 소비 한도를 소유합니다. 본문 제어문자 문법·NUL 종결·BOM 제거·2048바이트 상한을 임의 적용하지 않습니다. 고립 서로게이트는 치환하지 않고 수치로 진단합니다. 검사 보고서 존재를 무조건 Unicode 정상 판정으로 해석하지 않습니다.
 

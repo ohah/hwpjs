@@ -3,6 +3,7 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub const Selection = struct {
+    view_text_report: bool = false,
     forbidden_report: bool = false,
     forbidden_layout: @FieldType(core.hwp5.document_validation.Options, "forbidden_chars") = .preserve_raw,
     memo_report: bool = false,

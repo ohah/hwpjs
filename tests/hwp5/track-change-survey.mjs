@@ -11,10 +11,10 @@ const root=new URL('../../reference/rhwp/samples/',import.meta.url);
 const cfb=await createCfbReader(readFileSync(process.argv[2]??'zig-out/bin/hwpjs.wasm'));
 const results=[];
 try{
-  for(const name of ['issue5169_viewtext_changetracking.hwp','task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp']){
+  for(const name of ['issue5169_viewtext_changetracking.hwp','task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp','20250130-hongbo.hwp']){
     cfb.parse(readFileSync(new URL(name,root)),{strict:true});
     const nodes=cfb.document().nodes,h=Buffer.from(cfb.findExact('/FileHeader').content),flags=h.readUInt32LE(36);
-    assert.equal(flags,16385);
+    assert.equal(flags&6,0);
     const decode=raw=>flags&1?inflateRawSync(raw):Buffer.from(raw);
     const doc=decode(cfb.findExact('/DocInfo').content),authors=[];
     for(const r of documentRecords(doc).filter(r=>r.tag===97)){
@@ -26,7 +26,11 @@ try{
     for(const kind of ['BodyText','ViewText']){
       const parent=nodes.findIndex(n=>n.parent===0&&n.name===kind);assert.ok(parent>=0);
       for(const n of nodes.filter(n=>n.parent===parent&&/^Section\d+$/.test(n.name))){
-        const bytes=decode(n.content),rs=documentRecords(bytes);
+        let bytes;
+        try{bytes=decode(n.content);}catch(error){
+          streams.push({kind,name:n.name,decodeError:error.message,encodedPrefix:Buffer.from(n.content).subarray(0,4).toString('hex')});continue;
+        }
+        const rs=documentRecords(bytes);
         streams.push({kind,name:n.name,bytes:bytes.length,records:rs.length,paragraphs:rs.filter(r=>r.tag===66).length,textBytes:rs.filter(r=>r.tag===67).reduce((sum,r)=>sum+r.end-r.start,0)});
       }
     }

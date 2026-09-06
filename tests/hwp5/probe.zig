@@ -159,6 +159,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         95 => return @import("forbidden-chars-probe.zig").run(a, bytes),
         96 => return @import("document-probe.zig").forbidden(a, bytes, limit),
         97 => return @import("container-probe.zig").forbidden(a, bytes, limit),
+        98 => return @import("container-probe.zig").viewText(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

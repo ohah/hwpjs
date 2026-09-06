@@ -57,6 +57,14 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     used.add(path.toLowerCase());
   }
   const nodes = cfb.document().nodes;
+  let viewBytes = 0, viewRecords = 0;
+  const viewRoot = nodes.findIndex(n => n.parent === 0 && n.name.toLowerCase() === 'viewtext');
+  if (viewRoot >= 0) for (const n of nodes.filter(n => n.parent === viewRoot && /^section\d+$/i.test(n.name))) {
+    const plain = h.readUInt32LE(36) & 1 ? inflateRawSync(n.content) : Buffer.from(n.content);
+    viewBytes += plain.length;
+    viewRecords += documentRecords(plain).length;
+    used.add(`/viewtext/${n.name.toLowerCase()}`);
+  }
   const scripts = scriptsActual(call, cfb, h, used);
   const summaryEntry = cfb.findExact("/\x05HwpSummaryInformation");
   const summaryBytes = summaryEntry
@@ -84,7 +92,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     stats[2] +
     previewBytes.length +
     summaryBytes.length +
-    scripts[8];
+    scripts[8] + viewBytes;
   const want = Buffer.concat([
     expected,
     ...scripts.map(w),
@@ -92,7 +100,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     ...preview.map(w),
     ...[...stats, total, uninspected].map(w),
   ]);
-  assert.deepEqual(run(call, bytes, total, expected.readUInt32LE(16)), want);
+  assert.deepEqual(run(call, bytes, total, expected.readUInt32LE(16) + viewRecords), want);
   assert.throws(() => run(call, bytes, total - 1), /LimitExceeded/);
   return [
     1,

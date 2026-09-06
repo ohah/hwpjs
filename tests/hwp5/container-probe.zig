@@ -4,6 +4,9 @@ const int = @import("resource-probe.zig").int;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return inspect(a, bytes, limit, false, .{});
 }
+pub fn viewText(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return inspect(a, bytes, limit, false, .{ .view_text_report = true });
+}
 pub fn forbidden(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const layout = try @import("document-probe.zig").readForbidden(&r);
@@ -54,6 +57,13 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: boo
         .max_total_records = limit,
     } });
     defer report.deinit(a);
+    if (selection.view_text_report) {
+        var out: std.ArrayList(u8) = .empty;
+        errdefer out.deinit(a);
+        const v = report.view_text;
+        for ([_]usize{ @intFromBool(v.declared), @intFromBool(v.present), v.sections, v.records, v.decoded_bytes, v.deferred_records }) |n| try int(a, &out, u32, @intCast(n));
+        return out.toOwnedSlice(a);
+    }
     if (selection.forbidden_report) {
         var out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(a);

@@ -5,6 +5,10 @@ const paths = @import("paths.zig");
 /// Owns array and decoded bytes; marks only direct BodyText section streams.
 pub fn decode(a: std.mem.Allocator, file: *const File, header: *const @import("../file_header.zig").Header, used: []bool, remaining: *usize, max_sections: usize) ![]Section {
     const body = try paths.required(file, "/BodyText", 1);
+    return decodeAt(a, file, body, header, used, remaining, max_sections);
+}
+/// Shared bounded decoding of direct canonical Section children of a checked storage.
+pub fn decodeAt(a: std.mem.Allocator, file: *const File, body: usize, header: *const @import("../file_header.zig").Header, used: []bool, remaining: *usize, max_sections: usize) ![]Section {
     var result: std.ArrayList(Section) = .empty;
     errdefer {
         for (result.items) |s| a.free(s.bytes);

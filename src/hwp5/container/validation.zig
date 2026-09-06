@@ -13,6 +13,7 @@ pub const Options = struct {
 /// Owns DocInfo backing bytes and the document report. Does NOT own the input CFB.
 /// Decoded binary bytes are checked for compression integrity, not image/OLE semantics.
 pub const Report = struct {
+    view_text: @import("view_text.zig").Report,
     document: d.Report,
     binary_data: binaries.Report,
     preview_text: ?@import("../preview/text.zig").Stats,
@@ -52,6 +53,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     defer sections.deinit(a, body);
     var report = try d.inspectDecoded(a, .{ .header = &header.raw, .doc_info = doc, .sections = body }, options.document);
     errdefer report.deinit(a);
+    const view = try @import("view_text.zig").inspect(a, &file, &header, used, &remaining, options.document.max_total_records - report.total_records, report.sections.len, options.document);
     const bins = try binaries.inspect(a, &file, &header, doc, options.document.framing, options.storage_layout, used, &remaining);
     const preview = try @import("preview.zig").inspect(&file, used, &remaining);
     const summary = try @import("summary.zig").inspect(a, &file, used, &remaining, options.max_summary_properties);
@@ -60,5 +62,5 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     for (file.entries, used) |entry, consumed| if (entry.kind == 2 and !consumed) {
         uninspected += 1;
     };
-    return .{ .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
+    return .{ .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
 }
