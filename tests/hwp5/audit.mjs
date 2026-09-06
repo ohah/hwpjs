@@ -34,6 +34,7 @@ import { equationEdges, equationReference } from "./equation.mjs";
 import { equationValidationEdges } from "./equation-validation.mjs";
 import { oleEdges, oleReference } from "./ole.mjs";
 import { oleValidationEdges } from "./ole-validation.mjs";
+import { storageEdges } from "./storage-extension.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -357,6 +358,7 @@ const equationEdgeResults = equationEdges(call);
 const equationValidationEdgeResults = equationValidationEdges(call);
 const oleEdgeResults = oleEdges(call);
 const oleValidationEdgeResults = oleValidationEdges(call);
+const storageEdgeResults = storageEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -787,6 +789,7 @@ console.log(
       equationValidationEdgeResults,
       oleEdgeResults,
       oleValidationEdgeResults,
+      storageEdgeResults,
       oleReferenceResults,
       equationReferenceResults,
       noteControlReferenceResults,

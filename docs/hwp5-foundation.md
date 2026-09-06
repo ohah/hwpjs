@@ -1344,3 +1344,23 @@ payload 해석은 equation.Properties, ID는 control_rules.equation_id, 태그 �
 직접 OLE payload 소유권과 문서 연결은 추가됐지만 BinData 참조 해석·storage형 확장자와 컨테이너 경로·상위 도형 전체 계층/기하·임베디드 OLE/차트 내부 형식·표시/편집은 남았습니다. 다음 단계는 실제 CFB 실패를 만드는 storage 확장자 계약입니다. pending_references를 해소하지 않은 채 전체 OLE 지원 완료라고 판단하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 178/178, Node 47/47, HWP5 WASM 175,295회 검사 통과(참조 표본 존재). OLE 소유권 합성 성공 64건·거부 60건입니다. CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다. 이 수치는 두 OLE 원본의 MissingHwpEntry 예상 실패 검사를 포함하며 두 원본의 전체 CFB 성공을 의미하지 않습니다.
+
+## storage형 BinData 확장자와 실제 OLE 컨테이너 복구 (2026-09-06)
+
+명세 스킬 4.2.3의 표 17은 확장자를 EMBEDDING에만 정의합니다. 앞 단계 실제 두 OLE 표본은 STORAGE(type 2)의 ID 뒤에도 counted UTF-16 OLE를 저장합니다. 새 StorageLayout은 specified/observed_optional_extension으로 구분하며 `BinData.parse`의 명세 envelope 및 원문 extra는 그대로 둡니다. `BinData.target(layout)`이 embedding/storage의 ID·선택 extension_utf16·남은 extra view를 반환합니다. LINK/미지원 타입은 null이고 외부 경로를 읽지 않습니다.
+
+observed_optional_extension은 꼬리가 없으면 확장자 부재(null)이고, 꼬리가 있으면 완전한 u16 길이+문자열이 필요합니다. 길이 0인 문자열은 존재하되 빈 확장자이며 부재와 구분합니다. 잘린 prefix/문자열에 대해 지정되지 않은 명세 배치로 fallback하지 않습니다. specified는 storage 꼬리를 전부 미지 extra로 남깁니다. 형식 해석은 BinData.target, 경로 검증/조합은 기존 paths.binary, 정확한 파일 조회·압축/총량 한도는 container.binaries가 소유합니다. 컨테이너 Options.storage_layout 기본값은 관측 선택 배치입니다.
+
+실제 한셀OLE.hwp 및 issue5724/2689441_wmf_contents_ole.hwp가 이제 BIN0001.OLE을 정확히 찾고 전체 CFB 검사를 통과합니다. 이전 MissingHwpEntry 보류를 원본 성공 검사로 교체했습니다. OLE payload의 BinData ID가 순번인지 storage ID인지에 대한 별도 pending_references는 변경하지 않습니다. 경로 복구를 이 참조 의미의 검증으로 혼동하지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 네이티브에서 specified/관측 선택의 차이, 원래 item.extra 보존, 확장자 뒤 꼬리, 부재/null과 빈 문자열, 최대 ID, embedding 재사용, LINK/unknown 비대상을 검사했습니다. storage 확장자 선언이 시작된 뒤의 모든 잘림을 거부했습니다.
+2. WASM target view를 독립 바이트 기대값과 대조하고 잘림/잘못된 모드를 검사했습니다. 표준 BinData 재구성 probe와 기존 전체 DocInfo 회귀도 유지해 기존 parse 계약을 바꾸지 않았음을 확인합니다.
+3. 실제 두 파일의 DocInfo를 메모리에서 변형해 모든 확장자 prefix 잘림, NUL·슬래시·고립 서로게이트, 존재하지 않는 확장자를 CFB 경로에서 거부했습니다. 확장자를 가진 DocInfo를 두고 스트림만 BIN0001로 바꿔도 거부합니다. basename fallback은 없습니다.
+4. 확장자 부재 및 빈 확장자로 변경한 DocInfo와 확장자 없는 스트림은 허용했습니다. 명세 모드는 원본 BIN0001.OLE에 대해 MissingHwpEntry이며, 명시적으로 BIN0001로 이름을 바꾼 합성 컨테이너에서는 원본 관측 모드와 같은 보고서를 반환합니다. 명세 모드가 몰래 관측 확장자를 채택하지 않음을 검사합니다.
+5. 각 오류 뒤 정상 CFB 보고서를 다시 대조했습니다. 실제 파일 전체의 독립 컨테이너 oracle·decode 한도·원래 OLE 문서 소유권 및 두 구역 순서 검증도 함께 실행했습니다. 원본 파일은 변경하지 않았고 참조 표본이 없으면 skipped입니다.
+
+이 단계에서 두 원본의 storage 확장자 경로 실패는 해소했습니다. 확장자 뒤 미지 꼬리 의미, 모든 버전의 배치 규칙, OLE ID 참조 의미·임베디드 내부 형식·상위 도형 의미·표시/편집은 남았습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 179/179, Node 47/47, HWP5 WASM 175,370회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다. 두 OLE 원본의 기본 관측 모드 CFB 성공과 명세 모드 예상 실패를 구분해 검증했습니다.

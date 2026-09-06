@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
 import { documentRecords, documentActual, decodedDocumentInput } from "./documents.mjs";
+import { containerActual } from "./containers.mjs";
 import { oleActual, oleRun } from "./ole-validation.mjs";
+import { storageDocumentEdges } from "./storage-extension.mjs";
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 const run=(call,b,mode)=>call(46,Buffer.concat([Buffer.from([mode]),b]));
 function check(call,b,mode) {
@@ -44,8 +46,8 @@ export function oleReference(call,cfb) {
     assert.deepEqual(doc.subarray(bin.start,bin.end),Buffer.from('0200010003004f004c004500','hex'));
     assert.equal(cfb.findExact('/BinData/BIN0001'),null);
     assert.ok(cfb.findExact('/BinData/BIN0001.OLE'));
-    assert.throws(()=>call(25,Buffer.concat([w(67108864),readFileSync(path)])),/MissingHwpEntry/);
-    const container={pending:'storage extension OLE: MissingHwpEntry'};
+    const container=containerActual(call,readFileSync(path),cfb,h,doc,sections);
+    const storage=storageDocumentEdges(call,cfb,h,doc,readFileSync(path));
     const record=rows[0],missing=Buffer.concat([b.subarray(0,record.offset),b.subarray(record.end)]),duplicate=Buffer.concat([b.subarray(0,record.end),b.subarray(record.offset,record.end),b.subarray(record.end)]);
     for(const [bad,error] of [[missing,/MissingOle/],[duplicate,/DuplicateOle/]]) {
       assert.throws(()=>oleRun(call,h.readUInt32LE(32),bad),error);
@@ -64,7 +66,7 @@ export function oleReference(call,cfb) {
     assert.equal(changed.readUInt32LE(12),0xccdd0001);
     // Truncating unknown tail bytes is not a required-field error.
     for(let n=26;n<30;n++)check(call,p.subarray(0,n),1);
-    files.push({name,attributes:p.readUInt32LE(0),extentX:p.readInt32LE(4),extentY:p.readInt32LE(8),binDataId:p.readUInt16LE(12),extraBytes:4,ownership,document,container});
+    files.push({name,attributes:p.readUInt32LE(0),extentX:p.readInt32LE(4),extentY:p.readInt32LE(8),binDataId:p.readUInt16LE(12),extraBytes:4,ownership,document,container,storage});
   }
   return {files,rejected,skipped};
 }

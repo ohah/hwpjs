@@ -2,9 +2,15 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return inspect(a, bytes, limit, false);
+}
+pub fn specifiedStorage(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return inspect(a, bytes, limit, true);
+}
+fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: bool) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const max_bytes = try r.readInt(u32);
-    var report = try core.hwp5.container_validation.inspect(a, bytes[r.offset..], .{ .document = .{
+    var report = try core.hwp5.container_validation.inspect(a, bytes[r.offset..], .{ .storage_layout = if (specified) .specified else .observed_optional_extension, .document = .{
         .list_layout = .observed8,
         .zone_layout = .observed_row_first,
         .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty },

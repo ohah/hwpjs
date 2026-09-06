@@ -42,7 +42,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     }
     const id = b.readUInt16LE(2),
       ext =
-        type === 1
+        (type === 1 || b.length > 4)
           ? b.subarray(6, 6 + 2 * b.readUInt16LE(4)).toString("utf16le")
           : "";
     const path = `/BinData/BIN${id.toString(16).padStart(4, "0")}${ext ? "." + ext : ""}`;
