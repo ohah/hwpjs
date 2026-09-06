@@ -8,6 +8,7 @@ import { scriptEdges } from "./scripts.mjs";
 import { xmlTemplateEdges } from "./xml-template.mjs";
 import { optionalSurvey } from "./optional-survey.mjs";
 import { historyEdges, historyActual } from "./history.mjs";
+import { compatibilityEdges } from "./compatibility.mjs";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
@@ -309,6 +310,7 @@ const codepageEdgeResults = codepageEdges(call);
 const scriptEdgeResults = scriptEdges(call);
 const xmlTemplateEdgeResults = xmlTemplateEdges(call);
 const historyEdgeResults = historyEdges(call);
+const compatibilityEdgeResults = compatibilityEdges(call);
 const historyActualResults = historyActual(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
 const containerEdgeResults = containerEdges(call, cfb);
@@ -522,7 +524,7 @@ assert.deepEqual(body, {
   controlHeaders: 313,
   listHeaders: 643,
 });
-assert.deepEqual(references, [7881, 0, 316, 138]);
+assert.deepEqual(references, [7881, 0, 316, 70]);
 assert.deepEqual(formatting, {
   tabDef: 138,
   numbering: 50,
@@ -645,6 +647,7 @@ console.log(
       scriptEdgeResults,
       xmlTemplateEdgeResults,
       historyEdgeResults,
+      compatibilityEdgeResults,
       historyActualResults,
       optionalStreamObservations,
       codepageEdgeResults,

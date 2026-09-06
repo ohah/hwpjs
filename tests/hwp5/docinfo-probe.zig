@@ -21,11 +21,19 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
                 for (0..@min(m.count(), 18)) |i| try word(a, &out, @bitCast(m.get(@enumFromInt(i)).?));
                 try out.appendSlice(a, m.extra());
             },
-            .bin_data, .face_name, .tab_def, .numbering, .bullet, .style, .border_fill, .char_shape, .para_shape => {
+            .bin_data, .face_name, .tab_def, .numbering, .bullet, .style, .border_fill, .char_shape, .para_shape, .compatible_document, .layout_compatibility => {
                 try word(a, &out, @intCast(record.framing.raw.len));
                 const header_len = record.framing.raw.len - record.framing.payload.len;
                 try out.appendSlice(a, record.framing.raw[0..header_len]);
                 switch (record.value) {
+                    .compatible_document => |v| {
+                        try word(a, &out, @intFromEnum(v.target));
+                        try out.appendSlice(a, v.extra);
+                    },
+                    .layout_compatibility => |v| {
+                        for ([_]u32{ v.character, v.paragraph, v.section, v.object, v.field }) |n| try word(a, &out, n);
+                        try out.appendSlice(a, v.extra);
+                    },
                     .bin_data, .face_name => try @import("resource-probe.zig").payload(a, &out, record.value),
                     .border_fill, .char_shape, .para_shape => try @import("shape-probe.zig").payload(a, &out, record.value),
                     else => try @import("formatting-probe.zig").payload(a, &out, record.value),

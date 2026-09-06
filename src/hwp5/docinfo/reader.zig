@@ -12,8 +12,10 @@ pub const Style = @import("style.zig").Style;
 pub const BorderFill = @import("border_fill.zig").BorderFill;
 pub const CharShape = @import("char_shape.zig").CharShape;
 pub const ParaShape = @import("para_shape.zig").ParaShape;
-pub const Tag = enum(u10) { document_properties = 16, id_mappings = 17, bin_data = 18, face_name = 19, border_fill = 20, char_shape = 21, tab_def = 22, numbering = 23, bullet = 24, para_shape = 25, style = 26 };
-pub const Value = union(enum) { properties: Properties, id_mappings: IdMappings, bin_data: BinData, face_name: FaceName, border_fill: BorderFill, char_shape: CharShape, tab_def: TabDef, numbering: Numbering, bullet: Bullet, para_shape: ParaShape, style: Style, unknown };
+pub const CompatibleDocument = @import("compatible_document.zig").CompatibleDocument;
+pub const LayoutCompatibility = @import("layout_compatibility.zig").LayoutCompatibility;
+pub const Tag = enum(u10) { document_properties = 16, id_mappings = 17, bin_data = 18, face_name = 19, border_fill = 20, char_shape = 21, tab_def = 22, numbering = 23, bullet = 24, para_shape = 25, style = 26, compatible_document = 30, layout_compatibility = 31 };
+pub const Value = union(enum) { properties: Properties, id_mappings: IdMappings, bin_data: BinData, face_name: FaceName, border_fill: BorderFill, char_shape: CharShape, tab_def: TabDef, numbering: Numbering, bullet: Bullet, para_shape: ParaShape, style: Style, compatible_document: CompatibleDocument, layout_compatibility: LayoutCompatibility, unknown };
 pub const Record = struct { framing: framing.Record, value: Value };
 
 /// Incremental semantic decoding; all records retain their exact raw framing.
@@ -42,11 +44,13 @@ pub const Iterator = struct {
             @intFromEnum(Tag.border_fill) => .{ .border_fill = try BorderFill.parse(r.payload) },
             @intFromEnum(Tag.char_shape) => .{ .char_shape = try CharShape.parse(r.payload, self.version) },
             @intFromEnum(Tag.para_shape) => .{ .para_shape = try ParaShape.parse(r.payload, self.version) },
+            @intFromEnum(Tag.compatible_document) => .{ .compatible_document = try CompatibleDocument.parse(r.payload) },
+            @intFromEnum(Tag.layout_compatibility) => .{ .layout_compatibility = try LayoutCompatibility.parse(r.payload) },
             else => .unknown,
         };
         const expected_level: ?u10 = switch (value) {
-            .properties, .id_mappings => 0,
-            .bin_data, .face_name, .tab_def, .numbering, .bullet, .style, .border_fill, .char_shape, .para_shape => 1,
+            .properties, .id_mappings, .compatible_document => 0,
+            .bin_data, .face_name, .tab_def, .numbering, .bullet, .style, .border_fill, .char_shape, .para_shape, .layout_compatibility => 1,
             .unknown => null,
         };
         if (expected_level) |level| if (r.level != level) return error.InvalidDocInfoLevel;

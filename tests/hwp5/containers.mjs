@@ -189,6 +189,24 @@ export function containerEdges(call, cfb) {
   for (const i of [1, 2, 3, 4, 5]) mixed[i].name = mixed[i].name.toLowerCase();
   assert.deepEqual(run(call, write(mixed)), output);
   const total = 256 + doc(binary()).length + 3;
+  // New typed compatibility records must be checked by the file-level path too.
+  for (const [tag, size, level] of [
+    [30, 4, 0],
+    [31, 20, 1],
+  ]) {
+    const short = nodes();
+    short[2].content = Buffer.concat([
+      short[2].content,
+      frame(tag, Buffer.alloc(size - 1), level),
+    ]);
+    reject(short, /UnexpectedEnd/);
+    const wrongLevel = nodes();
+    wrongLevel[2].content = Buffer.concat([
+      wrongLevel[2].content,
+      frame(tag, Buffer.alloc(size), 1 - level),
+    ]);
+    reject(wrongLevel, /InvalidDocInfoLevel/);
+  }
   for (const compressed of [0, 1]) {
     const sh = Buffer.from(h);
     sh[36] = compressed;
