@@ -44,6 +44,7 @@ test {
     _ = @import("hwp5/body/rectangle_validation_tests.zig");
     _ = @import("hwp5/body/shape_ellipse_tests.zig");
     _ = @import("hwp5/body/shape_arc_tests.zig");
+    _ = @import("hwp5/body/arc_validation_tests.zig");
     _ = @import("hwp5/body/ellipse_validation_tests.zig");
     _ = @import("hwp5/body/tree_tests.zig");
     _ = @import("hwp5/body/section_tests.zig");

@@ -51,6 +51,8 @@ import { rectangleOwnerEdges } from "./rectangle-validation.mjs";
 import { rectangleDocumentReference } from "./rectangle-document.mjs";
 import { ellipseEdges } from "./shape-ellipse.mjs";
 import { arcEdges } from "./shape-arc.mjs";
+import { arcOwnerEdges } from "./arc-validation.mjs";
+import { arcDocumentEdges } from "./arc-document.mjs";
 import { arcSurvey } from "./arc-survey.mjs";
 import { ellipsePair } from "./ellipse-pair.mjs";
 import { ellipseOwnerEdges } from "./ellipse-validation.mjs";
@@ -391,6 +393,8 @@ const rectangleEdgeResults = rectangleEdges(call);
 const rectangleOwnerEdgeResults = rectangleOwnerEdges(call);
 const ellipseEdgeResults = ellipseEdges(call);
 const arcEdgeResults = arcEdges(call);
+const arcOwnerEdgeResults = arcOwnerEdges(call);
+const arcDocumentEdgeResults = arcDocumentEdges(call,cfb);
 const arcSurveyResults = arcSurvey(call,cfb);
 const ellipseOwnerEdgeResults = ellipseOwnerEdges(call);
 let rubyDocumentResults = null;
@@ -846,6 +850,8 @@ console.log(
       rectangleOwnerEdgeResults,
       ellipseEdgeResults,
       arcEdgeResults,
+      arcOwnerEdgeResults,
+      arcDocumentEdgeResults,
       arcSurveyResults,
       ellipseOwnerEdgeResults,
       shapeBorderReferenceResults,

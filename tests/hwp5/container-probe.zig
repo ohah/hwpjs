@@ -2,21 +2,27 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
-    return inspect(a, bytes, limit, false, null);
+    return inspect(a, bytes, limit, false, null, null);
 }
 pub fn specifiedStorage(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
-    return inspect(a, bytes, limit, true, null);
+    return inspect(a, bytes, limit, true, null, null);
 }
 pub fn styled(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const style = try @import("document-probe.zig").readStyle(&r);
-    return inspect(a, bytes[r.offset..], limit, false, style);
+    return inspect(a, bytes[r.offset..], limit, false, style, null);
 }
-fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: bool, style: ?core.hwp5.document_validation.types.DrawingStyleOptions) ![]u8 {
+pub fn arced(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const arc = try @import("document-probe.zig").readArc(&r);
+    return inspect(a, bytes[r.offset..], limit, false, null, arc);
+}
+fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: bool, style: ?core.hwp5.document_validation.types.DrawingStyleOptions, arc: ?core.hwp5.shape_arc.Layout) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const max_bytes = try r.readInt(u32);
     var report = try core.hwp5.container_validation.inspect(a, bytes[r.offset..], .{ .storage_layout = if (specified) .specified else .observed_optional_extension, .document = .{
         .drawing_style = style,
+        .arc_layout = arc,
         .list_layout = .observed8,
         .zone_layout = .observed_row_first,
         .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty },

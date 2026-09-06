@@ -1751,3 +1751,23 @@ needsIntervalUpdate는 bit 0, isArc는 bit 1, arcKindRaw는 bit 2~9의 8비트 �
 현재는 호 payload 코어와 테스트용 WASM 모드 62입니다. 호의 문서 소유권·누락·중복 검사, 실제 호/HWPX 짝 좌표 비교, 호 종류·시작각·끝각·조판 의미 및 나머지 도형은 아직 남아 있습니다. 제품 HWPX·편집·저장 완료를 의미하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 203/203, Node 47/47, HWP5 WASM 344,362회 검사 통과. 호 합성 성공 161/거부 4,283이며 실제 호 payload 검증은 0개입니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-arc-{debug,safe,fast}.log`입니다.
+
+## 호 직접 소유권·명시적 문서 배치 선택 (2026-09-06)
+
+`arc_validation.inspect`를 구역 검사에 연결했습니다. 첫 ID가 $arc인 구성요소의 직접 태그 81 자식은 정확히 하나여야 하며 MissingArc/DuplicateArc/OrphanArc를 구분합니다. 사각형/타원과 owned_record.componentChild를 공유하고 Arc.parse의 필드 해석을 복제하지 않습니다.
+
+문서 옵션 arc_layout은 ?Layout이며 기본값 null입니다. 기본 배치의 실제 근거가 없으므로 자동 선택하지 않습니다. 소유권은 항상 검사하지만 미선택 payload는 해석하지 않고 unselected와 unselected_bytes로 보고합니다. 선택된 경우에만 parsed/extra_bytes를 집계하며 arcs = parsed + unselected입니다. 미선택 성공은 payload 정상 판정이 아니며, 길이가 0이어도 보류 항목으로 남습니다. 소유권 오류는 미선택으로 숨기지 않습니다.
+
+구역 보고서의 arcs 그룹은 arcs/parsed/unselected/unselected_bytes/extra_bytes 다섯 항목입니다. 테스트 wire stride는 584바이트이고 document-report-wire.mjs에서 공유합니다. 프로브 63은 소유권, 64/65는 명시적 문서/CFB 검사입니다. 세 프로브가 readArc로 0=specified_u32, 1=reference_u8, 2=미선택을 공유합니다. 기존 문서/CFB 프로브는 기본 미선택 정책을 유지하고 제품 JS ABI를 확장하지 않았습니다.
+
+### 구현 후 적대적 검증
+
+1. 세 설정에서 누락·중복·다른 부모·루트 고아·손자/형제 차용을 거부합니다. 중간 미지 레코드와 서로 다른 정상 소유자는 허용합니다. 선택 배치의 필수 prefix는 거부하고 미선택에서는 해당 원문 길이가 보류로 보고되는지 구분합니다.
+2. 네이티브 checkAllAllocationFailures로 세 설정 × 정상/누락/중복/고아 네 경로의 Tree 정리를 확인합니다. 기존 공통 소유권 검사기들의 회귀 테스트도 유지합니다.
+3. group-drawing-02.hwp의 사각형 한 개를 메모리 복사본에서 호 구성요소/합성 payload로 바꿉니다. 실제 호 fixture로 세지 않습니다. 두 선택 배치와 미선택 각각에서 단독/decoded 문서/새 CFB 검사 결과를 비교하고 삭제·중복·루트 고아가 세 경로에 전파되는지 확인합니다.
+4. 28/25개 prefix 잘림은 선택된 문서/CFB에서 오류로 전파됩니다. 미선택의 28개 prefix는 parsed=0과 정확한 보류 길이를 보고합니다. 같은 28바이트 원문을 서로 다른 명시적 배치로 검사하면 extra=0/3으로 달라지고 길이에 따른 자동 선택은 없습니다. 잘못된 모드 3/255도 거부합니다.
+5. extra 또는 미선택 길이가 서로 다른 두 구역을 역순으로 입력해 원래 순서와 동일한 정렬 결과 및 구역별 값을 확인합니다. 각 오류 뒤 정상 문서/CFB 재호출을 검사합니다. 실제 참조 조사의 진입 가능한 구역에 독립 소유권 기대값 대조도 연결하지만 실제 호 표본 수는 여전히 0입니다.
+
+원본 파일은 수정하지 않았습니다. 호의 실제 배치·좌표·종류 의미·조판, 나머지 도형, 전체 문서 모델·HWPX·편집/저장은 계속 남아 있습니다. 이번 연결과 모든 문서의 모든 payload 검증 완료를 구분합니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 204/204, Node 47/47, HWP5 WASM 345,593회 검사 통과. 호 소유권 합성 성공 111/거부 75, 문서·CFB 변이 및 잘못된 모드 거부 190, 미선택 prefix 보류 28, 구역 순서 비교 3건을 포함합니다. 실제 호 표본은 여전히 0개입니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-arc-owner-{debug,safe,fast}.log`입니다.

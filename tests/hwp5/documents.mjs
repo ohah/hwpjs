@@ -21,6 +21,7 @@ import { unselectedStyles } from "./drawing-style-document.mjs";
 import { lineOwnerActual } from "./line-validation.mjs";
 import { rectangleOwnerActual } from "./rectangle-validation.mjs";
 import { ellipseOwnerActual } from "./ellipse-validation.mjs";
+import { arcOwnerActual } from "./arc-validation.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -154,6 +155,7 @@ export function documentActual(call, h, doc, sections) {
       ...lineOwnerActual(call,v,b).map(w),
       ...rectangleOwnerActual(call,v,b).map(w),
       ...ellipseOwnerActual(call,v,b).map(w),
+      ...arcOwnerActual(call,v,b).map(w),
     );
   }
   const want = Buffer.concat(expected);

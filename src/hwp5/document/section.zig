@@ -46,6 +46,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
         .lines = try @import("../body/line_validation.zig").inspect(tree),
         .rectangles = try @import("../body/rectangle_validation.zig").inspect(tree, options.rectangle_layout),
         .ellipses = try @import("../body/ellipse_validation.zig").inspect(tree),
+        .arcs = try @import("../body/arc_validation.zig").inspect(tree, options.arc_layout),
         .ole = try @import("../body/ole_validation.zig").inspect(tree, options.ole_layout),
         .equations = try @import("../body/equation_validation.zig").inspect(tree, options.equation_layout),
         .notes = try @import("../body/note_validation.zig").inspect(tree, groups.items, options.note_layout, options.list_layout),
