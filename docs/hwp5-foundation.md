@@ -1703,3 +1703,25 @@ needsIntervalUpdate는 bit 0, isArc는 bit 1, arcKindRaw는 bit 2~9의 8비트 �
 이는 현재 지원 한계의 재현이지 원본 손상 판정이나 의도된 최종 거부 계약이 아닙니다. 해당 Set/Item에서 0의 부재 의미를 명세·독립 구현과 추가 대조해야 하며, 모든 PIT_BINDATA를 optional로 완화하지 않았습니다. 이 두 파일을 타원 통합 검증 성공 표본으로 세지 않습니다. 다음 검증에서 이 참조 의미를 우선 조사합니다. 호/다각형/곡선 등 남은 도형, 전체 문서 모델·HWPX·편집/저장 목표도 계속 남아 있습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 200/200, Node 47/47, HWP5 WASM 338,572회 검사 통과. 타원 소유권 합성 성공 80/거부 72, 실제 문서 변이 거부 174 및 구역 순서 검사 1건을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-ellipse-owner-{debug,safe,fast}.log`입니다. 위 미해결 0 참조 두 건을 포함한 알려진 실패의 재현 테스트도 통과한 것이므로 전체 실제 문서가 성공했다는 뜻은 아닙니다.
+
+## 프레젠테이션 그라데이션의 비활성 이미지 참조 (2026-09-06)
+
+직전 단계의 ID 0 실패를 추가 분석했습니다. 해당 CTRL_DATA의 직접 부모는 secd입니다. 두 파일의 짝 HWPX에는 hp:presentation 아래 hc:gradation이 있고 이미지 채우기는 없습니다. HWP의 Set 경로 0x021b → item/set 0x0219 → item/set 0x0266에서 item 0x4001(PIT_UI)의 값이 4이며, item 0x401e(PIT_BINDATA)는 0입니다. 같은 값의 채우기 종류가 payload offset 234/26이라는 서로 다른 위치에 저장됩니다. 위치를 고정한 제품 파싱으로 해결하지 않았습니다.
+
+[공식 HWP5 명세 표 52](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.2.pdf)는 PIT_BINDATA의 UINT16 자료형과 바이너리 데이터 ID를 정의하지만 위 개별 Set/Item의 활성 조건을 정의하지 않습니다. 로컬 rhwp의 diagnostics/hwp5_ctrl_data_trace.rs도 0x8002를 u16으로 읽어 출력할 뿐 이 참조를 검증하지 않습니다. 레거시 Rust doc_data.rs도 원시 u16을 보존합니다. 외부 구현의 무검증을 유효성 근거로 삼지 않고, 짝 HWPX 배경과 실제 필드 대조를 근거로 **관측된 그라데이션 문맥**을 명시적으로 지원합니다.
+
+`presentation_reference.inactiveGradientImage`는 위 정확한 직접 조상 경로, 원시 이미지 ID 0, 단 하나의 직접 PIT_UI 채우기 종류 항목 값 4만 인정합니다. `sources`가 secd의 직접 CTRL_DATA일 때만 문맥을 전달합니다. DocData·표 셀·다른 컨트롤·고아·손자 CTRL_DATA에는 적용하지 않습니다. `references.validate`의 무문맥 API는 여전히 0을 거부하고, 비영 ID는 기존 reference_rules.one_based 범위 검사를 유지합니다. 비활성 원시 ID는 1로 고치거나 삭제하지 않습니다.
+
+`binary_refs`는 검사한 PIT_BINDATA 항목 수이며 이 관측 비활성 부재도 포함합니다. 성공한 CFB 스트림 참조 수로 해석하지 않습니다. 보고서 wire 크기와 기존 API는 바꾸지 않았습니다. 자료형 파싱·바이너리 참조·개별 의미 규칙·본문 소유권 연결을 각각 기존 모듈과 새 presentation_reference로 분리했습니다.
+
+### 구현 후 적대적 검증
+
+1. 두 실제 파일의 원본 decoded 문서와 전체 CFB 검사가 통과합니다. paired HWPX의 프레젠테이션 그라데이션 존재/이미지 부재를 독립 비교하고, 원시 ParameterSet typed 재인코딩 바이트와 ID 0 보존을 검사합니다. 테스트용 ID 1 치환은 실패 원인 분리에만 사용하며 제품 수정 방식이 아닙니다.
+2. 동일 payload를 부모 없는 CTRL_DATA로 전달하면 여전히 거부합니다. 다른 컨트롤, secd의 손자, DocData 및 다른 root/presentation/fill Set 경로를 거부합니다.
+3. 채우기 항목 순서를 뒤집어도 같은 결과입니다. 누락·중복·충돌·잘못된 자료형·손자 채우기 항목은 예외 규칙을 활성화하지 않습니다. 0/1/2/3/5/6/7/8/상위 미지 비트 값도 이 관측 규칙으로 통과시키지 않습니다.
+4. 각 실제 파일에서 채우기 종류만 이미지 활성 값 2로 바꾼 메모리 복사본은 단독 본문/decoded 문서/재압축 CFB 세 경로에서 ID 0을 거부합니다. 매 오류 후 원본 문서와 CFB를 다시 검사합니다. 비영 ID 1/2/65535는 각 실측 한도에서 성공하고 한도보다 클 때 실패하는 합성 검사도 유지합니다.
+5. 실제 payload의 모든 prefix 560개를 문맥 있는 입력에서 잘라 거부합니다. 네이티브 할당 실패 주입으로 정상·무문맥·이미지 활성·범위 오류 경로의 정리를 확인합니다. 기존 범용 ParameterSet의 잘림/참조/표 셀/책갈피 테스트도 전체 audit에서 실행합니다.
+
+이 단계는 그라데이션 외 프레젠테이션 채우기·다른 Set의 ID 0 의미, 실제 프레젠테이션 렌더링을 검증한 것이 아닙니다. 두 표본의 전체 검사는 현재 연결된 검사기의 성공이며 unknown/opaque/deferred 및 미지원 도형이 없어졌다는 뜻은 아닙니다. HWPX 제품 파서·문서 편집/저장도 계속 남아 있습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 201/201, Node 47/47, HWP5 WASM 339,200회 검사 통과. 새 문맥 합성 성공 29/거부 25, 실제 두 파일의 문서·CFB 성공, 이미지 활성 변이 거부 6 및 prefix 잘림 거부 560을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-presentation-reference-{debug,safe,fast}.log`입니다.

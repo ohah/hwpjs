@@ -57,6 +57,7 @@ test {
     _ = @import("hwp5/body/cell_extension_tests.zig");
     _ = @import("hwp5/parameters/tests.zig");
     _ = @import("hwp5/parameters/source_tests.zig");
+    _ = @import("hwp5/parameters/presentation_reference_tests.zig");
     _ = @import("hwp5/document/tests.zig");
     _ = @import("hwp5/container/tests.zig");
     _ = @import("hwp5/preview/text_tests.zig");

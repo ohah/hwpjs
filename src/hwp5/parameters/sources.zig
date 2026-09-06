@@ -17,7 +17,7 @@ pub const Report = struct {
     unsupported: usize = 0,
     unsupported_bytes: usize = 0,
     nodes: usize = 0,
-    binary_refs: usize = 0,
+    binary_refs: usize = 0, // Inspected IDs, including contextual inactive absence; not resolved streams.
     cell_names: usize = 0,
     unknown_cell_sets: usize = 0,
     opaque_cell_extensions: usize = 0,
@@ -25,7 +25,7 @@ pub const Report = struct {
     trailing_bytes: usize = 0,
 };
 const Role = enum { document, control, cell };
-fn consume(a: std.mem.Allocator, bytes: []const u8, role: Role, options: Options, report: *Report, bookmarks: ?*bookmark.Report) !void {
+fn consume(a: std.mem.Allocator, bytes: []const u8, role: Role, options: Options, report: *Report, bookmarks: ?*bookmark.Report, context: references.Context) !void {
     switch (role) {
         .document => report.doc_payloads += 1,
         .control => report.control_payloads += 1,
@@ -40,7 +40,7 @@ fn consume(a: std.mem.Allocator, bytes: []const u8, role: Role, options: Options
         return;
     };
     defer doc.deinit(a);
-    report.binary_refs += try references.validate(doc, options.bin_data_count);
+    report.binary_refs += try references.validateInContext(doc, options.bin_data_count, context);
     if (bookmarks) |b| try bookmark.consume(b, doc);
     if (role == .cell) {
         const field = try body.cell_field.fromDocument(doc);
@@ -59,7 +59,7 @@ pub fn inspectDocInfo(a: std.mem.Allocator, bytes: []const u8, options: Options)
     try options.parameters.validate();
     var report: Report = .{};
     var it = record.Iterator.init(bytes, options.framing);
-    while (try it.next()) |r| if (r.tag == 27) try consume(a, r.payload, .document, options, &report, null);
+    while (try it.next()) |r| if (r.tag == 27) try consume(a, r.payload, .document, options, &report, null, .unknown);
     return report;
 }
 /// Uses a validated tree and selected list layout with the observed cell prefix.
@@ -81,7 +81,11 @@ pub fn inspectBodyDetailed(a: std.mem.Allocator, tree: Tree, options: Options) !
         if (node.record.framing.tag == 87) {
             const owned = bookmark.owns(tree, index);
             if (owned) bookmarks.control_data += 1;
-            try consume(a, node.record.framing.payload, .control, options, &report, if (owned) &bookmarks else null);
+            const context: references.Context = if (node.parent) |p| blk: {
+                const value = tree.nodes[p].record.value;
+                break :blk if (value == .control_header and value.control_header.id == @import("../body/control_rules.zig").id("secd")) .section_control else .unknown;
+            } else .unknown;
+            try consume(a, node.record.framing.payload, .control, options, &report, if (owned) &bookmarks else null, context);
         }
         if (node.record.value != .control_header or node.record.value.control_header.id != table_id) continue;
         var it = try lists.Iterator.init(tree, index);
@@ -91,7 +95,7 @@ pub fn inspectBodyDetailed(a: std.mem.Allocator, tree: Tree, options: Options) !
             const cell = try body.Cell.parse(view.extra);
             const ext = try body.CellExtension.parse(cell.extra);
             if (ext.parameterSetMarked()) {
-                try consume(a, ext.remaining, .cell, options, &report, null);
+                try consume(a, ext.remaining, .cell, options, &report, null, .unknown);
             } else if (ext.remaining.len > 0 or (ext.marker != null and ext.marker.? != 0)) {
                 report.opaque_cell_extensions += 1;
             }
