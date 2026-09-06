@@ -18,6 +18,7 @@ import { curveOwnerActual } from "./curve-validation.mjs";
 import { pictureActual, pictureRun } from "./shape-picture.mjs";
 import { colorActual } from "./picture-color.mjs";
 import { effectsActual } from "./picture-effects.mjs";
+import { additionalActual, additionalRun, tailActual, tailRun } from "./picture-additional.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -33,6 +34,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.pictures = { parsed: 0, rejected: 0, lengths: {}, selectedPrefixes: [0,0,0], unavailablePrefixes: 0, nonzeroAdjustments: [] };
   out.pictureColors = { parsed: 0, rejected: 0, files: {}, values: {}, counts: {}, extra: {} };
   out.pictureEffects = { parsed: 0, rejected: 0, flags: {}, extra: {} };
+  out.pictureAdditional = { selected: [0,0], rejected: 0, unavailable: 0, alpha: {} };
   out.versions = {};
   out.images = [];
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
@@ -88,6 +90,17 @@ export function drawingStyleSurvey(call, cfb) {
             const effect=effectsActual(call,p.subarray(78));out.pictureEffects.parsed++;out.pictureEffects.rejected+=effect.rejected;
             out.pictureEffects.flags[effect.flags]=(out.pictureEffects.flags[effect.flags]??0)+1;
             out.pictureEffects.extra[effect.extra]=(out.pictureEffects.extra[effect.extra]??0)+1;
+            tailActual(call,p.subarray(78),0,false);
+            const extra=p.subarray(78+effect.bytes);
+            for(const [mode,size] of [[0,8],[1,9]]){
+              if(extra.length<size){assert.throws(()=>additionalRun(call,extra,mode),/UnexpectedEnd/);assert.throws(()=>tailRun(call,p.subarray(78),mode+1),/UnexpectedEnd/);out.pictureAdditional.unavailable++;}
+              else {
+                const a=additionalActual(call,extra,mode),composed=tailActual(call,p.subarray(78),mode+1,false);
+                assert.equal(a.width,composed.width);assert.equal(a.height,composed.height);assert.equal(a.alpha,composed.alpha);
+                out.pictureAdditional.selected[mode]++;out.pictureAdditional.rejected+=a.rejected;
+                if(mode===1)out.pictureAdditional.alpha[a.alpha]=(out.pictureAdditional.alpha[a.alpha]??0)+1;
+              }
+            }
           }
           // Explicit observed shadow-only experiment; other effect layouts stay pending.
           if(p.length>=82&&p.readUInt32LE(78)===1){

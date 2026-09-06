@@ -1926,3 +1926,23 @@ picture_effect_fields는 이름 있는 고정 필드(그림자 44, 네온 8, 반
 실제 효과 헤더 1,899개는 flags=0(없음) 1,865개, flags=1(그림자) 33개, flags=4(soft edge) 1개입니다. 필수 prefix 거부 9,448회를 검사했습니다. extra는 0바이트 130개/8바이트 195개/9바이트 1,574개로 보존합니다. 실제 네온·반사 및 복합 효과 표본은 없으므로 이들은 합성 검증 범위입니다. 그림자 색상 33개의 type/value/count=0과 독립 효과 의미 미검증 한계도 그대로 유지합니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 215/215, Node 47/47, HWP5 WASM 1,148,545회 검사입니다. 효과 조합 합성 성공 4,304/거부 442,208, 실제 1,899개/필수 prefix 거부 9,448을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-picture-effects-{debug,safe,fast}.log`입니다.
+
+## 최초 이미지 크기·선택 투명도와 효과 뒤 연결
+
+2026-09-07. 표 116의 HWPUNIT 두 개/INT8 하나를 독립 `picture_additional.Additional`로 구현했습니다. width/height는 원시 u32, alpha는 ?i8이며 alphaByte()는 같은 바이트의 u8 view입니다. dimensions8/with_alpha9를 명시적으로 선택하고 백분율 변환·signed 값 clamp·없는 바이트 0 채우기를 하지 않습니다. 읽기 실패는 호출자 커서를 보존합니다.
+
+`picture_tail.Tail.read(reader, ?Layout)`은 명시적 instance-id prefix 이후부터 기존 Effects.read→선택 Additional.read를 조립합니다. layout=null은 크기/투명도를 읽지 않으며 그 원문은 호출자의 남은 바이트로 유지됩니다. 효과의 종류/색상 배열 크기에 따라 Additional의 위치가 달라지므로 마지막 바이트나 고정 offset으로 추정하지 않습니다. 효과 성공 후 Additional 실패도 외부 커서는 갱신하지 않습니다. 본문 소유권·문서 연결은 별도입니다.
+
+적대적 검증:
+
+1. 두 Additional 배치의 모든 필수 잘림을 offset 1에서 검사하고 잘못된 usize 최대 offset도 거부합니다. width/height의 최상위 비트·u32 최대값과 alpha 0/127/128/255를 검사해 null/0/-1을 구분합니다.
+2. 모든 데이터 위치의 경계 바이트 변이와 원문 꼬리 보존을 검사합니다. 테스트 WASM 모드 77은 Additional, 78은 Effects와 Additional의 조립입니다. 보고서에서 alpha 존재/부호 있는 값/원시 바이트를 독립 비교합니다.
+3. 16가지 효과 조합 각각에서 추가 속성 미선택/8/9바이트 선택을 검사합니다. 색상 효과 배열을 넣어 가변 위치도 이동시키고, 모든 필수 prefix 잘림·미지원 flags/색상 타입 오류 전파·실패 후 이전 정상 결과 회복을 확인합니다.
+4. 실제 효과 뒤에 크기 8바이트를 선택할 수 있는 표본은 1,769개, 투명도까지 9바이트는 1,574개입니다. Additional의 필수 prefix 거부는 28,318회입니다. 선택 불가능한 455가지 경우는 단독/조립 두 경로 모두 UnexpectedEnd이며 제품에서 길이에 따른 자동 선택을 구현한 것은 아닙니다. 실제 alpha 원시값은 0이 1,571개/127이 3개이며 128~255는 합성 검증 범위입니다.
+5. 기존 바탕쪽 포함 짝 비교를 투명도 표본 두 변형까지 확장해 그림 30개의 imgDim을 HWPX와 대조합니다. alpha가 존재하는 28개는 XML 원값과 대조하며 2개가 비영 127입니다. 두 투명도 파일은 관련 변형이지 두 독립 기능 표본으로 과장하지 않습니다. 기존 좌표·자르기·여백·밝기/명암 대조도 유지합니다.
+
+최초 짝 비교에서 복학원서 그림 2개에 with_alpha9를 적용하자 길이 검증이 실패했습니다. 원문은 90바이트로 효과 뒤에 크기 8바이트만 있고, HWPX에는 alpha=0이 있습니다. 이 fixture의 실험 배치를 dimensions8로 명시하고 HWP alpha=null과 XML alpha=0을 구분해 검사합니다. 제품 parser에 fallback하거나 원문에 없던 0을 추가하지 않습니다.
+
+현재는 추가 속성과 효과 뒤 조립 코어입니다. 그림 소유권·BinData 참조·문서 검사 연결, 미확정 색상 타입과 실제 조판 검증은 계속 남아 있습니다. 원본 파일은 수정하지 않았습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 217/217, Node 47/47, HWP5 WASM 1,210,974회 검사입니다. 추가 속성/조립 합성 성공 138/거부 4,937, 실제 Additional 필수 잘림 28,318, 30개 짝 필드 대조를 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-picture-additional-{debug,safe,fast}.log`입니다.

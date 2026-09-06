@@ -3,12 +3,13 @@ import { existsSync,readFileSync } from "node:fs";
 import { sectionXml,masterPageXml } from "./fixture-xml.mjs";
 import { documentRecords } from "./documents.mjs";
 import { pictureActual,pictureRun } from "./shape-picture.mjs";
+import { tailActual } from "./picture-additional.mjs";
 export function picturePair(call,cfb){
   const root=new URL('../../reference/rhwp/samples/',import.meta.url);
-  const cases=[['복학원서',0],['2025 행정업무운영 편람(최종)',0],['2025 행정업무운영 편람(최종)',3]];
-  const files=[];let pictures=0,nonzeroAdjustments=0,axesMismatch=0;
+  const cases=[['복학원서',0,1],['2025 행정업무운영 편람(최종)',0,2],['2025 행정업무운영 편람(최종)',3,2],['투명도0-50',0,2],['투명도0-50-2nd그림글차처럼off',0,2]];
+  const files=[];let pictures=0,nonzeroAdjustments=0,axesMismatch=0,nonzeroAlpha=0,absentAlpha=0;
   const attr=(s,key)=>{const m=s.match(new RegExp(`\\b${key}="([^"]*)"`));assert.ok(m,key);return m[1];};
-  for(const [name,section] of cases){
+  for(const [name,section,tailMode] of cases){
     const hwp=new URL(name+'.hwp',root),hwpx=new URL(name+'.hwpx',root);
     if(!existsSync(hwp)||!existsSync(hwpx)){files.push({name,section,skipped:true});continue;}
     cfb.parse(readFileSync(hwp),{strict:true});const h=Buffer.from(cfb.findExact('/FileHeader').content);
@@ -39,11 +40,16 @@ export function picturePair(call,cfb){
       const crop=xml.match(/<hp:imgClip\b[^>]*>/)[0],margin=xml.match(/<hp:inMargin\b[^>]*>/)[0];
       ['left','top','right','bottom'].forEach((key,j)=>assert.equal(out.readInt32LE(44+j*4),Number(attr(crop,key))));
       ['left','right','top','bottom'].forEach((key,j)=>assert.equal(out.readInt16LE(60+j*2),Number(attr(margin,key))));
+      const additional=tailActual(call,p.subarray(78),tailMode,false),dim=xml.match(/<hp:imgDim\b[^>]*>/)[0];
+      assert.equal(additional.width,Number(attr(dim,'dimwidth')));assert.equal(additional.height,Number(attr(dim,'dimheight')));
+      if(tailMode===1){assert.equal(additional.alpha,null);assert.equal(Number(attr(img,'alpha')),0);absentAlpha++;}
+      else assert.equal(additional.alpha,Number(attr(img,'alpha')));
+      if(additional.alpha)nonzeroAlpha++;
       pictures++;
     }
     files.push({name,section,pictures:records.length,masterPagePictures:masterText?1:0});
   }
-  if(files.every(f=>!f.skipped)){assert.equal(nonzeroAdjustments,3);assert.equal(axesMismatch,pictures);}
+  if(files.every(f=>!f.skipped)){assert.equal(nonzeroAdjustments,3);assert.equal(axesMismatch,pictures);assert.equal(nonzeroAlpha,2);assert.equal(absentAlpha,2);}
   for(const index of [-1,1.5,NaN,65536])assert.throws(()=>masterPageXml(Buffer.alloc(0),index));
-  return {files,pictures,nonzeroAdjustments,axesMismatch};
+  return {files,pictures,nonzeroAdjustments,axesMismatch,nonzeroAlpha,absentAlpha};
 }
