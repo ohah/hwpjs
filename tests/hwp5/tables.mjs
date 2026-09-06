@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { checkBody } from "./body.mjs";
 import { sectionXml } from "./fixture-xml.mjs";
 import { checkGrid } from "./grid.mjs";
+import { cellActual } from "./cell-extensions.mjs";
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -37,6 +38,21 @@ function nodes(bytes) {
   }
   return out;
 }
+export function tableCellLists(bytes) {
+  const records = nodes(bytes);
+  return records
+    .filter((r, i) => {
+      if (r.tag !== 72 || r.parent < 0) return false;
+      const parent = records[r.parent];
+      if (parent.tag !== 71 || parent.raw.readUInt32LE() !== 0x74626c20)
+        return false;
+      const marker = records.findIndex(
+        (n) => n.tag === 77 && n.parent === r.parent,
+      );
+      return marker >= 0 && i > marker;
+    })
+    .map((r) => r.raw);
+}
 export function tablesActual(call, v, borders, bytes) {
   const records = nodes(bytes),
     expected = [],
@@ -55,6 +71,7 @@ export function tablesActual(call, v, borders, bytes) {
       const kind = index < marker ? 0 : 1;
       report[kind ? 1 : 2]++;
       const raw = r.raw.subarray(8);
+      if (kind) cellActual(call, r.raw);
       if (kind)
         cells.push([
           raw.readUInt16LE(2),

@@ -23,6 +23,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - `object_common.zig`는 tbl/gso/eqed 헤더의 공통 속성만 해석합니다. ID는 control_rules를 공유하고 UTF-16 길이 검사는 utf16_string을 재사용합니다. 설명 부재/빈 값, signed 위치와 unsigned 크기, 원시 플래그/꼬리를 보존하며 캡션·셀·도형 자식 레코드를 인라인 속성으로 소비하지 않습니다.
 - `table.zig`·`table_cell.zig`·`caption.zig`는 payload, `table_zone.zig`는 원시 좌표/명시적 열-행 또는 행-열 view, `table_lists.zig`는 TABLE 전후 직접 형제의 캡션/셀 역할을 소유합니다. `table_validation.zig`는 부모·중복·셀 수·병합 범위·영역/참조를 검사합니다. list/zone 배치는 호출자가 선택하며 길이로 자동 추정하지 않습니다. 확장 꼬리 의미와 시각적 배치는 미검증 범위입니다.
 - `table_grid.zig`는 Rectangle의 병합 경계 SSOT, 행별 시작 셀 수, 비중첩/완전 격자 채움을 소유합니다. table_validation은 할당자를 받아 이 검사를 호출합니다. 칸 수만큼 메모리를 할당하거나 총면적만으로 비중첩을 가정하지 않습니다. 공유 행 경계에서는 제거를 추가보다 먼저 처리합니다.
+- `cell_attributes.zig`는 호출자가 선택한 list view의 셀별 bit 16~19를 해석하고 원값을 보존합니다. `cell_extension.zig`는 명시적으로 선택한 관측 꼬리의 선택 text_width/marker와 remaining 원문만 소유합니다. 0xff는 ParameterSet 표시이지 고정 offset 필드명이나 유효성 보장이 아닙니다. Cell.parse는 여전히 꼬리 전체를 보존하며 자동으로 확장 형식을 가정하지 않습니다.
 - `src/hwp5/docinfo/`: 문서 속성·ID 매핑·BinData·FaceName·TabDef·Numbering·Bullet·Style payload와 태그 dispatch·리소스 개수 검증을 분리합니다. 번호/글머리표의 공통 머리 정보는 `paragraph_head.zig`가 소유합니다. 실제 필드 부재(null)와 값 0, 버전상 기대 슬롯 수를 구분합니다. BinData/글꼴 개수 검증과 전체 문서 조립/참조 검증을 혼동하지 않습니다.
 - `src/compression/`: bounded raw DEFLATE와 MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.
 - `src/hwp5/docinfo/resources.zig`: 주요 리소스 실측 개수와 ID 매핑 비교. `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 순회·진단을 소유합니다. `validateKnown()` 성공을 전체 문서 유효성으로 해석하지 말고 deferred/unknown_records와 미검증 범위를 확인합니다.

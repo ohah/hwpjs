@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
   inflateRawSync,
@@ -23,7 +23,13 @@ import { columnEdges, columnPair } from "./columns.mjs";
 import { listsActual, listEdges } from "./list-groups.mjs";
 import { typeActual, typeEdges } from "./control-types.mjs";
 import { objectActual, objectEdges } from "./objects.mjs";
-import { tablesActual, tableEdges, tableZonePair } from "./tables.mjs";
+import {
+  tablesActual,
+  tableEdges,
+  tableZonePair,
+  tableCellLists,
+} from "./tables.mjs";
+import { cellPair, cellEdges } from "./cell-extensions.mjs";
 import { gridEdges } from "./grid.mjs";
 import {
   formattingEdges,
@@ -116,6 +122,10 @@ const typeEdgeResults = typeEdges(call);
 const objectEdgeResults = objectEdges(call);
 const tableEdgeResults = tableEdges(call);
 const gridEdgeResults = gridEdges(call);
+const cellEdgeResults = cellEdges(call);
+const cellPairResults = [0, 0, 0, 0, 0];
+let cellPairs = 0;
+const cellTails = [0, 0, 0];
 const tableReport = [0, 0, 0, 0];
 let tableZonePairResult;
 const objectCounts = [0, 0, 0, 0, 0, 0, 0];
@@ -307,6 +317,24 @@ try {
       );
       const framed = call(2, plain);
       if (/^Section\d+$/.test(entry.name)) {
+        const rawCells = tableCellLists(plain);
+        for (const raw of rawCells) {
+          const tail = raw.length - 34;
+          assert.ok(tail === 4 || tail === 13);
+          cellTails[tail === 4 ? 0 : 1]++;
+          if (tail >= 5 && raw[38] === 255) cellTails[2]++;
+        }
+        const pairedPath = new URL(name.replace(/\.hwp$/, ".hwpx"), fixtures);
+        if (
+          entry.name === "Section0" &&
+          rawCells.length &&
+          existsSync(pairedPath)
+        ) {
+          cellPair(call, rawCells, readFileSync(pairedPath)).forEach((n, i) => {
+            cellPairResults[i] += n;
+          });
+          cellPairs++;
+        }
         if (name === "borderfill.hwp" && entry.name === "Section0")
           tableZonePairResult = tableZonePair(
             call,
@@ -494,6 +522,9 @@ const shapeMutationResults = shapeMutations(call);
 const bodyMutationResults = bodyMutations(call);
 assert.deepEqual(objectCounts, [60, 53, 20, 42, 82, 9, 5]);
 assert.deepEqual(tableReport, [60, 578, 29, 2]);
+assert.equal(cellPairs, 11);
+assert.deepEqual(cellPairResults, [532, 96, 0, 0, 0]);
+assert.deepEqual(cellTails, [71, 507, 0]);
 assert.deepEqual(tableZonePairResult, [0, 0, 2, 0]);
 console.log(
   JSON.stringify(
@@ -515,6 +546,10 @@ console.log(
       objectCounts,
       tableEdgeResults,
       gridEdgeResults,
+      cellEdgeResults,
+      cellPairResults,
+      cellPairs,
+      cellTails,
       tableReport,
       tableZonePairResult,
       checks,

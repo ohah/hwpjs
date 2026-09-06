@@ -629,3 +629,26 @@ while (try it.next()) |record| {
 이제 table_validation은 논리 격자의 완전성을 검사하지만, 확장 꼬리 필드·그리기/수식 캡션·시각적 레이아웃·다른 컨트롤/전체 문서 통합까지 완료한 것은 아닙니다. 다음 파트는 셀/캡션 확장 필드의 명세·레퍼런스·실제 값 대조입니다.
 
 최종 검토에서 초기화 비용을 복잡도 설명에 포함하고, 늦은 빈칸 오류의 할당 정리 테스트를 추가했습니다. 중복 셀 카운터도 제거해 실제 Rectangle 배열 길이로 총수/보고서를 계산합니다. Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 102/102, Node 47/47, HWP5 WASM 85,667회 검사(모드별). 기존 CFB 비교와 12,000회 변이, Zig/JS 포맷·diff 검사도 통과했습니다.
+
+## 셀 확장 속성·꼬리 선두 필드와 미검증 ParameterSet
+
+2026-09-06. 공개 hwplib의 [셀 속성 비트](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/object/bodytext/control/table/ListHeaderPropertyForCell.java), [셀 리더](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/reader/bodytext/paragraph/control/tbl/ForCell.java), [캡션 리더](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/reader/bodytext/paragraph/control/gso/part/ForCaption.java)를 참고하여 필드 배치를 대조했습니다. 외부 소스는 해석 레퍼런스이며 제품 의존성/코드 이식은 추가하지 않았습니다.
+
+- `CellAttributes`는 선택된 ListHeader.View.attributes의 bit 16 여백 지정, 17 보호, 18 제목 셀, 19 양식모드 편집 가능을 노출합니다. raw 전체 32비트를 보존하고 기존 공통 direction/wrapping/alignment와 분리합니다. 여백 지정이 꺼져 있어도 저장된 셀 여백 값을 덮어쓰지 않습니다.
+- `CellExtension.parse(cell.extra)`는 관측 형식을 명시적으로 선택한 별도 뷰입니다. 부재는 text_width=null, 4바이트면 u32 폭만, 이후 1바이트 marker와 나머지 원문을 반환합니다. 1~3바이트만 있으면 UnexpectedEnd입니다. 폭 0과 부재, marker 0과 부재를 구분합니다. 기본 Cell.parse는 임의 꼬리를 그대로 보존하며 이 뷰를 자동 선택하지 않습니다.
+- hwplib는 marker 0xff 이후를 공통 ParameterSet으로 읽고 특정 set/item ID의 문자열을 찾습니다. Rhwp는 셀 꼬리의 고정 offset 15/17에서 이름 길이/UTF-16을 읽지만, 이를 일반 규칙으로 도입하지 않았습니다. `parameterSetMarked()`는 표시 유무만 보고하며 remaining을 검증하지 않습니다. 0xff 바로 뒤에 데이터가 없어도 이 선두 필드 뷰 자체는 성공할 수 있으므로 전체 확장 유효성으로 사용하면 안 됩니다.
+- 캡션의 추가 바이트는 hwplib도 버전별 미지 꼬리로 건너뜁니다. 의미를 0 패딩으로 단정하거나 제거하지 않고 기존 Caption.extra를 유지했습니다.
+
+실측 및 정규 audit: 셀 578개의 꼬리는 4바이트 71개, 13바이트 507개입니다. 0xff 표시는 0개입니다. 모든 셀의 raw flags·텍스트 폭·marker·remaining을 WASM에서 독립 바이트 oracle과 대조합니다. 짝 HWP/HWPX 11쌍의 셀 532개는 XML의 hasMargin/protect/header/editable과 일치했습니다. 참 값은 여백 지정 96개뿐이고 나머지 세 플래그는 모두 거짓입니다. 따라서 보호/제목/편집 가능의 참 값이나 실제 이름 ParameterSet까지 fixture로 입증했다고 주장하지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 네이티브 one-hot 32비트로 각 getter가 정확히 해당 비트에만 반응하는지 검사했습니다. 상위 미지 비트와 하위 공통 속성을 함께 넣고 원본과 명시적 spec6/observed8 선택을 확인했습니다.
+2. WASM에서 네 속성의 모든 조합 16개와 전체 47바이트 셀의 비트 변이 376개를 대조하고, 376회 정상 복구했습니다. 셀의 모든 위치를 변이시키며 꼬리만 검사하지 않습니다.
+3. 기본 헤더/셀의 모든 잘림, 관측 폭의 1~3바이트 잘림을 거부합니다. 부재·빈 값·u32 최댓값·미지 marker·0xff 뒤 빈/불명 바이트를 구분하고 원본 remaining의 borrowed slice를 네이티브에서 확인했습니다.
+4. 실제 양성 사례의 부족과 0xff 미관측을 audit 집계에 고정했습니다. 참 값 검증의 근거는 공개 배치와 합성 테스트, 실제 짝 파일의 근거는 위 관측 범위로 분리합니다.
+5. SSOT/책임 검토: 리스트 공통 배치를 다시 파싱하지 않고 View를 재사용합니다. 속성 비트와 확장 바이트 해석은 별도 파일이며, field-name을 고정 오프셋/문자열 휴리스틱으로 추가하지 않습니다. 기존 표 격자·원본 왕복 검사를 유지합니다.
+
+다음은 공통 ParameterSet 파서와 이를 사용하는 셀 필드명/컨트롤 임의 데이터입니다. 캡션 미지 꼬리, 관측 8바이트 리스트의 상위 문단 count 슬롯 의미, 그리기/수식 캡션과 전체 문서 조립도 남아 있습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 104/104, Node 47/47, HWP5 WASM 87,593회 검사(모드별). 기존 CFB 비교·12,000회 변이도 통과했습니다. Zig/JS 포맷·diff 검사와 SSOT/파일 책임 검토를 완료했습니다.

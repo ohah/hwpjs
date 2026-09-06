@@ -81,6 +81,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         17 => return @import("table-probe.zig").inspect(a, bytes, limit),
         18 => return @import("table-probe.zig").zoneFields(a, bytes),
         19 => return @import("grid-probe.zig").run(a, bytes),
+        20 => return @import("cell-probe.zig").run(a, bytes),
         else => return error.InvalidMode,
     }
 }
