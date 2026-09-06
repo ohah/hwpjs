@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {paragraphEvidence,textCandidates} from './line-cache-evidence.mjs';
+import {paragraphEvidence,textCandidates,rangeFilteredCandidate,rootMergeGroups} from './line-cache-evidence.mjs';
 const frame=(tag,level,b)=>{const h=Buffer.alloc(4);h.writeUInt32LE(tag|(level<<10)|(b.length<<20));return Buffer.concat([h,b]);};
 const head=(level=0,size=24)=>frame(66,level,Buffer.alloc(size));
 const text=(s,level=1)=>frame(67,level,Buffer.from(s,'utf16le'));
@@ -43,4 +43,42 @@ test('missing text is not synthesized from declared units',()=>{
 test('text evidence retains supplementary characters and inline control bytes',()=>{
   const s='😀\t\0\0\0\0\0\0\t\r',p=paragraphEvidence(Buffer.concat([head(),text(s)]))[0];
   assert.equal(p.textUnits,s.length);assert.equal(p.text.toString('utf16le'),s);
+});
+
+const ranged=(s,ranges)=>({text:Buffer.from(s,'utf16le'),units:s.length,ranges});
+const range=(start,end,kind=17,data=0)=>({start,end,kind,data});
+test('root grouping rejects unknown/absent merge values and orphan continuations',()=>{
+  for(const merge of [null,2,65535,1])assert.throws(()=>rootMergeGroups([{level:0,merge}]));
+});
+test('root grouping keeps source order, excludes nested scope, and does not cross calls',()=>{
+  const a={level:0,merge:0},nested={level:1,merge:1},b={level:0,merge:1},c={level:0,merge:0};
+  assert.deepEqual(rootMergeGroups([a,nested,b,c]),[[a,b],[c]]);
+  assert.throws(()=>rootMergeGroups([b]));assert.deepEqual(rootMergeGroups([]),[]);
+});
+test('filter endpoints are half-open and overlapping intervals form a union',()=>{
+  const p=ranged('ABCDEF\r',[range(1,3),range(2,4),range(4,4)]),before=structuredClone(p.ranges);
+  assert.equal(rangeFilteredCandidate([p],17).toString('utf16le'),'AEF\r');
+  assert.deepEqual(p.ranges,before);
+  assert.equal(rangeFilteredCandidate([ranged('A\r',[range(0,2)])],17).length,0);
+});
+test('filter selects kind exactly, not low data bits or neighboring kind',()=>{
+  const p=ranged('ABC\r',[range(0,1,16,17),range(1,2,17,0xffffff),range(2,3,18,17)]);
+  assert.equal(rangeFilteredCandidate([p],17).toString('utf16le'),'AC\r');
+  assert.equal(rangeFilteredCandidate([p],16).toString('utf16le'),'BC\r');
+});
+test('filter rejects reversed/out-of-bounds spans and mismatched declared text',()=>{
+  for(const r of [range(2,1),range(0,3),range(0,0xffffffff)])assert.throws(()=>rangeFilteredCandidate([ranged('A\r',[r])],17));
+  assert.throws(()=>rangeFilteredCandidate([{...ranged('A\r',[]),units:3}],17));
+});
+test('missing-text candidate is explicit one-unit CR, never arbitrary padding',()=>{
+  assert.equal(rangeFilteredCandidate([{text:null,units:1,ranges:[]}],17).toString('utf16le'),'\r');
+  assert.equal(rangeFilteredCandidate([{text:null,units:1,ranges:[range(0,1)]}],17).length,0);
+  for(const units of [0,2,0xffffffff])assert.throws(()=>rangeFilteredCandidate([{text:null,units,ranges:[]}],17));
+});
+test('range evidence uses immediate parent and retains full 24-bit data',()=>{
+  const b=Buffer.alloc(12);b.writeUInt32LE(0,0);b.writeUInt32LE(1,4);b.writeUInt32LE(0x11abcdef,8);
+  const ps=paragraphEvidence(Buffer.concat([head(),frame(71,1,Buffer.alloc(4)),head(2),frame(70,3,b)]));
+  assert.equal(ps[0].ranges,null);assert.deepEqual(ps[1].ranges,[range(0,1,17,0xabcdef)]);
+  assert.throws(()=>paragraphEvidence(Buffer.concat([head(),frame(70,1,b.subarray(0,11))])));
+  assert.throws(()=>paragraphEvidence(Buffer.concat([head(),frame(70,1,b),frame(70,1,b)])));
 });
