@@ -16,6 +16,7 @@ import { polygonOwnerActual } from "./polygon-validation.mjs";
 import { curveActual } from "./shape-curve.mjs";
 import { curveOwnerActual } from "./curve-validation.mjs";
 import { pictureActual, pictureRun } from "./shape-picture.mjs";
+import { colorActual } from "./picture-color.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -29,6 +30,7 @@ export function drawingStyleSurvey(call, cfb) {
   ]);
   out.fillOnly = { parsed: 0, rejectedPrefixes: 0 };
   out.pictures = { parsed: 0, rejected: 0, lengths: {}, selectedPrefixes: [0,0,0], unavailablePrefixes: 0, nonzeroAdjustments: [] };
+  out.pictureColors = { parsed: 0, rejected: 0, files: {}, values: {}, counts: {}, extra: {} };
   out.versions = {};
   out.images = [];
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
@@ -79,6 +81,16 @@ export function drawingStyleSurvey(call, cfb) {
         if(record.tag===85){
           const p=bytes.subarray(record.start,record.end),stats=pictureActual(call,p);
           out.pictures.parsed++;out.pictures.rejected+=stats.rejected;
+          // Explicit observed shadow-only experiment; other effect layouts stay pending.
+          if(p.length>=82&&p.readUInt32LE(78)===1){
+            assert.ok(p.length>=138);
+            const color=colorActual(call,p.subarray(126));
+            out.pictureColors.parsed++;out.pictureColors.rejected+=color.rejected;
+            out.pictureColors.files[name]=(out.pictureColors.files[name]??0)+1;
+            out.pictureColors.values[color.value]=(out.pictureColors.values[color.value]??0)+1;
+            out.pictureColors.counts[color.count]=(out.pictureColors.counts[color.count]??0)+1;
+            out.pictureColors.extra[color.extra]=(out.pictureColors.extra[color.extra]??0)+1;
+          }
           out.pictures.lengths[p.length]=(out.pictures.lengths[p.length]??0)+1;
           out.pictures.selectedPrefixes[0]++;
           // Each prefix is a separate explicit experiment, never product auto-selection.

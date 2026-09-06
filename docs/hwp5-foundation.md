@@ -1882,3 +1882,25 @@ rhwp는 개수를 남은 좌표 바이트에 맞춰 줄이고 구간이 부족�
 현재는 고정 prefix 코어와 테스트 WASM 모드 74입니다. 표 108~116의 효과/색상/추가 크기·투명도, 문서 소유권·BinData 참조·조판은 다음 단계이며 전체 그림 지원 완료로 주장하지 않습니다. 원본 파일은 수정하지 않았습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 211/211, Node 47/47, HWP5 WASM 676,099회 검사입니다. 그림 합성 성공 1,560/거부 116,978, 실제 1,947개/필수 잘림 142,131, 바탕쪽 포함 짝 26개 필드 대조를 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-picture-{debug,safe,fast}.log`입니다.
+
+## 그림 효과의 색상 블록과 색상 효과 배열
+
+2026-09-07. 공식 표 113~115와 독립 [hwplib ForPictureEffect](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/reader/bodytext/paragraph/control/gso/part/ForPictureEffect.java)를 대조했습니다. 참조 리비전의 라이선스는 Apache-2.0이며 코드를 이식하거나 제품 의존성을 추가하지 않았습니다. 공식 표 113은 타입별 값의 종류/폭을 나열하지만 번호 매핑을 명시하지 않습니다. 참조 리더도 type 0의 4바이트 색상만 읽고 다른 타입은 거부합니다. [ColorWithEffect](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/object/bodytext/control/gso/shapecomponenteach/picture/ColorWithEffect.java) 역시 타입별 값 정보를 미정으로 표시합니다.
+
+`picture_color.Color.read`는 관측 type 0의 i32 타입, u32 색상 원값, u32 효과 수와 8바이트 효과 배열을 읽습니다. 고정 12바이트+8×count입니다. 표의 총길이 요약 4+m+n을 그대로 사용해 count 필드나 8배 길이를 누락하지 않습니다. 다른 타입은 UnsupportedPictureColorType으로 반환하고 원문을 0/default 색상으로 대체하지 않습니다. RGB 등 채널 해석은 하지 않습니다.
+
+`picture_color_effect.Effect`는 i32 kind_raw와 float의 u32 value_bits를 보존합니다. 0~27은 표 115의 이름 있는 Kind view이며 음수·28 이상은 null입니다. 미지 종류도 배열에서 삭제하지 않습니다. value()는 별도 f32 view이고 직렬 대조는 원시 비트를 사용해 NaN payload·부호 있는 0을 보존합니다. 배열은 공통 binary.record_array를 공유하며 할당하지 않습니다.
+
+적대적 검증 범위:
+
+1. offset 1에서 모든 필수 잘림·미지원 타입·개수 초과 오류가 호출자의 커서를 유지하는지 검사하고, 잘못된 usize 최대 offset도 검증합니다.
+2. count를 0/1/2/3, 2³¹-1/2³¹/2³²-1로 바꾸고, 남은 바이트로 나눈 한도 검사 뒤 곱하는지 검증합니다. 65,537개 배열도 실제 WASM에서 읽습니다. count가 줄어 남는 바이트는 호출자 꼬리로 보존하며 임의로 이전 개수를 복원하지 않습니다.
+3. 타입 DWORD의 32개 단일 비트 변이, 다른 모든 데이터 위치의 0/128/255 변이와 정상 입력 재검사를 수행합니다. 기본값 채우기나 입력 길이에 맞춘 배열 clamp는 없습니다.
+4. 알려진 28종류와 미지 signed 종류에 ±0/±무한대/quiet·signaling NaN/최소 subnormal/1의 비트패턴을 조합합니다. 정확한 배열 끝·범위 밖 get·borrowed 주소도 검사합니다.
+5. 실제 그림 조사에서 효과 플래그가 정확히 1인 관측 그림자 블록만 명시적으로 선택해 78+4+44 위치의 색상 블록을 WASM과 독립 JS로 대조합니다. 이 offset은 테스트의 특정 배치 선택이지 제품 자동 효과 parser가 아닙니다. 다른 효과 조합이나 미확정 타입을 검증 완료에 포함하지 않습니다.
+
+현재는 색상 블록 코어와 테스트 WASM 모드 75입니다. 효과별 상위 조립·추가 크기/투명도·문서 연결, 미확정 색상 타입 번호/채널 의미는 계속 남아 있습니다. 실제 효과 표본의 짝 HWPX는 이번 조사에서 확보하지 못했으므로 렌더링/효과 의미를 독립 검증했다고 주장하지 않습니다.
+
+실제 색상 블록은 aift.hwp 1개와 basic/Worldcup_FIFA2010_32.hwp 32개로 총 33개입니다. 모두 type/value/count가 0이며 실제 색상 효과 항목은 없습니다. 따라서 비영 색상·효과 배열은 합성 검증 범위임을 구분합니다. 필수 prefix 거부는 396회, 뒤에 남은 바이트는 32개가 0바이트/1개가 9바이트이고 이 단계에서는 후속 의미를 해석하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 213/213, Node 47/47, HWP5 WASM 684,483회 검사입니다. 색상 합성 성공 367/거부 7,188, 실제 33개/필수 prefix 거부 396을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-picture-color-{debug,safe,fast}.log`입니다.
