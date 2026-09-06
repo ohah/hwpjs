@@ -48,6 +48,7 @@ pub const note_control = @import("body/note_control.zig");
 pub const note_validation = @import("body/note_validation.zig");
 pub const equation = @import("body/equation.zig");
 pub const equation_validation = @import("body/equation_validation.zig");
+pub const ole = @import("body/ole.zig");
 pub const control_identity = @import("body/control_identity.zig");
 pub const char_overlap = @import("body/char_overlap.zig");
 pub const char_overlap_validation = @import("body/char_overlap_validation.zig");

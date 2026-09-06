@@ -1302,3 +1302,23 @@ payload 해석은 equation.Properties, ID는 control_rules.equation_id, 태그 �
 이전의 수식 레코드 소유권·문서 검사 연결 보류는 해소됐습니다. 문서 기본 배치에서 extra로 남는 폰트의 의미, 버전별 배치 선택 규칙, 수식 언어 문법·렌더링·편집·저장은 남았습니다. 기존 미지 레코드 진단은 별도 층의 분류이며 수식 검사 성공으로 다른 미지 항목을 완료 처리하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 176/176, Node 47/47, HWP5 WASM 174,569회 검사 통과(참조 표본 존재). 전용 소유권 합성 성공 55건·거부 49건, 실제 문서 손상 거부 27건·고아 거부 3건입니다. CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
+
+## OLE 개체의 명세/관측 속성 배치 (2026-09-06)
+
+명세 스킬 4.3.9.5 및 공식 PDF 표 117~119를 대조했습니다. 표 118은 속성을 u16로 쓰지만 표 119는 bit 16~21의 개체 종류도 정의합니다. 따라서 명세 배치에서 이 비트가 존재한다고 가정하지 않습니다. [hwplib의 ForControlOLE](https://github.com/neolord0/hwplib/blob/main/src/main/java/kr/dogfoot/hwplib/reader/bodytext/paragraph/control/gso/ForControlOLE.java)는 속성을 u32, BinData ID를 u16으로 읽고 테두리 색·두께·속성 뒤 나머지를 보존합니다. 실제 표본과 이 독립 구현을 함께 참조하되 코드를 복사하지 않았습니다.
+
+`ole.Properties.parse`는 spec24/observed26을 호출자가 명시합니다. 속성 너비만 각각 2/4바이트로 다르며 extent_x/y는 i32, BinData ID는 u16, 테두리 색 u32·두께 i32·속성 u32입니다. objectKind는 spec24에서 null이며 observed26의 Unknown 값 0과 구분합니다. baselineRaw는 원시 7비트이고 0을 85로 덮어쓰지 않습니다. 알려지지 않은 enum/상위 비트/꼬리는 버리지 않습니다. 공통 개체/그리기 개체 속성을 이 payload 앞에서 중복 소비하지 않습니다.
+
+로컬 rhwp parser/control/shape.rs는 offset 12에서 BinData ID를 u32로 읽습니다. 실제 표본의 해당 위치 뒤 테두리 색이 0이면 차이가 숨겨집니다. 이번 테스트는 색을 0xaabbccdd로 바꿨을 때 u16 ID는 1 그대로이고 같은 위치의 u32 읽기는 0xccdd0001이 됨을 확인합니다. 이는 바이트 해석의 경계 검증이며 rhwp 전체 프로그램을 실행해 재현한 결과는 아닙니다.
+
+### 구현 후 적대적 검증
+
+1. spec24/observed26의 전체 필수 prefix 잘림 50개를 거부했습니다. 명세 24바이트를 observed26으로 자동 후퇴 처리하지 않습니다. 잘못된 모드와 오류 뒤 정상 재호출도 검사합니다.
+2. 각 필수 바이트 위치에 1/0x80/0xff를 독립 주입한 150개 합성 양성을 WASM의 typed 필드 재구성과 대조했습니다. 기대값은 제품 파서로 생성하지 않습니다.
+3. signed extent/두께 경계, COLORREF 상위 비트, 최대 속성·개체 종류, baseline 0/127, moniker true/false, BinData ID 0/1, 명세 배치에서의 개체 종류 부재를 네이티브로 대조했습니다.
+4. 실제 한셀OLE.hwp와 issue5724/2689441_wmf_contents_ole.hwp는 버전 5.1.0.1이며 각각 OLE 레코드 1개, payload 길이 30바이트입니다. strict CFB로 추출하고 Node/코어 압축 해제를 대조한 뒤 관측 26바이트 필드와 4바이트 미지 꼬리를 원문과 비교했습니다. 속성 값은 각각 0x00010001/0x00030001입니다.
+5. 실제 필수 prefix 잘림 52건을 거부하고 각 오류 뒤 정상 payload를 다시 검사했습니다. 필수 영역은 유지한 채 미지 꼬리만 0~3바이트로 줄인 입력은 허용합니다. 테두리 색 변경이 BinData ID를 오염시키지 않는지도 확인했습니다. 원본 파일은 변경하지 않았고 외부 표본 부재는 skipped입니다.
+
+이번 단계는 OLE payload 파서와 전용 WASM 검사입니다. 그리기 개체 소유권, BinData 리소스 참조 및 저장 스트림 연결, 문서 검사기 통합, 임베디드 OLE/차트 내부 형식·표시/편집은 남았습니다. 외부 moniker나 임베디드 프로그램에 접근·실행하지 않았습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 177/177, Node 47/47, HWP5 WASM 174,940회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
