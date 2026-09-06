@@ -150,6 +150,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         86 => return @import("video-data-probe.zig").run(a, bytes),
         87 => return @import("memo-shape-probe.zig").run(a, bytes),
         88 => return @import("list-probe.zig").runMemo(a, bytes, limit),
+        89 => return @import("memo-field-probe.zig").run(a, bytes),
         else => return error.InvalidMode,
     }
 }

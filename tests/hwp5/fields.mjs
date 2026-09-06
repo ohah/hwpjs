@@ -65,7 +65,12 @@ export function fieldEdges(call) {
       rejected++;
       check(id, good);
     }
-    check(id, Buffer.concat([good, Buffer.from([9, 8, 7])]));
+    const extra = Buffer.from([9, 8, 7]);
+    if (id === 0x25256d65) {
+      assert.throws(() => call(39, Buffer.concat([w(v), frame(id, Buffer.concat([good, extra]))])), /UnexpectedEnd/);
+      rejected++;
+      check(id, Buffer.concat([good, w(0), extra]));
+    } else check(id, Buffer.concat([good, extra]));
   }
   const id = 0x25756e6b;
   for (let bit = 0; bit < 32; bit++) {

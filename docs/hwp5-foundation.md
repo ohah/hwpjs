@@ -2168,3 +2168,17 @@ section에서 기존 Groups.build 다음에 검사를 연결했습니다. Groups
 후속 작업을 위한 읽기 전용 조사에서 task2287/1342000_edu_curriculum_map의 메모 번호 4는 Section33의 MEMO_LIST와 Section1의 %unk/MEMO 명령·꼬리 DWORD에 걸쳐 있음을 확인했습니다. 같은 구역에서만 비교했던 3개 미대조 항목 중 1개는 구역 간 사례입니다. issue5169의 BodyText에서는 이 조사 방식으로 해당 필드를 찾지 못했으며, 변경 추적이나 다른 스트림으로 원인을 확정하지 않았습니다. 전역 연결은 section-local 누락 판정을 복제하지 않는 방향으로 구현해야 합니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 236/236, Node 47/47, HWP5 WASM 1,293,626회 검사 통과했습니다. 새 소유권 경계 성공 12/거부 7, 실제 30개 표식 연결 보고서 대조, 확장한 실제 메모 문서 세 경로 거부 66을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-memo-owner-{debug,safe,fast}.log`입니다.
+
+## 메모 필드 번호 해석과 문서 단위 참조 조사
+
+2026-09-07. strict CFB/비보안 표본의 전체 BodyText를 읽기 전용으로 조사했습니다. 진입 성공 430개, 보안 제외 4개, 진입/형식 오류 102개입니다. MEMO/ 필드 28개는 모두 공통 필드 instance_id 뒤에 4바이트 꼬리가 있고, 명령의 번호와 이 u32가 일치합니다. 메모 리스트는 30개이며 필드 28개는 모두 같은 문서의 메모 리스트와 대응합니다. 중복 번호는 관측되지 않았고, 역방향 미대조는 issue5169의 번호 1/3 두 개입니다. 이를 곧바로 파일 오류라고 단정하지 않습니다.
+
+memo_field.fromField는 기존 field_start.Properties를 받아 %%me 또는 %unk+정확한 UTF-16 MEMO/ 표식만 식별합니다. control_identity는 같은 isCommand 함수를 사용해 표식 판정을 복제하지 않습니다. 선택 번호가 없으면 null, 있으면 u32 원값이며 1~3바이트는 UnexpectedEnd입니다. 이후 extra는 borrowed slice입니다. 명령의 숫자 문법은 제품에서 아직 해석하지 않으며 다른 종류의 필드는 동일 문자열이 있어도 메모로 재분류하지 않습니다.
+
+field_validation은 이미 읽은 Properties로 이 검사를 호출하므로 부분 번호의 오류가 문서/CFB로 전파됩니다. 기존 extra_bytes는 공통 필드 envelope 이후 길이이므로 번호 4바이트도 계속 포함합니다. 테스트 mode 89는 메모 여부/번호 존재 여부/원값/extra를 별도로 직렬화해 부재와 0을 구분합니다. 기존 필드 합성 테스트의 %%me+3바이트 꼬리는 이제 오류로 검사하고, 4바이트 번호 뒤 3바이트 extra는 정상 보존하는 사례로 분리했습니다.
+
+정규 테스트에서는 6개 실제 파일의 모든 구역을 조사해 필드 28개/메모 30개, 구역 간 대응 1개, 역방향 미대조 2개를 검사합니다. 실제 번호를 WASM 출력과 명령 문자열의 독립 숫자 기대값으로 대조합니다. Section1↔Section33 사례를 포함하며 이 JS 대조는 제품 전역 참조 해석기가 아닙니다. 합성 입력은 부재/0/UINT32_MAX/상위 비트/extra/부분 번호와 다른 ID·대소문자·구분자 오인 방지를 검사합니다. 실제 issue5866 필드의 꼬리를 1/2/3바이트로 잘라 payload·decoded 문서·재생성 CFB에서 거부하고 원본 입력 복구를 확인합니다. 원본 fixture는 수정하지 않습니다.
+
+제품의 문서 전역 번호 인덱스와 참조 검증은 다음 단계입니다. field.start.instance_id, 메모 번호, DocInfo 메모 모양 ordinal을 같은 ID로 합치지 않으며, issue5169의 미대조 원인을 변경 추적 등으로 추정 확정하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 237/237, Node 47/47, HWP5 WASM 1,293,767회 검사 통과했습니다. 새 필드 경계 성공 46/거부 6, 실제 필드 28개/메모 30개/구역 간 대응 1개/역방향 미대조 2개, 실제 필드 잘림의 세 경로 거부 9건을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-memo-field-{debug,safe,fast}.log`입니다.

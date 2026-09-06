@@ -9,6 +9,7 @@ pub fn inspect(tree: Tree) !Report {
         const h = node.record.value.control_header;
         if (!field.supports(h.id)) continue;
         const p = try field.Properties.parse(h.properties);
+        _ = try @import("memo_field.zig").fromField(h.id, p);
         report.controls += 1;
         report.command_units += p.command.len / 2;
         report.editable_readonly += @intFromBool(p.editableReadOnly());
