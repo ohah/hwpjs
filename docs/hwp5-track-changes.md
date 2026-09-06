@@ -56,4 +56,6 @@ Debug → ReleaseSafe → ReleaseFast 전체 감사가 모두 성공했습니다
 
 ## 남은 범위
 
+[payload·ViewText 조사](hwp5-track-change-viewtext.md)에 공개 답변, 실제 스트림 차이, 손상 ViewText가 현재 검사되지 않는 재현 결과와 다음 구현 순서를 기록했습니다.
+
 내용/작성자 payload 필드, 작성자 ID와 내용 참조, 변경 이력의 적용·취소, 편집·저장·HWPX 변환은 미완료입니다. 정보 코어 경계와 매핑 개수를 검증했다고 변경 추적 전체 지원으로 표시하지 않습니다.
