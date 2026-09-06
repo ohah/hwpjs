@@ -345,6 +345,7 @@ while (try it.next()) |record| {
         .unknown => {},
         .char_runs, .line_segments, .range_tags => {},
         .control_header, .list_header => {},
+        .page_definition, .page_border => {},
     }
 }
 ```
@@ -429,3 +430,23 @@ while (try it.next()) |record| {
 다음은 구역 정의와 컨트롤/텍스트 연결, 리스트 문맥 및 개체별 속성 검증입니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 전부 통과했습니다. 각 모드 네이티브 79/79, Node 47/47, HWP5 WASM 48,657회 검사이며 기존 CFB 비교·12,000회 변이도 통과했습니다. SSOT 재검토에서 새 코드가 기존 framing/태그 dispatch/메타데이터/ID 규칙을 중복 구현하지 않는지 확인했습니다. 포맷·diff 공백 검사도 통과했습니다.
+
+## 후속 구현: 구역 정의·용지·쪽 테두리
+
+2026-09-06. 공식 PDF §4.3.10.1, 표 129~136과 자료형 표를 대조했습니다. 구역 정의 본체와 하위 레코드를 합쳐 140바이트 고정 payload로 취급하지 않습니다.
+
+- `section_def.zig`: `secd` 컨트롤의 properties 24바이트 기본부(속성·signed 단 간격/줄맞춤·기본 탭·번호 ID·쪽/그림/표/수식 시작 번호), 5.0.1.5 이상은 대표 language u16을 필수로 읽습니다. 이전 버전은 null이며 실제 0과 구분합니다. 후속 extra는 보존합니다. 일반 `ControlHeader`는 여전히 ID/properties를 제공하며 구역 의미 해석은 별도 호출입니다.
+- `page_def.zig`: 태그 73의 40바이트 용지/여백/속성과 extra를 읽습니다. 원본 HWPUNIT는 u32이며 없는 값에 A4/기본 여백을 자동 삽입하지 않습니다.
+- `page_border.zig`: 태그 75의 속성 u32 + signed 간격 4개 + ID u16 = **14바이트**를 읽습니다. 표 135의 전체 길이 12는 필드 합과 모순되며 실제 141개도 모두 14바이트였습니다. 상위 속성 비트/extra를 보존하고 화면상의 기준을 추정하지 않습니다.
+- `section_validation.inspect(tree, version, numbering_count, border_count)`는 구역 정의가 root 문단의 자식인지, Section당 하나인지, 용지/테두리/각주 레코드의 직접 부모가 그 구역 정의인지 검사합니다. 용지는 하나를 요구하고 누락/중복을 거부합니다. 구역 번호 ID는 1 기반, 테두리 ID는 1 기반/0 부재로 기존 reference_rules를 호출합니다. 번호 ID 0은 의미를 확정하지 않고 numbering_deferred에 기록합니다.
+- 보고서 `[definitions, pages, borders, numbering_deferred, notes_pending]`는 실제 파일에서 `[47,47,141,1,94]`이며 정규 audit에서 고정 assert합니다. 용지/테두리 해석 추가로 본문 unknown_records는 476→288입니다. 이 숫자 감소가 컨트롤 전체 의미 검증 완료를 뜻하지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 구역 버전 5.0.1.4/5.0.1.5 경계, 기본/언어 필드 모든 잘림 위치, signed 간격·u32 상한, null/0, extra 보존을 검사했습니다. 세 payload의 전 바이트 단일 비트 변이 712개와 매번 정상 재검증을 실행합니다.
+2. 구역/용지 누락·중복, 잘못된 하위 레코드 부모, 번호/테두리 ID 상한 초과를 검사합니다. 기본 payload는 typed 필드로 재인코딩하여 원본과 대조합니다. 잘린 용지/테두리 payload의 반복 실패 후 cursor가 그대로인지도 확인했습니다.
+3. 실제 지원 45개 파일의 구역 47개(properties 길이 32/34/43), 용지 47개(40바이트), 쪽 테두리 141개(14바이트)를 검사했습니다. 각주/미주 94개는 공식 표 26바이트와 다르게 모두 28바이트이며 **아직 payload 의미 해석은 보류**합니다. rhwp는 추가 u16을 읽지만, 실제 추가/확장 필드의 정확한 의미와 배치는 추가 대조가 필요합니다.
+
+남은 과제: 각주/미주 배치, 컨트롤-텍스트 연결, 리스트 문맥, 구역 번호 ID 0 및 DocInfo 개요 fallback 316건의 연결 검증. 전체 문서 완료 판정은 아직 제공하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 81/81, Node 47/47, HWP5 WASM 50,419회 검사. 기존 CFB 비교·12,000회 변이(트랩 0)도 통과했습니다. SSOT 검토에서 payload별 파일/구역 교차 검증을 분리하고 기존 framing·tree·ID 규칙을 재사용하는지 확인했습니다.

@@ -16,6 +16,7 @@ import { checkBody, bodyEdges, bodyMutations } from "./body.mjs";
 import { metadataActual, metadataEdges } from "./metadata.mjs";
 import { controlEdges } from "./controls.mjs";
 import { treeActual, treeEdges } from "./tree.mjs";
+import { sectionActual, sectionEdges } from "./sections.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -99,6 +100,7 @@ bodyEdges(call);
 const metadataEdgeResults = metadataEdges(call);
 const controlEdgeResults = controlEdges(call);
 const treeEdgeResults = treeEdges(call);
+const sectionEdgeResults = sectionEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -247,6 +249,7 @@ const formatting = {
 };
 const metadata = { paragraphs: 0, runs: 0, lines: 0, ranges: 0 };
 const paragraphReport = [0, 0, 0, 0, 0, 0];
+const sectionReport = [0, 0, 0, 0, 0];
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
     cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
@@ -282,6 +285,12 @@ try {
       const framed = call(2, plain);
       if (/^Section\d+$/.test(entry.name)) {
         const counts = formattingCounts(docPlain);
+        sectionActual(
+          call,
+          hdr.readUInt32LE(32),
+          [counts.numbering, counts.borderFill],
+          plain,
+        ).forEach((n, i) => (sectionReport[i] += n));
         treeActual(
           call,
           hdr.readUInt32LE(32),
@@ -321,7 +330,8 @@ try {
   cfb.close();
 }
 assert.equal(files, 48);
-assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 476]);
+assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 288]);
+assert.deepEqual(sectionReport, [47, 47, 141, 1, 94]);
 assert.deepEqual(metadata, {
   paragraphs: 1481,
   runs: 1740,
@@ -373,6 +383,7 @@ rounds.push({
   body,
   metadata,
   paragraphReport,
+  sectionReport,
   formatting,
 });
 begin = checks;
@@ -422,6 +433,7 @@ console.log(
       metadataEdgeResults,
       controlEdgeResults,
       treeEdgeResults,
+      sectionEdgeResults,
       checks,
       imports: 0,
     },

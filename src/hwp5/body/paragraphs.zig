@@ -25,6 +25,7 @@ pub fn inspect(tree: Tree, resources: Resources) !Report {
             .list_header => report.lists_pending += 1,
             .unknown => report.unknown_records += 1,
             .header => {},
+            .page_definition, .page_border => {},
         }
         if (value != .header) continue;
         const h = value.header;

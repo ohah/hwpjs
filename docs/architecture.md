@@ -24,6 +24,8 @@ CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계�
 
 `body/tree.zig`는 레코드 level 기반 parent/subtree_end 인덱스를 선형 시간에 만들고 노드 배열을 소유합니다. payload는 입력을 빌립니다. `paragraphs.zig`는 문단 직접 자식을 연결하고 기존 개수/참조 규칙을 호출하며, 누락 텍스트·컨트롤/리스트 보류·미해석 레코드를 보고합니다. 논리적 리스트 묶음·개체 모델·렌더링 문자열은 아직 만들지 않습니다.
 
+태그 dispatch는 용지 73·쪽 테두리 75도 포함합니다. `section_def.zig`·`page_def.zig`·`page_border.zig`는 각 payload 배치를 소유하고 `section_validation.zig`는 트리 기반 구역 소유권/개수/참조를 검증합니다. 구역 정의 본체와 하위 레코드를 섞지 않으며 각주/미주 payload와 번호 ID 0은 보류로 기록합니다.
+
 HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.
 
 DocInfo 리소스는 BinData·글꼴·탭·번호·글머리표·스타일·테두리/배경·글자 모양·문단 모양까지 해석합니다. `border_fill.zig`는 선 배열, `fill.zig`는 채우기 조합, `picture_info.zig`는 이미지 속성 공통 배치를 소유합니다. 문단 모양의 구/신 줄 간격을 임의로 하나로 합치지 않습니다. `resources.zig`는 주요 리소스 개수, `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 진단을 분리합니다. 본문 구역/외부 스트림 연결 및 미지원 리소스의 참조는 후속 단계입니다.
