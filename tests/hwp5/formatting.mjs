@@ -88,6 +88,18 @@ export function formattingMutations(call) {
     [26, Buffer.alloc(14)],
   ];
   cases[0][1].writeUInt32LE(1, 4);
+  function checkMutation(tag, original, b) {
+    let error;
+    try {
+      call(4, Buffer.concat([word(0x05010001), frame(tag, b)]));
+    } catch (e) {
+      error = e;
+    }
+    if (error) assert.equal(error.message, "UnexpectedEnd");
+    else checkDocinfo(call, 0x05010001, frame(tag, b));
+    checkDocinfo(call, 0x05010001, frame(tag, original));
+    return !error;
+  }
   let seed = 0x713a58,
     accepted = 0,
     rejected = 0;
@@ -96,22 +108,50 @@ export function formattingMutations(call) {
     const [tag, original] = cases[i % cases.length];
     const b = Buffer.from(original);
     b[seed % b.length] ^= seed >>> 24 || 1;
-    let error;
-    try {
-      call(4, Buffer.concat([word(0x05010001), frame(tag, b)]));
-    } catch (e) {
-      error = e;
-    }
-    if (error) {
-      assert.match(error.message, /UnexpectedEnd/);
-      rejected++;
-    } else {
-      checkDocinfo(call, 0x05010001, frame(tag, b));
-      accepted++;
-    }
-    checkDocinfo(call, 0x05010001, frame(tag, original));
+    if (checkMutation(tag, original, b)) accepted++;
+    else rejected++;
   }
-  return { mutations: 1000, accepted, rejected, recoveries: 1000 };
+  // LCG low bits correlate with i % 4: random repetition does not guarantee
+  // position coverage. Enumerate every bit independently of the random sweep.
+  const exhaustive = [];
+  for (const [tag, original] of cases) {
+    const coverage = Buffer.alloc(original.length);
+    let passed = 0,
+      failed = 0;
+    for (let offset = 0; offset < original.length; offset++) {
+      for (let bit = 0; bit < 8; bit++) {
+        const b = Buffer.from(original);
+        b[offset] ^= 1 << bit;
+        if (checkMutation(tag, original, b)) passed++;
+        else failed++;
+        coverage[offset] |= 1 << bit;
+      }
+    }
+    assert.deepEqual(coverage, Buffer.alloc(original.length, 255));
+    assert.equal(passed + failed, original.length * 8);
+    exhaustive.push({
+      tag,
+      positions: original.length,
+      mutations: passed + failed,
+      accepted: passed,
+      rejected: failed,
+      recoveries: passed + failed,
+    });
+  }
+  assert.deepEqual(
+    exhaustive.map(({ tag, positions, mutations }) => ({
+      tag,
+      positions,
+      mutations,
+    })),
+    [
+      { tag: 22, positions: 16, mutations: 128 },
+      { tag: 23, positions: 182, mutations: 1456 },
+      { tag: 24, positions: 25, mutations: 200 },
+      { tag: 26, positions: 14, mutations: 112 },
+    ],
+  );
+  return { mutations: 1000, accepted, rejected, recoveries: 1000, exhaustive };
 }
 
 export function formattingCounts(bytes) {
