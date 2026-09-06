@@ -9,6 +9,7 @@ import { xmlTemplateEdges } from "./xml-template.mjs";
 import { optionalSurvey } from "./optional-survey.mjs";
 import { historyEdges, historyActual } from "./history.mjs";
 import { compatibilityEdges } from "./compatibility.mjs";
+import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
@@ -311,6 +312,8 @@ const scriptEdgeResults = scriptEdges(call);
 const xmlTemplateEdgeResults = xmlTemplateEdges(call);
 const historyEdgeResults = historyEdges(call);
 const compatibilityEdgeResults = compatibilityEdges(call);
+const headerFooterEdgeResults = headerFooterEdges(call);
+const headerFooterReport = [0, 0, 0, 0, 0];
 const historyActualResults = historyActual(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
 const containerEdgeResults = containerEdges(call, cfb);
@@ -393,6 +396,9 @@ try {
             plain,
             readFileSync(new URL("borderfill.hwpx", fixtures)),
           );
+        headerFooterActual(call, hdr.readUInt32LE(32), plain).forEach(
+          (n, i) => (headerFooterReport[i] += n),
+        );
         objectActual(plain).forEach((n, i) => {
           objectCounts[i] += n;
         });
@@ -490,6 +496,7 @@ try {
   cfb.close();
 }
 assert.equal(files, 48);
+assert.deepEqual(headerFooterReport, [3, 3, 3, 0, 60]);
 assert.deepEqual(optionalStreamObservations, [45, 23580, 45, 45, 1, 0]);
 assert.deepEqual(documentReport, [45, 47, 482195, 10425]);
 assert.deepEqual(
@@ -648,6 +655,8 @@ console.log(
       xmlTemplateEdgeResults,
       historyEdgeResults,
       compatibilityEdgeResults,
+      headerFooterEdgeResults,
+      headerFooterReport,
       historyActualResults,
       optionalStreamObservations,
       codepageEdgeResults,

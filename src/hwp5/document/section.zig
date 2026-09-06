@@ -19,6 +19,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
     const controls = try control_types.inspect(links.items);
     var groups = try Groups.build(a, tree);
     defer groups.deinit(a);
+    const header_footer = try @import("../body/header_footer_validation.zig").inspect(tree, groups.items, options.list_layout);
     var lists: types.Lists = .{ .groups = groups.items.len };
     for (groups.items) |g| {
         lists.paragraphs += g.paragraph_count;
@@ -32,5 +33,5 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
         _ = try object.Properties.parse(h.properties);
         objects += 1;
     }
-    return .{ .records = tree.nodes.len, .paragraphs = paras, .definition = definition, .control_types = controls, .lists = lists, .tables = try tables.inspect(a, tree, .{ .list_layout = options.list_layout, .zone_layout = options.zone_layout, .border_count = counts.count(.border_fill) }), .parameters = try sources.inspectBody(a, tree, types.parameterOptions(options, counts.bin_data_count)), .object_properties = objects };
+    return .{ .header_footer = header_footer, .records = tree.nodes.len, .paragraphs = paras, .definition = definition, .control_types = controls, .lists = lists, .tables = try tables.inspect(a, tree, .{ .list_layout = options.list_layout, .zone_layout = options.zone_layout, .border_count = counts.count(.border_fill) }), .parameters = try sources.inspectBody(a, tree, types.parameterOptions(options, counts.bin_data_count)), .object_properties = objects };
 }
