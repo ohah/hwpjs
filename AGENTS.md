@@ -32,6 +32,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - `section_def.zig`·`page_def.zig`·`page_border.zig`는 구역/용지/쪽 테두리 payload, `section_validation.zig`는 구역 소유권/개수/참조 검증을 소유합니다. 구역 하위 레코드를 본체에 붙은 바이트로 읽지 않습니다. 번호 ID 0은 보류 항목입니다.
 - 각주 payload는 `note_shape.zig`에서 추가 해석합니다. 기본 28바이트/i32 구분선 길이, 명시적 spec26 경로를 구분하며 자동 길이 fallback을 금지합니다. `section_validation`은 note_shapes 개수를 보고하고 주석 문단/번호 의미는 별도입니다.
 - `control_links.zig`는 같은 문단의 확장 텍스트 토큰과 컨트롤 헤더를 발생 순서/ID로 연결합니다. `paragraph_children.zig`는 문단 직접 자식 수집/중복 검사의 SSOT이며 paragraphs와 links가 공유합니다. 연결 성공과 개별 컨트롤 의미 검증을 구분합니다.
+- `control_identity.zig`는 exact와 관측 메모 연결을 구분합니다. code 3의 %%me 토큰/%unk 헤더와 bounded 필드 command의 정확한 UTF-16 MEMO/ 표식만 관측 연결로 인정하며 두 ID를 Link에 그대로 보존합니다. 다른 불일치를 wildcard로 허용하지 않습니다. `field_start.zig`는 표 152의 공통 속성·command·instance ID·extra를 소유하며 명령을 실행하지 않습니다. 구역 observed_field_links를 별도로 보고하고 메모 명령의 전체 문법/번호 의미는 보류합니다.
 - `column_def.zig`는 cold의 공통 간격/개별 너비·간격 배치를 소유합니다. count 1 또는 동일 너비와 가변 너비를 구분하며, 개별 쌍은 record_array를 재사용합니다. section_validation에서 부모/개수를 검사하고 단위/레이아웃을 임의 보정하지 않습니다.
 - `list_groups.zig`는 같은 부모의 리스트 헤더 사이에서 직접 문단을 묶고 count_raw와 대조합니다. 중간 표/개체 레코드가 있다고 그룹을 닫지 않으며, Tree의 부모를 변경하지 않습니다. 그룹 범위/개수 검증과 셀/캡션 속성 검증은 구분합니다.
 - `control_rules.zig`는 공식 ID/코드 대응과 MAKE_4CHID의 SSOT, `control_type_validation.zig`는 연결 결과의 종류 검증을 소유합니다. 미지 ID는 deferred로 남기며 접두사나 잘못된 요약 별칭으로 자동 분류하지 않습니다.

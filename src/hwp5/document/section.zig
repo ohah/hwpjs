@@ -39,5 +39,22 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
     }
     const parameter_report = try sources.inspectBodyDetailed(a, tree, types.parameterOptions(options, counts.bin_data_count));
     const char_overlap = try @import("../body/char_overlap_validation.zig").inspect(tree, options.overlap_layout, counts.count(.char_shape));
-    return .{ .char_overlap = char_overlap, .bookmarks = parameter_report.bookmarks, .page_visibility = page_visibility, .index_marks = index_marks, .page_number = page_number, .number_controls = number_controls, .header_footer = header_footer, .records = tree.nodes.len, .paragraphs = paras, .definition = definition, .control_types = controls, .lists = lists, .tables = try tables.inspect(a, tree, .{ .list_layout = options.list_layout, .zone_layout = options.zone_layout, .border_count = counts.count(.border_fill) }), .parameters = parameter_report.parameters, .object_properties = objects };
+    return .{
+        .observed_field_links = links.observedCount(),
+        .char_overlap = char_overlap,
+        .bookmarks = parameter_report.bookmarks,
+        .page_visibility = page_visibility,
+        .index_marks = index_marks,
+        .page_number = page_number,
+        .number_controls = number_controls,
+        .header_footer = header_footer,
+        .records = tree.nodes.len,
+        .paragraphs = paras,
+        .definition = definition,
+        .control_types = controls,
+        .lists = lists,
+        .tables = try tables.inspect(a, tree, .{ .list_layout = options.list_layout, .zone_layout = options.zone_layout, .border_count = counts.count(.border_fill) }),
+        .parameters = parameter_report.parameters,
+        .object_properties = objects,
+    };
 }

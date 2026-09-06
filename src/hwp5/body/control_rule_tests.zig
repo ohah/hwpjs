@@ -4,7 +4,7 @@ const rules = @import("control_rules.zig");
 const validation = @import("control_type_validation.zig");
 const Link = @import("control_links.zig").Link;
 fn link(id: u32, code: u16) Link {
-    return .{ .paragraph_node = 0, .text_node = 1, .control_node = 2, .start_unit = 0, .id = id, .code = code };
+    return .{ .paragraph_node = 0, .text_node = 1, .control_node = 2, .start_unit = 0, .id = id, .header_id = id, .code = code };
 }
 test "control rule IDs are unique and reject every wrong code in the table domain" {
     try t.expectEqual(53, rules.rules.len);

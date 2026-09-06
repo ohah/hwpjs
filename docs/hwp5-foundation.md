@@ -1122,3 +1122,25 @@ SectionReport.char_overlap은 controls/text_units/shape_refs/inherited_refs/text
 SSOT는 payload/참조 집계/조립을 분리하고 기존 문자열·배열·ID·참조 규칙을 재사용합니다. 신구 배치의 정확한 전환 버전, aift의 컨트롤 ID 불일치가 허용 가능한 저장 관행인지 여부, 실제 글자 겹침 조판은 남았습니다. 전체 corpus 성공과 추가 참조 파일의 pending을 구분해야 합니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 162/162, Node 47/47, HWP5 WASM 165,261회 검사 통과(참조 표본 존재 환경). 합성 성공 48건·거부 28건이며 CFB 12,000회 변이에서 trap 0입니다. 포맷·diff 검사도 통과했습니다. 이 수치는 위의 명시적 ControlIdMismatch 거부 확인도 포함하며, aift 전체 문서의 성공을 뜻하지 않습니다.
+
+## 관측 메모의 이중 ID 연결 및 aift 문서 검증 (2026-09-06)
+
+앞 단계의 ControlIdMismatch를 추가 조사했습니다. 공식 표 128은 %unk와 %%me를 각각 정의하지만 서로 다른 ID의 허용 관계는 설명하지 않습니다. aift Section2 문단 401136/401473의 텍스트는 code 3 + %%me이고 헤더 offset 401288/401633은 %unk입니다. 두 헤더의 공통 필드는 attributes=0x8001, other=0, command 41 UTF-16 단위의 MEMO/ 표식, instance ID, extra 4바이트입니다.
+
+rhwp 레퍼런스 HEAD `e8800c8def63449808a4092798442652ed460552`의 serializer/control.rs는 Memo의 헤더를 명시적으로 FIELD_UNKNOWN으로 기록하고 serializer/body_text.rs는 FIELD_MEMO 토큰을 사용합니다. parser/tags.rs에도 MEMO/ 기반 관측 저장 형태와 변환 이력이 설명되어 있습니다. 따라서 이번 현상은 단순 바이트 손상으로만 단정할 수 없는 저장 형태입니다. 레퍼런스의 command 기반 의미 추정 전체나 잘린 payload를 기본값으로 치환하는 처리는 가져오지 않았습니다.
+
+명세 스킬 4.3.10.15와 공식 표 152~153을 바탕으로 `field_start.zig`에 ID 제외 11바이트+command의 bounded 공통 파서를 추가했습니다. attributes/other/command/instance_id/extra를 보존하고 instance ID가 없으면 실패합니다. `control_identity.zig`는 정확한 동일 ID 또는 code 3·%%me 토큰·%unk 헤더·UTF-16 MEMO/ 표식이 모두 맞는 관측 메모만 구분합니다. 방향을 뒤집거나 다른 필드/다른 code/소문자·유사 문자열로 확장하지 않습니다. 이 표식 검사는 메모 command 전체 문법·번호·작성자·명령 실행 의미를 검증하지 않습니다.
+
+Link.id는 원본 토큰 ID이고 header_id도 원본 그대로 저장합니다. identity=exact/observed_memo를 별도로 보존하며 ID를 덮어쓰지 않습니다. `Links.observedCount`가 구역 observed_field_links를 집계합니다. 기존 테스트 모드 13의 여섯 필드 형식은 명시적으로 유지하고 새 모드 38은 두 필드를 더 내보내 원본 ID와 관측 구분을 대조합니다. 구역 기대 wire SSOT는 292바이트입니다.
+
+### 구현 후 적대적 검증
+
+1. 필드 command와 instance ID의 모든 짧은 prefix를 거부했습니다. u32 속성/instance ID, u8 기타 속성, extra를 보존합니다. 정확히 같은 ID의 기존 연결은 새 추정을 적용하지 않습니다.
+2. 반대 방향, 다른 헤더·토큰, 다른 제어코드, MEMO 표식 누락/소문자/전각/중간 NUL은 거부합니다. 최대 65,535 UTF-16 단위 command와 고립 서로게이트·NUL·BOM·꼬리는 원문으로 유지합니다. 합성 WASM 성공 39건·거부 32건입니다.
+3. 네이티브에서 필드 원본과 두 ID를 대조하고 Tree/Links 할당 실패를 모두 주입했습니다. 기존 다른 ID·제어코드 불일치 테스트도 계속 거부해야 합니다. 관측 연결을 임의 %unk wildcard나 명령 실행으로 확장하지 않았습니다.
+4. aift 3개 구역, 헤더 포함 decoded document 988,925바이트/28,503레코드를 독립 구역 oracle 및 정렬/역순 입력으로 대조했습니다. 원본 Section2의 관측 연결 수는 정확히 2입니다. CFB 검사도 통과했고 BinData 21개/38,376,784바이트를 기존 독립 container oracle로 비교했습니다. 미검사 스트림 2개 등 기존 보류 범위는 그대로입니다.
+5. 두 실제 헤더에서 첫 command 문자를 X로 바꾸거나, extra 4바이트와 필수 instance ID 1바이트를 제거해 framing을 재작성했습니다. 전용 연결·decoded document·재작성 CFB 세 경로에서 각각 ControlIdMismatch/UnexpectedEnd로 거부했습니다(12건). 정상 재호출의 보고서가 원본과 같은지도 확인했습니다. 원본 파일은 수정하지 않았고 외부 표본 부재는 skipped입니다.
+
+앞 단계의 aift ControlIdMismatch pending은 이 관측 계약과 검증으로 해소됐습니다. 단, 이를 모든 %unk/다른 필드 불일치에 대한 허용 규칙이나 메모의 전체 의미 검증으로 일반화하지 않습니다. 모든 필드의 속성 검사 연결, 명령 종류별 해석, 전역 instance ID 의미와 메모 편집/조판은 남았습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 165/165, Node 47/47, HWP5 WASM 165,425회 검사 통과(참조 표본 존재 환경). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.

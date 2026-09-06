@@ -21,6 +21,7 @@ import { bookmarkEdges } from "./bookmarks.mjs";
 import { bookmarkReference } from "./bookmark-reference.mjs";
 import { overlapEdges } from "./char-overlap.mjs";
 import { overlapReference } from "./char-overlap-reference.mjs";
+import { memoEdges } from "./memo-identity.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -334,6 +335,7 @@ const indexMarkEdgeResults = indexMarkEdges(call);
 const visibilityEdgeResults = visibilityEdges(call);
 const bookmarkEdgeResults = bookmarkEdges(call);
 const overlapEdgeResults = overlapEdges(call);
+const memoEdgeResults = memoEdges(call);
 let pageNumberDocumentChecks = 0;
 let numberDocumentChecks = 0;
 reportWireEdges();
@@ -723,6 +725,7 @@ console.log(
       visibilityEdgeResults,
       bookmarkEdgeResults,
       overlapEdgeResults,
+      memoEdgeResults,
       overlapReferenceResults,
       bookmarkReferenceResults,
       visibilityReferenceResults,

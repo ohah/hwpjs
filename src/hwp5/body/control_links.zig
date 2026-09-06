@@ -2,10 +2,18 @@ const std = @import("std");
 const body = @import("reader.zig");
 const Tree = @import("tree.zig").Tree;
 const Reader = @import("../../binary/reader.zig").Reader;
-pub const Link = struct { paragraph_node: usize, text_node: usize, control_node: usize, start_unit: usize, code: u16, id: u32 };
+const identity = @import("control_identity.zig");
+pub const Link = struct { paragraph_node: usize, text_node: usize, control_node: usize, start_unit: usize, code: u16, id: u32, header_id: u32, identity: identity.Identity = .exact };
 /// Owns only the links. Node indices refer to the unchanged source Tree.
 pub const Links = struct {
     items: []Link,
+    pub fn observedCount(self: Links) usize {
+        var count: usize = 0;
+        for (self.items) |link| if (link.identity != .exact) {
+            count += 1;
+        };
+        return count;
+    }
     pub fn deinit(self: *Links, a: std.mem.Allocator) void {
         a.free(self.items);
         self.* = undefined;
@@ -35,8 +43,9 @@ pub const Links = struct {
                     // never an address to dereference. Remaining bytes stay opaque.
                     var r: Reader = .{ .bytes = token.value.control.data };
                     const id = try r.readInt(u32);
-                    if (id != entry.record.value.control_header.id) return error.ControlIdMismatch;
-                    try out.append(a, .{ .paragraph_node = index, .text_node = text_index.?, .control_node = child, .start_unit = token.start_unit, .code = token.value.control.code, .id = id });
+                    const h = entry.record.value.control_header;
+                    const relation = try identity.resolve(id, h.id, token.value.control.code, h.properties);
+                    try out.append(a, .{ .paragraph_node = index, .text_node = text_index.?, .control_node = child, .start_unit = token.start_unit, .code = token.value.control.code, .id = id, .header_id = h.id, .identity = relation });
                 }
                 child = entry.subtree_end;
             }

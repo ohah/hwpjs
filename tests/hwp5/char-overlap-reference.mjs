@@ -2,11 +2,8 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
 import { overlapActual, overlapInput } from "./char-overlap.mjs";
-import {
-  documentRecords,
-  documentActual,
-  decodedDocumentInput,
-} from "./documents.mjs";
+import { memoReference } from "./memo-identity-reference.mjs";
+import { documentRecords, documentActual } from "./documents.mjs";
 export function overlapReference(call, cfb) {
   const results = [];
   for (const [path, mode] of [
@@ -21,7 +18,8 @@ export function overlapReference(call, cfb) {
       results.push({ path, skipped: "reference fixture unavailable" });
       continue;
     }
-    cfb.parse(readFileSync(url), { strict: true });
+    const file = readFileSync(url);
+    cfb.parse(file, { strict: true });
     const h = Buffer.from(cfb.findExact("/FileHeader").content),
       v = h.readUInt32LE(32),
       flags = h.readUInt32LE(36);
@@ -84,23 +82,19 @@ export function overlapReference(call, cfb) {
       : [];
     let documentReport = null;
     if (mode) {
-      // Known whole-document blocker: Section2 %%me tokens have %unk headers.
-      // Keep it visible and pinned; do not count this as successful document validation.
-      assert.throws(
-        () => documentActual(call, h, doc, sections),
-        /ControlIdMismatch/,
-      );
-      assert.throws(
-        () => call(24, decodedDocumentInput(h, doc, sections)),
-        /ControlIdMismatch/,
-      );
-      documentReport = {
-        pending: "ControlIdMismatch",
-        section: 2,
-        paragraphOffsets: [401136, 401473],
-      };
+      documentReport = documentActual(call, h, doc, sections);
     }
-    results.push({ path, version: v, stats, rejected, documentReport });
+    const memoReport = mode
+      ? memoReference(call, cfb, file, h, doc, sections)
+      : null;
+    results.push({
+      path,
+      version: v,
+      stats,
+      rejected,
+      documentReport,
+      memoReport,
+    });
   }
   return results;
 }

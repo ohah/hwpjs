@@ -9,7 +9,7 @@ const frame = (tag, level, b = Buffer.alloc(0)) =>
   Buffer.concat([word(tag | (level << 10) | (b.length << 20)), b]);
 const extended = new Set([1, 2, 3, 11, 12, 14, 15, 16, 17, 18, 21, 22, 23]);
 const wide = new Set([...extended, 4, 5, 6, 7, 8, 9, 19, 20]);
-export function linksActual(call, v, bytes) {
+function linkRows(bytes) {
   const nodes = [],
     stack = [],
     paragraphs = [];
@@ -60,15 +60,52 @@ export function linksActual(call, v, bytes) {
     for (let i = 0; i < p.tokens.length; i++) {
       const [text, offset, code, id] = p.tokens[i],
         header = p.headers[i];
-      assert.equal(id, header.raw.readUInt32LE());
-      rows.push([p.index, text, header.index, offset, code, id]);
+      const headerId = header.raw.readUInt32LE();
+      let identity = 0;
+      if (id !== headerId) {
+        assert.equal(id, 0x25256d65);
+        assert.equal(headerId, 0x25756e6b);
+        assert.equal(code, 3);
+        const units = header.raw.readUInt16LE(9),
+          end = 11 + units * 2;
+        assert.ok(end + 4 <= header.raw.length);
+        assert.ok(
+          header.raw
+            .subarray(11, end)
+            .subarray(0, 10)
+            .equals(Buffer.from("MEMO/", "utf16le")),
+        );
+        identity = 1;
+      }
+      rows.push([
+        p.index,
+        text,
+        header.index,
+        offset,
+        code,
+        id,
+        headerId,
+        identity,
+      ]);
     }
   }
+  return rows;
+}
+export function linksActual(call, v, bytes) {
+  const rows = linkRows(bytes);
   assert.deepEqual(
     call(13, Buffer.concat([word(v), bytes])),
-    Buffer.concat(rows.flatMap((r) => r.map(word))),
+    Buffer.concat(rows.flatMap((r) => r.slice(0, 6).map(word))),
   );
   return rows.length;
+}
+export function identityActual(call, v, bytes) {
+  const rows = linkRows(bytes);
+  assert.deepEqual(
+    call(38, Buffer.concat([word(v), bytes])),
+    Buffer.concat(rows.flatMap((r) => r.map(word))),
+  );
+  return rows.reduce((n, r) => n + r[7], 0);
 }
 export function linkEdges(call) {
   const header = frame(66, 0, Buffer.alloc(24));
