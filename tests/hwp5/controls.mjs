@@ -13,8 +13,10 @@ export function controlEdges(call) {
     [71, 4],
     [72, 6],
   ]) {
+    // Generic unknown-header preservation, not a truncated known table payload.
+    // Known object payload boundaries are covered by objects.mjs.
     const raw = Buffer.from([
-      32, 108, 98, 116, 255, 0, 128, 129, 85, 170, 0, 1, 2,
+      122, 122, 122, 122, 255, 0, 128, 129, 85, 170, 0, 1, 2,
     ]);
     for (let n = 0; n <= raw.length; n++) {
       const record = frame(tag, raw.subarray(0, n));

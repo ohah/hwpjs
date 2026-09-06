@@ -4,6 +4,9 @@ pub fn id(comptime name: *const [4]u8) u32 {
 }
 pub const section_id = id("secd");
 pub const column_id = id("cold");
+pub const table_id = id("tbl ");
+pub const drawing_id = id("gso ");
+pub const equation_id = id("eqed");
 pub const Rule = struct { control_id: u32, code: u16 };
 /// Official tables 6, 127, 128; equation is an object control.
 pub const rules = [_]Rule{
@@ -43,9 +46,9 @@ pub const rules = [_]Rule{
     .{ .control_id = id("%%me"), .code = 3 },
     .{ .control_id = id("%cpr"), .code = 3 },
     .{ .control_id = id("%toc"), .code = 3 },
-    .{ .control_id = id("tbl "), .code = 11 },
-    .{ .control_id = id("gso "), .code = 11 },
-    .{ .control_id = id("eqed"), .code = 11 },
+    .{ .control_id = table_id, .code = 11 },
+    .{ .control_id = drawing_id, .code = 11 },
+    .{ .control_id = equation_id, .code = 11 },
     .{ .control_id = id("tcmt"), .code = 15 },
     .{ .control_id = id("head"), .code = 16 },
     .{ .control_id = id("foot"), .code = 16 },

@@ -562,3 +562,25 @@ while (try it.next()) |record| {
 다음은 표·그리기 개체 공통 속성 및 표의 셀/캡션 의미 검증입니다. 전체 문서 검증은 아직 진행 중이며 `controls_pending` 등의 미완료 집계를 이번 종류 검사만으로 0으로 만들지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 90/90, Node 47/47, HWP5 WASM 54,215회 검사. 기존 CFB 비교·12,000회 변이도 통과했습니다. 포맷/diff 검사와 SSOT/파일 책임 검토를 완료했습니다.
+
+## 개체 공통 속성: 위치·크기·여백·선택 설명
+
+2026-09-06. 공식 revision 1.3 PDF 표 69와 로컬 4.3.9 절, 실제 HWP CTRL_HEADER를 대조했습니다. `object_common.Properties.parse`는 ID를 제외한 속성을 읽습니다. 표 tbl / 그리기 gso / 수식 eqed만 supports로 분류하며 `$pic`·`$rec` 등 자식 도형 ID를 컨트롤 헤더로 추정하지 않습니다.
+
+- 필수 40바이트: flags u32, y/x i32, width/height u32, z-order i32, 여백 i16[4], instance ID u32, 쪽나눔 방지 i32. 이후 설명은 u16 길이와 UTF-16LE 원문, 그 이후 바이트는 extra로 보존합니다. 플래그와 쪽나눔 값은 미지 값을 임의 bool/enum 기본값으로 치환하지 않습니다.
+- 40바이트면 description=null, 42바이트와 길이 0이면 빈 설명입니다. 41바이트 또는 선언 길이에 못 미치는 문자열은 UnexpectedEnd입니다. 짧은 필수 필드를 기본값으로 채우지 않습니다. 확정되지 않은 버전 경계로 설명 존재 여부를 강제하지 않습니다.
+- 지원 fixture 45개/Section 47개에서 표 60, 그리기 53, 수식 20, 합계 133개를 실측했습니다. 설명 부재 42, 빈 설명 82, 비어 있지 않은 설명 9개이며, 모든 필드를 테스트 WASM에서 각각 재직렬화해 원본과 대조합니다. 실제 샘플에는 설명 이후 extra가 없으므로 합성 입력으로 별도 검사합니다.
+- 부재 42개는 관측상 5.0.1.7, 설명 존재는 5.0.3.0/5.1.0.1/5.1.1.0에서 확인했습니다. 이것을 전체 버전 명세로 일반화하지 않습니다. 설명 없는 필수 40바이트 형식은 현대 버전에서도 파싱 가능하도록 테스트합니다.
+- 위치 상위 비트가 켜진 개체 5개: aligns 2개, noori, sample-5017-pics, table2 각 1개. i32 해석은 -2835, -140, -23207 등을 보존합니다. 공식 표에는 HWPUNIT(unsigned)로 되어 있고, aligns.hwpx에도 4294964461 같은 unsigned 표기가 있습니다. signed API 표현을 선택하되 비트 패턴은 그대로 보존하며, HWPX의 signed 표기로 독립 입증했다고 주장하지 않습니다. 요약 문서의 `0xFFFFF9ED = -835` 예시는 산술 오류라 채택하지 않았습니다.
+
+### 구현 후 적대적 검증
+
+1. 필수 필드 모든 잘림 위치, 선택 길이의 1바이트 잘림, 문자열 중간 잘림을 거부합니다. 설명 부재와 빈 설명을 구분하고, 최대 65,535 UTF-16 단위와 마지막 바이트 잘림을 WASM에서 검사합니다.
+2. 서로 다른 signed 위치·z-order·여백과 unsigned 크기/ID 극값을 네이티브에서 직접 assert합니다. 원문 설명의 NUL·고립 surrogate·BOM과 borrowed slice/extra 경계를 검사합니다. 바이트 왕복만으로 signed 의미까지 검증했다고 간주하지 않습니다.
+3. 세 개 ID의 51바이트 합성 payload 전체 비트 변이 1,224개: 정상 경계 1,182개 원본 왕복, 잘못된 설명 길이 42개 거부, 각 변이 뒤 정상 입력으로 1,224회 복구합니다. 긴 레코드는 확장 길이 framing도 통과합니다.
+4. 기존 일반 CTRL_HEADER 테스트가 13바이트짜리 tbl payload를 정상으로 사용하던 문제를 새 검사에서 발견했습니다. 일반 unknown 보존 시험은 zzzz ID로 분리하고, 알려진 세 ID의 짧은 payload 거부는 objects.mjs에서 검사합니다. 제품의 일반 ControlHeader.parse는 여전히 ID/원본 보존만 책임지며 알려진 속성 검사와 구분됩니다.
+5. SSOT/책임 재검토: ID는 control_rules 상수, 문자열 경계는 기존 utf16_string.read를 재사용합니다. core의 해석, 테스트 전용 직렬화, 변이/fixture 집계를 별도 파일로 분리했습니다. unknown 자식 도형 ID를 supports에 등록하거나 리스트를 공통 속성 꼬리로 소비하지 않습니다.
+
+이 단계는 개체 공통 payload 읽기입니다. 셀·캡션·개별 도형·표 내부 참조·레이아웃·전체 문서 통합 검사와 제품 HWP JS API는 아직 남아 있습니다. controls_pending를 완료로 바꾸지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 93/93, Node 47/47, HWP5 WASM 56,849회 검사(모드별). CFB 60컨테이너/483스트림/5,496검색 비교 및 12,000회 변이도 통과했습니다. `zig fmt --check build.zig src tests/hwp5`, 변경 JS 포맷과 `git diff --check`도 확인했습니다.

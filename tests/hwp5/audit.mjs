@@ -22,6 +22,7 @@ import { linksActual, linkEdges } from "./links.mjs";
 import { columnEdges, columnPair } from "./columns.mjs";
 import { listsActual, listEdges } from "./list-groups.mjs";
 import { typeActual, typeEdges } from "./control-types.mjs";
+import { objectActual, objectEdges } from "./objects.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -110,6 +111,8 @@ const linkEdgeResults = linkEdges(call);
 const columnEdgeResults = columnEdges(call);
 const listEdgeResults = listEdges(call);
 const typeEdgeResults = typeEdges(call);
+const objectEdgeResults = objectEdges(call);
+const objectCounts = [0, 0, 0, 0, 0, 0, 0];
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -298,6 +301,9 @@ try {
       );
       const framed = call(2, plain);
       if (/^Section\d+$/.test(entry.name)) {
+        objectActual(plain).forEach((n, i) => {
+          objectCounts[i] += n;
+        });
         typeActual(call, hdr.readUInt32LE(32), plain).forEach(
           (n, i) => (typeReport[i] += n),
         );
@@ -465,6 +471,7 @@ rounds.push({
 const formattingMutationResults = formattingMutations(call);
 const shapeMutationResults = shapeMutations(call);
 const bodyMutationResults = bodyMutations(call);
+assert.deepEqual(objectCounts, [60, 53, 20, 42, 82, 9, 5]);
 console.log(
   JSON.stringify(
     {
@@ -481,6 +488,8 @@ console.log(
       columnEdgeResults,
       listEdgeResults,
       typeEdgeResults,
+      objectEdgeResults,
+      objectCounts,
       checks,
       imports: 0,
     },
