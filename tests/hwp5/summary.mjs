@@ -39,6 +39,13 @@ export function summaryActual(call, b) {
       0,
     ],
     parts = [];
+  let codePage = null;
+  for (let i = 0; i < count; i++)
+    if (b.readUInt32LE(start + 8 + i * 8) === 1) {
+      const offset = start + b.readUInt32LE(start + 12 + i * 8);
+      assert.equal(b.readUInt32LE(offset), 2);
+      codePage = b.readUInt16LE(offset + 4);
+    }
   for (let i = 0; i < count; i++) {
     const id = b.readUInt32LE(start + 8 + i * 8),
       offset = b.readUInt32LE(start + 12 + i * 8);
@@ -57,9 +64,12 @@ export function summaryActual(call, b) {
       } else if (type === 64) {
         stats[2]++;
         consumed = 12;
-      } else if (type === 3) {
+      } else if (type === 3 || type === 2) {
         stats[3]++;
         consumed = 8;
+      } else if (type === 30 && codePage !== null) {
+        stats[1]++;
+        consumed = 8 + Math.ceil(raw.readUInt32LE(4) / 4) * 4;
       } else stats[5]++;
       stats[6] += raw.length - consumed;
     }

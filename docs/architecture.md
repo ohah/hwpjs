@@ -56,7 +56,9 @@ container Report는 document Report와 그 DocInfo backing을 소유합니다. �
 
 `preview/text.zig`는 raw UTF-16LE 바이트를 빌리는 뷰와 코드 유닛/Unicode scalar/고립 서로게이트/NUL/BOM 수치를 소유합니다. 길이 접두사가 있는 DocInfo 문자열, 제어문자 문법이 있는 본문 텍스트와 별도 형식입니다. `container/preview.zig`는 루트 PrvText의 선택적 존재·kind·전역 바이트 한도만 담당하고 문서 compressed 비트와 무관하게 원문을 전달합니다. container Report의 preview_text=null과 0유닛 Stats는 부재/빈 텍스트를 구분하며, 통계만 저장하므로 임시 CFB를 해제한 뒤의 포인터를 남기지 않습니다. total_decoded_bytes에는 이 비압축 소비량도 포함합니다.
 
-`summary/header.zig`는 HWP FMTID의 단일 property-set envelope만 해석하고, `parser.zig`는 set 크기·속성 디렉터리와 증가/정렬/범위/중복을 검사합니다. 속성 배열만 할당하며 원문 전체·UTF-16·dictionary·미지원 값·extra는 입력을 빌립니다. `value.zig`는 VT_LPWSTR/I4/FILETIME, `rules.zig`는 HWP ID별 기대 타입을 소유합니다. 문자열 길이 u32 및 4바이트 패딩은 DocInfo의 u16 문자열 문법과 다르며 혼용하지 않습니다. PID 0은 별도 dictionary 원문으로 보류하고 일반 태그 1로 읽지 않습니다. container/summary는 optional 정확한 루트 스트림을 소비하고 scalar 통계만 반환하므로 임시 파서/CFB를 모두 해제합니다. 다중 set·다른 FMTID·코드페이지 문자열·dictionary 의미 검증은 후속 범위입니다.
+`summary/header.zig`는 HWP FMTID의 단일 property-set envelope만 해석하고, `parser.zig`는 set 크기·속성 디렉터리와 증가/정렬/범위/중복을 검사합니다. 속성 배열만 할당하며 원문 전체·문자열·dictionary·미지원 값·extra는 입력을 빌립니다. `value.zig`는 알려진 typed value, `rules.zig`는 HWP ID별 기대 타입을 소유합니다. 문자열 길이 u32 및 패딩은 DocInfo의 u16 문자열 문법과 다르며 혼용하지 않습니다. PID 0은 별도 dictionary 원문으로 보존하고 일반 태그 1로 읽지 않습니다. container/summary는 optional 정확한 루트 스트림을 소비하고 scalar 통계만 반환하므로 임시 파서/CFB를 모두 해제합니다. 다중 set·다른 FMTID·문자 변환·dictionary 이름 의미 검증은 후속 범위입니다.
+
+요약 파서는 디렉터리 확인 후 PID1을 먼저 읽고 나서 값들을 해석합니다. 선택적인 code_page는 signed VT_I2의 16비트 원형을 보존하고, 문자열보다 뒤에 있다는 이유로 누락하지 않습니다. value는 VT_I2/LPSTR도 지원하며 LPSTR은 코드페이지 식별자와 원시 bytes를 함께 반환합니다. `strings.zig`에서 길이/단위/종결/패딩만 공유하고 문자를 변환하지 않습니다. CP1200 LPSTR도 바이트 길이이며 dictionary는 CP1200이면 UTF-16 유닛 길이와 항목별 패딩, 그 외에는 바이트 길이와 무패딩 항목입니다. dictionary의 Iterator는 raw 이름을 빌리고 실패 시 위치/잔여 개수를 유지합니다. inspect는 ID 범위/중복과 마지막 정렬 바이트를 확인하며 dictionary_structure를 반환합니다. 코드페이지 부재·문자 변환·이름 의미 검증은 아직 별도이며 dictionaries_deferred를 구조 검사 성공만으로 감소시키지 않습니다.
 
 HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.
 

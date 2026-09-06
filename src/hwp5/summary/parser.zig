@@ -2,6 +2,7 @@ const std = @import("std");
 const Reader = @import("../../binary/reader.zig").Reader;
 pub const Header = @import("header.zig").Header;
 pub const Value = @import("value.zig").Value;
+pub const dictionary = @import("dictionary.zig");
 pub const Property = struct { id: u32, offset: usize, raw: []const u8, value: Value, extra: []const u8 };
 pub const Stats = struct { properties: usize = 0, strings: usize = 0, filetimes: usize = 0, integers: usize = 0, dictionaries_deferred: usize = 0, unsupported_types: usize = 0, trailing_bytes: usize = 0, unknown_ids: usize = 0 };
 /// Owns property array only. All raw/value/extra bytes borrow the input stream.
@@ -12,6 +13,8 @@ pub const Document = struct {
     properties: []Property,
     extra: []const u8,
     stats: Stats,
+    code_page: ?u16,
+    dictionary_structure: ?dictionary.Report,
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {
         a.free(self.properties);
         self.* = undefined;
@@ -42,20 +45,34 @@ pub const Document = struct {
         for (properties, 0..) |*p, i| {
             const end = if (i + 1 < properties.len) properties[i + 1].offset else size;
             p.raw = r.bytes[p.offset..end];
-            const parsed = try @import("value.zig").parse(p.id, p.raw);
+        }
+        // Resolve context before decoding any dependent value, regardless of order.
+        var code_page: ?u16 = null;
+        for (properties) |p| if (p.id == 1) {
+            const cp = try @import("value.zig").parse(1, p.raw);
+            try @import("rules.zig").validate(1, cp.value);
+            code_page = @bitCast(cp.value.i16);
+        };
+        var dictionary_structure: ?dictionary.Report = null;
+        for (properties) |*p| {
+            const parsed = try @import("value.zig").parseWithCodePage(p.id, p.raw, code_page);
             p.value = parsed.value;
             try @import("rules.zig").validate(p.id, p.value);
             if (!@import("rules.zig").known(p.id)) stats.unknown_ids += 1;
             p.extra = parsed.extra;
             stats.trailing_bytes += p.extra.len;
             switch (p.value) {
-                .utf16 => stats.strings += 1,
+                .utf16, .encoded_string => stats.strings += 1,
                 .filetime => stats.filetimes += 1,
-                .i32 => stats.integers += 1,
-                .dictionary => stats.dictionaries_deferred += 1,
+                .i16, .i32 => stats.integers += 1,
+                .dictionary => |raw| {
+                    // Names/case/encoding semantics remain deferred even after structure checks.
+                    stats.dictionaries_deferred += 1;
+                    if (code_page) |cp| dictionary_structure = try dictionary.inspect(a, raw, cp);
+                },
                 .unsupported => stats.unsupported_types += 1,
             }
         }
-        return .{ .raw = bytes, .header = h, .properties = properties, .extra = bytes[h.set_offset + size ..], .stats = stats };
+        return .{ .raw = bytes, .header = h, .properties = properties, .extra = bytes[h.set_offset + size ..], .stats = stats, .code_page = code_page, .dictionary_structure = dictionary_structure };
     }
 };

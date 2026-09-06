@@ -3,6 +3,7 @@ import { documentActual, documentEdges } from "./documents.mjs";
 import { containerActual, containerEdges } from "./containers.mjs";
 import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
+import { codepageEdges } from "./codepage.mjs";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
@@ -300,6 +301,7 @@ const documentReport = [0, 0, 0, 0];
 const containerReport = Array(19).fill(0);
 const previewEdgeResults = previewEdges(call);
 const summaryEdgeResults = summaryEdges(call);
+const codepageEdgeResults = codepageEdges(call);
 const containerEdgeResults = containerEdges(call, cfb);
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
@@ -629,6 +631,7 @@ console.log(
       containerReport,
       previewEdgeResults,
       summaryEdgeResults,
+      codepageEdgeResults,
       containerEdgeResults,
       documentEdgeResults,
       tableReport,

@@ -12,6 +12,17 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
         try int(a, &out, u32, @intCast(p.offset));
         try int(a, &out, u32, @intCast(p.raw.len));
         switch (p.value) {
+            .i16 => |v| {
+                try int(a, &out, u32, 2);
+                try int(a, &out, i16, v);
+                try int(a, &out, u16, 0);
+            },
+            .encoded_string => |v| {
+                try int(a, &out, u32, 30);
+                try int(a, &out, u32, @intCast(v.bytes.len));
+                try out.appendSlice(a, v.bytes);
+                for (0..(4 - v.bytes.len % 4) % 4) |_| try out.append(a, 0);
+            },
             .i32 => |v| {
                 try int(a, &out, u32, 3);
                 try int(a, &out, i32, v);

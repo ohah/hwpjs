@@ -835,3 +835,27 @@ Document는 속성 배열만 소유하며 raw stream/header/속성 값/extra는 
 현재 미검사 스트림은 **180개**이며 summary 내부의 dictionary 보류 **45개**는 별도로 남아 있습니다. 전체 소비량 합계는 1,554,627바이트입니다. 다음 작업은 dictionary/코드페이지와 미지원 요약 타입을 명세에 따라 확장하는 것이며, 미리보기 이미지·스크립트·문서 옵션·나머지 본문 컨트롤/도형·HWPX 등 전체 목표는 계속 남아 있습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 128/128, Node 47/47, HWP5 WASM 162,245회 검사(모드별). 기존 CFB 비교 60컨테이너/483스트림/5,496검색·12,000회 변이(trap 0), Zig/JS 포맷·diff 검사도 통과했습니다.
+
+## 요약 코드페이지·LPSTR·dictionary 구조
+
+2026-09-06. 명시된 코드페이지를 사용하는 요약 값의 경계를 추가했습니다. 근거는 MS-OLEPS의 [CodePage Property](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/b8910736-7f4a-469a-9644-aed68a71d7d1), [CodePageString](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/a4c32611-5b79-4965-8f50-50639c138e16), [DictionaryEntry](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/333959a3-a999-4eca-8627-48a224e63e77), [Dictionary](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/99127b7f-c440-4697-91a4-c853086d6b33)입니다.
+
+- parser는 속성 디렉터리를 검사한 뒤 PID1을 먼저 찾아 VT_I2인지 확인합니다. 텍스트/dictionary보다 뒤에 있는 코드페이지도 적용합니다. raw 값은 signed i16, `Document.code_page`는 같은 16비트 비트패턴의 u16입니다. 65001을 음수/범위 초과로 잘못 버리지 않습니다. 코드페이지 식별자 전체 등록 목록의 유효성이나 문자 변환까지 구현한 것은 아닙니다.
+- `strings.zig`는 기존 LPWSTR와 새 LPSTR/dictionary가 공유하는 경계·종결·패딩을 소유합니다. LPWSTR 길이는 UTF-16 유닛 수, LPSTR 길이는 **CP1200에서도 바이트 수**입니다. CP1200의 바이트 수는 짝수여야 하며 NUL 종결은 2바이트입니다. 다른 코드페이지는 8비트 바이트 배열을 보존합니다. 원문을 UTF-8/CP949 등으로 자동 변환하지 않습니다.
+- `Value.encoded_string`은 코드페이지 ID와 원시 bytes를 함께 반환합니다. 내부 NUL/추가 NUL도 제거하지 않습니다. 코드페이지가 없으면 값 의미는 보류하지만 인코딩과 무관한 바이트 길이·패딩·마지막 0바이트 조건은 검사합니다. 부재를 0이나 호스트 기본 코드페이지로 대체하지 않습니다.
+- `dictionary.zig`는 borrowed 이름 Iterator와 구조 검사기를 분리합니다. 코드페이지가 명시된 경우에만 parser에서 호출합니다. CP1200 이름은 UTF-16 유닛 길이와 항목별 4바이트 패딩, 나머지는 바이트 길이와 **항목별 무패딩**을 적용합니다. dictionary 전체의 마지막 정렬 바이트는 별도로 소비합니다. ID 2..0x7fffffff 범위/ID 중복을 검사하며 이름의 인코딩·대소문자/동일성 의미 검증은 보류합니다.
+- dictionary entry 수는 남은 입력의 최소 항목 크기로 선검사합니다. 임시 중복 ID 집합만 할당하고 모든 실패에서 해제합니다. Iterator는 실패 시 reader 위치와 남은 항목 수를 바꾸지 않습니다. `Document.dictionary_structure`에는 확인한 항목 수와 추가 원문을 제공하지만 `dictionaries_deferred`를 의미 검증 완료로 감소시키지 않습니다.
+
+실제 지원 45개 HWP를 다시 조사하니 모두 PID1 코드페이지가 없었고, PID0 원문은 동일한 13바이트 `01000000000000000100000000`였습니다. 이를 표준 dictionary 항목이라고 단정하면 예약 ID 0을 포함하므로 기본 코드페이지를 임의 주입해 ‘정상 dictionary’로 승격할 수 없습니다. 기존 원문/보류를 유지했고 실제 정상 파일 결과는 달라지지 않았습니다. 이번 코드페이지 양성 경로는 합성 자료로 검증한 범위입니다.
+
+### 구현 후 적대적 검증
+
+1. 코드페이지 949/1252/1200/65001과 속성 순서 앞/뒤를 검사했습니다. CP949 바이트와 UTF-8 보조 평면 문자의 원문, 내부 NUL, 빈 문자열, 16비트 부호 비트가 있는 코드페이지를 typed 재직렬화/네이티브 값으로 대조했습니다.
+2. dictionary의 비정렬 다음 항목(바이트 이름), UTF-16 항목별 패딩, 예약/범위 밖/중복 ID, 과대 항목 수와 모든 잘림 prefix를 검사했습니다. 마지막 전체 패딩을 항목별 패딩으로 혼동하지 않습니다. 이름 유닛 길이와 LPSTR 바이트 길이를 서로 바꾸지 않았습니다.
+3. 잘못된 PID1 타입/패딩, CP1200 홀수 바이트 길이, u32 최대 선언 길이, 종결/문자열 패딩 오류를 거부했습니다. 명시적 오류 149건 각각 뒤에 정상 문서를 재호출해 회복을 확인했습니다. 빈 속성 slice가 되면 먼저 디렉터리 offset 검사가 거부하는 경우도 오류 원인을 구분했습니다.
+4. 추가 검토에서 **코드페이지 부재 시 잘린 LPSTR 전체를 보류하던 누락**을 발견했습니다. 수정 전 WASM에 최대 길이/빈 body를 넣자 `Missing expected exception`으로 재현됐습니다. 공통 바이트 envelope는 코드페이지 없이도 검사하도록 수정해 UnexpectedEnd로 거부합니다. 반면 유효한 envelope의 인코딩은 추정하지 않습니다.
+5. 네이티브에서 정상 2항목 dictionary 및 중복 ID 실패의 모든 할당 실패를 주입했습니다. 코드페이지가 마지막에 있어도 값/이름을 올바른 경계로 읽고, 실패한 Iterator를 재호출해 위치·개수가 유지되는지 확인했습니다. 문자열 공통 규칙은 strings, dictionary 구조는 dictionary, PID별 타입은 rules, context 순서는 parser가 소유합니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 131/131, Node 47/47, HWP5 WASM 162,562회 검사(모드별). 기존 CFB 60컨테이너/483스트림/5,496검색 비교·12,000회 변이(trap 0), Zig/JS 포맷·diff 검사도 통과했습니다.
+
+미검사 스트림 180개와 실제 dictionary 의미 보류 45개는 그대로입니다. 코드페이지 없는 관측 dictionary의 의미를 확정하거나, 코드페이지 등록값/문자 변환/이름 동일성을 검증한 단계는 아닙니다. 전체 문서 목표를 완료 처리하지 않으며, 다음에는 나머지 미검사 스트림과 컨트롤 검증을 이어갑니다.
