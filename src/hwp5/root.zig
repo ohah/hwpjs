@@ -28,4 +28,5 @@ pub const summary_information = @import("summary/parser.zig");
 pub const script_version = @import("scripts/version.zig");
 pub const script_source = @import("scripts/source.zig");
 pub const xml_template = @import("xml_template/template.zig");
+pub const history = @import("history/item.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");

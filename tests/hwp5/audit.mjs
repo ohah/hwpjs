@@ -7,6 +7,7 @@ import { codepageEdges } from "./codepage.mjs";
 import { scriptEdges } from "./scripts.mjs";
 import { xmlTemplateEdges } from "./xml-template.mjs";
 import { optionalSurvey } from "./optional-survey.mjs";
+import { historyEdges, historyActual } from "./history.mjs";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
@@ -307,6 +308,8 @@ const summaryEdgeResults = summaryEdges(call);
 const codepageEdgeResults = codepageEdges(call);
 const scriptEdgeResults = scriptEdges(call);
 const xmlTemplateEdgeResults = xmlTemplateEdges(call);
+const historyEdgeResults = historyEdges(call);
+const historyActualResults = historyActual(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
 const containerEdgeResults = containerEdges(call, cfb);
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
@@ -641,6 +644,8 @@ console.log(
       summaryEdgeResults,
       scriptEdgeResults,
       xmlTemplateEdgeResults,
+      historyEdgeResults,
+      historyActualResults,
       optionalStreamObservations,
       codepageEdgeResults,
       containerEdgeResults,

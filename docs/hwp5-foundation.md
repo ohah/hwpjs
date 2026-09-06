@@ -907,3 +907,24 @@ XMLTemplate은 공식 3.2.10절 표 10~12와 로컬 명세를 대조했습니다
 5. SSOT 재검토 후 Scripts의 독립 u32 문자열 함수를 제거했습니다. 기존 DocInfo/본문/u16 문자열과 실제 Scripts 90개를 포함한 전체 audit를 재실행했습니다. XMLTemplate에는 실제 양성 표본이 없으므로 합성 검증이라고 명시합니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 138/138, Node 47/47, HWP5 WASM 163,098회 검사 통과. CFB 기존 비교와 12,000회 변이(trap 0), 포맷·diff 검사도 통과했습니다. corpus 미검사 스트림 90개는 감소시키지 않았습니다. `_LinkDoc` 필드 확정, XMLTemplate 실제 컨테이너/문법 검증을 남겨 두고 다른 명세상 미구현 파트의 검증을 계속합니다.
+
+## DocHistory decoded 이력 레코드 (2026-09-06)
+
+공식 revision 1.3의 3.2.11, 4.4.1~4.4.2 및 명세 스킬 해당 절을 대조했습니다. 이력 레코드는 일반 본문 10/10/12비트 헤더가 아니라 BYTE type + UINT payload 바이트 길이입니다. VersionLog 한 항목은 STAG(0x10)로 시작하고 ETAG(0x11)로 끝납니다. 압축·암호화된 이력 스트림을 일반 본문 파서로 직접 읽지 않습니다.
+
+### 실제 자료와 명세 차이
+
+- `rg --files reference legacy`에서 찾은 HWP 788경로 중 strict CFB 성공 599개를 조사했습니다. 그중 `reference/rhwp/samples/basic/treatise sample.hwp`에 DocHistory가 있었고 VersionLog0~3 및 HistoryLastDoc이 존재했습니다. 읽기 실패 189개는 내부 부재로 판정하지 않았습니다.
+- 이 표본의 시작 payload는 모두 `000000009f00`입니다. PDF 표 154의 WORD flag→UINT option 순서로 읽으면 flags=0이지만 실제 버전·날짜·작성자·설명·DiffData가 존재합니다. 관측 UINT option→WORD flag 순서에서는 option=0, flags=0x009f로 다섯 presence bit와 맞습니다. 길이/버전 자동 추정 대신 `spec_flag_first`와 `observed_option_first`를 호출자가 명시합니다. 관측을 모든 파일의 규칙으로 일반화하지 않습니다.
+- 4항목은 각각 109/6,505/19,885/81,177 decoded 바이트, 합계 107,676바이트이며 각각 7레코드입니다. raw DEFLATE 뒤에는 8바이트 CRC32/ISIZE가 붙습니다. 순수 raw decoder의 TrailingData 실패를 실제로 확인한 후 기존 HWP 압축 꼬리 검사기로 비교했고 CRC 변조를 거부했습니다. 새 복호화 알고리즘이나 보편적인 이력 압축 정책을 확정한 것은 아닙니다.
+- 날짜 payload는 표본에서 16바이트지만 공식 문서의 SYSTEMDATE wire 구조가 정의되어 있지 않아 필드를 추측하지 않았습니다. PDF는 LASTDOCDATA에 “기록하지 않음, 필수”라고 적혀 있어 로컬 요약의 “선택”을 채택하지 않았습니다. 별도 HistoryLastDoc 연결을 아직 검사하지 않으므로 항목 검사를 전체 이력 유효성으로 보고하지 않습니다.
+
+### 구현과 적대적 검증
+
+1. `history/record.zig`는 payload/레코드 수 상한과 원자적 Iterator를 소유합니다. 잘림·과대 u32 크기에서 커서/개수는 유지되며, 빈 입력과 0 레코드 한도를 구분합니다. 일반 HWP record 형식을 복제·변형해 섞지 않았습니다.
+2. `value.zig`는 공식 태그/다섯 presence bit의 SSOT입니다. start의 선택 배치와 raw flag/option, unsigned 버전 및 extra, WCHAR payload를 빌립니다. 종료 레코드의 비어 있지 않은 payload·홀수 text 크기를 거부합니다. 날짜와 미지 태그는 raw deferred이며 DiffML/HWPML을 XML로 파싱하지 않습니다.
+3. `item.zig`는 시작/끝, 중첩 시작, 끝 뒤 레코드 및 다섯 포함 비트 일치를 검사합니다. 중복 metadata는 명세상 금지 여부가 불명확해 duplicate_presence_records로 보고합니다. LOCK·미지 flag/option을 지우지 않으며 LASTDOCDATA 존재는 별도 수치입니다.
+4. WASM 합성 검증은 성공 337건·거부 85건입니다. 모든 잘림 prefix, 잘못된 시작/끝, 중첩/끝 뒤 레코드, 포함 비트 불일치, 네 text 태그의 홀수 길이, 정확한 payload/record 한도와 한도 부족, 0x7fffffff·0x80000000·0xffffffff 길이를 검사했습니다. 알려진 8개를 제외한 모든 u8 태그를 미지 payload로 재구성했습니다. 오류 뒤 정상 회복도 검사했습니다.
+5. 실제 4항목은 독립 Node zlib/정수 읽기와 WASM typed 필드 재구성으로 107,676바이트 전체가 일치했습니다. spec 배치는 presence mismatch, 명시한 관측 배치는 통과함을 회귀 검사로 남겼습니다. 참조 표본이 없는 환경에서는 해당 실제 검증을 skipped로 명시하며 합성 성공으로 대체하지 않습니다. 외부 코드/표본은 제품 소스로 복사하지 않았습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 141/141, Node 47/47, HWP5 WASM 163,539회 검사(참조 표본 있는 현재 환경). CFB 60컨테이너/483스트림/5,496검색 비교, 12,000회 변이(trap 0), 포맷·diff 검사도 통과했습니다. 실제 날짜 4레코드는 의미 보류입니다. 암호화·HistoryLastDoc 연결·이력 재생·파일 단위 자동 연결은 남았으며 기존 45개 corpus의 미검사 스트림 90개를 줄이지 않았습니다.
