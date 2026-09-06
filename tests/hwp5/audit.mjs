@@ -15,6 +15,7 @@ import { numberControlEdges } from "./number-controls.mjs";
 import { numberDocumentEdges } from "./number-control-document.mjs";
 import { pageNumberEdges, pageNumberDocumentEdges } from "./page-number.mjs";
 import { indexMarkEdges } from "./index-mark.mjs";
+import { indexMarkReference } from "./index-mark-reference.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -332,6 +333,7 @@ let reportOrderingChecks = 0;
 const headerFooterReport = [0, 0, 0, 0, 0];
 const headerFooterDocumentReport = { controls: 0, rejected: 0 };
 const historyActualResults = historyActual(call, cfb);
+const indexMarkReferenceResults = indexMarkReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
 const containerEdgeResults = containerEdges(call, cfb);
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
@@ -713,6 +715,7 @@ console.log(
       headerFooterReport,
       headerFooterDocumentReport,
       historyActualResults,
+      indexMarkReferenceResults,
       optionalStreamObservations,
       codepageEdgeResults,
       containerEdgeResults,

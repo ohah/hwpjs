@@ -22,6 +22,10 @@ export function objectEdges(call) {
   let mutations = 0,
     rejected = 0;
   for (const id of ids) {
+    const coverage = objectActual(frame(id, original));
+    assert.equal(coverage[0] + coverage[1] + coverage[2], 1);
+    assert.equal(coverage[5], 1); // Text plus opaque suffix is valid.
+    assert.throws(() => objectActual(frame(id, original.subarray(0, 47))));
     for (let n = 0; n < 48; n++) {
       const bytes = frame(id, original.subarray(0, n));
       if (n === 40) checkBody(call, version, bytes);
@@ -84,7 +88,8 @@ export function objectActual(section) {
     if (n === 44) counts[3]++;
     else {
       const length = b.readUInt16LE(44);
-      assert.equal(n, 46 + length * 2);
+      // Description end is a lower bound: the core preserves extension bytes.
+      assert.ok(n >= 46 + length * 2);
       counts[length === 0 ? 4 : 5]++;
     }
     if (b.readInt32LE(8) < 0 || b.readInt32LE(12) < 0) counts[6]++;
