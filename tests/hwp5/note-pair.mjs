@@ -1,27 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { runInNewContext } from "node:vm";
+import { sectionXml } from "./fixture-xml.mjs";
 // Existing MIT legacy ZIP reader is a test oracle only, never a product dependency.
 export function notePair(call, section, hwpx) {
-  const context = {
-    module: { exports: {} },
-    require: createRequire(import.meta.url),
-    Buffer,
-    process,
-    console,
-  };
-  runInNewContext(
-    readFileSync(new URL("../../legacy/cfb.js", import.meta.url), "utf8"),
-    context,
-  );
-  const CFB = context.module.exports;
-  const zip = CFB.read(hwpx, { type: "buffer" });
-  const index = zip.FullPaths.findIndex((path) =>
-    path.endsWith("/Contents/section0.xml"),
-  );
-  assert.ok(index >= 0);
-  const xml = Buffer.from(zip.FileIndex[index].content).toString("utf8");
+  const xml = sectionXml(hwpx);
   const notes = [];
   for (let p = 0; p < section.length; ) {
     const bits = section.readUInt32LE(p);

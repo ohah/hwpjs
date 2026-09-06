@@ -68,6 +68,8 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
                 try int(a, &out, u32, id);
                 if (h.id == core.hwp5.body.section_def.control_id) {
                     try @import("section-probe.zig").definition(a, &out, h.properties, .{ .raw = version });
+                } else if (h.id == core.hwp5.body.column_def.control_id) {
+                    try @import("column-probe.zig").payload(a, &out, h.properties);
                 } else try out.appendSlice(a, h.properties);
             },
             .list_header => |h| {

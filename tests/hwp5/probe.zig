@@ -75,6 +75,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
             return out;
         },
         13 => return @import("link-probe.zig").run(a, bytes, limit),
+        14 => return @import("column-probe.zig").fields(a, bytes),
         else => return error.InvalidMode,
     }
 }

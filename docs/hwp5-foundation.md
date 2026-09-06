@@ -502,3 +502,24 @@ while (try it.next()) |record| {
 **연결 성공은 컨트롤 의미 검증 완료가 아닙니다.** 제어코드 종류와 ID 종류의 호환성, 각 컨트롤 payload의 속성/리소스, 필드 시작/끝 쌍, 단/리스트 문맥은 별도 과제입니다. `paragraphs.Report.controls_pending`는 여전히 컨트롤 의미 검증 대상을 세며 새 `linkedControls=313`을 빼서 완료 처리하지 않습니다. 다음은 단 정의와 리스트 문맥, 컨트롤별 코드/ID 규칙입니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 전부 통과: 네이티브 85/85, Node 47/47, HWP5 WASM 51,179회 검사. 기존 CFB 비교·12,000회 변이도 통과했습니다. 포맷/diff 검사와 책임/SSOT 재검토까지 마쳤습니다.
+
+## 후속 구현: 단 정의의 너비/간격 분기
+
+2026-09-06. 공식 표 138~139, hwp-spec §4.3.10.2, rhwp 및 [hwplib의 단 정의 reader](https://github.com/neolord0/hwplib/blob/master/src/main/java/kr/dogfoot/hwplib/reader/bodytext/paragraph/control/ForControlColumnDefine.java)를 대조했습니다. 외부 코드는 이식하지 않았습니다.
+
+- `column_def.Definition.parse(properties)`는 cold 컨트롤 properties를 읽습니다. count는 하위 속성 bit 2~9이며 0은 InvalidColumnCount입니다. 단 종류/방향/미지 비트는 원값으로 유지합니다.
+- count 1 또는 동일 너비: 하위 속성 u16 → 공통 간격 i16 → 상위 속성 u16 → 선 종류 u8/굵기 u8/색상 u32, 총 12바이트입니다. count 1에서는 sameWidth가 false여도 이 배치를 사용하며 합성 테스트로 명시했습니다.
+- count ≥2이고 서로 다른 너비: 하위/상위 속성 u16 두 개 → count개의 너비 u16/간격 u16 쌍 → 선 정보 6바이트, 총 10+4×count입니다. 공식 표의 단순 너비 배열/필드 순서와 다르며 실제 paired HWPX 및 독립 reader와 대조했습니다.
+- 공통 `spacing`과 개별 `columns`는 서로 배타적인 nullable 값입니다. 없는 공통 간격을 0으로 만들지 않습니다. 배열은 기존 `binary/record_array.zig`를 공유하며 extra를 보존합니다. 너비/간격의 합을 강제로 32768로 맞추거나 절대 단위로 변환하지 않습니다.
+- `section_validation`에서 단 정의가 문단의 직접 자식인지 검사하고 payload 파서를 호출합니다. 중첩 문단의 단 정의도 허용합니다. 보고서 마지막에 columns 수가 추가되어 실측 합은 `[47,47,141,1,94,68]`입니다. 일반 control header raw API와 의미 파서는 별도입니다.
+
+### 구현 후 적대적 검증
+
+1. 실제 단 정의 68개: 동일 너비 1단 57개/2단 7개/3단 2개, 가변 너비 2단 1개/3단 1개입니다. 각 typed 재인코딩 바이트가 원본과 일치합니다.
+2. `multicolumns-widths`의 HWP/HWPX 세 단 설정을 WASM 필드 출력과 비교합니다. 가변 2단은 `(15291,1744),(15733,0)`, 3단은 `(10336,870),(10336,434),(10792,0)`으로 일치합니다. 이번에 한글 프로그램을 직접 실행한 결과는 아닙니다.
+3. count 1/2/3/255 × sameWidth true/false의 모든 잘림 위치, count 0 거부, null/0·signed 공통 간격·u16 쌍 상한·get 범위 밖·extra를 검사합니다. 3단+extra의 전 25바이트×8비트 변이 200개는 194개 원본 보존 통과/6개 정상 오류이며 매번 정상 입력으로 복구합니다.
+4. 단 정의의 문단 부모/고아/잘못된 개수를 section 검사 경로에서도 확인했습니다. `fixture-xml.mjs`로 각주/단 테스트의 ZIP/XML 로딩을 공통화했습니다. 제품 ZIP/HWPX 파서는 아니며 테스트 의존성을 제품에 넣지 않습니다.
+
+다음은 컨트롤 코드/ID 종류 규칙과 논리적 리스트 문맥입니다. 단 설정의 실제 페이지 폭/레이아웃 효과, 각 개체 payload, 구역 ID 0과 개요 fallback을 포함한 전체 문서 의미 검증은 여전히 진행 중입니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 86/86, Node 47/47, HWP5 WASM 52,740회 검사. 기존 CFB 비교·12,000회 변이도 통과했습니다. 포맷/diff 검사와 SSOT/파일 책임 분리 재검토까지 마쳤습니다.

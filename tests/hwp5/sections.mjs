@@ -10,7 +10,8 @@ const frame = (tag, level, b) =>
 const version = 0x05000307;
 export function sectionActual(call, v, counts, bytes) {
   const out = call(11, Buffer.concat([word(v), ...counts.map(word), bytes]));
-  return Array.from({ length: 5 }, (_, i) => out.readUInt32LE(i * 4));
+  assert.equal(out.length, 24);
+  return Array.from({ length: 6 }, (_, i) => out.readUInt32LE(i * 4));
 }
 export function sectionEdges(call) {
   let mutations = 0;
@@ -51,7 +52,7 @@ export function sectionEdges(call) {
   const good = () => Buffer.concat([h, ctrl(), page, frame(75, 2, border)]);
   assert.deepEqual(
     sectionActual(call, version, [1, 1], good()),
-    [1, 1, 1, 0, 0],
+    [1, 1, 1, 0, 0, 0],
   );
   for (const [bytes, error] of [
     [h, /MissingSectionDefinition/],
@@ -71,7 +72,7 @@ export function sectionEdges(call) {
   d.writeUInt16LE(0, 14);
   assert.deepEqual(
     sectionActual(call, version, [1, 1], good()),
-    [1, 1, 1, 1, 0],
+    [1, 1, 1, 1, 0, 0],
   );
   border.writeUInt16LE(2, 12);
   assert.throws(
@@ -83,7 +84,7 @@ export function sectionEdges(call) {
   const note = frame(74, 2, Buffer.alloc(28));
   assert.deepEqual(
     sectionActual(call, version, [1, 1], Buffer.concat([good(), note, note])),
-    [1, 1, 1, 1, 2],
+    [1, 1, 1, 1, 2, 0],
   );
   assert.throws(
     () =>
@@ -106,5 +107,24 @@ export function sectionEdges(call) {
     /OrphanSectionRecord/,
   );
   assert.equal(mutations, 960);
+  const cold = Buffer.alloc(12);
+  cold.writeUInt16LE(0x1004);
+  const column = (level) =>
+    frame(71, level, Buffer.concat([word(0x636f6c64), cold]));
+  assert.deepEqual(
+    sectionActual(call, version, [1, 1], Buffer.concat([good(), column(1)])),
+    [1, 1, 1, 1, 0, 1],
+  );
+  assert.throws(
+    () =>
+      sectionActual(call, version, [1, 1], Buffer.concat([good(), column(0)])),
+    /OrphanColumnDefinition/,
+  );
+  cold.writeUInt16LE(0);
+  assert.throws(
+    () =>
+      sectionActual(call, version, [1, 1], Buffer.concat([good(), column(1)])),
+    /InvalidColumnCount/,
+  );
   return { mutations, recoveries: mutations };
 }

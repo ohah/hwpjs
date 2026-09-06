@@ -11,6 +11,7 @@ pub const ControlHeader = @import("control_header.zig").Header;
 pub const list_header = @import("list_header.zig");
 pub const ListHeader = list_header.Header;
 pub const section_def = @import("section_def.zig");
+pub const column_def = @import("column_def.zig");
 pub const PageDefinition = @import("page_def.zig").Definition;
 pub const PageBorder = @import("page_border.zig").Border;
 pub const note_shape = @import("note_shape.zig");

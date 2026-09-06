@@ -2,12 +2,18 @@ const body = @import("reader.zig");
 const Tree = @import("tree.zig").Tree;
 const Version = @import("../version.zig").Version;
 const rules = @import("../docinfo/reference_rules.zig");
-pub const Report = struct { definitions: usize = 0, pages: usize = 0, borders: usize = 0, numbering_deferred: usize = 0, note_shapes: usize = 0 };
+pub const Report = struct { definitions: usize = 0, pages: usize = 0, borders: usize = 0, numbering_deferred: usize = 0, note_shapes: usize = 0, columns: usize = 0 };
 pub fn inspect(tree: Tree, version: Version, numbering_count: usize, border_count: usize) !Report {
     var report: Report = .{};
     var section: ?usize = null;
     for (tree.nodes, 0..) |node, index| {
         const v = node.record.value;
+        if (v == .control_header and v.control_header.id == body.column_def.control_id) {
+            const parent = node.parent orelse return error.OrphanColumnDefinition;
+            if (tree.nodes[parent].record.value != .header) return error.OrphanColumnDefinition;
+            _ = try body.column_def.Definition.parse(v.control_header.properties);
+            report.columns += 1;
+        }
         if (v != .control_header or v.control_header.id != body.section_def.control_id) continue;
         if (section != null) return error.DuplicateSectionDefinition;
         const parent = node.parent orelse return error.OrphanSectionDefinition;
