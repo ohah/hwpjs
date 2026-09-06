@@ -14,7 +14,7 @@ pub const Selection = struct {
     polygon: core.hwp5.shape_polygon.Layout = .observed_i32_points,
     curve: core.hwp5.shape_curve.Layout = .observed_i32_points,
 };
-fn fields(a: std.mem.Allocator, out: *std.ArrayList(u8), value: anytype) !void {
+pub fn fields(a: std.mem.Allocator, out: *std.ArrayList(u8), value: anytype) !void {
     inline for (std.meta.fields(@TypeOf(value))) |f| try int(a, out, u32, @intCast(@field(value, f.name)));
 }
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
@@ -22,9 +22,13 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 }
 pub fn forbidden(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
+    const layout = try readForbidden(&r);
+    return configured(a, bytes[r.offset..], limit, .{ .forbidden_report = true, .forbidden_layout = layout });
+}
+pub fn readForbidden(r: *core.Reader) !@FieldType(Selection, "forbidden_layout") {
     const mode = try r.readInt(u8);
     if (mode > 1) return error.InvalidMode;
-    return configured(a, bytes[r.offset..], limit, .{ .forbidden_report = true, .forbidden_layout = @enumFromInt(mode) });
+    return @enumFromInt(mode);
 }
 pub fn memo(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return configured(a, bytes, limit, .{ .memo_report = true });

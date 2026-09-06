@@ -4,6 +4,11 @@ const int = @import("resource-probe.zig").int;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return inspect(a, bytes, limit, false, .{});
 }
+pub fn forbidden(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const layout = try @import("document-probe.zig").readForbidden(&r);
+    return inspect(a, bytes[r.offset..], limit, false, .{ .forbidden_report = true, .forbidden_layout = layout });
+}
 pub fn pictured(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const picture = try @import("document-probe.zig").readPicture(&r);
@@ -36,6 +41,7 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: boo
     var r: core.Reader = .{ .bytes = bytes };
     const max_bytes = try r.readInt(u32);
     var report = try core.hwp5.container_validation.inspect(a, bytes[r.offset..], .{ .storage_layout = if (specified) .specified else .observed_optional_extension, .document = .{
+        .forbidden_chars = selection.forbidden_layout,
         .drawing_style = selection.style,
         .arc_layout = selection.arc,
         .polygon_layout = selection.polygon,
@@ -48,6 +54,12 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: boo
         .max_total_records = limit,
     } });
     defer report.deinit(a);
+    if (selection.forbidden_report) {
+        var out: std.ArrayList(u8) = .empty;
+        errdefer out.deinit(a);
+        try @import("document-probe.zig").fields(a, &out, report.document.doc_info.forbidden_chars);
+        return out.toOwnedSlice(a);
+    }
     const doc = try @import("document-probe.zig").serialize(a, report.document);
     defer a.free(doc);
     var out: std.ArrayList(u8) = .empty;

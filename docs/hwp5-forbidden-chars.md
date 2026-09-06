@@ -60,3 +60,13 @@ Debug/ReleaseSafe/ReleaseFast 전체 audit가 각각 네이티브 252/252, Node 
 ### 문서 선택 정책 연결 후 검증
 
 Debug/ReleaseSafe/ReleaseFast audit 모두 네이티브 253/253, Node 47/47, HWP5 WASM 1,371,918건을 통과했습니다. 새 문서 정책 테스트는 정상 5건/거부 35건과 기본 모드·원본 복구 대조를 포함합니다. CFB 변형 12,000건/trap 0, 포맷·JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-forbidden-document-{debug,safe,fast}.log`입니다. 이 단계는 선택 정책과 집계의 문서 연결을 검증하며 목록의 언어별 의미·행 나눔·무손실 저장은 여전히 범위 밖입니다.
+
+### CFB 파일 입력 대조
+
+제품 container.inspect는 이미 document 옵션을 inspectDecoded에 전달합니다. 빠져 있던 파일 경로 검증을 테스트 mode 97로 보강했습니다. 입력은 선택 바이트+전체 decoded 바이트 한도+CFB 파일이며, 선택값 읽기와 scalar 보고서 직렬화는 mode 96의 helper를 공유합니다. 제품 정책·파서·기존 wire는 변경하지 않았습니다.
+
+기존 DocInfo 변형을 독립 zlib로 압축하고 CFB writer로 새 파일을 만든 뒤, decoded mode 96과 CFB mode 97의 성공 바이트 또는 오류명을 109회 대조합니다. 길이 잘림, 레벨 0/1/2/1023, 원문 보류/관측 해석, 부재·빈 목록·공백 목록·extra, 잘못된 선택값과 매번 원본 복구를 포함합니다. 추가로 재생성하지 않은 원본 CFB도 두 선택값으로 검사합니다. 파일 전체 바이트가 재생성 전후 동일하다는 주장이나 새 금칙 처리 의미 규칙은 아닙니다.
+
+2026-09-07 실측: Debug 전체 audit는 네이티브 253/253, Node 47/47, HWP5 WASM 1,372,027건을 통과했습니다. 실행 도중 추가한 원본 CFB 두 선택 검사는 동일 Debug 산출물의 최종 집중 검사(254개 호출, 109회 경로 대조)로 확인했습니다. 최종 테스트가 포함된 ReleaseSafe/ReleaseFast 전체 audit는 각각 네이티브 253/253, Node 47/47, WASM 1,372,029건을 통과했습니다. 각 전체 audit의 CFB 변형 12,000건은 trap 0입니다.
+
+로그는 `/tmp/hwpjs-forbidden-container-{debug,safe,fast}.log`, 추가 Debug 집중 검사는 `/tmp/hwpjs-forbidden-container-final-debug-focus.log`입니다. 포맷·JS 문법·diff 검사도 통과했습니다. 이 결과는 두 입력 경로의 선택 정책 전파를 입증하며 전체 HWP 문서 지원 완료를 뜻하지 않습니다.
