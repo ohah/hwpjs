@@ -31,4 +31,6 @@ pub const xml_template = @import("xml_template/template.zig");
 pub const history = @import("history/item.zig");
 pub const header_footer = @import("body/header_footer.zig");
 pub const header_footer_validation = @import("body/header_footer_validation.zig");
+pub const number_control = @import("body/number_control.zig");
+pub const number_control_validation = @import("body/number_control_validation.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");

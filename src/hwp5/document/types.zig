@@ -29,6 +29,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    number_controls: @import("../body/number_control_validation.zig").Report = .{},
     header_footer: @import("../body/header_footer_validation.zig").Report = .{},
     records: usize,
     paragraphs: @import("../body/paragraphs.zig").Report,

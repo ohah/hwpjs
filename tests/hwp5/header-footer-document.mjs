@@ -99,7 +99,7 @@ export function headerFooterDocumentEdges(call, cfb, h, doc, sections) {
         r.start + 4,
       );
       const changed = decoded(mutate(reserved));
-      const stat = 132 + s.index * 164 + 144;
+      const stat = 132 + s.index * 180 + 144;
       assert.equal(
         changed.readUInt32LE(stat + 12),
         good.readUInt32LE(stat + 12) + 1,

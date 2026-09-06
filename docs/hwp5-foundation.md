@@ -986,3 +986,21 @@ document-probe가 각 구역의 header_footer 다섯 수치를 직렬화하도�
 또한 실제 속성의 페이지값을 3으로 바꾸었을 때 예약값 진단이 정확히 1 증가하고, 컨테이너의 document prefix가 decoded 결과와 일치하는지 확인했습니다. 새 필드가 누락되거나 기본 0으로 전달되는 경우를 테스트가 관측할 수 있게 했습니다. 기존 실제 47개 구역의 나머지 보고서 필드도 함께 대조합니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 148/148, Node 47/47, HWP5 WASM 164,053회 검사 통과. 기존 CFB 비교·12,000회 변이(trap 0), 포맷·diff 검사도 통과했습니다. 이번 단계는 문서/파일 연결 검증을 강화한 것으로 실제 페이지 배치나 남은 원시 비트 의미를 구현 완료로 바꾸지 않습니다.
+
+## 자동 번호·새 번호 지정 저장 필드 (2026-09-06)
+
+명세 스킬 4.3.10.5·4.3.10.6과 공식 표 142~144를 대조했습니다. 실제 ID는 기존 공식 ID 표/SSOT의 atno/nwno이며 로컬 요약의 autn/newn을 별칭으로 추가하지 않았습니다. Auto는 속성 u32, 번호 u16, 사용자 기호/앞/뒤 장식 WCHAR 각 2바이트로 12바이트입니다. Restart는 표의 u32+u16 합계가 6바이트인데 전체 길이는 8바이트로 적혀 있습니다. 정의되지 않은 두 바이트를 번호 상위 비트나 필수 패딩으로 추정하지 않고 extra로 보존합니다.
+
+`number_control.zig`는 공통 Header(원시 속성/번호)와 Auto/Restart를 분리합니다. 공통 prefix 읽기는 실패 시 커서를 보존합니다. 번호 종류 bit 0~3, 자동 번호 모양 bit 4~11, superscript bit 12는 원시 view이며 번호 계산이나 표시 문자열 생성은 하지 않습니다. WCHAR의 NUL·고립 서로게이트·BOM도 u16 원값으로 보존합니다. `number_control_validation.zig`는 구역 Tree를 순회해 automatic/restarted/reserved_kinds/extra_bytes를 보고합니다. 기존 control_links/타입 검사와 역할이 다르며 SectionReport.number_controls와 테스트용 document/container 직렬화에도 연결했습니다.
+
+실제 지원 corpus에서는 자동 번호 32개, 새 번호 지정 0개를 찾았습니다. 자동 번호는 모두 ID 포함 16바이트로 표 142와 일치했고, typed 필드 재구성이 원본 바이트와 일치했습니다. 새 번호 지정의 길이 정책은 명세 필드와 합성 입력으로 검증한 범위이며 실제 양성 검증이라고 주장하지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. Auto 0~11바이트와 Restart 0~5바이트의 모든 잘림 prefix를 거부했습니다. 실패 후 정상 입력을 다시 호출해 회복을 확인했습니다.
+2. 각 payload의 모든 개별 비트를 독립적으로 켜고 재구성했습니다. 네이티브에서는 속성 32개 비트의 종류/모양/superscript 위치도 각각 대조했습니다. u16 최대 번호와 고립 서로게이트/빈 장식 코드 유닛도 확인했습니다.
+3. 0~3바이트 미지 꼬리를 보존하고 잘못된 요약 ID autn/newn을 해당 타입으로 해석하지 않는지 검사했습니다. WASM 합성 성공 170건·거부 20건입니다.
+4. 실제 자동 번호 32개를 각각 한 바이트 짧게 다시 framing해 decoded document 검사에 넣었고 UnexpectedEnd로 거부했습니다. 같은 문서의 원시 번호 종류만 예약값으로 바꿨을 때 최종 구역의 reserved_kinds가 정확히 1 증가함을 확인했습니다.
+5. SSOT 재검토: 공통 prefix는 한 곳, ID는 기존 control_rules, payload와 구역 집계는 분리했습니다. document-probe에도 새 진단을 포함해 전용 파서만 통과하고 최종 보고서가 관측되지 않는 누락을 피했습니다. 테스트 전용 구역 행은 180바이트이며 제품 ABI 변경은 아닙니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 151/151, Node 47/47, HWP5 WASM 164,371회 검사 통과. CFB 기존 비교·12,000회 변이(trap 0), 포맷·diff 검사도 통과했습니다. 번호 순서 재계산, 번호 모양의 전체 의미, 각주/표/그림 대상 연결과 Restart 실제 표본 검증은 남았습니다.

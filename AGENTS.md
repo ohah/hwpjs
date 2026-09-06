@@ -22,6 +22,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - 본문 `char_runs.zig`·`line_segments.zig`·`range_tags.zig`는 고정 행 해석, `metadata.zig`는 호출자가 연결한 헤더 개수/위치/글자 모양 ID 검증을 소유합니다. `binary/record_array.zig`는 고정 폭 배열 경계만 공유합니다. 영역 중첩과 signed 줄 값·미지 플래그는 보존하며 페이지를 추정하지 않습니다.
 - `control_header.zig`는 4바이트 ID/속성 원본, `list_header.zig`는 문단 수 원값과 명시적 spec6/observed8 배치를 소유합니다. 리스트 배치를 길이·버전만으로 자동 선택하지 않습니다. 컨트롤별 속성과 리스트 소유권 검증은 별도입니다.
 - `header_footer.zig`는 관측 head/foot 컨트롤 속성과 리스트 확장의 텍스트 영역을 분리합니다. 제어 헤더 꼬리를 폭으로 추정하거나 누락을 0으로 채우지 않습니다. `header_footer_validation.zig`는 기존 Groups의 직접 소유 관계를 사용하며 section 보고서에 controls/lists/paragraphs/예약 페이지값/꼬리 바이트를 남깁니다. 실제 쪽 배치와 참조 비트 의미 검증은 별도입니다.
+- `number_control.zig`는 atno/nwno의 공통 속성·u16 번호, 자동 번호의 장식 코드 유닛을 소유합니다. 표 144의 6바이트 필드 합계/8바이트 총길이 모순은 extra로 보존하며 번호를 u32로 추정하지 않습니다. `number_control_validation.zig`는 구역의 개수/예약 종류/꼬리 진단만 집계합니다. 번호 재계산·표시 모양·각주 번호 의미 검증과 구분합니다.
 - `body/tree.zig`는 level 기반 부모/서브트리 인덱스를 할당·소유하고 payload는 입력을 빌립니다. `paragraphs.zig`는 직접 자식 연결·중복/고아·문단 참조 검증을 소유합니다. 리스트 헤더 뒤 문단은 같은 level의 형제일 수 있으며 리스트를 가짜 부모로 만들지 않습니다. 보고서의 missing/pending/unknown은 완료로 세지 않습니다.
 - `section_def.zig`·`page_def.zig`·`page_border.zig`는 구역/용지/쪽 테두리 payload, `section_validation.zig`는 구역 소유권/개수/참조 검증을 소유합니다. 구역 하위 레코드를 본체에 붙은 바이트로 읽지 않습니다. 번호 ID 0은 보류 항목입니다.
 - 각주 payload는 `note_shape.zig`에서 추가 해석합니다. 기본 28바이트/i32 구분선 길이, 명시적 spec26 경로를 구분하며 자동 길이 fallback을 금지합니다. `section_validation`은 note_shapes 개수를 보고하고 주석 문단/번호 의미는 별도입니다.
