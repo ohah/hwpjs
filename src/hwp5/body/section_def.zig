@@ -1,6 +1,6 @@
 const Reader = @import("../../binary/reader.zig").Reader;
 const Version = @import("../version.zig").Version;
-pub const control_id: u32 = 0x73656364;
+pub const control_id = @import("control_rules.zig").section_id;
 /// Properties only; page/note/border records are children, not inline bytes.
 pub const Definition = struct {
     flags: u32,

@@ -1,5 +1,5 @@
 const Reader = @import("../../binary/reader.zig").Reader;
-pub const control_id: u32 = 0x636f6c64;
+pub const control_id = @import("control_rules.zig").column_id;
 pub const Column = struct {
     width: u16,
     gap: u16,

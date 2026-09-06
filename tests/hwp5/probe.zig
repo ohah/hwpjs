@@ -74,9 +74,10 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
             for ([_]i32{ note.separator_length, note.above, note.below, note.between }, 0..) |v, i| std.mem.writeInt(i32, out[i * 4 ..][0..4], v, .little);
             return out;
         },
-        13 => return @import("link-probe.zig").run(a, bytes, limit),
+        13 => return @import("link-probe.zig").run(a, bytes, limit, false),
         14 => return @import("column-probe.zig").fields(a, bytes),
         15 => return @import("list-probe.zig").run(a, bytes, limit),
+        16 => return @import("link-probe.zig").run(a, bytes, limit, true),
         else => return error.InvalidMode,
     }
 }

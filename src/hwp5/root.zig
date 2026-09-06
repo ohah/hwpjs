@@ -13,4 +13,6 @@ pub const paragraphs = @import("body/paragraphs.zig");
 pub const section_validation = @import("body/section_validation.zig");
 pub const control_links = @import("body/control_links.zig");
 pub const list_groups = @import("body/list_groups.zig");
+pub const control_rules = @import("body/control_rules.zig");
+pub const control_type_validation = @import("body/control_type_validation.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");

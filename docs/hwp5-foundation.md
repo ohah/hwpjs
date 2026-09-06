@@ -542,3 +542,23 @@ while (try it.next()) |record| {
 이 검사는 **그룹 범위와 수**에 대한 것이며 각 리스트가 표 셀인지 캡션인지, 해당 속성의 참조·크기·행/열 관계가 유효한지는 아직 검사하지 않습니다. `paragraphs.Report.lists_pending`도 개체별 의미 검증 대상으로 유지합니다. 다음은 컨트롤 코드/ID 규칙 및 표/개체 속성 검증입니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 88/88, Node 47/47, HWP5 WASM 52,835회 검사. 기존 CFB 비교·12,000회 변이도 통과했습니다. 포맷/diff 검사와 SSOT/파일 책임 검토를 완료했습니다.
+
+## 후속 구현: 컨트롤 코드와 ID 종류 검증
+
+2026-09-06. 공식 PDF의 표 6(제어코드), 127(컨트롤 ID), 128(필드 ID)을 기준으로 53개 알려진 ID를 매핑했습니다. 실제 수식 eqed의 코드 11도 확인했습니다. 저장소의 요약 skill 문서에 있는 autn/newn/bkmk/%crf/%fml 같은 표기와 공식 원문의 atno/nwno/bokm/%xrf/%fmu가 다른 점을 확인하여, 요약의 표기를 임의 별칭으로 등록하지 않았습니다.
+
+- `control_rules.zig`는 MAKE_4CHID·구역/단 ID 상수·ID별 기대 제어코드만 소유합니다. 섹션/단 파서가 이 상수를 재사용합니다. 공간/대소문자와 4바이트 전체를 비교하며 `%` 접두사만으로 모든 ID를 필드로 간주하지 않습니다.
+- `control_type_validation.inspect(links)`는 기존 Links.build 결과에 대해 known ID의 code를 검사합니다. 다르면 ControlCodeMismatch, 알려지지 않은 ID면 deferred입니다. report는 checked/deferred를 구분하며 오류나 미래 확장을 임의로 보정하지 않습니다.
+- 대응 범주: 2 구역/단, 3 명시된 필드 ID, 11 표/그리기/수식, 15 숨은 설명, 16 머리말/꼬리말, 17 각주/미주, 18 자동번호, 21 페이지 관련, 22 책갈피/찾아보기, 23 겹침/덧말입니다.
+- 연결 검사와 종류 검사와 payload 의미 검사는 별도 API/책임입니다. 테스트의 링크 WASM 경로는 연결 후 종류 검사도 호출합니다. checked는 개별 컨트롤 속성이나 필드 종료 쌍을 검증했다는 뜻이 아닙니다.
+
+### 구현 후 적대적 검증
+
+1. 실제 연결 313개를 검사해 `[checked=313,deferred=0]`을 정규 audit에서 고정 assert했습니다.
+2. 53개 ID 각각에 13개 확장 코드 중 다른 코드 12개를 적용한 636개 오조합을 WASM에서 거부하고 매 오류 뒤 정상 입력으로 복구합니다. 네이티브에서는 코드 0~31 모두를 검사하여 ID마다 하나의 기대 코드만 통과하는지 확인합니다.
+3. 미등록/요약 문서 별칭/대소문자 차이 8개는 deferred이며 알 수 없는 ID를 전부 Invalid로 판정하지 않습니다. `%zzz`를 필드로 자동 추정하지 않는 회귀 사례를 포함합니다. 빈 링크·혼합 known/unknown 집계와 규칙 ID 중복 부재도 검사합니다.
+4. SSOT 재검토에서 순수 대응표와 링크 순회를 분리해 파일 책임을 유지하고 기존 section/column ID 중복 상수를 없앴습니다.
+
+다음은 표·그리기 개체 공통 속성 및 표의 셀/캡션 의미 검증입니다. 전체 문서 검증은 아직 진행 중이며 `controls_pending` 등의 미완료 집계를 이번 종류 검사만으로 0으로 만들지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 90/90, Node 47/47, HWP5 WASM 54,215회 검사. 기존 CFB 비교·12,000회 변이도 통과했습니다. 포맷/diff 검사와 SSOT/파일 책임 검토를 완료했습니다.

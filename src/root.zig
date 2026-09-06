@@ -22,6 +22,7 @@ test {
     _ = @import("hwp5/body/link_tests.zig");
     _ = @import("hwp5/body/column_tests.zig");
     _ = @import("hwp5/body/list_tests.zig");
+    _ = @import("hwp5/body/control_rule_tests.zig");
     _ = @import("hwp5/compression_tests.zig");
     _ = @import("cfb/tests.zig");
     _ = @import("cfb/mutation_tests.zig");
