@@ -42,6 +42,7 @@ import { shapeBorderEdges, shapeBorderReference } from "./shape-border.mjs";
 import { drawingStyleEdges } from "./drawing-style.mjs";
 import { drawingStyleSurvey } from "./drawing-style-survey.mjs";
 import { styleDocumentReference } from "./drawing-style-document.mjs";
+import { lineEdges } from "./shape-line.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -370,6 +371,7 @@ const shapeComponentEdgeResults = shapeComponentEdges(call);
 const shapeValidationEdgeResults = shapeValidationEdges(call);
 const shapeBorderEdgeResults = shapeBorderEdges(call);
 const drawingStyleEdgeResults = drawingStyleEdges(call);
+const lineEdgeResults = lineEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -810,6 +812,7 @@ console.log(
       shapeValidationEdgeResults,
       shapeBorderEdgeResults,
       drawingStyleEdgeResults,
+      lineEdgeResults,
       shapeBorderReferenceResults,
       drawingStyleSurveyResults,
       styleDocumentReferenceResults,

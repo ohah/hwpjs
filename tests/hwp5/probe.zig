@@ -117,6 +117,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         53 => return @import("drawing-style-probe.zig").run(a, bytes),
         54 => return @import("document-probe.zig").styled(a, bytes, limit),
         55 => return @import("container-probe.zig").styled(a, bytes, limit),
+        56 => return @import("shape-line-probe.zig").run(a, bytes),
         else => return error.InvalidMode,
     }
 }

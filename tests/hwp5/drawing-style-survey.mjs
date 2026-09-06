@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { documentRecords } from "./documents.mjs";
 import { drawingStyleActual } from "./drawing-style.mjs";
+import { lineActual } from "./shape-line.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -18,6 +19,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.fillOnly = { parsed: 0, rejectedPrefixes: 0 };
   out.versions = {};
   out.images = [];
+  out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
   out.metadata = { parsed: 0, rejected: 0, reservedNonzero: 0, alphaNonzero: 0, reservedExamples: [] };
   const drawingIds = new Set(["$lin", "$rec", "$ell", "$arc", "$pol", "$cur"]);
   for (const name of readdirSync(root, { recursive: true }).filter(n => n.endsWith(".hwp")).sort()) {
@@ -54,6 +56,17 @@ export function drawingStyleSurvey(call, cfb) {
       for (const record of records) {
         const level = bytes.readUInt32LE(record.offset) >>> 10 & 1023;
         stack.length = level;
+        if(record.tag===78){
+          const parent=stack[level-1];
+          const owner=parent?.tag===76?Buffer.from(bytes.subarray(parent.start,parent.start+4)).reverse().toString("latin1"):"other";
+          if(owner==="$lin"){
+            const line=lineActual(call,bytes.subarray(record.start,record.end));
+            out.lines.parsed++;out.lines.rejected+=line.rejected;
+            if(name==="group-drawing-02.hwp")out.lines.groupDrawingLines++;
+            out.lines.attributes[line.attributes]=(out.lines.attributes[line.attributes]??0)+1;
+            out.lines.extras[line.extra]=(out.lines.extras[line.extra]??0)+1;
+          }else out.lines.deferredOwners[owner]=(out.lines.deferredOwners[owner]??0)+1;
+        }
         if (record.tag === 76) {
           const p = bytes.subarray(record.start, record.end);
           const id = Buffer.from(p.subarray(0, 4)).reverse().toString("latin1");
@@ -130,6 +143,7 @@ export function drawingStyleSurvey(call, cfb) {
     }
   }
   assert.equal(out.fillOnly.parsed, expectedParsed);
+  if(existsSync(join(fileURLToPath(root),"group-drawing-02.hwp")))assert.equal(out.lines.groupDrawingLines,4);
   const versions = Object.values(out.versions);
   const kinds = Object.values(out.kinds);
   for (const [versionField, kindField] of [["full", "known"], ["unknown", "unknown"]]) {
