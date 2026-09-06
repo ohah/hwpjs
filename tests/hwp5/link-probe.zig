@@ -20,6 +20,7 @@ fn detailed(a: std.mem.Allocator, bytes: []const u8, limit: usize, report_only: 
     if (report_only) {
         try int(a, &out, u32, @intCast(report.checked));
         try int(a, &out, u32, @intCast(report.deferred));
+        try int(a, &out, u32, @intCast(report.observed));
         return out.toOwnedSlice(a);
     }
     for (links.items) |link| {

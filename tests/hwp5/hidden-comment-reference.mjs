@@ -8,6 +8,9 @@ import {
   decodedDocumentInput,
 } from "./documents.mjs";
 import { containerActual } from "./containers.mjs";
+import { linksActual } from "./links.mjs";
+import { typeActual } from "./control-types.mjs";
+import { sectionFieldOffset } from "./document-report-wire.mjs";
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -35,17 +38,9 @@ export function hiddenReference(call, cfb) {
     doc = decode("/DocInfo");
   const stats = hiddenActual(call, v, original);
   assert.deepEqual(stats, [1, 1, 1, 0, 0, 0]);
-  assert.throws(
-    () =>
-      call(24, decodedDocumentInput(h, doc, [{ index: 0, bytes: original }])),
-    /ControlCodeMismatch/,
-  );
-  assert.throws(
-    () => call(25, Buffer.concat([w(67108864), file])),
-    /ControlCodeMismatch/,
-  );
-  // A separate synthetic code-15 variant exercises document validation without
-  // silently accepting or rewriting the original code-23 representation.
+  linksActual(call, v, original);
+  assert.equal(typeActual(call, v, original)[2], 1);
+  // Keep the observed code in the actual document; compare code 15 separately.
   const b = Buffer.from(original),
     text = documentRecords(b).find((r) => r.offset === 614);
   assert.equal(text.tag, 67);
@@ -53,21 +48,9 @@ export function hiddenReference(call, cfb) {
   assert.equal(b.readUInt16LE(token), 23);
   assert.equal(b.readUInt32LE(token + 2), 0x74636d74);
   assert.equal(b.readUInt16LE(token + 14), 23);
-  b.writeUInt16LE(15, token);
-  b.writeUInt16LE(15, token + 14);
-  const sections = [{ index: 0, bytes: b }],
-    profileNodes = cfb.document().nodes;
-  const profileBody = profileNodes.findIndex(
-      (n) => n.name === "BodyText" && n.parent === 0,
-    ),
-    profileSection = profileNodes.findIndex(
-      (n) => n.name === "Section0" && n.parent === profileBody,
-    );
-  assert.ok(profileSection >= 0);
-  profileNodes[profileSection].content = flags & 1 ? deflateRawSync(b) : b;
-  const profileFile = Buffer.from(cfb.write({ nodes: profileNodes }));
+  const sections = [{ index: 0, bytes: b }];
   const documentReport = documentActual(call, h, doc, sections),
-    containerReport = containerActual(call, profileFile, cfb, h, doc, sections);
+    containerReport = containerActual(call, file, cfb, h, doc, sections);
   const rows = documentRecords(b),
     control = rows.find(
       (r) => r.tag === 71 && b.readUInt32LE(r.start) === 0x74636d74,
@@ -110,16 +93,49 @@ export function hiddenReference(call, cfb) {
   count.writeUInt16LE(2, list.start);
   const missing = Buffer.concat([b.subarray(0, control.end), b.subarray(end)]);
   let rejected = 0;
+  const normal = call(24, decodedDocumentInput(h, doc, sections));
+  const code15 = Buffer.from(b);
+  code15.writeUInt16LE(15, token);
+  code15.writeUInt16LE(15, token + 14);
+  const expected = Buffer.from(normal),
+    checked = sectionFieldOffset(0, "control_types", 0),
+    observed = sectionFieldOffset(0, "control_types", 2);
+  expected.writeUInt32LE(expected.readUInt32LE(checked) + 1, checked);
+  expected.writeUInt32LE(0, observed);
+  assert.deepEqual(
+    call(24, decodedDocumentInput(h, doc, [{ index: 0, bytes: code15 }])),
+    expected,
+  );
+  assert.deepEqual(full(code15).subarray(0, expected.length), expected);
+  linksActual(call, v, code15);
+  for (const code of [2, 3, 11, 21]) {
+    const bad = Buffer.from(b);
+    bad.writeUInt16LE(code, token);
+    bad.writeUInt16LE(code, token + 14);
+    for (const invoke of [
+      () => call(16, Buffer.concat([w(v), bad])),
+      () => call(24, decodedDocumentInput(h, doc, [{ index: 0, bytes: bad }])),
+      () => full(bad),
+    ]) {
+      assert.throws(invoke, /ControlCodeMismatch/);
+      rejected++;
+    }
+    assert.deepEqual(call(24, decodedDocumentInput(h, doc, sections)), normal);
+  }
+  const info = Buffer.from(doc),
+    properties = documentRecords(info).find((r) => r.tag === 16);
+  info.writeUInt16LE(2, properties.start);
+  documentActual(call, h, info, [
+    { index: 0, bytes: code15 },
+    { index: 1, bytes: b },
+  ]);
   for (const [bad, error] of [
     [short, /UnexpectedEnd/],
     [count, /ListParagraphCountMismatch/],
     [missing, /MissingHiddenCommentList/],
   ]) {
-    const originalCodeBad = Buffer.from(bad);
-    originalCodeBad.writeUInt16LE(23, token);
-    originalCodeBad.writeUInt16LE(23, token + 14);
     for (const invoke of [
-      () => call(41, Buffer.concat([w(v), Buffer.from([1]), originalCodeBad])),
+      () => call(41, Buffer.concat([w(v), Buffer.from([1]), bad])),
       () => call(24, decodedDocumentInput(h, doc, [{ index: 0, bytes: bad }])),
       () => full(bad),
     ]) {
@@ -132,8 +148,7 @@ export function hiddenReference(call, cfb) {
   return {
     stats,
     rejected,
-    originalDocumentPending: "ControlCodeMismatch: tcmt code 23",
-    syntheticCode15: true,
+    observedCodes: 1,
     documentReport,
     containerReport,
   };

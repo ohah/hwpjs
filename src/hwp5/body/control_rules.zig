@@ -68,3 +68,11 @@ pub fn expectedCode(control_id: u32) ?u16 {
     for (rules) |r| if (r.control_id == control_id) return r.code;
     return null;
 }
+pub const CodeMatch = enum { specified, observed_hidden_comment, unknown, invalid };
+/// Keep table 6's code 15 and the observed tcmt/code 23 representation distinct.
+pub fn classifyCode(control_id: u32, code: u16) CodeMatch {
+    const expected = expectedCode(control_id) orelse return .unknown;
+    if (code == expected) return .specified;
+    if (control_id == id("tcmt") and code == 23) return .observed_hidden_comment;
+    return .invalid;
+}

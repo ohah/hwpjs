@@ -16,6 +16,13 @@ test "control rule IDs are unique and reject every wrong code in the table domai
                 const report = try validation.inspect(&links);
                 try t.expectEqual(1, report.checked);
                 try t.expectEqual(0, report.deferred);
+                try t.expectEqual(0, report.observed);
+            } else if (rule.control_id == rules.id("tcmt") and code == 23) {
+                const report = try validation.inspect(&links);
+                try t.expectEqual(0, report.checked);
+                try t.expectEqual(0, report.deferred);
+                try t.expectEqual(1, report.observed);
+                try t.expectEqual(23, links[0].code);
             } else try t.expectError(error.ControlCodeMismatch, validation.inspect(&links));
         }
     }

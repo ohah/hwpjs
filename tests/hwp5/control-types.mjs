@@ -64,8 +64,8 @@ const frame = (tag, level, b) =>
   Buffer.concat([word(tag | (level << 10) | (b.length << 20)), b]);
 export function typeActual(call, v, bytes) {
   const out = call(16, Buffer.concat([word(v), bytes]));
-  assert.equal(out.length, 8);
-  return [out.readUInt32LE(), out.readUInt32LE(4)];
+  assert.equal(out.length, 12);
+  return [out.readUInt32LE(), out.readUInt32LE(4), out.readUInt32LE(8)];
 }
 export function typeEdges(call) {
   const make = (name, code) => {
@@ -85,15 +85,22 @@ export function typeEdges(call) {
   for (const [expected, names] of cases)
     for (const name of names) {
       const good = make(name, expected);
-      assert.deepEqual(typeActual(call, 0x05000307, good), [1, 0]);
+      assert.deepEqual(typeActual(call, 0x05000307, good), [1, 0, 0]);
       known++;
       for (const code of extended)
         if (code !== expected) {
+          if (name === "tcmt" && code === 23) {
+            assert.deepEqual(
+              typeActual(call, 0x05000307, make(name, code)),
+              [0, 0, 1],
+            );
+            continue;
+          }
           assert.throws(
             () => typeActual(call, 0x05000307, make(name, code)),
             /ControlCodeMismatch/,
           );
-          assert.deepEqual(typeActual(call, 0x05000307, good), [1, 0]);
+          assert.deepEqual(typeActual(call, 0x05000307, good), [1, 0, 0]);
           mismatches++;
         }
     }
@@ -107,9 +114,9 @@ export function typeEdges(call) {
     "FN  ",
     "abcd",
   ]) {
-    assert.deepEqual(typeActual(call, 0x05000307, make(name, 11)), [0, 1]);
+    assert.deepEqual(typeActual(call, 0x05000307, make(name, 11)), [0, 1, 0]);
   }
   assert.equal(known, 53);
-  assert.equal(mismatches, 636);
-  return { known, mismatches, recoveries: mismatches, unknown: 8 };
+  assert.equal(mismatches, 635);
+  return { known, mismatches, recoveries: mismatches, unknown: 8, observed: 1 };
 }

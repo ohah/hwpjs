@@ -324,7 +324,7 @@ let notePairResult;
 let linkedControls = 0;
 let pairedColumns = 0;
 const listReport = [0, 0, 0];
-const typeReport = [0, 0];
+const typeReport = [0, 0, 0];
 const documentReport = [0, 0, 0, 0];
 const containerReport = Array(23).fill(0);
 const previewEdgeResults = previewEdges(call);
@@ -611,7 +611,7 @@ assert.ok(notePairResult);
 assert.equal(linkedControls, 313);
 assert.equal(pairedColumns, 3);
 assert.deepEqual(listReport, [643, 792, 57]);
-assert.deepEqual(typeReport, [313, 0]);
+assert.deepEqual(typeReport, [313, 0, 0]);
 assert.deepEqual(metadata, {
   paragraphs: 1481,
   runs: 1740,

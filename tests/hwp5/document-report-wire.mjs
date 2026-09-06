@@ -4,7 +4,7 @@ const groups = Object.freeze({
   records: 1,
   paragraphs: 6,
   definition: 6,
-  control_types: 2,
+  control_types: 3,
   lists: 3,
   tables: 4,
   parameters: 13,
