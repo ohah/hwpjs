@@ -11,6 +11,7 @@ import { createCfbReader } from "../../js/cfb.mjs";
 import { checkDocinfo, checkDocinfoEdges } from "./docinfo.mjs";
 import { resourceEdges, resourceActual } from "./resources.mjs";
 import { shapeEdges, shapeMutations } from "./shapes.mjs";
+import { referenceEdges, referenceActual } from "./references.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -89,6 +90,7 @@ checkDocinfoEdges(call);
 resourceEdges(call);
 formattingEdges(call);
 shapeEdges(call);
+const referenceEdgeResults = referenceEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -213,6 +215,7 @@ const resources = {
   mismatches: [],
   missing: [],
 };
+const references = [0, 0, 0, 0];
 const formatting = {
   tabDef: 0,
   numbering: 0,
@@ -253,6 +256,9 @@ try {
       const framed = call(2, plain);
       if (entry.name === "DocInfo") {
         checkDocinfo(call, hdr.readUInt32LE(32), plain);
+        referenceActual(call, hdr.readUInt32LE(32), plain).forEach(
+          (n, i) => (references[i] += n),
+        );
         for (const [key, count] of Object.entries(formattingCounts(plain)))
           formatting[key] += count;
         const result = resourceActual(call, hdr, plain, cfb);
@@ -272,6 +278,7 @@ try {
   cfb.close();
 }
 assert.equal(files, 48);
+assert.deepEqual(references, [7881, 0, 316, 138]);
 assert.deepEqual(formatting, {
   tabDef: 138,
   numbering: 50,
@@ -300,6 +307,7 @@ rounds.push({
   unsupported,
   versions: [...versions].sort(),
   resources,
+  references,
   formatting,
 });
 begin = checks;
@@ -343,6 +351,7 @@ console.log(
       rounds,
       formattingMutationResults,
       shapeMutationResults,
+      referenceEdgeResults,
       checks,
       imports: 0,
     },

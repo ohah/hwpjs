@@ -2,11 +2,33 @@ const d = @import("reader.zig");
 const Version = @import("../version.zig").Version;
 const Options = @import("../record.zig").Options;
 pub const Language = enum(u3) { korean, english, hanja, japanese, other, symbol, user };
+/// Same contiguous order as ID_MAPPINGS slots 8..14.
+pub const Kind = enum { border_fill, char_shape, tab_def, numbering, bullet, para_shape, style };
+const kind_count = @typeInfo(Kind).@"enum".fields.len;
+pub fn mappingField(kind: Kind) d.MappingField {
+    return @enumFromInt(@intFromEnum(d.MappingField.border_fill) + @intFromEnum(kind));
+}
 
 pub const Report = struct {
     mappings: d.IdMappings,
     bin_data_count: usize,
     face_name_count: usize,
+    counts: [kind_count]usize = @splat(0),
+
+    pub fn count(self: Report, kind: Kind) usize {
+        return self.counts[@intFromEnum(kind)];
+    }
+    /// Extends the legacy BinData/font check without changing validate().
+    /// Optional memo/change-tracking slots are not covered here.
+    pub fn validateKnownCounts(self: Report) !void {
+        try self.validate();
+        inline for (@typeInfo(Kind).@"enum".fields) |field| {
+            const kind: Kind = @enumFromInt(field.value);
+            const n = self.mappings.get(mappingField(kind)).?;
+            if (n < 0) return error.NegativeMappingCount;
+            if (@as(u64, @intCast(n)) != self.count(kind)) return error.ResourceCountMismatch;
+        }
+    }
 
     pub fn validate(self: Report) !void {
         const bins = self.mappings.get(.bin_data).?;
@@ -35,12 +57,13 @@ pub const Report = struct {
 };
 
 /// No allocations from declared counts; preserve mismatches as a report.
-/// Checks only BinData and FACE_NAME counts, not all DocInfo resource types.
+/// Counts BinData, FACE_NAME and the seven parsed formatting resource types.
 pub fn inspect(bytes: []const u8, version: Version, options: Options) !Report {
     var it = try d.Iterator.init(bytes, version, options);
     var mappings: ?d.IdMappings = null;
     var bins: usize = 0;
     var fonts: usize = 0;
+    var counts: [kind_count]usize = @splat(0);
     while (try it.next()) |r| switch (r.value) {
         .id_mappings => |m| {
             if (mappings != null) return error.DuplicateIdMappings;
@@ -48,7 +71,11 @@ pub fn inspect(bytes: []const u8, version: Version, options: Options) !Report {
         },
         .bin_data => bins += 1,
         .face_name => fonts += 1,
-        else => {},
+        else => {
+            inline for (@typeInfo(Kind).@"enum".fields) |field| {
+                if (r.framing.tag == @intFromEnum(@field(d.Tag, field.name))) counts[field.value] += 1;
+            }
+        },
     };
-    return .{ .mappings = mappings orelse return error.MissingIdMappings, .bin_data_count = bins, .face_name_count = fonts };
+    return .{ .mappings = mappings orelse return error.MissingIdMappings, .bin_data_count = bins, .face_name_count = fonts, .counts = counts };
 }

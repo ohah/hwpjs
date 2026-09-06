@@ -281,3 +281,41 @@ while (try it.next()) |record| {
 5. Debug·ReleaseSafe·ReleaseFast 전체 audit 통과. 네이티브 62개, Node/WASM 계약 47개, HWP5 probe 34,941회, 기존 CFB 12,000개 변형과 독립 비교를 유지했습니다. 파일 분리·공통 그림 정보 SSOT·문서 예제의 enum 분기도 함께 확인했습니다.
 
 다음 작업: **DocInfo 주요 리소스의 ID 매핑 개수·참조 검증**을 추가한 뒤 본문 문단 헤더·텍스트 해석으로 연결합니다. 호환성/변경 추적 등 아직 해석하지 않는 DocInfo 태그는 raw 보존 상태입니다.
+
+## 후속 구현: 주요 리소스 개수·활성 참조 검증
+
+2026-09-06. `hwp-spec`의 ID 매핑/각 참조 필드, 로컬 rhwp의 ID 조회 및 개요 번호 fallback을 대조하고, 실제 fixture와 독립 JS oracle로 검증했습니다. 파서는 그대로 원본을 보존하며, 아래 의미 검증은 호출자가 별도로 선택합니다. 제품 JS ABI에 추가된 기능은 아닙니다.
+
+### API와 책임
+
+- `resources.inspect(bytes, version, options)`는 BinData·글꼴과 테두리/배경·글자 모양·탭·번호·글머리표·문단 모양·스타일의 실제 개수를 집계합니다. `report.count(kind)`와 `report.validateKnownCounts()`를 추가했습니다. 기존 `validate()`와 `fontOrdinal()`의 BinData/글꼴 검증 계약은 유지합니다. 알려진 매핑 값이 음수면 NegativeMappingCount, 개수가 다르면 ResourceCountMismatch입니다. ID 매핑 자체의 부재/중복 오류도 유지합니다. 메모/변경추적 등 선택 슬롯의 개수는 검증 범위 밖입니다.
+- `reference_rules.zig`는 0/1 기반 ID를 순번으로 바꾸는 경계 검사 및 부재 sentinel을 소유합니다. `references.zig`는 어떤 필드가 활성인지 판단하고 이 규칙을 호출합니다. 입력을 수정하거나 ID를 자동 보정하지 않습니다.
+- `hwp5.references.inspect(bytes, version, options)`는 개수 검증 후 두 번째 순회로 참조 report를 반환합니다. 각 순회에 record limit이 적용되며, 선언 개수 기반 할당·참조 체인 추적·재귀는 없습니다. 참조 대상이 소스보다 뒤에 있거나 ID 매핑이 뒤에 있어도 동작합니다.
+- report의 `checked`는 활성 참조 검사 수(오류 포함), `invalid`는 범위 밖 참조 수, `deferred`는 본문 문맥/미지원 유형으로 검증을 보류한 항목 수, `unknown_records`는 의미를 해석하지 않은 레코드 수입니다. `first_issue`에는 원본 DocInfo 레코드 offset·tag·field·언어/수준 slot·문제 ID를 담습니다. 모든 오류의 목록을 할당하지는 않습니다.
+- `report.validateKnown()`은 invalid가 있으면 InvalidResourceReference를 반환합니다. deferred/unknown이 있어도 알려진 참조가 유효하면 성공하므로 **전체 DocInfo·전체 문서 검증 완료를 뜻하지 않습니다.** 알 수 없는 extra 내부, 빈 optional 슬롯, BinData 스트림의 존재/유형/중복 storage ID, 메모/변경추적 참조도 이 결과로 보장하지 않습니다.
+
+### 참조 규칙
+
+| 참조 | 현재 적용 규칙 |
+|---|---|
+| 글자 모양 → 7개 언어 글꼴 | 언어별 목록의 0-based ID. 총 FACE_NAME 수만으로 검사하지 않습니다. |
+| 글자/문단 모양 → 테두리/배경 | 1-based, 0은 참조 없음. 선택 필드 자체의 부재도 유지합니다. |
+| 번호 1~10수준/글머리표 → 글자 모양 | 0-based, `0xffffffff`는 상속/명시 참조 없음으로 구분합니다. 0은 첫 글자 모양입니다. |
+| 이미지 채우기/활성 이미지 글머리표 → BinData | 1-based **BinData 레코드 순번**입니다. BinData payload의 CFB storage ID와 혼동하지 않습니다. 활성 이미지에서 0은 오류입니다. |
+| 문단 모양 → 탭 | 0-based ID. |
+| 문단 머리 종류 2/3 → 번호/글머리표 | 각 목록의 1-based ID. 종류 0의 저장된 ID는 비활성 값이므로 검사하지 않습니다. |
+| 개요(종류 1) → 번호 | ID가 있으면 1-based 검사. 0이면 구역의 개요 번호 정의가 필요하므로 deferred입니다. |
+| 문단 스타일 → 다음 스타일/문단 모양/글자 모양 | 각각 0-based. 다음 스타일의 자기 참조는 정상이며 체인 순환을 오류로 보지 않습니다. |
+| 글자 스타일 → 글자 모양 | 0-based. 다음 스타일/문단 모양은 비활성 필드로 취급합니다. 미지원 스타일 종류는 deferred입니다. |
+
+Bullet 이미지 여부 0은 비활성, 1은 활성, 다른 값은 deferred입니다. 알 수 없는 Fill 타입 비트도 deferred입니다. 미지 유형을 자동으로 정상/오류로 단정하지 않습니다. 개요 ID 0의 구역 fallback은 로컬 `reference/rhwp/src/renderer/layout/utils.rs`의 `resolve_numbering_id`와 대조했으며 우리 코어에서 본문 문맥을 추측해 채우지는 않습니다.
+
+### 실측·적대적 검증
+
+1. 지원 문서 45개에서 주요 리소스 선언/실제 개수가 모두 일치했습니다. 활성 참조 7,881건 중 범위 밖 0건, 구역 개요 번호를 기다리는 보류 316건, 미해석 레코드 138개입니다. 실제 수치를 정규 audit에서 assert합니다.
+2. 테스트 전용 WASM mode 7과 `tests/hwp5/references.mjs`의 독립 payload 오프셋/ID oracle로 report 전체를 비교합니다. first_issue의 필드·slot·ID·원본 offset까지 비교하며 제품 파서를 JS에 복제하지 않습니다.
+3. 합성 문서의 각 활성 ID에 0/1/2/최대값을 넣는 경계 108개, 매핑 15슬롯의 음수/부족/초과 45개, 매핑 부재/중복·레코드 제한을 검사했습니다. 비활성 값·미지원 타입·개요 보류·원본 순서 변경도 검사합니다. 오류 후 정상 문서 재검사와 기존 바이트 보존 검증을 유지합니다.
+4. 네이티브 4개 테스트 추가: ID 규칙/sentinel, 7종 개수와 순서 독립성, 언어별 오류 위치, 활성/비활성/보류 및 자기 참조를 직접 검증합니다. 기존 사용자 변경과 제품 ABI는 변경하지 않았습니다.
+5. Debug·ReleaseSafe·ReleaseFast 전체 audit: 네이티브 66개, Node/WASM 계약 47개, HWP5 probe 35,261회. 기존 단일 비트 전수 검사·CFB 변형·독립 byte 비교를 함께 실행합니다.
+
+다음은 **본문 문단 헤더·텍스트 해석**입니다. 이후 구역 정의를 연결해야 보류된 개요 번호 참조도 검증할 수 있습니다.

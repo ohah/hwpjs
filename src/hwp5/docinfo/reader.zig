@@ -17,8 +17,8 @@ pub const Value = union(enum) { properties: Properties, id_mappings: IdMappings,
 pub const Record = struct { framing: framing.Record, value: Value };
 
 /// Incremental semantic decoding; all records retain their exact raw framing.
-/// Not a complete DocInfo validator: order, duplicates and resource references
-/// are left to the future document assembler. Failures are atomic.
+/// Not a complete DocInfo validator: count/reference checks live in resources
+/// and references; full document ordering/assembly is separate. Failures are atomic.
 pub const Iterator = struct {
     records: framing.Iterator,
     version: Version,

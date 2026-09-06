@@ -63,6 +63,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         4 => return @import("docinfo-probe.zig").run(a, bytes, limit),
         5 => return @import("resource-probe.zig").report(a, bytes, limit),
         6 => return @import("resource-probe.zig").decode(a, bytes, limit),
+        7 => return @import("reference-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
