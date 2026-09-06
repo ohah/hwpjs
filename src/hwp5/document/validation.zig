@@ -30,12 +30,16 @@ pub fn inspectDecoded(a: std.mem.Allocator, input: Input, options: Options) !Rep
     const sections = try a.alloc(types.SectionReport, input.sections.len);
     errdefer a.free(sections);
     var records = doc.records;
+    var memos: @import("../memo_references.zig").Index = .{};
+    defer memos.deinit(a);
     for (order, 0..) |input_index, index| {
         local.framing.max_records = @min(options.framing.max_records, options.max_total_records - records);
-        sections[index] = try @import("section.zig").inspect(a, input.sections[input_index].bytes, header.version(), doc.resources, local);
+        sections[index] = try @import("section.zig").inspectCollected(a, input.sections[input_index].bytes, header.version(), doc.resources, local, .{ .index = &memos, .allocator = a, .section = index });
         records += sections[index].records;
     }
-    return .{ .header = header, .doc_info = doc, .sections = sections, .total_bytes = options.max_total_bytes - remaining, .total_records = records };
+    const memo_report = memos.inspect();
+    try memo_report.validateKnown();
+    return .{ .header = header, .doc_info = doc, .sections = sections, .total_bytes = options.max_total_bytes - remaining, .total_records = records, .memo_references = memo_report };
 }
 fn charge(remaining: *usize, count: usize) !void {
     if (count > remaining.*) return error.LimitExceeded;

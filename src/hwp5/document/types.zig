@@ -78,6 +78,7 @@ pub const SectionReport = struct {
 /// All registered checks passed, NOT proof of full HWP support.
 /// Owns sections only; DocInfo property/mapping slices still borrow input.doc_info.
 pub const Report = struct {
+    memo_references: @import("../memo_references.zig").Report = .{},
     header: Header,
     doc_info: DocInfo,
     sections: []SectionReport,

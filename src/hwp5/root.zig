@@ -63,6 +63,7 @@ pub const shape_connector = @import("body/shape_connector.zig");
 pub const group_info = @import("body/group_info.zig");
 pub const video_data = @import("body/video_data.zig");
 pub const memo_shape = @import("docinfo/memo_shape.zig");
+pub const memo_references = @import("memo_references.zig");
 pub const shape_picture = @import("body/shape_picture.zig");
 pub const picture_color = @import("body/picture_color.zig");
 pub const picture_effects = @import("body/picture_effects.zig");

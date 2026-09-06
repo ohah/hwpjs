@@ -2182,3 +2182,27 @@ field_validation은 이미 읽은 Properties로 이 검사를 호출하므로 �
 제품의 문서 전역 번호 인덱스와 참조 검증은 다음 단계입니다. field.start.instance_id, 메모 번호, DocInfo 메모 모양 ordinal을 같은 ID로 합치지 않으며, issue5169의 미대조 원인을 변경 추적 등으로 추정 확정하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 237/237, Node 47/47, HWP5 WASM 1,293,767회 검사 통과했습니다. 새 필드 경계 성공 46/거부 6, 실제 필드 28개/메모 30개/구역 간 대응 1개/역방향 미대조 2개, 실제 필드 잘림의 세 경로 거부 9건을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-memo-field-{debug,safe,fast}.log`입니다.
+
+## 문서 전역 메모 번호 참조와 관측 삭제 필드 연결
+
+2026-09-07. memo_references.Index는 필드의 선택 번호와 리스트 번호를 구역 번호와 함께 수집합니다. field_validation은 이미 파싱한 공통 필드/memo_field 결과를 전달하고 section은 이미 검증한 Group.memo를 전달합니다. document.validation은 모든 구역 검사 이후 번호/구역으로 정렬한 두 목록을 대조합니다. 입력 구역 순서나 첫 번째로 발견한 동명 번호에 의존하지 않으며, 번호 크기를 배열 크기로 사용하지 않습니다. 인덱스는 성공/실패 모두 해제하고 문서 Report에는 scalar 집계만 남깁니다.
+
+알려진 필드 번호에 대상 리스트가 없으면 MissingMemoTarget, 여러 리스트가 있으면 AmbiguousMemoTarget입니다. 두 오류가 함께 있으면 누락 오류를 우선합니다. 번호 부재(null)는 missing_indices, 참조 없는 리스트는 unreferenced_lists로 보고합니다. 중복 필드/리스트 ID 진단은 중복된 서로 다른 번호의 수이며 중복 행의 초과 개수가 아닙니다. 중복 필드만 있거나 참조되지 않는 중복 리스트만 있다는 이유로 오류를 강제하지 않습니다. 0과 UINT32_MAX는 실제 번호로 보존합니다. 메모 번호를 DocInfo 메모 모양 ordinal 또는 공통 필드 instance_id와 합치지 않습니다.
+
+실제 6개 파일의 전체 구역을 제품 inspectDecoded 경로로 통과시켜 필드 28개/리스트 30개/구역 간 연결 1개/미참조 리스트 2개를 확인합니다. task2287/1342000_edu_curriculum_map은 34개 구역 전체를 전달하며 Section1의 필드와 Section33의 리스트가 연결됩니다. 역순으로 구역 입력을 전달해도 같은 전역 보고서입니다. issue5169의 두 미참조 리스트는 그대로 진단하며 원인을 변경 추적으로 확정하지 않습니다. 기존 mode 24/25 문서 wire는 유지하고 별도 테스트 mode 90이 전역 진단 10개를 노출합니다.
+
+초기 전체 구역 검증은 위 task2287 파일의 ControlIdMismatch로 실패했습니다. Section15/16/17에서 code 3 토큰 %%*d와 %unk 헤더의 `$RevisionDelete;` 명령이 관측됐습니다. 로컬 rhwp의 parser/tags.rs와 serializer/hwpx/field.rs도 이 관측 대응을 설명합니다. 명세의 공통 필드 envelope와 별개로 **이 정확한 ID/전체 명령 조합만 관측 관계**로 추가했습니다. `$Revision` 접두사 일반 허용이나 %unk wildcard는 아닙니다. 토큰/헤더 원값은 유지하고 변경 추적을 실행하지 않습니다. 기존 독립 JS 기대값도 새로운 enum 값을 연결 개수로 합산하지 않도록 `identity != exact` 개수로 수정했습니다. 해당 파일 일부를 제외하거나 검사기를 우회하지 않았습니다.
+
+적대적 검증 범위:
+
+1. 네이티브 인덱스의 모든 할당 실패, 입력 정렬 전후의 반복 검사, 누락/모호함 동시 발생 및 진단 분할을 검사합니다.
+2. 번호 부재/0/UINT32_MAX, 동일·다른 구역, 중복 번호와 미참조 리스트를 구분합니다.
+3. 실제 issue5866 필드 또는 리스트 번호만 변경하거나 메모 전체 블록을 중복하여 mode 90/decoded 문서/재생성 CFB에서 오류 21건을 확인하고 원본 입력으로 복구합니다.
+4. 두 번호를 함께 0/UINT32_MAX로 변경하거나 선택 필드 번호를 제거한 3개 성공 변형을 확인합니다. 이는 참조 계층의 경계 검사이지 인라인 토큰까지 일관된 한글 편집본을 만들었다는 주장이 아닙니다.
+5. 관측 삭제 필드의 공통 envelope 모든 prefix 잘림, 명령의 모든 비트 변이, 종결 문자 제거/NUL 추가 및 ID/코드 오인 입력을 거부합니다. 별도 WASM 검사는 정상/복구 45회, 거부 304회입니다.
+
+메모 명령 전체 문법·인라인 필드 시작/끝의 번호 관계·메모 모양 참조·마지막 구역 배치 강제·변경 추적 의미는 아직 별도입니다. 원본 fixture는 수정하지 않았고 제품 JS 공개 API나 HWPX 파서를 추가한 작업이 아닙니다.
+
+추가 읽기 전용 실측에서는 위 6개 원본 CFB 전체를 Debug mode 25에 전달해 모두 통과했습니다. 동일한 task2287 원본을 이전 메모 리스트 헤더 단계의 캐시 WASM(c8ee6a2269399f48409e98148260e08c)과 이번 Debug WASM(e8e8bbec64bdb2efee3fbec57d04c9ed)에 전달하면 각각 ControlIdMismatch/성공입니다. 이 6개 CFB 검사는 별도 실행이며 정규 audit 횟수에 더하지 않습니다. decoded 전역 보고서/역순 구역 검사와 issue5866 CFB 변이 검사는 정규 audit에 포함되어 있습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 240/240, Node 47/47, HWP5 WASM 1,294,226회 검사 통과했습니다. CFB 12,000회 변이 trap 0이며 Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-memo-references-{debug,safe,fast}.log`입니다. 책임별 파일/파싱 결과 공유와 오류 경로 수명도 검토했으며, 이 결과를 남은 명령/변경 추적/편집·저장 범위의 완료로 세지 않습니다.

@@ -3,6 +3,7 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub const Selection = struct {
+    memo_report: bool = false,
     picture: core.hwp5.picture_validation.Options = .{},
     style: ?core.hwp5.document_validation.types.DrawingStyleOptions = null,
     arc: ?core.hwp5.shape_arc.Layout = null,
@@ -14,6 +15,9 @@ fn fields(a: std.mem.Allocator, out: *std.ArrayList(u8), value: anytype) !void {
 }
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return configured(a, bytes, limit, .{});
+}
+pub fn memo(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return configured(a, bytes, limit, .{ .memo_report = true });
 }
 pub fn styled(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
@@ -97,6 +101,12 @@ fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: 
         .framing = .{ .max_records = limit },
     });
     defer report.deinit(a);
+    if (selection.memo_report) {
+        var out: std.ArrayList(u8) = .empty;
+        errdefer out.deinit(a);
+        try fields(a, &out, report.memo_references);
+        return out.toOwnedSlice(a);
+    }
     return serialize(a, report);
 }
 pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Report) ![]u8 {

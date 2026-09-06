@@ -74,6 +74,8 @@ test {
     _ = @import("hwp5/body/memo_list_header_tests.zig");
     _ = @import("hwp5/body/memo_validation_tests.zig");
     _ = @import("hwp5/body/memo_field_tests.zig");
+    _ = @import("hwp5/memo_reference_tests.zig");
+    _ = @import("hwp5/body/revision_delete_tests.zig");
     _ = @import("hwp5/body/cell_extension_tests.zig");
     _ = @import("hwp5/parameters/tests.zig");
     _ = @import("hwp5/parameters/source_tests.zig");

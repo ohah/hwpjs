@@ -7,6 +7,8 @@ import {memoListEdges,memoListReference,memoListDocument} from "./memo-list.mjs"
 import {memoListGroupEdges} from "./memo-list-groups.mjs";
 import {memoOwnerEdges} from "./memo-owner.mjs";
 import {memoFieldEdges,memoFieldReference,memoFieldDocument} from "./memo-field.mjs";
+import {memoReferencesActual,memoReferenceDocument} from "./memo-references.mjs";
+import {revisionDeleteEdges} from "./revision-delete.mjs";
 import {groupInfoEdges} from "./group-info.mjs";
 import {groupInfoPair} from "./group-info-pair.mjs";
 import {groupOwnerEdges,groupDocumentReference} from "./group-validation.mjs";
@@ -438,6 +440,8 @@ const memoListResults = {edges:memoListEdges(call),reference:memoListReference(c
 const memoListGroupResults = memoListGroupEdges(call);
 const memoOwnerResults = memoOwnerEdges(call);
 const memoFieldResults = {edges:memoFieldEdges(call),reference:memoFieldReference(call,cfb),document:memoFieldDocument(call,cfb)};
+const memoReferenceResults = {actual:memoReferencesActual(call,cfb),document:memoReferenceDocument(call,cfb)};
+const revisionDeleteResults = revisionDeleteEdges(call);
 const groupInfoPairResults = groupInfoPair(call,cfb);
 const groupOwnerEdgeResults = groupOwnerEdges(call);
 const groupDocumentResults = groupDocumentReference(call,cfb);
@@ -932,6 +936,8 @@ console.log(
       memoListGroupResults,
       memoOwnerResults,
       memoFieldResults,
+      memoReferenceResults,
+      revisionDeleteResults,
       groupInfoPairResults,
       groupOwnerEdgeResults,
       groupDocumentResults,

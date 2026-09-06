@@ -10,6 +10,9 @@ const tables = @import("../body/table_validation.zig");
 const sources = @import("../parameters/sources.zig");
 const object = @import("../body/object_common.zig");
 pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, counts: @import("../docinfo/resources.zig").Report, options: types.Options) !types.SectionReport {
+    return inspectCollected(a, bytes, version, counts, options, null);
+}
+pub fn inspectCollected(a: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, counts: @import("../docinfo/resources.zig").Report, options: types.Options, collector: ?@import("../memo_references.zig").Collector) !types.SectionReport {
     var tree = try Tree.parse(a, bytes, version, options.framing);
     defer tree.deinit(a);
     const paras = try paragraphs.inspect(tree, .{ .char_shapes = counts.count(.char_shape), .para_shapes = counts.count(.para_shape), .styles = counts.count(.style) });
@@ -20,6 +23,9 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
     var groups = try Groups.build(a, tree);
     defer groups.deinit(a);
     _ = try @import("../body/memo_validation.zig").inspect(tree, groups.items);
+    if (collector) |c| for (groups.items) |group| {
+        if (group.memo) |memo| try c.index.addList(c.allocator, tree.nodes[memo.node].record.value.memo_list.memo_index, c.section);
+    };
     const header_footer = try @import("../body/header_footer_validation.zig").inspect(tree, groups.items, options.list_layout);
     const number_controls = try @import("../body/number_control_validation.zig").inspect(tree);
     const page_number = try @import("../body/page_number_validation.zig").inspect(tree);
@@ -57,7 +63,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
         .notes = try @import("../body/note_validation.zig").inspect(tree, groups.items, options.note_layout, options.list_layout),
         .hidden_comments = try @import("../body/hidden_comment.zig").inspect(tree, groups.items, options.list_layout),
         .ruby = try @import("../body/ruby_validation.zig").inspect(tree),
-        .fields = try @import("../body/field_validation.zig").inspect(tree),
+        .fields = try @import("../body/field_validation.zig").inspectCollected(tree, collector),
         .observed_field_links = links.observedCount(),
         .char_overlap = char_overlap,
         .bookmarks = parameter_report.bookmarks,

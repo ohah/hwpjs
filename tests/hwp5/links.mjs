@@ -63,19 +63,20 @@ function linkRows(bytes) {
       const headerId = header.raw.readUInt32LE();
       let identity = 0;
       if (id !== headerId) {
-        assert.equal(id, 0x25256d65);
+        assert.ok(id === 0x25256d65 || id === 0x25252a64);
         assert.equal(headerId, 0x25756e6b);
         assert.equal(code, 3);
         const units = header.raw.readUInt16LE(9),
           end = 11 + units * 2;
         assert.ok(end + 4 <= header.raw.length);
-        assert.ok(
+        if (id === 0x25256d65) assert.ok(
           header.raw
             .subarray(11, end)
             .subarray(0, 10)
             .equals(Buffer.from("MEMO/", "utf16le")),
         );
-        identity = 1;
+        else assert.deepEqual(header.raw.subarray(11,end),Buffer.from('$RevisionDelete;','utf16le'));
+        identity = id === 0x25256d65 ? 1 : 2;
       }
       rows.push([
         p.index,
@@ -105,7 +106,7 @@ export function identityActual(call, v, bytes) {
     call(38, Buffer.concat([word(v), bytes])),
     Buffer.concat(rows.flatMap((r) => r.map(word))),
   );
-  return rows.reduce((n, r) => n + r[7], 0);
+  return rows.reduce((n, r) => n + Number(r[7] !== 0), 0);
 }
 export function linkEdges(call) {
   const header = frame(66, 0, Buffer.alloc(24));
