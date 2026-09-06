@@ -23,6 +23,7 @@ const groups = Object.freeze({
   notes: 7,
   equations: 8,
   ole: 7,
+  shapes: 8,
 });
 export const documentPrefixBytes = 33 * 4;
 export const sectionReportBytes = Object.values(groups).reduce(

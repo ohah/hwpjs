@@ -65,6 +65,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try fields(a, &out, s.notes);
         try fields(a, &out, s.equations);
         try fields(a, &out, s.ole);
+        try fields(a, &out, s.shapes);
     }
     return out.toOwnedSlice(a);
 }

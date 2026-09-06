@@ -1,14 +1,13 @@
 const Tree = @import("tree.zig").Tree;
-const Reader = @import("../../binary/reader.zig").Reader;
+const component = @import("shape_component.zig");
 const ole = @import("ole.zig");
 const owned = @import("owned_record.zig");
 const id = @import("control_rules.zig").id;
 pub const Report = struct { objects: usize = 0, pending_references: usize = 0, monikers: usize = 0, reserved_aspects: usize = 0, reserved_baselines: usize = 0, reserved_kinds: usize = 0, extra_bytes: usize = 0 };
 /// Only the first SHAPE_COMPONENT identity, not its unimplemented geometry schema.
 fn isOwner(node: @import("tree.zig").Node) !bool {
-    if (node.record.framing.tag != 76) return false;
-    var r: Reader = .{ .bytes = node.record.framing.payload };
-    return try r.readInt(u32) == id("$ole");
+    if (node.record.framing.tag != component.tag) return false;
+    return try component.identity(node.record.framing.payload) == id("$ole");
 }
 pub fn inspect(tree: Tree, layout: ole.Layout) !Report {
     var report: Report = .{};

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
 import { documentRecords } from "./documents.mjs";
+import { shapeDocument } from "./shape-document.mjs";
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 const run=(call,b,mode)=>call(50,Buffer.concat([Buffer.from([mode]),b]));
 function check(call,b,mode) {
@@ -54,7 +55,7 @@ export function shapeComponentReference(call,cfb) {
       }
       stack.push(r);
     }
-    assert.ok(count>0);files.push({name,count});
+    assert.ok(count>0);files.push({name,count,document:shapeDocument(call,cfb,readFileSync(path),h,b)});
   }
   return {components,single,double,rejected,files,skipped};
 }

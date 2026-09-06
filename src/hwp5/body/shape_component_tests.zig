@@ -58,3 +58,17 @@ test "shape component explicit identity count and bounded matrix pairs" {
     try t.expectEqual(0x246f6c65, single.offset_x);
     try t.expectEqual(0, single.rendering.pairs.count());
 }
+fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
+    var raw = [_]u8{0} ** 112;
+    std.mem.writeInt(u32, raw[0..4], 71 | (4 << 20), .little);
+    std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").drawing_id, .little);
+    std.mem.writeInt(u32, raw[8..12], 76 | (1 << 10) | (100 << 20), .little);
+    var tree = try @import("tree.zig").Tree.parse(a, raw[0..if (bad) 8 else 112], .{ .raw = 0x05010001 }, .{});
+    defer tree.deinit(a);
+    const result = @import("shape_validation.zig").inspect(tree);
+    if (bad) try t.expectError(error.MissingShapeComponent, result) else try t.expectEqual(1, (try result).components);
+}
+test "shape hierarchy cleanup includes missing component" {
+    try t.checkAllAllocationFailures(t.allocator, allocationCase, .{false});
+    try t.checkAllAllocationFailures(t.allocator, allocationCase, .{true});
+}

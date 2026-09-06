@@ -1,6 +1,10 @@
 const Reader = @import("../../binary/reader.zig").Reader;
 const Rendering = @import("rendering.zig").Rendering;
 pub const tag: u10 = 76;
+pub fn identity(bytes: []const u8) !u32 {
+    var r: Reader = .{ .bytes = bytes };
+    return r.readInt(u32);
+}
 pub const Layout = enum { single_id, double_id };
 /// Tables 82-85 only. Type-specific border/fill/shadow data remains in extra.
 pub const Component = struct {

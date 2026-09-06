@@ -1400,3 +1400,23 @@ OLE 참조 의미는 아직 보류입니다. 이를 확정하려면 파일을 �
 이번 단계는 표 82~85의 payload 파서와 전용 WASM 검사입니다. 기존 OLE 소유권 검사는 아직 구성요소 첫 ID만 사용하며 이 새 필드 검사가 문서 검사에 자동 연결된 것은 아닙니다. 전체 도형 계층·그룹 횟수 의미·행렬 합성·종류별 꼬리·문서 연결·렌더링/편집은 남았습니다. NaN 등이 보존된다고 유효한 조판 행렬로 판정하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 181/181, Node 47/47, HWP5 WASM 189,726회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
+
+## 그리기 구성요소 계층과 문서 검사 연결 (2026-09-06)
+
+추가 표본 순회에서 구성요소 부모는 gso CTRL_HEADER 3,242건과 $con SHAPE_COMPONENT 2,342건으로 관측됐습니다. CFB/압축/레코드 단계 실패 102파일은 이 관계 검증의 성공이나 구성요소 부재로 계상하지 않습니다. 공식 GenShapeObject ID 반복 규칙과 이 계층 증거를 사용해 배치를 선택합니다.
+
+`shape_validation.inspect`는 gso마다 직접 SHAPE_COMPONENT 하나를 요구하며 owned_record.find를 재사용합니다. root/다른 부모/그룹이 아닌 구성요소의 자식은 OrphanShapeComponent, gso 직접 구성요소 중복·부재는 DuplicateShapeComponent/MissingShapeComponent입니다. gso 아래는 double_id, $con 아래는 single_id이며 길이/인접 DWORD 일치로 추측하지 않습니다. 부모 그래프는 Tree의 parent/subtree_end가 소유합니다. identity 읽기는 shape_component.identity로 분리해 OLE에서도 공유합니다.
+
+문서 구역 보고서는 components/top_level/grouped/matrix_pairs/mismatched_ids/unknown_attributes/nonfinite_values/extra_bytes입니다. 이중 ID 불일치와 미지 속성은 진단이며 원문을 수정하지 않습니다. 비유한 수는 원시 IEEE exponent로 세어 NaN·무한대의 비트 패턴을 손상시키지 않습니다. 모든 translation/scale/rotation 원소를 검사하지만 행렬 합성이나 시각적 유효성을 판정하지 않습니다. 독립 보고서 행은 488바이트가 됐습니다.
+
+### 구현 후 적대적 검증
+
+1. gso 구성요소 누락·중복, 고아 root/다른 컨트롤 부모, $con이 아닌 구성요소의 자식, 다른 후손이나 이후 형제의 차용을 거부했습니다. 여러 단계의 그룹 및 이후 별도 gso는 자기 구성요소만 집계합니다.
+2. double_id 100바이트와 single_id 96바이트 최소 배치의 모든 필수 prefix 잘림을 별도로 거부했습니다. 오류 뒤 정상 계층 재호출도 확인했습니다. native에서는 Tree 모든 할당 실패를 성공 및 MissingShapeComponent 경로에 주입했습니다.
+3. 독립 JS 순회가 level과 부모 ID로 배치를 정하고 원문 필드에서 보고서를 계산합니다. ID 불일치·속성 상위 비트 및 translation/scale/rotation 각각에 넣은 비유한 값 3개를 정확히 진단했습니다. 유한성 검사에 부동소수점 연산이나 NaN 정규화를 사용하지 않습니다.
+4. 한셀OLE.hwp/shape-group-02.hwp/group-drawing-02.hwp의 실제 구성요소 40개에 대한 전체 decoded document 및 CFB 경로가 통과했습니다. 각 첫 gso 구성요소 하위 영역 누락·직접 구성요소 중복·필수 행렬 1바이트 잘림을 전용 검사/문서/재생성 CFB 세 경로에서 거부했습니다(27건). 원본 파일은 변경하지 않았습니다.
+5. 각 실제 파일의 첫 구성요소 미지 속성 비트를 뒤집은 합성 구역과 원본 구역을 함께 독립 oracle에 대조했습니다. 서로 다른 구역 보고서의 정순/역순·총량 한도와 두 번째 구역의 고정 필드 위치를 확인했습니다. 수식/OLE의 공유 직접 자식 검색 및 기존 문서 회귀도 유지했습니다.
+
+이전 단계의 공통 구성요소 문서 연결 보류는 해소됐습니다. 그룹 횟수/변환 쌍 의미, 종류별 테두리·채우기·그림자 등 extra, 행렬 합성·조판·편집/저장 및 OLE ID 참조 의미는 남았습니다. 계층/공통 필드 검증을 도형 전체 의미 검증으로 계상하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 182/182, Node 47/47, HWP5 WASM 190,497회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
