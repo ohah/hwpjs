@@ -1,0 +1,36 @@
+const std = @import("std");
+const types = @import("types.zig");
+const Tree = @import("../body/tree.zig").Tree;
+const paragraphs = @import("../body/paragraphs.zig");
+const definitions = @import("../body/section_validation.zig");
+const Links = @import("../body/control_links.zig").Links;
+const control_types = @import("../body/control_type_validation.zig");
+const Groups = @import("../body/list_groups.zig").Groups;
+const tables = @import("../body/table_validation.zig");
+const sources = @import("../parameters/sources.zig");
+const object = @import("../body/object_common.zig");
+pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, counts: @import("../docinfo/resources.zig").Report, options: types.Options) !types.SectionReport {
+    var tree = try Tree.parse(a, bytes, version, options.framing);
+    defer tree.deinit(a);
+    const paras = try paragraphs.inspect(tree, .{ .char_shapes = counts.count(.char_shape), .para_shapes = counts.count(.para_shape), .styles = counts.count(.style) });
+    const definition = try definitions.inspect(tree, version, counts.count(.numbering), counts.count(.border_fill));
+    var links = try Links.build(a, tree);
+    defer links.deinit(a);
+    const controls = try control_types.inspect(links.items);
+    var groups = try Groups.build(a, tree);
+    defer groups.deinit(a);
+    var lists: types.Lists = .{ .groups = groups.items.len };
+    for (groups.items) |g| {
+        lists.paragraphs += g.paragraph_count;
+        lists.intervening_records += g.intervening_records;
+    }
+    var objects: usize = 0;
+    for (tree.nodes) |node| {
+        if (node.record.value != .control_header) continue;
+        const h = node.record.value.control_header;
+        if (!object.supports(h.id)) continue;
+        _ = try object.Properties.parse(h.properties);
+        objects += 1;
+    }
+    return .{ .records = tree.nodes.len, .paragraphs = paras, .definition = definition, .control_types = controls, .lists = lists, .tables = try tables.inspect(a, tree, .{ .list_layout = options.list_layout, .zone_layout = options.zone_layout, .border_count = counts.count(.border_fill) }), .parameters = try sources.inspectBody(a, tree, types.parameterOptions(options, counts.bin_data_count)), .object_properties = objects };
+}

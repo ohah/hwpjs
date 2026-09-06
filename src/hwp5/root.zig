@@ -21,4 +21,5 @@ pub const table_grid = @import("body/table_grid.zig");
 pub const parameters = @import("parameters/parser.zig");
 pub const parameter_sources = @import("parameters/sources.zig");
 pub const parameter_references = @import("parameters/references.zig");
+pub const document_validation = @import("document/validation.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");

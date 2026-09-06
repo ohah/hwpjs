@@ -702,3 +702,47 @@ while (try it.next()) |record| {
 이 단계는 파라미터 관련 검증 경로 연결입니다. 전체 문서 검사 진입점, 구역 개수/전역 참조 조립, ControlData 소유권과 컨트롤별 의미, 미지 꼬리 및 나머지 본문 컨트롤은 아직 남아 있습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 113/113, Node 47/47, HWP5 WASM 92,098회 검사(모드별). 기존 CFB 비교·12,000회 변이, Zig/JS 포맷·diff 검사도 통과했습니다. 실제 opaque 셀 확장 507개는 검증 완료로 바꾸지 않고 남겼습니다.
+
+## 압축 해제된 문서 검증 진입점
+
+2026-09-06. `hwp5.document_validation.inspectDecoded(allocator, input, options)`를 추가했습니다. 입력은 256바이트 FileHeader, **이미 압축 해제된** DocInfo, `{index: u16, bytes}` 구역 배열입니다. 원본 헤더의 compressed 비트가 있어도 다시 압축 해제하지 않습니다. 암호화·배포용·DRM 헤더는 기존 지원 정책으로 거부합니다.
+
+공식 revision 1.3 PDF의 3.2.3(BodyText/Section 번호와 문서 속성 구역 수), 4.2.1 표 14를 로컬 원문과 대조했습니다. 표 14는 첫 u16이 구역 수이며 전체 기본 길이는 26바이트입니다. 로컬 요약의 ‘문서 내 각종 시작번호에 대한 정보’는 별도 u16 필드가 아니라 그룹 설명이므로 새로운 필드로 추가하지 않았습니다.
+
+- `document/types.zig`: 입력·명시적 배치·한도·보고서와 소유권 계약.
+- `document/docinfo.zig`: 문서 속성 정확히 하나, 주요 리소스 개수/활성 참조, 파라미터 소스 검사 연결.
+- `document/section.zig`: Tree 한 번 생성 후 문단·구역 정의·컨트롤 링크/종류·리스트·개체 공통 속성·표 격자·파라미터 검사 연결. DocInfo에서 확인한 리소스 개수를 사용합니다.
+- `document/validation.zig`: 헤더 지원 정책, 선언/실제 구역 수 대조, 인덱스 중복·범위 검사, 전역 한도와 보고서 수명. 입력 배열 순서와 무관하게 보고서는 0부터 구역 인덱스 순서입니다.
+
+기본 한도는 구역 4,096개, 헤더+decoded DocInfo+모든 구역 바이트 합 64 MiB, 물리 레코드 합 1,000,000개입니다. 레코드 합은 검사기 반복 순회 횟수가 아니라 실제 입력 레코드를 한 번씩 셉니다. 스트림별 framing 한도도 함께 적용합니다. ParameterSet 노드/깊이 한도는 각 payload에 적용되는 별도 제한입니다. 총 입력 바이트 한도는 최대 힙 사용량 보장을 뜻하지 않습니다.
+
+선언된 구역 수와 supplied 배열 길이를 대조한 뒤 실제 배열 길이만큼 인덱스 맵을 할당합니다. 개수 일치+범위 내 유일 인덱스로 구역 누락도 거부합니다. 선언과 입력 모두 0인 경우는 허용하지만 이것이 실제 빈 HWP 파일의 완전한 유효성 증명은 아닙니다. CFB 저장소/필수 스트림 존재 여부는 이 함수가 검사하지 않습니다.
+
+```zig
+var report = try hwp5.document_validation.inspectDecoded(allocator, .{
+    .header = header_bytes,
+    .doc_info = decoded_doc_info,
+    .sections = decoded_sections,
+}, .{
+    .list_layout = .observed8,
+    .zone_layout = .observed_row_first,
+    .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty },
+});
+defer report.deinit(allocator);
+// report.doc_info의 borrowed 속성/매핑을 사용하는 동안 decoded_doc_info 유지.
+// report.sections[i]는 구역 i의 진단이며 보류/미지 항목을 포함할 수 있음.
+```
+
+Report는 구역 보고서 배열만 소유합니다. 헤더는 값 복사, DocInfo의 extra/매핑 raw는 입력을 빌리며, 구역 보고서는 임시 Tree 인덱스나 해제된 payload 포인터를 포함하지 않습니다. 실패 시 부분 보고서는 반환하지 않고 모든 임시 할당을 정리합니다.
+
+### 구현 후 적대적 검증
+
+1. **조립/SSOT**: 45개 실제 지원 파일·47개 구역의 통합 보고서를 개별 검사기 결과와 모든 필드 대조했습니다. 역순 구역 입력도 정규 인덱스 결과와 같습니다. 이 비교는 검사기 연결 일치 검증이지 한컴 프로그램과 독립적으로 의미가 100% 같다는 증명은 아닙니다. 실제 합계는 헤더 포함 482,195바이트, DocInfo+Section 10,425레코드입니다.
+2. **잘못된 선언/입력**: 45개 파일 각각에서 구역 수 불일치·중복·범위 밖 ID, 문서 속성 누락/중복/잘못된 level, 잘림·테스트 bridge의 trailing 입력, 미지원 헤더를 거부했습니다. DocInfo level 검사는 이미 reader가 소유하므로 새 코드의 중복 검사를 제거했습니다.
+3. **전역 경계/후반 실패**: 실제 각 파일의 정확한 바이트/레코드 한도에서는 성공, 각각 한 단계 작은 한도에서는 실패합니다. 첫 구역 성공 후 두 번째 구역 누락·잘못된 문단 참조·구역 한도 초과, 추가 DocData의 잘못된 BinData 참조 및 미지 타입 뒤 잘린 payload도 검사했습니다. 오류를 보류로 바꾸지 않습니다.
+4. **명세 누락 재현/수정**: 정상 구역 앞에 빈 루트 문단을 추가하면 구역 정의가 두 번째 문단으로 밀려도 이전 WASM은 성공했습니다(`Missing expected exception`으로 회귀 테스트 실패 재현). 공식 3.2.3의 첫 문단 조건을 기존 `body/section_validation.zig`에 추가해 `MisplacedSectionDefinition`으로 거부합니다. 반대로 첫 문단 앞의 미지 레코드는 문단으로 오인하지 않습니다. 새 문서 계층에 같은 규칙을 복제하지 않았습니다.
+5. **수명/할당/회복**: 네이티브에서 정상 두 구역 조립과 후반 구역 실패의 모든 할당 실패 지점을 주입했습니다. DocInfo borrowed 꼬리의 수명, 빈 구역 선언, 소스가 없어도 잘못된 옵션 거부를 확인했습니다. 45개 파일의 명시적 오류 1,215건은 각각 정상 문서를 재호출해 회복을 확인했습니다. opaque/unsupported 진단은 보고서에 남습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 117/117, Node 47/47, HWP5 WASM 95,305회 검사(모드별), CFB 60컨테이너/483스트림/5,496검색 비교 및 12,000회 변이(trap 0). 정상 파일 대조에 더해 오류/후속 정상 호출을 수행한 수치이며, 테스트 수가 포맷 지원률을 뜻하지 않습니다.
+
+**남은 범위**: CFB에서 정규 경로로 필수 스트림/구역을 수집하고 압축을 해제하는 파일 단위 진입점, BinData 실물 연결, 번호 ID 0/fallback, ControlData 소유권·개별 컨트롤 의미, 미지 DocInfo/셀·캡션 꼬리, 나머지 도형/필드/HWPX/공개 JS API는 아직 남아 있습니다. 기존 opaque 셀 확장 507개와 각 검사기의 pending/unknown은 다른 검사기의 성공 수로 상쇄하지 않았습니다. 전체 문서 모델·렌더링·편집·저장 완료가 아닙니다.

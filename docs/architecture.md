@@ -46,9 +46,13 @@ CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계�
 
 태그 dispatch는 용지 73·각주/미주 모양 74·쪽 테두리 75도 포함합니다. `section_def.zig`·`page_def.zig`·`note_shape.zig`·`page_border.zig`는 각 payload 배치를 소유하고 `section_validation.zig`는 트리 기반 구역 소유권/개수/참조를 검증합니다. 구역 정의 본체와 하위 레코드를 섞지 않습니다. 각주 구분선 길이는 관측 i32 배치를 기본으로 하며 spec26은 명시적으로만 선택합니다. 주석 컨트롤 연결 및 번호 ID 0은 아직 남아 있습니다.
 
+`document/validation.zig`의 `inspectDecoded`는 헤더와 압축 해제된 DocInfo·인덱스별 구역을 받아 기존 검증기를 연결합니다. `docinfo.zig`가 확인한 리소스 개수를 `section.zig`의 문단·구역 정의·표·파라미터 참조에 전달하며 호출자가 임의 리소스 개수를 주입하지 않습니다. 구역 수/인덱스/전역 입력 한도만 새 조립 계층이 소유합니다. 구역 정의가 첫 루트 문단에 있어야 하는 규칙은 기존 section_validation에 둡니다. 파일 검색/압축 해제/BinData 스트림 조립 및 미지원 기능 검증은 이 API의 범위가 아닙니다.
+
+`document/types.zig`의 Report는 인덱스 순서의 구역 보고서 배열을 소유하며 deinit으로 해제합니다. DocInfo 속성 extra와 ID 매핑 raw는 입력 DocInfo를 빌리므로 해당 입력의 수명을 유지해야 합니다. 임시 Tree/링크/리스트/파라미터 노드는 호출 안에서 해제하며 부분 실패에는 보고서를 반환하지 않습니다. 개별 검사기의 pending/unknown/opaque 수치를 다른 축의 성공 개수로 상쇄하지 않습니다.
+
 HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.
 
-DocInfo 리소스는 BinData·글꼴·탭·번호·글머리표·스타일·테두리/배경·글자 모양·문단 모양까지 해석합니다. `border_fill.zig`는 선 배열, `fill.zig`는 채우기 조합, `picture_info.zig`는 이미지 속성 공통 배치를 소유합니다. 문단 모양의 구/신 줄 간격을 임의로 하나로 합치지 않습니다. `resources.zig`는 주요 리소스 개수, `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 진단을 분리합니다. 본문 구역/외부 스트림 연결 및 미지원 리소스의 참조는 후속 단계입니다.
+DocInfo 리소스는 BinData·글꼴·탭·번호·글머리표·스타일·테두리/배경·글자 모양·문단 모양까지 해석합니다. `border_fill.zig`는 선 배열, `fill.zig`는 채우기 조합, `picture_info.zig`는 이미지 속성 공통 배치를 소유합니다. 문단 모양의 구/신 줄 간격을 임의로 하나로 합치지 않습니다. `resources.zig`는 주요 리소스 개수, `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 진단을 분리합니다. 알려진 본문 참조는 decoded 문서 진입점에 연결했으며, 외부 스트림 연결·구역 번호 fallback 및 미지원 리소스의 참조는 후속 단계입니다.
 
 저장은 문서 모델 → HWP 레코드 → 압축된 스트림 목록 → 새 CFB 생성 순서로 구현합니다. 기존 파일의 섹터를 제자리 수정하는 기능은 초기 범위에 포함하지 않습니다.
 

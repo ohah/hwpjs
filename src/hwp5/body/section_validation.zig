@@ -6,8 +6,10 @@ pub const Report = struct { definitions: usize = 0, pages: usize = 0, borders: u
 pub fn inspect(tree: Tree, version: Version, numbering_count: usize, border_count: usize) !Report {
     var report: Report = .{};
     var section: ?usize = null;
+    var first_paragraph: ?usize = null;
     for (tree.nodes, 0..) |node, index| {
         const v = node.record.value;
+        if (v == .header and node.parent == null and first_paragraph == null) first_paragraph = index;
         if (v == .control_header and v.control_header.id == body.column_def.control_id) {
             const parent = node.parent orelse return error.OrphanColumnDefinition;
             if (tree.nodes[parent].record.value != .header) return error.OrphanColumnDefinition;
@@ -18,6 +20,7 @@ pub fn inspect(tree: Tree, version: Version, numbering_count: usize, border_coun
         if (section != null) return error.DuplicateSectionDefinition;
         const parent = node.parent orelse return error.OrphanSectionDefinition;
         if (tree.nodes[parent].record.value != .header or tree.nodes[parent].parent != null) return error.OrphanSectionDefinition;
+        if (parent != first_paragraph) return error.MisplacedSectionDefinition;
         const d = try body.section_def.Definition.parse(v.control_header.properties, version);
         if (d.numbering_id == 0) {
             report.numbering_deferred += 1;

@@ -1,0 +1,49 @@
+const std = @import("std");
+pub const Header = @import("../file_header.zig").Header;
+const resources = @import("../docinfo/resources.zig");
+const sources = @import("../parameters/sources.zig");
+pub const Section = struct { index: u16, bytes: []const u8 };
+pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
+pub const Options = struct {
+    list_layout: @import("../body/list_header.zig").Layout,
+    zone_layout: @import("../body/table_zone.zig").Layout,
+    parameters: @import("../parameters/types.zig").Options,
+    framing: @import("../record.zig").Options = .{},
+    max_sections: usize = 4096,
+    max_total_bytes: usize = 64 * 1024 * 1024,
+    max_total_records: usize = 1000000,
+};
+pub fn parameterOptions(options: Options, count: usize) sources.Options {
+    return .{ .parameters = options.parameters, .list_layout = options.list_layout, .bin_data_count = count, .framing = options.framing };
+}
+pub const DocInfo = struct {
+    properties: @import("../docinfo/properties.zig").Properties,
+    resources: resources.Report,
+    references: @import("../docinfo/references.zig").Report,
+    parameters: sources.Report,
+    records: usize,
+};
+pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
+pub const SectionReport = struct {
+    records: usize,
+    paragraphs: @import("../body/paragraphs.zig").Report,
+    definition: @import("../body/section_validation.zig").Report,
+    control_types: @import("../body/control_type_validation.zig").Report,
+    lists: Lists,
+    tables: @import("../body/table_validation.zig").Report,
+    parameters: sources.Report,
+    object_properties: usize,
+};
+/// All registered checks passed, NOT proof of full HWP support.
+/// Owns sections only; DocInfo property/mapping slices still borrow input.doc_info.
+pub const Report = struct {
+    header: Header,
+    doc_info: DocInfo,
+    sections: []SectionReport,
+    total_bytes: usize,
+    total_records: usize,
+    pub fn deinit(self: *Report, a: std.mem.Allocator) void {
+        a.free(self.sections);
+        self.* = undefined;
+    }
+};

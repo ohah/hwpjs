@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { documentActual, documentEdges } from "./documents.mjs";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
@@ -292,6 +293,8 @@ let linkedControls = 0;
 let pairedColumns = 0;
 const listReport = [0, 0, 0];
 const typeReport = [0, 0];
+const documentReport = [0, 0, 0, 0];
+const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
     cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
@@ -311,6 +314,7 @@ try {
     const docPlain =
       hdr.readUInt32LE(36) & 1 ? inflateRawSync(docBytes) : docBytes;
     const shapeCount = formattingCounts(docPlain).charShape;
+    const decodedSections = [];
     for (const entry of cfb.document().nodes) {
       if (
         entry.kind !== 2 ||
@@ -339,6 +343,10 @@ try {
         },
       );
       if (/^Section\d+$/.test(entry.name)) {
+        decodedSections.push({
+          index: Number(entry.name.slice(7)),
+          bytes: plain,
+        });
         const rawCells = tableCellLists(plain);
         for (const raw of rawCells) {
           const tail = raw.length - 34;
@@ -435,11 +443,24 @@ try {
       records += framed.length / 20;
       totalBytes += plain.length;
     }
+    documentActual(call, hdr, docPlain, decodedSections).forEach(
+      (n, i) => (documentReport[i] += n),
+    );
+    const documentEdgesResult = documentEdges(
+      call,
+      hdr,
+      docPlain,
+      decodedSections,
+    );
+    documentEdgeResults.files++;
+    documentEdgeResults.rejected += documentEdgesResult.rejected;
+    documentEdgeResults.recoveries += documentEdgesResult.recoveries;
   }
 } finally {
   cfb.close();
 }
 assert.equal(files, 48);
+assert.deepEqual(documentReport, [45, 47, 482195, 10425]);
 assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 134]);
 assert.deepEqual(sectionReport, [47, 47, 141, 1, 94, 68]);
 assert.ok(notePairResult);
@@ -581,6 +602,8 @@ console.log(
       parameterReport,
       parameterSourceEdgeResults,
       parameterSourceReport,
+      documentReport,
+      documentEdgeResults,
       tableReport,
       tableZonePairResult,
       checks,
