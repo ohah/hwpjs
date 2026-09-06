@@ -1,0 +1,34 @@
+const std = @import("std");
+const t = std.testing;
+const eq = @import("equation.zig");
+test "equation observed layouts preserve signed baseline, raw strings and absent font" {
+    var raw = [_]u8{0} ** 25;
+    std.mem.writeInt(u32, raw[0..4], 0xffffffff, .little);
+    std.mem.writeInt(u16, raw[4..6], 1, .little);
+    raw[7] = 0xd8;
+    std.mem.writeInt(u32, raw[8..12], 0xffffffff, .little);
+    std.mem.writeInt(u32, raw[12..16], 0x80000000, .little);
+    std.mem.writeInt(i16, raw[16..18], -32768, .little);
+    std.mem.writeInt(u16, raw[18..20], 65535, .little);
+    raw[24] = 9;
+    const p = try eq.Properties.parse(&raw, .with_font);
+    try t.expect(p.lineMode());
+    try t.expectEqual(0xffffffff, p.attributes);
+    try t.expectEqual(0xffffffff, p.font_size);
+    try t.expectEqual(0x80000000, p.color);
+    try t.expectEqual(-32768, p.baseline);
+    try t.expectEqual(65535, p.unknown);
+    try t.expectEqualSlices(u8, &.{ 0, 0xd8 }, p.script);
+    try t.expectEqual(0, p.font_name.?.len);
+    try t.expectEqualSlices(u8, &.{9}, p.extra);
+    const old = try eq.Properties.parse(&raw, .version_only);
+    try t.expectEqual(null, old.font_name);
+    try t.expectEqualSlices(u8, raw[22..], old.extra);
+    try t.expect(p.script.ptr == raw[6..].ptr);
+    std.mem.writeInt(u32, raw[0..4], 0xfffffffe, .little);
+    try t.expect(!(try eq.Properties.parse(&raw, .with_font)).lineMode());
+    for (0..24) |n| try t.expectError(error.UnexpectedEnd, eq.Properties.parse(raw[0..n], .with_font));
+    for (0..22) |n| try t.expectError(error.UnexpectedEnd, eq.Properties.parse(raw[0..n], .version_only));
+    std.mem.writeInt(u16, raw[20..22], 65535, .little);
+    try t.expectError(error.UnexpectedEnd, eq.Properties.parse(&raw, .with_font));
+}

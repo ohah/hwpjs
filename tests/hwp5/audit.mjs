@@ -30,6 +30,7 @@ import { hiddenEdges } from "./hidden-comment.mjs";
 import { hiddenReference } from "./hidden-comment-reference.mjs";
 import { noteControlEdges, noteControlReference } from "./note-control.mjs";
 import { noteValidationEdges } from "./note-validation.mjs";
+import { equationEdges, equationReference } from "./equation.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -349,6 +350,7 @@ const rubyEdgeResults = rubyEdges(call);
 const hiddenEdgeResults = hiddenEdges(call);
 const noteControlEdgeResults = noteControlEdges(call);
 const noteValidationEdgeResults = noteValidationEdges(call);
+const equationEdgeResults = equationEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -367,6 +369,7 @@ const indexMarkReferenceResults = indexMarkReference(call, cfb);
 const bookmarkReferenceResults = bookmarkReference(call, cfb);
 const hiddenReferenceResults = hiddenReference(call, cfb);
 const noteControlReferenceResults = noteControlReference(call, cfb);
+const equationReferenceResults = equationReference(call, cfb);
 const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
@@ -773,6 +776,8 @@ console.log(
       hiddenReferenceResults,
       noteControlEdgeResults,
       noteValidationEdgeResults,
+      equationEdgeResults,
+      equationReferenceResults,
       noteControlReferenceResults,
       rubyDocumentResults,
       fieldDocumentResults,

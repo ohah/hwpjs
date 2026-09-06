@@ -1264,3 +1264,23 @@ rhwp parser/control.rs 및 serializer/control.rs는 number(u32), 앞/뒤 장식(
 이전 단계의 문서 연결/직접 리스트 구조 보류는 해소했습니다. 버전별 배치 전환 규칙, 리스트 확장 8바이트 의미, 마지막 DWORD의 실제 유일성/용도, 자동 번호와의 의미 연결·레이아웃·편집·저장은 남았습니다. 검사 통과를 이 범위의 완료로 계상하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 174/174, Node 47/47, HWP5 WASM 168,929회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
+
+## 수식 EQEDIT의 관측 payload 배치 (2026-09-06)
+
+명세 스킬 4.3.9.3 및 공식 PDF 표 104/105를 대조했습니다. eqed 컨트롤의 개체 공통 속성과 자식 EQEDIT(tag 88)는 별개이며 공통 속성을 EQEDIT 시작에서 다시 읽지 않습니다. 표 105는 뒤 두 문자열에 같은 len을 표기하지만 실제 저장은 각각 u16 길이를 갖습니다. 또한 baseline 뒤의 u16은 표에 없습니다. rhwp parser/control.rs와 serializer/control.rs의 관측 처리 및 실제 원문으로 이 차이를 확인했습니다.
+
+`equation.Properties`는 attributes(u32), counted script, font_size(u32), color(u32), baseline(i16), unknown(u16), counted version_info, 선택 counted font_name, extra를 보존합니다. Layout.version_only/with_font는 호출자가 명시하며 버전/길이로 fallback하지 않습니다. version_only의 font_name은 null이고 with_font의 빈 문자열과 다릅니다. 첫 비트만 lineMode view로 해석하고 나머지 원시 속성을 마스킹하지 않습니다. unknown이 0이어야 한다고 강제하지 않습니다. 최소 길이는 문자열 내용 제외 각각 20/22바이트이며 공식 표의 총합을 그대로 메모리 크기로 사용하지 않습니다.
+
+문자열 경계는 기존 utf16_string, 정수 읽기는 binary.Reader가 소유합니다. 수식 스크립트를 실행하거나 Unicode를 치환하지 않으며 raw 슬라이스는 입력을 빌립니다. rhwp의 잘림 시 기본값 채움은 채택하지 않고 필수 필드 잘림을 오류로 반환합니다.
+
+### 구현 후 적대적 검증
+
+1. signed baseline 최솟값, 최대 크기/속성, COLORREF 상위 비트, 미지 u16 최댓값, lineMode 양쪽 값과 borrowed 주소를 네이티브에서 검사했습니다. 고립 서로게이트·NUL·비문자 값은 원문 그대로 보존합니다.
+2. 각 배치의 모든 필수 prefix 잘림과 거대한 문자열 선언을 거부했습니다. font 부재와 빈 font를 구분하고 version_only에서 후속 바이트는 extra로 보존합니다.
+3. WASM에서 세 문자열을 독립적으로 최대 65,535 코드 유닛까지 늘려 검사했습니다. 각 스칼라 바이트 위치를 독립 변이해 필드 교환·폭 축소·부호 손실을 검출하고 원문과 바이트 대조합니다.
+4. 실제 atop-equation-01.hwp(5.0.3.0, 3개)는 version_only, equation-lim.hwp(5.1.1.0, 1개)와 math-001.hwp(5.1.0.1, 44개)는 with_font입니다. strict CFB로 Section0을 추출하고 Node/코어 압축 해제를 대조한 뒤 모든 EQEDIT payload를 typed 필드로 재구성해 원문과 비교했습니다. 이 세 표본만으로 포맷 전환 버전을 일반화하지 않습니다.
+5. 실제 48개 payload의 각 바이트 길이 0부터 마지막 필수 바이트 직전까지 모두 잘라 거부를 확인하고 정상 재호출했습니다. version_only 원본 3개를 with_font로 읽으면 오류임도 검사합니다. 외부 표본이 없으면 skipped이고 원본 파일은 변경하지 않습니다.
+
+이번 단계는 payload 파서와 전용 WASM 검사입니다. EQEDIT의 부모/중복/필수 존재 규칙, 문서 검사기 연결, 수식 스크립트 문법·렌더링·편집/저장은 남았습니다. 실제 payload 대조를 해당 파일 전체 문서 검증 완료로 계상하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 175/175, Node 47/47, HWP5 WASM 174,134회 검사 통과(참조 표본 존재). 수식 합성 성공 41건·거부 60건, 실제 payload 잘림 거부 4,948건입니다. CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
