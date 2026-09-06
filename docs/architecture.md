@@ -74,7 +74,7 @@ DocInfo `compatible_document.zig`와 `layout_compatibility.zig`는 각각 표 54
 
 요약 파서는 디렉터리 확인 후 PID1을 먼저 읽고 나서 값들을 해석합니다. 선택적인 code_page는 signed VT_I2의 16비트 원형을 보존하고, 문자열보다 뒤에 있다는 이유로 누락하지 않습니다. value는 VT_I2/LPSTR도 지원하며 LPSTR은 코드페이지 식별자와 원시 bytes를 함께 반환합니다. `strings.zig`에서 길이/단위/종결/패딩만 공유하고 문자를 변환하지 않습니다. CP1200 LPSTR도 바이트 길이이며 dictionary는 CP1200이면 UTF-16 유닛 길이와 항목별 패딩, 그 외에는 바이트 길이와 무패딩 항목입니다. dictionary의 Iterator는 raw 이름을 빌리고 실패 시 위치/잔여 개수를 유지합니다. inspect는 ID 범위/중복과 마지막 정렬 바이트를 확인하며 dictionary_structure를 반환합니다. 코드페이지 부재·문자 변환·이름 의미 검증은 아직 별도이며 dictionaries_deferred를 구조 검사 성공만으로 감소시키지 않습니다.
 
-HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.
+HWP5 기반의 책임 소유자·소유권·미지원 경계와 새 검증 기록은 [HWP5 모듈 계약 인덱스](hwp5-modules.md)의 해당 주제 문서에서 관리합니다. [기존 구현 기록](hwp5-foundation.md)은 과거 이력으로 보존합니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.
 
 DocInfo 리소스는 BinData·글꼴·탭·번호·글머리표·스타일·테두리/배경·글자 모양·문단 모양까지 해석합니다. `border_fill.zig`는 선 배열, `fill.zig`는 채우기 조합, `picture_info.zig`는 이미지 속성 공통 배치를 소유합니다. 문단 모양의 구/신 줄 간격을 임의로 하나로 합치지 않습니다. `resources.zig`는 주요 리소스 개수, `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 진단을 분리합니다. 알려진 본문 참조는 decoded 문서 진입점에 연결했으며, 외부 스트림 연결·구역 번호 fallback 및 미지원 리소스의 참조는 후속 단계입니다.
 
