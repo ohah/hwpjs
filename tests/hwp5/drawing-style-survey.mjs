@@ -15,6 +15,7 @@ import { polygonActual } from "./shape-polygon.mjs";
 import { polygonOwnerActual } from "./polygon-validation.mjs";
 import { curveActual } from "./shape-curve.mjs";
 import { curveOwnerActual } from "./curve-validation.mjs";
+import { pictureOwnerActual } from "./picture-validation.mjs";
 import { pictureActual, pictureRun } from "./shape-picture.mjs";
 import { colorActual } from "./picture-color.mjs";
 import { effectsActual } from "./picture-effects.mjs";
@@ -80,6 +81,7 @@ export function drawingStyleSurvey(call, cfb) {
       arcOwnerActual(call,header.readUInt32LE(32),bytes);
       polygonOwnerActual(call,header.readUInt32LE(32),bytes);
       curveOwnerActual(call,header.readUInt32LE(32),bytes);
+      pictureOwnerActual(call,header.readUInt32LE(32),bytes);
       const stack = [];
       for (const record of records) {
         if(record.tag===85){

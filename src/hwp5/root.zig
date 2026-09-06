@@ -64,6 +64,7 @@ pub const picture_color = @import("body/picture_color.zig");
 pub const picture_effects = @import("body/picture_effects.zig");
 pub const picture_additional = @import("body/picture_additional.zig");
 pub const picture_tail = @import("body/picture_tail.zig");
+pub const picture_validation = @import("body/picture_validation.zig");
 pub const curve_validation = @import("body/curve_validation.zig");
 pub const polygon_validation = @import("body/polygon_validation.zig");
 pub const arc_validation = @import("body/arc_validation.zig");

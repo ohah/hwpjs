@@ -4,6 +4,11 @@ const int = @import("resource-probe.zig").int;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return inspect(a, bytes, limit, false, .{});
 }
+pub fn pictured(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const picture = try @import("document-probe.zig").readPicture(&r);
+    return inspect(a, bytes[r.offset..], limit, false, .{ .picture = picture });
+}
 pub fn specifiedStorage(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return inspect(a, bytes, limit, true, .{});
 }
@@ -35,6 +40,7 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: boo
         .arc_layout = selection.arc,
         .polygon_layout = selection.polygon,
         .curve_layout = selection.curve,
+        .picture = selection.picture,
         .list_layout = .observed8,
         .zone_layout = .observed_row_first,
         .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty },

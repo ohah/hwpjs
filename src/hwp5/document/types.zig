@@ -6,6 +6,7 @@ pub const DrawingStyleOptions = @import("../body/drawing_style_validation.zig").
 pub const Section = struct { index: u16, bytes: []const u8 };
 pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
 pub const Options = struct {
+    picture: @import("../body/picture_validation.zig").Options = .{},
     curve_layout: @import("../body/shape_curve.zig").Layout = .observed_i32_points,
     polygon_layout: @import("../body/shape_polygon.zig").Layout = .observed_i32_points,
     arc_layout: ?@import("../body/shape_arc.zig").Layout = null,
@@ -24,6 +25,7 @@ pub const Options = struct {
     max_total_bytes: usize = 64 * 1024 * 1024,
     max_total_records: usize = 1000000,
     pub fn validate(self: Options) !void {
+        try self.picture.validate();
         try self.parameters.validate();
         if (self.max_sections == 0 or self.max_total_bytes == 0 or self.max_total_records == 0) return error.InvalidDocumentLimit;
     }
@@ -40,6 +42,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    pictures: @import("../body/picture_validation.zig").Report = .{},
     curves: @import("../body/curve_validation.zig").Report = .{},
     polygons: @import("../body/polygon_validation.zig").Report = .{},
     arcs: @import("../body/arc_validation.zig").Report = .{},

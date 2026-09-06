@@ -50,6 +50,7 @@ test {
     _ = @import("hwp5/body/picture_color_tests.zig");
     _ = @import("hwp5/body/picture_effects_tests.zig");
     _ = @import("hwp5/body/picture_additional_tests.zig");
+    _ = @import("hwp5/body/picture_validation_tests.zig");
     _ = @import("hwp5/body/curve_validation_tests.zig");
     _ = @import("hwp5/body/polygon_validation_tests.zig");
     _ = @import("hwp5/body/arc_validation_tests.zig");

@@ -60,6 +60,9 @@ import { picturePair } from "./picture-pair.mjs";
 import { colorEdges } from "./picture-color.mjs";
 import { effectsEdges } from "./picture-effects.mjs";
 import { additionalEdges } from "./picture-additional.mjs";
+import { pictureOwnerEdges } from "./picture-validation.mjs";
+import { pictureDocumentReference } from "./picture-document.mjs";
+import { pictureSelectedDocument } from "./picture-selected-document.mjs";
 import { curveOwnerEdges } from "./curve-validation.mjs";
 import { curveDocumentReference } from "./curve-document.mjs";
 import { curveLayoutDocument } from "./curve-layout-document.mjs";
@@ -414,6 +417,9 @@ const pictureEdgeResults = pictureEdges(call);
 const pictureColorEdgeResults = colorEdges(call);
 const pictureEffectsEdgeResults = effectsEdges(call);
 const pictureAdditionalEdgeResults = additionalEdges(call);
+const pictureOwnerEdgeResults = pictureOwnerEdges(call);
+const pictureDocumentReferenceResults = pictureDocumentReference(call,cfb);
+const pictureSelectedDocumentResults = pictureSelectedDocument(call,cfb);
 const picturePairResults = picturePair(call,cfb);
 const curveOwnerEdgeResults = curveOwnerEdges(call);
 const curveDocumentReferenceResults = curveDocumentReference(call,cfb);
@@ -886,6 +892,9 @@ console.log(
       pictureColorEdgeResults,
       pictureEffectsEdgeResults,
       pictureAdditionalEdgeResults,
+      pictureOwnerEdgeResults,
+      pictureDocumentReferenceResults,
+      pictureSelectedDocumentResults,
       picturePairResults,
       curveOwnerEdgeResults,
       curveDocumentReferenceResults,

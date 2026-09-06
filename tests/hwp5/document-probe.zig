@@ -3,6 +3,7 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub const Selection = struct {
+    picture: core.hwp5.picture_validation.Options = .{},
     style: ?core.hwp5.document_validation.types.DrawingStyleOptions = null,
     arc: ?core.hwp5.shape_arc.Layout = null,
     polygon: core.hwp5.shape_polygon.Layout = .observed_i32_points,
@@ -33,6 +34,21 @@ pub fn readCounted(r: *core.Reader) !core.hwp5.shape_polygon.Layout {
     const mode = try r.readInt(u8);
     if (mode > 1) return error.InvalidMode;
     return @enumFromInt(mode);
+}
+pub fn readPicture(r: *core.Reader) !core.hwp5.picture_validation.Options {
+    const mode = try r.readInt(u8);
+    if (mode > 11) return error.InvalidMode;
+    const stage = mode % 6;
+    return .{
+        .layout = if (mode < 6) .interleaved else .separate_axes,
+        .prefix = if (stage < 3) @enumFromInt(stage) else .with_instance78,
+        .tail = if (stage < 3) null else .{ .additional = if (stage == 3) null else @enumFromInt(stage - 4) },
+    };
+}
+pub fn pictured(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const picture = try readPicture(&r);
+    return configured(a, bytes[r.offset..], limit, .{ .picture = picture });
 }
 pub fn polygoned(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
@@ -71,6 +87,7 @@ fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: 
         .arc_layout = selection.arc,
         .polygon_layout = selection.polygon,
         .curve_layout = selection.curve,
+        .picture = selection.picture,
         .list_layout = .observed8,
         .zone_layout = .observed_row_first,
         .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty },
@@ -121,6 +138,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try fields(a, &out, s.arcs);
         try fields(a, &out, s.polygons);
         try fields(a, &out, s.curves);
+        try fields(a, &out, s.pictures);
     }
     return out.toOwnedSlice(a);
 }

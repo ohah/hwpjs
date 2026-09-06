@@ -1946,3 +1946,25 @@ picture_effect_fields는 이름 있는 고정 필드(그림자 44, 네온 8, 반
 현재는 추가 속성과 효과 뒤 조립 코어입니다. 그림 소유권·BinData 참조·문서 검사 연결, 미확정 색상 타입과 실제 조판 검증은 계속 남아 있습니다. 원본 파일은 수정하지 않았습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 217/217, Node 47/47, HWP5 WASM 1,210,974회 검사입니다. 추가 속성/조립 합성 성공 138/거부 4,937, 실제 Additional 필수 잘림 28,318, 30개 짝 필드 대조를 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-picture-additional-{debug,safe,fast}.log`입니다.
+
+## 그림 직접 소유권과 선택 확장의 문서 연결
+
+2026-09-07. 실제 레코드의 level 기반 직접 부모를 독립 JS로 조사했습니다. 진입 가능한 그림 1,947개 모두 $pic SHAPE_COMPONENT의 직접 자식이며 해당 소유자의 누락/중복은 없었습니다. 102개 파일의 진입 실패와 4개 보안 보류는 기존 조사 목록에 남기며 정상 파일로 세지 않습니다. 로컬 요약 문서의 그림 형제 가능성만으로 임의 sibling fallback을 추가하지 않습니다.
+
+picture_validation은 기존 owned_record.componentChild, Picture.parse, Tail.read를 조립합니다. Options 기본값은 interleaved/base73/tail=null입니다. 그림의 소유권과 공통 73바이트를 항상 검사하고, 선택하지 않은 확장 바이트는 extra_bytes로 보고합니다. tail을 선택하면서 prefix가 with_instance78이 아니면 InvalidPictureOptions입니다. 이 규칙은 Options.validate에서 공유하며 문서 진입점과 직접 검사기가 재사용합니다. 길이/버전 자동 배치 전환은 없습니다.
+
+구역 보고서는 pictures/unknown_image_effects/pending_references/parsed_tails/additional_properties/alpha_values/extra_bytes 7항목입니다. unknown_image_effects는 기본 그림 효과 코드 3 초과의 원시값 진단입니다. pending_references는 모든 그림의 미해결 이미지 참조 수이며 유효 ID나 스트림 해결을 의미하지 않습니다. parsed_tails가 0인 성공 보고서를 전체 확장 검증으로 해석하지 않습니다. extra_bytes는 선택한 단계 이후 남은 바이트이며 미선택/미해석 필드를 포함할 수 있습니다.
+
+테스트 WASM 모드 79는 소유권, 80/81은 문서/CFB의 명시적 그림 옵션입니다. 옵션 0~5는 interleaved의 base73/opacity74/instance78/effects/크기8/alpha9 단계, 6~11은 같은 단계의 separate_axes입니다. 구역 보고서 stride 652바이트는 공통 독립 JS schema에서 관리합니다.
+
+적대적 검증:
+
+1. 두 좌표 배치×6단계에서 직접 자식·중간 미지 레코드·다른 도형 부모·손자·형제·고아·누락·중복과 모든 필수 payload prefix 잘림을 검사합니다. 네이티브는 기본/전체 확장 선택의 정상·소유권 오류·잘림·잘못된 옵션 6경로마다 모든 할당 실패를 주입합니다.
+2. 복학원서의 그림 2개를 각각 제거/복제/공통 필드 잘림으로 변형하고 단독·문서·CFB 세 경로의 오류와 정상 회복을 검사합니다. 새로운 원본 변형 파일을 저장하지 않습니다.
+3. 투명도0-50 원본에서 6단계별 보고서·CFB 일치, 선택한 마지막 필드 누락을 검사합니다. 효과 선택 단계에는 미지 flags와 미지원 색상 타입을 넣어 오류가 세 경로에 전달됨을 확인합니다. 총 거부 76건입니다.
+4. 확장 미선택 기본 문서 경로는 확장 부분이 잘리거나 미지 flags를 가져도 공통 필드와 원문 보존 범위에서는 성공해야 하며, 이를 명시적 확장 검증 성공으로 세지 않습니다. 이런 미선택 보존 16경우와 서로 다른 unknown_image_effects 값을 가진 두 구역의 역순 정렬 6경우를 검사합니다.
+5. 전체 그림 조사에서 기본 소유권 보고서를 독립 부모 인덱스와 대조하고 앞선 실제 payload 1,947개/효과·추가 속성/짝 그림 30개 검증을 유지합니다. 보고서 필드 추가가 다른 구역 필드 위치를 바꾸므로 공통 schema와 독립 경계 검사를 함께 갱신했습니다.
+
+이번 단계는 그림 공통 필드·소유권·선택 확장의 문서 연결입니다. 이미지 BinData 참조 해결·미확정 색상 타입·조판/편집 의미와 나머지 미지원 레코드는 계속 남아 있습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 218/218, Node 47/47, HWP5 WASM 1,215,218회 검사입니다. 그림 소유권 합성 성공 1,102/거부 1,068, 기본 실제 문서 거부 21/정렬 1, 선택 확장 문서 거부 76/정렬 6/미선택 보존 16을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사를 통과했습니다. 로그는 `/tmp/hwpjs-picture-owner-{debug,safe,fast}.log`입니다.

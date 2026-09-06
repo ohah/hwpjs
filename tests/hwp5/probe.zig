@@ -140,6 +140,9 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         76 => return @import("picture-effects-probe.zig").run(a, bytes),
         77 => return @import("picture-additional-probe.zig").run(a, bytes, false),
         78 => return @import("picture-additional-probe.zig").run(a, bytes, true),
+        79 => return @import("picture-validation-probe.zig").run(a, bytes, limit),
+        80 => return @import("document-probe.zig").pictured(a, bytes, limit),
+        81 => return @import("container-probe.zig").pictured(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
