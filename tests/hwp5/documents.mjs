@@ -3,6 +3,7 @@ import { formattingCounts } from "./formatting.mjs";
 import { objectActual } from "./objects.mjs";
 import { headerFooterActual } from "./header-footer.mjs";
 import { numberControlActual } from "./number-controls.mjs";
+import { reportBytes } from "./document-report-wire.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -117,7 +118,7 @@ export function documentActual(call, h, doc, sections) {
     );
   }
   const want = Buffer.concat(expected);
-  assert.equal(want.length, 132 + sections.length * 180);
+  assert.equal(want.length, reportBytes(sections.length));
   assert.deepEqual(
     call(24, input(h, doc, sections, totalBytes), totalRecords),
     want,

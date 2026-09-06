@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
 import { decodedDocumentInput, documentRecords } from "./documents.mjs";
+import { sectionFieldOffset } from "./document-report-wire.mjs";
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -99,11 +100,8 @@ export function headerFooterDocumentEdges(call, cfb, h, doc, sections) {
         r.start + 4,
       );
       const changed = decoded(mutate(reserved));
-      const stat = 132 + s.index * 180 + 144;
-      assert.equal(
-        changed.readUInt32LE(stat + 12),
-        good.readUInt32LE(stat + 12) + 1,
-      );
+      const stat = sectionFieldOffset(s.index, "header_footer", 3);
+      assert.equal(changed.readUInt32LE(stat), good.readUInt32LE(stat) + 1);
       // Container serializes the same document prefix, including the previously unobserved report.
       assert.deepEqual(
         container(mutate(reserved)).subarray(0, changed.length),

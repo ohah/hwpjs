@@ -13,6 +13,10 @@ import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
 import { numberControlEdges } from "./number-controls.mjs";
 import { numberDocumentEdges } from "./number-control-document.mjs";
+import {
+  reportWireEdges,
+  reportOrderingEdges,
+} from "./document-report-edges.mjs";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
@@ -318,6 +322,8 @@ const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
 let numberDocumentChecks = 0;
+reportWireEdges();
+let reportOrderingChecks = 0;
 const headerFooterReport = [0, 0, 0, 0, 0];
 const headerFooterDocumentReport = { controls: 0, rejected: 0 };
 const historyActualResults = historyActual(call, cfb);
@@ -489,6 +495,12 @@ try {
       docPlain,
       decodedSections,
     );
+    reportOrderingChecks += reportOrderingEdges(
+      call,
+      hdr,
+      docPlain,
+      decodedSections,
+    );
     headerFooterDocumentReport.controls += hfDoc.controls;
     headerFooterDocumentReport.rejected += hfDoc.rejected;
     optionalSurvey(cfb).forEach((n, i) => (optionalStreamObservations[i] += n));
@@ -520,6 +532,7 @@ assert.equal(files, 48);
 assert.deepEqual(headerFooterReport, [3, 3, 3, 0, 60]);
 assert.deepEqual(headerFooterDocumentReport, { controls: 3, rejected: 18 });
 assert.equal(numberDocumentChecks, 32);
+assert.equal(reportOrderingChecks, 9);
 assert.deepEqual(optionalStreamObservations, [45, 23580, 45, 45, 1, 0]);
 assert.deepEqual(documentReport, [45, 47, 482195, 10425]);
 assert.deepEqual(
@@ -681,6 +694,7 @@ console.log(
       headerFooterEdgeResults,
       numberControlEdgeResults,
       numberDocumentChecks,
+      reportOrderingChecks,
       headerFooterReport,
       headerFooterDocumentReport,
       historyActualResults,
