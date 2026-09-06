@@ -33,6 +33,10 @@ import { cellPair, cellEdges } from "./cell-extensions.mjs";
 import { gridEdges } from "./grid.mjs";
 import { parameterActual, parameterEdges } from "./parameters.mjs";
 import {
+  parameterSourceActual,
+  parameterSourceEdges,
+} from "./parameter-sources.mjs";
+import {
   formattingEdges,
   formattingCounts,
   formattingMutations,
@@ -125,6 +129,8 @@ const tableEdgeResults = tableEdges(call);
 const gridEdgeResults = gridEdges(call);
 const cellEdgeResults = cellEdges(call);
 const parameterEdgeResults = parameterEdges(call);
+const parameterSourceEdgeResults = parameterSourceEdges(call);
+const parameterSourceReport = Array(13).fill(0);
 const parameterReport = [0, 0, 0, 0, 0, 0, 0, 0];
 const cellPairResults = [0, 0, 0, 0, 0];
 let cellPairs = 0;
@@ -319,6 +325,14 @@ try {
         `${name}/${entry.name}`,
       );
       const framed = call(2, plain);
+      parameterSourceActual(
+        call,
+        hdr.readUInt32LE(32),
+        docPlain,
+        entry.name === "DocInfo" ? null : plain,
+      ).forEach((n, i) => {
+        parameterSourceReport[i] += n;
+      });
       parameterActual(call, plain, entry.name === "DocInfo" ? 27 : 87).forEach(
         (n, i) => {
           parameterReport[i] += n;
@@ -534,6 +548,10 @@ assert.equal(cellPairs, 11);
 assert.deepEqual(cellPairResults, [532, 96, 0, 0, 0]);
 assert.deepEqual(cellTails, [71, 507, 0]);
 assert.deepEqual(parameterReport, [2, 20, 4, 0, 16, 0, 0, 0]);
+assert.deepEqual(
+  parameterSourceReport,
+  [2, 0, 0, 2, 0, 0, 20, 0, 0, 0, 507, 0, 0],
+);
 assert.deepEqual(tableZonePairResult, [0, 0, 2, 0]);
 console.log(
   JSON.stringify(
@@ -561,6 +579,8 @@ console.log(
       cellTails,
       parameterEdgeResults,
       parameterReport,
+      parameterSourceEdgeResults,
+      parameterSourceReport,
       tableReport,
       tableZonePairResult,
       checks,

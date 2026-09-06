@@ -677,3 +677,28 @@ while (try it.next()) |record| {
 남은 작업은 DocData/ControlData/셀 확장의 문서 조립 호출과 참조/unknown 집계, 더 다양한 실제 파라미터 샘플, 캡션 꼬리 및 나머지 컨트롤입니다. table_validation은 아직 별도 cell_field 호출을 자동 포함하지 않습니다. 전체 문서 검증은 계속 진행 중입니다.
 
 마지막 검토에서 배열 안의 배열/서로 다른 shared ID 사례를 추가했습니다. 실제 80바이트 샘플 2개는 동일한 payload라 두 종류의 형식을 입증한 것은 아닙니다. 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 110/110, Node 47/47, HWP5 WASM 91,934회 검사(모드별). 기존 CFB 비교·12,000회 변이, Zig/JS 포맷·diff 검사도 통과했습니다.
+
+## ParameterSet 소스 연결·바이너리 참조·보류 집계
+
+2026-09-06. `parameter_sources.inspectDocInfo`는 DocData(tag 27), `inspectBody`는 ControlData(tag 87)와 표의 셀 확장을 검사하도록 연결했습니다. 본문은 검증된 Tree와 명시적인 list layout, 관측 셀 확장 prefix를 사용합니다. CFB/파일 I/O를 코어에 추가하지 않았습니다.
+
+- `parameters/references.zig`는 모든 중첩 Set/array 노드의 PIT_BINDATA를 기존 one_based 규칙으로 검사합니다. 0과 DocInfo BinData 리소스 개수 밖 ID는 InvalidResourceReference입니다. 개수는 CFB 스트림 수가 아니라 호출자가 확인한 BinData 리소스 수입니다.
+- `cell_field.fromDocument`를 분리해 기존 명시적 셀 이름 API와 소스 검사기가 같은 파싱 결과/이름 규칙을 공유합니다. 소스 검사기는 참조→이름 검사를 수행한 뒤 노드 배열을 해제합니다. 원문과 extra는 변경하지 않습니다.
+- 소스별 payload 수, parsed, unsupported 및 그 전체 바이트 수, 노드/참조 수, 이름 수, 미등록 셀 Set 수, opaque 셀 확장 수, trailing payload/바이트 수를 별도 축으로 보고합니다. 빈 이름도 존재하는 이름으로 셉니다. 이 수들을 합쳐 전체 완료 수로 해석하지 않습니다.
+- 미지 타입은 개별 길이를 알 수 없어 전체 소스를 unsupported로 남기고 다음 소스를 검사합니다. 해당 소스의 부분 노드/참조를 완료로 세지 않습니다. 잘림·음수 count·한도·OutOfMemory·잘못된 참조/셀 이름은 보류로 바꾸지 않고 오류로 전파합니다.
+- 0xff 셀은 ParameterSet/참조/이름 검사에 연결합니다. 다른 marker 또는 남은 미지 바이트는 opaque 셀 확장으로 집계합니다. 알려진 Set 뒤의 extra도 보존하고 trailing으로 남깁니다. 8바이트가 모두 0이라고 검증 완료로 지우지 않습니다.
+- 파라미터 옵션 검증을 `Options.validate`로 모아 파서와 소스 검사기가 공유합니다. payload가 없는 입력에서도 잘못된 한도 설정을 놓치지 않습니다.
+
+실제 45개 지원 파일/92개 DocInfo·Section 스트림에 검사기를 적용했습니다. `[doc=2,control=0,cell=0,parsed=2,unsupported=0,unsupported_bytes=0,nodes=20,binary_refs=0,cell_names=0,unknown_cell_sets=0,opaque_cells=507,trailing_payloads=0,trailing_bytes=0]`을 정규 audit에 고정했습니다. 실제 PIT_BINDATA/표시된 셀 이름/ControlData 사례는 여전히 없어 해당 경로는 합성 검증입니다. flat 리소스 참조 검사기의 기존 unknown 집계는 다른 검사 범위이므로 임의로 2를 빼거나 이 보고서에 합산하지 않았습니다.
+
+### 구현 후 적대적 검증
+
+1. DocData와 중첩 Set/array의 참조 ID 0·개수 초과·65535, 최대 유효 ID, 16비트 one-hot 변이를 검사했습니다. 같은 참조 검증이 셀 ParameterSet에도 적용되는지 확인했습니다.
+2. 미지 payload→정상 payload→trailing payload를 한 스트림에 넣어 보류 후 정상 검사가 계속되는지 검사했습니다. 미지 payload 뒤의 잘린/참조 오류 소스는 여전히 실패합니다. 미지 타입을 잘림/OutOfMemory와 혼동하지 않습니다.
+3. ControlData, 표시된 셀 이름, 빈 이름, 중복/잘못된 이름 타입, 다른 root Set, 0xff 뒤 누락, 미지 marker와 8바이트 꼬리를 소스 경로에서 검사했습니다. ControlData를 읽었다고 부모/컨트롤별 의미까지 검증한 것으로 간주하지 않습니다.
+4. 네이티브에서 성공·참조 실패·미지 타입 보류의 모든 할당 실패를 주입했습니다. empty 입력의 잘못된 옵션과 레코드 framing의 모든 잘림 위치도 검사했습니다. 파싱 결과를 두 번 소유하거나 재해석하지 않습니다.
+5. SSOT/책임 재검토: 소스 라우팅과 참조 규칙, 셀 이름 의미를 분리하고 기존 reference_rules·Options.validate·cell_field.fromDocument를 공유합니다. 처음 연결 과정에서 optional 결과의 오류 union 변환 문제를 컴파일러가 잡았고 명시적 try로 수정한 뒤 검증했습니다.
+
+이 단계는 파라미터 관련 검증 경로 연결입니다. 전체 문서 검사 진입점, 구역 개수/전역 참조 조립, ControlData 소유권과 컨트롤별 의미, 미지 꼬리 및 나머지 본문 컨트롤은 아직 남아 있습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 113/113, Node 47/47, HWP5 WASM 92,098회 검사(모드별). 기존 CFB 비교·12,000회 변이, Zig/JS 포맷·diff 검사도 통과했습니다. 실제 opaque 셀 확장 507개는 검증 완료로 바꾸지 않고 남겼습니다.

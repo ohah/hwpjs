@@ -7,6 +7,11 @@ pub fn inspect(a: std.mem.Allocator, extension: Extension, options: parameters.O
     if (!extension.parameterSetMarked()) return null;
     var doc = try parameters.Document.parse(a, extension.remaining, options);
     defer doc.deinit(a);
+    return try fromDocument(doc);
+}
+/// Reuse an already parsed tree; the caller retains its input bytes.
+pub fn fromDocument(doc: parameters.Document) !Result {
+    if (doc.nodes.len == 0 or doc.nodes[0].value != .set) return error.InvalidParameterRoot;
     var result: Result = .{ .recognized_set = doc.nodes[0].value.set.id == 0x021b, .field_name_utf16 = null, .parameter_nodes = doc.nodes.len, .extra = doc.extra };
     if (!result.recognized_set) return result;
     for (doc.nodes) |n| {

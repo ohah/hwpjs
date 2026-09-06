@@ -14,7 +14,7 @@ pub const Document = struct {
         self.* = undefined;
     }
     pub fn parse(a: std.mem.Allocator, bytes: []const u8, options: Options) !Document {
-        if (options.max_depth > 64 or options.max_nodes == 0) return error.InvalidParameterLimit;
+        try options.validate();
         var p: Parser = .{ .a = a, .r = .{ .bytes = bytes }, .options = options };
         errdefer p.nodes.deinit(a);
         try p.node(null, null, false, 0);

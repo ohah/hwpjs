@@ -42,6 +42,8 @@ CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계�
 
 `parameters/types.zig`는 노드/배치/제한 계약을, `parameters/parser.zig`는 prefix 파싱과 전위 순서 노드 배열 수명을 소유합니다. 문자열과 raw/extra는 입력을 빌리며 소비 길이를 반환합니다. Set ID와 item ID, 배열의 공통 ID와 wire상 ID 존재 여부를 구분합니다. 중첩은 기본 32/상한 64, 노드는 기본 100,000개로 제한합니다. 셀 이름 소비자는 root 0x021b의 직접 item 0x4000만 확인하며 임시 노드를 해제한 뒤 borrowed 이름/꼬리를 반환합니다. BinData 참조 연결과 각 레코드의 꼬리 계약은 외부 문서 조립 책임입니다.
 
+`parameter_sources.inspectDocInfo/inspectBody`는 parameter options·list layout·DocInfo BinData 리소스 개수를 받아 각 소스를 순회합니다. 파싱된 트리는 parameter_references와 cell_field.fromDocument에서 공유한 뒤 해제합니다. 미지원 타입은 전체 payload 단위로 보류하지만 그 뒤의 소스 검사는 계속합니다. 알려진 손상/참조 오류/할당 실패는 전파합니다. reported parsed는 구조 파싱 수이며 trailing/opaque/unknown 셀 Set을 완료로 치환하지 않습니다. ControlData 소유권과 컨트롤별 Set 의미, 전체 문서/CFB 조립은 별도 책임입니다.
+
 태그 dispatch는 용지 73·각주/미주 모양 74·쪽 테두리 75도 포함합니다. `section_def.zig`·`page_def.zig`·`note_shape.zig`·`page_border.zig`는 각 payload 배치를 소유하고 `section_validation.zig`는 트리 기반 구역 소유권/개수/참조를 검증합니다. 구역 정의 본체와 하위 레코드를 섞지 않습니다. 각주 구분선 길이는 관측 i32 배치를 기본으로 하며 spec26은 명시적으로만 선택합니다. 주석 컨트롤 연결 및 번호 ID 0은 아직 남아 있습니다.
 
 HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.

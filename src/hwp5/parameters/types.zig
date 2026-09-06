@@ -5,6 +5,9 @@ pub const Options = struct {
     null_layout: NullLayout,
     max_depth: u8 = 32,
     max_nodes: usize = 100000,
+    pub fn validate(self: Options) !void {
+        if (self.max_depth > 64 or self.max_nodes == 0) return error.InvalidParameterLimit;
+    }
 };
 pub const Set = struct { id: u16, count: u16, reserved: ?u16 };
 /// Observed array: signed count, shared item ID only when nonempty, then typed values.
