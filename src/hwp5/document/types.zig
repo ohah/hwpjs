@@ -2,9 +2,11 @@ const std = @import("std");
 pub const Header = @import("../file_header.zig").Header;
 const resources = @import("../docinfo/resources.zig");
 const sources = @import("../parameters/sources.zig");
+pub const DrawingStyleOptions = @import("../body/drawing_style_validation.zig").Options;
 pub const Section = struct { index: u16, bytes: []const u8 };
 pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
 pub const Options = struct {
+    drawing_style: ?DrawingStyleOptions = null,
     ole_layout: @import("../body/ole.zig").Layout = .observed26,
     equation_layout: @import("../body/equation.zig").Layout = .version_only,
     note_layout: @import("../body/note_control.zig").Layout = .observed12,
@@ -34,6 +36,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    drawing_styles: @import("../body/drawing_style_validation.zig").Report = .{},
     shapes: @import("../body/shape_validation.zig").Report = .{},
     ole: @import("../body/ole_validation.zig").Report = .{},
     equations: @import("../body/equation_validation.zig").Report = .{},

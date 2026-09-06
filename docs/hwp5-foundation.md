@@ -1529,3 +1529,23 @@ Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 186/
 적대적 검증 결과: localVersion 단독 선택 가설은 실제 표본으로 배제했습니다. 헤더 버전의 전환 가설은 표본 공백 때문에 미확정입니다. 문서 연결은 자동 버전 추정을 전제로 미루지 않고 **호출자가 명시적으로 선택한 배치 옵션을 전달하는 방식**으로 진행할 수 있습니다. 기본 정책과 미선택 진단을 분리하고, 선택된 배치에서의 잘림을 다른 배치로 자동 복구하지 않는 계약이 필요합니다.
 
 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 188/188, Node 47/47, HWP5 WASM 201,898회 검사. 새 버전별 합계/반례 assertion은 JS 검증이며 WASM 호출 수 증가로 계상하지 않습니다. 로그는 `/tmp/hwpjs-style-version-{debug,safe,fast}.log`입니다. 제품 파서 선택 정책은 이 조사 단계에서 변경하지 않았습니다.
+
+## 명시적 도형 스타일의 문서 검사 연결 (2026-09-06)
+
+document.Options.drawing_style에 선택적 `{ border, tail }` 설정을 추가했습니다. 기본 null은 배치를 추정하지 않고 unselected로 보고합니다. 선택된 경우 fill_only/alpha_shadow 및 spec11/observed13의 필수 필드를 검사하며 잘림은 오류로 전파합니다. container의 기존 document 옵션을 통해 동일한 설정을 전달할 수 있습니다.
+
+`shape_validation.inspectDetailed`는 기존 한 번의 Tree 순회와 Component 파싱 결과를 재사용해 기존 shapes 및 새 drawing_styles 보고서를 함께 반환합니다. 기존 inspect는 shapes만 반환하는 호환 경로입니다. `drawing_style_validation.zig`는 타입 선택·스타일 검사·진단 누적만 담당하며 부모 판정/기하 필드를 재파싱하지 않습니다. 실제 읽기는 기존 Style/Border/Fill/Alpha/Shadow가 계속 소유합니다.
+
+drawing_styles는 supported/unsupported/unselected/parsed/unknown/extra_bytes 여섯 필드입니다. supported = unselected + parsed + unknown이고, supported + unsupported는 구성요소 수입니다. unsupported는 그림/OLE/그룹/연결선 등 다른 꼬리 형식을 뜻합니다. parsed는 선택한 필드 배치 검사이지 이미지 참조·렌더링 검증 완료가 아닙니다. shapes.extra_bytes는 구성요소 전체 꼬리, drawing_styles.extra_bytes는 선택한 스타일에서 남은 영역이므로 두 값을 단순 합산하지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 네이티브에서 unsupported/unselected/unknown/parsed를 각각 구분하고, 선택된 스타일 파싱 실패 시 보고서가 부분 증가하지 않는지 검사했습니다. 옵션 미선택 상태의 빈 스타일을 정상 스타일로 계상하지 않습니다.
+2. 새 테스트 모드 54(명시적 decoded document)와 55(명시적 CFB)를 추가하고 옵션 모드 해석을 공유했습니다. 기존 24/25도 새 여섯 진단을 직렬화합니다. 독립 report-wire는 구역 stride 512바이트이며 기대 위치 검사를 갱신했습니다.
+3. 실제 신형 세 파일·구형 두 파일의 도형 스타일을 문서와 CFB 경로로 검사합니다. 스타일 부분만 제거한 레코드를 만들되 부모/기하/레코드 경계는 유지해, 선택된 문서 검사가 UnexpectedEnd를 내는지 확인합니다. 같은 입력의 미선택 검사는 성공하더라도 unselected로 남습니다.
+4. 실제 스타일의 원시 flags로 만든 unknown 변이를 서로 다른 두 구역에 배치했습니다. 구역 0은 unknown=0, 구역 1은 unknown=1이며 입력 순서를 뒤집어도 정규화된 보고서가 같습니다. 미지 스타일을 다른 배치로 재시도하지 않습니다.
+5. 선택 모드의 전체 문서 기대값은 기본 문서의 비스타일 필드와 독립 JS 스타일 경계 계산으로 구성합니다. CFB 결과는 decoded 문서 보고서와 나머지 컨테이너 보고서를 모두 대조합니다. 원본 파일은 수정하지 않았습니다.
+
+이미지 채우기 참조 검증, 스타일 후반부 6바이트 의미, 미지원 도형 종류별 payload, 배치 자동 선택과 조판은 남아 있습니다. 기본 null 정책을 전체 스타일 자동 검증 완료로 설명하지 않습니다.
+
+최종 실제 5파일의 스타일 56개 검사, 스타일 제거 변이 56개 거부, 구역 순서 반전 5건 통과. Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 189/189, Node 47/47, HWP5 WASM 202,112회 검사 통과. CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-style-document-{debug,safe,fast}.log`입니다.

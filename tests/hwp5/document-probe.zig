@@ -6,6 +6,19 @@ fn fields(a: std.mem.Allocator, out: *std.ArrayList(u8), value: anytype) !void {
     inline for (std.meta.fields(@TypeOf(value))) |f| try int(a, out, u32, @intCast(@field(value, f.name)));
 }
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return configured(a, bytes, limit, null);
+}
+pub fn styled(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const style = try readStyle(&r);
+    return configured(a, bytes[r.offset..], limit, style);
+}
+pub fn readStyle(r: *core.Reader) !core.hwp5.document_validation.types.DrawingStyleOptions {
+    const mode = try r.readInt(u8);
+    if (mode > 3) return error.InvalidMode;
+    return .{ .border = @enumFromInt(mode & 1), .tail = if (mode & 2 != 0) .fill_only else .alpha_shadow };
+}
+fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, style: ?core.hwp5.document_validation.types.DrawingStyleOptions) ![]u8 {
     const d = core.hwp5.document_validation;
     var r: core.Reader = .{ .bytes = bytes };
     const max_bytes = try r.readInt(u32);
@@ -23,6 +36,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     }
     if (r.offset != bytes.len) return error.TrailingDocumentInput;
     var report = try d.inspectDecoded(a, .{ .header = header, .doc_info = doc, .sections = sections }, .{
+        .drawing_style = style,
         .list_layout = .observed8,
         .zone_layout = .observed_row_first,
         .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty },
@@ -66,6 +80,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try fields(a, &out, s.equations);
         try fields(a, &out, s.ole);
         try fields(a, &out, s.shapes);
+        try fields(a, &out, s.drawing_styles);
     }
     return out.toOwnedSlice(a);
 }

@@ -41,6 +41,7 @@ import { shapeValidationEdges } from "./shape-validation.mjs";
 import { shapeBorderEdges, shapeBorderReference } from "./shape-border.mjs";
 import { drawingStyleEdges } from "./drawing-style.mjs";
 import { drawingStyleSurvey } from "./drawing-style-survey.mjs";
+import { styleDocumentReference } from "./drawing-style-document.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -393,6 +394,7 @@ const oleReferenceEvidenceResults = await oleReferenceEvidence(call, cfb);
 const shapeComponentReferenceResults = shapeComponentReference(call, cfb);
 const shapeBorderReferenceResults = shapeBorderReference(call, cfb);
 const drawingStyleSurveyResults = drawingStyleSurvey(call, cfb);
+const styleDocumentReferenceResults = styleDocumentReference(call, cfb);
 const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
@@ -810,6 +812,7 @@ console.log(
       drawingStyleEdgeResults,
       shapeBorderReferenceResults,
       drawingStyleSurveyResults,
+      styleDocumentReferenceResults,
       shapeComponentReferenceResults,
       oleReferenceResults,
       oleReferenceEvidenceResults,

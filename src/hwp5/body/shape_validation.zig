@@ -12,7 +12,13 @@ fn nonfinite(matrix: @import("rendering.zig").Matrix) usize {
     return count;
 }
 pub fn inspect(tree: Tree) !Report {
+    return (try inspectDetailed(tree, null)).shapes;
+}
+const styles = @import("drawing_style_validation.zig");
+pub const Detailed = struct { shapes: Report, styles: styles.Report };
+pub fn inspectDetailed(tree: Tree, options: ?styles.Options) !Detailed {
     var report: Report = .{};
+    var style_report: styles.Report = .{};
     for (tree.nodes, 0..) |node, index| {
         if (gso(node)) {
             _ = (owned.find(tree, index, component.tag) catch return error.DuplicateShapeComponent) orelse return error.MissingShapeComponent;
@@ -25,6 +31,7 @@ pub fn inspect(tree: Tree) !Report {
             break :blk .single_id;
         };
         const p = try component.Component.parse(node.record.framing.payload, layout);
+        try style_report.add(p, options);
         report.components += 1;
         if (layout == .double_id) report.top_level += 1 else report.grouped += 1;
         report.matrix_pairs += p.rendering.pairs.count();
@@ -37,5 +44,5 @@ pub fn inspect(tree: Tree) !Report {
         }
         report.extra_bytes += p.extra.len;
     }
-    return report;
+    return .{ .shapes = report, .styles = style_report };
 }

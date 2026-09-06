@@ -2,6 +2,30 @@ const std = @import("std");
 const t = std.testing;
 const Reader = @import("../../binary/reader.zig").Reader;
 const Alpha = @import("../docinfo/fill_alpha.zig").Alpha;
+test "style diagnostics distinguish unsupported unselected unknown and parsed atomically" {
+    const Component = @import("shape_component.zig").Component;
+    const validation = @import("drawing_style_validation.zig");
+    var raw = [_]u8{0} ** 137;
+    var p = try Component.parse(&raw, .double_id);
+    var report: validation.Report = .{};
+    try report.add(p, .{ .tail = .alpha_shadow });
+    try t.expectEqual(1, report.unsupported);
+    p.id = 0x24726563;
+    p.extra = &.{};
+    try report.add(p, null);
+    try t.expectEqual(1, report.unselected);
+    const before = report;
+    try t.expectError(error.UnexpectedEnd, report.add(p, .{ .tail = .alpha_shadow }));
+    try t.expectEqualDeep(before, report);
+    p.extra = raw[100..];
+    try report.add(p, .{ .tail = .alpha_shadow });
+    try t.expectEqual(1, report.parsed);
+    std.mem.writeInt(u32, raw[113..117], 0x80000000, .little);
+    try report.add(p, .{ .tail = .alpha_shadow });
+    try t.expectEqual(1, report.unknown);
+    try t.expectEqual(20, report.extra_bytes);
+    try t.expectEqual(report.supported, report.unselected + report.parsed + report.unknown);
+}
 test "older gradient style reuses Fill fields without manufacturing alpha" {
     const Style = @import("drawing_style.zig").Style;
     var raw: [51]u8 = undefined;

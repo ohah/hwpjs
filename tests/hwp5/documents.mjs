@@ -17,6 +17,7 @@ import { noteActual } from "./note-validation.mjs";
 import { equationActual } from "./equation-validation.mjs";
 import { oleActual } from "./ole-validation.mjs";
 import { shapeActual } from "./shape-validation.mjs";
+import { unselectedStyles } from "./drawing-style-document.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -146,6 +147,7 @@ export function documentActual(call, h, doc, sections) {
       ...equationActual(call, v, b).map(w),
       ...oleActual(call, v, b).map(w),
       ...shapeActual(call, v, b).map(w),
+      ...unselectedStyles(b).map(w),
     );
   }
   const want = Buffer.concat(expected);
