@@ -344,6 +344,7 @@ while (try it.next()) |record| {
         },
         .unknown => {},
         .char_runs, .line_segments, .range_tags => {},
+        .control_header, .list_header => {},
     }
 }
 ```
@@ -388,3 +389,22 @@ while (try it.next()) |record| {
 최종 `zig build audit -Doptimize=Debug|ReleaseSafe|ReleaseFast --summary all`을 모드별로 실행해 모두 통과했습니다. 각 모드 네이티브 74/74, Node 47/47, HWP5 WASM 47,983회 검사, CFB 12,000회 변이(트랩 0), 독립 CFB 비교 60개 컨테이너/483개 스트림/5,496개 검색입니다. 포맷 검사와 `git diff --check`도 통과했습니다.
 
 다음 작업은 **컨트롤 헤더·문단 리스트 헤더**와 문단/컨트롤 계층 조립입니다. 전체 문서 검증·제품 HWP API·렌더링 완료를 뜻하지 않습니다.
+
+## 후속 구현: 컨트롤/리스트 헤더 (4.3.6~4.3.7)
+
+2026-09-06. 공식 PDF 표 64~65와 MAKE_4CHID 정의, hwp-spec 해당 절, rhwp `parser/control.rs`의 `parse_cell` 및 `body_text.rs` 리스트 읽기를 대조했습니다.
+
+- `control_header.zig`: UINT32 ID와 뒤의 개별 속성 바이트를 분리합니다. `name()`은 MAKE_4CHID 순서의 **4바이트**를 반환하며 문자열 변환·공백/NUL 제거를 하지 않습니다.
+- `list_header.zig`: 최소 6바이트를 검사하고 `count_raw`/`tail`을 보존합니다. 공식 INT16 문단 수는 `signedCount()`로 조회합니다. `view(.spec6)`는 offset 2의 속성, `view(.observed8)`는 offset 2의 미지 u16과 offset 4의 속성을 읽습니다. 호출자가 명시적으로 선택하며 길이/버전만으로 자동 판단하지 않습니다. 뒤의 셀/텍스트박스 속성은 `extra`로 보존합니다.
+- rhwp는 셀의 u16 count + u32 attr + u16 width_ref를 읽고 attr의 상위 16비트에서 정렬을 추출합니다. 이를 공식 배치와 동일하다고 단정하지 않았습니다. observed8의 미지 속성 비트에 의미를 임의로 부여하지 않습니다.
+- 태그 71/72 dispatch는 기본 경계/원본 보존까지만 책임집니다. 리스트 배치 선택·문단 수 대조·소유권·컨트롤별 속성·텍스트 토큰 연결은 후속 조립 과제입니다. CTRL_DATA의 Parameter Set도 미해석입니다.
+
+### 구현 후 적대적 검증
+
+1. ID의 `tbl ` 공백·비ASCII/NUL, 리스트 signed count -1/raw 65535, 배치별 속성/미지 필드/extra를 네이티브 테스트로 확인했습니다. observed8은 6/7바이트 입력에서 실패하고 spec6은 이를 보존합니다.
+2. 두 레코드의 모든 길이 0~13과 208개 전 위치 단일 비트 변이/정상 입력 재검증을 WASM에서 실행합니다. 타입 필드 재인코딩을 독립 원본과 비교하고, 잘린 payload의 반복 실패 후 cursor/count 불변도 검사합니다.
+3. 실제 지원 45개 파일의 컨트롤 헤더 313개·리스트 헤더 643개가 재인코딩 바이트와 일치합니다. 개수는 정규 audit에서 assert합니다. 별도 실측 리스트 길이 분포: 16(4), 20(17), 22(23), 30(8), 33(9), 34(4), 38(71), 47(507). 모두 offset 2~3은 0이며, 이 관찰만으로 모든 버전의 배치 선택 규칙을 확정하지 않습니다.
+
+다음은 문단/컨트롤 계층 조립과 구역 정의입니다. **헤더 파싱 성공은 리스트/컨트롤 의미 검증 완료가 아닙니다.**
+
+최종 Debug·ReleaseSafe·ReleaseFast의 `zig build audit --summary all` 모두 통과: 모드별 네이티브 77/77, Node 47/47, HWP5 WASM 48,427회 검사. 기존 CFB 비교/12,000회 변이도 통과했습니다. SSOT 검토: 프레이밍·정수 읽기는 기존 코어 재사용, ID와 리스트 배치는 별도 파일, 문맥 없는 배치 추정은 추가하지 않았습니다.

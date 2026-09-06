@@ -14,6 +14,7 @@ import { shapeEdges, shapeMutations } from "./shapes.mjs";
 import { referenceEdges, referenceActual } from "./references.mjs";
 import { checkBody, bodyEdges, bodyMutations } from "./body.mjs";
 import { metadataActual, metadataEdges } from "./metadata.mjs";
+import { controlEdges } from "./controls.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -95,6 +96,7 @@ shapeEdges(call);
 const referenceEdgeResults = referenceEdges(call);
 bodyEdges(call);
 const metadataEdgeResults = metadataEdges(call);
+const controlEdgeResults = controlEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -229,6 +231,8 @@ const body = {
   inlineControls: 0,
   extendedControls: 0,
   headersWithoutText: 0,
+  controlHeaders: 0,
+  listHeaders: 0,
 };
 const formatting = {
   tabDef: 0,
@@ -322,6 +326,8 @@ assert.deepEqual(body, {
   inlineControls: 50,
   extendedControls: 313,
   headersWithoutText: 405,
+  controlHeaders: 313,
+  listHeaders: 643,
 });
 assert.deepEqual(references, [7881, 0, 316, 138]);
 assert.deepEqual(formatting, {
@@ -402,6 +408,7 @@ console.log(
       referenceEdgeResults,
       bodyMutationResults,
       metadataEdgeResults,
+      controlEdgeResults,
       checks,
       imports: 0,
     },

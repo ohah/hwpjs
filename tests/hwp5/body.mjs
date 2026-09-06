@@ -56,6 +56,8 @@ export function checkBody(call, v, bytes, pairCounts = false) {
     inlineControls: 0,
     extendedControls: 0,
     headersWithoutText: 0,
+    controlHeaders: 0,
+    listHeaders: 0,
   };
   while (p < bytes.length) {
     const start = p,
@@ -76,6 +78,11 @@ export function checkBody(call, v, bytes, pairCounts = false) {
       word(p - start),
       bytes.subarray(start, p),
     );
+    if (tag === 71) stats.controlHeaders++;
+    if (tag === 72) {
+      stats.listHeaders++;
+      if (n >= 8) expected.push(b.subarray(2));
+    }
     if (tag === 66) {
       const count = b.readUInt32LE(0) & 0x7fffffff;
       expected.push(word(count), word(b.readUInt32LE(0) >>> 31));

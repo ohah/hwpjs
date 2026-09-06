@@ -61,6 +61,24 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
                 }
             },
             .unknown => try out.appendSlice(a, f.payload),
+            .control_header => |h| {
+                const name = h.name();
+                const id = (@as(u32, name[0]) << 24) | (@as(u32, name[1]) << 16) | (@as(u32, name[2]) << 8) | name[3];
+                try int(a, &out, u32, id);
+                try out.appendSlice(a, h.properties);
+            },
+            .list_header => |h| {
+                try int(a, &out, i16, h.signedCount());
+                const v = try h.view(.spec6);
+                try int(a, &out, u32, v.attributes);
+                try out.appendSlice(a, v.extra);
+                if (h.tail.len >= 6) {
+                    const observed = try h.view(.observed8);
+                    try int(a, &out, u16, observed.unknown.?);
+                    try int(a, &out, u32, observed.attributes);
+                    try out.appendSlice(a, observed.extra);
+                }
+            },
             .char_runs, .line_segments, .range_tags => try @import("metadata-probe.zig").payload(a, &out, record.value),
         }
     }
