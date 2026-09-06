@@ -53,6 +53,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try int(a, &out, u32, @intCast(s.object_properties));
         try fields(a, &out, s.header_footer);
         try fields(a, &out, s.number_controls);
+        try fields(a, &out, s.page_number);
     }
     return out.toOwnedSlice(a);
 }

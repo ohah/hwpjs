@@ -33,4 +33,6 @@ pub const header_footer = @import("body/header_footer.zig");
 pub const header_footer_validation = @import("body/header_footer_validation.zig");
 pub const number_control = @import("body/number_control.zig");
 pub const number_control_validation = @import("body/number_control_validation.zig");
+pub const page_number = @import("body/page_number.zig");
+pub const page_number_validation = @import("body/page_number_validation.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");

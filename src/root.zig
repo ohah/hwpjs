@@ -20,6 +20,7 @@ test {
     _ = @import("hwp5/body/control_tests.zig");
     _ = @import("hwp5/body/header_footer_tests.zig");
     _ = @import("hwp5/body/number_control_tests.zig");
+    _ = @import("hwp5/body/page_number_tests.zig");
     _ = @import("hwp5/body/tree_tests.zig");
     _ = @import("hwp5/body/section_tests.zig");
     _ = @import("hwp5/body/note_tests.zig");
