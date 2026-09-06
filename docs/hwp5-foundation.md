@@ -319,3 +319,50 @@ Bullet 이미지 여부 0은 비활성, 1은 활성, 다른 값은 deferred입�
 5. Debug·ReleaseSafe·ReleaseFast 전체 audit: 네이티브 66개, Node/WASM 계약 47개, HWP5 probe 35,261회. 기존 단일 비트 전수 검사·CFB 변형·독립 byte 비교를 함께 실행합니다.
 
 다음은 **본문 문단 헤더·텍스트 해석**입니다. 이후 구역 정의를 연결해야 보류된 개요 번호 참조도 검증할 수 있습니다.
+
+## 후속 구현: 본문 문단 헤더·텍스트 토큰
+
+2026-09-06. `hwp-spec`의 3.2.3/4.3/4.3.1/4.3.2절과 공식 revision 1.3 PDF 표 6/58/60을 대조했습니다. 분할 문서 표 6에서 빠진 코드 0~3은 공식 PDF로 확인했습니다. rhwp의 `src/parser/body_text.rs`도 참고했으나 UTF-8 출력/대체문자/생략 정책은 그대로 옮기지 않았습니다.
+
+### 책임과 API
+
+| 소유자 | 구현 |
+|---|---|
+| `body/paragraph_header.zig` | 22바이트 기본부: 문자 수 원값·control mask·문단 모양/스타일 ID·나누기 플래그·글자 모양/range/line 정보 수·instance ID. 5.0.3.2 이상에서 후속 바이트가 있으면 merge_tracking u16을 읽습니다. 그룹 부재는 null, 중간 잘림은 오류, 뒤의 extra는 보존합니다. |
+| `body/control.zig` | 제어코드 0~31의 character/inline/extended 종류와 1/8 UTF-16 단위 너비를 정의하는 SSOT. 예약 코드도 명세 너비대로 읽습니다. |
+| `body/text.zig` | 일반 텍스트 연속 구간과 제어문자 토큰. 토큰은 start_unit·raw 및 text 또는 control(code/kind/12바이트 data/closing_code)을 제공합니다. 임의 포인터 접근·UTF-8 변환·문자 정규화·컨트롤 생략은 하지 않습니다. |
+| `body/reader.zig` | 태그 66/67을 해석하고 나머지는 unknown/raw로 보존합니다. 알려진 payload 해석 실패 시 framing cursor/count가 전진하지 않습니다. |
+
+```zig
+var it = try hwp5.body.Iterator.init(plain_section, version, .{});
+while (try it.next()) |record| {
+    switch (record.value) {
+        .header => |h| { _ = h.characterUnits(); },
+        .text => |text| {
+            var tokens = text.tokens();
+            while (try tokens.next()) |token| { _ = token.start_unit; }
+        },
+        .unknown => {},
+    }
+}
+```
+
+입력은 헤더/보안 정책·압축 해제를 거친 평문 Section 바이트입니다. 모든 가변 데이터는 입력을 빌리며 코어 파서는 동적 할당하지 않습니다. 호출자는 입력 수명을 유지해야 합니다. 각 토큰은 최소 2바이트를 소비하고 제어문자 부가정보는 길이 검사 후 한 덩어리로 소비합니다. iterator 오류 후 같은 입력으로 재시도하면 동일 오류이며, 호출자는 종료하거나 입력을 바꿔야 합니다.
+
+### 정확성 경계
+
+- `Header.characterUnits()`는 원래 문자 수의 상위 비트를 마스킹합니다. `chars_raw`와 `countHighBit()`로 상위 비트도 보존하며 이를 단독으로 문단 트리의 소유권/마지막 문단 판정에 사용하지 않습니다. 나누기 플래그 역시 조합을 보존하며 실제 페이지 수를 추정하지 않습니다.
+- 위치와 길이는 **UTF-16 코드 단위**입니다. surrogate pair는 2단위이고 inline/extended 컨트롤은 8단위입니다. 일반 텍스트의 잘못된 surrogate·BOM도 원본 그대로 유지합니다. 문자 컨트롤 0과 예약 코드도 버리지 않습니다.
+- 텍스트의 홀수 바이트 길이는 InvalidTextSize, 잘린 16바이트 컨트롤은 UnexpectedEnd, 시작/끝 코드 불일치는 InvalidControlTerminator입니다. 이것은 경계 해석 정책이며 손상된 입력을 자동 복구하지 않습니다. 컨트롤 data의 값·ID·필드 시작/끝 짝·실제 CTRL_HEADER 연결은 아직 검증하지 않습니다.
+- `Text.validateCount(header)`는 호출자가 이미 올바르게 짝지은 헤더의 단위 수와 비교합니다. 파서가 level만 보고 문단 소유권을 추측하지 않습니다. 중첩 문단 때문에 헤더를 level 0, 텍스트를 level 1로 고정하지도 않습니다. orphan·중복 텍스트·리스트/표/각주 계층 유효성은 후속 조립 단계입니다.
+- 텍스트 레코드 부재를 자동 문단 끝 문자로 바꾸지 않습니다. 빈 텍스트 payload도 그대로 구분합니다. 문단 텍스트의 마지막 코드 13 강제, DocInfo 참조 연결, 글자 모양/줄/range 개수 대조, 제어문자에서 실제 탭 폭·필드 의미·개체를 해석하는 단계는 별도입니다.
+
+### 실측·적대적 검증
+
+1. 지원 HWP 45개·47개 Section에서 문단 헤더 1,481개(22바이트 378개 / 24바이트 1,103개), 텍스트 1,076개·23,570 UTF-16 단위를 읽었습니다. 일반 텍스트 구간 1,040개, 문자 컨트롤 1,076개, inline 50개, extended 313개입니다. 테스트 전용 WASM mode 8에서 필드/토큰으로 재구성한 원본 바이트 및 토큰의 위치·너비·종류·코드를 독립 JS 기준과 비교했고 불일치 0입니다.
+2. 실제 텍스트가 있는 문단은 헤더 선언 단위 수와 모두 일치했습니다. 테스트의 level 기반 pairing으로 텍스트가 없는 헤더 405개도 별도 집계합니다. 이 측정은 전체 본문 트리 조립을 구현했다는 뜻이 아닙니다. 수치는 정규 audit에서 assert합니다.
+3. 코드 0~31 전부, 16바이트 컨트롤의 모든 중간 잘림·잘못된 끝 코드, 부가정보 안의 제어코드처럼 보이는 값, 정상/비정상 surrogate·BOM, 빈 텍스트·홀수 길이, 일반/확장 framing 및 131,072바이트 텍스트를 검사합니다. 헤더 버전 경계·모든 잘림·상위 비트/추가 필드와 token/framing 실패 원자성을 네이티브에서도 확인합니다.
+4. 헤더와 32개 제어코드를 모두 포함한 합성 텍스트의 모든 위치 × 8비트 변형 3,152개: 수용 2,448 / 오류 704 / 정상 복구 3,152회. 각 위치의 커버리지 마스크 0xff를 assert하며, 수용된 입력의 바이트/토큰도 독립 기준과 비교합니다. UTF-16 손실·트랩은 발견되지 않았습니다.
+5. Debug·ReleaseSafe·ReleaseFast 전체 audit: 네이티브 70개, Node/WASM 계약 47개, HWP5 probe 44,567회. 기존 DocInfo·CFB 테스트도 유지하며 제품 JS ABI와 레거시 코드는 변경하지 않았습니다.
+
+다음 작업은 **본문 글자 모양 구간·줄 레이아웃·영역 태그** 해석과 헤더 개수/텍스트 위치 경계 대조입니다. 구역 정의·컨트롤 연결·문단 트리를 조립해야 이전의 개요 번호 보류도 해소할 수 있습니다.

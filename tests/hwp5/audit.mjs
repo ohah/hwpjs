@@ -12,6 +12,7 @@ import { checkDocinfo, checkDocinfoEdges } from "./docinfo.mjs";
 import { resourceEdges, resourceActual } from "./resources.mjs";
 import { shapeEdges, shapeMutations } from "./shapes.mjs";
 import { referenceEdges, referenceActual } from "./references.mjs";
+import { checkBody, bodyEdges, bodyMutations } from "./body.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -91,6 +92,7 @@ resourceEdges(call);
 formattingEdges(call);
 shapeEdges(call);
 const referenceEdgeResults = referenceEdges(call);
+bodyEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -216,6 +218,16 @@ const resources = {
   missing: [],
 };
 const references = [0, 0, 0, 0];
+const body = {
+  headers: 0,
+  texts: 0,
+  units: 0,
+  textRuns: 0,
+  characterControls: 0,
+  inlineControls: 0,
+  extendedControls: 0,
+  headersWithoutText: 0,
+};
 const formatting = {
   tabDef: 0,
   numbering: 0,
@@ -254,6 +266,12 @@ try {
         `${name}/${entry.name}`,
       );
       const framed = call(2, plain);
+      if (/^Section\d+$/.test(entry.name)) {
+        for (const [key, n] of Object.entries(
+          checkBody(call, hdr.readUInt32LE(32), plain, true),
+        ))
+          body[key] += n;
+      }
       if (entry.name === "DocInfo") {
         checkDocinfo(call, hdr.readUInt32LE(32), plain);
         referenceActual(call, hdr.readUInt32LE(32), plain).forEach(
@@ -278,6 +296,16 @@ try {
   cfb.close();
 }
 assert.equal(files, 48);
+assert.deepEqual(body, {
+  headers: 1481,
+  texts: 1076,
+  units: 23570,
+  textRuns: 1040,
+  characterControls: 1076,
+  inlineControls: 50,
+  extendedControls: 313,
+  headersWithoutText: 405,
+});
 assert.deepEqual(references, [7881, 0, 316, 138]);
 assert.deepEqual(formatting, {
   tabDef: 138,
@@ -308,6 +336,7 @@ rounds.push({
   versions: [...versions].sort(),
   resources,
   references,
+  body,
   formatting,
 });
 begin = checks;
@@ -345,6 +374,7 @@ rounds.push({
 });
 const formattingMutationResults = formattingMutations(call);
 const shapeMutationResults = shapeMutations(call);
+const bodyMutationResults = bodyMutations(call);
 console.log(
   JSON.stringify(
     {
@@ -352,6 +382,7 @@ console.log(
       formattingMutationResults,
       shapeMutationResults,
       referenceEdgeResults,
+      bodyMutationResults,
       checks,
       imports: 0,
     },

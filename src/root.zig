@@ -13,6 +13,7 @@ test {
     _ = @import("hwp5/docinfo/formatting_tests.zig");
     _ = @import("hwp5/docinfo/shape_tests.zig");
     _ = @import("hwp5/docinfo/reference_tests.zig");
+    _ = @import("hwp5/body/tests.zig");
     _ = @import("hwp5/compression_tests.zig");
     _ = @import("cfb/tests.zig");
     _ = @import("cfb/mutation_tests.zig");
