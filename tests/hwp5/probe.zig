@@ -103,6 +103,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         39 => return @import("field-probe.zig").run(a, bytes, limit),
         40 => return @import("ruby-probe.zig").run(a, bytes, limit),
         41 => return @import("hidden-comment-probe.zig").run(a, bytes, limit),
+        42 => return @import("note-control-probe.zig").run(a, bytes),
         else => return error.InvalidMode,
     }
 }
