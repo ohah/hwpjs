@@ -111,6 +111,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         47 => return @import("ole-validation-probe.zig").run(a, bytes, limit),
         48 => return @import("storage-probe.zig").run(a, bytes),
         49 => return @import("container-probe.zig").specifiedStorage(a, bytes, limit),
+        50 => return @import("shape-component-probe.zig").run(a, bytes),
         else => return error.InvalidMode,
     }
 }

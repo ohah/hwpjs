@@ -1380,3 +1380,23 @@ OLE의 pending_references를 성급히 리소스 순번 검사로 대체하지 �
 OLE 참조 의미는 아직 보류입니다. 이를 확정하려면 파일을 읽는 한컴 동작이나 더 명확한 규격/독립 구현 근거가 필요하며, 현재 검사의 성공만으로 순번 또는 물리 ID를 선택하지 않습니다. 전체 문서 구현 목표는 유지합니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 179/179, Node 47/47, HWP5 WASM 175,406회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 diff 검사도 통과했습니다. 이번 변경은 증거·회귀 테스트 추가이며 제품의 OLE 참조 의미를 바꾸지 않았습니다.
+
+## 그리기 구성요소와 Rendering 행렬 파서 (2026-09-06)
+
+공식 PDF 표 82~85와 자료형 표를 대조했습니다. 표 82는 ID 4바이트이고 GenShapeObject일 경우 두 번 기록한다고 명시합니다. 로컬 스킬 요약의 항상 두 번이라는 설명은 적용하지 않습니다. 표 83의 고정 필드는 42바이트이며 HWPUNIT16 회전각은 signed i16입니다. 표 84는 u16 쌍 개수, 48바이트 translation, count×96바이트 scale/rotation 쌍입니다.
+
+`shape_component.Component.parse`는 Layout.single_id/double_id를 명시적으로 받습니다. 원시 ID 두 값과 signed 좌표·회전각, unsigned 크기·횟수·버전·속성을 보존하고 일치하지 않는 두 ID를 몰래 합치지 않습니다. 두 인접 DWORD가 같다는 이유로 두 번째 값을 ID로 추정하지 않습니다. 종류별 테두리·채우기·그림자 등 나머지는 extra입니다.
+
+`rendering.Matrix`는 double 6개의 원시 u64 비트를 보존하며 선택 value(index) view만 제공합니다. Pair/Rendering의 read는 실패 시 Reader cursor를 보존합니다. 행렬 쌍은 binary.record_array의 고정 96바이트 borrowed 배열로 접근하며 입력 전체를 복제하거나 native 구조체에 직접 캐스팅하지 않습니다. count는 u16이고 count×96 크기를 bounded Reader.take로 확인합니다. 행렬 합성·정규화·유한성 판정을 파싱 성공과 혼동하지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. signed 좌표/회전각 최솟값, 최대 unsigned 크기/속성, 단일 ID에서의 second_id 부재, 서로 다른 이중 ID 보존을 네이티브로 확인했습니다. 단일 배치의 offset_x가 ID와 우연히 같아도 필드 위치를 변경하지 않습니다.
+2. Matrix/Pair/Rendering의 중간 잘림에서 cursor가 그대로임을 확인했습니다. 행렬 배열의 count 경계·범위 밖 get·usize 최댓값 인덱스가 안전하게 처리되는지도 검사했습니다.
+3. WASM에서 NaN payload·양/음 무한대·음수 0·subnormal을 translation/scale/rotation에 넣고 원시 비트로 재구성했습니다. 각 고정 필드 바이트를 독립 변이하고 0쌍/65,535쌍 경계, 과대 선언에 부족한 바이트, 잘못된 모드를 검사했습니다. 도형/행렬의 모든 필수 prefix 잘림을 거부했습니다.
+4. 한셀OLE.hwp, shape-group-02.hwp, group-drawing-02.hwp의 Section0을 strict CFB로 추출하고 Node/코어 압축 해제를 대조했습니다. 총 40개 구성요소에서 부모가 gso CTRL_HEADER인 3개는 double_id, 부모가 SHAPE_COMPONENT인 37개는 single_id로 명시해 원문 재구성을 비교했습니다. 바이트 중복 비교로 배치를 선택하지 않았습니다.
+5. 실제 각 구성요소의 필수 행렬 영역 끝까지 모든 잘림 위치를 검사해 13,740건을 거부했습니다. extra 영역을 필수 행렬이라고 잘못 계산하지 않고 정상 재호출도 대조합니다. 원본 파일은 변경하지 않았으며 표본 부재는 skipped입니다.
+
+이번 단계는 표 82~85의 payload 파서와 전용 WASM 검사입니다. 기존 OLE 소유권 검사는 아직 구성요소 첫 ID만 사용하며 이 새 필드 검사가 문서 검사에 자동 연결된 것은 아닙니다. 전체 도형 계층·그룹 횟수 의미·행렬 합성·종류별 꼬리·문서 연결·렌더링/편집은 남았습니다. NaN 등이 보존된다고 유효한 조판 행렬로 판정하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 181/181, Node 47/47, HWP5 WASM 189,726회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
