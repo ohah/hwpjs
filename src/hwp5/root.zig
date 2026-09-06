@@ -70,6 +70,7 @@ pub const memo_end = @import("body/memo_end.zig");
 pub const paragraph_flows = @import("body/paragraph_flows.zig");
 pub const revision_projection = @import("body/revision_projection.zig");
 pub const revision_groups = @import("body/revision_groups.zig");
+pub const revision_text = @import("body/revision_text.zig");
 pub const memo_ranges = @import("body/memo_ranges.zig");
 pub const shape_picture = @import("body/shape_picture.zig");
 pub const picture_color = @import("body/picture_color.zig");

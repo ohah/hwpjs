@@ -19,6 +19,7 @@ import {revisionDeleteEdges} from "./revision-delete.mjs";
 import {revisionSignEdges,revisionSignActual} from "./revision-sign.mjs";
 import {revisionProjectionEdges,revisionProjectionActual} from "./revision-projection.mjs";
 import {revisionGroupEdges,revisionGroupActual} from "./revision-groups.mjs";
+import {revisionTextEdges,revisionTextActual} from "./revision-text.mjs";
 import {memoEndEdges,memoEndActual} from "./memo-end.mjs";
 import {paragraphFlowEdges,paragraphFlowActual} from "./paragraph-flows.mjs";
 import {groupInfoEdges} from "./group-info.mjs";
@@ -464,6 +465,7 @@ const revisionDeleteResults = revisionDeleteEdges(call);
 const revisionSignResults = {edges:revisionSignEdges(call),actual:revisionSignActual(call,cfb)};
 const revisionProjectionResults = {edges:revisionProjectionEdges(call),actual:revisionProjectionActual(call,cfb)};
 const revisionGroupResults = {edges:revisionGroupEdges(call),actual:revisionGroupActual(call,cfb)};
+const revisionTextResults = {edges:revisionTextEdges(call),actual:revisionTextActual(call,cfb)};
 const memoEndResults = {edges:memoEndEdges(call),actual:memoEndActual(call,cfb)};
 const paragraphFlowResults = {edges:paragraphFlowEdges(call),actual:paragraphFlowActual(call,cfb)};
 const groupInfoPairResults = groupInfoPair(call,cfb);
@@ -972,6 +974,7 @@ console.log(
       revisionSignResults,
       revisionProjectionResults,
       revisionGroupResults,
+      revisionTextResults,
       memoEndResults,
       paragraphFlowResults,
       groupInfoPairResults,

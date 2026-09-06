@@ -10,10 +10,13 @@ pub const Metadata = struct {
     runs: ?Runs = null,
     lines: ?Segments = null,
     ranges: ?Ranges = null,
-    pub fn validate(self: Metadata, h: Header, char_shape_count: usize) !void {
+    pub fn validateCounts(self: Metadata, h: Header) !void {
         if ((if (self.runs) |r| r.count() else @as(usize, 0)) != h.char_shape_count or
             (if (self.lines) |r| r.count() else @as(usize, 0)) != h.line_segment_count or
             (if (self.ranges) |r| r.count() else @as(usize, 0)) != h.range_tag_count) return error.ParagraphMetadataCountMismatch;
+    }
+    pub fn validate(self: Metadata, h: Header, char_shape_count: usize) !void {
+        try self.validateCounts(h);
         if (self.runs) |runs| {
             var previous: u32 = 0;
             for (0..runs.count()) |i| {

@@ -24,8 +24,9 @@ function expected(bytes) {
   }
   const out=Buffer.alloc(rows.length*32);
   rows.forEach((r,i)=>{const at=i*32;[r.index,r.flow,r.group.head,r.group.count].forEach((n,j)=>out.writeUInt32LE(n,at+j*4));out.writeBigUInt64LE(r.start,at+16);out.writeBigUInt64LE(r.group.units,at+24);});
-  return {out,paragraphs:rows.length,groups:groups.length};
+  return {out,paragraphs:rows.length,groups:groups.length,members:rows,groupRows:groups};
 }
+export {expected as revisionGroupEvidence};
 export function revisionGroupEdges(call) {
   let accepted=0,rejected=0;
   const run=(b,version=0x05000307)=>call(101,Buffer.concat([w(version),b]));
