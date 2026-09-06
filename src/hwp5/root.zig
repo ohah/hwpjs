@@ -11,4 +11,5 @@ pub const body = @import("body/reader.zig");
 pub const body_tree = @import("body/tree.zig");
 pub const paragraphs = @import("body/paragraphs.zig");
 pub const section_validation = @import("body/section_validation.zig");
+pub const control_links = @import("body/control_links.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");

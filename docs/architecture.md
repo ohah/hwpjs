@@ -24,6 +24,8 @@ CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계�
 
 `body/tree.zig`는 레코드 level 기반 parent/subtree_end 인덱스를 선형 시간에 만들고 노드 배열을 소유합니다. payload는 입력을 빌립니다. `paragraphs.zig`는 문단 직접 자식을 연결하고 기존 개수/참조 규칙을 호출하며, 누락 텍스트·컨트롤/리스트 보류·미해석 레코드를 보고합니다. 논리적 리스트 묶음·개체 모델·렌더링 문자열은 아직 만들지 않습니다.
 
+`paragraph_children.zig`가 직접 자식 수집/중복 검사를 소유하고 paragraphs와 `control_links.zig`가 재사용합니다. control_links는 원본 문단/텍스트/컨트롤 노드와 UTF-16 위치를 가진 순서/ID 링크 배열을 소유합니다. 토큰의 나머지 부가정보와 개별 컨트롤 의미는 추정하지 않습니다.
+
 태그 dispatch는 용지 73·각주/미주 모양 74·쪽 테두리 75도 포함합니다. `section_def.zig`·`page_def.zig`·`note_shape.zig`·`page_border.zig`는 각 payload 배치를 소유하고 `section_validation.zig`는 트리 기반 구역 소유권/개수/참조를 검증합니다. 구역 정의 본체와 하위 레코드를 섞지 않습니다. 각주 구분선 길이는 관측 i32 배치를 기본으로 하며 spec26은 명시적으로만 선택합니다. 주석 컨트롤 연결 및 번호 ID 0은 아직 남아 있습니다.
 
 HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.

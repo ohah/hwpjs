@@ -1,4 +1,3 @@
-const body = @import("reader.zig");
 const Tree = @import("tree.zig").Tree;
 const rules = @import("../docinfo/reference_rules.zig");
 pub const Resources = struct { char_shapes: usize, para_shapes: usize, styles: usize };
@@ -31,34 +30,10 @@ pub fn inspect(tree: Tree, resources: Resources) !Report {
         const h = value.header;
         if (rules.resolve(.zero_based, h.para_shape_id, resources.para_shapes) == .invalid or
             rules.resolve(.zero_based, h.style_id, resources.styles) == .invalid) return error.InvalidResourceReference;
-        var m: body.Metadata = .{};
-        var text: ?body.Text = null;
-        var child = index + 1;
-        while (child < node.subtree_end) {
-            const entry = tree.nodes[child];
-            switch (entry.record.value) {
-                .text => |v| {
-                    if (text != null) return error.DuplicateParagraphRecord;
-                    text = v;
-                },
-                .char_runs => |v| {
-                    if (m.runs != null) return error.DuplicateParagraphRecord;
-                    m.runs = v;
-                },
-                .line_segments => |v| {
-                    if (m.lines != null) return error.DuplicateParagraphRecord;
-                    m.lines = v;
-                },
-                .range_tags => |v| {
-                    if (m.ranges != null) return error.DuplicateParagraphRecord;
-                    m.ranges = v;
-                },
-                else => {},
-            }
-            child = entry.subtree_end;
-        }
-        try m.validate(h, resources.char_shapes);
-        if (text) |t| {
+        const contents = try @import("paragraph_children.zig").collect(tree, index);
+        try contents.metadata.validate(h, resources.char_shapes);
+        if (contents.text_node) |text_node| {
+            const t = tree.nodes[text_node].record.value.text;
             try t.validateCount(h);
             report.texts += 1;
         } else report.missing_texts += 1;

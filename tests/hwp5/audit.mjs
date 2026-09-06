@@ -18,6 +18,7 @@ import { controlEdges } from "./controls.mjs";
 import { treeActual, treeEdges } from "./tree.mjs";
 import { sectionActual, sectionEdges } from "./sections.mjs";
 import { notePair } from "./note-pair.mjs";
+import { linksActual, linkEdges } from "./links.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -102,6 +103,7 @@ const metadataEdgeResults = metadataEdges(call);
 const controlEdgeResults = controlEdges(call);
 const treeEdgeResults = treeEdges(call);
 const sectionEdgeResults = sectionEdges(call);
+const linkEdgeResults = linkEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -252,6 +254,7 @@ const metadata = { paragraphs: 0, runs: 0, lines: 0, ranges: 0 };
 const paragraphReport = [0, 0, 0, 0, 0, 0];
 const sectionReport = [0, 0, 0, 0, 0];
 let notePairResult;
+let linkedControls = 0;
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
     cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
@@ -286,6 +289,7 @@ try {
       );
       const framed = call(2, plain);
       if (/^Section\d+$/.test(entry.name)) {
+        linkedControls += linksActual(call, hdr.readUInt32LE(32), plain);
         if (name === "footnote-endnote.hwp" && entry.name === "Section0")
           notePairResult = notePair(
             call,
@@ -341,6 +345,7 @@ assert.equal(files, 48);
 assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 194]);
 assert.deepEqual(sectionReport, [47, 47, 141, 1, 94]);
 assert.ok(notePairResult);
+assert.equal(linkedControls, 313);
 assert.deepEqual(metadata, {
   paragraphs: 1481,
   runs: 1740,
@@ -394,6 +399,7 @@ rounds.push({
   paragraphReport,
   sectionReport,
   notePairResult,
+  linkedControls,
   formatting,
 });
 begin = checks;
@@ -444,6 +450,7 @@ console.log(
       controlEdgeResults,
       treeEdgeResults,
       sectionEdgeResults,
+      linkEdgeResults,
       checks,
       imports: 0,
     },
