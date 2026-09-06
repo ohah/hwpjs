@@ -47,12 +47,20 @@ export function memoListDocument(call,cfb){
   const doc=decode(cfb.findExact('/DocInfo').content),b=decode(cfb.findExact('/BodyText/Section0').content),r=documentRecords(b).find(r=>r.tag===93);assert.ok(r);
   const run=body=>call(24,decodedDocumentInput(h,doc,[{index:0,bytes:body}])),original=run(b),cap=w(64*1024*1024),whole=call(25,Buffer.concat([cap,file]));assert.deepEqual(whole.subarray(0,original.length),original);
   const body=nodes.findIndex(n=>n.parent===0&&n.name==='BodyText');
+  let rejected=0;
+  const reject=(changed,error)=>{
+    assert.throws(()=>call(15,Buffer.concat([h.subarray(32,36),changed])),error);
+    assert.throws(()=>run(changed),error);
+    const altered=nodes.map(n=>n.parent===body&&n.name==='Section0'?{...n,content:flags&1?deflateRawSync(changed):changed}:n);
+    assert.throws(()=>call(25,Buffer.concat([cap,Buffer.from(cfb.write({nodes:altered}))])),error);rejected+=3;
+    assert.deepEqual(run(b),original);assert.deepEqual(call(25,Buffer.concat([cap,file])),whole);
+  };
   for(let cut=0;cut<4;cut++){
     const changed=Buffer.concat([b.subarray(0,r.offset),frame(b.subarray(r.start,r.start+cut)),b.subarray(r.end)]);
-    assert.throws(()=>run(changed),/UnexpectedEnd/);
-    const altered=nodes.map(n=>n.parent===body&&n.name==='Section0'?{...n,content:flags&1?deflateRawSync(changed):changed}:n);
-    assert.throws(()=>call(25,Buffer.concat([cap,Buffer.from(cfb.write({nodes:altered}))])),/UnexpectedEnd/);
-    assert.deepEqual(run(b),original);assert.deepEqual(call(25,Buffer.concat([cap,file])),whole);
+    reject(changed,/UnexpectedEnd/);
   }
-  return {rejected:8};
+  const list=documentRecords(b).find(n=>n.offset===r.end);assert.equal(list.tag,72);
+  for(const n of [0,65537,0x7fff0001,-2147483647]){const changed=Buffer.from(b);changed.writeInt32LE(n,list.start);reject(changed,n<0?/NegativeMemoParagraphCount/:/ListParagraphCountMismatch/);}
+  for(let cut=6;cut<16;cut++)reject(Buffer.concat([b.subarray(0,list.offset),w(72|1024|(cut<<20)),b.subarray(list.start,list.start+cut),b.subarray(list.end)]),/UnexpectedEnd/);
+  return {rejected};
 }

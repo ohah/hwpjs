@@ -71,6 +71,7 @@ test {
     _ = @import("hwp5/body/table_tests.zig");
     _ = @import("hwp5/body/grid_tests.zig");
     _ = @import("hwp5/body/memo_list_tests.zig");
+    _ = @import("hwp5/body/memo_list_header_tests.zig");
     _ = @import("hwp5/body/cell_extension_tests.zig");
     _ = @import("hwp5/parameters/tests.zig");
     _ = @import("hwp5/parameters/source_tests.zig");

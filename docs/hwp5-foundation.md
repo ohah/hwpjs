@@ -2142,3 +2142,15 @@ memo_list.Header.parse는 u32 memo_index와 borrowed extra를 반환합니다. b
 적대적 검증은 네이티브의 0/UINT32_MAX/상위 비트·모든 0~3바이트 잘림·extra 수명, Iterator 반복 실패, WASM의 세 버전/일반·확장 framing/7바이트 전체 위치 비트 변이로 구성합니다. 실제 issue5866 문서의 메모를 각 prefix로 잘라 decoded 문서와 메모리에서 재생성한 CFB에서 거부하고 원본으로 복구를 확인합니다. 원본 fixture는 수정하지 않습니다. 후속 LIST_HEADER 확장·문단 소유권·본문 메모 필드의 전역 연결은 아직 미구현이며 payload가 알려진 레코드가 된 것을 전체 메모 지원 완료로 해석하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 232/232, Node 47/47, HWP5 WASM 1,293,479회 검사 통과했습니다. 메모 리스트 합성 성공 372/거부 1,488, 실제 30개/필수 prefix 거부 120, 같은 구역 필드 번호 대조 27개와 decoded 문서/CFB 거부 8건을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-memo-list-{debug,safe,fast}.log`입니다.
+
+## 메모 LIST_HEADER의 전체 32비트 문단 수 검증
+
+2026-09-07. [hwplib ForMemo](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/reader/bodytext/memo/ForMemo.java)는 메모 후속 LIST_HEADER를 signed 32비트 문단 수, u32 속성/텍스트 폭/높이 순서로 읽습니다. 실제 위 30개는 root 문단 아래 level 1의 MEMO_LIST→LIST_HEADER 직접 형제이며 후속 헤더는 모두 16바이트, 문단 수 1/나머지 0입니다. 이는 실제 상위 count 비트·비영 크기의 의미까지 검증한 것이 아닙니다.
+
+이전 공통 Groups 검사는 문맥 구분 없이 low u16만 비교했습니다. 이전 WASM `.zig-cache/o/1e9823066f4c40fe8aeccacceedcf352/hwp5-probe.wasm`에서 실제 문단 1개/선언 65,537 입력이 mode 15에 성공하는 것을 재현했고, 수정 Debug `.zig-cache/o/c8ee6a2269399f48409e98148260e08c/hwp5-probe.wasm`은 ListParagraphCountMismatch로 거부했습니다. 실제 한글 작성 파일의 손상이 아니라 명시적으로 만든 잘못된 입력 재현입니다.
+
+memo_list_header는 기존 ListHeader.view(observed8)의 상위 워드와 속성/extra를 재사용합니다. Groups.build가 직접 형제 순회 중 바로 앞 MEMO_LIST를 선택해 Group.memo에 노드와 typed 헤더를 함께 보존하므로 다른 부모나 자손의 표식을 가져오지 않습니다. validate는 선택된 메모에서만 음수와 전체 32비트 개수를 검사하며 다른 리스트의 기존 u16 배치를 바꾸지 않습니다. 선언값으로 메모리를 할당하지 않고 실제 Tree/Groups 크기에만 할당합니다. 기존 테스트용 group wire는 명시적 여섯 필드를 유지해 내부 optional 메타데이터 추가가 무의식적으로 wire를 바꾸지 않도록 했습니다.
+
+적대적 검증은 비영 속성/폭/높이·상위 count 비트·borrowed extra, 모든 필수 잘림, 실패 경로의 할당 실패 주입, 다른 부모/다른 리스트 문맥, 실제 65,536문단 정상 입력을 포함합니다. 실제 issue5866의 선언 count 변이와 메모용 헤더 6~15바이트 잘림은 Groups/decoded 문서/재생성 CFB 세 경로에서 거부하고 정상 복구를 확인합니다. OOM 주입 테스트에서는 문법 오류보다 먼저 발생할 수 있는 OutOfMemory를 재전파하도록 테스트 harness를 수정했습니다. 번호 표식 자체의 고아/중복·후속 리스트 누락·구역 간 필드 연결은 아직 다음 범위입니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 234/234, Node 47/47, HWP5 WASM 1,293,581회 검사 통과했습니다. 신규 그룹 경계 성공 11/거부 17과 65,536문단 합성 정상 입력, 확장된 실제 메모 문서 세 경로 거부 54를 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-memo-list-header-{debug,safe,fast}.log`입니다.

@@ -4,6 +4,7 @@ import {memoShapeEdges} from "./memo-shape.mjs";
 import {memoShapePair} from "./memo-shape-pair.mjs";
 import {memoResourceEdges,memoResourceDocument} from "./memo-resource.mjs";
 import {memoListEdges,memoListReference,memoListDocument} from "./memo-list.mjs";
+import {memoListGroupEdges} from "./memo-list-groups.mjs";
 import {groupInfoEdges} from "./group-info.mjs";
 import {groupInfoPair} from "./group-info-pair.mjs";
 import {groupOwnerEdges,groupDocumentReference} from "./group-validation.mjs";
@@ -432,6 +433,7 @@ const memoShapeEdgeResults = memoShapeEdges(call);
 const memoShapePairResults = memoShapePair(call,cfb);
 const memoResourceResults = {edges:memoResourceEdges(call),document:memoResourceDocument(call,cfb)};
 const memoListResults = {edges:memoListEdges(call),reference:memoListReference(call,cfb),document:memoListDocument(call,cfb)};
+const memoListGroupResults = memoListGroupEdges(call);
 const groupInfoPairResults = groupInfoPair(call,cfb);
 const groupOwnerEdgeResults = groupOwnerEdges(call);
 const groupDocumentResults = groupDocumentReference(call,cfb);
@@ -923,6 +925,7 @@ console.log(
       memoShapePairResults,
       memoResourceResults,
       memoListResults,
+      memoListGroupResults,
       groupInfoPairResults,
       groupOwnerEdgeResults,
       groupDocumentResults,

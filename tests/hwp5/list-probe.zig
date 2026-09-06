@@ -10,6 +10,6 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     defer groups.deinit(a);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    for (groups.items) |group| inline for (std.meta.fields(@TypeOf(group))) |f| try int(a, &out, u32, @intCast(@field(group, f.name)));
+    for (groups.items) |group| inline for (.{ "header_node", "parent_node", "begin", "end", "paragraph_count", "intervening_records" }) |name| try int(a, &out, u32, @intCast(@field(group, name)));
     return out.toOwnedSlice(a);
 }
