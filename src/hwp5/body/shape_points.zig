@@ -2,6 +2,7 @@ const Reader = @import("../../binary/reader.zig").Reader;
 const Records = @import("../../binary/record_array.zig").Records;
 pub const Point = @import("shape_point.zig").Point;
 pub const Layout = enum { separate_axes, interleaved };
+pub const CountedLayout = enum { specified_i16_axes, observed_i32_points };
 const Coordinate = struct {
     value: i32,
     pub fn read(r: *Reader) !Coordinate {
@@ -12,6 +13,17 @@ const Coordinate = struct {
 pub const Points = struct {
     raw: []const u8,
     layout: Layout,
+    pub fn readCounted(reader: *Reader, layout: CountedLayout) !Points {
+        var r = reader.*;
+        const n: i32 = switch (layout) {
+            .specified_i16_axes => try r.readInt(i16),
+            .observed_i32_points => try r.readInt(i32),
+        };
+        if (n < 0) return error.NegativePointCount;
+        const result = try read(&r, @intCast(n), if (layout == .specified_i16_axes) .separate_axes else .interleaved);
+        reader.* = r;
+        return result;
+    }
     pub fn read(reader: *Reader, count_value: usize, layout: Layout) !Points {
         var r = reader.*;
         _ = try r.take(0); // Share Reader's cursor validation before subtracting.

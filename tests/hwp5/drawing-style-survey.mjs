@@ -13,6 +13,7 @@ import { ellipseOwnerActual } from "./ellipse-validation.mjs";
 import { arcOwnerActual } from "./arc-validation.mjs";
 import { polygonActual } from "./shape-polygon.mjs";
 import { polygonOwnerActual } from "./polygon-validation.mjs";
+import { curveActual } from "./shape-curve.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -31,6 +32,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.rectangles = { parsed: 0, rejected: 0, groupDrawingRects: 0, rounds: {}, extras: {}, deferredOwners: {} };
   out.ellipses = { parsed: 0, rejected: 0, attributes: {}, extras: {}, files: {}, deferredOwners: {} };
   out.polygons = { parsed: 0, rejected: 0, counts: {}, extras: {}, tails: {}, files: {}, deferredOwners: {} };
+  out.curves = { parsed: 0, rejected: 0, points: 0, segments: 0, types: {}, tails: {}, files: {}, deferredOwners: {} };
   out.metadata = { parsed: 0, rejected: 0, reservedNonzero: 0, alphaNonzero: 0, reservedExamples: [] };
   const drawingIds = new Set(["$lin", "$rec", "$ell", "$arc", "$pol", "$cur"]);
   for (const name of readdirSync(root, { recursive: true }).filter(n => n.endsWith(".hwp")).sort()) {
@@ -72,6 +74,17 @@ export function drawingStyleSurvey(call, cfb) {
       for (const record of records) {
         const level = bytes.readUInt32LE(record.offset) >>> 10 & 1023;
         stack.length = level;
+        if(record.tag===83){
+          const parent=stack[level-1];
+          const owner=parent?.tag===76?Buffer.from(bytes.subarray(parent.start,parent.start+4)).reverse().toString("latin1"):"other";
+          if(owner==="$cur"){
+            const curve=curveActual(call,bytes.subarray(record.start,record.end));
+            out.curves.parsed++;out.curves.rejected+=curve.rejected;out.curves.points+=curve.points;out.curves.segments+=curve.segments;
+            out.curves.files[name]=(out.curves.files[name]??0)+1;
+            out.curves.tails[curve.tail]=(out.curves.tails[curve.tail]??0)+1;
+            for(const [kind,n] of Object.entries(curve.types))out.curves.types[kind]=(out.curves.types[kind]??0)+n;
+          }else out.curves.deferredOwners[owner]=(out.curves.deferredOwners[owner]??0)+1;
+        }
         if(record.tag===82){
           const parent=stack[level-1];
           const owner=parent?.tag===76?Buffer.from(bytes.subarray(parent.start,parent.start+4)).reverse().toString("latin1"):"other";
@@ -197,6 +210,7 @@ export function drawingStyleSurvey(call, cfb) {
   if(existsSync(join(fileURLToPath(root),"group-drawing-02.hwp")))assert.equal(out.rectangles.groupDrawingRects,30);
   if(existsSync(join(fileURLToPath(root),"basic/KTX.hwp")))assert.equal(out.ellipses.files["basic/KTX.hwp"],19);
   if(existsSync(join(fileURLToPath(root),"basic/KTX.hwp")))assert.equal(out.polygons.files["basic/KTX.hwp"],21);
+  if(existsSync(join(fileURLToPath(root),"2025 행정업무운영 편람(최종).hwp")))assert.equal(out.curves.files["2025 행정업무운영 편람(최종).hwp"],2);
   const versions = Object.values(out.versions);
   const kinds = Object.values(out.kinds);
   for (const [versionField, kindField] of [["full", "known"], ["unknown", "unknown"]]) {

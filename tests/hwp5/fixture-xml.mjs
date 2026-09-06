@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 // Existing MIT ZIP reader, test-only. No product HWPX implementation implied.
-export function sectionXml(hwpx) {
+export function sectionXml(hwpx, section = 0) {
+  assert.ok(Number.isInteger(section) && section >= 0 && section <= 65535);
   const context = {
     module: { exports: {} },
     require: createRequire(import.meta.url),
@@ -17,7 +18,7 @@ export function sectionXml(hwpx) {
   );
   const zip = context.module.exports.read(hwpx, { type: "buffer" });
   const index = zip.FullPaths.findIndex((path) =>
-    path.endsWith("/Contents/section0.xml"),
+    path.endsWith(`/Contents/section${section}.xml`),
   );
   assert.ok(index >= 0);
   return Buffer.from(zip.FileIndex[index].content).toString("utf8");
