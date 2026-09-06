@@ -7,7 +7,7 @@ src/
   binary/      경계 검사·정수 읽기 (현재 구현)
   cfb/         컨테이너 읽기·검증·새 컨테이너 쓰기 (구현)
   compression/ bounded raw DEFLATE·MIT 디코더 경계 수정본 (구현)
-  hwp5/        FileHeader·버전·압축·레코드 경계·DocInfo 속성/ID 매핑/BinData/글꼴/탭/번호/글머리표/스타일·일부 개수 검증 (구현), 나머지 의미 해석/쓰기 (예정)
+  hwp5/        FileHeader·버전·압축·레코드 경계·DocInfo 속성/ID 매핑/주요 리소스·일부 개수 검증 (구현), 나머지 의미 해석/쓰기 (예정)
   hwpx/        ZIP/XML 읽기·쓰기 (예정)
   model/       문서 공통 모델과 원본 정보 보존 (예정)
   root.zig     라이브러리 진입점
@@ -21,6 +21,8 @@ tests/hwp5/    테스트 전용 WASM bridge·독립 zlib/레코드 oracle·적�
 CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계·브라우저 API에 직접 의존하지 않는 메모리 기반 읽기·쓰기를 우선합니다.
 
 HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.
+
+DocInfo 리소스는 BinData·글꼴·탭·번호·글머리표·스타일·테두리/배경·글자 모양·문단 모양까지 해석합니다. `border_fill.zig`는 선 배열, `fill.zig`는 채우기 조합, `picture_info.zig`는 이미지 속성 공통 배치를 소유합니다. 문단 모양의 구/신 줄 간격을 임의로 하나로 합치지 않으며 전체 리소스 참조 검증은 후속 단계입니다.
 
 저장은 문서 모델 → HWP 레코드 → 압축된 스트림 목록 → 새 CFB 생성 순서로 구현합니다. 기존 파일의 섹터를 제자리 수정하는 기능은 초기 범위에 포함하지 않습니다.
 

@@ -10,6 +10,7 @@ import {
 import { createCfbReader } from "../../js/cfb.mjs";
 import { checkDocinfo, checkDocinfoEdges } from "./docinfo.mjs";
 import { resourceEdges, resourceActual } from "./resources.mjs";
+import { shapeEdges, shapeMutations } from "./shapes.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -87,6 +88,7 @@ let begin = checks;
 checkDocinfoEdges(call);
 resourceEdges(call);
 formattingEdges(call);
+shapeEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -211,7 +213,15 @@ const resources = {
   mismatches: [],
   missing: [],
 };
-const formatting = { tabDef: 0, numbering: 0, bullet: 0, style: 0 };
+const formatting = {
+  tabDef: 0,
+  numbering: 0,
+  bullet: 0,
+  style: 0,
+  borderFill: 0,
+  charShape: 0,
+  paraShape: 0,
+};
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
     cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
@@ -267,6 +277,9 @@ assert.deepEqual(formatting, {
   numbering: 50,
   bullet: 25,
   style: 700,
+  borderFill: 247,
+  charShape: 525,
+  paraShape: 792,
 });
 assert.ok(streams >= 90);
 assert.equal(unsupported.length, 3);
@@ -323,9 +336,16 @@ rounds.push({
   recoveries: 2000,
 });
 const formattingMutationResults = formattingMutations(call);
+const shapeMutationResults = shapeMutations(call);
 console.log(
   JSON.stringify(
-    { rounds, formattingMutationResults, checks, imports: 0 },
+    {
+      rounds,
+      formattingMutationResults,
+      shapeMutationResults,
+      checks,
+      imports: 0,
+    },
     null,
     2,
   ),

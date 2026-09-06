@@ -155,8 +155,24 @@ export function formattingMutations(call) {
 }
 
 export function formattingCounts(bytes) {
-  const counts = { tabDef: 0, numbering: 0, bullet: 0, style: 0 };
-  const names = { 22: "tabDef", 23: "numbering", 24: "bullet", 26: "style" };
+  const counts = {
+    tabDef: 0,
+    numbering: 0,
+    bullet: 0,
+    style: 0,
+    borderFill: 0,
+    charShape: 0,
+    paraShape: 0,
+  };
+  const names = {
+    20: "borderFill",
+    21: "charShape",
+    22: "tabDef",
+    23: "numbering",
+    24: "bullet",
+    25: "paraShape",
+    26: "style",
+  };
   let offset = 0;
   while (offset < bytes.length) {
     const bits = bytes.readUInt32LE(offset);
