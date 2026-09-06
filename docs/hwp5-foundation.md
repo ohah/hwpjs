@@ -1364,3 +1364,19 @@ observed_optional_extension은 꼬리가 없으면 확장자 부재(null)이고,
 이 단계에서 두 원본의 storage 확장자 경로 실패는 해소했습니다. 확장자 뒤 미지 꼬리 의미, 모든 버전의 배치 규칙, OLE ID 참조 의미·임베디드 내부 형식·상위 도형 의미·표시/편집은 남았습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 179/179, Node 47/47, HWP5 WASM 175,370회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다. 두 OLE 원본의 기본 관측 모드 CFB 성공과 명세 모드 예상 실패를 구분해 검증했습니다.
+
+## OLE 참조 해석을 구별하는 실제 차트 표본 (2026-09-06)
+
+OLE의 pending_references를 성급히 리소스 순번 검사로 대체하지 않기 위해 rhwp samples의 HWP 후보 536개를 추가 조사했습니다. 430개는 순회를 마쳤고 102개는 CFB/압축/레코드 등의 단계에서 실패했으며 4개는 지원하지 않는 보안 플래그로 제외했습니다. 실패를 OLE 부재로 해석하지 않습니다. 순회 중 찾은 OLE 53개 중 51개는 ID가 DocInfo 순번/저장소 ID 양쪽에 맞아 구별에 도움이 되지 않았습니다. 한 개는 ID 0이었고, 한 개에서 DocInfo 두 해석이 달랐습니다. 이 집계는 전체 HWP 지원률이나 실패 파일의 완전한 개체 조사 결과가 아닙니다.
+
+구별 표본은 `reference/rhwp/samples/chart/분산형/곡선이있는분산형.hwp`입니다. 버전은 5.1.1.0이며 OLE payload의 ID는 1입니다. DocInfo BinData는 단 한 항목이고 원문은 0200030003004f004c004500: storage ID 3, extension OLE입니다. 따라서 리소스 순번 1로 해석하면 BIN0003.OLE이지만 물리 저장소 ID 1로 해석하면 BIN0001.OLE입니다. 파일 안에는 두 스트림이 모두 존재합니다. DocInfo에 ID 1이 없다는 사실만으로 물리 ID 해석을 반증할 수 없습니다.
+
+추가로 BIN0001/2/3.OLE을 각각 압축 해제하고 4바이트 크기 envelope 뒤의 내부 CFB를 strict로 읽었습니다. 세 스트림 모두 Contents/OlePres/OOXMLChartContents를 갖지만 내용은 다릅니다. OOXMLChartContents의 scatterStyle은 각각 smooth/lineMarker/smoothMarker입니다. 압축 해제한 전체 envelope의 SHA-256도 모두 다릅니다. 파일 이름이 특정 표시와 비슷하다는 이유로 한컴의 실제 선택 스트림을 단정하지 않습니다. 이번에는 한컴 프로그램을 실행하거나 시각적 출력과 대조하지 않았습니다.
+
+`tests/hwp5/ole-reference-evidence.mjs`는 위 차이를 실제 코어 payload 출력과 독립 원문 순회로 대조합니다. ID 1, DocInfo ordinal 1/storage ID 3, 별개 물리 스트림 3개와 각 차트 설정을 고정했습니다. 내부 CFB 크기 envelope, strict 파싱, 서로 다른 내용 해시도 검사합니다. 차트 XML은 이 고정 표본의 설정 표식만 검사하며 일반 XML/차트 파서를 구현한 것이 아닙니다.
+
+현재 decoded document/CFB 검사는 통과하지만 OLE pending_references는 정확히 1 그대로입니다. DocInfo 항목이 가리키는 BIN0003.OLE을 디코딩한 사실은 OLE ID 1의 의미 해석 성공이 아닙니다. 이 표본은 앞으로 잘못된 단일 해석으로 보류를 지우는 회귀를 검출하기 위한 증거입니다. 원본과 내부 콘텐츠는 변경·실행하지 않았습니다. 외부 표본이 없으면 skipped로 보고합니다.
+
+OLE 참조 의미는 아직 보류입니다. 이를 확정하려면 파일을 읽는 한컴 동작이나 더 명확한 규격/독립 구현 근거가 필요하며, 현재 검사의 성공만으로 순번 또는 물리 ID를 선택하지 않습니다. 전체 문서 구현 목표는 유지합니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 179/179, Node 47/47, HWP5 WASM 175,406회 검사 통과(참조 표본 존재). CFB 12,000회 변이에서 trap 0이며 diff 검사도 통과했습니다. 이번 변경은 증거·회귀 테스트 추가이며 제품의 OLE 참조 의미를 바꾸지 않았습니다.

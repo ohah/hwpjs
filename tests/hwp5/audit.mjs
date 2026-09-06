@@ -35,6 +35,7 @@ import { equationValidationEdges } from "./equation-validation.mjs";
 import { oleEdges, oleReference } from "./ole.mjs";
 import { oleValidationEdges } from "./ole-validation.mjs";
 import { storageEdges } from "./storage-extension.mjs";
+import { oleReferenceEvidence } from "./ole-reference-evidence.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -379,6 +380,7 @@ const hiddenReferenceResults = hiddenReference(call, cfb);
 const noteControlReferenceResults = noteControlReference(call, cfb);
 const equationReferenceResults = equationReference(call, cfb);
 const oleReferenceResults = oleReference(call, cfb);
+const oleReferenceEvidenceResults = await oleReferenceEvidence(call, cfb);
 const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
@@ -791,6 +793,7 @@ console.log(
       oleValidationEdgeResults,
       storageEdgeResults,
       oleReferenceResults,
+      oleReferenceEvidenceResults,
       equationReferenceResults,
       noteControlReferenceResults,
       rubyDocumentResults,
