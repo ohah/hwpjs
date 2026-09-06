@@ -8,6 +8,8 @@
 
 - [변경 추적 작성자](hwp5-track-authors.md)는 태그 97의 레벨·선택적 매핑 개수 검증과 미해석 payload 경계를 관리합니다.
 
+- [변경 추적 내용·정보](hwp5-track-changes.md)는 태그 96의 개수·레벨과 태그 32의 코어·extra 경계를 관리합니다.
+
 - `docinfo/memo_shape.zig`는 관측 태그 92의 22바이트 payload 코어입니다. 폭 u32/테두리 6바이트/채우기·활성 색상 u32/마지막 미확정 u32와 extra를 보존합니다. `border_line.Border.read`를 border_fill과 공유하되 메모와 일반 테두리의 enum 의미까지 같다고 가정하지 않습니다. 마지막 DWORD의 실제 1/2를 기본 0으로 바꾸거나 memoType 의미를 확정하지 않습니다. DocInfo reader는 payload와 level 1을 검사하고 resources는 memo_shape_count를 집계합니다. 실제 ID 매핑 슬롯이 있을 때만 음수/개수 불일치를 검사하며 슬롯 부재를 0으로 보충하지 않습니다. 본문 메모 참조·메모 명령의 의미 검증은 별도입니다.
 
 - `src/hwp5/docinfo/`: 문서 속성·ID 매핑·BinData·FaceName·TabDef·Numbering·Bullet·Style payload와 태그 dispatch·리소스 개수 검증을 분리합니다. 번호/글머리표의 공통 머리 정보는 `paragraph_head.zig`가 소유합니다. 실제 필드 부재(null)와 값 0, 버전상 기대 슬롯 수를 구분합니다. BinData/글꼴 개수 검증과 전체 문서 조립/참조 검증을 혼동하지 않습니다.

@@ -53,6 +53,7 @@ test {
     _ = @import("hwp5/docinfo/forbidden_chars_tests.zig");
     _ = @import("hwp5/docinfo/forbidden_validation_tests.zig");
     _ = @import("hwp5/docinfo/track_author_tests.zig");
+    _ = @import("hwp5/docinfo/track_change_tests.zig");
     _ = @import("hwp5/body/group_validation_tests.zig");
     _ = @import("hwp5/body/shape_picture_tests.zig");
     _ = @import("hwp5/body/picture_color_tests.zig");

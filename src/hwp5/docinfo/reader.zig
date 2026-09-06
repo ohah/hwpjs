@@ -15,7 +15,7 @@ pub const ParaShape = @import("para_shape.zig").ParaShape;
 pub const CompatibleDocument = @import("compatible_document.zig").CompatibleDocument;
 pub const LayoutCompatibility = @import("layout_compatibility.zig").LayoutCompatibility;
 pub const MemoShape = @import("memo_shape.zig").Shape;
-pub const Tag = enum(u10) { document_properties = 16, id_mappings = 17, bin_data = 18, face_name = 19, border_fill = 20, char_shape = 21, tab_def = 22, numbering = 23, bullet = 24, para_shape = 25, style = 26, compatible_document = 30, layout_compatibility = 31, track_change_author = 97 };
+pub const Tag = enum(u10) { document_properties = 16, id_mappings = 17, bin_data = 18, face_name = 19, border_fill = 20, char_shape = 21, tab_def = 22, numbering = 23, bullet = 24, para_shape = 25, style = 26, compatible_document = 30, layout_compatibility = 31, track_change_info = 32, track_change = 96, track_change_author = 97 };
 pub const Value = union(enum) { properties: Properties, id_mappings: IdMappings, bin_data: BinData, face_name: FaceName, border_fill: BorderFill, char_shape: CharShape, tab_def: TabDef, numbering: Numbering, bullet: Bullet, para_shape: ParaShape, style: Style, compatible_document: CompatibleDocument, layout_compatibility: LayoutCompatibility, memo_shape: MemoShape, unknown };
 pub const Record = struct { framing: framing.Record, value: Value };
 
@@ -33,8 +33,8 @@ pub const Iterator = struct {
     pub fn next(self: *Iterator) !?Record {
         var candidate = self.records;
         const r = (try candidate.next()) orelse return null;
-        // Only tag/level are specified here; author payload stays unknown/raw.
-        if (r.tag == @intFromEnum(Tag.track_change_author) and r.level != 1) return error.InvalidDocInfoLevel;
+        // Envelope validation does not make track-change fields understood.
+        if (r.tag == @intFromEnum(Tag.track_change_info)) _ = try @import("track_change_info.zig").View.parse(r.payload);
         const value: Value = switch (r.tag) {
             @intFromEnum(Tag.document_properties) => .{ .properties = try Properties.parse(r.payload) },
             @intFromEnum(Tag.id_mappings) => .{ .id_mappings = try IdMappings.parse(r.payload, self.version) },
@@ -55,7 +55,10 @@ pub const Iterator = struct {
         const expected_level: ?u10 = switch (value) {
             .properties, .id_mappings, .compatible_document => 0,
             .bin_data, .face_name, .tab_def, .numbering, .bullet, .style, .border_fill, .char_shape, .para_shape, .layout_compatibility => 1,
-            .unknown => null,
+            .unknown => switch (r.tag) {
+                @intFromEnum(Tag.track_change_info), @intFromEnum(Tag.track_change), @intFromEnum(Tag.track_change_author) => 1,
+                else => null,
+            },
             .memo_shape => 1,
         };
         if (expected_level) |level| if (r.level != level) return error.InvalidDocInfoLevel;

@@ -15,18 +15,20 @@ pub const Report = struct {
     face_name_count: usize,
     memo_shape_count: usize = 0,
     track_change_author_count: usize = 0,
+    track_change_count: usize = 0,
     counts: [kind_count]usize = @splat(0),
 
     pub fn count(self: Report, kind: Kind) usize {
         return self.counts[@intFromEnum(kind)];
     }
     /// Extends the legacy BinData/font check without changing validate().
-    /// Memo/author counts are checked only when their mapping slots are present.
+    /// Optional resource counts are checked only when their mapping slots are present.
     /// Missing slots remain distinguishable through mappings.get().
     pub fn validateKnownCounts(self: Report) !void {
         try self.validate();
         try self.validateOptionalCount(.memo_shape, self.memo_shape_count);
         try self.validateOptionalCount(.track_change_author, self.track_change_author_count);
+        try self.validateOptionalCount(.track_change, self.track_change_count);
         inline for (@typeInfo(Kind).@"enum".fields) |field| {
             const kind: Kind = @enumFromInt(field.value);
             const n = self.mappings.get(mappingField(kind)).?;
@@ -68,7 +70,7 @@ pub const Report = struct {
 };
 
 /// No allocations from declared counts; preserve mismatches as a report.
-/// Counts BinData, FACE_NAME and the seven parsed formatting resource types.
+/// Counts BinData, FACE_NAME, formatting, memo and raw track-change resources.
 pub fn inspect(bytes: []const u8, version: Version, options: Options) !Report {
     var it = try d.Iterator.init(bytes, version, options);
     var mappings: ?d.IdMappings = null;
@@ -76,6 +78,7 @@ pub fn inspect(bytes: []const u8, version: Version, options: Options) !Report {
     var fonts: usize = 0;
     var memos: usize = 0;
     var authors: usize = 0;
+    var changes: usize = 0;
     var counts: [kind_count]usize = @splat(0);
     while (try it.next()) |r| switch (r.value) {
         .id_mappings => |m| {
@@ -87,10 +90,11 @@ pub fn inspect(bytes: []const u8, version: Version, options: Options) !Report {
         .memo_shape => memos += 1,
         else => {
             if (r.framing.tag == @intFromEnum(d.Tag.track_change_author)) authors += 1;
+            if (r.framing.tag == @intFromEnum(d.Tag.track_change)) changes += 1;
             inline for (@typeInfo(Kind).@"enum".fields) |field| {
                 if (r.framing.tag == @intFromEnum(@field(d.Tag, field.name))) counts[field.value] += 1;
             }
         },
     };
-    return .{ .mappings = mappings orelse return error.MissingIdMappings, .bin_data_count = bins, .face_name_count = fonts, .memo_shape_count = memos, .track_change_author_count = authors, .counts = counts };
+    return .{ .mappings = mappings orelse return error.MissingIdMappings, .bin_data_count = bins, .face_name_count = fonts, .memo_shape_count = memos, .track_change_author_count = authors, .track_change_count = changes, .counts = counts };
 }
