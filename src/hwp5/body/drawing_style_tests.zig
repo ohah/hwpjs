@@ -2,6 +2,51 @@ const std = @import("std");
 const t = std.testing;
 const Reader = @import("../../binary/reader.zig").Reader;
 const Alpha = @import("../docinfo/fill_alpha.zig").Alpha;
+test "older gradient style reuses Fill fields without manufacturing alpha" {
+    const Style = @import("drawing_style.zig").Style;
+    var raw: [51]u8 = undefined;
+    _ = try std.fmt.hexToBytes(&raw, "00000000c8000000410000c00004000000020000000032000000320000005000000002000000ffffff003366ff000100000050");
+    const style = try Style.parseWithTail(&raw, .observed13, .fill_only);
+    try t.expectEqual(200, style.border.width);
+    try t.expectEqual(4, style.fill.flags);
+    const fill = style.fill.data.known;
+    const gradient = fill.gradient.?;
+    try t.expectEqual(2, gradient.kind);
+    try t.expectEqual(0, gradient.angle);
+    try t.expectEqual(50, gradient.center_x);
+    try t.expectEqual(50, gradient.center_y);
+    try t.expectEqual(80, gradient.blur);
+    try t.expectEqual(2, gradient.count());
+    try t.expectEqual(0x00ffffff, gradient.color(0).?);
+    try t.expectEqual(0x00ff6633, gradient.color(1).?);
+    try t.expectEqual(null, gradient.color(2));
+    try t.expectEqual(null, gradient.position(0));
+    try t.expectEqual(80, fill.blurCenter().?);
+    try t.expect(style.tail == .fill_only);
+    try t.expectEqual(0, style.tail.fill_only.len);
+    try t.expectError(error.UnexpectedEnd, Style.parse(&raw, .observed13));
+    // A hostile count must fail, never consume it as an opaque older extension.
+    std.mem.writeInt(u32, raw[34..38], 0xffffffff, .little);
+    try t.expectError(error.UnexpectedEnd, Style.parseWithTail(&raw, .observed13, .fill_only));
+}
+test "explicit fill-only style preserves absence and does not guess a shadow" {
+    const Style = @import("drawing_style.zig").Style;
+    const raw = [_]u8{0} ** 37;
+    const short = try Style.parseWithTail(raw[0..21], .observed13, .fill_only);
+    try t.expect(short.tail == .fill_only);
+    try t.expectEqual(0, short.tail.fill_only.len);
+    try t.expectError(error.UnexpectedEnd, Style.parse(raw[0..21], .observed13));
+    for (0..21) |n| try t.expectError(error.UnexpectedEnd, Style.parseWithTail(raw[0..n], .observed13, .fill_only));
+    const extra = try Style.parseWithTail(&raw, .observed13, .fill_only);
+    try t.expectEqualSlices(u8, raw[21..], extra.tail.fill_only);
+    try t.expectEqual(raw[21..].ptr, extra.tail.fill_only.ptr);
+    try t.expectEqual(0, (try Style.parse(&raw, .observed13)).tail.known.shadow.kind);
+    var unknown = raw;
+    std.mem.writeInt(u32, unknown[13..17], 0x80000000, .little);
+    const preserved = try Style.parseWithTail(&unknown, .observed13, .fill_only);
+    try t.expect(preserved.tail == .unknown);
+    try t.expectEqualSlices(u8, unknown[17..], preserved.tail.unknown);
+}
 test "per-type alpha keeps zero and mixed types in pattern-gradient-image order" {
     for (0..8) |flags| {
         const values = [_]u8{ 0, 128, 255 };

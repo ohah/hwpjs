@@ -1486,3 +1486,21 @@ Alpha의 pattern/gradient/image는 각각 ?u8이며 부재/null과 값 0을 구�
 적대적 검토에서는 (1) 표본 38개 편향을 재귀 전체 조사로 확장, (2) 진입 실패/보안/계층 완료 분리, (3) 스타일 실패/unknown/deferred 분리 및 합계 검증, (4) 호 표본 부재 명시, (5) 실제 구형 18개 오류를 재현했습니다. 파일 이름의 URL 예약문자 오해를 피하려고 파일시스템 경로로 읽으며 원본 파일을 수정하지 않습니다. 제품 파서·문서 검사 동작은 이 단계에서 변경하지 않았습니다.
 
 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 186/186, Node 47/47, HWP5 WASM 200,705회 검사. 로그 `/tmp/hwpjs-style-survey-{debug,safe,fast}.log`에 파일별 진입 실패와 스타일 예외를 남겼습니다. audit 통과에는 위 18개 예상 오류의 재현이 포함되며 해당 스타일 지원 완료를 뜻하지 않습니다.
+
+## 그림자 없는 명시적 도형 스타일 배치 (2026-09-06)
+
+`drawing_style.Style.parseWithTail(bytes, border_layout, tail_layout)`을 추가했습니다. tail_layout은 fill_only/alpha_shadow이며 기존 parse는 alpha_shadow 호출로 유지합니다. 두 경로 모두 Border와 Fill의 기존 파서를 재사용합니다. fill_only는 Fill 이후 바이트를 Tail.fill_only에 원문 그대로 빌리고, alpha·그림자 구조체를 만들지 않습니다. 미지 Fill 비트는 두 경로 모두 Tail.unknown으로 남습니다. 따라서 필드 부재와 값 0, 미지 형식을 구분합니다.
+
+문서 버전/길이 기반 자동 선택과 오류 후 fallback은 추가하지 않았습니다. 전체 참조 조사의 두 구형 파일에 한해서 명시적으로 fill_only를 호출해 18개 원문을 대조했습니다. 기존 alpha_shadow 조사에서는 같은 입력의 UnexpectedEnd를 계속 검증하며, 별도 fillOnly.parsed에 성공을 기록합니다. 이는 두 파서 배치의 차이이며 전환 버전 발견이나 파일 손상 판정이 아닙니다.
+
+### 구현 후 적대적 검증
+
+1. 네이티브에서 동일 바이트를 fill_only/alpha_shadow로 각각 읽어, 꼬리 raw 보존과 0인 그림자/그림자 부재의 구별을 확인했습니다. fill_only view의 포인터도 입력의 정확한 위치를 빌립니다.
+2. 실제 51바이트 gradient 원문을 네이티브에 고정해 선 폭 200, gradient 종류 2, 중심 50/50, blur 80, 색 0x00ffffff/0x00ff6633, additional 80을 독립 기대값과 대조했습니다. 추가 alpha를 만들어내지 않습니다. count 0xffffffff 변이를 거부합니다.
+3. WASM에서 두 테두리 폭 × 두 꼬리 배치 × Fill 8조합을 대조했습니다. unknown flags·extra 보존·잘못된 모드·모든 필수 prefix 잘림·오류 뒤 정상 재호출을 검사합니다. fill_only 합성 입력을 alpha_shadow로 읽으면 계속 오류입니다.
+4. 실제 구형 18개가 fill_only로 성공했고, 이들의 필수 prefix 잘림 408건은 모두 거부했습니다. 입력 끝에 유효해 보이는 shadow 바이트가 추가되어도 fill_only는 이를 extra로 보존하며 자동 승격하지 않습니다.
+5. 기본 Fill 코드를 복제하거나 변경하지 않았으며 기존 2,716개 alpha_shadow 표본 대조를 유지했습니다. 미검사 종류/진입 실패 파일은 완료로 세지 않고 원본 파일은 변경하지 않았습니다.
+
+다음 범위는 실제 버전·종류별 배치 선택 근거와 문서 검사 연결, 이미지 채우기 참조 검증입니다. 이 단계의 명시적 구형 배치 지원을 전체 문서 자동 파싱 완료로 해석하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 188/188, Node 47/47, HWP5 WASM 201,898회 검사 통과. CFB 12,000회 변이에서 trap 0, Zig 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-style-fill-only-{debug,safe,fast}.log`입니다.

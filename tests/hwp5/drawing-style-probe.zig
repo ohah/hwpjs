@@ -4,11 +4,15 @@ const int = @import("resource-probe.zig").int;
 pub fn run(a: std.mem.Allocator, bytes: []const u8) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const mode = try r.readInt(u8);
-    if (mode > 1) return error.InvalidMode;
-    const p = try core.hwp5.drawing_style.Style.parse(bytes[r.offset..], @enumFromInt(mode));
+    if (mode > 3) return error.InvalidMode;
+    const p = try core.hwp5.drawing_style.Style.parseWithTail(bytes[r.offset..], @enumFromInt(mode & 1), if (mode & 2 != 0) .fill_only else .alpha_shadow);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    try int(a, &out, u32, @intFromBool(p.tail == .known));
+    try int(a, &out, u32, switch (p.tail) {
+        .unknown => 0,
+        .known => 1,
+        .fill_only => 2,
+    });
     try int(a, &out, u32, p.fill.flags);
     try int(a, &out, u32, p.border.color);
     try int(a, &out, i32, p.border.width);
@@ -16,6 +20,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8) ![]u8 {
     try int(a, &out, u32, p.border.outline);
     const extra = switch (p.tail) {
         .unknown => |raw| raw,
+        .fill_only => |raw| raw,
         .known => |k| blk: {
             inline for (.{ "pattern", "gradient", "image" }) |f| try int(a, &out, u32, if (@field(k.alpha, f)) |v| v else 256);
             try int(a, &out, u32, k.shadow.kind);

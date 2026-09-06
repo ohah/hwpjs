@@ -3,7 +3,10 @@ const border = @import("shape_border.zig");
 const Fill = @import("../docinfo/fill.zig").Fill;
 const Alpha = @import("../docinfo/fill_alpha.zig").Alpha;
 const Shadow = @import("shadow.zig").Shadow;
+pub const TailLayout = enum { fill_only, alpha_shadow };
 pub const Tail = union(enum) {
+    /// Explicit older layout: no alpha/shadow interpretation; preserve remaining bytes.
+    fill_only: []const u8,
     known: struct { alpha: Alpha, shadow: Shadow, extra: []const u8 },
     unknown: []const u8,
 };
@@ -14,12 +17,17 @@ pub const Style = struct {
     fill: Fill,
     tail: Tail,
     pub fn parse(bytes: []const u8, layout: border.Layout) !Style {
+        return parseWithTail(bytes, layout, .alpha_shadow);
+    }
+    /// Caller-selected layout, never inferred from byte length or a failed read.
+    pub fn parseWithTail(bytes: []const u8, layout: border.Layout, tail_layout: TailLayout) !Style {
         var r: Reader = .{ .bytes = bytes };
         const line = try border.Border.read(&r, layout);
         const fill = try Fill.parse(bytes[r.offset..]);
         const tail: Tail = switch (fill.data) {
             .unknown => |raw| .{ .unknown = raw },
             .known => |known| blk: {
+                if (tail_layout == .fill_only) break :blk .{ .fill_only = known.extra };
                 var rest: Reader = .{ .bytes = known.extra };
                 const alpha = try Alpha.read(&rest, fill.flags);
                 const shadow = try Shadow.read(&rest);

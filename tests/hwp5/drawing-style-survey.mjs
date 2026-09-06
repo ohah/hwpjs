@@ -10,6 +10,12 @@ export function drawingStyleSurvey(call, cfb) {
   const root = new URL("../../reference/rhwp/samples/", import.meta.url);
   if (!existsSync(root)) return { skipped: true };
   const out = { files: 0, hierarchyCompleted: 0, security: 0, failures: [], kinds: {} };
+  // Explicit per-fixture experiment, NOT version inference or production fallback.
+  const olderFixtures = new Map([
+    ["issue2559/1341000_research_report_footnotes.hwp", { count: 17, bytes: 21, version: "5000107" }],
+    ["issue5714/1490000-200800034_vietnam_labor_report.hwp", { count: 1, bytes: 51, version: "5000006" }],
+  ]);
+  out.fillOnly = { parsed: 0, rejectedPrefixes: 0 };
   const drawingIds = new Set(["$lin", "$rec", "$ell", "$arc", "$pol", "$cur"]);
   for (const name of readdirSync(root, { recursive: true }).filter(n => n.endsWith(".hwp")).sort()) {
     out.files++;
@@ -54,6 +60,17 @@ export function drawingStyleSurvey(call, cfb) {
             const start = (stack[level - 1].tag === 71 ? 8 : 4) + 42;
             const end = start + 50 + p.readUInt16LE(start) * 96;
             const style = p.subarray(end);
+            if (olderFixtures.has(name) && id === "$rec") {
+              const parsed = drawingStyleActual(call, style, 3);
+              assert.equal(parsed.known, true);
+              assert.equal(parsed.extra, 0);
+              out.fillOnly.parsed++;
+              for (let n = 0; n < parsed.consumed; n++) {
+                assert.throws(() => call(53, Buffer.concat([Buffer.from([3]), style.subarray(0, n)])), /UnexpectedEnd/);
+                out.fillOnly.rejectedPrefixes++;
+              }
+              drawingStyleActual(call, style, 3);
+            }
             let result;
             try { result = call(53, Buffer.concat([Buffer.from([1]), style])); }
             catch (e) {
@@ -76,11 +93,10 @@ export function drawingStyleSurvey(call, cfb) {
   assert.equal(out.hierarchyCompleted + out.security + new Set(out.failures.map(f => f.name)).size, out.files);
   for (const stats of Object.values(out.kinds)) assert.equal(stats.total, stats.deferred + stats.known + stats.unknown + stats.errors.length);
   // Pin the newly observed incompatibilities, not a claim that these files are corrupt.
-  for (const [name, count, bytes, version] of [
-    ["issue2559/1341000_research_report_footnotes.hwp", 17, 21, "5000107"],
-    ["issue5714/1490000-200800034_vietnam_labor_report.hwp", 1, 51, "5000006"],
-  ]) {
+  let expectedParsed = 0;
+  for (const [name, { count, bytes, version }] of olderFixtures) {
     if (!existsSync(join(fileURLToPath(root), name))) continue;
+    expectedParsed += count;
     assert.ok(!out.failures.some(f => f.name === name), "regression fixture must reach styles");
     const failures = out.kinds.$rec.errors.filter(e => e.name === name);
     assert.equal(failures.length, count);
@@ -90,5 +106,6 @@ export function drawingStyleSurvey(call, cfb) {
       assert.equal(failure.error, "UnexpectedEnd");
     }
   }
+  assert.equal(out.fillOnly.parsed, expectedParsed);
   return out;
 }
