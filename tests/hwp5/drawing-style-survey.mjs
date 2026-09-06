@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { documentRecords } from "./documents.mjs";
 import { drawingStyleActual } from "./drawing-style.mjs";
 import { lineActual } from "./shape-line.mjs";
+import { groupInfoActual } from "./group-info.mjs";
 import { connectorActual } from "./shape-connector.mjs";
 import { lineOwnerActual } from "./line-validation.mjs";
 import { rectangleActual } from "./shape-rectangle.mjs";
@@ -39,6 +40,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.pictureAdditional = { selected: [0,0], rejected: 0, unavailable: 0, alpha: {} };
   out.pictureReferences = { ordinals: 0, absent: 0, nonidentity: {} };
   out.connectors = { parsed: 0, rejected: 0, points: 0, kinds: {}, extras: {}, files: {} };
+  out.groupInfo = { parsed: 0, ids: 0, rejected: 0, selectedInstances: 0, unavailableInstances: 0, extras: {}, files: {}, identityMismatches: [] };
   out.versions = {};
   out.images = [];
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
@@ -204,6 +206,23 @@ export function drawingStyleSurvey(call, cfb) {
         if (record.tag === 76) {
           const p = bytes.subarray(record.start, record.end);
           const id = Buffer.from(p.subarray(0, 4)).reverse().toString("latin1");
+          if(id==="$con"){
+            const base=(stack[level-1]?.tag===71?8:4)+42,start=base+50+p.readUInt16LE(base)*96;
+            const tail=p.subarray(start),info=groupInfoActual(call,tail);
+            out.groupInfo.parsed++;out.groupInfo.ids+=info.count;out.groupInfo.rejected+=info.rejected;
+            out.groupInfo.extras[info.extra]=(out.groupInfo.extras[info.extra]??0)+1;
+            out.groupInfo.files[name]=(out.groupInfo.files[name]??0)+1;
+            if(info.extra>=4){out.groupInfo.rejected+=groupInfoActual(call,tail,1).rejected;out.groupInfo.selectedInstances++;}
+            else out.groupInfo.unavailableInstances++;
+            const actual=[];
+            for(let j=records.indexOf(record)+1;j<records.length;j++){
+              const child=records[j],childLevel=bytes.readUInt32LE(child.offset)>>>10&1023;
+              if(childLevel<=level)break;
+              if(childLevel===level+1&&child.tag===76)actual.push(bytes.readUInt32LE(child.start));
+            }
+            const listed=Array.from({length:info.count},(_,i)=>tail.readUInt32LE(2+i*4));
+            if(JSON.stringify(actual)!==JSON.stringify(listed))out.groupInfo.identityMismatches.push({name,section:section.name,offset:record.offset,listed,actual});
+          }
           const stats = out.kinds[id] ??= { total: 0, deferred: 0, known: 0, unknown: 0, errors: [], flags: {}, extras: {} };
           stats.total++;
           if (drawingIds.has(id)) {

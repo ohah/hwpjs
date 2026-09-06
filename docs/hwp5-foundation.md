@@ -2030,3 +2030,25 @@ shape_connector는 Point.read와 record_array.Records를 재사용하고 제어�
 이 단계는 연결선 payload와 문서 소유권의 연결입니다. 대상 ID/인덱스 실물 해결·연결선 경로 생성·조판·미지 꼬리 및 나머지 문서 포맷 검증은 계속 남아 있습니다. 원본 fixture는 수정하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 222/222, Node 47/47, HWP5 WASM 1,248,969회 검사 통과했습니다. 연결선 소유권 합성 성공 82/거부 70, 실제 문서 오류 전파 거부 246/구역 정렬 1을 포함합니다. 기존 payload 32개·72점과 짝 HWPX 20개·44점 대조를 유지했습니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-connector-owner-{debug,safe,fast}.log`입니다.
+
+## 묶음 자식 목록과 선택 instance ID 코어
+
+2026-09-07. hwp-spec의 묶음 파트와 공식 PDF 표 120~121의 u16 개수/u32 ID 배열을 대조했습니다. strict CFB/비보안 스트림으로 진입 가능한 실제 묶음 818개에서는 별도 태그 86을 발견하지 못했고, 태그 76의 $con Component에서 Rendering 뒤에 목록이 있습니다. 요약 문서의 구현 완료 표시는 구 Rust 설명이지 신규 Zig 완료 근거가 아닙니다.
+
+독립 [hwplib ForShapeComponent](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/reader/bodytext/paragraph/control/gso/part/ForShapeComponent.java)의 commonPart→childInfo→선택 instid와 [container writer](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/writer/bodytext/paragraph/control/gso/part/shapecomponent/ForShapeComponentForContainer.java)의 태그 76 방출을 대조했습니다. 이 writer는 중첩 묶음의 instance 위치에 0을 쓰지만 이를 모든 원문의 규칙으로 채택하지 않습니다. 실제 편람의 중첩 묶음에도 비영 값이 있습니다. 외부 코드 이식·새 의존성은 없습니다.
+
+group_info.Info.parse는 명시적 ids_only/with_instance 배치를 받습니다. 개수에 필요한 길이를 먼저 검사하고 record_array.Records로 ID 배열을 빌립니다. 컨트롤 ID는 종류 식별자이므로 같은 종류가 반복된다고 중복 오류로 만들지 않고 순서·미지 값·extra를 보존합니다. instance_id는 null과 0을 구분하며 짧은 입력을 자동 기본값으로 채우지 않습니다. 테스트 WASM 모드 84는 배치 바이트와 이 목록 payload만 받으며 상위 Component의 ID/Rendering 배치를 다시 추정하지 않습니다.
+
+적대적 검증:
+
+1. 네이티브에서 중복 종류 ID/미지 0xffffffff/고위 비트 instance·borrowed 주소·범위 밖 배열 접근과 부재/null·명시적 0을 직접 검사합니다.
+2. 두 배치에서 모든 필수 prefix를 자르고, 0/1/65535개 정상 배열과 남은 바이트보다 큰 개수를 검사합니다. 잘림을 빈 목록이나 축소된 count로 바꾸지 않습니다.
+3. ID/instance/미지 꼬리의 각 바이트×8비트 변이를 실제 WASM으로 검사하고 정상 입력으로 회복합니다. 선택하지 않은 instance 바이트는 extra에 남습니다.
+4. 전체 drawing survey에서 $con의 실제 Rendering 경계 뒤 목록을 검사하고, 명시적 instance 배치 실험과 목록/직접 자식 ID 순서의 독립 대조를 별도 집계합니다. 태그만 검색해 자손 전체를 직접 자식으로 세지 않습니다. 진입 실패/보안 표본을 전체 지원으로 세지 않습니다.
+5. 편람 Section0의 묶음 21개 instance ID를 WASM의 이름 있는 출력 위치에서 읽어 짝 HWPX container instid와 대조했습니다. 모두 비영이며 일치했습니다. instance의 문서 전역 유일성이나 다른 포맷의 참조 연결까지 입증한 것은 아닙니다.
+
+현재는 목록 코어입니다. 실제 목록과 자식 계층의 문서 검증 연결, 별도 태그 86 표본·배치, instance 전역 의미·나머지 포맷 및 편집/저장은 계속 남아 있습니다. 원본 fixture는 수정하지 않았습니다.
+
+실측: 818개 목록의 자식 ID 2,342개가 실제 직접 자식의 순서와 모두 일치했습니다. 811개는 목록 뒤 4바이트가 있고 7개는 없습니다. 부재 7개는 모두 issue2559/1341000_research_report_footnotes.hwp의 Section0, 버전 5.0.1.7이며 각 목록의 자식 수는 2개입니다. 이 한 파일로 instance 도입 버전을 확정하지 않습니다. 부재를 0인 instance로 바꾸거나 전체 문서 자동 배치 선택 규칙으로 일반화하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 223/223, Node 47/47 통과했습니다. Debug WASM 1,283,262회 검사 후 같은 Debug 바이너리에서 추가한 HWPX 묶음 21개 instance 대조를 별도 실행해 통과했습니다. 이를 전체 audit에 포함한 ReleaseSafe·ReleaseFast는 각각 1,283,284회입니다. 합성 성공 334/거부 5,185, 실제 목록/선택 확장 필수 prefix 거부 25,182회와 ID 순서 불일치 0을 확인했습니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-group-info-{debug,safe,fast}.log`입니다.
