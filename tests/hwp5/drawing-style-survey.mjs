@@ -42,6 +42,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.pictureReferences = { ordinals: 0, absent: 0, nonidentity: {} };
   out.connectors = { parsed: 0, rejected: 0, points: 0, kinds: {}, extras: {}, files: {} };
   out.groupInfo = { parsed: 0, ids: 0, rejected: 0, selectedInstances: 0, unavailableInstances: 0, extras: {}, files: {}, identityMismatches: [] };
+  out.videoRecords = [];
   out.versions = {};
   out.images = [];
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
@@ -99,6 +100,7 @@ export function drawingStyleSurvey(call, cfb) {
       }
       const stack = [];
       for (const record of records) {
+        if(record.tag===98)out.videoRecords.push({name,section:section.name,offset:record.offset,bytes:record.end-record.start});
         if(record.tag===85){
           const p=bytes.subarray(record.start,record.end),stats=pictureActual(call,p);
           out.pictures.parsed++;out.pictures.rejected+=stats.rejected;

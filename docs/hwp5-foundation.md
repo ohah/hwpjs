@@ -2072,3 +2072,25 @@ shape_validation.Detailed.groups를 document.section의 shape_groups에 연결�
 회귀 검증 중 기존 arc-document 합성 테스트의 불일치도 발견했습니다. 사각형 Component를 호로 바꾸면서 부모 묶음 목록에는 사각형 ID를 남겼기 때문에 GroupChildIdentityMismatch가 발생했습니다. 해당 직접 자식의 순번을 구해 목록 한 항목만 함께 갱신하도록 수정했습니다. 같은 종류의 다른 자식을 일괄 치환하지 않습니다. 목록 갱신 전 변형은 새 검사에서 거부되는 별도 회귀 사례로 유지했습니다. 이는 원래부터 호가 들어 있는 실제 fixture가 아니라 기존 실제 컨테이너 안에 만든 합성 호입니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 224/224, Node 47/47, HWP5 WASM 1,284,057회 검사 통과했습니다. 묶음 합성 성공 23/거부 17, 실제 두 묶음의 문서 오류 전파 거부 45/빈 그룹 구역 정렬 1과 기존 818개 목록 대조를 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-group-owner-{debug,safe,fast}.log`입니다.
+
+## 동영상 payload 코어와 웹 길이의 명세 한계
+
+2026-09-07. hwp-spec 동영상 파트와 [공식 revision 1.3 PDF](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf)의 표 123~126을 대조했습니다. 타입은 i32이며 0은 로컬의 비디오/썸네일 ID u16 두 개, 1은 WCHAR[len] 웹 태그와 썸네일 ID u16입니다. 웹 태그의 길이 접두사는 표에 없습니다. 로컬 rhwp에서 동영상 payload 해석 경로를 찾지 못했고 hwplib 고정 리비전의 트리에도 전용 Video 구현 파일을 찾지 못했습니다. 검색 부재를 모든 버전의 미지원 증명으로 삼지 않습니다.
+
+현재 strict CFB/비보안 스트림으로 진입 가능한 표본에서 태그 98은 0개입니다. drawing survey에 videoRecords 위치/크기 목록을 추가해 실제 표본 유무를 계속 보고합니다. 실제 동영상·HWPX 짝·한글 재생 결과를 검증했다고 주장하지 않습니다.
+
+video_data.Video.parse는 Data tagged union으로 로컬/웹을 구분합니다. 로컬은 최소 8바이트이며 두 ID의 0/상위 비트와 뒤 extra를 보존합니다. 웹은 명시적 WebLayout을 받습니다. specified_remainder는 타입 뒤 남은 바이트에서 마지막 u16을 썸네일로 읽고 나머지를 UTF-16으로 봅니다. explicit_units는 호출자가 별도로 아는 코드 유닛 수로 문자열/썸네일 경계를 정하고 extra를 보존합니다. 이는 두 번째 HWP wire 형식이나 u32 길이 접두사를 발명한 것이 아닙니다. 테스트 모드 86의 길이 입력은 테스트 API 메타데이터입니다.
+
+레거시 Rust도 웹의 마지막 두 바이트를 썸네일로 사용하지만 빈 웹 태그를 거부합니다. 명세에는 비어 있으면 안 된다는 조건이 없으므로 신규 코어는 빈 태그를 보존합니다. 이를 실제 한글에서 빈 태그가 재생 가능하다는 뜻으로 해석하지 않습니다. 웹 태그의 NUL/고립 서로게이트/BOM 등 원시 코드 유닛은 변환·실행하지 않습니다. 미지/음수 타입은 UnsupportedVideoType이며 로컬로 치환하지 않습니다.
+
+적대적 검증:
+
+1. 로컬의 모든 필수 prefix와 16비트 ID 원값 보존, 웹의 명시적 길이에서 모든 필수 prefix 잘림을 검사합니다. 마지막 ID를 문자열에 합치지 않는지 이름 있는 네이티브 필드 기대값과 WASM 독립 wire 기대값을 대조합니다.
+2. 길이가 없는 specified_remainder에서 6바이트 이상인 짝수 prefix는 더 짧은 웹 태그와 썸네일로 해석될 수 있습니다. 이를 전부 잘림 오류로 잡는다고 주장하지 않고 정상 재해석 사례로 검사합니다. 홀수 문자열 바이트는 OddVideoWebTagBytes로 거부합니다. 이 배치에서는 미지 꼬리와 웹 태그/썸네일을 독립적으로 구별할 수 없습니다.
+3. 0/1/65536 UTF-16 유닛과 외부 길이 0x80000000/0xffffffff, NUL·고립 서로게이트·미지 코드 유닛을 검사합니다. 타입/배치 오류와 길이 오류를 구분하고 정상 원문으로 회복합니다.
+4. 로컬 ID/extra 및 웹 태그/썸네일/명시적 extra의 각 바이트×8비트 변이를 검사합니다. 웹 문자열 내용의 URL/HTML 문법 유효성을 검사하는 것은 아닙니다.
+5. utf16_string.readUnits로 기존 counted UTF-16과 길이 곱셈/경계 읽기를 공유합니다. nonzero cursor, 범위 밖 cursor, 최대 usize 및 0개 읽기를 직접 검사하고 실패 시 커서가 유지되는지 확인합니다. 기존 Scripts/XMLTemplate/문자열 파서 회귀는 전체 audit로 검사합니다.
+
+현재는 명세 payload 코어입니다. 문서 소유권·실제 로컬/웹 wire 배치·BinData ID 의미/부재 규칙·미지 확장·썸네일/미디어 디코딩·외부 URL과 재생은 별도입니다. 원본 fixture와 외부 파일은 수정하거나 실행하지 않았습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 226/226, Node 47/47, HWP5 WASM 1,284,403회 검사 통과했습니다. 동영상 합성 성공 296/거부 50, 실제 동영상 표본 0을 구분해 보고합니다. 기존 CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-video-data-{debug,safe,fast}.log`입니다.

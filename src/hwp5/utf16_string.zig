@@ -14,8 +14,13 @@ pub fn read32(reader: *Reader) ![]const u8 {
 fn readCounted(comptime Count: type, reader: *Reader) ![]const u8 {
     var candidate = reader.*;
     const units = try candidate.readInt(Count);
-    if (units > (candidate.bytes.len - candidate.offset) / 2) return error.UnexpectedEnd;
-    const bytes = try candidate.take(@as(usize, units) * 2);
+    const bytes = try readUnits(&candidate, units);
     reader.* = candidate;
     return bytes;
+}
+
+/// An externally established code-unit count; does not read a length prefix.
+pub fn readUnits(reader: *Reader, units: usize) ![]const u8 {
+    if (reader.offset > reader.bytes.len or units > (reader.bytes.len - reader.offset) / 2) return error.UnexpectedEnd;
+    return reader.take(units * 2);
 }
