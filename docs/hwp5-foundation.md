@@ -1504,3 +1504,28 @@ Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 186/
 다음 범위는 실제 버전·종류별 배치 선택 근거와 문서 검사 연결, 이미지 채우기 참조 검증입니다. 이 단계의 명시적 구형 배치 지원을 전체 문서 자동 파싱 완료로 해석하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 188/188, Node 47/47, HWP5 WASM 201,898회 검사 통과. CFB 12,000회 변이에서 trap 0, Zig 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-style-fill-only-{debug,safe,fast}.log`입니다.
+
+## 도형 스타일 배치와 헤더/localVersion 상관 검증 (2026-09-06)
+
+전체 참조 조사에 헤더 버전/localVersion별 독립 집계를 추가하고, 종류별 성공·미지·오류 및 명시적 fill_only 성공 합계와 교차 검증합니다. 실제 두 배치 모두 localVersion=1임을 회귀 검사로 남겼습니다. localVersion을 shadow 유무 선택에 사용하는 규칙은 반례가 있으므로 채택하지 않습니다.
+
+| 헤더 버전 | localVersion | alpha_shadow 성공 | alpha_shadow 실패 / 명시적 fill_only 성공 |
+| --- | ---: | ---: | ---: |
+| 5.0.0.6 | 1 | 0 | 1 / 1 |
+| 5.0.1.7 | 1 | 0 | 17 / 17 |
+| 5.0.2.4 | 1 | 247 | 0 / 0 |
+| 5.0.3.0 | 1 | 338 | 0 / 0 |
+| 5.0.3.2 | 1 | 2 | 0 / 0 |
+| 5.0.3.4 | 1 | 23 | 0 / 0 |
+| 5.0.4.0 | 1 | 1 | 0 / 0 |
+| 5.0.5.0 | 1 | 98 | 0 / 0 |
+| 5.1.0.1 | 1 | 1,092 | 0 / 0 |
+| 5.1.1.0 | 1 | 915 | 0 / 0 |
+
+위 표는 관측 표본에 한정됩니다. 5.0.1.8~5.0.2.3 등의 중간 버전, 편집/저장 프로그램이 서로 다른 파일의 혼합 배치, 실제 한글 조판 결과는 입증하지 않습니다. 5.0.2.0/5.0.2.1 등의 임의 cutoff를 만들지 않았습니다.
+
+독립 [hwplib ForShapeComponent](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/reader/bodytext/paragraph/control/gso/part/ForShapeComponent.java)의 normal 경로는 common/line/fill/shadow 뒤 레코드 끝인지 검사해 반환합니다. localVersion은 읽어서 저장하지만 그 값으로 shadow 유무를 분기하지 않습니다. 이 코드도 정확한 버전 전환의 근거는 아닙니다. 조회는 소스 비교이며 hwplib 실행이나 코드 이식이 아닙니다.
+
+적대적 검증 결과: localVersion 단독 선택 가설은 실제 표본으로 배제했습니다. 헤더 버전의 전환 가설은 표본 공백 때문에 미확정입니다. 문서 연결은 자동 버전 추정을 전제로 미루지 않고 **호출자가 명시적으로 선택한 배치 옵션을 전달하는 방식**으로 진행할 수 있습니다. 기본 정책과 미선택 진단을 분리하고, 선택된 배치에서의 잘림을 다른 배치로 자동 복구하지 않는 계약이 필요합니다.
+
+Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 188/188, Node 47/47, HWP5 WASM 201,898회 검사. 새 버전별 합계/반례 assertion은 JS 검증이며 WASM 호출 수 증가로 계상하지 않습니다. 로그는 `/tmp/hwpjs-style-version-{debug,safe,fast}.log`입니다. 제품 파서 선택 정책은 이 조사 단계에서 변경하지 않았습니다.

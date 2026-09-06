@@ -16,6 +16,7 @@ export function drawingStyleSurvey(call, cfb) {
     ["issue5714/1490000-200800034_vietnam_labor_report.hwp", { count: 1, bytes: 51, version: "5000006" }],
   ]);
   out.fillOnly = { parsed: 0, rejectedPrefixes: 0 };
+  out.versions = {};
   const drawingIds = new Set(["$lin", "$rec", "$ell", "$arc", "$pol", "$cur"]);
   for (const name of readdirSync(root, { recursive: true }).filter(n => n.endsWith(".hwp")).sort()) {
     out.files++;
@@ -60,11 +61,14 @@ export function drawingStyleSurvey(call, cfb) {
             const start = (stack[level - 1].tag === 71 ? 8 : 4) + 42;
             const end = start + 50 + p.readUInt16LE(start) * 96;
             const style = p.subarray(end);
+            const versionKey = `${header.readUInt32LE(32).toString(16)}/${p.readUInt16LE(start - 32)}`;
+            const versionStats = out.versions[versionKey] ??= { full: 0, unknown: 0, failed: 0, fillOnly: 0 };
             if (olderFixtures.has(name) && id === "$rec") {
               const parsed = drawingStyleActual(call, style, 3);
               assert.equal(parsed.known, true);
               assert.equal(parsed.extra, 0);
               out.fillOnly.parsed++;
+              versionStats.fillOnly++;
               for (let n = 0; n < parsed.consumed; n++) {
                 assert.throws(() => call(53, Buffer.concat([Buffer.from([3]), style.subarray(0, n)])), /UnexpectedEnd/);
                 out.fillOnly.rejectedPrefixes++;
@@ -75,11 +79,13 @@ export function drawingStyleSurvey(call, cfb) {
             try { result = call(53, Buffer.concat([Buffer.from([1]), style])); }
             catch (e) {
               if (e instanceof WebAssembly.RuntimeError) throw e;
+              versionStats.failed++;
               stats.errors.push({ name, section: section.name, offset: record.offset, version: header.readUInt32LE(32).toString(16), localVersion: p.readUInt16LE(start - 32), bytes: style.length, hex: style.subarray(0, 64).toString("hex"), error: e.message });
             }
             if (result) {
               const parsed = drawingStyleActual(call, style);
               stats[parsed.known ? "known" : "unknown"]++;
+              versionStats[parsed.known ? "full" : "unknown"]++;
               stats.flags[parsed.flags] = (stats.flags[parsed.flags] ?? 0) + 1;
               stats.extras[parsed.extra] = (stats.extras[parsed.extra] ?? 0) + 1;
             }
@@ -107,5 +113,17 @@ export function drawingStyleSurvey(call, cfb) {
     }
   }
   assert.equal(out.fillOnly.parsed, expectedParsed);
+  const versions = Object.values(out.versions);
+  const kinds = Object.values(out.kinds);
+  for (const [versionField, kindField] of [["full", "known"], ["unknown", "unknown"]]) {
+    assert.equal(versions.reduce((n, v) => n + v[versionField], 0), kinds.reduce((n, k) => n + k[kindField], 0));
+  }
+  assert.equal(versions.reduce((n, v) => n + v.failed, 0), kinds.reduce((n, k) => n + k.errors.length, 0));
+  assert.equal(versions.reduce((n, v) => n + v.fillOnly, 0), out.fillOnly.parsed);
+  // The same local version occurs in both layouts: it cannot select a tail by itself.
+  if (expectedParsed > 0 && existsSync(join(fileURLToPath(root), "group-drawing-02.hwp"))) {
+    assert.ok(Object.entries(out.versions).some(([key, v]) => key.endsWith("/1") && v.full > 0));
+    assert.ok(Object.entries(out.versions).some(([key, v]) => key.endsWith("/1") && v.fillOnly > 0));
+  }
   return out;
 }
