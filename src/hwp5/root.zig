@@ -63,6 +63,7 @@ pub const shape_connector = @import("body/shape_connector.zig");
 pub const group_info = @import("body/group_info.zig");
 pub const video_data = @import("body/video_data.zig");
 pub const memo_shape = @import("docinfo/memo_shape.zig");
+pub const forbidden_chars = @import("docinfo/forbidden_chars.zig");
 pub const memo_references = @import("memo_references.zig");
 pub const memo_end = @import("body/memo_end.zig");
 pub const paragraph_flows = @import("body/paragraph_flows.zig");

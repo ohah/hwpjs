@@ -50,6 +50,7 @@ test {
     _ = @import("hwp5/body/group_info_tests.zig");
     _ = @import("hwp5/body/video_data_tests.zig");
     _ = @import("hwp5/docinfo/memo_shape_tests.zig");
+    _ = @import("hwp5/docinfo/forbidden_chars_tests.zig");
     _ = @import("hwp5/body/group_validation_tests.zig");
     _ = @import("hwp5/body/shape_picture_tests.zig");
     _ = @import("hwp5/body/picture_color_tests.zig");
