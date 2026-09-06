@@ -13,6 +13,7 @@ import { identityActual } from "./links.mjs";
 import { fieldsActual } from "./fields.mjs";
 import { rubyActual } from "./ruby.mjs";
 import { hiddenActual } from "./hidden-comment.mjs";
+import { noteActual } from "./note-validation.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -138,6 +139,7 @@ export function documentActual(call, h, doc, sections) {
       ...fieldsActual(call, v, b).map(w),
       ...rubyActual(call, v, b).map(w),
       ...hiddenActual(call, v, b).map(w),
+      ...noteActual(call, v, b).map(w),
     );
   }
   const want = Buffer.concat(expected);

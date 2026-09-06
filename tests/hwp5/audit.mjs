@@ -29,6 +29,7 @@ import { rubyDocumentEdges } from "./ruby-document.mjs";
 import { hiddenEdges } from "./hidden-comment.mjs";
 import { hiddenReference } from "./hidden-comment-reference.mjs";
 import { noteControlEdges, noteControlReference } from "./note-control.mjs";
+import { noteValidationEdges } from "./note-validation.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -347,6 +348,7 @@ const fieldEdgeResults = fieldEdges(call);
 const rubyEdgeResults = rubyEdges(call);
 const hiddenEdgeResults = hiddenEdges(call);
 const noteControlEdgeResults = noteControlEdges(call);
+const noteValidationEdgeResults = noteValidationEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -770,6 +772,7 @@ console.log(
       hiddenEdgeResults,
       hiddenReferenceResults,
       noteControlEdgeResults,
+      noteValidationEdgeResults,
       noteControlReferenceResults,
       rubyDocumentResults,
       fieldDocumentResults,

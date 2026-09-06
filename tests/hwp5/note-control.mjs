@@ -2,13 +2,14 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
 import { documentRecords } from "./documents.mjs";
+import { noteDocument } from "./note-document.mjs";
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
   return b;
 };
 function check(call, raw, mode) {
-  const width = mode ? 16 : 8;
+  const width = [8, 16, 12][mode];
   assert.deepEqual(
     call(42, Buffer.concat([Buffer.from([mode]), raw])),
     Buffer.concat([raw.subarray(0, width), word(raw.length - width), raw.subarray(width)]),
@@ -16,8 +17,8 @@ function check(call, raw, mode) {
 }
 export function noteControlEdges(call) {
   let accepted = 0, rejected = 0;
-  for (const mode of [0, 1]) {
-    const width = mode ? 16 : 8;
+  for (const mode of [0, 1, 2]) {
+    const width = [8, 16, 12][mode];
     // Independent byte-position mutations catch swapped fields and narrowed integers.
     for (let i = 0; i < width; i++) {
       for (const value of [1, 0x80, 0xff]) {
@@ -34,7 +35,7 @@ export function noteControlEdges(call) {
       rejected++;
     }
   }
-  assert.throws(() => call(42, Buffer.from([2])), /InvalidMode/);
+  assert.throws(() => call(42, Buffer.from([3])), /InvalidMode/);
   return { accepted, rejected: rejected + 1 };
 }
 export function noteControlReference(call, cfb) {
@@ -56,6 +57,7 @@ export function noteControlReference(call, cfb) {
       const payload = body.subarray(r.start + 4, r.end);
       assert.equal(payload.length, 16);
       check(call, payload, 1);
+      check(call, payload, 2);
       check(call, payload, 0);
       for (let n = 0; n < 16; n++) {
         assert.throws(() => call(42, Buffer.concat([Buffer.from([1]), payload.subarray(0, n)])), /UnexpectedEnd/);
@@ -66,7 +68,7 @@ export function noteControlReference(call, cfb) {
     }
     assert.equal(count, expected);
     controls += count;
-    files.push({ name, count });
+    files.push({ name, count, document: noteDocument(call, cfb, readFileSync(path), h, body) });
   }
   return { controls, rejected, files, skipped };
 }

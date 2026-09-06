@@ -40,6 +40,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
     const parameter_report = try sources.inspectBodyDetailed(a, tree, types.parameterOptions(options, counts.bin_data_count));
     const char_overlap = try @import("../body/char_overlap_validation.zig").inspect(tree, options.overlap_layout, counts.count(.char_shape));
     return .{
+        .notes = try @import("../body/note_validation.zig").inspect(tree, groups.items, options.note_layout, options.list_layout),
         .hidden_comments = try @import("../body/hidden_comment.zig").inspect(tree, groups.items, options.list_layout),
         .ruby = try @import("../body/ruby_validation.zig").inspect(tree),
         .fields = try @import("../body/field_validation.zig").inspect(tree),
