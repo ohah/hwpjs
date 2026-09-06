@@ -2,7 +2,7 @@ const std = @import("std");
 const Header = @import("file_header.zig").Header;
 const compressed = @import("compressed_stream.zig");
 
-/// Only DocInfo / BodyText section streams. BinData has per-item compression rules.
+/// DocInfo / BodyText / Scripts streams. BinData has per-item compression rules.
 /// Always returns an owned buffer, including uncompressed streams.
 pub fn decode(a: std.mem.Allocator, header: *const Header, bytes: []const u8, max_output: usize) ![]u8 {
     try requireSupported(header);

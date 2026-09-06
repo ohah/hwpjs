@@ -4,6 +4,7 @@ import { containerActual, containerEdges } from "./containers.mjs";
 import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
 import { codepageEdges } from "./codepage.mjs";
+import { scriptEdges } from "./scripts.mjs";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   deflateRawSync,
@@ -298,10 +299,11 @@ let pairedColumns = 0;
 const listReport = [0, 0, 0];
 const typeReport = [0, 0];
 const documentReport = [0, 0, 0, 0];
-const containerReport = Array(19).fill(0);
+const containerReport = Array(23).fill(0);
 const previewEdgeResults = previewEdges(call);
 const summaryEdgeResults = summaryEdges(call);
 const codepageEdgeResults = codepageEdges(call);
+const scriptEdgeResults = scriptEdges(call);
 const containerEdgeResults = containerEdges(call, cfb);
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
@@ -482,8 +484,8 @@ assert.deepEqual(documentReport, [45, 47, 482195, 10425]);
 assert.deepEqual(
   containerReport,
   [
-    45, 13, 1028155, 180, 45, 11448, 11448, 0, 0, 0, 45, 630, 360, 135, 90, 45,
-    0, 0, 0,
+    45, 13, 1028155, 90, 45, 11448, 11448, 0, 0, 0, 45, 630, 360, 135, 90, 45,
+    0, 0, 0, 45, 45, 11476, 0,
   ],
 );
 assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 134]);
@@ -631,6 +633,7 @@ console.log(
       containerReport,
       previewEdgeResults,
       summaryEdgeResults,
+      scriptEdgeResults,
       codepageEdgeResults,
       containerEdgeResults,
       documentEdgeResults,

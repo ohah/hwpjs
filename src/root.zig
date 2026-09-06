@@ -34,6 +34,8 @@ test {
     _ = @import("hwp5/preview/text_tests.zig");
     _ = @import("hwp5/summary/tests.zig");
     _ = @import("hwp5/summary/codepage_tests.zig");
+    _ = @import("hwp5/scripts/tests.zig");
+    _ = @import("hwp5/container/script_tests.zig");
     _ = @import("hwp5/compression_tests.zig");
     _ = @import("cfb/tests.zig");
     _ = @import("cfb/mutation_tests.zig");

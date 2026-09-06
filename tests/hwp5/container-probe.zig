@@ -17,6 +17,14 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     try out.appendSlice(a, doc);
+    const scripts = report.scripts;
+    try int(a, &out, u32, @intFromBool(scripts.version != null));
+    try int(a, &out, u32, if (scripts.version) |v| v.high else 0);
+    try int(a, &out, u32, if (scripts.version) |v| v.low else 0);
+    try int(a, &out, u32, @intFromBool(scripts.source_units != null));
+    for (scripts.source_units orelse .{ 0, 0, 0, 0 }) |n| try int(a, &out, u32, @intCast(n));
+    try int(a, &out, u32, @intCast(scripts.decoded_bytes));
+    try int(a, &out, u32, @intCast(scripts.trailing_bytes));
     try int(a, &out, u32, @intFromBool(report.summary_information != null));
     const summary = report.summary_information orelse core.hwp5.summary_information.Stats{};
     inline for (std.meta.fields(@TypeOf(summary))) |f| try int(a, &out, u32, @intCast(@field(summary, f.name)));

@@ -3,6 +3,7 @@ import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { decodedDocumentInput, documentRecords } from "./documents.mjs";
 import { previewActual } from "./preview.mjs";
 import { summaryActual, summaryFixture } from "./summary.mjs";
+import { scriptsActual, scriptFixture } from "./scripts.mjs";
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -56,6 +57,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     used.add(path.toLowerCase());
   }
   const nodes = cfb.document().nodes;
+  const scripts = scriptsActual(call, cfb, h, used);
   const summaryEntry = cfb.findExact("/\x05HwpSummaryInformation");
   const summaryBytes = summaryEntry
     ? Buffer.from(summaryEntry.content)
@@ -81,16 +83,29 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     expected.readUInt32LE(12) +
     stats[2] +
     previewBytes.length +
-    summaryBytes.length;
+    summaryBytes.length +
+    scripts[8];
   const want = Buffer.concat([
     expected,
+    ...scripts.map(w),
     ...summary.map(w),
     ...preview.map(w),
     ...[...stats, total, uninspected].map(w),
   ]);
   assert.deepEqual(run(call, bytes, total, expected.readUInt32LE(16)), want);
   assert.throws(() => run(call, bytes, total - 1), /LimitExceeded/);
-  return [1, stats[1], stats[2], uninspected, ...preview, ...summary];
+  return [
+    1,
+    stats[1],
+    stats[2],
+    uninspected,
+    ...preview,
+    ...summary,
+    scripts[0],
+    scripts[3],
+    scripts[8],
+    scripts[9],
+  ];
 }
 export function containerEdges(call, cfb) {
   const h = Buffer.alloc(256);
@@ -174,6 +189,70 @@ export function containerEdges(call, cfb) {
   for (const i of [1, 2, 3, 4, 5]) mixed[i].name = mixed[i].name.toLowerCase();
   assert.deepEqual(run(call, write(mixed)), output);
   const total = 256 + doc(binary()).length + 3;
+  for (const compressed of [0, 1]) {
+    const sh = Buffer.from(h);
+    sh[36] = compressed;
+    const encode = (b) => (compressed ? deflateRawSync(b) : b);
+    const version = Buffer.concat([
+      w(0xffffffff),
+      w(0x80000000),
+      Buffer.from([7]),
+    ]);
+    const source = Buffer.concat([scriptFixture(), Buffer.from([8, 9])]);
+    const sn = () => [
+      ...nodes(sh),
+      { name: "Scripts", parent: 0, kind: 1 },
+      { name: "JScriptVersion", parent: 6, content: encode(version) },
+      { name: "DefaultJScript", parent: 6, content: encode(source) },
+    ];
+    const bytes = write(sn()),
+      cap = total + version.length + source.length;
+    assert.deepEqual(
+      words(run(call, bytes, cap)).slice(-32, -22),
+      [1, 0xffffffff, 0x80000000, 1, 0, 0, 0, 0, 31, 3],
+    );
+    assert.throws(() => run(call, bytes, cap - 1), /LimitExceeded/);
+    for (const i of [7, 8]) {
+      const n = sn();
+      n[i].kind = 1;
+      n[i].content = Buffer.alloc(0);
+      reject(n, /InvalidHwpEntryKind/);
+      const truncated = sn();
+      truncated[i].content = encode(Buffer.alloc(i === 7 ? 7 : 19));
+      reject(truncated, /UnexpectedEnd/);
+    }
+    const missing = sn();
+    missing[8].name = "Other";
+    const missingReport = words(run(call, write(missing)));
+    assert.equal(missingReport.at(-1), 1);
+    assert.deepEqual(
+      missingReport.slice(-32, -22),
+      [1, 0xffffffff, 0x80000000, 0, 0, 0, 0, 0, 9, 1],
+    );
+    const misplaced = sn();
+    misplaced[7].parent = 0;
+    assert.equal(words(run(call, write(misplaced))).at(-1), 1);
+    const lower = sn();
+    for (const i of [6, 7, 8]) lower[i].name = lower[i].name.toLowerCase();
+    assert.deepEqual(run(call, write(lower)), run(call, bytes));
+    const flag = sn();
+    const malformed = scriptFixture();
+    malformed.writeUInt32LE(0, 16);
+    flag[8].content = encode(malformed);
+    reject(flag, /InvalidScriptEndFlag/);
+    if (compressed) {
+      const corrupt = sn();
+      corrupt[7].content = version;
+      assert.throws(() => run(call, write(corrupt)));
+    }
+  }
+  reject([...nodes(), { name: "Scripts", parent: 0 }], /InvalidHwpEntryKind/);
+  assert.deepEqual(
+    words(
+      run(call, write([...nodes(), { name: "Scripts", parent: 0, kind: 1 }])),
+    ).slice(-32, -22),
+    Array(10).fill(0),
+  );
   assert.deepEqual(run(call, good, total), output);
   assert.throws(() => run(call, good, total - 1), /LimitExceeded/);
   for (const flag of [2, 4, 16, 256, 1024]) {

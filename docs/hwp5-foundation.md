@@ -859,3 +859,23 @@ Document는 속성 배열만 소유하며 raw stream/header/속성 값/extra는 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 131/131, Node 47/47, HWP5 WASM 162,562회 검사(모드별). 기존 CFB 60컨테이너/483스트림/5,496검색 비교·12,000회 변이(trap 0), Zig/JS 포맷·diff 검사도 통과했습니다.
 
 미검사 스트림 180개와 실제 dictionary 의미 보류 45개는 그대로입니다. 코드페이지 없는 관측 dictionary의 의미를 확정하거나, 코드페이지 등록값/문자 변환/이름 동일성을 검증한 단계는 아닙니다. 전체 문서 목표를 완료 처리하지 않으며, 다음에는 나머지 미검사 스트림과 컨트롤 검증을 이어갑니다.
+
+## Scripts 바이너리 경계와 컨테이너 연결 (2026-09-06)
+
+공식 HWP 5.0 revision 1.3의 3.2.9절, 표 8·9 및 로컬 명세 스킬 해당 절을 대조했습니다. `JScriptVersion`의 HIGH/LOW는 각각 unsigned DWORD이며 HWP 파일 버전과 별개입니다. `DefaultJScript`는 u32 길이 네 개와 각 UTF-16LE 문자열, 마지막 DWORD 0xffffffff로 구성됩니다. 문자열 길이는 코드 유닛 수이며 summary와 달리 NUL 종결·4바이트 패딩을 요구하지 않습니다.
+
+- `scripts/version.zig`와 `source.zig`는 입력을 빌리는 무할당 payload 파서입니다. 네 문자열은 각 필드로 노출하며 내부 NUL·고립 서로게이트를 변환하지 않습니다. 남은 입력을 2로 나눈 값과 길이를 비교한 뒤 곱해 wasm32 overflow를 방지합니다. 미지 버전과 종료 표식 뒤 extra도 보존합니다.
+- `container/scripts.zig`는 정확한 선택 경로와 kind, `stream.decode` 공통 압축 정책을 연결합니다. 두 스트림의 존재를 각각 구분하며 저장 플래그만으로 존재/부재를 추정하지 않습니다. scalar 보고서만 반환하므로 임시 압축 해제 버퍼를 해제한 뒤에도 유효합니다. 모든 소비 바이트는 기존 전역 한도에서 차감하고 extra는 trailing_bytes로 별도 집계합니다.
+- 스크립트를 실행하거나 JS 문법을 검사하지 않습니다. unknown 버전을 특정 엔진 지원으로 승격하지 않으며, binary envelope 검사 성공은 실행 안전성 보증이 아닙니다. Scripts의 다른 이름 스트림도 자동 소비하지 않습니다.
+
+실제 지원 대상 HWP 45개에서 JScriptVersion 45개와 DefaultJScript 45개를 독립 Node zlib/정수 읽기와 비교했습니다. WASM 파싱 필드로 재구성한 결과는 원문과 바이트 단위로 일치했습니다. 합계 압축 해제 크기는 11,476바이트, trailing 0입니다. corpus 미검사 스트림 수는 180에서 90으로 감소했지만 남은 스트림이나 dictionary 의미 보류가 해결된 것은 아닙니다.
+
+### 구현 후 적대적 검증
+
+1. 버전/소스의 모든 잘림 prefix, 네 길이 위치별 0x7fffffff·0x80000000·0xffffffff, 종료 표식의 각 32비트 변조를 검사했습니다. WASM payload 오류 94건 뒤에 정상 입력을 재호출해 회복을 확인했습니다.
+2. 네 문자열 각각의 빈 값·1·127·32,768·65,536 유닛을 독립 위치에 배치하고 재구성했습니다. 내부 NUL·고립 서로게이트·비종결 문자열·추가 꼬리·unsigned 버전 비트도 확인했습니다.
+3. 압축/비압축 컨테이너 모두에서 정확한 총 바이트 한도 성공과 1바이트 부족 실패를 확인했습니다. 잘못된 kind, 루트로 옮긴 동명 스트림, 미지 이름, 빈 Scripts storage, 대소문자 경로, 잘린 payload와 종료 표식 오류를 검사했습니다. 압축 실패 시 원본 fallback을 하지 않는 경로도 확인했습니다.
+4. 네이티브에서 Scripts 정상 완료 및 마지막 소스 실패의 모든 할당 실패 지점을 주입했습니다. 먼저 성공한 문서/버전 decode와 이후 실패 경로에 누수가 없었습니다.
+5. SSOT/수명 검토: 파일·압축 정책은 기존 계층을 공유하고, payload 문법은 scripts만 소유합니다. summary 문자열은 종료/패딩 문법이 달라 억지로 합치지 않았습니다. 컨테이너 보고서에 해제된 payload slice를 남기지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 135/135, Node 47/47, HWP5 WASM 162,900회 검사. 기존 CFB 60컨테이너/483스트림/5,496검색 비교와 12,000회 변이(trap 0), Zig/JS 포맷·diff 검사도 통과했습니다. 다음 범위는 DocOptions/_LinkDoc 등 남은 선택 스트림입니다. 전체 HWP/HWPX 구현 완료를 의미하지 않습니다.

@@ -25,4 +25,6 @@ pub const document_validation = @import("document/validation.zig");
 pub const container_validation = @import("container/validation.zig");
 pub const preview_text = @import("preview/text.zig");
 pub const summary_information = @import("summary/parser.zig");
+pub const script_version = @import("scripts/version.zig");
+pub const script_source = @import("scripts/source.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");
