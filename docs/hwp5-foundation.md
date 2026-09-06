@@ -346,6 +346,7 @@ while (try it.next()) |record| {
         .char_runs, .line_segments, .range_tags => {},
         .control_header, .list_header => {},
         .page_definition, .page_border => {},
+        .note_shape => {},
     }
 }
 ```
@@ -450,3 +451,35 @@ while (try it.next()) |record| {
 남은 과제: 각주/미주 배치, 컨트롤-텍스트 연결, 리스트 문맥, 구역 번호 ID 0 및 DocInfo 개요 fallback 316건의 연결 검증. 전체 문서 완료 판정은 아직 제공하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 81/81, Node 47/47, HWP5 WASM 50,419회 검사. 기존 CFB 비교·12,000회 변이(트랩 0)도 통과했습니다. SSOT 검토에서 payload별 파일/구역 교차 검증을 분리하고 기존 framing·tree·ID 규칙을 재사용하는지 확인했습니다.
+
+## 후속 구현: 각주/미주 모양의 28바이트 배치
+
+2026-09-06. 공식 표 133의 26바이트 배치, rhwp 및 레거시 Rust, 독립 [node-hwp 포맷 정의](https://github.com/123jimin/node-hwp/blob/master/format/record.format#L937-L965), 같은 이름의 HWP/HWPX fixture를 대조했습니다. 외부 코드 이식이나 신규 제품 의존성 추가는 없습니다.
+
+### 필드 차이와 실측
+
+구분선 길이는 offset 12에서 **signed i32**로 읽어야 paired HWPX의 length와 이후 여백이 일치합니다. 16비트 길이 뒤 마지막에 미지 u16을 덧붙이는 rhwp 배치를 채택하지 않았습니다.
+
+| `footnote-endnote` 구역 항목 | HWP 32비트 길이/위/아래/사이 | paired HWPX | 로컬 rhwp 방식의 길이/위/아래/사이 |
+|---|---|---|---|
+| 각주 | -1 / 850 / 567 / 283 | 동일 | -1 / -1 / 850 / 567 |
+| 미주 | 14692344 / 850 / 567 / 0 | 동일 | 12280 / 224 / 850 / 567 |
+
+이는 저장소의 paired fixture 비교이며 이번 작업에서 한글 프로그램을 직접 실행한 결과는 아닙니다. 미주 길이 14692344를 비현실적으로 보인다는 이유로 자르거나 기본값으로 바꾸지 않습니다.
+
+### 구현과 검증 범위
+
+- `note_shape.zig`가 공통 모양 payload를 소유합니다. 기본 `Shape.parse`는 28바이트 관측 배치이며 26/27바이트 입력을 잘린 데이터로 거부합니다. `parseLayout(..., .spec26)`은 공식 표 기반 데이터를 위한 명시적 별도 경로이고 길이나 버전으로 자동 전환하지 않습니다. 선택한 layout과 extra를 보존합니다.
+- 속성·WCHAR 원값·시작 번호·signed 구분선 길이/여백·선 종류/굵기·COLORREF를 보존합니다. 번호 모양/배치/번호매김 비트 조회는 미지 값을 기본 enum으로 치환하지 않습니다. 주석의 실제 번호 생성·레이아웃·fn/en 컨트롤 연결은 후속 작업입니다.
+- 태그 74를 typed dispatch에 추가하고 구역 직접 자식 검증을 적용했습니다. 같은 구역에 모양이 3개 이상이면 ExcessNoteShapes입니다. 0/1개를 자동 복제하지 않으며 `note_shapes` 개수로 호출자가 부재를 확인할 수 있습니다. 보고서의 이전 `notes_pending` 필드는 `note_shapes`로 바뀌었습니다.
+- 실제 94개 모양은 typed 재인코딩 바이트가 원본과 일치하고 본문 unknown_records는 288→194입니다. `note-pair.mjs`는 기존 MIT 레거시 ZIP reader를 **테스트 전용**으로 써 HWPX XML 값을 읽고 WASM의 이름 있는 네 필드 결과와 비교합니다. ZIP/XML 지원을 제품 HWPX 구현 완료로 세지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 26/28바이트 모든 잘림 위치, i32 길이의 16비트 초과 값·-1, signed 여백·원본 WCHAR·미지 속성·extra·명시적 spec26 차이를 검사했습니다.
+2. 각주 payload의 모든 31개 위치(28 기본+3 extra) × 8비트 = 248개 변이와 정상 재검증을 추가했습니다. 구역 관련 합계는 960개입니다. typed 재인코딩에만 의존하지 않고 네이티브의 서로 다른 필드 값 및 paired HWPX/WASM 결과도 검사합니다.
+3. 2개 모양 정상, 3개 초과 및 잘못된 부모를 회귀 테스트로 추가했습니다. 모양만 읽고 컨트롤/문단 연결을 완료로 오인하지 않도록 문서와 보고서 의미도 재검토했습니다.
+
+다음은 컨트롤-텍스트 연결과 단/리스트 문맥 검증입니다. 번호 ID 0, DocInfo 개요 fallback, 개체별 의미와 전체 문서 조립은 여전히 남아 있습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 모두 통과: 네이티브 83/83, Node 47/47, HWP5 WASM 51,016회 검사. 기존 CFB 비교·12,000회 변이도 통과했습니다. 포맷/diff 검사와 SSOT 검토에서 모양 필드 배치와 구역 소유권, 테스트 전용 ZIP/HWPX 비교 책임을 분리한 것을 확인했습니다.

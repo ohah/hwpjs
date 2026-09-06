@@ -17,6 +17,7 @@ export function sectionEdges(call) {
   for (const [tag, prefix, min] of [
     [71, word(0x73656364), 26],
     [73, Buffer.alloc(0), 40],
+    [74, Buffer.alloc(0), 28],
     [75, Buffer.alloc(0), 14],
   ]) {
     const raw = Buffer.from(
@@ -79,6 +80,31 @@ export function sectionEdges(call) {
   );
   border.writeUInt16LE(1, 12);
   sectionActual(call, version, [1, 1], good());
-  assert.equal(mutations, 712);
+  const note = frame(74, 2, Buffer.alloc(28));
+  assert.deepEqual(
+    sectionActual(call, version, [1, 1], Buffer.concat([good(), note, note])),
+    [1, 1, 1, 1, 2],
+  );
+  assert.throws(
+    () =>
+      sectionActual(
+        call,
+        version,
+        [1, 1],
+        Buffer.concat([good(), note, note, note]),
+      ),
+    /ExcessNoteShapes/,
+  );
+  assert.throws(
+    () =>
+      sectionActual(
+        call,
+        version,
+        [1, 1],
+        Buffer.concat([good(), frame(74, 1, Buffer.alloc(28))]),
+      ),
+    /OrphanSectionRecord/,
+  );
+  assert.equal(mutations, 960);
   return { mutations, recoveries: mutations };
 }

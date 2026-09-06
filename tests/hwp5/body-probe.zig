@@ -61,7 +61,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
                 }
             },
             .unknown => try out.appendSlice(a, f.payload),
-            .page_definition, .page_border => try @import("section-probe.zig").payload(a, &out, record.value),
+            .page_definition, .page_border, .note_shape => try @import("section-probe.zig").payload(a, &out, record.value),
             .control_header => |h| {
                 const name = h.name();
                 const id = (@as(u32, name[0]) << 24) | (@as(u32, name[1]) << 16) | (@as(u32, name[2]) << 8) | name[3];

@@ -2,7 +2,7 @@ const body = @import("reader.zig");
 const Tree = @import("tree.zig").Tree;
 const Version = @import("../version.zig").Version;
 const rules = @import("../docinfo/reference_rules.zig");
-pub const Report = struct { definitions: usize = 0, pages: usize = 0, borders: usize = 0, numbering_deferred: usize = 0, notes_pending: usize = 0 };
+pub const Report = struct { definitions: usize = 0, pages: usize = 0, borders: usize = 0, numbering_deferred: usize = 0, note_shapes: usize = 0 };
 pub fn inspect(tree: Tree, version: Version, numbering_count: usize, border_count: usize) !Report {
     var report: Report = .{};
     var section: ?usize = null;
@@ -31,12 +31,12 @@ pub fn inspect(tree: Tree, version: Version, numbering_count: usize, border_coun
             if (rules.resolve(.optional_one_based, d.border_fill_id, border_count) == .invalid) return error.InvalidResourceReference;
             report.borders += 1;
         },
-        else => {
-            if (node.record.framing.tag == 74) {
-                if (node.parent != owner) return error.OrphanSectionRecord;
-                report.notes_pending += 1;
-            }
+        .note_shape => {
+            if (node.parent != owner) return error.OrphanSectionRecord;
+            report.note_shapes += 1;
+            if (report.note_shapes > 2) return error.ExcessNoteShapes;
         },
+        else => {},
     };
     if (report.pages == 0) return error.MissingPageDefinition;
     return report;

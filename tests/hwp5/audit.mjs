@@ -17,6 +17,7 @@ import { metadataActual, metadataEdges } from "./metadata.mjs";
 import { controlEdges } from "./controls.mjs";
 import { treeActual, treeEdges } from "./tree.mjs";
 import { sectionActual, sectionEdges } from "./sections.mjs";
+import { notePair } from "./note-pair.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -250,6 +251,7 @@ const formatting = {
 const metadata = { paragraphs: 0, runs: 0, lines: 0, ranges: 0 };
 const paragraphReport = [0, 0, 0, 0, 0, 0];
 const sectionReport = [0, 0, 0, 0, 0];
+let notePairResult;
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
     cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
@@ -284,6 +286,12 @@ try {
       );
       const framed = call(2, plain);
       if (/^Section\d+$/.test(entry.name)) {
+        if (name === "footnote-endnote.hwp" && entry.name === "Section0")
+          notePairResult = notePair(
+            call,
+            plain,
+            readFileSync(new URL("footnote-endnote.hwpx", fixtures)),
+          );
         const counts = formattingCounts(docPlain);
         sectionActual(
           call,
@@ -330,8 +338,9 @@ try {
   cfb.close();
 }
 assert.equal(files, 48);
-assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 288]);
+assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 194]);
 assert.deepEqual(sectionReport, [47, 47, 141, 1, 94]);
+assert.ok(notePairResult);
 assert.deepEqual(metadata, {
   paragraphs: 1481,
   runs: 1740,
@@ -384,6 +393,7 @@ rounds.push({
   metadata,
   paragraphReport,
   sectionReport,
+  notePairResult,
   formatting,
 });
 begin = checks;

@@ -68,6 +68,12 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         9 => return @import("metadata-probe.zig").validate(a, bytes, limit),
         10 => return @import("tree-probe.zig").run(a, bytes, limit),
         11 => return @import("section-probe.zig").inspect(a, bytes, limit),
+        12 => {
+            const note = try core.hwp5.body.NoteShape.parse(bytes);
+            const out = try a.alloc(u8, 16);
+            for ([_]i32{ note.separator_length, note.above, note.below, note.between }, 0..) |v, i| std.mem.writeInt(i32, out[i * 4 ..][0..4], v, .little);
+            return out;
+        },
         else => return error.InvalidMode,
     }
 }

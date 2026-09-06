@@ -25,6 +25,16 @@ pub fn definition(a: std.mem.Allocator, out: *std.ArrayList(u8), bytes: []const 
 }
 pub fn payload(a: std.mem.Allocator, out: *std.ArrayList(u8), value: core.hwp5.body.Value) !void {
     switch (value) {
+        .note_shape => |s| {
+            try int(a, out, u32, s.flags);
+            inline for (.{ "user_char", "prefix", "suffix", "start_number" }) |name| try int(a, out, u16, @field(s, name));
+            try int(a, out, i32, s.separator_length);
+            inline for (.{ "above", "below", "between" }) |name| try int(a, out, i16, @field(s, name));
+            try int(a, out, u8, s.line_type);
+            try int(a, out, u8, s.line_width);
+            try int(a, out, u32, s.color);
+            try out.appendSlice(a, s.extra);
+        },
         .page_definition => |d| {
             inline for (.{ "width", "height", "left", "right", "top", "bottom", "header", "footer", "gutter", "flags" }) |name| try int(a, out, u32, @field(d, name));
             try out.appendSlice(a, d.extra);
