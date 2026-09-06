@@ -6,6 +6,7 @@ import { numberControlActual } from "./number-controls.mjs";
 import { reportBytes } from "./document-report-wire.mjs";
 import { pageNumberActual } from "./page-number.mjs";
 import { indexMarkActual } from "./index-mark.mjs";
+import { visibilityActual } from "./page-visibility.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -119,6 +120,7 @@ export function documentActual(call, h, doc, sections) {
       ...numberControlActual(call, b).map(w),
       ...pageNumberActual(call, b).map(w),
       ...indexMarkActual(call, v, b).map(w),
+      ...visibilityActual(call, v, b).map(w),
     );
   }
   const want = Buffer.concat(expected);

@@ -1062,3 +1062,21 @@ document-probe가 각 구역의 header_footer 다섯 수치를 직렬화하도�
 이 추가 문서는 구역 1개, DocInfo+본문 1,965레코드, 헤더 포함 decoded document 132,184바이트의 대조를 통과했습니다. BinData 3개/179,494바이트도 기존 독립 컨테이너 oracle로 비교했습니다. 미검사 스트림 2개와 dictionary 등 기존 의미 보류는 그대로이며, 전체 문서의 모든 의미가 검증됐다는 주장은 아닙니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 156/156, Node 47/47, HWP5 WASM 164,684회 검사 통과(현재 참조 표본 존재 환경). CFB 기존 비교·12,000회 변이(trap 0), 포맷·diff 검사도 통과했습니다. 실제 idxm 양성 필드 검증은 확보했지만, 두 번째 키워드의 실제 양성 사례·키워드 정렬/페이지 연결·찾아보기 생성은 여전히 남았습니다.
+
+## 감추기·홀짝 조정 속성 (2026-09-06)
+
+명세 스킬 4.3.10.7~8과 공식 표 145~146을 대조했습니다. 감추기(pghd)는 공식 표가 UINT를 2바이트로 기재하지만 관측 속성은 4바이트입니다. `page_visibility.HideLayout`으로 spec16/observed32를 분리하고 문서 옵션 hide_layout은 observed32를 기본값으로 사용합니다. 버전이나 짧은 입력으로 자동 fallback하지 않습니다. 홀짝 조정은 기존 control_rules의 pgct를 사용하고 로컬 요약의 pgad를 별칭으로 허용하지 않습니다.
+
+`page_visibility.zig`는 여섯 감추기 비트·홀짝 하위 2비트·원시 속성·extra를 해석합니다. `page_visibility_validation.zig`는 hide/parity/reserved_parity/unknown_hide_bits/extra_bytes를 집계하며 document.section이 이를 연결합니다. 예약값 3과 미지 감추기 비트를 원문과 진단으로 남기고 자동 보정하지 않습니다. 테스트 기대 형식 SSOT에 다섯 필드를 추가했으며 구역 행은 232바이트입니다.
+
+### 구현 후 적대적 검증
+
+1. 두 감추기 폭과 홀짝 속성의 모든 짧은 prefix를 거부하고 정상 재호출을 확인했습니다. 2바이트 감추기를 observed32로 읽으면 실패합니다.
+2. 속성의 각 비트를 독립적으로 켜 마스크와 원시 값 재구성을 확인했습니다. 꼬리 0~3바이트를 보존하고 미지 pgad는 분류하지 않습니다. 합성 WASM 성공 142건·거부 15건입니다.
+3. `reference/rhwp/saved/pr360-edward.hwp`의 Section0에서 실제 pghd 2개를 확인했습니다. 4바이트 속성의 집계는 [2,0,0,0,0]이며 Node와 Zig의 압축 해제 결과 및 전용 검사 typed 재구성을 비교했습니다. 두 레코드를 각각 한 바이트 줄여 framing을 다시 작성하면 UnexpectedEnd로 거부합니다. 원본 파일은 수정하지 않았으며 표본 부재 환경은 skipped로 보고합니다.
+4. 기존 corpus의 문서/CFB 보고서 대조와 서로 다른 두 구역의 순서 검증을 새 행 폭으로 실행했습니다. 기존 corpus에는 두 컨트롤이 없어 이 경로의 0개 결과를 실제 양성 검증으로 세지 않습니다. 추가 참조 표본의 양성/잘림 검사는 전용 구역 검사까지이며 전체 문서·CFB 의미 검증으로 확대해 주장하지 않습니다.
+5. SSOT 검토: ID는 control_rules, 바이트 경계는 Reader, payload와 구역 집계는 각각 단일 모듈이 소유합니다. 테스트 기대 형식은 제품 serializer에서 생성하지 않고 독립 대조합니다.
+
+홀짝 조정 실제 양성 표본과 감추기 spec16 실제 표본은 아직 확보하지 못했습니다. 페이지 숨김 적용·홀짝 페이지 삽입·조판은 미구현이며, 본 변경은 속성 해석과 진단에 한정됩니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 158/158, Node 47/47, HWP5 WASM 164,896회 검사 통과(참조 표본 존재 환경). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.

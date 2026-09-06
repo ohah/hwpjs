@@ -96,6 +96,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         32 => return @import("number-control-probe.zig").run(a, bytes),
         33 => return @import("page-number-probe.zig").run(a, bytes),
         34 => return @import("index-mark-probe.zig").run(a, bytes, limit),
+        35 => return @import("page-visibility-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

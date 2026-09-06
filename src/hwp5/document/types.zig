@@ -5,6 +5,7 @@ const sources = @import("../parameters/sources.zig");
 pub const Section = struct { index: u16, bytes: []const u8 };
 pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
 pub const Options = struct {
+    hide_layout: @import("../body/page_visibility.zig").HideLayout = .observed32,
     list_layout: @import("../body/list_header.zig").Layout,
     zone_layout: @import("../body/table_zone.zig").Layout,
     parameters: @import("../parameters/types.zig").Options,
@@ -29,6 +30,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    page_visibility: @import("../body/page_visibility_validation.zig").Report = .{},
     index_marks: @import("../body/index_mark_validation.zig").Report = .{},
     page_number: @import("../body/page_number_validation.zig").Report = .{},
     number_controls: @import("../body/number_control_validation.zig").Report = .{},
