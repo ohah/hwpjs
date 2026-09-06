@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { formattingCounts } from "./formatting.mjs";
 import { objectActual } from "./objects.mjs";
+import { headerFooterActual } from "./header-footer.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -110,10 +111,11 @@ export function documentActual(call, h, doc, sections) {
       run(17, b, [c.borderFill]).subarray(0, 16),
       params(1, b),
       w(objects[0] + objects[1] + objects[2]),
+      ...headerFooterActual(call, v, b).map(w),
     );
   }
   const want = Buffer.concat(expected);
-  assert.equal(want.length, 132 + sections.length * 144);
+  assert.equal(want.length, 132 + sections.length * 164);
   assert.deepEqual(
     call(24, input(h, doc, sections, totalBytes), totalRecords),
     want,
