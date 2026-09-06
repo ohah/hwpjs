@@ -8,4 +8,6 @@ pub const docinfo = @import("docinfo/reader.zig");
 pub const resources = @import("docinfo/resources.zig");
 pub const references = @import("docinfo/references.zig");
 pub const body = @import("body/reader.zig");
+pub const body_tree = @import("body/tree.zig");
+pub const paragraphs = @import("body/paragraphs.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");

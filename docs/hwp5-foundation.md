@@ -408,3 +408,24 @@ while (try it.next()) |record| {
 다음은 문단/컨트롤 계층 조립과 구역 정의입니다. **헤더 파싱 성공은 리스트/컨트롤 의미 검증 완료가 아닙니다.**
 
 최종 Debug·ReleaseSafe·ReleaseFast의 `zig build audit --summary all` 모두 통과: 모드별 네이티브 77/77, Node 47/47, HWP5 WASM 48,427회 검사. 기존 CFB 비교/12,000회 변이도 통과했습니다. SSOT 검토: 프레이밍·정수 읽기는 기존 코어 재사용, ID와 리스트 배치는 별도 파일, 문맥 없는 배치 추정은 추가하지 않았습니다.
+
+## 후속 구현: 레코드 계층과 문단 연결
+
+2026-09-06. hwp-spec 4.1의 level 정의를 기준으로 전체 Section 레코드 인덱스를 추가했습니다.
+
+- `body_tree.Tree.parse(allocator, bytes, version, options)`는 부모 인덱스와 exclusive `subtree_end`를 만듭니다. root level 0, 이후 최대 한 단계 증가를 요구하고 건너뛴 깊이는 InvalidRecordHierarchy입니다. 전체 Section용 API이며 중간 subtree만 잘라 입력하는 API는 아닙니다.
+- `Tree.deinit(allocator)`는 노드 배열만 해제합니다. payload/raw는 원래 입력을 빌리므로 트리 사용 중 입력 수명을 유지해야 합니다. 비재귀 스택 1,024칸, 생성 O(레코드 수), 노드 메모리 O(레코드 수)입니다. max_records/max_payload_bytes는 기존 framing 옵션을 재사용하고 할당 실패를 전파합니다.
+- `paragraphs.inspect(tree, .{ .char_shapes, .para_shapes, .styles })`는 파서가 만든 변경하지 않은 트리를 받습니다. 문단의 직접 자식만 연결하므로 개체 안 중첩 문단의 텍스트를 바깥 문단에 붙이지 않습니다. 텍스트/메타데이터 중복·고아를 거부하고 기존 `Metadata.validate`, `Text.validateCount`, `reference_rules.resolve`를 재사용합니다.
+- 실제 6,846개 Section 레코드에는 level 건너뛰기가 없었습니다. 문단 부모는 root 689개, 태그 71 765개, 태그 76 27개입니다. 리스트 헤더 부모는 태그 71 617개, 태그 76 26개입니다. **리스트 헤더와 뒤 문단이 형제인 배치**이므로 리스트를 가짜 계층 부모로 만들지 않았습니다. 논리적 리스트 묶음/개수는 후속 문맥 검증입니다.
+- 보고서는 paragraphs/texts/missing_texts/controls_pending/lists_pending/unknown_records를 구분합니다. 누락 텍스트 405개를 자동 보충하지 않습니다. 컨트롤 속성·텍스트 제어코드 연결·리스트 소유권·미지원 태그는 검사 완료가 아닙니다. 이 보고서에 전체 문서 `valid=true` 같은 판정을 제공하지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 최대 level 1,023을 네이티브/WASM에서 검사하고 모든 할당 실패 지점의 해제 경로를 `checkAllAllocationFailures`로 확인했습니다. 다중 root·형제 전환·여러 단계 복귀·잘린 레코드·레코드 제한·깊이 건너뛰기를 검사합니다.
+2. JS 독립 역방향 부모 검색/정방향 서브트리 탐색으로 모든 노드의 parent/end를 대조합니다. 8개 위치 × 10개 level 비트의 80개 변이와 매번 정상 재검증을 실행합니다. O(n²) 독립 oracle은 테스트에만 있고 제품은 선형 스택 방식입니다.
+3. 중첩 문단의 텍스트가 외부 문단에 섞이지 않는 사례, 중복 텍스트/세 메타데이터, 고아 텍스트, 문단 모양/스타일 참조 초과, 선언 문자/메타데이터 개수 불일치를 검사합니다.
+4. 실제 지원 45개 파일/47개 Section에서 `[1481, 1076, 405, 313, 643, 476]` 보고서 합계를 고정 assert합니다. 마지막 세 값은 컨트롤 보류·리스트 보류·본문 미해석 레코드이며 0으로 숨기지 않습니다. 이번 검증의 성공은 전체 HWP 지원 완료를 뜻하지 않습니다.
+
+다음은 구역 정의와 컨트롤/텍스트 연결, 리스트 문맥 및 개체별 속성 검증입니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all` 전부 통과했습니다. 각 모드 네이티브 79/79, Node 47/47, HWP5 WASM 48,657회 검사이며 기존 CFB 비교·12,000회 변이도 통과했습니다. SSOT 재검토에서 새 코드가 기존 framing/태그 dispatch/메타데이터/ID 규칙을 중복 구현하지 않는지 확인했습니다. 포맷·diff 공백 검사도 통과했습니다.

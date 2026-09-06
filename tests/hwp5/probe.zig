@@ -66,6 +66,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         7 => return @import("reference-probe.zig").run(a, bytes, limit),
         8 => return @import("body-probe.zig").run(a, bytes, limit),
         9 => return @import("metadata-probe.zig").validate(a, bytes, limit),
+        10 => return @import("tree-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

@@ -13,6 +13,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - `src/hwp5/body/`: 문단 헤더·제어코드 종류/너비·UTF-16 토큰·태그 dispatch를 분리합니다. 토큰 위치는 Unicode 문자 수가 아닌 원본 UTF-16 단위이며, 컨트롤 데이터를 텍스트나 실제 메모리 포인터로 취급하지 않습니다. 계층/DocInfo 참조/개체 연결은 별도 조립 책임입니다.
 - 본문 `char_runs.zig`·`line_segments.zig`·`range_tags.zig`는 고정 행 해석, `metadata.zig`는 호출자가 연결한 헤더 개수/위치/글자 모양 ID 검증을 소유합니다. `binary/record_array.zig`는 고정 폭 배열 경계만 공유합니다. 영역 중첩과 signed 줄 값·미지 플래그는 보존하며 페이지를 추정하지 않습니다.
 - `control_header.zig`는 4바이트 ID/속성 원본, `list_header.zig`는 문단 수 원값과 명시적 spec6/observed8 배치를 소유합니다. 리스트 배치를 길이·버전만으로 자동 선택하지 않습니다. 컨트롤별 속성과 리스트 소유권 검증은 별도입니다.
+- `body/tree.zig`는 level 기반 부모/서브트리 인덱스를 할당·소유하고 payload는 입력을 빌립니다. `paragraphs.zig`는 직접 자식 연결·중복/고아·문단 참조 검증을 소유합니다. 리스트 헤더 뒤 문단은 같은 level의 형제일 수 있으며 리스트를 가짜 부모로 만들지 않습니다. 보고서의 missing/pending/unknown은 완료로 세지 않습니다.
 - `src/hwp5/docinfo/`: 문서 속성·ID 매핑·BinData·FaceName·TabDef·Numbering·Bullet·Style payload와 태그 dispatch·리소스 개수 검증을 분리합니다. 번호/글머리표의 공통 머리 정보는 `paragraph_head.zig`가 소유합니다. 실제 필드 부재(null)와 값 0, 버전상 기대 슬롯 수를 구분합니다. BinData/글꼴 개수 검증과 전체 문서 조립/참조 검증을 혼동하지 않습니다.
 - `src/compression/`: bounded raw DEFLATE와 MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.
 - `src/hwp5/docinfo/resources.zig`: 주요 리소스 실측 개수와 ID 매핑 비교. `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 순회·진단을 소유합니다. `validateKnown()` 성공을 전체 문서 유효성으로 해석하지 말고 deferred/unknown_records와 미검증 범위를 확인합니다.
