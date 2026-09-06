@@ -60,6 +60,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try fields(a, &out, s.char_overlap);
         try int(a, &out, u32, @intCast(s.observed_field_links));
         try fields(a, &out, s.fields);
+        try fields(a, &out, s.ruby);
     }
     return out.toOwnedSlice(a);
 }

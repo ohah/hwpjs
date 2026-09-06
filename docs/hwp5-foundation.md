@@ -1162,3 +1162,23 @@ Link.id는 원본 토큰 ID이고 header_id도 원본 그대로 저장합니다.
 aift 및 찾아보기/책갈피 추가 표본의 문서·CFB 대조도 새 필드 집계를 포함합니다. 이 구현은 공통 envelope 검사이지 각 필드 command 문법·하이퍼링크 접근/상태·전역 instance ID 유일성·본문 필드 시작/끝 범위 의미 검증을 완료한 것이 아닙니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 167/167, Node 47/47, HWP5 WASM 166,921회 검사 통과(참조 표본 존재 환경). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
+
+## 덧말의 두 문자열과 전체 폭 속성 (2026-09-06)
+
+명세 스킬 4.3.10.13과 공식 표 127/151을 대조했습니다. 공식 ID는 tdut이며 로컬 요약의 cmtt가 아닙니다. 표 151의 전체 길이 18바이트는 나열된 두 WORD 길이와 다섯 UINT의 합계에도 미치지 못합니다. `ruby.zig`는 counted UTF-16 문자열 두 개와 위치/size_ratio/option/style_number/정렬의 u32 다섯 개를 읽어 최소 24바이트+문자열 데이터로 처리합니다. ID는 control_header에서 이미 분리돼 있습니다.
+
+reference/rhwp 및 기존 fixture 경로를 조사했지만 읽은 지원 본문에서 tdut 양성 표본을 찾지 못했습니다. 처리 실패 189건에는 CFB 및 이후 decode/framing 실패가 섞여 있으므로 이를 덧말 부재로 판정하지 않습니다. rhwp 파서도 두 HWP 문자열과 다섯 UINT를 읽지만 size_ratio/위치/정렬을 u8, style을 u16으로 축소합니다. 본 구현은 명세의 u32 전체 폭과 extra를 보존하며 기본값 치환·Unicode 정규화·크기 제한을 임의 적용하지 않습니다.
+
+`ruby_validation.zig`는 controls/main_units/sub_units/reserved_positions/reserved_alignments/extra_bytes를 집계합니다. 위치 0~2, 정렬 0~5 밖은 원문과 진단으로 남깁니다. size_ratio/option의 세부 의미 및 style_number가 어떤 리소스를 어떤 기준으로 참조하는지는 단정하지 않습니다. SectionReport.ruby와 독립 테스트 기대 형식에 연결했고 구역 행은 340바이트입니다.
+
+### 구현 후 적대적 검증
+
+1. 두 문자열 및 다섯 정수의 모든 잘린 prefix를 거부했습니다. 표의 18바이트만 주어진 입력과 최대 길이만 선언한 짧은 문자열도 거부합니다. 오류 뒤 정상 재호출을 확인했습니다.
+2. 두 문자열의 위치를 각각 바꿔 0/1/127/32,768/65,535 코드 유닛을 검사하고 두 문자열 모두 최대 길이인 경우도 typed 재구성으로 대조했습니다. NUL·고립 서로게이트·BOM·홀수 extra를 보존합니다.
+3. 다섯 u32 각각에 0/1/2/3/5/6/255/256/65,535/65,536/0xffffffff를 넣어 축소가 없음을 확인했습니다. 네이티브에서도 서로 다른 고비트 값 다섯 개를 대조했습니다. 합성 WASM 성공 104건·거부 33건이며 Tree 할당 실패를 정상/마지막 정수 잘림 경로에 주입했습니다.
+4. 기존 실제 파일의 문서 입력에 합성 tdut 문단을 추가해 decoded document/재작성 CFB의 구역 보고서를 대조했습니다. 합성 payload의 모든 잘림 및 CFB 마지막 정수 잘림 합계 35건을 거부했고 정상 재호출이 같은 보고서를 반환했습니다. 예약 위치/정렬 변경은 각각의 진단만 증가합니다(두 경로 4건). 원본 파일은 수정하지 않았으며 실제 덧말 양성 사례로 계상하지 않습니다.
+5. 합성 두 구역에 서로 다른 덧말 진단을 넣고 Section1의 값이 정확히 1인지 확인했습니다. 공통 문서 oracle로 역순 입력과 전역 한도도 대조합니다. SSOT는 utf16_string/control_rules, payload/ruby, 집계/ruby_validation, 조립/section, 독립 wire 기대 정의로 분리합니다.
+
+실제 덧말 파일과 버전별 저장 형태, 스타일 번호 참조 의미, 크기 비율/옵션의 조판 효과는 남았습니다. 기존 실제 corpus에서의 0개 결과와 합성 양성 검증을 구분합니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 169/169, Node 47/47, HWP5 WASM 167,244회 검사 통과(기존 참조 표본 존재 환경). CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.

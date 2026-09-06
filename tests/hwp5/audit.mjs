@@ -24,6 +24,8 @@ import { overlapReference } from "./char-overlap-reference.mjs";
 import { memoEdges } from "./memo-identity.mjs";
 import { fieldEdges } from "./fields.mjs";
 import { fieldDocumentEdges } from "./field-document.mjs";
+import { rubyEdges } from "./ruby.mjs";
+import { rubyDocumentEdges } from "./ruby-document.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -339,6 +341,8 @@ const bookmarkEdgeResults = bookmarkEdges(call);
 const overlapEdgeResults = overlapEdges(call);
 const memoEdgeResults = memoEdges(call);
 const fieldEdgeResults = fieldEdges(call);
+const rubyEdgeResults = rubyEdges(call);
+let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
   rejected: 0,
@@ -518,6 +522,14 @@ try {
       docPlain,
       decodedSections,
     );
+    if (rubyDocumentResults === null)
+      rubyDocumentResults = rubyDocumentEdges(
+        call,
+        cfb,
+        hdr,
+        docPlain,
+        decodedSections,
+      );
     const fieldDoc = fieldDocumentEdges(
       call,
       hdr,
@@ -747,6 +759,8 @@ console.log(
       overlapEdgeResults,
       memoEdgeResults,
       fieldEdgeResults,
+      rubyEdgeResults,
+      rubyDocumentResults,
       fieldDocumentResults,
       overlapReferenceResults,
       bookmarkReferenceResults,
