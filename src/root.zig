@@ -46,6 +46,7 @@ test {
     _ = @import("hwp5/body/shape_arc_tests.zig");
     _ = @import("hwp5/body/shape_polygon_tests.zig");
     _ = @import("hwp5/body/shape_curve_tests.zig");
+    _ = @import("hwp5/body/shape_connector_tests.zig");
     _ = @import("hwp5/body/shape_picture_tests.zig");
     _ = @import("hwp5/body/picture_color_tests.zig");
     _ = @import("hwp5/body/picture_effects_tests.zig");

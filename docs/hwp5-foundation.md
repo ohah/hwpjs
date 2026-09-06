@@ -1992,3 +1992,23 @@ picture_validation.inspect에 선택적 BinData 항목 개수를 전달합니다
 실제 그림 1,947개 중 비영 항목 참조는 1,946개, 부재 ID 0은 1개입니다. 순번과 저장 ID가 다른 그림은 8개 파일의 60개입니다: BlogForm_Recipe 10, NewYear_s_Day 1, Worldcup_FIFA2010_32 29, interview 1, exam_social 2, evaluation_form_200dpi_scan 1, pic-crop-01 2, table-in-tbox 14. 이 차이를 오류나 ID 자동 치환으로 처리하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과했습니다. 모드별 네이티브 219/219, Node 47/47, HWP5 WASM 1,216,280회 검사입니다. 참조 경계 합성 성공 15/거부 10, 실제 문서의 잘못된 ID·누락 저장 경로 거부 25회를 포함합니다. CFB 12,000회 변이 trap 0이며, 로그는 `/tmp/hwpjs-picture-reference-{debug,safe,fast}.log`입니다. 참조 규칙은 기존 reference_rules, 저장 경로·압축은 container 계층, 보고서 위치는 테스트 공통 schema를 재사용했습니다.
+
+## 연결선 payload 코어
+
+2026-09-07. 공식 PDF 표 92는 일반 선의 18바이트 속성만 정의하며 연결선의 별도 배열 배치를 찾지 못했습니다. 요약 스킬의 모든 SHAPE_COMPONENT가 이중 ID라는 설명은 기존 그룹 표본과 모순되므로 사용하지 않습니다. 연결선은 태그 78을 공유하지만 $col 소유자의 별도 payload입니다.
+
+독립 [hwplib ForControlObjectLinkLine](https://github.com/neolord0/hwplib/blob/4dc9673942bb8d977405122c3fed758af104cccd/src/main/java/kr/dogfoot/hwplib/reader/bodytext/paragraph/control/gso/ForControlObjectLinkLine.java)의 필드 폭/순서와 로컬 rhwp parser/control/shape.rs를 대조했습니다. 관측 배치는 start/end의 signed XY 16바이트, 종류 u32, 시작 대상 ID/인덱스와 끝 대상 ID/인덱스 각 u32, 개수 u32까지 40바이트, 이후 개수×10바이트의 XY/종류 u16 배열입니다. hwplib의 종류 byte 축소, rhwp의 미지 종류 기본값 치환과 남은 바이트에 맞춘 개수 축소는 채택하지 않습니다. 코드 이식·의존성 추가는 없습니다.
+
+shape_connector는 Point.read와 record_array.Records를 재사용하고 제어점/extra를 빌립니다. 좌표는 signed view로 보존하되 HWPX unsigned 표기의 동일한 32비트 패턴과 비교합니다. 연결 대상 ID/인덱스 및 미지 종류는 그대로 보존하고 의미를 추정하지 않습니다. 개수 검사는 곱셈 전에 수행하며 부족하면 UnexpectedEnd입니다. 일반 선의 18바이트를 자동 fallback하지 않습니다. 테스트 WASM 모드 83은 명시적인 연결선 payload 입력입니다.
+
+적대적 검증:
+
+1. 네이티브에서 서로 다른 이름 있는 헤더 필드, signed 최솟값/최댓값, 65535 제어점 종류, borrowed 주소 및 배열 범위 밖 null을 직접 검사합니다. 단순 재직렬화의 필드 순서 편향을 피합니다.
+2. 필수 prefix의 모든 잘림, count 3/65535/0x80000000/0xffffffff 초과, 빈 배열과 65,537개 배열을 검사합니다. 원문을 보정하거나 과도한 count만큼 할당하지 않습니다.
+3. 헤더/제어점/미지 꼬리의 각 바이트×8비트 변이와 정상 원문 회복을 WASM으로 검사합니다. 제어점 읽기는 nonzero cursor에서 모든 잘림에 대해 원자성을 확인합니다.
+4. 실제 행정업무 편람 20개 및 issue4491 혼합단지 제도개선 문서 12개를 독립 바이트 oracle과 비교합니다. 실제 표본은 종류 1/4, 제어점 2/3/4개, 꼬리 4바이트이며 다른 종류의 실제 의미까지 입증하지 않습니다.
+5. 행정업무 편람 Section2/7의 짝 HWPX 연결선 20개·제어점 44개에서 시작/끝 XY·대상 ID/인덱스·종류·각 제어점 XY/종류를 실제 WASM 출력과 비교합니다. Section0만 검사하지 않으며 테스트용 ZIP/XML 읽기를 제품 HWPX 지원으로 세지 않습니다. 원본 파일은 수정하지 않습니다.
+
+문서 line_validation의 deferred_connectors는 아직 유지합니다. 이 단계는 payload 코어이고 연결선 직접 소유권·누락·중복·대상 개체 참조 검증과 조판은 다음 범위입니다. 4바이트 꼬리 의미, 전체 문서 모델·HWPX·편집/저장도 아직 남아 있습니다.
+
+검증 결과: Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 221/221, Node 47/47 통과했습니다. Debug 전체 WASM 검사는 1,248,337회이며 이후 같은 Debug 바이너리에서 추가한 HWPX 20개/44점 대조를 별도 실행해 통과했습니다. 해당 대조가 전체 audit에 포함된 ReleaseSafe·ReleaseFast는 각각 1,248,399회입니다. 연결선 합성 성공 489/거부 29,015, 실제 32개·72점 및 필수 prefix 거부 2,000회를 포함합니다. 실제 종류는 1이 27개, 4가 5개입니다. 기존 CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-connector-{debug,safe,fast}.log`입니다.

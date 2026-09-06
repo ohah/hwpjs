@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { documentRecords } from "./documents.mjs";
 import { drawingStyleActual } from "./drawing-style.mjs";
 import { lineActual } from "./shape-line.mjs";
+import { connectorActual } from "./shape-connector.mjs";
 import { lineOwnerActual } from "./line-validation.mjs";
 import { rectangleActual } from "./shape-rectangle.mjs";
 import { rectangleOwnerActual } from "./rectangle-validation.mjs";
@@ -37,6 +38,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.pictureEffects = { parsed: 0, rejected: 0, flags: {}, extra: {} };
   out.pictureAdditional = { selected: [0,0], rejected: 0, unavailable: 0, alpha: {} };
   out.pictureReferences = { ordinals: 0, absent: 0, nonidentity: {} };
+  out.connectors = { parsed: 0, rejected: 0, points: 0, kinds: {}, extras: {}, files: {} };
   out.versions = {};
   out.images = [];
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
@@ -188,7 +190,16 @@ export function drawingStyleSurvey(call, cfb) {
             if(name==="group-drawing-02.hwp")out.lines.groupDrawingLines++;
             out.lines.attributes[line.attributes]=(out.lines.attributes[line.attributes]??0)+1;
             out.lines.extras[line.extra]=(out.lines.extras[line.extra]??0)+1;
-          }else out.lines.deferredOwners[owner]=(out.lines.deferredOwners[owner]??0)+1;
+          }else {
+            out.lines.deferredOwners[owner]=(out.lines.deferredOwners[owner]??0)+1;
+            if(owner==="$col"){
+              const p=connectorActual(call,bytes.subarray(record.start,record.end));
+              out.connectors.parsed++;out.connectors.rejected+=p.rejected;out.connectors.points+=p.count;
+              out.connectors.kinds[p.kind]=(out.connectors.kinds[p.kind]??0)+1;
+              out.connectors.extras[p.extra]=(out.connectors.extras[p.extra]??0)+1;
+              out.connectors.files[name]=(out.connectors.files[name]??0)+1;
+            }
+          }
         }
         if (record.tag === 76) {
           const p = bytes.subarray(record.start, record.end);
