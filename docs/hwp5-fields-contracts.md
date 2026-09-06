@@ -14,7 +14,7 @@
 
 - `memo_field.fromField`는 이미 파싱한 공통 필드에서 %%me 또는 %unk+정확한 UTF-16 MEMO/ 표식을 식별하고 선택 u32 메모 번호/extra를 보존합니다. isCommand는 control_identity도 공유합니다. 부재는 null이며 1~3바이트 꼬리는 오류, 0은 존재하는 값입니다. field_validation이 이 경계를 검사하지만 공통 헤더 이후 extra_bytes 집계는 유지합니다. 다른 필드에 MEMO/ 문자열이 있다는 이유만으로 재분류하거나 명령 숫자·전역 참조를 추정하지 않습니다.
 
-- `control_identity.zig`는 exact와 관측 메모/변경 추적 삭제 연결을 구분합니다. code 3과 %unk 헤더에 대해 %%me 토큰은 정확한 UTF-16 MEMO/ 접두사, %%*d 토큰은 `$RevisionDelete;` 전체 명령이 일치할 때만 관측 연결입니다. 각각 memo_field/revision_delete_field가 명령 식별을 소유하고 두 ID는 Link에 그대로 보존합니다. 다른 불일치를 wildcard로 허용하지 않습니다. `field_start.zig`는 표 152의 공통 속성·command·instance ID·extra를 소유하며 명령을 실행하지 않습니다. 구역 observed_field_links는 관측 종류의 enum 값 합계가 아닌 연결 수입니다. 메모 전체 명령 문법과 변경 추적 적용은 별도입니다.
+- `control_identity.zig`는 exact와 관측 메모/변경 추적 삭제·서명 연결을 구분합니다. code 3과 %unk 헤더에 대해 %%me 토큰은 정확한 UTF-16 MEMO/ 접두사, %%*d 토큰은 `$RevisionDelete;` 전체 명령이 일치할 때만 관측 연결입니다. 각각 memo_field/revision_delete_field가 명령 식별을 소유합니다. 서명의 별도 계약·실측·검증은 [변경 추적 서명 필드](hwp5-revision-sign.md)가 소유합니다. 두 ID는 Link에 그대로 보존하며 다른 불일치를 wildcard로 허용하지 않습니다. `field_start.zig`는 표 152의 공통 속성·command·instance ID·extra를 소유하며 명령을 실행하지 않습니다. 구역 observed_field_links는 관측 종류의 enum 값 합계가 아닌 연결 수입니다. 메모 전체 명령 문법과 변경 추적 적용은 별도입니다.
 
 - `hwp5/memo_references.zig`는 문서 전역 메모 번호 인덱스와 진단을 소유합니다. section은 기존 Group.memo와 field_validation의 파싱 결과에서 번호/구역만 수집하고 document.validation은 모든 구역 검사 후 정렬/대조합니다. 번호 크기로 배열을 할당하지 않습니다. 부재 번호는 null 진단, 알려진 번호의 대상 누락/여러 대상은 오류이며 참조 없는 리스트·중복 필드 번호 자체는 진단입니다. DocInfo 모양/instance ID와 섞지 않고 미참조 리스트의 변경 추적 의미를 추정하지 않습니다. 반환 Report는 scalar 집계만 보유하며 임시 인덱스는 성공/실패 모두 해제합니다. 기존 section wire는 유지하고 테스트 mode 90에서 전역 보고서를 노출합니다.
 

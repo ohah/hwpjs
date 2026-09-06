@@ -43,9 +43,9 @@ task2070의 전체 파일명은 `task2070/1130000-201900011_D0150004-1-002_2017�
 
 `20250130-hongbo.hwp`의 ViewText는 처음에는 `InvalidDeflate`로 거부되었습니다. 이후 태그 28·256바이트 배포 데이터와 AES 블록·꼬리를 확인하고 [배포용 형태 ViewText 디코더](hwp5-distribution-viewtext.md)를 연결했습니다. 현재는 이 파일도 컨테이너 검증을 통과하며 복호화된 ViewText가 BodyText와 바이트 단위로 같습니다. FileHeader의 배포용 비트는 꺼져 있습니다. 배포용 비트가 켜진 문서 전체의 지원 정책과 구분합니다.
 
-task2070을 전체 컨테이너 mode 98로 검사하면 기존 BodyText 의미 검사에서 `ControlIdMismatch`로 먼저 실패합니다. 이 파일의 ViewText 수치는 독립 framing 조사 결과이지 신규 컨테이너 경로의 전체 성공 증거가 아닙니다. issue5169는 실제 컨테이너 검증 및 변조 테스트를 통과한 표본입니다.
+task2070은 처음에 BodyText 의미 검사에서 `ControlIdMismatch`로 실패했습니다. [관측 서명 필드 연결](hwp5-revision-sign.md)을 추가한 뒤 전체 컨테이너 mode 25와 BodyText/ViewText 각각의 decoded 의미 검사 mode 24가 성공했습니다. 기본 컨테이너의 ViewText 의미 검증은 여전히 deferred입니다. issue5169도 실제 컨테이너 framing 검증 및 변조 테스트를 통과한 표본입니다.
 
-기존 decoded 문서 의미 검사기에 두 ViewText를 직접 공급하면 각각 `InvalidLinePosition`, `ControlIdMismatch`가 발생했습니다. 이를 피하려고 기존 BodyText 규칙을 완화하지 않았습니다. 다음 단계는 이 차이의 원인과 ViewText 전용 규칙의 근거를 조사하는 것입니다.
+issue5169의 ViewText를 decoded 의미 검사기에 직접 공급하면 `InvalidLinePosition`이 남아 있습니다. 독립적인 문단 직접 자식 조사에서 문단 길이를 넘는 줄 시작 위치 9건을 확인했습니다(BodyText 0건). 첫 문단 레코드 인덱스 35, 바이트 위치 1015의 길이는 15유닛인데 줄 시작은 97/119입니다. 다음 사례는 문단 116(위치 3725), 길이 3에 시작 183/226입니다. 위치는 해제한 Section 기준입니다. 명세 표 62는 줄 정보를 cache로 설명하지만 다른 위치 기준이나 초과 허용 조건은 명시하지 않습니다. 원인을 확인하기 전까지 문단 위치 제한을 완화하지 않습니다.
 
 ## payload 해석 근거의 한계
 

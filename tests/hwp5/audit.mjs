@@ -16,6 +16,7 @@ import {trackChangeEdges,trackChangeDocument} from "./track-change.mjs";
 import {viewTextDocument} from "./view-text.mjs";
 import {distributionEdges,distributionActual} from "./distribution.mjs";
 import {revisionDeleteEdges} from "./revision-delete.mjs";
+import {revisionSignEdges,revisionSignActual} from "./revision-sign.mjs";
 import {memoEndEdges,memoEndActual} from "./memo-end.mjs";
 import {paragraphFlowEdges,paragraphFlowActual} from "./paragraph-flows.mjs";
 import {groupInfoEdges} from "./group-info.mjs";
@@ -458,6 +459,7 @@ const trackChangeResults = {edges:trackChangeEdges(call),document:trackChangeDoc
 const viewTextResults = viewTextDocument(call,cfb);
 const distributionResults = {edges:distributionEdges(call),actual:distributionActual(call,cfb)};
 const revisionDeleteResults = revisionDeleteEdges(call);
+const revisionSignResults = {edges:revisionSignEdges(call),actual:revisionSignActual(call,cfb)};
 const memoEndResults = {edges:memoEndEdges(call),actual:memoEndActual(call,cfb)};
 const paragraphFlowResults = {edges:paragraphFlowEdges(call),actual:paragraphFlowActual(call,cfb)};
 const groupInfoPairResults = groupInfoPair(call,cfb);
@@ -963,6 +965,7 @@ console.log(
       viewTextResults,
       distributionResults,
       revisionDeleteResults,
+      revisionSignResults,
       memoEndResults,
       paragraphFlowResults,
       groupInfoPairResults,

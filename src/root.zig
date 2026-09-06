@@ -56,6 +56,7 @@ test {
     _ = @import("hwp5/docinfo/track_change_tests.zig");
     _ = @import("hwp5/container/view_text_tests.zig");
     _ = @import("hwp5/distribution/tests.zig");
+    _ = @import("hwp5/body/revision_sign_tests.zig");
     _ = @import("hwp5/body/group_validation_tests.zig");
     _ = @import("hwp5/body/shape_picture_tests.zig");
     _ = @import("hwp5/body/picture_color_tests.zig");
