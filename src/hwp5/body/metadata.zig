@@ -29,7 +29,7 @@ pub const Metadata = struct {
         // Overlap, equal endpoints and arbitrary kind/data are preserved.
         if (self.ranges) |ranges| for (0..ranges.count()) |i| {
             const r = ranges.get(i).?;
-            if (r.start > r.end or r.end > h.characterUnits()) return error.InvalidRangePosition;
+            try r.validateBounds(h.characterUnits());
         };
     }
 };

@@ -3,6 +3,9 @@ pub const Range = struct {
     start: u32,
     end: u32,
     tag: u32,
+    pub fn validateBounds(self: Range, units: u32) !void {
+        if (self.start > self.end or self.end > units) return error.InvalidRangePosition;
+    }
     pub fn kind(self: Range) u8 {
         return @truncate(self.tag >> 24);
     }
