@@ -12,7 +12,7 @@ pub const Report = struct {
     /// Every payload remains semantically unvalidated; framing is not field support.
     deferred_records: usize = 0,
 };
-pub fn inspect(a: std.mem.Allocator, file: *const File, header: *const Header, used: []bool, remaining_bytes: *usize, remaining_records: usize, expected_sections: usize, options: @import("../document/types.zig").Options) !Report {
+pub fn inspect(a: std.mem.Allocator, file: *const File, header: *const Header, used: []bool, remaining_bytes: *usize, remaining_records: usize, expected_sections: usize, options: @import("../document/types.zig").Options, max_ciphertext: usize) !Report {
     var report: Report = .{ .declared = header.has(.track_changes) };
     const root = try file.findExact("/ViewText") orelse {
         if (report.declared) return error.MissingViewText;
@@ -20,7 +20,7 @@ pub fn inspect(a: std.mem.Allocator, file: *const File, header: *const Header, u
     };
     if (file.entries[root].kind != 1) return error.InvalidHwpEntryKind;
     report.present = true;
-    const decoded = try sections.decodeAt(a, file, root, header, used, remaining_bytes, options.max_sections);
+    const decoded = try sections.decodeAt(a, file, root, header, used, remaining_bytes, options.max_sections, max_ciphertext);
     defer sections.deinit(a, decoded);
     if (decoded.len != expected_sections) return error.SectionCountMismatch;
     const order = try @import("../document/section_order.zig").build(a, decoded);

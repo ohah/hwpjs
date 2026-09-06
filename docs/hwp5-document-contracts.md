@@ -6,6 +6,8 @@
 
 - [변경 추적 ViewText 계약·조사](hwp5-track-change-viewtext.md)는 별도 압축·framing·구역 경계 검증, 공유 한도와 미완료 의미 검증을 관리합니다.
 
+- [배포용 형태 ViewText](hwp5-distribution-viewtext.md)는 별도 envelope·키 유도·블록·꼬리 검증과 배포용 플래그 문서 전체 지원의 차이를 관리합니다.
+
 - `src/hwp5/document/`: types는 입력/소유권/보고서, docinfo는 리소스 검증 연결, section은 기존 본문 검사기 조립, validation은 헤더 지원 정책·구역 수/인덱스·전역 한도를 소유합니다. inspectDecoded 입력은 이미 압축 해제된 스트림이며 CFB를 검색하지 않습니다. 구역 보고서는 인덱스 순서로 소유하고 DocInfo 원문 슬라이스는 빌립니다. 레벨·ID·구역 정의 첫 문단 조건 등 기존 의미 규칙을 이 계층에 복제하지 않습니다.
 
 - `src/hwp5/container/`: paths는 CFB 계층 조회와 정규 Section/BinData 이름, sections는 직접 Section 자식의 bounded decode, binaries는 항목별 압축/외부 링크 보류, validation은 파일 단위 수명과 총 decode 한도를 소유합니다. strict CFB와 findExact만 사용하며 동명 basename fallback·외부 링크 접근·압축 실패 후 원본 fallback을 금지합니다. 반환 보고서는 DocInfo backing을 소유하므로 입력 CFB를 해제해도 유효합니다. uninspected 및 별도 deferred 진단을 완료로 세지 않습니다.

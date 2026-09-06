@@ -42,6 +42,49 @@ fn failure(a: std.mem.Allocator, bytes: []const u8) !void {
     defer r.deinit(a);
     return error.ExpectedViewTextFailure;
 }
+fn encryptedSuccess(a: std.mem.Allocator, bytes: []const u8) !void {
+    var r = try c.inspect(a, bytes, opts);
+    defer r.deinit(a);
+    try t.expectEqual(8, r.view_text.records);
+    try t.expectEqual(32, r.view_text.decoded_bytes);
+}
+fn encryptedLimitFailure(a: std.mem.Allocator, bytes: []const u8) !void {
+    var limited = opts;
+    limited.max_viewtext_ciphertext_bytes = 31;
+    var r = c.inspect(a, bytes, limited) catch |err| switch (err) {
+        error.LimitExceeded => return,
+        else => return err,
+    };
+    defer r.deinit(a);
+    return error.ExpectedDistributionLimit;
+}
+test "distribution ViewText integration owns decoded buffers and bounds ciphertext" {
+    const source = try fixture(t.allocator, true, true, false);
+    defer t.allocator.free(source);
+    var file = try @import("../../cfb/reader.zig").File.open(t.allocator, source, .{ .strict = true });
+    defer file.deinit();
+    const nodes = try file.toNodes(t.allocator);
+    defer t.allocator.free(nodes);
+    var raw = [_]u8{0} ** 292;
+    f.put(&raw, 0, u32, 0x1000001c);
+    f.put(&raw, 4, u32, 5);
+    var plain = [_]u8{0} ** 32;
+    for (0..8) |i| f.put(&plain, i * 4, u32, 999);
+    const cipher = std.crypto.core.aes.Aes128.initEnc(@import("../distribution/key.zig").derive(raw[4..260]));
+    for (0..2) |i| cipher.encrypt(raw[260 + i * 16 ..][0..16], plain[i * 16 ..][0..16]);
+    // toNodes compacts unused CFB entries: do not reuse physical directory IDs.
+    var view_parent: ?usize = null;
+    for (nodes, 0..) |node, i| {
+        if (node.parent == 0 and std.mem.eql(u8, node.name, "ViewText")) view_parent = i;
+    }
+    for (nodes) |*node| {
+        if (node.parent == view_parent.? and std.mem.eql(u8, node.name, "Section0")) node.content = &raw;
+    }
+    const encoded = try writer.write(t.allocator, nodes, .{});
+    defer t.allocator.free(encoded);
+    try t.checkAllAllocationFailures(t.allocator, encryptedSuccess, .{encoded});
+    try t.checkAllAllocationFailures(t.allocator, encryptedLimitFailure, .{encoded});
+}
 test "ViewText framing success and late failure clean every allocation" {
     const good = try fixture(t.allocator, true, true, false);
     defer t.allocator.free(good);

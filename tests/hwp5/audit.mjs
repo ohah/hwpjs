@@ -14,6 +14,7 @@ import {forbiddenDocument} from "./forbidden-document.mjs";
 import {trackAuthorEdges,trackAuthorDocument} from "./track-author.mjs";
 import {trackChangeEdges,trackChangeDocument} from "./track-change.mjs";
 import {viewTextDocument} from "./view-text.mjs";
+import {distributionEdges,distributionActual} from "./distribution.mjs";
 import {revisionDeleteEdges} from "./revision-delete.mjs";
 import {memoEndEdges,memoEndActual} from "./memo-end.mjs";
 import {paragraphFlowEdges,paragraphFlowActual} from "./paragraph-flows.mjs";
@@ -455,6 +456,7 @@ const forbiddenDocumentResults = forbiddenDocument(call,cfb);
 const trackAuthorResults = {edges:trackAuthorEdges(call),document:trackAuthorDocument(call,cfb)};
 const trackChangeResults = {edges:trackChangeEdges(call),document:trackChangeDocument(call,cfb)};
 const viewTextResults = viewTextDocument(call,cfb);
+const distributionResults = {edges:distributionEdges(call),actual:distributionActual(call,cfb)};
 const revisionDeleteResults = revisionDeleteEdges(call);
 const memoEndResults = {edges:memoEndEdges(call),actual:memoEndActual(call,cfb)};
 const paragraphFlowResults = {edges:paragraphFlowEdges(call),actual:paragraphFlowActual(call,cfb)};
@@ -959,6 +961,7 @@ console.log(
       trackAuthorResults,
       trackChangeResults,
       viewTextResults,
+      distributionResults,
       revisionDeleteResults,
       memoEndResults,
       paragraphFlowResults,

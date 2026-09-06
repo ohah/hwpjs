@@ -4,6 +4,7 @@ import { decodedDocumentInput, documentRecords } from "./documents.mjs";
 import { previewActual } from "./preview.mjs";
 import { summaryActual, summaryFixture } from "./summary.mjs";
 import { scriptsActual, scriptFixture } from "./scripts.mjs";
+import {distributionOracle} from './distribution-oracle.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -60,7 +61,8 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
   let viewBytes = 0, viewRecords = 0;
   const viewRoot = nodes.findIndex(n => n.parent === 0 && n.name.toLowerCase() === 'viewtext');
   if (viewRoot >= 0) for (const n of nodes.filter(n => n.parent === viewRoot && /^section\d+$/i.test(n.name))) {
-    const plain = h.readUInt32LE(36) & 1 ? inflateRawSync(n.content) : Buffer.from(n.content);
+    const raw = Buffer.from(n.content);
+    const plain = raw.length >= 4 && raw.readUInt32LE(0) === 0x1000001c ? distributionOracle(raw) : h.readUInt32LE(36) & 1 ? inflateRawSync(raw) : raw;
     viewBytes += plain.length;
     viewRecords += documentRecords(plain).length;
     used.add(`/viewtext/${n.name.toLowerCase()}`);

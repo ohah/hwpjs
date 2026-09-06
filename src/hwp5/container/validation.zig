@@ -5,6 +5,7 @@ const paths = @import("paths.zig");
 const sections = @import("sections.zig");
 const binaries = @import("binaries.zig");
 pub const Options = struct {
+    max_viewtext_ciphertext_bytes: usize = 64 * 1024 * 1024,
     storage_layout: @import("../docinfo/bin_data.zig").StorageLayout = .observed_optional_extension,
     document: d.Options,
     cfb: @import("../../cfb/types.zig").Options = .{ .strict = true },
@@ -53,7 +54,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     defer sections.deinit(a, body);
     var report = try d.inspectDecoded(a, .{ .header = &header.raw, .doc_info = doc, .sections = body }, options.document);
     errdefer report.deinit(a);
-    const view = try @import("view_text.zig").inspect(a, &file, &header, used, &remaining, options.document.max_total_records - report.total_records, report.sections.len, options.document);
+    const view = try @import("view_text.zig").inspect(a, &file, &header, used, &remaining, options.document.max_total_records - report.total_records, report.sections.len, options.document, options.max_viewtext_ciphertext_bytes);
     const bins = try binaries.inspect(a, &file, &header, doc, options.document.framing, options.storage_layout, used, &remaining);
     const preview = try @import("preview.zig").inspect(&file, used, &remaining);
     const summary = try @import("summary.zig").inspect(a, &file, used, &remaining, options.max_summary_properties);

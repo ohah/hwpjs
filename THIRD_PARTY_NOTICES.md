@@ -1,5 +1,14 @@
 # Third-party notices
 
+## rhwp distribution key derivation
+
+`src/hwp5/distribution/key.zig` adapts the MSVC-LCG/XOR key derivation in
+`reference/rhwp/src/parser/crypto.rs`, Copyright (c) 2025-2026 Edward Kim.
+Upstream: https://github.com/edwardkim/rhwp
+License: [MIT](licenses/rhwp-MIT.txt). AES uses Zig's standard library; incomplete
+cipher blocks are rejected rather than padded. Envelope, resource limits and
+observed checksum-block validation are separate HWPJS implementations.
+
 ## Zig DEFLATE decoder
 
 `src/compression/flate/Decompress.zig` and `token.zig` are adapted from Zig 0.16.0
