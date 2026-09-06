@@ -106,6 +106,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         42 => return @import("note-control-probe.zig").run(a, bytes),
         43 => return @import("note-validation-probe.zig").run(a, bytes, limit),
         44 => return @import("equation-probe.zig").run(a, bytes),
+        45 => return @import("equation-validation-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

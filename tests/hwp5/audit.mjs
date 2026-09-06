@@ -31,6 +31,7 @@ import { hiddenReference } from "./hidden-comment-reference.mjs";
 import { noteControlEdges, noteControlReference } from "./note-control.mjs";
 import { noteValidationEdges } from "./note-validation.mjs";
 import { equationEdges, equationReference } from "./equation.mjs";
+import { equationValidationEdges } from "./equation-validation.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -351,6 +352,7 @@ const hiddenEdgeResults = hiddenEdges(call);
 const noteControlEdgeResults = noteControlEdges(call);
 const noteValidationEdgeResults = noteValidationEdges(call);
 const equationEdgeResults = equationEdges(call);
+const equationValidationEdgeResults = equationValidationEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -777,6 +779,7 @@ console.log(
       noteControlEdgeResults,
       noteValidationEdgeResults,
       equationEdgeResults,
+      equationValidationEdgeResults,
       equationReferenceResults,
       noteControlReferenceResults,
       rubyDocumentResults,

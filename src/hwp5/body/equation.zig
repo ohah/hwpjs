@@ -1,5 +1,6 @@
 const Reader = @import("../../binary/reader.zig").Reader;
 const string = @import("../utf16_string.zig");
+pub const tag: u10 = 88;
 /// Observed EQEDIT layouts. Neither lengths nor versions select a fallback.
 pub const Layout = enum { version_only, with_font };
 pub const Properties = struct {

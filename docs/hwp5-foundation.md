@@ -1284,3 +1284,21 @@ rhwp parser/control.rs 및 serializer/control.rs는 number(u32), 앞/뒤 장식(
 이번 단계는 payload 파서와 전용 WASM 검사입니다. EQEDIT의 부모/중복/필수 존재 규칙, 문서 검사기 연결, 수식 스크립트 문법·렌더링·편집/저장은 남았습니다. 실제 payload 대조를 해당 파일 전체 문서 검증 완료로 계상하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 175/175, Node 47/47, HWP5 WASM 174,134회 검사 통과(참조 표본 존재). 수식 합성 성공 41건·거부 60건, 실제 payload 잘림 거부 4,948건입니다. CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.
+
+## 수식 레코드 소유권과 문서 검사 연결 (2026-09-06)
+
+실제 수식 표본 3개의 EQEDIT 48개 모두 직접 부모가 eqed CTRL_HEADER임을 level 기반 독립 순회로 확인했습니다. 새 equation_validation은 eqed의 직접 자식에 EQEDIT가 하나 있어야 한다는 구조를 검사합니다. EQEDIT가 루트이거나 다른 종류 부모의 자식이면 OrphanEquation, 두 개면 DuplicateEquation, 없으면 MissingEquation입니다. Tree의 parent/subtree_end를 재사용하고 별도 부모 그래프를 만들지 않습니다. 다른 자식의 후손을 건너뛰므로 후손이나 이후 형제의 EQEDIT로 누락을 상쇄하지 않습니다.
+
+payload 해석은 equation.Properties, ID는 control_rules.equation_id, 태그 번호는 equation.tag가 소유합니다. 문서 조립은 Options.equation_layout으로 검사기를 호출합니다. 기본 version_only에서는 뒤쪽 폰트 원문을 extra로 보존·집계하며 자동으로 with_font로 바꾸지 않습니다. with_font 선택 시 폰트 prefix도 필수입니다. 구역 보고서는 controls/script_units/version_units/font_units/line_mode/unknown_attributes/unknown_words/extra_bytes 8필드입니다. 미지 속성 비트와 unknown u16은 진단만 하고 원시 값을 거부·정규화하지 않습니다. 독립 보고서 행은 428바이트로 확장했습니다.
+
+### 구현 후 적대적 검증
+
+1. 두 배치의 모든 필수 prefix 잘림, EQEDIT 루트/다른 부모, 중복, 누락, 중첩 수식, 미지 형제 레코드, 이후 형제의 잘못된 차용을 검사했습니다. 상위 수식에 정상 EQEDIT가 있어도 다른 자식 아래의 고아 EQEDIT를 무시하지 않습니다.
+2. Tree의 모든 할당 실패를 성공 및 MissingEquation 경로에 주입했습니다. 검사기는 추가 할당 없이 직접 자식만 순회하고 payload를 재파싱하지 않습니다. object_common과 수식 필드를 같은 바이트에서 두 번 읽지 않습니다.
+3. 독립 JS 기대 순회는 원본 level/parent와 각 문자열 길이를 직접 읽어 구역 보고서와 대조합니다. 미지 속성 상위 비트, lineMode, unknown u16, extra를 별도 집계하며 제품 보고서에서 기대값을 생성하지 않습니다.
+4. atop-equation-01.hwp/equation-lim.hwp/math-001.hwp의 원본 전체 decoded document와 CFB 경로가 통과했습니다. 각 파일 첫 EQEDIT의 누락/중복/필수 버전 문자열 잘림을 전용 검사·문서·재생성 CFB 세 경로에서 거부했습니다(27건). 원본 레코드를 독립 루트로 옮긴 고아 검사도 3건 수행했습니다. 원본 파일은 변경하지 않았습니다.
+5. 각 실제 파일의 첫 수식 lineMode 비트를 뒤집은 합성 구역과 원본 구역을 함께 검사했습니다. 다른 집계를 가진 두 구역을 정순/역순 및 전역 한도로 대조했고 독립 Section1 필드 고정 위치도 확인했습니다. 오류 뒤 정상 문서 재호출로 복구를 확인했습니다.
+
+이전의 수식 레코드 소유권·문서 검사 연결 보류는 해소됐습니다. 문서 기본 배치에서 extra로 남는 폰트의 의미, 버전별 배치 선택 규칙, 수식 언어 문법·렌더링·편집·저장은 남았습니다. 기존 미지 레코드 진단은 별도 층의 분류이며 수식 검사 성공으로 다른 미지 항목을 완료 처리하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 176/176, Node 47/47, HWP5 WASM 174,569회 검사 통과(참조 표본 존재). 전용 소유권 합성 성공 55건·거부 49건, 실제 문서 손상 거부 27건·고아 거부 3건입니다. CFB 12,000회 변이에서 trap 0이며 포맷·diff 검사도 통과했습니다.

@@ -14,6 +14,7 @@ import { fieldsActual } from "./fields.mjs";
 import { rubyActual } from "./ruby.mjs";
 import { hiddenActual } from "./hidden-comment.mjs";
 import { noteActual } from "./note-validation.mjs";
+import { equationActual } from "./equation-validation.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -140,6 +141,7 @@ export function documentActual(call, h, doc, sections) {
       ...rubyActual(call, v, b).map(w),
       ...hiddenActual(call, v, b).map(w),
       ...noteActual(call, v, b).map(w),
+      ...equationActual(call, v, b).map(w),
     );
   }
   const want = Buffer.concat(expected);

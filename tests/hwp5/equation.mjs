@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
 import { documentRecords } from "./documents.mjs";
+import { equationDocument } from "./equation-document.mjs";
 const w = n => { const b=Buffer.alloc(4); b.writeUInt32LE(n); return b; };
 const str = raw => { const n=Buffer.alloc(2); n.writeUInt16LE(raw.length/2); return Buffer.concat([n,raw]); };
 const run = (call,b,mode) => call(44,Buffer.concat([Buffer.from([mode]),b]));
@@ -59,7 +60,7 @@ export function equationReference(call,cfb) {
       if(mode===0) assert.throws(()=>run(call,payload,1),/UnexpectedEnd/);
       equations++;
     }
-    files.push({name,mode,count});
+    files.push({name,mode,count,document:equationDocument(call,cfb,readFileSync(path),h,b)});
   }
   return {equations,rejected,files,skipped};
 }

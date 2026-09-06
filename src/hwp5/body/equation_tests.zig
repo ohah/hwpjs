@@ -32,3 +32,17 @@ test "equation observed layouts preserve signed baseline, raw strings and absent
     std.mem.writeInt(u16, raw[20..22], 65535, .little);
     try t.expectError(error.UnexpectedEnd, eq.Properties.parse(&raw, .with_font));
 }
+fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
+    var raw = [_]u8{0} ** 32;
+    std.mem.writeInt(u32, raw[0..4], 71 | (4 << 20), .little);
+    std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").equation_id, .little);
+    std.mem.writeInt(u32, raw[8..12], 88 | (1 << 10) | (20 << 20), .little);
+    var tree = try @import("tree.zig").Tree.parse(a, raw[0..if (bad) 8 else 32], .{ .raw = 0x05000300 }, .{});
+    defer tree.deinit(a);
+    const result = @import("equation_validation.zig").inspect(tree, .version_only);
+    if (bad) try t.expectError(error.MissingEquation, result) else try t.expectEqual(1, (try result).controls);
+}
+test "equation owner allocation cleanup includes missing child" {
+    try t.checkAllAllocationFailures(t.allocator, allocationCase, .{false});
+    try t.checkAllAllocationFailures(t.allocator, allocationCase, .{true});
+}
