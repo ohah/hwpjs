@@ -2116,3 +2116,15 @@ hwplib는 마지막 DWORD를 unknown으로 보존합니다. rhwp의 HWPX 변환�
 최종 Debug·ReleaseSafe·ReleaseFast audit는 각 모드에서 네이티브 228/228, Node 47/47, HWP5 WASM 1,290,581회 검사를 통과했습니다. 메모 모양 합성 성공 206/잘린 입력 거부 4,532, 실제 51개/필수 prefix 거부 1,122와 HWP/HWPX 짝 7개 대조를 포함합니다. CFB 12,000회 변이에서 trap 0이며 Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-memo-shape-{debug,safe,fast}.log`입니다. 이는 payload 코어 검증이며 메모의 문서 연결·편집·저장 완료를 뜻하지 않습니다.
 
 실제 51개는 선 종류 1이 47개/3이 4개, 폭 15590이 1개/15591이 50개입니다. 마지막 DWORD는 0이 49개/1과 2가 각 1개이며 extra는 모두 0바이트입니다. 실제 폭의 1단위 차이를 반올림하거나 기본값으로 보정하지 않습니다. 짝 비교 7개는 종류 1/SOLID와 마지막 값 0/NOMAL만 대조했으며 다른 종류의 의미까지 실측했다고 주장하지 않습니다.
+
+## 메모 모양 DocInfo 연결과 선택 개수 검증
+
+2026-09-07. 공식 PDF 표 4는 MEMO_SHAPE 22바이트/level 1, 표 13은 태그 92, 표 16은 메모 개수 슬롯 15(5.0.2.1 이상)를 명시합니다. reader는 기존 Shape.parse와 태그 상수를 재사용해 typed memo_shape로 dispatch하고 level 1을 검사합니다. 실패 시 Iterator 상태는 갱신하지 않습니다. resources는 기존 필수 리소스 배열의 wire 순서를 변경하지 않고 memo_shape_count를 별도로 집계합니다. validateKnownCounts는 실제 슬롯이 있을 때만 음수/개수 불일치를 거부합니다. 버전의 기대 슬롯 수와 실제 존재를 혼동하지 않으며 부재는 mappings.get(.memo_shape)==null로 남습니다. 부재 슬롯의 개수 검증이 완료되었다는 뜻은 아닙니다.
+
+실제 reference/rhwp/samples를 읽기 전용으로 조사했습니다. strict CFB·비보안 DocInfo에 진입한 430개 중 슬롯 존재 427개/부재 3개이며 선언 개수와 메모 레코드 개수의 불일치는 0개입니다. 메모 51개는 모두 level 1입니다. 슬롯 부재인데 메모가 존재하는 실제 표본은 없었습니다. 보안 정책 제외 4개와 CFB/헤더/스트림 진입 실패 102개는 이 비교의 성공에 포함하지 않습니다. 진입 실패에는 다른 포맷 표본도 있으므로 모두 손상 HWP라고 해석하지 않습니다.
+
+적대적 검증은 네이티브 Iterator의 모든 짧은 payload·반복 실패·잘못된 레벨, 세 버전의 슬롯 부재/음수/0/1/2/INT32_MAX, WASM의 일반/확장 framing과 실패 후 정상 재입력으로 구성합니다. 실제 hwpx_sample2 DocInfo의 개수 변이·메모 삭제/중복·22개 prefix 잘림·level 0/2를 references→decoded 문서→재생성 CFB의 세 경로에서 거부하고 원본 입력으로 복구를 확인합니다. CFB 변이는 메모리에서 생성하며 fixture를 수정하지 않습니다. references의 unknown_records는 typed 메모를 제외하지만 메모 본문 연결·마지막 DWORD 의미·편집/저장을 완료로 세지 않습니다.
+
+최초 전체 Debug audit에서 기존 고정 fixture 집계의 unknown_records 기대값 70이 실제 69와 달라 실패했습니다. legacy fixture의 DocInfo를 독립 Node zlib/framing 경로로 다시 조사해 software.hwp에 메모 레코드가 정확히 1개 있음을 확인하고 기대값을 69로 수정했습니다. 개별 파일의 references 기대값도 태그 92를 알려진 레코드로 분류하며 제품 오류 검사를 완화하지 않았습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 230/230, Node 47/47, HWP5 WASM 1,291,041회 검사 통과했습니다. 신규 메모 연결 합성 성공 12/거부 162와 실제 문서의 세 경로 거부 90을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-memo-resource-{debug,safe,fast}.log`입니다. payload·level·선택 슬롯 개수 연결까지 완료했으며 본문 MEMO_LIST 및 필드 명령과의 연결은 다음 범위입니다.

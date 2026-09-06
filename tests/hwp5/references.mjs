@@ -129,7 +129,7 @@ function oracle(v, bytes) {
         break;
       }
       default:
-        if ((r.tag < 16 || r.tag > 26) && r.tag !== 30 && r.tag !== 31)
+        if ((r.tag < 16 || r.tag > 26) && r.tag !== 30 && r.tag !== 31 && r.tag !== 92)
           out[3]++;
     }
   }

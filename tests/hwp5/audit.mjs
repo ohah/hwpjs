@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {videoEdges} from "./video-data.mjs";
 import {memoShapeEdges} from "./memo-shape.mjs";
 import {memoShapePair} from "./memo-shape-pair.mjs";
+import {memoResourceEdges,memoResourceDocument} from "./memo-resource.mjs";
 import {groupInfoEdges} from "./group-info.mjs";
 import {groupInfoPair} from "./group-info-pair.mjs";
 import {groupOwnerEdges,groupDocumentReference} from "./group-validation.mjs";
@@ -428,6 +429,7 @@ const groupInfoEdgeResults = groupInfoEdges(call);
 const videoEdgeResults = videoEdges(call);
 const memoShapeEdgeResults = memoShapeEdges(call);
 const memoShapePairResults = memoShapePair(call,cfb);
+const memoResourceResults = {edges:memoResourceEdges(call),document:memoResourceDocument(call,cfb)};
 const groupInfoPairResults = groupInfoPair(call,cfb);
 const groupOwnerEdgeResults = groupOwnerEdges(call);
 const groupDocumentResults = groupDocumentReference(call,cfb);
@@ -756,7 +758,8 @@ assert.deepEqual(body, {
   controlHeaders: 313,
   listHeaders: 643,
 });
-assert.deepEqual(references, [7881, 0, 316, 70]);
+// The fixture memo shape is now typed; its unresolved body meaning is separate.
+assert.deepEqual(references, [7881, 0, 316, 69]);
 assert.deepEqual(formatting, {
   tabDef: 138,
   numbering: 50,
@@ -916,6 +919,7 @@ console.log(
       videoEdgeResults,
       memoShapeEdgeResults,
       memoShapePairResults,
+      memoResourceResults,
       groupInfoPairResults,
       groupOwnerEdgeResults,
       groupDocumentResults,

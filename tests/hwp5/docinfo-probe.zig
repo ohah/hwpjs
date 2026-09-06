@@ -39,6 +39,17 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
                     else => try @import("formatting-probe.zig").payload(a, &out, record.value),
                 }
             },
+            .memo_shape => |v| {
+                try word(a, &out, @intCast(record.framing.raw.len));
+                const header_len = record.framing.raw.len - record.framing.payload.len;
+                try out.appendSlice(a, record.framing.raw[0..header_len]);
+                const int = @import("resource-probe.zig").int;
+                try int(a, &out, u32, v.width);
+                try int(a, &out, u8, v.border.kind);
+                try int(a, &out, u8, v.border.width);
+                for ([_]u32{ v.border.color, v.fill_color, v.active_color, v.unknown_raw }) |n| try word(a, &out, n);
+                try out.appendSlice(a, v.extra);
+            },
             .unknown => {
                 try word(a, &out, @intCast(record.framing.raw.len));
                 try out.appendSlice(a, record.framing.raw);

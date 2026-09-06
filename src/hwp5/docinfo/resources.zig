@@ -13,15 +13,21 @@ pub const Report = struct {
     mappings: d.IdMappings,
     bin_data_count: usize,
     face_name_count: usize,
+    memo_shape_count: usize = 0,
     counts: [kind_count]usize = @splat(0),
 
     pub fn count(self: Report, kind: Kind) usize {
         return self.counts[@intFromEnum(kind)];
     }
     /// Extends the legacy BinData/font check without changing validate().
-    /// Optional memo/change-tracking slots are not covered here.
+    /// Memo count is checked only when its mapping slot is present.
+    /// Missing slots remain distinguishable through mappings.get(.memo_shape).
     pub fn validateKnownCounts(self: Report) !void {
         try self.validate();
+        if (self.mappings.get(.memo_shape)) |n| {
+            if (n < 0) return error.NegativeMappingCount;
+            if (@as(u64, @intCast(n)) != self.memo_shape_count) return error.ResourceCountMismatch;
+        }
         inline for (@typeInfo(Kind).@"enum".fields) |field| {
             const kind: Kind = @enumFromInt(field.value);
             const n = self.mappings.get(mappingField(kind)).?;
@@ -63,6 +69,7 @@ pub fn inspect(bytes: []const u8, version: Version, options: Options) !Report {
     var mappings: ?d.IdMappings = null;
     var bins: usize = 0;
     var fonts: usize = 0;
+    var memos: usize = 0;
     var counts: [kind_count]usize = @splat(0);
     while (try it.next()) |r| switch (r.value) {
         .id_mappings => |m| {
@@ -71,11 +78,12 @@ pub fn inspect(bytes: []const u8, version: Version, options: Options) !Report {
         },
         .bin_data => bins += 1,
         .face_name => fonts += 1,
+        .memo_shape => memos += 1,
         else => {
             inline for (@typeInfo(Kind).@"enum".fields) |field| {
                 if (r.framing.tag == @intFromEnum(@field(d.Tag, field.name))) counts[field.value] += 1;
             }
         },
     };
-    return .{ .mappings = mappings orelse return error.MissingIdMappings, .bin_data_count = bins, .face_name_count = fonts, .counts = counts };
+    return .{ .mappings = mappings orelse return error.MissingIdMappings, .bin_data_count = bins, .face_name_count = fonts, .memo_shape_count = memos, .counts = counts };
 }
