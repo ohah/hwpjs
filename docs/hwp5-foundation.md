@@ -2052,3 +2052,23 @@ group_info.Info.parse는 명시적 ids_only/with_instance 배치를 받습니다
 실측: 818개 목록의 자식 ID 2,342개가 실제 직접 자식의 순서와 모두 일치했습니다. 811개는 목록 뒤 4바이트가 있고 7개는 없습니다. 부재 7개는 모두 issue2559/1341000_research_report_footnotes.hwp의 Section0, 버전 5.0.1.7이며 각 목록의 자식 수는 2개입니다. 이 한 파일로 instance 도입 버전을 확정하지 않습니다. 부재를 0인 instance로 바꾸거나 전체 문서 자동 배치 선택 규칙으로 일반화하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 223/223, Node 47/47 통과했습니다. Debug WASM 1,283,262회 검사 후 같은 Debug 바이너리에서 추가한 HWPX 묶음 21개 instance 대조를 별도 실행해 통과했습니다. 이를 전체 audit에 포함한 ReleaseSafe·ReleaseFast는 각각 1,283,284회입니다. 합성 성공 334/거부 5,185, 실제 목록/선택 확장 필수 prefix 거부 25,182회와 ID 순서 불일치 0을 확인했습니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-group-info-{debug,safe,fast}.log`입니다.
+
+## 묶음 목록과 실제 자식의 문서 검증 연결
+
+2026-09-07. group_validation.Report.add는 shape_validation에서 이미 파싱한 Component와 Tree 인덱스를 받습니다. ID/Rendering/부모별 single_id·double_id 배치를 다시 읽지 않습니다. $con일 때만 ids_only 목록을 읽고, subtree_end로 손자 이하를 건너뛰며 직접 태그 76 자식을 순서대로 대조합니다. GroupChildCountMismatch와 GroupChildIdentityMismatch를 구분하며 개수가 다르면 개수 오류를 우선 보고합니다. 성공하기 전에는 Report를 변경하지 않습니다.
+
+shape_validation.Detailed.groups를 document.section의 shape_groups에 연결했습니다. 보고서는 groups/children/empty_groups/extra_bytes 네 항목입니다. 같은 종류의 중복 ID·미지 ID·빈 그룹은 목록과 실제 자식이 일치하면 허용하고, 4바이트 instance 필드는 자동 선택하지 않습니다. 기존 shapes.extra_bytes는 공통 Component 뒤 전체 크기이고 shape_groups.extra_bytes는 목록 뒤 크기이므로 두 값을 서로 다른 소비량처럼 더하지 않습니다. 테스트 보고서 공통 schema는 구역 stride 688바이트이며 새 모드 85는 동일한 Detailed 검사 경로의 그룹 보고서를 반환합니다.
+
+적대적 검증:
+
+1. 네이티브 정상/ID 불일치/과소 개수/자식 누락/목록 잘림 사례에 모든 Tree 할당 실패를 주입합니다.
+2. 합성 입력에서 빈 그룹, 반복 종류, 미지 종류, 중첩 그룹, 미지 레코드가 사이에 있는 직접 자식을 검사합니다. 같은 개수의 ID 순서 변경, 형제/손자 빌리기와 모든 목록 prefix 잘림을 거부합니다. 이전 shape 공통 테스트의 목록 없는 $con 정상 입력은 명시적 목록이 있는 중첩 그룹으로 보완했습니다.
+3. 실제 group-drawing-02의 두 그룹에서 전체 하위 트리 삭제/중복, 마지막 목록 바이트 잘림, 개수 증감·65535, 첫 ID 변이를 단독·decoded 문서·CFB 경로에서 검사하고 정상 원문으로 회복합니다.
+4. 최초 삭제 테스트는 부모 Component만 제거하고 자식을 남겨 InvalidRecordHierarchy가 먼저 발생했습니다. 공통 harness에 명시적 subtreeEnd를 전달해 누락/중복 검사를 구조적으로 분리했고, 부모만 빠진 레벨 점프는 별도 합성 사례에서 검사합니다. 누락에 따른 ID 이동까지 생기는 경우에는 개수 오류를 우선하도록 검증 순서를 정리했습니다.
+5. 한 구역의 최상위 묶음을 실제 빈 목록/빈 하위 트리로 바꿔 empty_groups 0/1을 만든 뒤, 두 구역을 역순으로 넣어 같은 인덱스 순 보고서인지 검사합니다. 공통 harness의 mutateBody는 바이트 변형만 주입하며 그룹 규칙은 그룹 테스트가 소유합니다. 전체 818개 목록·2,342개 자식의 독립 JS 대조와 기존 HWPX instance 검증을 유지합니다.
+
+별도 태그 86의 미확보 배치, 선택 instance의 문서 전역 의미, 그룹 변환 행렬 합성·조판 및 나머지 포맷은 아직 남아 있습니다. 이 연결은 전체 문서 구현 완료를 뜻하지 않습니다. 원본 fixture는 수정하지 않았습니다.
+
+회귀 검증 중 기존 arc-document 합성 테스트의 불일치도 발견했습니다. 사각형 Component를 호로 바꾸면서 부모 묶음 목록에는 사각형 ID를 남겼기 때문에 GroupChildIdentityMismatch가 발생했습니다. 해당 직접 자식의 순번을 구해 목록 한 항목만 함께 갱신하도록 수정했습니다. 같은 종류의 다른 자식을 일괄 치환하지 않습니다. 목록 갱신 전 변형은 새 검사에서 거부되는 별도 회귀 사례로 유지했습니다. 이는 원래부터 호가 들어 있는 실제 fixture가 아니라 기존 실제 컨테이너 안에 만든 합성 호입니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 224/224, Node 47/47, HWP5 WASM 1,284,057회 검사 통과했습니다. 묶음 합성 성공 23/거부 17, 실제 두 묶음의 문서 오류 전파 거부 45/빈 그룹 구역 정렬 1과 기존 818개 목록 대조를 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-group-owner-{debug,safe,fast}.log`입니다.

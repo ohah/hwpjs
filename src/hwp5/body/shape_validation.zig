@@ -15,10 +15,11 @@ pub fn inspect(tree: Tree) !Report {
     return (try inspectDetailed(tree, null, 0)).shapes;
 }
 const styles = @import("drawing_style_validation.zig");
-pub const Detailed = struct { shapes: Report, styles: styles.Report };
+pub const Detailed = struct { shapes: Report, styles: styles.Report, groups: @import("group_validation.zig").Report };
 pub fn inspectDetailed(tree: Tree, options: ?styles.Options, bin_data_count: usize) !Detailed {
     var report: Report = .{};
     var style_report: styles.Report = .{};
+    var group_report: @import("group_validation.zig").Report = .{};
     for (tree.nodes, 0..) |node, index| {
         if (gso(node)) {
             _ = (owned.find(tree, index, component.tag) catch return error.DuplicateShapeComponent) orelse return error.MissingShapeComponent;
@@ -31,6 +32,7 @@ pub fn inspectDetailed(tree: Tree, options: ?styles.Options, bin_data_count: usi
             break :blk .single_id;
         };
         const p = try component.Component.parse(node.record.framing.payload, layout);
+        try group_report.add(tree, index, p);
         try style_report.add(p, options, bin_data_count);
         report.components += 1;
         if (layout == .double_id) report.top_level += 1 else report.grouped += 1;
@@ -44,5 +46,5 @@ pub fn inspectDetailed(tree: Tree, options: ?styles.Options, bin_data_count: usi
         }
         report.extra_bytes += p.extra.len;
     }
-    return .{ .shapes = report, .styles = style_report };
+    return .{ .shapes = report, .styles = style_report, .groups = group_report };
 }

@@ -146,6 +146,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         82 => return @import("picture-validation-probe.zig").referenced(a, bytes, limit),
         83 => return @import("shape-connector-probe.zig").run(a, bytes),
         84 => return @import("group-info-probe.zig").run(a, bytes),
+        85 => return @import("group-validation-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

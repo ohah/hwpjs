@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {groupInfoEdges} from "./group-info.mjs";
 import {groupInfoPair} from "./group-info-pair.mjs";
+import {groupOwnerEdges,groupDocumentReference} from "./group-validation.mjs";
 import { connectorEdges } from "./shape-connector.mjs";
 import { connectorPair } from "./connector-pair.mjs";
 import {connectorOwnerEdges,connectorDocumentReference} from "./connector-validation.mjs";
@@ -422,6 +423,8 @@ const curveEdgeResults = curveEdges(call);
 const connectorEdgeResults = connectorEdges(call);
 const groupInfoEdgeResults = groupInfoEdges(call);
 const groupInfoPairResults = groupInfoPair(call,cfb);
+const groupOwnerEdgeResults = groupOwnerEdges(call);
+const groupDocumentResults = groupDocumentReference(call,cfb);
 const connectorPairResults = connectorPair(call,cfb);
 const connectorOwnerEdgeResults = connectorOwnerEdges(call);
 const connectorDocumentResults = connectorDocumentReference(call,cfb);
@@ -905,6 +908,8 @@ console.log(
       connectorEdgeResults,
       groupInfoEdgeResults,
       groupInfoPairResults,
+      groupOwnerEdgeResults,
+      groupDocumentResults,
       connectorPairResults,
       connectorOwnerEdgeResults,
       connectorDocumentResults,

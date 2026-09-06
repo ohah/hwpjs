@@ -42,6 +42,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    shape_groups: @import("../body/group_validation.zig").Report = .{},
     pictures: @import("../body/picture_validation.zig").Report = .{},
     curves: @import("../body/curve_validation.zig").Report = .{},
     polygons: @import("../body/polygon_validation.zig").Report = .{},

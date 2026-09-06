@@ -30,16 +30,18 @@ export function ownedShapeDocument(call,cfb,config){
     assert.deepEqual(call(25,Buffer.concat([cap,file])),container);
   };
   for(const r of records){
-    const before=b.subarray(0,r.offset),after=b.subarray(r.end),record=b.subarray(r.offset,r.end);
-    reject(Buffer.concat([before,after]),config.missing);
-    reject(Buffer.concat([before,record,record,after]),config.duplicate);
+    const before=b.subarray(0,r.offset),after=b.subarray(r.end),end=config.subtreeEnd?config.subtreeEnd(b,r):r.end;
+    const record=b.subarray(r.offset,end),afterSubtree=b.subarray(end);
+    reject(Buffer.concat([before,afterSubtree]),config.missing);
+    reject(Buffer.concat([before,record,record,afterSubtree]),config.duplicate);
     const short=(typeof config.minimum==='function'?config.minimum(b,r):config.minimum)-1,header=w((b.readUInt32LE(r.offset)&0xfffff)|(short<<20));
     reject(Buffer.concat([before,header,b.subarray(r.start,r.start+short),after]),/UnexpectedEnd/);
     for(const mutation of config.invalidMutations?.(b,r)??[])reject(mutation.bytes,mutation.error);
   }
   const orphan=b.subarray(records[0].start,records[0].end);
   reject(Buffer.concat([b,w(config.tag|(orphan.length<<20)),orphan]),config.orphan);
-  const changed=Buffer.from(b);config.mutate(changed,records[0].start);
+  const changed=config.mutateBody?config.mutateBody(b,records[0]):Buffer.from(b);
+  if(!config.mutateBody)config.mutate(changed,records[0].start);
   const info=Buffer.from(doc),properties=documentRecords(info).find(r=>r.tag===16);info.writeUInt16LE(2,properties.start);
   const pair=[{index:0,bytes:b},{index:1,bytes:changed}];
   const check=sections=>call(24,decodedDocumentInput(h,info,sections));

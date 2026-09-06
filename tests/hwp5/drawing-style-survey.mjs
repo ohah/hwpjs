@@ -6,6 +6,7 @@ import { documentRecords } from "./documents.mjs";
 import { drawingStyleActual } from "./drawing-style.mjs";
 import { lineActual } from "./shape-line.mjs";
 import { groupInfoActual } from "./group-info.mjs";
+import {groupActual} from "./group-validation.mjs";
 import { connectorActual } from "./shape-connector.mjs";
 import { lineOwnerActual } from "./line-validation.mjs";
 import { rectangleActual } from "./shape-rectangle.mjs";
@@ -83,6 +84,7 @@ export function drawingStyleSurvey(call, cfb) {
         failed = true; continue;
       }
       lineOwnerActual(call,header.readUInt32LE(32),bytes);
+      groupActual(call,header.readUInt32LE(32),bytes);
       rectangleOwnerActual(call,header.readUInt32LE(32),bytes);
       ellipseOwnerActual(call,header.readUInt32LE(32),bytes);
       arcOwnerActual(call,header.readUInt32LE(32),bytes);

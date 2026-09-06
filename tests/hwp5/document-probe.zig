@@ -139,6 +139,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try fields(a, &out, s.polygons);
         try fields(a, &out, s.curves);
         try fields(a, &out, s.pictures);
+        try fields(a, &out, s.shape_groups);
     }
     return out.toOwnedSlice(a);
 }

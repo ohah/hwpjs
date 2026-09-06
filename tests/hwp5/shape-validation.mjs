@@ -24,12 +24,13 @@ export function shapeActual(call,v,b) {
 export function shapeValidationEdges(call){
   const v=0x05010001;
   const ctrl=(id=0x67736f20,level=0)=>frame(71,level,w(id));
-  const payload=(double=true,id=0x24636f6e)=>{const b=Buffer.alloc(double?100:96);b.writeUInt32LE(id,0);if(double)b.writeUInt32LE(id,4);return b;};
+  const payload=(double=true,id=0x24726563)=>{const b=Buffer.alloc(double?100:96);b.writeUInt32LE(id,0);if(double)b.writeUInt32LE(id,4);return b;};
   const shape=(level=1,double=true,id)=>frame(76,level,payload(double,id));
   const good=Buffer.concat([ctrl(),shape()]);let accepted=0,rejected=0;
   const check=b=>{accepted++;return shapeActual(call,v,b);};
   const reject=(b,e)=>{assert.throws(()=>shapeRun(call,v,b),e);rejected++;check(good);};
-  check(Buffer.concat([good,shape(2,false),shape(3,false),ctrl(),shape()]));
+  const group=(level,ids)=>{const count=Buffer.alloc(2);count.writeUInt16LE(ids.length);return frame(76,level,Buffer.concat([payload(level===1,0x24636f6e),count,...ids.map(w)]));};
+  check(Buffer.concat([ctrl(),group(1,[0x24636f6e]),group(2,[0x24726563]),shape(3,false),ctrl(),shape()]));
   reject(ctrl(),/MissingShapeComponent/);reject(shape(0,false),/OrphanShapeComponent/);
   reject(Buffer.concat([ctrl(0x12345678),shape()]),/OrphanShapeComponent/);
   reject(Buffer.concat([good,shape()]),/DuplicateShapeComponent/);
@@ -37,7 +38,7 @@ export function shapeValidationEdges(call){
   reject(Buffer.concat([ctrl(),shape(1,true,0x24726563),shape(2,false)]),/OrphanShapeComponent/);
   reject(Buffer.concat([good,ctrl()]),/MissingShapeComponent/);
   for(let n=0;n<100;n++)reject(Buffer.concat([ctrl(),frame(76,1,payload().subarray(0,n))]),/UnexpectedEnd/);
-  for(let n=0;n<96;n++)reject(Buffer.concat([good,frame(76,2,payload(false).subarray(0,n))]),/UnexpectedEnd/);
+  for(let n=0;n<96;n++)reject(Buffer.concat([ctrl(),group(1,[0x24726563]),frame(76,2,payload(false).subarray(0,n))]),/UnexpectedEnd/);
   const changed=payload();changed.writeUInt32LE(0x12345678,4);changed.writeUInt32LE(0x80000000,36);changed.writeBigUInt64LE(0x7ff8000000000042n,52);
   const stats=check(Buffer.concat([ctrl(),frame(76,1,changed)]));assert.deepEqual(stats.slice(4,7),[1,1,1]);
   const matrices=Buffer.concat([changed,Buffer.alloc(96)]);matrices.writeUInt16LE(1,50);matrices.writeBigUInt64LE(0x7ff0000000000000n,100);matrices.writeBigUInt64LE(0xfff0000000000000n,148);

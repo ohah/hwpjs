@@ -42,6 +42,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
     const shapes = try @import("../body/shape_validation.zig").inspectDetailed(tree, options.drawing_style, counts.bin_data_count);
     return .{
         .shapes = shapes.shapes,
+        .shape_groups = shapes.groups,
         .drawing_styles = shapes.styles,
         .lines = try @import("../body/line_validation.zig").inspect(tree),
         .rectangles = try @import("../body/rectangle_validation.zig").inspect(tree, options.rectangle_layout),

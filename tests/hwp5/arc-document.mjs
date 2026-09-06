@@ -25,6 +25,15 @@ export function arcDocumentEdges(call, cfb) {
   const prefix = Buffer.from(original.subarray(0, target.offset));
   const ids = owner.parent.tag === 71 ? 2 : 1;
   for (let i = 0; i < ids; i++) prefix.writeUInt32LE(0x24617263, owner.start + i * 4);
+  if(owner.parent.tag===76){
+    const group=owner.parent,level=original.readUInt32LE(owner.offset)>>>10&1023;
+    const rows=documentRecords(original),ordinal=rows.filter(r=>r.tag===76&&r.offset>group.offset&&r.offset<owner.offset&&(original.readUInt32LE(r.offset)>>>10&1023)===level).length;
+    const base=group.start+(group.parent.tag===71?8:4)+42,start=base+50+original.readUInt16LE(base)*96;
+    assert.ok(ordinal<original.readUInt16LE(start));assert.equal(original.readUInt32LE(start+2+ordinal*4),0x24726563);
+    // Changing a grouped shape kind without its matching list entry must fail.
+    assert.throws(()=>call(85,Buffer.concat([w(v),prefix,original.subarray(target.offset)])),/GroupChildIdentityMismatch/);
+    prefix.writeUInt32LE(0x24617263,start+2+ordinal*4);
+  }
   const make = p => Buffer.concat([prefix, w(81 | (original.readUInt32LE(target.offset) & 0xffc00) | p.length << 20), p, original.subarray(target.end)]);
   const cap = w(64 * 1024 * 1024), input = bytes => decodedDocumentInput(h, doc, [{index: 0, bytes}]);
   const fullInput = bytes => Buffer.concat([cap, Buffer.from(cfb.write({nodes: nodes.map(n => n.parent === body && n.name === 'Section0' ? {...n, content: h.readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes} : n)}))]);

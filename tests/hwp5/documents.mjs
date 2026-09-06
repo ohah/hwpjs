@@ -19,6 +19,7 @@ import { oleActual } from "./ole-validation.mjs";
 import { shapeActual } from "./shape-validation.mjs";
 import { unselectedStyles } from "./drawing-style-document.mjs";
 import { lineOwnerActual } from "./line-validation.mjs";
+import {groupActual} from "./group-validation.mjs";
 import { rectangleOwnerActual } from "./rectangle-validation.mjs";
 import { ellipseOwnerActual } from "./ellipse-validation.mjs";
 import { arcOwnerActual } from "./arc-validation.mjs";
@@ -162,6 +163,7 @@ export function documentActual(call, h, doc, sections) {
       ...polygonOwnerActual(call,v,b).map(w),
       ...curveOwnerActual(call,v,b).map(w),
       ...pictureOwnerActual(call,v,b,0,bins).map(w),
+      ...groupActual(call,v,b).map(w),
     );
   }
   const want = Buffer.concat(expected);
