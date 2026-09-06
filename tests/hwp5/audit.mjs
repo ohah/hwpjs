@@ -19,6 +19,8 @@ import { indexMarkReference } from "./index-mark-reference.mjs";
 import { visibilityEdges, visibilityReference } from "./page-visibility.mjs";
 import { bookmarkEdges } from "./bookmarks.mjs";
 import { bookmarkReference } from "./bookmark-reference.mjs";
+import { overlapEdges } from "./char-overlap.mjs";
+import { overlapReference } from "./char-overlap-reference.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -331,6 +333,7 @@ const pageNumberEdgeResults = pageNumberEdges(call);
 const indexMarkEdgeResults = indexMarkEdges(call);
 const visibilityEdgeResults = visibilityEdges(call);
 const bookmarkEdgeResults = bookmarkEdges(call);
+const overlapEdgeResults = overlapEdges(call);
 let pageNumberDocumentChecks = 0;
 let numberDocumentChecks = 0;
 reportWireEdges();
@@ -340,6 +343,7 @@ const headerFooterDocumentReport = { controls: 0, rejected: 0 };
 const historyActualResults = historyActual(call, cfb);
 const indexMarkReferenceResults = indexMarkReference(call, cfb);
 const bookmarkReferenceResults = bookmarkReference(call, cfb);
+const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
 const containerEdgeResults = containerEdges(call, cfb);
@@ -718,6 +722,8 @@ console.log(
       indexMarkEdgeResults,
       visibilityEdgeResults,
       bookmarkEdgeResults,
+      overlapEdgeResults,
+      overlapReferenceResults,
       bookmarkReferenceResults,
       visibilityReferenceResults,
       pageNumberDocumentChecks,

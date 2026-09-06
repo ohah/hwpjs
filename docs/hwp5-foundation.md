@@ -1100,3 +1100,25 @@ document-probe가 각 구역의 header_footer 다섯 수치를 직렬화하도�
 이름의 전역 유일성·문서 내 이동 위치·책갈피 편집/저장 의미는 미구현입니다. 관측 Set ID를 공식 명세가 보장한 값으로 표현하지 않으며, 조사된 136건 모두를 전체 문서 검증했다고 주장하지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 160/160, Node 47/47, HWP5 WASM 165,076회 검사 통과(참조 표본 존재 환경). 책갈피 합성 성공 39건·거부 23건이며 CFB 12,000회 변이에서 trap 0입니다. 포맷·diff 검사도 통과했습니다.
+
+## 글자 겹침의 명시적 배치와 글자 모양 참조 (2026-09-06)
+
+명세 스킬 4.3.10.12와 공식 표 150/컨트롤 ID 표를 대조했습니다. 공식 ID는 tcps이며 로컬 요약의 over를 사용하지 않습니다. 표 150은 ID 포함 10바이트+문자열+글자 모양 배열입니다. control_header가 ID를 이미 소비하므로 속성 파서는 최소 6바이트부터 읽으며 ID를 두 번 읽지 않습니다.
+
+레퍼런스/fixture 경로 조사에서 tcps 52건을 찾았습니다. 5.0.2.4(9건)/5.0.2.5(16건)는 counted 문자열 뒤 필드가 없었고, 관측 5.0.3.0 이상 나머지 27건은 문자열 뒤 44바이트(속성 4바이트+10개의 u32)를 가졌습니다. 파일 처리 실패 189건은 CFB와 이후 decode/framing 실패가 섞인 값으로 부재 판정이 아닙니다. 이 표본만으로 정확한 전환 버전을 증명할 수 없고 명세에도 명시되지 않아 `Layout.text_only/full`을 호출자가 선택합니다. 문서 Options.overlap_layout 기본값은 full이며 짧은 full을 text_only로 자동 재해석하지 않습니다.
+
+`char_overlap.zig`는 공통 utf16_string과 record_array를 재사용하여 원본 문자열, optional Attributes, u8 테두리/i8 내부 크기/u8 펼침/글자 모양 ID 배열과 extra를 보존합니다. text_only의 속성은 null이며 0으로 채우지 않습니다. `char_overlap_validation.zig`는 reference_rules의 inherited_char_shape를 사용합니다. 실제 배열에 반복되는 0xffffffff는 명시 참조와 별도 집계하며 일반 ID는 0-based 글자 모양 수와 대조합니다. 테두리/펼침 전체 값의 의미와 표시 결과는 검증하지 않습니다.
+
+SectionReport.char_overlap은 controls/text_units/shape_refs/inherited_refs/text_only/extra_bytes 여섯 값을 보고합니다. 기존 구역 검사 및 독립 기대 wire 정의에 연결했고 구역 행은 288바이트입니다.
+
+### 구현 후 적대적 검증
+
+1. 문자열·속성·배열 모든 짧은 prefix를 거부하고 정상 재호출했습니다. signed 크기 -128/-1/0/127, 문자열 0/1/32,768/65,535 UTF-16 단위와 배열 0/1/254/255개를 검사했습니다.
+2. 최대 배열과 0개 리소스에서 상속 sentinel을 허용하되, count와 같은 ID 및 범위를 벗어난 일반 ID는 거부합니다. 0xfffffffe도 충분한 리소스 수를 명시하면 일반 ID로 보존됩니다.
+3. NUL·고립 서로게이트·BOM·비표준 속성·홀수 꼬리를 typed 재구성으로 대조했습니다. text_only와 full을 동일 입력에서 명시적으로 선택하고 자동 fallback이 없음을 확인했습니다. 네이티브 Tree의 정상/잘못된 참조 경로에 할당 실패를 주입했습니다.
+4. `aift.hwp` Section0의 신형 tcps 1개는 문자 1단위·명시 참조 1개·상속 sentinel 9개입니다. `basic/issue2007_nested_cell_pagination_42065.hwp` Section0의 구형 8개는 문자 합계 15단위이며 속성은 부재입니다. Node/Zig 압축 해제 및 전용 WASM typed 재구성을 대조했습니다. 각각 마지막 바이트 잘림 1/8건과 신형의 범위 밖 참조 1건을 거부했습니다. 외부 표본은 복사/수정하지 않았고 부재 환경은 skipped로 보고합니다.
+5. 전체 문서 확인에서 aift의 모든 구역을 전달하도록 테스트를 보완했습니다. 이어 Section2의 문단 offset 401136/401473에서 확장 토큰 ID %%me(0x25256d65)와 헤더 %unk(0x25756e6b)의 불일치를 독립 바이트 조사로 확인했습니다. 전용 연결 검사와 decoded document 모두 ControlIdMismatch로 거부하는 상태를 명시적 pending으로 기록했습니다. 이 오류를 삼켜 전체 문서 성공으로 세거나 ID를 보정하지 않습니다. 구형 참조 파일의 전체 문서 검증도 이번 양성 검증 범위가 아닙니다.
+
+SSOT는 payload/참조 집계/조립을 분리하고 기존 문자열·배열·ID·참조 규칙을 재사용합니다. 신구 배치의 정확한 전환 버전, aift의 컨트롤 ID 불일치가 허용 가능한 저장 관행인지 여부, 실제 글자 겹침 조판은 남았습니다. 전체 corpus 성공과 추가 참조 파일의 pending을 구분해야 합니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit: 모드별 네이티브 162/162, Node 47/47, HWP5 WASM 165,261회 검사 통과(참조 표본 존재 환경). 합성 성공 48건·거부 28건이며 CFB 12,000회 변이에서 trap 0입니다. 포맷·diff 검사도 통과했습니다. 이 수치는 위의 명시적 ControlIdMismatch 거부 확인도 포함하며, aift 전체 문서의 성공을 뜻하지 않습니다.

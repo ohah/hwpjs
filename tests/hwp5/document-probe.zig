@@ -57,6 +57,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try fields(a, &out, s.index_marks);
         try fields(a, &out, s.page_visibility);
         try fields(a, &out, s.bookmarks);
+        try fields(a, &out, s.char_overlap);
     }
     return out.toOwnedSlice(a);
 }

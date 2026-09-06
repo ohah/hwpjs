@@ -98,6 +98,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         34 => return @import("index-mark-probe.zig").run(a, bytes, limit),
         35 => return @import("page-visibility-probe.zig").run(a, bytes, limit),
         36 => return @import("bookmark-probe.zig").run(a, bytes, limit),
+        37 => return @import("char-overlap-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

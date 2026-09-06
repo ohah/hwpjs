@@ -15,6 +15,7 @@ const groups = Object.freeze({
   index_marks: 4,
   page_visibility: 5,
   bookmarks: 8,
+  char_overlap: 6,
 });
 export const documentPrefixBytes = 33 * 4;
 export const sectionReportBytes = Object.values(groups).reduce(

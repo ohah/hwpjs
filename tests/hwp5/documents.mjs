@@ -8,6 +8,7 @@ import { pageNumberActual } from "./page-number.mjs";
 import { indexMarkActual } from "./index-mark.mjs";
 import { visibilityActual } from "./page-visibility.mjs";
 import { bookmarkActual } from "./bookmarks.mjs";
+import { overlapActual } from "./char-overlap.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -123,6 +124,12 @@ export function documentActual(call, h, doc, sections) {
       ...indexMarkActual(call, v, b).map(w),
       ...visibilityActual(call, v, b).map(w),
       ...bookmarkActual(call, v, b).map(w),
+      ...overlapActual(
+        call,
+        v,
+        b,
+        records(doc).filter((r) => r.tag === 21).length,
+      ).map(w),
     );
   }
   const want = Buffer.concat(expected);
