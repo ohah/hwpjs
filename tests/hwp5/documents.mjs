@@ -12,6 +12,7 @@ import { overlapActual } from "./char-overlap.mjs";
 import { identityActual } from "./links.mjs";
 import { fieldsActual } from "./fields.mjs";
 import { rubyActual } from "./ruby.mjs";
+import { hiddenActual } from "./hidden-comment.mjs";
 export { input as decodedDocumentInput, records as documentRecords };
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -136,6 +137,7 @@ export function documentActual(call, h, doc, sections) {
       w(identityActual(call, v, b)),
       ...fieldsActual(call, v, b).map(w),
       ...rubyActual(call, v, b).map(w),
+      ...hiddenActual(call, v, b).map(w),
     );
   }
   const want = Buffer.concat(expected);

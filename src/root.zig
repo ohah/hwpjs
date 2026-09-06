@@ -28,6 +28,7 @@ test {
     _ = @import("hwp5/body/control_identity_tests.zig");
     _ = @import("hwp5/body/field_tests.zig");
     _ = @import("hwp5/body/ruby_tests.zig");
+    _ = @import("hwp5/body/hidden_comment_tests.zig");
     _ = @import("hwp5/body/tree_tests.zig");
     _ = @import("hwp5/body/section_tests.zig");
     _ = @import("hwp5/body/note_tests.zig");

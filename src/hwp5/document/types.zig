@@ -31,6 +31,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    hidden_comments: @import("../body/hidden_comment.zig").Report = .{},
     ruby: @import("../body/ruby_validation.zig").Report = .{},
     fields: @import("../body/field_validation.zig").Report = .{},
     observed_field_links: usize = 0,

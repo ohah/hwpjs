@@ -19,6 +19,7 @@ const groups = Object.freeze({
   observed_field_links: 1,
   fields: 6,
   ruby: 6,
+  hidden_comments: 6,
 });
 export const documentPrefixBytes = 33 * 4;
 export const sectionReportBytes = Object.values(groups).reduce(

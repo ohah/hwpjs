@@ -12,9 +12,8 @@ pub const Report = struct {
 /// Observed split CTRL_HEADER/LIST_HEADER profile; not an inline 14-byte fallback.
 pub fn inspect(tree: Tree, groups: []const Group, layout: @import("list_header.zig").Layout) !Report {
     var report: Report = .{};
-    var group_index: usize = 0;
+    var owners: @import("list_groups.zig").OwnerCursor = .{ .groups = groups };
     for (tree.nodes, 0..) |node, index| {
-        while (group_index < groups.len and groups[group_index].parent_node < index) group_index += 1;
         if (node.record.value != .control_header) continue;
         const control = node.record.value.control_header;
         if (!hf.supports(control.id)) continue;
@@ -22,18 +21,15 @@ pub fn inspect(tree: Tree, groups: []const Group, layout: @import("list_header.z
         report.controls += 1;
         report.extra_bytes += props.extra.len;
         if (props.pageKind() == 3) report.reserved_page_kinds += 1;
-        var found = false;
-        var current = group_index;
-        while (current < groups.len and groups[current].parent_node == index) : (current += 1) {
-            const group = groups[current];
+        const owned = owners.take(index);
+        for (owned) |group| {
             const view = try tree.nodes[group.header_node].record.value.list_header.view(layout);
             const area = try hf.Area.parse(view.extra);
             report.extra_bytes += area.extra.len;
             report.lists += 1;
             report.paragraphs += group.paragraph_count;
-            found = true;
         }
-        if (!found) return error.MissingHeaderFooterList;
+        if (owned.len == 0) return error.MissingHeaderFooterList;
     }
     return report;
 }

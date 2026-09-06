@@ -26,6 +26,8 @@ import { fieldEdges } from "./fields.mjs";
 import { fieldDocumentEdges } from "./field-document.mjs";
 import { rubyEdges } from "./ruby.mjs";
 import { rubyDocumentEdges } from "./ruby-document.mjs";
+import { hiddenEdges } from "./hidden-comment.mjs";
+import { hiddenReference } from "./hidden-comment-reference.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -342,6 +344,7 @@ const overlapEdgeResults = overlapEdges(call);
 const memoEdgeResults = memoEdges(call);
 const fieldEdgeResults = fieldEdges(call);
 const rubyEdgeResults = rubyEdges(call);
+const hiddenEdgeResults = hiddenEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -358,6 +361,7 @@ const headerFooterDocumentReport = { controls: 0, rejected: 0 };
 const historyActualResults = historyActual(call, cfb);
 const indexMarkReferenceResults = indexMarkReference(call, cfb);
 const bookmarkReferenceResults = bookmarkReference(call, cfb);
+const hiddenReferenceResults = hiddenReference(call, cfb);
 const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
@@ -760,6 +764,8 @@ console.log(
       memoEdgeResults,
       fieldEdgeResults,
       rubyEdgeResults,
+      hiddenEdgeResults,
+      hiddenReferenceResults,
       rubyDocumentResults,
       fieldDocumentResults,
       overlapReferenceResults,

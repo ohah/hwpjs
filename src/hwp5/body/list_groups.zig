@@ -8,6 +8,17 @@ pub const Group = struct {
     paragraph_count: usize = 0,
     intervening_records: usize = 0,
 };
+/// Linear cursor over Groups.build output. Owners must be visited in node order.
+pub const OwnerCursor = struct {
+    groups: []const Group,
+    index: usize = 0,
+    pub fn take(self: *OwnerCursor, parent: usize) []const Group {
+        while (self.index < self.groups.len and self.groups[self.index].parent_node < parent) self.index += 1;
+        const start = self.index;
+        while (self.index < self.groups.len and self.groups[self.index].parent_node == parent) self.index += 1;
+        return self.groups[start..self.index];
+    }
+};
 /// Logical sibling groups, not a replacement for the original record tree.
 /// Owns groups only; indices require the unchanged source tree.
 /// Items are ordered by parent node, then by sibling header order.

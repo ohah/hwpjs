@@ -43,6 +43,7 @@ pub const field_start = @import("body/field_start.zig");
 pub const field_validation = @import("body/field_validation.zig");
 pub const ruby = @import("body/ruby.zig");
 pub const ruby_validation = @import("body/ruby_validation.zig");
+pub const hidden_comment = @import("body/hidden_comment.zig");
 pub const control_identity = @import("body/control_identity.zig");
 pub const char_overlap = @import("body/char_overlap.zig");
 pub const char_overlap_validation = @import("body/char_overlap_validation.zig");

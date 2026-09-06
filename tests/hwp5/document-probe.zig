@@ -61,6 +61,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try int(a, &out, u32, @intCast(s.observed_field_links));
         try fields(a, &out, s.fields);
         try fields(a, &out, s.ruby);
+        try fields(a, &out, s.hidden_comments);
     }
     return out.toOwnedSlice(a);
 }
