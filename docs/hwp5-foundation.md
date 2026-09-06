@@ -2154,3 +2154,17 @@ memo_list_header는 기존 ListHeader.view(observed8)의 상위 워드와 속성
 적대적 검증은 비영 속성/폭/높이·상위 count 비트·borrowed extra, 모든 필수 잘림, 실패 경로의 할당 실패 주입, 다른 부모/다른 리스트 문맥, 실제 65,536문단 정상 입력을 포함합니다. 실제 issue5866의 선언 count 변이와 메모용 헤더 6~15바이트 잘림은 Groups/decoded 문서/재생성 CFB 세 경로에서 거부하고 정상 복구를 확인합니다. OOM 주입 테스트에서는 문법 오류보다 먼저 발생할 수 있는 OutOfMemory를 재전파하도록 테스트 harness를 수정했습니다. 번호 표식 자체의 고아/중복·후속 리스트 누락·구역 간 필드 연결은 아직 다음 범위입니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 234/234, Node 47/47, HWP5 WASM 1,293,581회 검사 통과했습니다. 신규 그룹 경계 성공 11/거부 17과 65,536문단 합성 정상 입력, 확장된 실제 메모 문서 세 경로 거부 54를 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-memo-list-header-{debug,safe,fast}.log`입니다.
+
+## 메모 표식의 부모 및 후속 리스트 연결 검증
+
+2026-09-07. memo_validation은 공식 표 5의 level 1과 실제 30개의 root 문단 직접 자식 배치를 검사합니다. 표식의 부모가 없거나 root 문단이 아니면 OrphanMemoList, 표식 아래 자식 레코드가 있으면 InvalidMemoListChildren입니다. 같은 Tree에서 만든 Groups.build의 Group.memo를 재사용하므로 payload·개수·직접 형제 관계를 다시 파싱하지 않습니다. Groups가 표식 하나를 최대 한 리스트에 연결하는 계약에 따라 전체 표식 수와 연결 수를 대조하며 부족하면 MissingMemoListHeader입니다.
+
+section에서 기존 Groups.build 다음에 검사를 연결했습니다. Groups 자체는 다른 컨트롤도 쓰는 일반 그룹 생성기로 유지합니다. 검사기는 새 메모리 할당 없이 markers/paragraphs/extra_bytes 저수준 보고서를 반환하며 제품 section은 오류를 전파합니다. 테스트 모드 88이 이 보고서를 노출하고, 기존 mode 15/section wire는 변경하지 않습니다. 기존 OwnerCursor·개수 비교·리스트 payload 배치를 복제하지 않습니다.
+
+적대적 검증은 고아 표식·문단 아닌 부모·표식의 자식·다른 root의 리스트·연속 중복 표식으로 인한 미연결·중간 unknown 레코드로 32비트 메모 검사를 피하려는 입력을 포함합니다. 별도 정상 리스트가 연결된 동일 번호 두 개는 아직 번호 충돌로 판정하지 않습니다. 빈 메모 리스트와 번호 UINT32_MAX/원문 extra를 보존하는 성공 사례도 검사합니다. 실제 6개 파일/30개 메모의 Groups 기반 보고서는 각각 표식 수·문단 수·extra 0과 일치하도록 검사합니다. 실제 issue5866의 표식 중복/고아 추가/자식 삽입/후속 전체 잘림 오류는 mode 88·decoded 문서·재생성 CFB에서 전파하고 원본 복구를 확인합니다. 원본 fixture는 수정하지 않습니다.
+
+이 단계는 존재하는 메모 표식의 구조 연결입니다. 번호 중복의 의미·필드와 메모의 문서 전역 일대일 대응·표식이 삭제된 일반 리스트의 메모 여부는 아직 별도이며, 원문/문서 편집·저장 완료를 뜻하지 않습니다.
+
+후속 작업을 위한 읽기 전용 조사에서 task2287/1342000_edu_curriculum_map의 메모 번호 4는 Section33의 MEMO_LIST와 Section1의 %unk/MEMO 명령·꼬리 DWORD에 걸쳐 있음을 확인했습니다. 같은 구역에서만 비교했던 3개 미대조 항목 중 1개는 구역 간 사례입니다. issue5169의 BodyText에서는 이 조사 방식으로 해당 필드를 찾지 못했으며, 변경 추적이나 다른 스트림으로 원인을 확정하지 않았습니다. 전역 연결은 section-local 누락 판정을 복제하지 않는 방향으로 구현해야 합니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 236/236, Node 47/47, HWP5 WASM 1,293,626회 검사 통과했습니다. 새 소유권 경계 성공 12/거부 7, 실제 30개 표식 연결 보고서 대조, 확장한 실제 메모 문서 세 경로 거부 66을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-memo-owner-{debug,safe,fast}.log`입니다.

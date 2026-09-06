@@ -19,6 +19,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, version: @import("../ver
     const controls = try control_types.inspect(links.items);
     var groups = try Groups.build(a, tree);
     defer groups.deinit(a);
+    _ = try @import("../body/memo_validation.zig").inspect(tree, groups.items);
     const header_footer = try @import("../body/header_footer_validation.zig").inspect(tree, groups.items, options.list_layout);
     const number_controls = try @import("../body/number_control_validation.zig").inspect(tree);
     const page_number = try @import("../body/page_number_validation.zig").inspect(tree);

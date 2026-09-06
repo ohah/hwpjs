@@ -27,6 +27,7 @@ export function memoListReference(call,cfb){
     cfb.parse(readFileSync(new URL('../../reference/rhwp/samples/'+name,import.meta.url)),{strict:true});
     const h=Buffer.from(cfb.findExact('/FileHeader').content),version=h.readUInt32LE(32),b=call(3,Buffer.concat([h,Buffer.from(cfb.findExact('/BodyText/Section'+section).content)]));
     const rs=documentRecords(b),memos=rs.filter(r=>r.tag===93);assert.equal(memos.length,count);
+    assert.deepEqual(call(88,Buffer.concat([w(version),b])),Buffer.concat([count,count,0].map(w)));
     const indices=memos.map(r=>{assert.equal((b.readUInt32LE(r.offset)>>>10)&1023,1);const p=actual(call,version,b.subarray(r.start,r.end));assert.equal(p.extra,0);parsed++;return p.index;});
     const fields=[];
     for(const r of rs.filter(r=>r.tag===71&&r.end-r.start>=15)){
@@ -49,7 +50,7 @@ export function memoListDocument(call,cfb){
   const body=nodes.findIndex(n=>n.parent===0&&n.name==='BodyText');
   let rejected=0;
   const reject=(changed,error)=>{
-    assert.throws(()=>call(15,Buffer.concat([h.subarray(32,36),changed])),error);
+    assert.throws(()=>call(88,Buffer.concat([h.subarray(32,36),changed])),error);
     assert.throws(()=>run(changed),error);
     const altered=nodes.map(n=>n.parent===body&&n.name==='Section0'?{...n,content:flags&1?deflateRawSync(changed):changed}:n);
     assert.throws(()=>call(25,Buffer.concat([cap,Buffer.from(cfb.write({nodes:altered}))])),error);rejected+=3;
@@ -62,5 +63,9 @@ export function memoListDocument(call,cfb){
   const list=documentRecords(b).find(n=>n.offset===r.end);assert.equal(list.tag,72);
   for(const n of [0,65537,0x7fff0001,-2147483647]){const changed=Buffer.from(b);changed.writeInt32LE(n,list.start);reject(changed,n<0?/NegativeMemoParagraphCount/:/ListParagraphCountMismatch/);}
   for(let cut=6;cut<16;cut++)reject(Buffer.concat([b.subarray(0,list.offset),w(72|1024|(cut<<20)),b.subarray(list.start,list.start+cut),b.subarray(list.end)]),/UnexpectedEnd/);
+  reject(Buffer.concat([b.subarray(0,r.offset),b.subarray(r.offset,r.end),b.subarray(r.offset)]),/MissingMemoListHeader/);
+  reject(Buffer.concat([b,w(93|(4<<20)),w(1)]),/OrphanMemoList/);
+  reject(Buffer.concat([b.subarray(0,r.end),w(900|(2<<10)),b.subarray(r.end)]),/InvalidMemoListChildren/);
+  reject(b.subarray(0,r.end),/MissingMemoListHeader/);
   return {rejected};
 }
