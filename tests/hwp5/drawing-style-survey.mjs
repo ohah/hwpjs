@@ -9,6 +9,7 @@ import { lineOwnerActual } from "./line-validation.mjs";
 import { rectangleActual } from "./shape-rectangle.mjs";
 import { rectangleOwnerActual } from "./rectangle-validation.mjs";
 import { ellipseActual } from "./shape-ellipse.mjs";
+import { ellipseOwnerActual } from "./ellipse-validation.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -60,6 +61,7 @@ export function drawingStyleSurvey(call, cfb) {
       }
       lineOwnerActual(call,header.readUInt32LE(32),bytes);
       rectangleOwnerActual(call,header.readUInt32LE(32),bytes);
+      ellipseOwnerActual(call,header.readUInt32LE(32),bytes);
       const stack = [];
       for (const record of records) {
         const level = bytes.readUInt32LE(record.offset) >>> 10 & 1023;

@@ -51,6 +51,9 @@ import { rectangleOwnerEdges } from "./rectangle-validation.mjs";
 import { rectangleDocumentReference } from "./rectangle-document.mjs";
 import { ellipseEdges } from "./shape-ellipse.mjs";
 import { ellipsePair } from "./ellipse-pair.mjs";
+import { ellipseOwnerEdges } from "./ellipse-validation.mjs";
+import { ellipseDocumentReference } from "./ellipse-document.mjs";
+import { parameterZeroReference } from "./parameter-zero-reference.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -384,6 +387,7 @@ const lineOwnerEdgeResults = lineOwnerEdges(call);
 const rectangleEdgeResults = rectangleEdges(call);
 const rectangleOwnerEdgeResults = rectangleOwnerEdges(call);
 const ellipseEdgeResults = ellipseEdges(call);
+const ellipseOwnerEdgeResults = ellipseOwnerEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -413,6 +417,8 @@ const lineDocumentReferenceResults = lineDocumentReference(call, cfb);
 const rectanglePairResults = rectanglePair(call,cfb);
 const rectangleDocumentReferenceResults = rectangleDocumentReference(call,cfb);
 const ellipsePairResults = ellipsePair(call,cfb);
+const ellipseDocumentReferenceResults = ellipseDocumentReference(call,cfb);
+const parameterZeroReferenceResults = parameterZeroReference(call,cfb);
 const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
@@ -833,6 +839,7 @@ console.log(
       rectangleEdgeResults,
       rectangleOwnerEdgeResults,
       ellipseEdgeResults,
+      ellipseOwnerEdgeResults,
       shapeBorderReferenceResults,
       drawingStyleSurveyResults,
       styleDocumentReferenceResults,
@@ -840,6 +847,8 @@ console.log(
       rectanglePairResults,
       rectangleDocumentReferenceResults,
       ellipsePairResults,
+      ellipseDocumentReferenceResults,
+      parameterZeroReferenceResults,
       shapeComponentReferenceResults,
       oleReferenceResults,
       oleReferenceEvidenceResults,

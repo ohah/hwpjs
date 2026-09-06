@@ -56,6 +56,7 @@ pub const shape_border = @import("body/shape_border.zig");
 pub const shape_line = @import("body/shape_line.zig");
 pub const shape_rectangle = @import("body/shape_rectangle.zig");
 pub const shape_ellipse = @import("body/shape_ellipse.zig");
+pub const ellipse_validation = @import("body/ellipse_validation.zig");
 pub const rectangle_validation = @import("body/rectangle_validation.zig");
 pub const line_validation = @import("body/line_validation.zig");
 pub const drawing_style = @import("body/drawing_style.zig");

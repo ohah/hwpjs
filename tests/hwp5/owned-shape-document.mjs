@@ -5,7 +5,7 @@ import { documentRecords,decodedDocumentInput } from "./documents.mjs";
 import { sectionFieldOffset } from "./document-report-wire.mjs";
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n>>>0);return b;};
 export function ownedShapeDocument(call,cfb,config){
-  const path=new URL('../../reference/rhwp/samples/group-drawing-02.hwp',import.meta.url);
+  const path=new URL(`../../reference/rhwp/samples/${config.file??'group-drawing-02.hwp'}`,import.meta.url);
   if(!existsSync(path))return {skipped:true};
   const file=readFileSync(path);cfb.parse(file,{strict:true});
   const h=Buffer.from(cfb.findExact('/FileHeader').content),v=h.readUInt32LE(32),flags=h.readUInt32LE(36);

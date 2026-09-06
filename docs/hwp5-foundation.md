@@ -1679,3 +1679,27 @@ needsIntervalUpdate는 bit 0, isArc는 bit 1, arcKindRaw는 bit 2~9의 8비트 �
 타원의 문서 직접 소유권·누락·중복 검사, 실제 호 조판/구간 계산 및 나머지 도형 payload는 남아 있습니다. 실제 원문 필드 대조와 전체 문서 의미/시각적 일치를 구분합니다. 원본 파일은 수정하지 않았습니다.
 
 최종 짝 표본 4개 일치, 호 플래그 비활성 상태의 비영 구간 Point 12개 보존 확인. Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 199/199, Node 47/47, HWP5 WASM 337,457회 검사 통과. CFB 12,000회 변이 trap 0, 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-ellipse-{debug,safe,fast}.log`입니다.
+
+## 타원 직접 소유권·문서/CFB 연결 (2026-09-06)
+
+`ellipse_validation.inspect`를 구역 검사에 연결했습니다. 첫 ID가 $ell인 SHAPE_COMPONENT는 직접 태그 80 자식 하나가 필요하며 MissingEllipse/DuplicateEllipse/OrphanEllipse로 누락·중복·고아를 구분합니다. 사각형과 `owned_record.componentChild`를 공유하고 기존 find의 서브트리 건너뛰기/직접 자식 규칙을 재사용합니다. 기하 필드는 Ellipse.parse가 계속 소유합니다.
+
+구역 보고서 ellipses는 ellipses/arcs/interval_updates/unknown_attributes/extra_bytes 다섯 필드입니다. 호/갱신 비트는 독립 집계하며 서로 일치하도록 보정하지 않습니다. 테스트 wire는 구역 564바이트이고 독립 JS schema가 필드 위치를 소유합니다.
+
+### 구현 후 적대적 검증
+
+1. 직접 자식 누락·중복·잘못된 부모·루트 고아, 조상/형제/손자 레코드 차용을 거부합니다. 중간 미지 레코드와 중첩 그룹의 서로 다른 타원은 허용하며 중간 레코드 뒤 중복도 거부합니다.
+2. 필수 payload 60개 prefix와 구성요소 ID 4개 prefix 잘림을 거부하고 매 오류 후 정상 문서를 재검사합니다. 속성 0/1/2/1020/0x80000003과 extra 3바이트를 독립 JS 계산과 대조합니다.
+3. 네이티브 checkAllAllocationFailures로 정상·누락·중복·고아 네 경로의 Tree 정리를 확인합니다. 공통 소유권 helper로 바꾼 사각형의 기존 검증도 전체 audit에 포함합니다.
+4. 실제 basic/KTX-003.hwp의 타원 19개에서 삭제·복제·잘림 및 루트 고아를 만들고 단독 검사/decoded 문서/재압축한 CFB 세 경로에서 총 174회 거부를 확인합니다. 매 오류 뒤 원본 문서/CFB 재호출을 검사하며 원본 파일을 수정하지 않습니다.
+5. 타원 미지 비트가 서로 다른 두 구역을 역순으로 입력해 동일한 정렬 결과와 구역별 진단을 대조합니다. 전체 참조 조사의 진입 가능한 구역에 독립 부모/자식 기대값 비교를 추가하며 기존 실제 139개 payload·짝 HWPX 비교도 유지합니다.
+
+### 실제 파일 검사에서 발견한 별도 미해결 참조
+
+`복학원서.hwp`와 `hwp3-sample16-hwp5.hwp`의 짝 HWPX 타원 필드 비교 성공은 **전체 문서 검사 성공이 아닙니다**. 두 파일은 DocInfo 활성 참조 검사를 통과하지만 본문 ParameterSet 참조 검사에서 InvalidResourceReference를 냅니다.
+
+두 파일 모두 Section0 offset 185의 CTRL_DATA(280바이트)에 Set 경로 539:537 → 537:614 → 614:16414의 PIT_BINDATA ID 0이 있습니다. payload 내부 ID offset은 각각 246/230이고 실측 BinData 수는 2/7입니다. 현재 references.validate의 일괄 one_based 정책이 0을 거부합니다. `parameter-zero-reference.mjs`는 해당 원문 항목·단독 실패·문서/CFB 실패를 고정하고, 메모리 복사본의 해당 ID만 1로 바꾸면 단독 참조 검사에 성공함을 확인합니다. 원문은 바꾸지 않습니다.
+
+이는 현재 지원 한계의 재현이지 원본 손상 판정이나 의도된 최종 거부 계약이 아닙니다. 해당 Set/Item에서 0의 부재 의미를 명세·독립 구현과 추가 대조해야 하며, 모든 PIT_BINDATA를 optional로 완화하지 않았습니다. 이 두 파일을 타원 통합 검증 성공 표본으로 세지 않습니다. 다음 검증에서 이 참조 의미를 우선 조사합니다. 호/다각형/곡선 등 남은 도형, 전체 문서 모델·HWPX·편집/저장 목표도 계속 남아 있습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 200/200, Node 47/47, HWP5 WASM 338,572회 검사 통과. 타원 소유권 합성 성공 80/거부 72, 실제 문서 변이 거부 174 및 구역 순서 검사 1건을 포함합니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-ellipse-owner-{debug,safe,fast}.log`입니다. 위 미해결 0 참조 두 건을 포함한 알려진 실패의 재현 테스트도 통과한 것이므로 전체 실제 문서가 성공했다는 뜻은 아닙니다.

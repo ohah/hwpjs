@@ -10,3 +10,15 @@ pub fn find(tree: Tree, parent: usize, tag: u10) error{DuplicateChildRecord}!?us
     }
     return result;
 }
+/// Check one component/payload relationship, sharing direct ownership across shape validators.
+pub fn componentChild(tree: Tree, index: usize, owner_id: u32, tag: u10) !?usize {
+    const component = @import("shape_component.zig");
+    const node = tree.nodes[index];
+    if (node.record.framing.tag == tag) {
+        const parent = node.parent orelse return error.OrphanChildRecord;
+        const owner = tree.nodes[parent].record.framing;
+        if (owner.tag != component.tag or try component.identity(owner.payload) != owner_id) return error.OrphanChildRecord;
+    }
+    if (node.record.framing.tag != component.tag or try component.identity(node.record.framing.payload) != owner_id) return null;
+    return (try find(tree, index, tag)) orelse error.MissingChildRecord;
+}

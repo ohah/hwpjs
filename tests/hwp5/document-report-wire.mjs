@@ -27,6 +27,7 @@ const groups = Object.freeze({
   drawing_styles: 7,
   lines: 4,
   rectangles: 3,
+  ellipses: 5,
 });
 export const documentPrefixBytes = 33 * 4;
 export const sectionReportBytes = Object.values(groups).reduce(
