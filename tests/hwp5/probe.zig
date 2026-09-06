@@ -11,8 +11,8 @@ export fn alloc(n: usize) ?[*]u8 {
 export fn free(ptr: [*]u8, n: usize) void {
     a.free(ptr[0..@max(n, 1)]);
 }
-export fn result_ptr() [*]const u8 {
-    return output.ptr;
+export fn result_ptr() usize {
+    return if (output.len == 0) 0 else @intFromPtr(output.ptr);
 }
 export fn result_len() usize {
     return output.len;
@@ -65,6 +65,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         6 => return @import("resource-probe.zig").decode(a, bytes, limit),
         7 => return @import("reference-probe.zig").run(a, bytes, limit),
         8 => return @import("body-probe.zig").run(a, bytes, limit),
+        9 => return @import("metadata-probe.zig").validate(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

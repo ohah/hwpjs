@@ -61,6 +61,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
                 }
             },
             .unknown => try out.appendSlice(a, f.payload),
+            .char_runs, .line_segments, .range_tags => try @import("metadata-probe.zig").payload(a, &out, record.value),
         }
     }
     return out.toOwnedSlice(a);

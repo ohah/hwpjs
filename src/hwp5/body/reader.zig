@@ -3,8 +3,12 @@ const Version = @import("../version.zig").Version;
 pub const Header = @import("paragraph_header.zig").Header;
 pub const text = @import("text.zig");
 pub const Text = text.Text;
-pub const Tag = enum(u10) { paragraph_header = 66, paragraph_text = 67 };
-pub const Value = union(enum) { header: Header, text: Text, unknown };
+pub const Runs = @import("char_runs.zig").Runs;
+pub const Segments = @import("line_segments.zig").Segments;
+pub const Ranges = @import("range_tags.zig").Ranges;
+pub const Metadata = @import("metadata.zig").Metadata;
+pub const Tag = enum(u10) { paragraph_header = 66, paragraph_text = 67, char_runs = 68, line_segments = 69, range_tags = 70 };
+pub const Value = union(enum) { header: Header, text: Text, char_runs: Runs, line_segments: Segments, range_tags: Ranges, unknown };
 pub const Record = struct { framing: framing.Record, value: Value };
 /// Payload decoding only. Nested paragraphs keep their original levels.
 /// Ownership/order/count/DocInfo references need a separate section assembler.
@@ -21,6 +25,9 @@ pub const Iterator = struct {
         const value: Value = switch (r.tag) {
             @intFromEnum(Tag.paragraph_header) => .{ .header = try Header.parse(r.payload, self.version) },
             @intFromEnum(Tag.paragraph_text) => .{ .text = try Text.parse(r.payload) },
+            @intFromEnum(Tag.char_runs) => .{ .char_runs = try Runs.parse(r.payload) },
+            @intFromEnum(Tag.line_segments) => .{ .line_segments = try Segments.parse(r.payload) },
+            @intFromEnum(Tag.range_tags) => .{ .range_tags = try Ranges.parse(r.payload) },
             else => .unknown,
         };
         self.records = candidate;

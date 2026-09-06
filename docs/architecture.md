@@ -20,7 +20,7 @@ tests/hwp5/    테스트 전용 WASM bridge·독립 zlib/레코드 oracle·적�
 
 CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계·브라우저 API에 직접 의존하지 않는 메모리 기반 읽기·쓰기를 우선합니다.
 
-`hwp5/body/paragraph_header.zig`는 문단 헤더, `control.zig`는 제어코드 분류와 너비, `text.zig`는 원본 UTF-16 단위 위치를 가진 토큰, `reader.zig`는 태그 66/67 dispatch를 담당합니다. 문단 내부/중첩 레코드의 level은 보존하며 아직 트리나 렌더링 문자열을 만들지 않습니다.
+`hwp5/body/paragraph_header.zig`는 문단 헤더, `control.zig`는 제어코드 분류와 너비, `text.zig`는 원본 UTF-16 단위 위치를 가진 토큰, `reader.zig`는 태그 66~70 dispatch를 담당합니다. `char_runs.zig`·`line_segments.zig`·`range_tags.zig`는 각 행 배치, `binary/record_array.zig`는 빌린 고정 폭 배열 경계, `metadata.zig`는 호출자가 연결한 문단의 선언 개수·위치·글자 모양 ID 검증을 소유합니다. 문단 내부/중첩 레코드의 level은 보존하며 아직 트리나 렌더링 문자열을 만들지 않습니다.
 
 HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.
 

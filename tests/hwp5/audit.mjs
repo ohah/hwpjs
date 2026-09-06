@@ -13,6 +13,7 @@ import { resourceEdges, resourceActual } from "./resources.mjs";
 import { shapeEdges, shapeMutations } from "./shapes.mjs";
 import { referenceEdges, referenceActual } from "./references.mjs";
 import { checkBody, bodyEdges, bodyMutations } from "./body.mjs";
+import { metadataActual, metadataEdges } from "./metadata.mjs";
 import {
   formattingEdges,
   formattingCounts,
@@ -93,6 +94,7 @@ formattingEdges(call);
 shapeEdges(call);
 const referenceEdgeResults = referenceEdges(call);
 bodyEdges(call);
+const metadataEdgeResults = metadataEdges(call);
 // Round 1: fixed header, byte order, unknown flags, incompatible versions, feature gates.
 for (let n = 0; n < 256; n++)
   assert.throws(() => call(0, header().subarray(0, n)), /InvalidHeaderSize/);
@@ -237,6 +239,7 @@ const formatting = {
   charShape: 0,
   paraShape: 0,
 };
+const metadata = { paragraphs: 0, runs: 0, lines: 0, ranges: 0 };
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
     cfb.parse(readFileSync(new URL(name, fixtures)), { strict: true });
@@ -252,6 +255,10 @@ try {
       unsupported.push(name);
       continue;
     }
+    const docBytes = Buffer.from(cfb.findExact("/DocInfo").content);
+    const docPlain =
+      hdr.readUInt32LE(36) & 1 ? inflateRawSync(docBytes) : docBytes;
+    const shapeCount = formattingCounts(docPlain).charShape;
     for (const entry of cfb.document().nodes) {
       if (
         entry.kind !== 2 ||
@@ -267,6 +274,10 @@ try {
       );
       const framed = call(2, plain);
       if (/^Section\d+$/.test(entry.name)) {
+        for (const [key, n] of Object.entries(
+          metadataActual(call, hdr.readUInt32LE(32), plain, shapeCount),
+        ))
+          metadata[key] += n;
         for (const [key, n] of Object.entries(
           checkBody(call, hdr.readUInt32LE(32), plain, true),
         ))
@@ -296,6 +307,12 @@ try {
   cfb.close();
 }
 assert.equal(files, 48);
+assert.deepEqual(metadata, {
+  paragraphs: 1481,
+  runs: 1740,
+  lines: 1729,
+  ranges: 0,
+});
 assert.deepEqual(body, {
   headers: 1481,
   texts: 1076,
@@ -337,6 +354,7 @@ rounds.push({
   resources,
   references,
   body,
+  metadata,
   formatting,
 });
 begin = checks;
@@ -383,6 +401,7 @@ console.log(
       shapeMutationResults,
       referenceEdgeResults,
       bodyMutationResults,
+      metadataEdgeResults,
       checks,
       imports: 0,
     },
