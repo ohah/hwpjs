@@ -25,7 +25,7 @@ const groups = Object.freeze({
   ole: 7,
   shapes: 8,
   drawing_styles: 7,
-  lines: 4,
+  lines: 7,
   rectangles: 3,
   ellipses: 5,
   arcs: 5,

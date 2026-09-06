@@ -2012,3 +2012,21 @@ shape_connector는 Point.read와 record_array.Records를 재사용하고 제어�
 문서 line_validation의 deferred_connectors는 아직 유지합니다. 이 단계는 payload 코어이고 연결선 직접 소유권·누락·중복·대상 개체 참조 검증과 조판은 다음 범위입니다. 4바이트 꼬리 의미, 전체 문서 모델·HWPX·편집/저장도 아직 남아 있습니다.
 
 검증 결과: Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 221/221, Node 47/47 통과했습니다. Debug 전체 WASM 검사는 1,248,337회이며 이후 같은 Debug 바이너리에서 추가한 HWPX 20개/44점 대조를 별도 실행해 통과했습니다. 해당 대조가 전체 audit에 포함된 ReleaseSafe·ReleaseFast는 각각 1,248,399회입니다. 연결선 합성 성공 489/거부 29,015, 실제 32개·72점 및 필수 prefix 거부 2,000회를 포함합니다. 실제 종류는 1이 27개, 4가 5개입니다. 기존 CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-connector-{debug,safe,fast}.log`입니다.
+
+## 연결선 문서 소유권과 오류 전파
+
+2026-09-07. line_validation에서 태그 78의 직접 부모가 $lin 또는 $col인지 한 번의 책임 경계에서 검사합니다. 기존 owned_record.find의 직접 자식·서브트리 건너뛰기를 재사용합니다. 같은 태그에 단일 owner 전용 componentChild를 두 번 호출하면 정상인 다른 종류까지 고아로 거부하므로 그렇게 조립하지 않습니다. $col도 직접 payload 한 개를 요구하며 MissingConnector/DuplicateConnector를 반환합니다. 소유자를 잃은 태그 78은 종류를 추정하지 않고 공통 OrphanLine입니다.
+
+문서 section의 기존 line_validation 호출로 연결선 payload 오류까지 자동 전파합니다. Report의 deferred_connectors는 실제 파싱한 connectors로 바꾸고 control_points/unknown_connector_kinds/pending_subject_slots를 추가했습니다. extra_bytes는 두 종류의 미지 꼬리 합계입니다. unknown 종류는 원문을 보존하는 진단이며 >8을 임의의 기본 종류로 바꾸지 않습니다. pending_subject_slots는 연결선당 두 개로, ID=0도 포함해 대상 슬롯 의미·실물 연결이 미검증임을 명시합니다. 테스트 보고서의 lines 7필드/구역 stride 672는 공통 JS schema에서 관리하며 제품 JS API 변경은 없습니다.
+
+적대적 검증 범위:
+
+1. 네이티브에서 정상/누락/중복/고아/과대 개수의 모든 Tree 할당 실패를 주입하고 반환값과 메모리 정리를 검사합니다.
+2. 합성 문서에서 미지 레코드 너머의 중복, 형제/손자의 payload 빌리기, 모든 필수 prefix 잘림과 과대 개수, 미지 종류의 원값 진단을 검사합니다. 일반 선·연결선 혼합 순서를 바꿔 같은 집계인지 비교합니다.
+3. 실제 issue4491 혼합단지 문서의 연결선 12개 각각에 삭제/중복/제어점 마지막 바이트 잘림/과대 개수 변이를 적용하여 단독 검사·decoded 문서·재조립 CFB 세 경로에서 거부하고 정상 원문으로 회복하는지 확인합니다. 일반 선이 함께 있을 수 있으므로 태그만으로 연결선 개수를 세지 않고 독립 부모 ID로 선택합니다.
+4. 두 구역 중 하나의 연결선 종류를 미지 값으로 바꿔 unknown_connector_kinds가 0/1인 입력을 역순으로 전달하고, 인덱스 순 보고서가 동일한지 검사합니다. 실제 값이 같은 구역끼리만 비교하는 위치 편향을 피합니다.
+5. 전체 drawing survey의 독립 JS 소유 관계/필드 기대값 대조와 기존 실제 연결선 32개·HWPX 짝 20개 대조를 유지합니다. 공통 문서 변이 harness에는 명시적 record 선택과 count 필드 선택만 추가하고 파서 규칙은 복제하지 않습니다.
+
+이 단계는 연결선 payload와 문서 소유권의 연결입니다. 대상 ID/인덱스 실물 해결·연결선 경로 생성·조판·미지 꼬리 및 나머지 문서 포맷 검증은 계속 남아 있습니다. 원본 fixture는 수정하지 않습니다.
+
+최종 Debug·ReleaseSafe·ReleaseFast audit 모두 모드별 네이티브 222/222, Node 47/47, HWP5 WASM 1,248,969회 검사 통과했습니다. 연결선 소유권 합성 성공 82/거부 70, 실제 문서 오류 전파 거부 246/구역 정렬 1을 포함합니다. 기존 payload 32개·72점과 짝 HWPX 20개·44점 대조를 유지했습니다. CFB 12,000회 변이 trap 0, Zig 포맷·변경 JS 문법·diff 검사 통과. 로그는 `/tmp/hwpjs-connector-owner-{debug,safe,fast}.log`입니다.

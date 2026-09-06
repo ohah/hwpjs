@@ -14,11 +14,11 @@ export function ownedShapeDocument(call,cfb,config){
   const nodes=cfb.document().nodes,body=nodes.findIndex(n=>n.parent===0&&n.name==='BodyText');
   const input=bytes=>decodedDocumentInput(h,doc,[{index:0,bytes}]);
   const original=call(24,input(b));
-  const expected=config.documentActual?config.documentActual(call,v,b,doc):config.actual(call,v,b);assert.equal(expected[0],config.count);
+  const expected=config.documentActual?config.documentActual(call,v,b,doc):config.actual(call,v,b);assert.equal(expected[config.countField??0],config.count);
   expected.forEach((n,i)=>assert.equal(original.readUInt32LE(sectionFieldOffset(0,config.group,i)),n));
   const cap=w(config.maxDecodedBytes??64*1024*1024),container=call(25,Buffer.concat([cap,file]));
   assert.deepEqual(container.subarray(0,original.length),original);
-  const records=documentRecords(b).filter(r=>r.tag===config.tag);assert.equal(records.length,config.count);
+  const records=config.selectRecords?config.selectRecords(b):documentRecords(b).filter(r=>r.tag===config.tag);assert.equal(records.length,config.count);
   let rejected=0;
   const reject=(changed,error)=>{
     assert.throws(()=>config.run(call,v,changed),error);rejected++;

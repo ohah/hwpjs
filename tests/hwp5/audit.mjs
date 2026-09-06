@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { connectorEdges } from "./shape-connector.mjs";
 import { connectorPair } from "./connector-pair.mjs";
+import {connectorOwnerEdges,connectorDocumentReference} from "./connector-validation.mjs";
 import { documentActual, documentEdges } from "./documents.mjs";
 import { containerActual, containerEdges } from "./containers.mjs";
 import { previewEdges } from "./preview.mjs";
@@ -418,6 +419,8 @@ const polygonEdgeResults = polygonEdges(call);
 const curveEdgeResults = curveEdges(call);
 const connectorEdgeResults = connectorEdges(call);
 const connectorPairResults = connectorPair(call,cfb);
+const connectorOwnerEdgeResults = connectorOwnerEdges(call);
+const connectorDocumentResults = connectorDocumentReference(call,cfb);
 const pictureEdgeResults = pictureEdges(call);
 const pictureColorEdgeResults = colorEdges(call);
 const pictureEffectsEdgeResults = effectsEdges(call);
@@ -897,6 +900,8 @@ console.log(
       curveEdgeResults,
       connectorEdgeResults,
       connectorPairResults,
+      connectorOwnerEdgeResults,
+      connectorDocumentResults,
       pictureEdgeResults,
       pictureColorEdgeResults,
       pictureEffectsEdgeResults,
