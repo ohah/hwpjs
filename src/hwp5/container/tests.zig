@@ -16,15 +16,17 @@ fn fixture(a: std.mem.Allocator, late_failure: bool) ![]u8 {
         .{ .name = "DocInfo", .parent = 0, .content = doc },
         .{ .name = "BodyText", .parent = 0, .kind = 1 },
         .{ .name = "Section0", .parent = 3, .content = section },
+        .{ .name = "PrvText", .parent = 0, .content = &.{ 0xff, 0xfe, 'A', 0 } },
         .{ .name = "Section1", .parent = 3, .content = &.{} },
     };
-    return writer.write(a, nodes[0..if (late_failure) 6 else 5], .{});
+    return writer.write(a, nodes[0..if (late_failure) 7 else 6], .{});
 }
 fn success(a: std.mem.Allocator, bytes: []const u8) !void {
     var report = try c.inspect(a, bytes, opts);
     defer report.deinit(a);
     try t.expectEqual(1, report.document.sections.len);
     try t.expectEqual(0, report.uninspected_streams);
+    try t.expectEqual(1, report.preview_text.?.bom_units);
     try t.expectEqual(0xa5, report.document.doc_info.properties.extra[0]);
 }
 fn failure(a: std.mem.Allocator, bytes: []const u8) !void {
@@ -34,6 +36,28 @@ fn failure(a: std.mem.Allocator, bytes: []const u8) !void {
     };
     defer report.deinit(a);
     return error.ExpectedContainerFailure;
+}
+fn malformedPreview(a: std.mem.Allocator, bytes: []const u8) !void {
+    var report = c.inspect(a, bytes, opts) catch |err| switch (err) {
+        error.InvalidPreviewTextSize => return,
+        else => return err,
+    };
+    defer report.deinit(a);
+    return error.ExpectedPreviewFailure;
+}
+test "late malformed preview cleans successful document and every allocation failure" {
+    const good = try fixture(t.allocator, false);
+    defer t.allocator.free(good);
+    var file = try @import("../../cfb/reader.zig").File.open(t.allocator, good, .{ .strict = true });
+    defer file.deinit();
+    const nodes = try file.toNodes(t.allocator);
+    defer t.allocator.free(nodes);
+    for (nodes) |*node| if (std.mem.eql(u8, node.name, "PrvText")) {
+        node.content = &.{1};
+    };
+    const bad = try writer.write(t.allocator, nodes, .{});
+    defer t.allocator.free(bad);
+    try t.checkAllAllocationFailures(t.allocator, malformedPreview, .{bad});
 }
 test "container success and partial section failure clean every allocation point" {
     const good = try fixture(t.allocator, false);
@@ -54,7 +78,8 @@ test "container report outlives input CFB and respects independent encoded limit
     try t.expectEqual(0xa5, report.document.doc_info.properties.extra[0]);
     try t.expectEqual(1, report.document.doc_info.resources.count(.style));
     try t.expectEqual(1, report.document.sections[0].control_types.checked);
-    try t.expectEqual(report.document.total_bytes, report.total_decoded_bytes);
+    try t.expectEqual(report.document.total_bytes + 4, report.total_decoded_bytes);
+    try t.expectEqual(2, report.preview_text.?.scalar_values);
 }
 test "canonical section namespace and bounded UTF16 BinData paths" {
     const paths = @import("paths.zig");

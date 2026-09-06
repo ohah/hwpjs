@@ -13,6 +13,7 @@ pub const Options = struct {
 pub const Report = struct {
     document: d.Report,
     binary_data: binaries.Report,
+    preview_text: ?@import("../preview/text.zig").Stats,
     total_decoded_bytes: usize,
     uninspected_streams: usize,
     doc_info_backing: []const u8,
@@ -48,9 +49,10 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     var report = try d.inspectDecoded(a, .{ .header = &header.raw, .doc_info = doc, .sections = body }, options.document);
     errdefer report.deinit(a);
     const bins = try binaries.inspect(a, &file, &header, doc, options.document.framing, used, &remaining);
+    const preview = try @import("preview.zig").inspect(&file, used, &remaining);
     var uninspected: usize = 0;
     for (file.entries, used) |entry, consumed| if (entry.kind == 2 and !consumed) {
         uninspected += 1;
     };
-    return .{ .document = report, .binary_data = bins, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
+    return .{ .document = report, .binary_data = bins, .preview_text = preview, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
 }

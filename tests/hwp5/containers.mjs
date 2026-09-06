@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { decodedDocumentInput, documentRecords } from "./documents.mjs";
+import { previewActual } from "./preview.mjs";
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -54,19 +55,28 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     used.add(path.toLowerCase());
   }
   const nodes = cfb.document().nodes;
+  const previewEntry = cfb.findExact("/PrvText");
+  const previewBytes = previewEntry
+    ? Buffer.from(previewEntry.content)
+    : Buffer.alloc(0);
+  const preview = previewEntry
+    ? [1, ...previewActual(call, previewBytes)]
+    : [0, 0, 0, 0, 0, 0];
+  if (previewEntry) used.add("/prvtext");
   const path = (i) =>
     nodes[i].kind === 5 ? "" : `${path(nodes[i].parent)}/${nodes[i].name}`;
   const uninspected = nodes.filter(
     (n, i) => n.kind === 2 && !used.has(path(i).toLowerCase()),
   ).length;
-  const total = expected.readUInt32LE(12) + stats[2];
+  const total = expected.readUInt32LE(12) + stats[2] + previewBytes.length;
   const want = Buffer.concat([
     expected,
+    ...preview.map(w),
     ...[...stats, total, uninspected].map(w),
   ]);
   assert.deepEqual(run(call, bytes, total, expected.readUInt32LE(16)), want);
   assert.throws(() => run(call, bytes, total - 1), /LimitExceeded/);
-  return [1, stats[1], stats[2], uninspected];
+  return [1, stats[1], stats[2], uninspected, ...preview];
 }
 export function containerEdges(call, cfb) {
   const h = Buffer.alloc(256);
@@ -225,6 +235,32 @@ export function containerEdges(call, cfb) {
   assert.equal(external.at(-1), 1); // Unused BIN stream remains uninspected.
   const unknown = words(run(call, write(nodes(h, u(15)))));
   assert.deepEqual(unknown.slice(-7, -2), [1, 0, 0, 0, 1]);
+  for (const raw of [
+    Buffer.alloc(0),
+    Buffer.from("\ufeffA\0😀\ud800", "utf16le"),
+  ]) {
+    const n = [...nodes(), { name: "PrvText", parent: 0, content: raw }];
+    const out = words(run(call, write(n), total + raw.length));
+    assert.deepEqual(out.slice(-13, -7), [1, ...previewActual(call, raw)]);
+    assert.equal(out.at(-1), 0);
+  }
+  reject(
+    [...nodes(), { name: "PrvText", parent: 0, content: Buffer.from([1]) }],
+    /InvalidPreviewTextSize/,
+  );
+  reject(
+    [...nodes(), { name: "PrvText", parent: 0, kind: 1 }],
+    /InvalidHwpEntryKind/,
+  );
+  const nestedPreview = [
+    ...nodes(),
+    { name: "PrvText", parent: 4, content: Buffer.from([1]) },
+  ];
+  assert.deepEqual(
+    words(run(call, write(nestedPreview))).slice(-13, -7),
+    [0, 0, 0, 0, 0, 0],
+  );
+  assert.equal(words(run(call, write(nestedPreview))).at(-1), 1);
   return {
     rejected,
     recoveries: rejected,

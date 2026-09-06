@@ -12,6 +12,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. [구현/검증 기록](docs/hwp5-foundation.md)을 참조합니다.
 - `src/hwp5/document/`: types는 입력/소유권/보고서, docinfo는 리소스 검증 연결, section은 기존 본문 검사기 조립, validation은 헤더 지원 정책·구역 수/인덱스·전역 한도를 소유합니다. inspectDecoded 입력은 이미 압축 해제된 스트림이며 CFB를 검색하지 않습니다. 구역 보고서는 인덱스 순서로 소유하고 DocInfo 원문 슬라이스는 빌립니다. 레벨·ID·구역 정의 첫 문단 조건 등 기존 의미 규칙을 이 계층에 복제하지 않습니다.
 - `src/hwp5/container/`: paths는 CFB 계층 조회와 정규 Section/BinData 이름, sections는 직접 BodyText 자식의 bounded decode, binaries는 항목별 압축/외부 링크 보류, validation은 파일 단위 수명과 총 decode 한도를 소유합니다. strict CFB와 findExact만 사용하며 동명 basename fallback·외부 링크 접근·압축 실패 후 원본 fallback을 금지합니다. 반환 보고서는 DocInfo backing을 소유하므로 입력 CFB를 해제해도 유효합니다. uninspected 스트림은 완료로 세지 않습니다.
+- `hwp5/preview/text.zig`는 길이 접두사 없는 raw UTF-16LE 미리보기 뷰/진단, `container/preview.zig`는 선택 루트 PrvText 조회와 전체 소비 한도를 소유합니다. 본문 제어문자 문법·NUL 종결·BOM 제거·2048바이트 상한을 임의 적용하지 않습니다. 고립 서로게이트는 치환하지 않고 수치로 진단합니다. 검사 보고서 존재를 무조건 Unicode 정상 판정으로 해석하지 않습니다.
 - `src/hwp5/body/`: 문단 헤더·제어코드 종류/너비·UTF-16 토큰·태그 dispatch를 분리합니다. 토큰 위치는 Unicode 문자 수가 아닌 원본 UTF-16 단위이며, 컨트롤 데이터를 텍스트나 실제 메모리 포인터로 취급하지 않습니다. 계층/DocInfo 참조/개체 연결은 별도 조립 책임입니다.
 - 본문 `char_runs.zig`·`line_segments.zig`·`range_tags.zig`는 고정 행 해석, `metadata.zig`는 호출자가 연결한 헤더 개수/위치/글자 모양 ID 검증을 소유합니다. `binary/record_array.zig`는 고정 폭 배열 경계만 공유합니다. 영역 중첩과 signed 줄 값·미지 플래그는 보존하며 페이지를 추정하지 않습니다.
 - `control_header.zig`는 4바이트 ID/속성 원본, `list_header.zig`는 문단 수 원값과 명시적 spec6/observed8 배치를 소유합니다. 리스트 배치를 길이·버전만으로 자동 선택하지 않습니다. 컨트롤별 속성과 리스트 소유권 검증은 별도입니다.

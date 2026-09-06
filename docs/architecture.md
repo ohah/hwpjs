@@ -54,6 +54,8 @@ CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계�
 
 container Report는 document Report와 그 DocInfo backing을 소유합니다. 입력 CFB와 임시 구역/바이너리 데이터는 반환 뒤 필요하지 않습니다. 미소비 CFB 스트림은 uninspected_streams로 보고하며 이미지/OLE 콘텐츠 해석이나 미지원 스트림의 유효성을 주장하지 않습니다. 동일 BinData 스트림을 여러 항목이 참조하면 각 항목의 압축 정책으로 검사하고 총 decode 한도도 항목별로 계산합니다.
 
+`preview/text.zig`는 raw UTF-16LE 바이트를 빌리는 뷰와 코드 유닛/Unicode scalar/고립 서로게이트/NUL/BOM 수치를 소유합니다. 길이 접두사가 있는 DocInfo 문자열, 제어문자 문법이 있는 본문 텍스트와 별도 형식입니다. `container/preview.zig`는 루트 PrvText의 선택적 존재·kind·전역 바이트 한도만 담당하고 문서 compressed 비트와 무관하게 원문을 전달합니다. container Report의 preview_text=null과 0유닛 Stats는 부재/빈 텍스트를 구분하며, 통계만 저장하므로 임시 CFB를 해제한 뒤의 포인터를 남기지 않습니다. total_decoded_bytes에는 이 비압축 소비량도 포함합니다.
+
 HWP5 기반의 책임 소유자·소유권·미지원 경계·검증 기록은 [HWP5 기반 구현](hwp5-foundation.md)에 모읍니다. 제품 JS ABI는 변경하지 않았고, 테스트 전용 bridge는 코어를 wasm32-freestanding으로 실행하기 위한 어댑터입니다.
 
 DocInfo 리소스는 BinData·글꼴·탭·번호·글머리표·스타일·테두리/배경·글자 모양·문단 모양까지 해석합니다. `border_fill.zig`는 선 배열, `fill.zig`는 채우기 조합, `picture_info.zig`는 이미지 속성 공통 배치를 소유합니다. 문단 모양의 구/신 줄 간격을 임의로 하나로 합치지 않습니다. `resources.zig`는 주요 리소스 개수, `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 진단을 분리합니다. 알려진 본문 참조는 decoded 문서 진입점에 연결했으며, 외부 스트림 연결·구역 번호 fallback 및 미지원 리소스의 참조는 후속 단계입니다.
