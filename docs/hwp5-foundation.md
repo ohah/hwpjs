@@ -1661,3 +1661,21 @@ rhwp `parser/control/shape.rs:parse_line_shape_data`도 일반 선에서 u16을 
 사각형 좌표/곡률의 실제 조판 의미와 타원/호/다각형/곡선/연결선 payload 등은 남아 있습니다. 이번 구현은 사각형의 필드·소유권 검사이며 전체 문서/도형 구현 완료가 아닙니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 통과: 모드별 네이티브 197/197, Node 47/47, HWP5 WASM 317,363회 검사. CFB 12,000회 변이 trap 0, 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-rectangle-owner-{debug,safe,fast}.log`입니다.
+
+## 타원 payload·속성 view·비활성 구간 좌표 보존 (2026-09-06)
+
+공식 표 95~97과 rhwp parse_ellipse_shape_data를 대조해 태그 80의 `shape_ellipse.Ellipse`를 추가했습니다. 최소 60바이트는 attributes u32와 일곱 signed Point(center/axis1/axis2/start1/end1/start2/end2)입니다. Point.read를 일반 선/사각형과 공유하며 남은 바이트는 extra로 빌립니다.
+
+needsIntervalUpdate는 bit 0, isArc는 bit 1, arcKindRaw는 bit 2~9의 8비트 원값이고 unknownBits는 나머지 상위 비트입니다. 예약값을 enum 기본값으로 바꾸거나 kind 값을 축소하지 않습니다. 호 전환 플래그가 꺼져 있어도 start/end 좌표를 보존하며, 축 길이·교차점·각도를 계산하거나 좌표를 정규화하지 않습니다.
+
+### 구현 후 적대적 검증
+
+1. 네이티브에서 일곱 Point의 서로 다른 signed 최소/최대/-1/0/양수/음수 값을 대조했습니다. isArc=false에도 구간 좌표가 그대로이고 모든 필수 60개 prefix 잘림을 거부합니다. extra 내용과 borrowed 포인터를 확인했습니다.
+2. 32개 속성 비트를 하나씩 켜 bit 0/1/2~9 및 unknownBits가 섞이지 않는지 검사했습니다. 전체 0xffffffff에서 arcKindRaw=255도 보존합니다. 미지 비트만으로 입력을 거부하지 않습니다.
+3. WASM 모드 60에서 각 필드 바이트에 1/128/255를 주입한 180개와 최소 길이 1개를 typed 재인코딩·독립 비트 계산과 비교했습니다. 합성 성공 181건, prefix 잘림 거부 10,860건 및 오류 뒤 정상 재호출입니다.
+4. 전체 참조 조사에서 부모 $ell인 타원 139개를 대조했습니다. 모두 payload 60바이트·extra=0·attributes=0이며, 실제 필수 prefix 잘림 8,340건을 거부했습니다. basic/KTX.hwp의 19개는 필수 회귀 assertion입니다. 실제 비영 호 전환/종류/예약 비트의 표본을 검증한 것으로 주장하지 않습니다.
+5. hwp3-sample16-hwp5.hwp/.hwpx의 3개와 복학원서.hwp/.hwpx의 1개에서 일곱 XY 좌표 및 intervalDirty/hasArcPr를 실제 WASM 출력과 대조합니다. 전자는 호 플래그가 꺼져도 start/end에 -1 좌표가 있으며 이를 삭제하지 않습니다. 기존 테스트 전용 ZIP/XML helper를 사용하며 제품 HWPX 구현이나 한글 프로그램 실행 검증은 아닙니다.
+
+타원의 문서 직접 소유권·누락·중복 검사, 실제 호 조판/구간 계산 및 나머지 도형 payload는 남아 있습니다. 실제 원문 필드 대조와 전체 문서 의미/시각적 일치를 구분합니다. 원본 파일은 수정하지 않았습니다.
+
+최종 짝 표본 4개 일치, 호 플래그 비활성 상태의 비영 구간 Point 12개 보존 확인. Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 199/199, Node 47/47, HWP5 WASM 337,457회 검사 통과. CFB 12,000회 변이 trap 0, 포맷·diff 검사 통과. 로그는 `/tmp/hwpjs-ellipse-{debug,safe,fast}.log`입니다.

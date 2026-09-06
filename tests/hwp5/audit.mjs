@@ -49,6 +49,8 @@ import { rectangleEdges } from "./shape-rectangle.mjs";
 import { rectanglePair } from "./rectangle-pair.mjs";
 import { rectangleOwnerEdges } from "./rectangle-validation.mjs";
 import { rectangleDocumentReference } from "./rectangle-document.mjs";
+import { ellipseEdges } from "./shape-ellipse.mjs";
+import { ellipsePair } from "./ellipse-pair.mjs";
 import {
   reportWireEdges,
   reportOrderingEdges,
@@ -381,6 +383,7 @@ const lineEdgeResults = lineEdges(call);
 const lineOwnerEdgeResults = lineOwnerEdges(call);
 const rectangleEdgeResults = rectangleEdges(call);
 const rectangleOwnerEdgeResults = rectangleOwnerEdges(call);
+const ellipseEdgeResults = ellipseEdges(call);
 let rubyDocumentResults = null;
 const fieldDocumentResults = {
   total: Array(6).fill(0),
@@ -409,6 +412,7 @@ const styleDocumentReferenceResults = styleDocumentReference(call, cfb);
 const lineDocumentReferenceResults = lineDocumentReference(call, cfb);
 const rectanglePairResults = rectanglePair(call,cfb);
 const rectangleDocumentReferenceResults = rectangleDocumentReference(call,cfb);
+const ellipsePairResults = ellipsePair(call,cfb);
 const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
@@ -828,12 +832,14 @@ console.log(
       lineOwnerEdgeResults,
       rectangleEdgeResults,
       rectangleOwnerEdgeResults,
+      ellipseEdgeResults,
       shapeBorderReferenceResults,
       drawingStyleSurveyResults,
       styleDocumentReferenceResults,
       lineDocumentReferenceResults,
       rectanglePairResults,
       rectangleDocumentReferenceResults,
+      ellipsePairResults,
       shapeComponentReferenceResults,
       oleReferenceResults,
       oleReferenceEvidenceResults,

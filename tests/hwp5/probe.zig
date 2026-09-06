@@ -121,6 +121,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         57 => return @import("line-validation-probe.zig").run(a, bytes, limit),
         58 => return @import("shape-rectangle-probe.zig").run(a, bytes),
         59 => return @import("rectangle-validation-probe.zig").run(a, bytes, limit),
+        60 => return @import("shape-ellipse-probe.zig").run(a, bytes),
         else => return error.InvalidMode,
     }
 }

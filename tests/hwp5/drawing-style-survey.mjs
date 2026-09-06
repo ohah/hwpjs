@@ -8,6 +8,7 @@ import { lineActual } from "./shape-line.mjs";
 import { lineOwnerActual } from "./line-validation.mjs";
 import { rectangleActual } from "./shape-rectangle.mjs";
 import { rectangleOwnerActual } from "./rectangle-validation.mjs";
+import { ellipseActual } from "./shape-ellipse.mjs";
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
@@ -24,6 +25,7 @@ export function drawingStyleSurvey(call, cfb) {
   out.images = [];
   out.lines = { parsed: 0, rejected: 0, groupDrawingLines: 0, attributes: {}, extras: {}, deferredOwners: {} };
   out.rectangles = { parsed: 0, rejected: 0, groupDrawingRects: 0, rounds: {}, extras: {}, deferredOwners: {} };
+  out.ellipses = { parsed: 0, rejected: 0, attributes: {}, extras: {}, files: {}, deferredOwners: {} };
   out.metadata = { parsed: 0, rejected: 0, reservedNonzero: 0, alphaNonzero: 0, reservedExamples: [] };
   const drawingIds = new Set(["$lin", "$rec", "$ell", "$arc", "$pol", "$cur"]);
   for (const name of readdirSync(root, { recursive: true }).filter(n => n.endsWith(".hwp")).sort()) {
@@ -62,6 +64,17 @@ export function drawingStyleSurvey(call, cfb) {
       for (const record of records) {
         const level = bytes.readUInt32LE(record.offset) >>> 10 & 1023;
         stack.length = level;
+        if(record.tag===80){
+          const parent=stack[level-1];
+          const owner=parent?.tag===76?Buffer.from(bytes.subarray(parent.start,parent.start+4)).reverse().toString("latin1"):"other";
+          if(owner==="$ell"){
+            const ellipse=ellipseActual(call,bytes.subarray(record.start,record.end));
+            out.ellipses.parsed++;out.ellipses.rejected+=ellipse.rejected;
+            out.ellipses.files[name]=(out.ellipses.files[name]??0)+1;
+            out.ellipses.attributes[ellipse.attributes]=(out.ellipses.attributes[ellipse.attributes]??0)+1;
+            out.ellipses.extras[ellipse.extra]=(out.ellipses.extras[ellipse.extra]??0)+1;
+          }else out.ellipses.deferredOwners[owner]=(out.ellipses.deferredOwners[owner]??0)+1;
+        }
         if(record.tag===79){
           const parent=stack[level-1];
           const owner=parent?.tag===76?Buffer.from(bytes.subarray(parent.start,parent.start+4)).reverse().toString("latin1"):"other";
@@ -162,6 +175,7 @@ export function drawingStyleSurvey(call, cfb) {
   assert.equal(out.fillOnly.parsed, expectedParsed);
   if(existsSync(join(fileURLToPath(root),"group-drawing-02.hwp")))assert.equal(out.lines.groupDrawingLines,4);
   if(existsSync(join(fileURLToPath(root),"group-drawing-02.hwp")))assert.equal(out.rectangles.groupDrawingRects,30);
+  if(existsSync(join(fileURLToPath(root),"basic/KTX.hwp")))assert.equal(out.ellipses.files["basic/KTX.hwp"],19);
   const versions = Object.values(out.versions);
   const kinds = Object.values(out.kinds);
   for (const [versionField, kindField] of [["full", "known"], ["unknown", "unknown"]]) {
