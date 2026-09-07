@@ -61,6 +61,7 @@ import {pngStructureEdges} from './png-structure.mjs';
 import {zlibEdges} from './zlib.mjs';
 import {pngFilterEdges} from './png-filter.mjs';
 import {pngPixelsEdges} from './png-pixels.mjs';
+import {pngTransparencyEdges} from './png-transparency.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -451,6 +452,7 @@ const pngStructureResults = pngStructureEdges(call,cfb);
 const zlibResults = zlibEdges(call,cfb);
 const pngFilterResults = pngFilterEdges(call);
 const pngPixelsResults = pngPixelsEdges(call,cfb);
+const pngTransparencyResults = pngTransparencyEdges(call,cfb);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -983,6 +985,7 @@ console.log(
       zlibResults,
       pngFilterResults,
       pngPixelsResults,
+      pngTransparencyResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,

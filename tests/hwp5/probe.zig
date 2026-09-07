@@ -191,6 +191,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         128 => return @import("zlib-prefix-probe.zig").run(a, bytes, limit),
         129 => return @import("png-filter-probe.zig").run(a, bytes, limit),
         130 => return @import("png-pixels-probe.zig").run(a, bytes, limit),
+        131 => return @import("png-transparency-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

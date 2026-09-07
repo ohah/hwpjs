@@ -12,6 +12,7 @@ test {
     _ = @import("image/png/tests.zig");
     _ = @import("image/png/filter_tests.zig");
     _ = @import("image/png/pixels_tests.zig");
+    _ = @import("image/png/transparency_tests.zig");
     _ = @import("xml/input_tests.zig");
     _ = @import("xml/declaration_tests.zig");
     _ = @import("xml/prolog_tests.zig");

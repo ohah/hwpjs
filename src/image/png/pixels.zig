@@ -3,6 +3,7 @@ const structure = @import("structure.zig");
 const zlib = @import("../../compression/zlib.zig");
 const filter = @import("filter.zig");
 const indices = @import("palette_indices.zig");
+const metadata = @import("metadata.zig");
 pub const Layout = @import("layout.zig").Layout;
 pub const Options = struct { structure: structure.Options = .{}, max_decoded_bytes: usize = 256 * 1024 * 1024 };
 pub const Report = struct {
@@ -12,6 +13,7 @@ pub const Report = struct {
     passes: usize,
     zlib_trailing_bytes: usize,
     reconstructed_crc32: u32,
+    transparency: ?@import("transparency.zig").Value,
 };
 pub const Decoded = struct {
     report: Report,
@@ -36,10 +38,14 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
     defer a.free(compressed);
     var it = try structure.chunks.Iterator.init(bytes, options.structure.chunks);
     var at: usize = 0;
-    while (try it.next()) |chunk| if (chunk.is("IDAT")) {
-        @memcpy(compressed[at..][0..chunk.payload.len], chunk.payload);
-        at += chunk.payload.len;
-    };
+    var meta: metadata.State = .{};
+    while (try it.next()) |chunk| {
+        try meta.consume(envelope.header, envelope.palette_entries, chunk);
+        if (chunk.is("IDAT")) {
+            @memcpy(compressed[at..][0..chunk.payload.len], chunk.payload);
+            at += chunk.payload.len;
+        }
+    }
     const decoded = try zlib.decodePrefix(a, compressed, layout.bytes);
     errdefer a.free(decoded.bytes);
     if (decoded.bytes.len != layout.bytes) return error.InvalidPngScanlineSize;
@@ -59,5 +65,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
         }
     }
     envelope.pixels_validated = true;
-    return .{ .bytes = decoded.bytes, .layout = layout, .report = .{ .structure = envelope, .decoded_bytes = layout.bytes, .scanlines = layout.rows, .passes = layout.nonempty_passes, .zlib_trailing_bytes = compressed.len - decoded.consumed, .reconstructed_crc32 = crc.final() } };
+    envelope.ancillary_chunks_deferred -= meta.validated_chunks;
+    envelope.ancillary_bytes_deferred -= meta.validated_bytes;
+    return .{ .bytes = decoded.bytes, .layout = layout, .report = .{ .structure = envelope, .decoded_bytes = layout.bytes, .scanlines = layout.rows, .passes = layout.nonempty_passes, .zlib_trailing_bytes = compressed.len - decoded.consumed, .reconstructed_crc32 = crc.final(), .transparency = meta.transparency } };
 }

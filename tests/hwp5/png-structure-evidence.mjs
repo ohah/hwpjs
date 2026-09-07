@@ -17,5 +17,5 @@ export function pngStructureEvidence(raw){
   let entries=0;if(palettes.length){assert.ok([2,3,6].includes(color)&&palettes[0]<ids[0]);const size=chunks[palettes[0]].payload.length;assert.ok(size>0&&size%3===0&&size<=768);entries=size/3;if(color===3)assert.ok(entries<=2**depth);}
   const ancillary=chunks.filter(c=>!['IHDR','PLTE','IDAT','IEND'].includes(c.name));for(const c of ancillary)assert.ok(c.name.charCodeAt(0)&32);
   const fields=[width,height,depth,color,h[12],chunks.length,ids.length,ids.reduce((n,i)=>n+chunks[i].payload.length,0),entries,ancillary.length,ancillary.reduce((n,c)=>n+c.payload.length,0),ancillary.filter(c=>c.name.charCodeAt(2)&32).length,0];
-  const wire=Buffer.alloc(fields.length*4);fields.forEach((n,i)=>wire.writeUInt32LE(n,i*4));return {wire,fields,maxChunk:Math.max(...chunks.map(c=>c.payload.length)),pixels:BigInt(width)*BigInt(height)};
+  const wire=Buffer.alloc(fields.length*4);fields.forEach((n,i)=>wire.writeUInt32LE(n,i*4));return {wire,fields,chunks,maxChunk:Math.max(...chunks.map(c=>c.payload.length)),pixels:BigInt(width)*BigInt(height)};
 }

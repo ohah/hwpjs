@@ -4,7 +4,7 @@
 
 `src/image/png/pixels.zig`는 [청크 구조 검사](png-structure.md), [zlib 해제](zlib-validation.md), [행 필터 복원](png-filters.md)을 연결합니다. IHDR 기반 scanline 길이, 비인터레이스/Adam7 pass, 5종 필터와 indexed-color의 실제 사용 인덱스를 검사합니다. 기준은 [PNG §7~10 및 §11.2](https://www.w3.org/TR/png-3/)입니다.
 
-이는 기본 IDAT 이미지 데이터 검증입니다. ancillary chunk의 의미·순서·중복은 기존 deferred 보고를 유지합니다. APNG frame, tRNS 투명도 적용, 색상 프로필, 텍스트 메타데이터, RGBA 변환, 화면 렌더링, 이미지 저장은 이 단계에서 구현하지 않습니다. HWP 컨테이너의 PrvImage/BinData를 제품 검사에서 소비하도록 연결한 상태도 아닙니다. 제품 JS API는 계속 CFB만 제공합니다.
+이는 기본 IDAT 이미지 데이터 검증과 [tRNS 메타데이터 검증](png-transparency.md)입니다. tRNS 이외의 ancillary chunk 의미·순서·중복은 deferred 보고를 유지합니다. APNG frame, 투명도 적용, 색상 프로필, 텍스트 메타데이터, RGBA 변환, 화면 렌더링, 이미지 저장은 이 단계에서 구현하지 않습니다. HWP 컨테이너의 PrvImage/BinData를 제품 검사에서 소비하도록 연결한 상태도 아닙니다. 제품 JS API는 계속 CFB만 제공합니다.
 
 ## 책임과 반환값
 
@@ -15,7 +15,7 @@
 
 `decode(allocator, bytes, options)`는 Decoded를 반환합니다. bytes는 소유한 pass 순서의 행 버퍼이며, 각 행에 **원래 필터 바이트 1개 + 복원된 packed bytes**가 있습니다. 패딩 비트와 16-bit sample의 바이트 순서를 보존합니다. 이는 deinterlace된 전체 이미지 배열이나 canonical RGBA가 아닙니다. layout의 pass offset/row_bytes로 접근하며 `deinit(allocator)`로 해제합니다. 입력 PNG의 수명을 반환 이후 유지할 필요는 없습니다.
 
-`inspect`는 동일 decode 경로를 호출하고 버퍼를 해제한 뒤 scalar 보고서만 반환합니다. 보고서는 구조 통계, decoded_bytes(필터 바이트 포함), scanlines, 비어 있지 않은 passes, zlib_trailing_bytes, reconstructed_crc32를 포함합니다. CRC는 **필터 바이트를 제외한 pass 순서의 복원 행 바이트**에 적용하며 사용하지 않는 패딩 비트도 포함합니다. 서로 다른 인코딩 간 시각적 동일성 해시가 아닙니다.
+`inspect`는 동일 decode 경로를 호출하고 버퍼를 해제한 뒤 포인터 없는 값 기반 보고서를 반환합니다. 보고서는 구조 통계, decoded_bytes(필터 바이트 포함), scanlines, 비어 있지 않은 passes, zlib_trailing_bytes, reconstructed_crc32와 optional transparency를 포함합니다. CRC는 **필터 바이트를 제외한 pass 순서의 복원 행 바이트**에 적용하며 사용하지 않는 패딩 비트도 포함합니다. 서로 다른 인코딩 간 시각적 동일성 해시가 아닙니다.
 
 이 연결 경로는 모든 행 검사 후 structure.pixels_validated를 true로 설정합니다. 독립 structure.inspect는 여전히 false입니다. 이 플래그는 위 IDAT 데이터 범위의 성공이지 ancillary/APNG/렌더링까지 완료했다는 뜻이 아닙니다. 실패에는 부분 보고서나 부분 버퍼를 반환하지 않습니다.
 
@@ -37,4 +37,4 @@
 
 모든 color/depth 조합·두 interlace 방식·5종 및 혼합 필터·다양한 작은/직사각형 치수, IDAT 모든 분할 위치와 빈 청크, 출력 부족/초과, 압축 잘림/체크섬, 각 pass 행의 잘못된 필터·palette 인덱스, 압축 후미·deferred ancillary·실패 후 회복을 검사합니다. 실제 HWP PNG 32개의 복원 버퍼는 JS oracle과 바이트 단위로 비교합니다. 이 실파일에는 Adam7이 없으므로 실제 interlaced 파일까지 대조했다고 주장하지 않습니다.
 
-최종 수정 후 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 17/17 단계, 네이티브 351/351, 감사 스크립트 3,166,780 checks를 통과했습니다. PNG 이미지 전용 결과는 정상 2,097건·거부 4,379건입니다. 실제 PNG 32개에서 총 94,928,296바이트의 복원 행 버퍼가 일치했습니다. Header.palette 보강 후 Debug 전체 audit도 다시 실행했습니다. 포맷·변경 JS 문법·관련 로컬 문서 링크 24개를 확인했습니다.
+이미지 데이터 연결 단계(787fe5ca)에서 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 17/17 단계, 네이티브 351/351, 감사 스크립트 3,166,780 checks를 통과했습니다. PNG 이미지 전용 결과는 정상 2,097건·거부 4,379건입니다. 실제 PNG 32개에서 총 94,928,296바이트의 복원 행 버퍼가 일치했습니다. Header.palette 보강 후 Debug 전체 audit도 다시 실행했습니다. 포맷·변경 JS 문법·관련 로컬 문서 링크 24개를 확인했습니다. 이후 tRNS 연결 검증은 투명도 주제 문서에 기록합니다.

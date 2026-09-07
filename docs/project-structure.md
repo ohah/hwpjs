@@ -8,7 +8,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 ## 진입점과 공통 계층
 
 - `src/binary/`: 경계 검사와 바이너리 읽기.
-- `src/image/`: [PNG 청크 구조·CRC 검사](png-structure.md), [행 필터 복원](png-filters.md), [IDAT 이미지 데이터 검증](png-pixels.md). RGBA 변환·다른 이미지 형식·HWP 컨테이너 연결은 후속 단계입니다.
+- `src/image/`: [PNG 청크 구조·CRC 검사](png-structure.md), [행 필터 복원](png-filters.md), [IDAT 이미지 데이터 검증](png-pixels.md), [tRNS 투명도](png-transparency.md). RGBA 변환·다른 이미지 형식·HWP 컨테이너 연결은 후속 단계입니다.
 - `src/xml/`: [XML 1.0 문자 입력](xml-input.md), [선언·인코딩 시작 처리](xml-declaration.md), [이름·참조](xml-names-references.md), [태그·속성 토큰](xml-tags.md), [문서 구조 검증](xml-document.md), [namespace 검증](xml-namespaces.md). DTD·스키마 검증과 HWPX 통합은 아직 미구현입니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.

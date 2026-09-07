@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {inflateSync,crc32} from 'node:zlib';
 import {pngStructureEvidence} from './png-structure-evidence.mjs';
+import {transparencyEvidence} from './png-transparency-evidence.mjs';
 
 // Independent Adam7 oracle uses the specification's repeated tile, not strides.
 const tile=['16462646','77777777','56565656','77777777','36463646','77777777','56565656','77777777'];
@@ -23,8 +24,8 @@ export function predict(kind,a,b,c) {
 }
 export function pngPixelsEvidence(raw) {
   const structure=pngStructureEvidence(raw);const [width,height,depth,color,interlace]=structure.fields;
-  const chunks=[];
-  for(let p=8;p<raw.length;){const n=raw.readUInt32BE(p);if(raw.toString('ascii',p+4,p+8)==='IDAT')chunks.push(raw.subarray(p+8,p+8+n));p+=12+n;}
+  const transparency=transparencyEvidence(structure);
+  const chunks=structure.chunks.filter(c=>c.name==='IDAT').map(c=>c.payload);
   const compressed=Buffer.concat(chunks);const {buffer,engine}=inflateSync(compressed,{info:true,maxOutputLength:268435456});
   const decoded=Buffer.from(buffer);const channels=({0:1,2:3,3:1,4:2,6:4})[color];const stride=Math.ceil(channels*depth/8);
   let at=0,rows=0,nonempty=0,crc=0;
@@ -40,7 +41,7 @@ export function pngPixelsEvidence(raw) {
     }
   }
   assert.equal(at,decoded.length);
-  const fields=[decoded.length,rows,nonempty,compressed.length-engine.bytesWritten,crc,structure.fields[9],structure.fields[10],1];
+  const fields=[decoded.length,rows,nonempty,compressed.length-engine.bytesWritten,crc,transparency.deferredChunks,transparency.deferredBytes,1];
   const wire=Buffer.alloc(32+decoded.length);fields.forEach((value,i)=>wire.writeUInt32LE(value,i*4));decoded.copy(wire,32);
   return {wire,decoded,fields};
 }
