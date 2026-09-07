@@ -4,6 +4,10 @@ pub fn run(a: std.mem.Allocator, input: []const u8, limit: usize) ![]u8 {
     if (input.len < 4) return error.UnexpectedEnd;
     const bytes = input[4..];
     const r = try core.text.bcp47.inspect(a, bytes, .{ .max_bytes = limit, .max_subtags = std.mem.readInt(u32, input[0..4], .little) });
+    return encode(a, r);
+}
+pub fn encode(a: std.mem.Allocator, r: core.text.bcp47.Report) ![]u8 {
+    const bytes = r.raw;
     var fields: [21]u32 = @splat(0);
     fields[0..7].* = .{ @intFromEnum(r.kind), @intCast(r.subtags), @intCast(r.extlang_count), @intCast(r.variant_count), @intCast(r.extension_count), @intCast(r.private_count), @intFromBool(r.registry_validated) };
     for ([_][]const u8{ r.language, r.extlangs, r.script, r.region, r.variants, r.extensions, r.private_use }, 0..) |span, i| if (span.len != 0) {

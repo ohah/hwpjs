@@ -2,6 +2,8 @@
 
 ## 현재 범위
 
+IANA 등록 검증은 별도 [등록 검사 API](bcp47-registry.md)에 추가했습니다. 아래 문법 API 자체의 계약과 과거 검증 기록은 변경하지 않습니다.
+
 국제 텍스트 iTXt 연결을 위한 공통 언어 태그 기반입니다. [RFC 5646 §2.1](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.1)의 ABNF와 [§2.2.9](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.9)의 중복 variant/singleton 금지를 검사합니다. **IANA 등록 여부·extlang prefix·extension 내부 의미·권장 표기 변환·언어 매칭은 아직 검사하지 않습니다.** iTXt 제품 파서에 연결한 상태도 아닙니다.
 
 `text.bcp47.inspect(allocator, bytes, options)` 성공은 위 문법과 중복 조건만 통과했다는 뜻입니다. Report.registry_validated는 false입니다. RFC의 well-formed와 valid를 혼용하지 않습니다. 예약된 4글자 primary나 문법상 가능한 2~3개 extlang도 구조적으로 해석할 수 있지만, 실제 등록된 태그라는 보증은 아닙니다. 빈 문자열은 언어 태그가 아니므로 거부합니다. iTXt의 빈 언어 필드(미지정)는 향후 호출자가 별도로 처리해야 합니다.

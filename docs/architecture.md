@@ -2,7 +2,7 @@
 
 XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다. HWP5 원시 문자열 보존과 정책이 다르며, XML 문법·HWPML/HWPX 모델 검증으로 자동 승격하지 않습니다.
 
-이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 IANA 등록 검증은 다른 단계이며, 현재 문법 성공을 iTXt 전체 검증 성공으로 취급하지 않습니다.
+이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 [IANA 등록 검증](bcp47-registry.md)은 다른 단계이며, 현재 문법 성공을 iTXt 전체 검증 성공으로 취급하지 않습니다.
 
 바이트 리더와 CFB 읽기·strict 검증·새 컨테이너 쓰기를 구현했습니다. CFB의 각 책임은 개별 파일로 나누며, `reader.zig`는 소유권과 처리 순서를 조립합니다. 상세 API와 검증 범위는 [CFB 읽기·쓰기](cfb-reader.md)를 참고하세요.
 
