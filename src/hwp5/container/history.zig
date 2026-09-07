@@ -1,7 +1,7 @@
 const std = @import("std");
 const File = @import("../../cfb/reader.zig").File;
 const item = @import("../history/item.zig");
-pub const Encoding = enum { decoded, observed_hwp_compressed };
+pub const Encoding = @import("selected_encoding.zig").Encoding;
 pub const Options = struct {
     encoding: Encoding,
     item: item.Options,
@@ -61,13 +61,7 @@ pub fn inspect(a: std.mem.Allocator, file: *const File, declared: bool, used: []
     for (sources.items, 0..) |source, i| {
         const limit = @min(remaining_bytes.*, options.max_decoded_bytes - result.decoded_bytes);
         const encoded = file.entries[source.node].content;
-        const bytes = switch (options.encoding) {
-            .decoded => decoded: {
-                if (encoded.len > limit) return error.LimitExceeded;
-                break :decoded try a.dupe(u8, encoded);
-            },
-            .observed_hwp_compressed => try @import("../compressed_stream.zig").decode(a, encoded, limit),
-        };
+        const bytes = try @import("selected_encoding.zig").decode(a, encoded, limit, options.encoding);
         defer a.free(bytes);
         var local = options.item;
         local.framing.max_records = record_budget - result.records;

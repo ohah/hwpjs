@@ -9,6 +9,11 @@ pub fn history(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const selected = try @import("history-container-probe.zig").read(&r);
     return inspect(a, bytes[r.offset..], limit, false, .{ .history = selected, .history_report = true });
 }
+pub fn xmlTemplate(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const selected = try @import("xml-template-container-probe.zig").read(&r);
+    return inspect(a, bytes[r.offset..], limit, false, .{ .xml_template = selected, .xml_template_report = true });
+}
 pub fn formed(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const forms = try @import("form-selection.zig").read(&r);
@@ -53,7 +58,7 @@ pub fn curved(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: bool, selection: @import("document-probe.zig").Selection) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const max_bytes = try r.readInt(u32);
-    var report = try core.hwp5.container_validation.inspect(a, bytes[r.offset..], .{ .history = selection.history, .storage_layout = if (specified) .specified else .observed_optional_extension, .document = .{
+    var report = try core.hwp5.container_validation.inspect(a, bytes[r.offset..], .{ .xml_template = selection.xml_template, .history = selection.history, .storage_layout = if (specified) .specified else .observed_optional_extension, .document = .{
         .forms = selection.forms,
         .forbidden_chars = selection.forbidden_layout,
         .drawing_style = selection.style,
@@ -104,5 +109,6 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: boo
     try int(a, &out, u32, @intCast(report.total_decoded_bytes));
     try int(a, &out, u32, @intCast(report.uninspected_streams));
     if (selection.history_report) try @import("history-container-probe.zig").serialize(a, &out, report.history);
+    if (selection.xml_template_report) try @import("xml-template-container-probe.zig").serialize(a, &out, report.xml_template);
     return out.toOwnedSlice(a);
 }

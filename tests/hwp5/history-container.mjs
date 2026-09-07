@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {inflateRawSync,deflateRawSync} from 'node:zlib';
 import {documentRecords} from './documents.mjs';
 import {historyContainerEvidence} from './history-container-evidence.mjs';
+import {containerTotals} from './container-report-wire.mjs';
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n>>>0);return b;};
 const prefix=(o={})=>Buffer.concat([Buffer.from([o.mode??2,o.start??1,o.date??1]),...[o.items??4096,o.bytes??67108864,o.records??1000000,o.payload??67108864].map(w)]);
 export function historyContainerActual(call,cfb) {
@@ -15,7 +16,7 @@ export function historyContainerActual(call,cfb) {
   const check=(model=original,o={},bytes=cfb.write(model))=>{const before=Buffer.from(bytes),b=ordinary(bytes),expected=historyContainerEvidence(b,model,o);assert.deepEqual(run(bytes,o),expected.wire);assert.deepEqual(run(bytes,{...o,mode:0}),Buffer.concat([b,w(0)]));assert.deepEqual(Buffer.from(bytes),before);accepted++;return {bytes,base:b,expected};};
   check(original,{},file);assert.equal(e.decoded,107676);assert.equal(e.records,28);
   assert.deepEqual(e.entries.map(x=>[x[0],x[3]]),[[0,109],[1,6505],[2,19885],[3,81177]]);
-  const total=base.readUInt32LE(base.length-8)+e.decoded,recordTotal=base.readUInt32LE(16)+28;
+  const total=containerTotals(base).decoded_bytes+e.decoded,recordTotal=base.readUInt32LE(16)+28;
   assert.deepEqual(run(file,{items:4,bytes:e.decoded,records:28},total,recordTotal),e.wire);accepted++;
   const reject=(bytes,o,error,max=67108864,records=1000000)=>{assert.throws(()=>run(bytes,o,max,records),error);rejected++;assert.deepEqual(run(file),e.wire);};
   for(const o of [{items:3},{bytes:e.decoded-1},{records:27},{payload:0}])reject(file,o,/LimitExceeded/);

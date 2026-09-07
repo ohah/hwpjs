@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {deflateRawSync} from 'node:zlib';
 import {loadMemoDocument} from './memo-references.mjs';
 import {documentRecords} from './documents.mjs';
+import {containerTotals} from './container-report-wire.mjs';
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n>>>0);return b;};
 const words=xs=>Buffer.concat(xs.map(w));
 export function viewTextDocument(call,cfb){
@@ -31,7 +32,7 @@ export function viewTextDocument(call,cfb){
   const h=Buffer.from(x.h);h.writeUInt32LE(h.readUInt32LE(36)&~16384,36);
   const unflagged=rebuild(x.nodes.map(n=>n.parent===0&&n.name==='FileHeader'?{...n,content:h}:n));
   assert.deepEqual(call(98,input(unflagged)),words([0,1,1,records,view.length,records]));accepted++;recover();
-  const total=original.readUInt32LE(original.length-8),bodyRecords=original.readUInt32LE(16);
+  const total=containerTotals(original).decoded_bytes,bodyRecords=original.readUInt32LE(16);
   assert.deepEqual(call(98,input(x.file,total),bodyRecords+records),expected);accepted++;
   for(const [cap,limit] of [[total-1,bodyRecords+records],[total,bodyRecords+records-1]]){
     for(const mode of [25,98]){assert.throws(()=>call(mode,input(x.file,cap),limit),/LimitExceeded/);rejected++;}recover();

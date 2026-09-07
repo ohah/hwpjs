@@ -113,6 +113,7 @@ test {
     _ = @import("hwp5/history/tests.zig");
     _ = @import("hwp5/history/date_tests.zig");
     _ = @import("hwp5/container/history_tests.zig");
+    _ = @import("hwp5/container/xml_template_tests.zig");
     _ = @import("hwp5/container/script_tests.zig");
     _ = @import("hwp5/compression_tests.zig");
     _ = @import("cfb/tests.zig");

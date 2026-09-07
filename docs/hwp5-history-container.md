@@ -23,6 +23,7 @@ encoding에는 기본값이 없습니다. decoded는 저장된 바이트가 이�
 ## 책임과 경로
 
 - `container/numbered_stream.zig`: 대소문자를 구분하지 않는 ASCII 접두부와 정규 십진 접미사 읽기의 공통 구현. Section의 u16 제한/오류 형식은 기존 paths.sectionIndex가 유지하고 VersionLog는 u32 인덱스를 사용합니다.
+- `container/selected_encoding.zig`: [XMLTemplate](hwp5-xml-template.md)와 공유하는 명시적 codec 선택/owned buffer 반환. 기존 압축 검사기를 호출하며 각 소비자의 남은 바이트 한도를 전달받습니다.
 - `container/history.zig`: 정확한 DocHistory 직접 자식 선택, 수치 인덱스 정렬, 선택한 디코딩, 공유 예산, 결과 배열 수명.
 - `history/item.zig`: 기존 STAG/ETAG·presence·payload 문법·날짜 선택. 컨테이너에서 이 규칙을 다시 구현하지 않습니다.
 - `container/validation.zig`: 기존 파일/본문/별도 스트림 검사와 이력 검사 순서를 연결하고 최종 소유권·미소비 스트림을 보고합니다.

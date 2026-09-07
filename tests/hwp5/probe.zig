@@ -176,6 +176,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         112 => return @import("form-max-length-probe.zig").run(a, bytes, limit),
         113 => return @import("history-date-probe.zig").run(a, bytes),
         114 => return @import("container-probe.zig").history(a, bytes, limit),
+        115 => return @import("container-probe.zig").xmlTemplate(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

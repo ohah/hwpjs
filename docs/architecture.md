@@ -58,7 +58,7 @@ container Report는 document Report와 그 DocInfo backing을 소유합니다. �
 
 `scripts/version.zig`와 `scripts/source.zig`는 압축 해제된 입력을 빌려 두 버전 DWORD, 네 UTF-16LE 필드와 -1 종료 표식을 해석합니다. 길이는 u32 코드 유닛이며 NUL 종결·4바이트 패딩은 요구하지 않습니다. 원문과 extra를 보존하며 JS 실행기는 포함하지 않습니다. `container/scripts.zig`는 선택적인 정확한 Scripts 자식 스트림과 kind를 검사하고 기존 stream.decode를 사용합니다. 버전/소스 존재는 각각 optional이고 보고서는 scalar만 소유합니다. 디코드 바이트 전체(꼬리 포함)를 전역 한도에서 차감하며 꼬리는 trailing_bytes로 별도 보고합니다. 미지 버전을 지원 버전으로 보정하거나 스크립트 저장 플래그만으로 스트림 존재를 추정하지 않습니다.
 
-`xml_template/string.zig`는 표 10~12의 u32 코드 유닛 문자열을 빌리고 extra를 보존합니다. `template.zig`는 이미 decoded된 schema_name/schema/instance의 선택 입력과 전체 바이트 상한만 조립하며 합산 전에 남은 한도를 차감합니다. `utf16_string.read32`는 Scripts와 공유하고 기존 u16 read도 같은 경계/원자적 커서 함수로 연결합니다. summary의 종결·패딩 문법은 여전히 별개입니다. XML 파싱·entity resolution·스키마 검증 및 컨테이너 압축 정책은 후속 범위로, 공개 CFB 검사기에 XMLTemplate 검증 완료를 자동 보고하지 않습니다.
+`xml_template/`는 표 10~12의 decoded 문자열을, `container/xml_template.zig`는 선택적 파일 연결을 소유합니다. Scripts와 `utf16_string.read32`를, DocHistory와 `container/selected_encoding.zig`를 공유합니다. 선택·codec·소유권·미지원 의미와 검증 기록은 [XMLTemplate 계약](hwp5-xml-template.md)에서 관리합니다. summary의 종결·패딩 문법은 별개입니다.
 
 `history/record.zig`는 5바이트 헤더의 독립 Iterator이며 실패 시 위치/개수를 보존합니다. `value.zig`는 태그와 다섯 공식 presence bit, 시작/버전 payload 및 raw 문자열을 소유하고 SYSTEMDATE는 deferred로 남깁니다. 시작 배치는 명세의 flag→option과 관측 option→flag를 명시적 인자로 받습니다. `item.zig`는 decoded 한 항목의 STAG/ETAG 위치와 다섯 포함 비트를 검사합니다. 중복 metadata는 진단으로 보고하며 미지 flag/option/tag·extra를 버리지 않습니다. 일반 본문 framing·CFB 조회·복호화는 포함하지 않습니다. 최종 문서 별도 스트림과의 연결을 확인하지 않았으므로 last_doc_records가 0이어도 전체 이력 유효성을 주장하지 않습니다.
 

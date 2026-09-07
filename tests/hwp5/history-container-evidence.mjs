@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {inflateRawSync} from 'node:zlib';
 import {historyExpected} from './history.mjs';
+import {consumeContainerStreams} from './container-report-wire.mjs';
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n>>>0);return b;};
 export function historyContainerEvidence(base,model,o={}) {
   if(o.mode===0)return {wire:Buffer.concat([base,w(0)]),entries:[],decoded:0,records:0};
@@ -14,7 +15,7 @@ export function historyContainerEvidence(base,model,o={}) {
     const report=Array.from({length:12},(_,i)=>r.readUInt32LE(8+i*4));decoded+=b.length;records+=report[0];
     return [index,r.readUInt32LE(0),r.readUInt32LE(4),b.length,...report];
   });
-  const changed=Buffer.from(base);changed.writeUInt32LE(changed.readUInt32LE(base.length-8)+decoded,base.length-8);changed.writeUInt32LE(changed.readUInt32LE(base.length-4)-entries.length,base.length-4);
+  const changed=consumeContainerStreams(base,decoded,entries.length);
   const header=[1,Number(root>=0),declared,Number(!!last),last?.content.length??0,decoded,records,entries.length];
   return {wire:Buffer.concat([changed,...header.map(w),...entries.flat().map(w)]),entries,decoded,records};
 }

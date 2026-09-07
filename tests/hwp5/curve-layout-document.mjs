@@ -4,6 +4,7 @@ import { deflateRawSync } from "node:zlib";
 import { documentRecords, decodedDocumentInput } from "./documents.mjs";
 import { containerActual } from "./containers.mjs";
 import { sectionFieldOffset } from "./document-report-wire.mjs";
+import { containerTotals } from "./container-report-wire.mjs";
 import { polygonBytes } from "./shape-polygon.mjs";
 import { curveOwnerActual, curveOwnerRun } from "./curve-validation.mjs";
 const w = n => { const b = Buffer.alloc(4); b.writeUInt32LE(n >>> 0); return b; };
@@ -18,7 +19,7 @@ export function curveLayoutDocument(call, cfb) {
   containerActual(call, file, cfb, h, doc, [{index: 0, bytes: original}]);
   assert.throws(() => call(25, Buffer.concat([w(64 * 1024 * 1024), file])), /LimitExceeded/);
   const fullOriginal = call(25, Buffer.concat([w(128 * 1024 * 1024), file]));
-  assert.equal(fullOriginal.readUInt32LE(fullOriginal.length - 8), 87772864);
+  assert.equal(containerTotals(fullOriginal).decoded_bytes, 87772864);
   const nodes = cfb.document().nodes, body = nodes.findIndex(n => n.parent === 0 && n.name === 'BodyText');
   const frame = (b, r, p) => Buffer.concat([w((b.readUInt32LE(r.offset) & 0xfffff) | p.length << 20), p]);
   const variant = mode => Buffer.concat(documentRecords(original).map(r => {
