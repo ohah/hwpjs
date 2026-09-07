@@ -7,6 +7,7 @@ import {unselectedForms} from './form-report-evidence.mjs';
 import {formSchemaEvidence,rewriteFormProperties} from './form-schema.mjs';
 import {formPropertyEvidence} from './form-property.mjs';
 import {formSemanticCounters} from './form-semantics.mjs';
+import {maxLengthCounters} from './form-max-length-evidence.mjs';
 import {controlLinkEvidence} from './links.mjs';
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n>>>0);return b;};
 const selection=(o={})=>Buffer.concat([Buffer.from([o.mode??1]),w(o.forms??100000),w(o.bytes??67108864),w(o.nodes??100000),w(o.depth??64)]);
@@ -18,6 +19,7 @@ function selected(bytes,count) {
     v[4]++;v[5]+=Number(kind===0);v[6]+=p.length;v[7]+=e.rows.length;v[8]+=e.checked;v[9]+=e.deferred;
     if(kind===0)v[13]++;else{const tag=e.wire.readUInt32LE(8);v[tag===1?10:tag===2?11:12]++;}
     formSemanticCounters(e,kind).forEach((n,j)=>v[14+j]+=n);
+    maxLengthCounters(e,kind).forEach((n,j)=>v[24+j]+=n);
   }
   return v;
 }
@@ -45,7 +47,8 @@ export function formDocumentActual(call,cfb) {
     const file=readFileSync(new URL('../../reference/rhwp/samples/'+name,import.meta.url));cfb.parse(file,{strict:true});
     const model=cfb.document(),h=Buffer.from(cfb.findExact('/FileHeader').content),doc=inflateRawSync(cfb.findExact('/DocInfo').content),body=inflateRawSync(cfb.findExact('/BodyText/Section0').content),sections=[{index:0,bytes:body}],count=documentRecords(doc).filter(r=>r.tag===21).length;
     const decoded=decodedDocumentInput(h,doc,sections),base=call(24,decoded),want=expected(base,sections,count),values=selected(body,count);
-    assert.deepEqual(values.slice(14),[5,0,0,0,0,1,1,0,0,0]);
+    assert.deepEqual(values.slice(14,24),[5,0,0,0,0,1,1,0,0,0]);
+    assert.deepEqual(values.slice(24),[0,0,1,0]);
     const run=(b=decoded,o={})=>call(109,Buffer.concat([selection(o),b]));
     assert.deepEqual(run(),want);assert.deepEqual(run(decoded,{mode:0}),base);
     const exact={forms:5,bytes:values[6],nodes:values[7],depth:1};assert.deepEqual(run(decoded,exact),want);
@@ -112,3 +115,4 @@ export function formDocumentActual(call,cfb) {
   assert.throws(()=>run({mode:2}),/InvalidMode/);rejected++;
   return {actual:results,multiSection:{values:[v0,v1],budget:exact},rejected,semanticMutations};
 }
+export {selection as formDocumentSelection,expected as formDocumentExpected,changeProperty as changeFormProperty};

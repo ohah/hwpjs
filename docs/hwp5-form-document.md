@@ -28,6 +28,7 @@
 | explicit_char_shape_valid / explicit_char_shape_invalid / explicit_char_shape_absent | 지정 글자 모양 출처를 선택한 양식의 저장 참조 상태별 수 |
 | surrounding_char_shape / undetermined_char_shape | 주변 글자 모양 출처를 선택한 수 / 출처 미정 수 |
 | choice_checked / choice_unchecked / choice_indeterminate / choice_invalid / choice_deferred | 선택 상자·라디오 단추의 선택 상태별 수 |
+| max_length_missing / max_length_unlimited / max_length_nonnegative / max_length_deferred | 입력 상자 MaxLength의 부재·무제한·비음수·미해석 음수 수 ([계약](hwp5-form-max-length.md)) |
 
 미선택이면 원시 개수와 unselected 개수만 기록하고 양식 소유 관계·payload 문법·스키마를 새로 검사하지 않습니다. 다른 문단/토큰/리소스 검사는 계속 적용되므로 임의의 손상 Section을 허용한다는 뜻은 아닙니다. 선택한 경우 양식 검사 오류가 문서와 CFB 진입점까지 전파되며 부분 문서 보고서를 반환하지 않습니다.
 
@@ -45,7 +46,7 @@
 
 ## 실파일·적대적 검증
 
-테스트 mode 109(문서)와 110(CFB)은 선택 u8·양식/속성 바이트/노드/깊이 한도 u32 네 값 뒤에 기존 입력을 받습니다. 공통 `form-selection.zig`가 선택 접두부를 읽습니다. 전체 문서 보고서는 각 구역 끝에 forms의 24개 수치를 추가합니다. 테스트 측 stride/필드 위치 기준은 기존 `document-report-wire.mjs` 한곳입니다. 구역별 위치를 별도 구현에 하드코딩하지 않으며, report-wire 계약 테스트는 독립 고정값으로 784바이트 구역 크기와 새 필드 시작/끝·범위를 검사합니다.
+테스트 mode 109(문서)와 110(CFB)은 선택 u8·양식/속성 바이트/노드/깊이 한도 u32 네 값 뒤에 기존 입력을 받습니다. 공통 `form-selection.zig`가 선택 접두부를 읽습니다. 전체 문서 보고서는 각 구역 끝에 forms의 28개 수치를 추가합니다. 테스트 측 stride/필드 위치 기준은 기존 `document-report-wire.mjs` 한곳입니다. 구역별 위치를 별도 구현에 하드코딩하지 않으며, report-wire 계약 테스트는 독립 고정값으로 800바이트 구역 크기와 새 필드 시작/끝·범위를 검사합니다.
 
 기본 문서 대조도 독립 원시 레코드 개수로 unselected 진단을 확인하도록 갱신했습니다. 선택 결과는 기존 독립 JS 속성/스키마 증거에서 계산해 보고서 전체 바이트와 대조합니다. 변경하지 않은 다른 모듈 보고서와 CFB 부가 스트림 진단도 함께 비교합니다.
 

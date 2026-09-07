@@ -1,6 +1,6 @@
 # 양식 속성의 관측 스키마·저장 참조
 
-[속성 문법](hwp5-form-properties.md) · [양식 조립](hwp5-form-controls.md) · [토큰 연결](hwp5-form-links.md)
+[속성 문법](hwp5-form-properties.md) · [양식 조립](hwp5-form-controls.md) · [토큰 연결](hwp5-form-links.md) · [MaxLength](hwp5-form-max-length.md)
 
 ## 근거와 지원 경계
 

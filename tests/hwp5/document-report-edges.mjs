@@ -8,12 +8,12 @@ import {
 } from "./document-report-wire.mjs";
 export function reportWireEdges() {
   assert.equal(documentPrefixBytes, 132);
-  assert.equal(sectionReportBytes, 784);
+  assert.equal(sectionReportBytes, 800);
   assert.equal(sectionFieldOffset(0, "header_footer"), 280);
-  assert.equal(sectionFieldOffset(1, "number_controls", 2), 1092);
+  assert.equal(sectionFieldOffset(1, "number_controls", 2), 1108);
   assert.equal(sectionFieldOffset(0, "forms"), 820);
-  assert.equal(sectionFieldOffset(1, "forms", 23), 1696);
-  assert.equal(reportBytes(2), 1700);
+  assert.equal(sectionFieldOffset(1, "forms", 27), 1728);
+  assert.equal(reportBytes(2), 1732);
   for (const index of [-1, 1.5, NaN, Infinity, 65536])
     assert.throws(() => reportBytes(index), RangeError);
   for (const [group, field] of [
@@ -22,7 +22,7 @@ export function reportWireEdges() {
     ["header_footer", 5],
     ["number_controls", -1],
     ["records", NaN],
-    ["forms", 24],
+    ["forms", 28],
   ])
     assert.throws(() => sectionFieldOffset(0, group, field), RangeError);
 }

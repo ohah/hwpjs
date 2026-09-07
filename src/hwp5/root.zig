@@ -81,6 +81,7 @@ pub const form_schema = @import("body/form_schema.zig");
 pub const form_references = @import("body/form_references.zig");
 pub const form_validation = @import("body/form_validation.zig");
 pub const form_semantics = @import("body/form_semantics.zig");
+pub const form_max_length = @import("body/form_max_length.zig");
 pub const memo_ranges = @import("body/memo_ranges.zig");
 pub const shape_picture = @import("body/shape_picture.zig");
 pub const picture_color = @import("body/picture_color.zig");

@@ -27,6 +27,10 @@ pub const Report = struct {
     choice_indeterminate: usize = 0,
     choice_invalid: usize = 0,
     choice_deferred: usize = 0,
+    max_length_missing: usize = 0,
+    max_length_unlimited: usize = 0,
+    max_length_nonnegative: usize = 0,
+    max_length_deferred: usize = 0,
 };
 /// Same Tree and Links.build result. Null selection counts raw presence only.
 /// Returns scalars, never slices into the temporary form/property arrays.
@@ -65,6 +69,13 @@ pub fn inspect(a: std.mem.Allocator, tree: Tree, links: Links, selection: ?Optio
             break :known reference;
         };
         const semantics = @import("form_semantics.zig").inspectObserved(form.properties, schema, kind, stored);
+        switch (@import("form_max_length.zig").inspectObserved(form.properties, schema, kind).state) {
+            .not_applicable => {},
+            .missing => report.max_length_missing += 1,
+            .unlimited => report.max_length_unlimited += 1,
+            .nonnegative => report.max_length_nonnegative += 1,
+            .deferred => report.max_length_deferred += 1,
+        }
         switch (semantics.char_source) {
             .undetermined => report.undetermined_char_shape += 1,
             .surrounding => report.surrounding_char_shape += 1,
