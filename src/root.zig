@@ -29,6 +29,9 @@ test {
     _ = @import("image/icc/header_tests.zig");
     _ = @import("image/icc/profile_id_tests.zig");
     _ = @import("image/icc/tag_table_tests.zig");
+    _ = @import("image/icc/identifier_tests.zig");
+    _ = @import("image/icc/value_tests.zig");
+    _ = @import("image/icc/v2_value_tests.zig");
     _ = @import("xml/input_tests.zig");
     _ = @import("xml/declaration_tests.zig");
     _ = @import("xml/prolog_tests.zig");

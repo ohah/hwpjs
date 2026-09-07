@@ -206,6 +206,9 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         143 => return @import("icc-header-probe.zig").run(a, bytes, limit),
         144 => return @import("icc-table-probe.zig").run(a, bytes, limit),
         145 => return @import("png-profile-probe.zig").run(a, bytes, limit),
+        146 => return @import("icc-identifiers-probe.zig").run(a, bytes, limit),
+        147 => return @import("icc-values-probe.zig").run(a, bytes, limit),
+        148 => return @import("icc-v2-values-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
