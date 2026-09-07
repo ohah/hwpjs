@@ -39,11 +39,15 @@ pub const Header = struct {
         return @as(u64, self.width) * self.height;
     }
     pub fn palette(self: Header, bytes: []const u8) !usize {
+        if (bytes.len % 3 != 0) return error.InvalidPngPalette;
+        const entries = bytes.len / 3;
+        try self.validatePaletteCount(entries);
+        return entries;
+    }
+    pub fn validatePaletteCount(self: Header, entries: usize) !void {
         try self.validate();
         if (self.color_type == 0 or self.color_type == 4) return error.InvalidPngPalette;
-        if (bytes.len == 0 or bytes.len % 3 != 0 or bytes.len > 768) return error.InvalidPngPalette;
-        const entries = bytes.len / 3;
+        if (entries == 0 or entries > 256) return error.InvalidPngPalette;
         if (self.color_type == 3 and entries > @as(usize, 1) << @as(u4, @intCast(self.bit_depth))) return error.InvalidPngPalette;
-        return entries;
     }
 };

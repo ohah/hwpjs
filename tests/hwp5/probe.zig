@@ -192,6 +192,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         129 => return @import("png-filter-probe.zig").run(a, bytes, limit),
         130 => return @import("png-pixels-probe.zig").run(a, bytes, limit),
         131 => return @import("png-transparency-probe.zig").run(a, bytes, limit),
+        132 => return @import("png-palette-metadata-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

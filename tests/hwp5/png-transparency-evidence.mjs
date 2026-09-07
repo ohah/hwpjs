@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {paletteMetadataEvidence} from './png-palette-metadata-evidence.mjs';
 export function transparencyEvidence(structure) {
   const {chunks,fields}=structure;const color=fields[3],depth=fields[2],palette=fields[8];
   const indexes=chunks.map((c,i)=>c.name==='tRNS'?i:-1).filter(i=>i>=0);assert.ok(indexes.length<=1);
@@ -11,8 +12,9 @@ export function transparencyEvidence(structure) {
     if(color===3){assert.ok(plte>=0&&payload.length<=palette);count=payload.length;payload.copy(alpha);}
     else {const samples=color===0?1:3;assert.equal(payload.length,samples*2);for(let i=0;i<samples;i++){raw[i]=payload.readUInt16BE(i*2);values[i]=raw[i]%(2**depth);masked+=raw[i]!==values[i]?1:0;}}
   }
-  const deferredChunks=fields[9]-indexes.length,deferredBytes=fields[10]-payloadBytes;
+  const paletteMetadata=paletteMetadataEvidence(structure);
+  const deferredChunks=fields[9]-indexes.length-paletteMetadata.validatedChunks,deferredBytes=fields[10]-payloadBytes-paletteMetadata.validatedBytes;
   const result=[indexes.length,kind,count,masked,...raw,...values,deferredChunks,deferredBytes];
   const wire=Buffer.alloc(304);result.forEach((v,i)=>wire.writeUInt32LE(v,i*4));alpha.copy(wire,48);
-  return {wire,present:indexes.length,payloadBytes,deferredChunks,deferredBytes};
+  return {wire,present:indexes.length,payloadBytes,deferredChunks,deferredBytes,paletteMetadata};
 }

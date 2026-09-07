@@ -36,7 +36,7 @@ export function pngPixelsEvidence(raw) {
       assert.ok(at+size+1<=decoded.length);const kind=decoded[at++];assert.ok(kind<=4);
       const row=decoded.subarray(at,at+size);
       for(let x=0;x<size;x++)row[x]=(row[x]+predict(kind,row[x-stride]??0,previous?.[x]??0,previous?.[x-stride]??0))%256;
-      if(color===3)for(let x=0;x<pass.width;x++){const bit=x*depth;const sample=(row[Math.floor(bit/8)]>>>(8-depth-bit%8))&((1<<depth)-1);assert.ok(sample<structure.fields[8]);}
+      if(color===3)for(let x=0;x<pass.width;x++){const bit=x*depth;const sample=(row[Math.floor(bit/8)]>>>(8-depth-bit%8))&((1<<depth)-1);assert.ok(sample<structure.fields[8]);if(transparency.paletteMetadata.frequencies)assert.ok(transparency.paletteMetadata.frequencies[sample]>0);}
       crc=crc32(row,crc);previous=row;at+=size;rows++;
     }
   }

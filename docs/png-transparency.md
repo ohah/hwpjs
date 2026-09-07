@@ -15,9 +15,9 @@ indexed tRNS 길이 0은 빈 alpha 표로 받아들여 전부 opaque로 해석�
 
 ## 책임·수명·미검사 통계
 
-`transparency.parse`는 Header.validate를 재사용하고 payload 길이·타입·palette 한도를 검사합니다. 반환 Value는 grayscale Sample, truecolor Sample 3개, 또는 alpha[256]+명시된 count의 union입니다. 입력 slice를 빌리지 않고 배열 값을 복사하므로 원문 수정·해제와 독립적입니다. palette 보완 배열의 유효 참조 범위는 PLTE 항목 수이며 임의의 추가 palette를 생성하는 기능이 아닙니다.
+`transparency.parse`는 Header.validate/validatePaletteCount와 공통 sample.zig를 재사용하고 payload 길이·타입·palette 한도를 검사합니다. 반환 Value는 grayscale Sample, truecolor Sample 3개, 또는 alpha[256]+명시된 count의 union입니다. 입력 slice를 빌리지 않고 배열 값을 복사하므로 원문 수정·해제와 독립적입니다. palette 보완 배열의 유효 참조 범위는 PLTE 항목 수이며 임의의 추가 palette를 생성하는 기능이 아닙니다.
 
-`metadata.State.consume`는 이미 critical envelope가 검증된 청크를 받습니다. 실패 시 상태를 바꾸지 않습니다. 아직 PLTE가 오지 않은 indexed tRNS, IDAT 이후 tRNS, 중복 tRNS, tRNS 뒤에 나오는 선택적 truecolor PLTE를 거부합니다. 다른 ancillary 청크의 의미는 검사하지 않습니다.
+`metadata.State.consume`는 이미 critical envelope가 검증된 청크를 받습니다. 실패 시 상태를 바꾸지 않습니다. 아직 PLTE가 오지 않은 indexed tRNS, IDAT 이후 tRNS, 중복 tRNS, tRNS 뒤에 나오는 선택적 truecolor PLTE를 거부합니다. 같은 상태 계층의 [bKGD/hIST 검사](png-palette-metadata.md)는 별도 주제에서 관리합니다.
 
 pixels 보고서의 transparency는 optional 값입니다. metadata에서 검사한 청크/바이트 수만 기존 ancillary deferred 통계에서 빼고, 나머지 vpAg·색상 프로필·텍스트 등은 그대로 남깁니다. 빈 tRNS는 검사 청크 1개/바이트 0개입니다. 오류에는 부분 보고서가 반환되지 않습니다. 새 동적 할당은 추가하지 않으며 기존 이미지 decode의 할당 실패 정리 경로를 재사용합니다.
 

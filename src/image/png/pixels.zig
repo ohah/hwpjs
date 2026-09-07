@@ -14,6 +14,9 @@ pub const Report = struct {
     zlib_trailing_bytes: usize,
     reconstructed_crc32: u32,
     transparency: ?@import("transparency.zig").Value,
+    background: ?@import("background.zig").Value,
+    histogram: ?@import("histogram.zig").Value,
+    histogram_usage_validated: bool,
 };
 pub const Decoded = struct {
     report: Report,
@@ -50,6 +53,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
     errdefer a.free(decoded.bytes);
     if (decoded.bytes.len != layout.bytes) return error.InvalidPngScanlineSize;
     var crc = std.hash.Crc32.init();
+    const frequencies: ?[]const u16 = if (meta.histogram) |*hist| hist.frequencies[0..hist.count] else null;
     for (layout.passes[0..layout.count]) |pass| {
         if (pass.width == 0 or pass.height == 0) continue;
         var previous: ?[]const u8 = null;
@@ -58,7 +62,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
             const kind = decoded.bytes[offset];
             const row = decoded.bytes[offset + 1 ..][0..pass.row_bytes];
             try filter.restore(kind, layout.stride, row, previous);
-            if (envelope.header.color_type == 3) try indices.inspect(row, pass.width, envelope.header.bit_depth, envelope.palette_entries);
+            if (envelope.header.color_type == 3) try indices.inspectWithHistogram(row, pass.width, envelope.header.bit_depth, envelope.palette_entries, frequencies);
             crc.update(row);
             previous = row;
             offset += 1 + pass.row_bytes;
@@ -67,5 +71,5 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
     envelope.pixels_validated = true;
     envelope.ancillary_chunks_deferred -= meta.validated_chunks;
     envelope.ancillary_bytes_deferred -= meta.validated_bytes;
-    return .{ .bytes = decoded.bytes, .layout = layout, .report = .{ .structure = envelope, .decoded_bytes = layout.bytes, .scanlines = layout.rows, .passes = layout.nonempty_passes, .zlib_trailing_bytes = compressed.len - decoded.consumed, .reconstructed_crc32 = crc.final(), .transparency = meta.transparency } };
+    return .{ .bytes = decoded.bytes, .layout = layout, .report = .{ .structure = envelope, .decoded_bytes = layout.bytes, .scanlines = layout.rows, .passes = layout.nonempty_passes, .zlib_trailing_bytes = compressed.len - decoded.consumed, .reconstructed_crc32 = crc.final(), .transparency = meta.transparency, .background = meta.background, .histogram = meta.histogram, .histogram_usage_validated = meta.histogram != null and envelope.header.color_type == 3 } };
 }
