@@ -38,3 +38,7 @@
 모든 color/depth 조합·두 interlace 방식·5종 및 혼합 필터·다양한 작은/직사각형 치수, IDAT 모든 분할 위치와 빈 청크, 출력 부족/초과, 압축 잘림/체크섬, 각 pass 행의 잘못된 필터·palette 인덱스, 압축 후미·deferred ancillary·실패 후 회복을 검사합니다. 실제 HWP PNG 32개의 복원 버퍼는 JS oracle과 바이트 단위로 비교합니다. 이 실파일에는 Adam7이 없으므로 실제 interlaced 파일까지 대조했다고 주장하지 않습니다.
 
 이미지 데이터 연결 단계(787fe5ca)에서 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 17/17 단계, 네이티브 351/351, 감사 스크립트 3,166,780 checks를 통과했습니다. PNG 이미지 전용 결과는 정상 2,097건·거부 4,379건입니다. 실제 PNG 32개에서 총 94,928,296바이트의 복원 행 버퍼가 일치했습니다. Header.palette 보강 후 Debug 전체 audit도 다시 실행했습니다. 포맷·변경 JS 문법·관련 로컬 문서 링크 24개를 확인했습니다. 이후 tRNS 연결 검증은 투명도 주제 문서에 기록합니다.
+
+## 감마·색도 추가 계약
+
+gAMA/cHRM 원값과 색상 해석 보류의 구분은 [PNG 감마·색도](png-color-fixed.md)를 참고합니다.

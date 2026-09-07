@@ -10,6 +10,8 @@ const text = @import("text.zig");
 const std = @import("std");
 const compressed_text = @import("compressed_text.zig");
 const international_text = @import("international_text.zig");
+const gamma = @import("gamma.zig");
+const chromaticities = @import("chromaticities.zig");
 
 /// Selected ancillary semantics only. Other chunks stay deferred in structure.
 pub const State = struct {
@@ -19,6 +21,8 @@ pub const State = struct {
     physical: ?physical.Value = null,
     significant_bits: ?significant_bits.Value = null,
     timestamp: ?timestamp.Value = null,
+    gamma: ?gamma.Value = null,
+    chromaticities: ?chromaticities.Value = null,
     text_chunks: usize = 0,
     text_keyword_bytes: usize = 0,
     text_bytes: usize = 0,
@@ -112,6 +116,20 @@ pub const State = struct {
             if (self.timestamp != null) return error.DuplicatePngTimestamp;
             const value = try timestamp.parse(chunk.payload);
             self.timestamp = value;
+            self.validated_chunks += 1;
+            self.validated_bytes += chunk.payload.len;
+        } else if (chunk.is("gAMA")) {
+            if (self.gamma != null) return error.DuplicatePngGamma;
+            if (self.palette_seen or self.data_seen) return error.InvalidPngGammaOrder;
+            const value = try gamma.parse(chunk.payload);
+            self.gamma = value;
+            self.validated_chunks += 1;
+            self.validated_bytes += chunk.payload.len;
+        } else if (chunk.is("cHRM")) {
+            if (self.chromaticities != null) return error.DuplicatePngChromaticities;
+            if (self.palette_seen or self.data_seen) return error.InvalidPngChromaticitiesOrder;
+            const value = try chromaticities.parse(chunk.payload);
+            self.chromaticities = value;
             self.validated_chunks += 1;
             self.validated_bytes += chunk.payload.len;
         } else if (chunk.is("sBIT")) {

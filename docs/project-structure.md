@@ -25,6 +25,8 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 
 ## 상세 문서
 
+- [PNG 감마·색도 원값 검사](png-color-fixed.md)
+
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)
 - [프로젝트 규칙](project-rules.md)

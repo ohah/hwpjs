@@ -7,13 +7,20 @@ pub fn withTransparency(a: std.mem.Allocator, value: u8, transparency: ?[]const 
 }
 pub const Extra = struct { name: *const [4]u8, bytes: []const u8 };
 pub fn withMetadata(a: std.mem.Allocator, value: u8, extras: []const Extra) ![]u8 {
+    return withPlacement(a, value, extras, false);
+}
+pub fn withEarlyMetadata(a: std.mem.Allocator, value: u8, extras: []const Extra) ![]u8 {
+    return withPlacement(a, value, extras, true);
+}
+fn withPlacement(a: std.mem.Allocator, value: u8, extras: []const Extra, early: bool) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     try out.appendSlice(a, @import("chunks.zig").signature);
     const ihdr = [_]u8{ 0, 0, 0, 1, 0, 0, 0, 1, 1, 3, 0, 0, 1 };
     try chunk(a, &out, "IHDR", &ihdr);
+    if (early) for (extras) |extra| try chunk(a, &out, extra.name, extra.bytes);
     try chunk(a, &out, "PLTE", &.{ 7, 8, 9 });
-    for (extras) |extra| try chunk(a, &out, extra.name, extra.bytes);
+    if (!early) for (extras) |extra| try chunk(a, &out, extra.name, extra.bytes);
     var compressed = [_]u8{ 0x78, 1, 1, 2, 0, 0xfd, 0xff, 0, value, 0, 0, 0, 0 };
     std.mem.writeInt(u32, compressed[9..13], std.hash.Adler32.hash(compressed[7..9]), .big);
     // Every zlib byte in its own IDAT; includes split header and checksum.

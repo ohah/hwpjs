@@ -29,6 +29,10 @@ pub const Report = struct {
     compressed_text_bytes: usize,
     international_text: @import("international_stats.zig").Stats,
     suggested_palettes: suggested_palettes.Stats,
+    gamma: ?@import("gamma.zig").Value,
+    chromaticities: ?@import("chromaticities.zig").Value,
+    /// Wire presence is not proof of color precedence, usable gamma or valid gamut.
+    color_semantics_deferred: bool,
 };
 pub const Decoded = struct {
     report: Report,
@@ -113,6 +117,9 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
             .compressed_text_bytes = meta.compressed_text_bytes,
             .international_text = meta.international_text,
             .suggested_palettes = suggested.stats,
+            .gamma = meta.gamma,
+            .chromaticities = meta.chromaticities,
+            .color_semantics_deferred = meta.gamma != null or meta.chromaticities != null,
         },
     };
 }
