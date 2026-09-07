@@ -4,12 +4,14 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const abi_check = b.addSystemCommand(&.{ "node", "tools/generate-abi.mjs", "--check" });
+    const icc_registry_check = b.addSystemCommand(&.{ "node", "tools/icc-registry/generate.mjs", "--check" });
     const core = b.addModule("hwpjs", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
     });
     const tests = b.addTest(.{ .root_module = core });
+    tests.step.dependOn(&icc_registry_check.step);
     const run_tests = b.addRunArtifact(tests);
     run_tests.step.dependOn(&abi_check.step);
     b.step("test", "Run core unit tests").dependOn(&run_tests.step);
@@ -25,6 +27,7 @@ pub fn build(b: *std.Build) void {
     wasm.entry = .disabled;
     wasm.rdynamic = true;
     wasm.step.dependOn(&abi_check.step);
+    wasm.step.dependOn(&icc_registry_check.step);
     b.installArtifact(wasm);
 
     const compare = b.addSystemCommand(&.{ "node", "tests/cfb/compare.mjs" });
@@ -40,6 +43,11 @@ pub fn build(b: *std.Build) void {
     audit.dependOn(&mutations.step);
     audit.dependOn(&run_tests.step);
     audit.dependOn(compare_step);
+    const icc_registry_tests = b.addSystemCommand(&.{ "node", "--test", "tools/icc-registry/csv.test.mjs", "tools/icc-registry/download.test.mjs", "tools/icc-registry/snapshot.test.mjs", "tools/icc-registry/generate.test.mjs" });
+    icc_registry_tests.step.dependOn(&icc_registry_check.step);
+    const icc_registry_audit = b.step("icc-registry-audit", "Verify offline ICC registry snapshot and generation contracts");
+    icc_registry_audit.dependOn(&icc_registry_tests.step);
+    audit.dependOn(icc_registry_audit);
 
     const line_cache_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/line-cache-evidence.test.mjs", "tests/hwp5/line-cache-coordinate-evidence.test.mjs" });
     const line_cache_survey = b.addSystemCommand(&.{ "node", "tests/hwp5/line-cache-survey.mjs" });
@@ -71,6 +79,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     }));
     hwp_probe.entry = .disabled;
+    hwp_probe.step.dependOn(&icc_registry_check.step);
     hwp_probe.rdynamic = true;
     const hwp_check = b.addSystemCommand(&.{ "node", "tests/hwp5/audit.mjs" });
     hwp_check.addArtifactArg(hwp_probe);

@@ -209,6 +209,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         146 => return @import("icc-identifiers-probe.zig").run(a, bytes, limit),
         147 => return @import("icc-values-probe.zig").run(a, bytes, limit),
         148 => return @import("icc-v2-values-probe.zig").run(a, bytes, limit),
+        149 => return @import("icc-registry-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

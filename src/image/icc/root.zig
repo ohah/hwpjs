@@ -6,3 +6,4 @@ pub const tag_table = @import("tag_table.zig");
 pub const header_identifiers = @import("header_identifiers.zig");
 pub const header_v4_values = @import("header_v4_values.zig");
 pub const header_v2_values = @import("header_v2_values.zig");
+pub const header_registry = @import("header_registry.zig");
