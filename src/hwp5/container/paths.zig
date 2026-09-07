@@ -9,16 +9,7 @@ pub fn required(file: *const File, path: []const u8, kind: u8) !usize {
 }
 /// CFB names are case-insensitive. Decimal suffixes are canonical, no aliases.
 pub fn sectionIndex(name: []const u8) !?u16 {
-    if (!std.ascii.startsWithIgnoreCase(name, "Section")) return null;
-    const digits = name[7..];
-    if (digits.len == 0 or (digits.len > 1 and digits[0] == '0')) return error.InvalidSectionName;
-    var index: u32 = 0;
-    for (digits) |c| {
-        if (c < '0' or c > '9') return error.InvalidSectionName;
-        index = index * 10 + c - '0';
-        if (index > std.math.maxInt(u16)) return error.InvalidSectionName;
-    }
-    return @intCast(index);
+    return @import("numbered_stream.zig").index(u16, "Section", name) catch return error.InvalidSectionName;
 }
 pub fn binary(a: std.mem.Allocator, id: u16, extension: []const u8) ![]u8 {
     // 7 UTF-16 units for BINhhhh plus dot; CFB component limit is 31.
