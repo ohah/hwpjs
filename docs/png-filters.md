@@ -18,6 +18,6 @@ kind 5~255, stride 0/9 이상, 이전 행 길이 불일치, 이전 행과 목적
 - 테스트 전용 WASM mode 129는 kind/stride/이전 행 존재(u8 각 1개), 행 길이(u32 LE), 선택적 이전 행, 필터링된 행을 받고 복원 행을 반환합니다. 외부 limit은 행 바이트 한도입니다.
 - 독립 JS forward-filter가 알고 있는 원본 행을 필터링하고 WASM 복원 결과와 비교합니다. 필터 5종×stride 1~8×행 길이 0~65×이전 행 유무, 전체 바이트 값이 포함된 긴 행, 한도 정확/부족, 입력 잘림·후미·실패 후 정상 재호출을 확인합니다.
 
-현재는 행 복원 계층만 구현했습니다. 실제 PNG 전체 이미지에서의 scanline 길이·Adam7 pass·palette 인덱스 검사와 zlib/청크 조립은 후속 범위입니다. 기존 structure.inspect의 pixels_validated=false는 바꾸지 않습니다.
+이 모듈 자체는 행 복원만 담당합니다. scanline 길이·Adam7 pass·palette 인덱스와 zlib/청크 조립은 별도 [이미지 데이터 검증](png-pixels.md)에 연결했습니다. 기존 structure.inspect의 pixels_validated=false는 바꾸지 않습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 17/17 단계, 네이티브 347/347, 감사 스크립트 3,160,304 checks를 통과했습니다. 필터 전용 WASM 결과는 정상 5,321건·거부 5,516건입니다. Paeth 전수 대조를 별도 네이티브 실행으로도 재확인했습니다. 포맷·변경 JS 문법·관련 로컬 문서 링크 17개를 확인했습니다. 이는 전체 PNG 디코딩이나 실제 이미지 픽셀 일치 검증을 완료했다는 뜻이 아닙니다.
