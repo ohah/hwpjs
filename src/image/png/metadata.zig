@@ -3,12 +3,16 @@ const Chunk = @import("chunks.zig").Chunk;
 const transparency = @import("transparency.zig");
 const background = @import("background.zig");
 const histogram = @import("histogram.zig");
+const physical = @import("physical.zig");
+const significant_bits = @import("significant_bits.zig");
 
 /// Selected ancillary semantics only. Other chunks stay deferred in structure.
 pub const State = struct {
     transparency: ?transparency.Value = null,
     background: ?background.Value = null,
     histogram: ?histogram.Value = null,
+    physical: ?physical.Value = null,
+    significant_bits: ?significant_bits.Value = null,
     validated_chunks: usize = 0,
     validated_bytes: usize = 0,
     palette_seen: bool = false,
@@ -41,6 +45,20 @@ pub const State = struct {
             if (self.data_seen or !self.palette_seen) return error.InvalidPngHistogramOrder;
             const value = try histogram.parse(h, palette_entries, chunk.payload);
             self.histogram = value;
+            self.validated_chunks += 1;
+            self.validated_bytes += chunk.payload.len;
+        } else if (chunk.is("pHYs")) {
+            if (self.physical != null) return error.DuplicatePngPhysical;
+            if (self.data_seen) return error.InvalidPngPhysicalOrder;
+            const value = try physical.parse(chunk.payload);
+            self.physical = value;
+            self.validated_chunks += 1;
+            self.validated_bytes += chunk.payload.len;
+        } else if (chunk.is("sBIT")) {
+            if (self.significant_bits != null) return error.DuplicatePngSignificantBits;
+            if (self.palette_seen or self.data_seen) return error.InvalidPngSignificantBitsOrder;
+            const value = try significant_bits.parse(h, chunk.payload);
+            self.significant_bits = value;
             self.validated_chunks += 1;
             self.validated_bytes += chunk.payload.len;
         }

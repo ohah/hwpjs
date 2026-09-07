@@ -17,6 +17,8 @@ pub const Report = struct {
     background: ?@import("background.zig").Value,
     histogram: ?@import("histogram.zig").Value,
     histogram_usage_validated: bool,
+    physical: ?@import("physical.zig").Value,
+    significant_bits: ?@import("significant_bits.zig").Value,
 };
 pub const Decoded = struct {
     report: Report,
@@ -71,5 +73,22 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
     envelope.pixels_validated = true;
     envelope.ancillary_chunks_deferred -= meta.validated_chunks;
     envelope.ancillary_bytes_deferred -= meta.validated_bytes;
-    return .{ .bytes = decoded.bytes, .layout = layout, .report = .{ .structure = envelope, .decoded_bytes = layout.bytes, .scanlines = layout.rows, .passes = layout.nonempty_passes, .zlib_trailing_bytes = compressed.len - decoded.consumed, .reconstructed_crc32 = crc.final(), .transparency = meta.transparency, .background = meta.background, .histogram = meta.histogram, .histogram_usage_validated = meta.histogram != null and envelope.header.color_type == 3 } };
+    return .{
+        .bytes = decoded.bytes,
+        .layout = layout,
+        .report = .{
+            .structure = envelope,
+            .decoded_bytes = layout.bytes,
+            .scanlines = layout.rows,
+            .passes = layout.nonempty_passes,
+            .zlib_trailing_bytes = compressed.len - decoded.consumed,
+            .reconstructed_crc32 = crc.final(),
+            .transparency = meta.transparency,
+            .background = meta.background,
+            .histogram = meta.histogram,
+            .histogram_usage_validated = meta.histogram != null and envelope.header.color_type == 3,
+            .physical = meta.physical,
+            .significant_bits = meta.significant_bits,
+        },
+    };
 }
