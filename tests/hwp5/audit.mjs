@@ -77,6 +77,7 @@ import {iccEdges} from './icc.mjs';
 import {iccSemanticEdges} from './icc-semantics.mjs';
 import {iccRegistryEdges} from './icc-registry.mjs';
 import {iccXyzEdges} from './icc-xyz.mjs';
+import {iccXyzTagEdges} from './icc-xyz-tags.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -483,6 +484,7 @@ const iccResults = iccEdges(call);
 const iccSemanticResults = iccSemanticEdges(call);
 const iccRegistryResults = iccRegistryEdges(call);
 const iccXyzResults = iccXyzEdges(call);
+const iccXyzTagResults = iccXyzTagEdges(call);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -1031,6 +1033,7 @@ console.log(
       iccSemanticResults,
       iccRegistryResults,
       iccXyzResults,
+      iccXyzTagResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,
