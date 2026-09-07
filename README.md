@@ -2,16 +2,13 @@
 
 CFB 컨테이너 읽기·쓰기용 JavaScript/WASM 라이브러리.
 
-## 준비 및 빌드
+## 빌드
 
-Zig 0.16.0과 Node.js 24가 필요합니다. 명령과 예제는 저장소 루트 기준입니다.
+Zig 0.16.0과 Node.js 24를 설치한 뒤 저장소 루트에서 실행합니다.
 
 ```sh
-mise install
 zig build -Doptimize=ReleaseSafe
 ```
-
-Zig와 Node.js를 별도로 설치했다면 `mise install`은 생략합니다. 빌드 결과는 `zig-out/bin/hwpjs.wasm`입니다.
 
 ## Node.js에서 읽기
 
@@ -47,8 +44,6 @@ try {
 ```
 
 HTML·JS·WASM·입력 파일을 HTTP 서버에서 제공하고 실행합니다.
-
-## API 안내
 
 스트림 추가·교체·저장과 옵션·자원 제한은 [CFB API](docs/cfb-reader.md#api)를 참고하세요.
 
