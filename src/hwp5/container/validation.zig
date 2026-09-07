@@ -5,6 +5,7 @@ const paths = @import("paths.zig");
 const sections = @import("sections.zig");
 const binaries = @import("binaries.zig");
 pub const Options = struct {
+    xml: ?@import("../xml_validation.zig").Options = null,
     xml_template: ?@import("xml_template.zig").Options = null,
     history: ?@import("history.zig").Options = null,
     max_viewtext_ciphertext_bytes: usize = 64 * 1024 * 1024,
@@ -16,6 +17,7 @@ pub const Options = struct {
 /// Owns DocInfo backing bytes and the document report. Does NOT own the input CFB.
 /// Decoded binary bytes are checked for compression integrity, not image/OLE semantics.
 pub const Report = struct {
+    xml: ?@import("../xml_validation.zig").Report,
     xml_template: ?@import("xml_template.zig").Report,
     history: ?@import("history.zig").Report,
     view_text: @import("view_text.zig").Report,
@@ -36,6 +38,8 @@ pub const Report = struct {
 };
 pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Report {
     try options.document.validate();
+    var xml_budget = if (options.xml) |selected| try @import("../xml_validation.zig").Budget.init(selected) else null;
+    const xml = if (xml_budget) |*budget| budget else null;
     var cfb_options = options.cfb;
     cfb_options.strict = true; // Hierarchical exact lookup needs a valid CFB directory.
     var file = try cfb.File.open(a, bytes, cfb_options);
@@ -64,11 +68,11 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     const preview = try @import("preview.zig").inspect(&file, used, &remaining);
     const summary = try @import("summary.zig").inspect(a, &file, used, &remaining, options.max_summary_properties);
     const scripts = try @import("scripts.zig").inspect(a, &file, &header, used, &remaining);
-    const xml_template = if (options.xml_template) |selected| try @import("xml_template.zig").inspect(a, &file, header.has(.xml_template), used, &remaining, selected) else null;
-    const history = if (options.history) |selected| try @import("history.zig").inspect(a, &file, header.has(.history), used, &remaining, options.document.max_total_records - report.total_records - view.records, selected) else null;
+    const xml_template = if (options.xml_template) |selected| try @import("xml_template.zig").inspectWithXml(a, &file, header.has(.xml_template), used, &remaining, selected, xml) else null;
+    const history = if (options.history) |selected| try @import("history.zig").inspectWithXml(a, &file, header.has(.history), used, &remaining, options.document.max_total_records - report.total_records - view.records, selected, xml) else null;
     var uninspected: usize = 0;
     for (file.entries, used) |entry, consumed| if (entry.kind == 2 and !consumed) {
         uninspected += 1;
     };
-    return .{ .xml_template = xml_template, .history = history, .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
+    return .{ .xml = if (xml) |budget| budget.report else null, .xml_template = xml_template, .history = history, .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
 }

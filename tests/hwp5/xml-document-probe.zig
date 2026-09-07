@@ -29,8 +29,8 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize, validate_names
         options.namespaces.max_uri_bytes = try r.readInt(u32);
     }
     const report = try core.xml.document.inspect(a, bytes[r.offset..], options);
-    const fields = [_]usize{ report.bytes, report.characters, report.events, report.elements, report.end_tags, report.attributes, report.references, report.text_scalars, report.comments, report.cdata, report.processing_instructions, report.max_depth, @intFromBool(report.namespaces_validated) };
-    const out = try a.alloc(u8, fields.len * 4);
-    for (fields, 0..) |v, i| std.mem.writeInt(u32, out[i * 4 ..][0..4], @intCast(v), .little);
-    return out;
+    var out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(a);
+    try @import("xml-report-probe.zig").append(a, &out, report);
+    return out.toOwnedSlice(a);
 }

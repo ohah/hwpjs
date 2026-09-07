@@ -2,6 +2,8 @@
 
 [DocHistory 컨테이너](hwp5-history-container.md)
 
+선택적 HWPML XML 구조·namespace 검사 연결은 [내부 XML 검증](hwp5-xml-validation.md)이 소유합니다. 아래 단일 레코드 검사나 이력 복원과 구분합니다.
+
 ## 명세와 실제 바이트
 
 HWP5 3.2.11은 DocHistory/HistoryLastDoc을 최종 문서 stream으로 나열하고, 4.4.2.8/표 161은 LASTDOCDATA 태그 0x31의 내용을 HWPML WCHAR로 설명합니다. 별도 HistoryLastDoc의 전체 wire 배치를 이 설명만으로 확정하지 않습니다. 로컬 명세와 공식 PDF에 없는 암호화/복원 규칙을 추가하지 않습니다.

@@ -2,6 +2,8 @@
 
 [최종 문서 구조](hwp5-history-last-document.md) · [개발 명령](development-commands.md)
 
+후속 제품 코어의 선택적 XML 문법·namespace 검증 연결은 [내부 XML 검증](hwp5-xml-validation.md)에 기록합니다. 이 문서의 외부 조사와 의미·복원 검증 여부를 구분합니다.
+
 ## 범위와 출처
 
 이 단계는 제품 XML 파서나 이력 복원기가 아니라 **실제 payload의 읽기 전용 조사와 회귀 검사**입니다. 기존 Zig 검사는 레코드/UTF-16 길이/압축/예산을 검사하며, 새 외부 XML 검사를 제품 지원 범위로 자동 승격하지 않습니다.

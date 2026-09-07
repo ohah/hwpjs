@@ -38,6 +38,9 @@ fn less(_: void, lhs: Source, rhs: Source) bool {
 /// fallback after a decode failure. Consumes successful direct VersionLogs and,
 /// only when explicitly selected, the observed HistoryLastDoc record.
 pub fn inspect(a: std.mem.Allocator, file: *const File, declared: bool, used: []bool, remaining_bytes: *usize, remaining_records: usize, options: Options) !Report {
+    return inspectWithXml(a, file, declared, used, remaining_bytes, remaining_records, options, null);
+}
+pub fn inspectWithXml(a: std.mem.Allocator, file: *const File, declared: bool, used: []bool, remaining_bytes: *usize, remaining_records: usize, options: Options, xml: ?*@import("../xml_validation.zig").Budget) !Report {
     var result: Report = .{ .declared = declared };
     const root = try file.findExact("/DocHistory") orelse return result;
     if (file.entries[root].kind != 1) return error.InvalidHwpEntryKind;
@@ -70,6 +73,7 @@ pub fn inspect(a: std.mem.Allocator, file: *const File, declared: bool, used: []
         var local = options.item;
         local.framing.max_records = record_budget - result.records;
         const parsed = try item.Item.parse(bytes, local);
+        if (xml) |budget| try @import("../history/xml.zig").inspect(a, parsed, local.framing, budget);
         result.entries[i] = .{ .index = source.index, .flags = parsed.start.flags, .option = parsed.start.option, .decoded_bytes = bytes.len, .report = parsed.report };
         result.decoded_bytes += bytes.len;
         result.records += parsed.report.records;
@@ -84,6 +88,7 @@ pub fn inspect(a: std.mem.Allocator, file: *const File, declared: bool, used: []
             var local = options.item.framing;
             local.max_records = record_budget - result.records;
             const parsed = try @import("../history/last_document.zig").View.parseObserved(bytes, local);
+            if (xml) |budget| try budget.inspect(a, parsed.text, .last_document);
             result.last_document = parsed.report;
             result.decoded_bytes += bytes.len;
             result.records += parsed.report.records;

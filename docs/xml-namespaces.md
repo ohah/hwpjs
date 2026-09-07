@@ -38,4 +38,4 @@ prefix와 local은 한 문서의 동일 strict 인코딩 원문을 빌립니다.
 
 Debug·ReleaseSafe·ReleaseFast 전체 audit 모두 17/17 단계와 HWP5 감사 스크립트 3,082,533 checks를 통과했습니다. namespace 전용 WASM 검사는 정상 138건·거부 602건이며 정상 건에 실제 이력 XML 5개를 포함합니다. 초기 Debug audit는 네이티브 331/331이었고, scope 상태 직접 검사 추가 후 최종 Debug `zig build test`와 Safe/Fast 전체 audit는 각각 332/332입니다. 외부 진단 회귀 테스트 6/6 및 실제 `history-xml-audit`도 통과했습니다. 포맷·변경 JS 문법·문서 로컬 링크 42개를 검사했습니다.
 
-검사 횟수는 지원률이나 무결함 보장이 아닙니다. HWP5 XML 스트림과의 제품 검증 연결, HWPX 통합과 DTD·스키마·문서 의미 검증은 여전히 남아 있습니다.
+검사 횟수는 지원률이나 무결함 보장이 아닙니다. 후속 [HWP5 내부 XML 검증 연결](hwp5-xml-validation.md)은 별도 계약입니다. HWPX 통합과 DTD·스키마·문서 의미 검증은 여전히 남아 있습니다.

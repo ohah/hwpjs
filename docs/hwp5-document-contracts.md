@@ -19,7 +19,7 @@
 
 - `hwp5/scripts/version.zig`는 버전 두 DWORD, `source.zig`는 u32 길이의 네 UTF-16 필드와 -1 종료 표식을 소유합니다. summary의 NUL/패딩 규칙을 재사용하지 않습니다. `container/scripts.zig`는 정확한 선택 경로·공통 stream.decode·전역 소비 한도를 연결하며 scalar 보고서만 반환합니다. 미지 버전/꼬리는 보존·보고하고 스크립트를 실행하지 않습니다.
 
-- [XMLTemplate](hwp5-xml-template.md)은 표 10~12의 decoded 문자열과 명시적인 컨테이너 선택을 검사합니다. XML 문법/스키마 검증·외부 엔터티 로드·CFB 압축 자동 판별은 포함하지 않습니다. 실제 XMLTemplate 표본은 아직 확보하지 못했습니다.
+- [XMLTemplate](hwp5-xml-template.md)은 표 10~12의 decoded 문자열과 명시적인 컨테이너 선택을 검사합니다. 선택적 XML 문법·namespace 검사는 [내부 XML 검증 연결](hwp5-xml-validation.md)이 소유하며, 스키마 의미 검증·외부 엔터티 로드·CFB 압축 자동 판별은 포함하지 않습니다. 실제 XMLTemplate 표본은 아직 확보하지 못했습니다.
 
 - `hwp5/history/record.zig`는 BYTE tag + UINT byte length의 별도 framing, `value.zig`는 공식 태그/포함 비트/알려진 payload, `item.zig`는 한 decoded VersionLog의 시작·끝·포함 비트를 소유합니다. 시작 payload는 spec_flag_first/observed_option_first를 명시적으로 선택합니다. SYSTEMDATE는 기본 raw deferred이고, [관측 날짜 배치](hwp5-history-dates.md)를 선택하면 필드·달력·요일 진단을 추가합니다. 마지막 문서 연결·DiffML/HWPML·암호화는 별도이며 일반 본문 record 헤더나 압축 정책을 자동 적용하지 않습니다.
 - [DocHistory 컨테이너 연결](hwp5-history-container.md)은 명시적으로 선택한 저장 방식의 VersionLog와 선택적 [최종 문서 구조](hwp5-history-last-document.md)를 검사합니다. 기본 미선택·HistoryLastDoc 미소비를 유지하며 파일 전체 바이트/레코드 예산을 공유합니다.

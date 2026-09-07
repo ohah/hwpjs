@@ -17,6 +17,9 @@ pub const Report = struct {
 /// Exact optional streams, scalar report. No XML parsing or external resolution.
 /// Missing storage/streams are not inferred from the declaration flag.
 pub fn inspect(a: std.mem.Allocator, file: *const File, declared: bool, used: []bool, remaining: *usize, options: Options) !Report {
+    return inspectWithXml(a, file, declared, used, remaining, options, null);
+}
+pub fn inspectWithXml(a: std.mem.Allocator, file: *const File, declared: bool, used: []bool, remaining: *usize, options: Options, xml: ?*@import("../xml_validation.zig").Budget) !Report {
     var result: Report = .{ .declared = declared };
     const root = try file.findExact("/XMLTemplate") orelse return result;
     if (file.entries[root].kind != 1) return error.InvalidHwpEntryKind;
@@ -33,6 +36,10 @@ pub fn inspect(a: std.mem.Allocator, file: *const File, declared: bool, used: []
             const bytes = try encoding.decode(a, entry.content, limit, options.encoding);
             defer a.free(bytes);
             const value = try @import("../xml_template/string.zig").String.parse(bytes);
+            if (xml) |budget| {
+                if (comptime std.mem.eql(u8, field[1], "schema_units")) try budget.inspect(a, value.value, .schema);
+                if (comptime std.mem.eql(u8, field[1], "instance_units")) try budget.inspect(a, value.value, .instance);
+            }
             @field(result, field[1]) = value.value.len / 2;
             result.trailing_bytes += value.extra.len;
             result.decoded_bytes += bytes.len;

@@ -2,6 +2,8 @@
 
 [문서 계약](hwp5-document-contracts.md)
 
+선택적 XML 문법·namespace 검사와 문서 전체 XML 예산은 [내부 XML 검증 연결](hwp5-xml-validation.md)을 참조합니다. 아래 원시 envelope 검사와 구분합니다.
+
 ## 명세와 구현 범위
 
 HWP5 공식 PDF 3.2.10, 표 10~12는 XMLTemplate storage의 `_SchemaName`, `Schema`, `Instance` stream을 정의합니다. 각 stream의 decoded envelope는 DWORD 코드 유닛 수와 그 수의 WCHAR입니다. NUL 종결·XML 스키마의 유효성·세 stream이 반드시 함께 있어야 하는 규칙을 추가하지 않습니다.
