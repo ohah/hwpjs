@@ -1,12 +1,11 @@
 const std = @import("std");
 const Samples = @import("curve_type.zig").Samples;
 /// Normalized device coordinate. Exact fraction, not necessarily reduced.
-pub const Fraction = struct { numerator: u64, denominator: u64 };
+pub const Fraction = @import("fraction.zig").Fraction;
 /// ICC.1:2022 Annex F.1, sampled piecewise-linear curves only.
 /// y is encoded in 0..65535. Validates the entire curve before returning a result.
 pub fn invert(samples: Samples, y: u16) !Fraction {
-    const count = samples.count();
-    if (samples.data.len % 2 != 0 or count < 2 or count > std.math.maxInt(u32)) return error.InvalidIccInverseSamples;
+    const count = samples.checkedCount() catch return error.InvalidIccInverseSamples;
     var rising = false;
     var falling = false;
     var previous = try samples.at(0);

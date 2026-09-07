@@ -6,6 +6,11 @@ pub const Samples = struct {
     pub fn count(self: Samples) usize {
         return self.data.len / 2;
     }
+    pub fn checkedCount(self: Samples) !usize {
+        const n = self.count();
+        if (self.data.len % 2 != 0 or n < 2 or n > std.math.maxInt(u32)) return error.InvalidIccCurveSamples;
+        return n;
+    }
     pub fn at(self: Samples, index: usize) !u16 {
         if (index >= self.count()) return error.InvalidIccCurveIndex;
         return std.mem.readInt(u16, self.data[index * 2 ..][0..2], .big);
