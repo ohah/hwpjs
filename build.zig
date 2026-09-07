@@ -49,6 +49,14 @@ pub fn build(b: *std.Build) void {
     line_cache_audit.dependOn(&line_cache_survey.step);
     audit.dependOn(line_cache_audit);
 
+    const history_xml_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/history-xml-query.test.mjs" });
+    audit.dependOn(&history_xml_tests.step);
+    const history_xml_survey = b.addSystemCommand(&.{ "node", "tests/hwp5/history-xml-survey.mjs" });
+    history_xml_survey.step.dependOn(b.getInstallStep());
+    const history_xml_audit = b.step("history-xml-audit", "Read-only history XML evidence (requires xmllint; not a product XML parser)");
+    history_xml_audit.dependOn(&history_xml_tests.step);
+    history_xml_audit.dependOn(&history_xml_survey.step);
+
     const hwp_probe = b.addExecutable(.{
         .name = "hwp5-probe",
         .root_module = b.createModule(.{

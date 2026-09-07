@@ -64,4 +64,6 @@ Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다.
 
 ## 남은 범위
 
+표본의 독립 XML 파싱과 DiffML 명령 경계/OLD 값의 관측은 [이력 XML 조사](hwp5-history-xml-evidence.md)에 기록합니다. 외부 조사 결과를 제품 파서의 XML 검증 완료로 보고하지 않습니다.
+
 암호화, 다른 HistoryLastDoc 배치, HWPML XML/스키마 의미, DiffML과의 관계·이력 적용 순서·현재 본문 비교, 복원·편집·저장은 남아 있습니다. 구조 소비 성공이나 `<HWPML>` 문자열로 이력 전체의 재생 가능성을 주장하지 않습니다.
