@@ -92,6 +92,7 @@ function linkRows(bytes) {
   }
   return rows;
 }
+export {linkRows as controlLinkEvidence};
 export function linksActual(call, v, bytes) {
   const rows = linkRows(bytes);
   assert.deepEqual(
