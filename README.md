@@ -2,7 +2,7 @@
 
 CFB 컨테이너 읽기·쓰기용 JavaScript/WASM 라이브러리.
 
-## 빌드
+## 준비 및 빌드
 
 Zig 0.16.0과 Node.js 24를 설치한 뒤 저장소 루트에서 실행합니다.
 
@@ -46,7 +46,3 @@ try {
 HTML·JS·WASM·입력 파일을 HTTP 서버에서 제공하고 실행합니다.
 
 스트림 추가·교체·저장과 옵션·자원 제한은 [CFB API](docs/cfb-reader.md#api)를 참고하세요.
-
-라이선스: [MIT](LICENSE) · [제3자 고지](THIRD_PARTY_NOTICES.md).
-
-본 제품은 한글과컴퓨터의 글 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.

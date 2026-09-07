@@ -1,5 +1,11 @@
 # Third-party notices
 
+프로젝트 라이선스: [MIT](LICENSE). 아래는 외부 코드·데이터·문서의 고지입니다.
+
+## 한글 문서 파일 공개 명세
+
+본 제품은 한글과컴퓨터의 글 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.
+
 ## rhwp distribution key derivation
 
 `src/hwp5/distribution/key.zig` adapts the MSVC-LCG/XOR key derivation in
