@@ -1,21 +1,5 @@
-const std = @import("std");
 const Input = @import("input.zig").Input;
-const scalars = @import("scalars.zig");
-pub const Value = struct {
-    raw: []const u8,
-    encoding: scalars.Encoding,
-    pub fn equals(self: Value, ascii: []const u8, ignore_case: bool) bool {
-        var offset: usize = 0;
-        for (ascii) |b| {
-            const c = (scalars.read(self.raw, offset, self.encoding) catch return false) orelse return false;
-            if (c.value > 127) return false;
-            const v: u8 = @intCast(c.value);
-            if (if (ignore_case) std.ascii.toLower(v) != std.ascii.toLower(b) else v != b) return false;
-            offset = c.end;
-        }
-        return offset == self.raw.len;
-    }
-};
+pub const Value = @import("text.zig").View;
 pub const Declaration = struct { raw: []const u8, version: Value, encoding: ?Value, standalone: ?bool };
 fn space(c: u21) bool {
     return c == 32 or c == 9 or c == 10 or c == 13;

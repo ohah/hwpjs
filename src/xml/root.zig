@@ -4,3 +4,5 @@ pub const input = @import("input.zig");
 pub const declaration = @import("declaration.zig");
 pub const encoding = @import("encoding.zig");
 pub const prolog = @import("prolog.zig");
+pub const names = @import("names.zig");
+pub const references = @import("references.zig");

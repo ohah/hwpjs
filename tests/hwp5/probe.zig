@@ -181,6 +181,8 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         117 => return @import("container-probe.zig").historyLastDocument(a, bytes, limit),
         118 => return @import("xml-input-probe.zig").run(a, bytes, limit),
         119 => return @import("xml-prolog-probe.zig").run(a, bytes, limit),
+        120 => return @import("xml-reference-probe.zig").classes(a, bytes),
+        121 => return @import("xml-reference-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
