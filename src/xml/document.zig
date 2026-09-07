@@ -2,7 +2,10 @@ const std = @import("std");
 const prolog = @import("prolog.zig");
 const tags = @import("tags.zig");
 const markup = @import("markup.zig");
+const namespaces = @import("namespaces.zig");
 pub const Options = struct {
+    validate_namespaces: bool = false,
+    namespaces: namespaces.Options = .{},
     prolog: prolog.Options = .{},
     tags: tags.Options = .{},
     max_markup_bytes: usize = 16 * 1024 * 1024,
@@ -13,7 +16,7 @@ pub const Options = struct {
     max_attributes: usize = 1000000,
     max_references: usize = 1000000,
 };
-/// XML 1.0 document structure WITHOUT DTD or namespace validation. DTD/unknown
+/// XML 1.0 document structure WITHOUT DTD, with optional namespace checks. DTD/unknown
 /// entities are explicit errors, not successful deferred records. Scalar report only.
 pub const Report = struct {
     bytes: usize = 0,
@@ -32,9 +35,12 @@ pub const Report = struct {
 };
 pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Report {
     var opened = try prolog.open(bytes, options.prolog);
-    var stack: std.ArrayList([]const u8) = .empty;
+    const Frame = struct { name: []const u8, namespace_marker: usize };
+    var stack: std.ArrayList(Frame) = .empty;
     defer stack.deinit(a);
-    var report: Report = .{};
+    var scope: namespaces.State = .{};
+    defer scope.deinit(a);
+    var report: Report = .{ .namespaces_validated = options.validate_namespaces };
     var root_seen = false;
     while (true) {
         var look = opened.input;
@@ -51,7 +57,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
         if (kind == .doctype) return error.UnsupportedXmlDtd;
         if (kind != .tag) {
             if (kind == .cdata and stack.items.len == 0) return error.CdataOutsideXmlRoot;
-            const scalars = try markup.parse(&opened.input, kind, options.max_markup_bytes, options.tags.max_name_bytes);
+            const scalars = try markup.parse(&opened.input, kind, options.max_markup_bytes, options.tags.max_name_bytes, options.validate_namespaces);
             switch (kind) {
                 .comment => report.comments += 1,
                 .pi => report.processing_instructions += 1,
@@ -73,8 +79,10 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
         report.references += tag.references;
         if (tag.kind == .end) {
             if (stack.items.len == 0) return error.UnexpectedXmlEndTag;
-            if (!std.mem.eql(u8, stack.items[stack.items.len - 1], tag.name.raw)) return error.XmlElementNameMismatch;
+            const frame = stack.items[stack.items.len - 1];
+            if (!std.mem.eql(u8, frame.name, tag.name.raw)) return error.XmlElementNameMismatch;
             _ = stack.pop();
+            if (options.validate_namespaces) scope.leave(a, frame.namespace_marker);
             report.end_tags += 1;
         } else {
             if (stack.items.len == 0) {
@@ -84,7 +92,8 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
             if (report.elements == options.max_elements or stack.items.len == options.max_depth) return error.LimitExceeded;
             report.elements += 1;
             report.max_depth = @max(report.max_depth, stack.items.len + 1);
-            if (tag.kind == .start) try stack.append(a, tag.name.raw);
+            const marker = if (options.validate_namespaces) try scope.enter(a, tag, options.namespaces) else 0;
+            if (tag.kind == .start) try stack.append(a, .{ .name = tag.name.raw, .namespace_marker = marker }) else if (options.validate_namespaces) scope.leave(a, marker);
         }
     }
     if (!root_seen) return error.MissingXmlRoot;

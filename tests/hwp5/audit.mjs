@@ -55,6 +55,7 @@ import {xmlPrologEdges} from './xml-prolog.mjs';
 import {xmlReferenceEdges} from './xml-reference.mjs';
 import {xmlTagEdges} from './xml-tag.mjs';
 import {xmlDocumentEdges} from './xml-document.mjs';
+import {xmlNamespaceEdges} from './xml-namespace.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -439,6 +440,7 @@ const xmlPrologResults = xmlPrologEdges(call,cfb);
 const xmlReferenceResults = xmlReferenceEdges(call);
 const xmlTagResults = xmlTagEdges(call,cfb);
 const xmlDocumentResults = xmlDocumentEdges(call,cfb);
+const xmlNamespaceResults = xmlNamespaceEdges(call,cfb);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -965,6 +967,7 @@ console.log(
       xmlReferenceResults,
       xmlTagResults,
       xmlDocumentResults,
+      xmlNamespaceResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,

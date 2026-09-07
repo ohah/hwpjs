@@ -25,7 +25,7 @@ fn literal(cursor: *Cursor, expected: []const u8) !void {
 }
 /// Comment/CDATA/PI validation only; never interpret references or execute PI data.
 /// Returns content scalar count (used for CDATA); caller state is atomic on error.
-pub fn parse(input: *Input, kind: Kind, max_bytes: usize, max_name_bytes: usize) !usize {
+pub fn parse(input: *Input, kind: Kind, max_bytes: usize, max_name_bytes: usize, validate_namespaces: bool) !usize {
     var cursor: Cursor = .{ .input = input.*, .start = input.offset, .max_bytes = max_bytes };
     switch (kind) {
         .comment => try literal(&cursor, "<!--"),
@@ -33,6 +33,7 @@ pub fn parse(input: *Input, kind: Kind, max_bytes: usize, max_name_bytes: usize)
         .pi => {
             try literal(&cursor, "<?");
             const target = try cursor.name(max_name_bytes);
+            if (validate_namespaces) try @import("qname.zig").ncname(target);
             if (target.equals("xml", true)) return error.ReservedXmlPiTarget;
             if ((try cursor.peek()) == '?') {
                 try literal(&cursor, "?>");

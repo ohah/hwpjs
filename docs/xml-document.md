@@ -4,7 +4,7 @@
 
 `src/xml/document.zig`의 `inspect`는 입력 끝까지 읽어 단일 루트, 시작/종료 태그 이름과 중첩, 루트 밖 공백·주석·PI, 본문·CDATA를 검사합니다. 기준은 [W3C XML 1.0 Fifth Edition](https://www.w3.org/TR/2008/REC-xml-20081126/)의 문서·CharData·Comment·PI·CDSect·element 문법입니다.
 
-**DTD와 namespace 검증을 포함한 전체 XML 지원은 아닙니다.** DOCTYPE은 `UnsupportedXmlDtd`, 본문/속성의 미해결 엔터티는 `UnresolvedXmlEntity`로 거부합니다. 외부 파일이나 네트워크를 조회하지 않습니다. `namespaces_validated`는 false이며, `<p:r/>`의 구조 검사 성공은 prefix 바인딩 성공을 뜻하지 않습니다. HWPML/HWPX 스키마·필드 의미, DiffML 복원, ZIP 연결, 문서 모델과 편집·저장은 후속 범위입니다. 제품 JS API는 여전히 CFB만 제공합니다.
+**DTD를 포함한 전체 XML 지원은 아닙니다.** DOCTYPE은 `UnsupportedXmlDtd`, 본문/속성의 미해결 엔터티는 `UnresolvedXmlEntity`로 거부합니다. 외부 파일이나 네트워크를 조회하지 않습니다. 기본 모드의 `namespaces_validated`는 false이며, `<p:r/>`의 구조 검사 성공은 prefix 바인딩 성공을 뜻하지 않습니다. `validate_namespaces = true`의 추가 검사·예산은 [namespace 검증](xml-namespaces.md)이 소유합니다. HWPML/HWPX 스키마·필드 의미, DiffML 복원, ZIP 연결, 문서 모델과 편집·저장은 후속 범위입니다. 제품 JS API는 여전히 CFB만 제공합니다.
 
 - `document.zig`: 루트 상태, 빌린 이름의 스택, 태그 짝, 문서 전체 예산과 scalar 보고서.
 - `markup.zig`: 주석·CDATA·PI 구분과 종결 문법. 참조 해석이나 PI 실행은 하지 않습니다.

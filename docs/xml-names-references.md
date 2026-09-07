@@ -19,7 +19,7 @@ XML 1.0의 Name과 Reference를 읽는 공통 토큰 계층입니다. 기준은 
 
 ## 이름과 namespace의 구분
 
-콜론은 NameStartChar/NameChar에 포함됩니다. `:a:b`도 이 계층의 Name으로 읽히지만 namespace QName 검증을 통과한 것은 아닙니다. xml 예약 이름, PI target, prefix 바인딩, QName의 콜론 위치/개수는 후속 문맥 계층의 책임입니다. NFC 정규화나 Unicode 대소문자 접기는 하지 않습니다. U+EFFFF는 이름에 허용되지만 U+F0000은 일반 XML 문자로 허용되어도 이름에서는 제외됩니다.
+콜론은 NameStartChar/NameChar에 포함됩니다. `:a:b`도 이 계층의 Name으로 읽히지만 namespace QName 검증을 통과한 것은 아닙니다. xml 예약 이름, PI target, prefix 바인딩, QName의 콜론 위치/개수는 [namespace 계층](xml-namespaces.md)과 문서 문맥의 책임입니다. NFC 정규화나 Unicode 대소문자 접기는 하지 않습니다. U+EFFFF는 이름에 허용되지만 U+F0000은 일반 XML 문자로 허용되어도 이름에서는 제외됩니다.
 
 ## 참조 결과와 미해결 경계
 

@@ -18,6 +18,9 @@ export function queryXml(bytes,expression,{maxBytes=16*1024*1024,maxOutput=1024*
   const result=run('xmllint',['--nonet','--xpath',expression,'-'],{input,maxBuffer:maxOutput,timeout:timeoutMs,encoding:'buffer'});
   // Do not print parser stderr: it may contain the user's document text.
   if(result.error||result.signal||result.status!==0)throw Error('XmlProcessFailed');
+  // libxml can report namespace errors with status 0. Evidence requires clean
+  // diagnostics; warnings are inconclusive too, not proof of an invalid document.
+  if(result.stderr!=null&&(!Buffer.isBuffer(result.stderr)||result.stderr.length!==0))throw Error('XmlProcessDiagnostic');
   if(!Buffer.isBuffer(result.stdout)||result.stdout.length>maxOutput)throw Error('XmlOutputLimitExceeded');
   return result.stdout.toString('utf8').trim();
 }

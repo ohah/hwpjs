@@ -26,6 +26,9 @@ test('XML evidence pins non-network stdin arguments, output bounds and timeout',
   assert.throws(()=>queryXml(raw,'x',{maxOutput:1,run:()=>({status:0,stdout:Buffer.from('xx')})}),/XmlOutputLimitExceeded/);
 });
 test('XML evidence rejects malformed process outputs and invalid resource options',()=>{
+  assert.throws(()=>queryXml(bytes('<p:x/>'),'name(/*)',{run:()=>({status:0,stdout:Buffer.from('p:x'),stderr:Buffer.from('namespace error : Namespace prefix p on x is not defined')})}),/^Error: XmlProcessDiagnostic$/);
+  for(const stderr of [Buffer.from('namespace warning : relative URI'),Buffer.from('private document text'),'unexpected text type'])assert.throws(()=>queryXml(bytes('<x/>'),'name(/*)',{run:()=>({status:0,stdout:Buffer.from('x'),stderr})}),/^Error: XmlProcessDiagnostic$/);
+  assert.equal(queryXml(bytes('<x/>'),'name(/*)',{run:()=>({status:0,stdout:Buffer.from('x'),stderr:Buffer.alloc(0)})}),'x');
   for(const value of ['','HMLDIFF|1','HMLDIFF|-1|0|0|0|0|0|0','HMLDIFF|9007199254740992|0|0|0|0|0|0'])assert.throws(()=>inspectXml(bytes('<x/>'),{run:()=>({status:0,stdout:Buffer.from(value)})}),/InvalidXmlEvidenceOutput/);
   const actual=inspectXml(bytes('<x/>'),{run:()=>({status:0,stdout:Buffer.from('HMLDIFF|1|0|0|0|0|0|0')})});assert.deepEqual(actual,{root:'HMLDIFF',elements:1,pathAttributes:0,updateElements:0,positionElements:0,deleteElements:0,insertElements:0,oldAttributes:0});
   assert.equal(inspectXml(bytes('<x/>'),{run:()=>({status:0,stdout:Buffer.from('한글:문서|1|0|0|0|0|0|0')})}).root,'한글:문서');

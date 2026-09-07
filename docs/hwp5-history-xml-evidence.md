@@ -22,6 +22,8 @@
 
 이 다섯 payload는 현재 환경의 xmllint(libxml 2.9.13)에서 XML로 파싱되었습니다. 스키마 유효성, HWPML의 모든 필드 지원, 다른 버전에서의 XML 저장 배치까지 증명하지 않습니다.
 
+후속 [namespace 검증](xml-namespaces.md) 중 종료 코드 0과 namespace 오류 진단이 함께 나오는 경우를 재현했습니다. 조사 adapter는 이제 stderr가 비어 있어야 독립 증거로 채택합니다. 경고도 `XmlProcessDiagnostic`으로 반환하므로 경고가 있는 문서를 잘못된 XML로 확정하는 정책과 구분합니다. 기존 다섯 payload의 외부 조사는 강화된 판정으로 다시 통과했습니다.
+
 관측된 PATH에는 `HWPML[1]`, `BODY[1]`, `P[97]`, `text()[1]`, `@Pos` 등이 있습니다. UPDATE가 중첩되고 POSITION/DELETE/INSERT도 나타납니다. 그러나 전역 태그 이름 개수는 명령 수가 아닙니다. **최종 HWPML 자체에도 POSITION이 9개** 있고, DiffML 내부에 포함된 문서 요소 역시 같은 이름을 가질 수 있습니다. 보고서 필드는 따라서 positionElements 등 이름별 요소 수로 표현합니다. 선택자는 namespace 없는 이름을 세며 모든 namespace의 의미적 동종 요소를 합산하는 도구가 아닙니다.
 
 VersionLog3의 `CARETPOS[1]` 아래 `@Pos` UPDATE에는 OLD 값 16이 있습니다. 최종 문서 `/HWPML/HEAD/DOCSETTING/CARETPOS/@Pos`는 32입니다. OLD를 그대로 새 값으로 적용하는 단순 정방향 복원은 이 관측과 맞지 않습니다. 역방향 복원 가설과 양립하지만 **방향·적용 순서·기준 버전이 검증된 것은 아닙니다**. 조사 결과도 restorationDirectionVerified=false로 남깁니다.

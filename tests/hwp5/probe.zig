@@ -184,7 +184,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         120 => return @import("xml-reference-probe.zig").classes(a, bytes),
         121 => return @import("xml-reference-probe.zig").run(a, bytes, limit),
         122 => return @import("xml-tag-probe.zig").run(a, bytes, limit),
-        123 => return @import("xml-document-probe.zig").run(a, bytes, limit),
+        123, 124 => return @import("xml-document-probe.zig").run(a, bytes, limit, mode == 124),
         else => return error.InvalidMode,
     }
 }
