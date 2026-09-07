@@ -5,6 +5,7 @@ pub const profile_id = @import("profile_id.zig");
 pub const tag_table = @import("tag_table.zig");
 pub const xyz_type = @import("xyz_type.zig");
 pub const curve_type = @import("curve_type.zig");
+pub const parametric_curve = @import("parametric_curve.zig");
 pub const xyz_values = @import("xyz_values.zig");
 pub const xyz_tag = @import("xyz_tag.zig");
 pub const xyz_tag_values = @import("xyz_tag_values.zig");

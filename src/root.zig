@@ -31,6 +31,7 @@ test {
     _ = @import("image/icc/tag_table_tests.zig");
     _ = @import("image/icc/xyz_type_tests.zig");
     _ = @import("image/icc/curve_type_tests.zig");
+    _ = @import("image/icc/parametric_curve_tests.zig");
     _ = @import("image/icc/xyz_tag_tests.zig");
     _ = @import("image/icc/identifier_tests.zig");
     _ = @import("image/icc/value_tests.zig");
