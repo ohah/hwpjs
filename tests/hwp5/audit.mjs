@@ -53,6 +53,7 @@ import {historyLastDocumentEdges} from './history-last-document.mjs';
 import {xmlInputEdges} from './xml-input.mjs';
 import {xmlPrologEdges} from './xml-prolog.mjs';
 import {xmlReferenceEdges} from './xml-reference.mjs';
+import {xmlTagEdges} from './xml-tag.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -435,6 +436,7 @@ const historyLastDocumentResults = historyLastDocumentEdges(call,cfb);
 const xmlInputResults = xmlInputEdges(call,cfb);
 const xmlPrologResults = xmlPrologEdges(call,cfb);
 const xmlReferenceResults = xmlReferenceEdges(call);
+const xmlTagResults = xmlTagEdges(call,cfb);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -959,6 +961,7 @@ console.log(
       xmlInputResults,
       xmlPrologResults,
       xmlReferenceResults,
+      xmlTagResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,

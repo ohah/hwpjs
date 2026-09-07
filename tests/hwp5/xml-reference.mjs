@@ -2,6 +2,18 @@ import assert from 'node:assert/strict';
 const start=':A-Z_a-z\\u00c0-\\u00d6\\u00d8-\\u00f6\\u00f8-\\u02ff\\u0370-\\u037d\\u037f-\\u1fff\\u200c-\\u200d\\u2070-\\u218f\\u2c00-\\u2fef\\u3001-\\ud7ff\\uf900-\\ufdcf\\ufdf0-\\ufffd\\u{10000}-\\u{effff}';
 const more='\\-.0-9\\u00b7\\u0300-\\u036f\\u203f-\\u2040';
 const first=new RegExp(`^[${start}]$`,'u'),continuing=new RegExp(`^[${start}${more}]$`,'u'),name=new RegExp(`^[${start}][${start}${more}]*`,'u');
+export {name as xmlNamePattern};
+export function xmlReferenceExpected(source){
+  if(/^&#(?:[0-9]+|x[0-9a-fA-F]+);/.test(source)){
+    const token=source.slice(0,source.indexOf(';')+1),n=BigInt(token[2]==='x'?'0x'+token.slice(3,-1):token.slice(2,-1));
+    assert.ok(n<=0x10ffffn);const value=Number(n);
+    assert.ok((value>=32||value===9||value===10||value===13)&&!(value>=0xd800&&value<=0xdfff)&&value!==0xfffe&&value!==0xffff);
+    return {token,kind:1,value};
+  }
+  assert.equal(source[0],'&');const n=name.exec(source.slice(1))?.[0];assert.ok(n&&source[1+n.length]===';');
+  const predefined={lt:60,gt:62,amp:38,apos:39,quot:34},known=Object.hasOwn(predefined,n);
+  return {token:'&'+n+';',kind:known?2:3,value:known?predefined[n]:0,name:n};
+}
 const encode=(text,e)=>e===0?Buffer.from(text):e===1?Buffer.from(text,'utf16le'):Buffer.from(text,'utf16le').swap16();
 function wire(raw,e,ref,cap=4096,nameCap=4096){const out=Buffer.alloc(10);out[0]=ref?1:0;out[1]=e;out.writeUInt32LE(cap,2);out.writeUInt32LE(nameCap,6);return Buffer.concat([out,raw]);}
 export function xmlReferenceEdges(call){
@@ -21,9 +33,7 @@ export function xmlReferenceEdges(call){
   const good=(source,e,ref)=>{
     let token,kind=0,value=0;
     if(!ref)token=name.exec(source)?.[0];
-    else if(/^&#(?:[0-9]+|x[0-9a-fA-F]+);/.test(source)){
-      token=source.slice(0,source.indexOf(';')+1);kind=1;value=Number(BigInt(token[2]==='x'?'0x'+token.slice(3,-1):token.slice(2,-1)));
-    }else{const n=name.exec(source.slice(1))?.[0];assert.ok(n&&source[1+n.length]===';');token='&'+n+';';const predefined={lt:60,gt:62,amp:38,apos:39,quot:34};kind=Object.hasOwn(predefined,n)?2:3;value=kind===2?predefined[n]:0;}
+    else ({token,kind,value}=xmlReferenceExpected(source));
     assert.ok(token);const raw=encode(source,e),consumed=encode(token,e),limit=1024;
     const expected=Buffer.alloc(16);[kind,value,consumed.length,limit-[...token].length].forEach((v,i)=>expected.writeUInt32LE(v,i*4));
     const want=Buffer.concat([expected,consumed]);assert.deepEqual(call(121,wire(raw,e,ref,consumed.length),limit),want);accepted++;

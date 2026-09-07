@@ -1,9 +1,7 @@
 const Input = @import("input.zig").Input;
 pub const Value = @import("text.zig").View;
 pub const Declaration = struct { raw: []const u8, version: Value, encoding: ?Value, standalone: ?bool };
-fn space(c: u21) bool {
-    return c == 32 or c == 9 or c == 10 or c == 13;
-}
+const space = @import("characters.zig").whitespace;
 const Cursor = struct {
     input: Input,
     start: usize,

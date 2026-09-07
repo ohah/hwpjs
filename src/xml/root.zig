@@ -6,3 +6,5 @@ pub const encoding = @import("encoding.zig");
 pub const prolog = @import("prolog.zig");
 pub const names = @import("names.zig");
 pub const references = @import("references.zig");
+pub const tags = @import("tags.zig");
+pub const attribute_value = @import("attribute_value.zig");

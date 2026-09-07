@@ -10,6 +10,7 @@ test {
     _ = @import("xml/declaration_tests.zig");
     _ = @import("xml/prolog_tests.zig");
     _ = @import("xml/reference_tests.zig");
+    _ = @import("xml/tag_tests.zig");
     _ = @import("binary/reader.zig");
     _ = @import("hwp5/header_tests.zig");
     _ = @import("hwp5/record_tests.zig");

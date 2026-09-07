@@ -5,6 +5,9 @@ pub fn valid(c: u32) bool {
         else => false,
     };
 }
+pub fn whitespace(c: u32) bool {
+    return c == 32 or c == 9 or c == 10 or c == 13;
+}
 /// XML 1.0 Fifth Edition [4], NOT a namespace QName or Unicode category test.
 pub fn nameStart(c: u32) bool {
     return switch (c) {

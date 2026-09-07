@@ -4,6 +4,8 @@
 
 ## 범위
 
+태그와 속성의 토큰 연결은 별도 [태그·속성 계약](xml-tags.md)이 소유합니다. 문서 전체 문맥 검증과 구분합니다.
+
 XML 1.0의 Name과 Reference를 읽는 공통 토큰 계층입니다. 기준은 W3C Fifth Edition [§2.3 이름](https://www.w3.org/TR/2008/REC-xml-20081126/#sec-common-syn)과 [§4.1 문자·엔터티 참조](https://www.w3.org/TR/2008/REC-xml-20081126/#sec-references)입니다. 전체 태그·속성·namespace·DTD·문서의 well-formedness 검증은 아직 아닙니다.
 
 ## 책임과 SSOT
