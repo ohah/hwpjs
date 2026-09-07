@@ -11,6 +11,7 @@ pub const text = @import("text/root.zig");
 test {
     _ = @import("text/bcp47/tests.zig");
     _ = @import("text/utf16_tests.zig");
+    _ = @import("text/iso639/tests.zig");
     _ = @import("text/bcp47/registry_tests.zig");
     _ = @import("compression/zlib_tests.zig");
     _ = @import("image/png/tests.zig");
