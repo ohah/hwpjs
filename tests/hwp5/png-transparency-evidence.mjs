@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {paletteMetadataEvidence} from './png-palette-metadata-evidence.mjs';
 import {sampleMetadataEvidence} from './png-sample-metadata-evidence.mjs';
 import {timestampEvidence} from './png-timestamp-evidence.mjs';
+import {textEvidence} from './png-text-evidence.mjs';
 export function transparencyEvidence(structure) {
   const {chunks,fields}=structure;const color=fields[3],depth=fields[2],palette=fields[8];
   const indexes=chunks.map((c,i)=>c.name==='tRNS'?i:-1).filter(i=>i>=0);assert.ok(indexes.length<=1);
@@ -17,8 +18,9 @@ export function transparencyEvidence(structure) {
   const paletteMetadata=paletteMetadataEvidence(structure);
   const sampleMetadata=sampleMetadataEvidence(structure);
   const timestamp=timestampEvidence(structure),timestampCount=timestamp===null?0:1;
-  const deferredChunks=fields[9]-indexes.length-paletteMetadata.validatedChunks-sampleMetadata.validatedChunks-timestampCount,deferredBytes=fields[10]-payloadBytes-paletteMetadata.validatedBytes-sampleMetadata.validatedBytes-timestampCount*7;
+  const text=textEvidence(structure);
+  const deferredChunks=fields[9]-indexes.length-paletteMetadata.validatedChunks-sampleMetadata.validatedChunks-timestampCount-text.entries.length,deferredBytes=fields[10]-payloadBytes-paletteMetadata.validatedBytes-sampleMetadata.validatedBytes-timestampCount*7-text.payloadBytes;
   const result=[indexes.length,kind,count,masked,...raw,...values,deferredChunks,deferredBytes];
   const wire=Buffer.alloc(304);result.forEach((v,i)=>wire.writeUInt32LE(v,i*4));alpha.copy(wire,48);
-  return {wire,present:indexes.length,payloadBytes,deferredChunks,deferredBytes,paletteMetadata,sampleMetadata,timestamp};
+  return {wire,present:indexes.length,payloadBytes,deferredChunks,deferredBytes,paletteMetadata,sampleMetadata,timestamp,text};
 }

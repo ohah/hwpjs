@@ -20,6 +20,9 @@ pub const Report = struct {
     physical: ?@import("physical.zig").Value,
     significant_bits: ?@import("significant_bits.zig").Value,
     timestamp: ?@import("timestamp.zig").Value,
+    text_chunks: usize,
+    text_keyword_bytes: usize,
+    text_bytes: usize,
 };
 pub const Decoded = struct {
     report: Report,
@@ -91,6 +94,9 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
             .physical = meta.physical,
             .significant_bits = meta.significant_bits,
             .timestamp = meta.timestamp,
+            .text_chunks = meta.text_chunks,
+            .text_keyword_bytes = meta.text_keyword_bytes,
+            .text_bytes = meta.text_bytes,
         },
     };
 }
