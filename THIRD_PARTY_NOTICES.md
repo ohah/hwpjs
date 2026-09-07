@@ -25,7 +25,10 @@ truncated dynamic blocks from reading beyond EOF or trapping while aligning.
 The token tables and self-contained upstream tests are retained; tests requiring
 testdata absent from the installed Zig distribution are omitted. Project tests
 generate independent zlib fixtures and malformed streams. `raw_deflate.zig` is the sole
-product entrypoint; it adds output limits, ownership, and trailing-data rejection.
+DEFLATE entrypoint; it adds output limits, ownership, and trailing-data rejection.
+The local fixed/dynamic match paths also enforce an optional maximum distance.
+`zlib.zig` reuses that entrypoint with the RFC1950 declared window and validates
+the header and Adler32 checksum; preset dictionaries are explicitly unsupported.
 
 ## Unicode character database
 

@@ -187,6 +187,8 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         123, 124 => return @import("xml-document-probe.zig").run(a, bytes, limit, mode == 124),
         125 => return @import("container-probe.zig").xmlDocuments(a, bytes, limit),
         126 => return @import("png-structure-probe.zig").run(a, bytes, limit),
+        127 => return core.zlib.decode(a, bytes, limit),
+        128 => return @import("zlib-prefix-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

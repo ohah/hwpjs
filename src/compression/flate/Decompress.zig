@@ -25,6 +25,8 @@ final_block: bool,
 state: State,
 
 err: ?Error,
+/// Enclosing formats may declare a smaller LZ77 window.
+max_distance: u16 = 32768,
 
 const BlockType = enum(u2) {
     stored = 0,
@@ -424,6 +426,7 @@ fn streamInner(d: *Decompress, w: *Writer, limit: std.Io.Limit) (Error || Reader
             if (remaining >= length) {
                 @branchHint(.likely);
                 const distance = try d.decodeDistance(@bitReverse(try d.takeIntBits(u5)));
+                if (distance > d.max_distance) return error.InvalidMatch;
                 try writeMatch(w, length, distance);
                 remaining -= length;
                 continue :sw .fixed_block;
@@ -475,6 +478,7 @@ fn streamInner(d: *Decompress, w: *Writer, limit: std.Io.Limit) (Error || Reader
                 remaining -= length;
                 const dsm = try d.decodeSymbol(&d.dst_dec);
                 const distance = try d.decodeDistance(@intCast(dsm));
+                if (distance > d.max_distance) return error.InvalidMatch;
                 try writeMatch(w, length, distance);
                 continue :sw .dynamic_block;
             } else {

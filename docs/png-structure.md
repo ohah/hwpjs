@@ -24,6 +24,8 @@
 
 ## 검증 범위
 
+후속 [zlib 압축 검증](zlib-validation.md)은 별도 계층에 구현했습니다. 현재 structure.inspect의 IDAT 의미 미검사 계약과 pixels_validated=false는 그대로입니다.
+
 네이티브에서 color type/bit depth 256×256 조합, compression/filter/interlace 각 바이트, 치수 경계, 정확/부족 예산, 잘림 전체 위치, palette와 IDAT 순서, 실패 상태 불변성을 검사합니다. IEND CRC의 고정값 `AE426082`도 대조합니다. 테스트용 WASM mode 126은 동일 보고서를 Node Buffer big-endian 읽기·Node CRC32·독립 배열 순서 oracle과 비교합니다. 합성 입력의 모든 바이트에 단일 비트를 뒤집고 청크 CRC/길이/타입/순서 손상을 검사합니다.
 
 실제 HWP fixture 48개에서 PrvImage 부재 1, PNG 32, GIF 14, JPEG 1, BMP 0개를 관측했습니다. PNG 32개 전체의 청크 구조/CRC와 통계가 독립 oracle과 일치했습니다. 이는 테스트 연결이며 HWP 컨테이너의 PrvImage stream을 제품 검사에서 소비하도록 연결한 상태는 아닙니다. GIF·JPEG·BMP 검증과 픽셀 복원은 후속 범위입니다.

@@ -58,6 +58,7 @@ import {xmlDocumentEdges} from './xml-document.mjs';
 import {xmlNamespaceEdges} from './xml-namespace.mjs';
 import {xmlContainerEdges} from './xml-container.mjs';
 import {pngStructureEdges} from './png-structure.mjs';
+import {zlibEdges} from './zlib.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -445,6 +446,7 @@ const xmlDocumentResults = xmlDocumentEdges(call,cfb);
 const xmlNamespaceResults = xmlNamespaceEdges(call,cfb);
 const xmlContainerResults = xmlContainerEdges(call,cfb);
 const pngStructureResults = pngStructureEdges(call,cfb);
+const zlibResults = zlibEdges(call,cfb);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -974,6 +976,7 @@ console.log(
       xmlNamespaceResults,
       xmlContainerResults,
       pngStructureResults,
+      zlibResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,

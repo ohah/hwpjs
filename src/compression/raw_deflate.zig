@@ -12,9 +12,16 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, max_output: usize) ![]u8 
 pub const Result = struct { bytes: []u8, consumed: usize };
 /// Caller owns bytes; enclosing formats must validate any unconsumed trailer.
 pub fn decodePrefix(a: std.mem.Allocator, bytes: []const u8, max_output: usize) !Result {
+    return decodePrefixWindow(a, bytes, max_output, 32768);
+}
+
+/// Same ownership/budget contract, with an enclosing format's distance limit.
+pub fn decodePrefixWindow(a: std.mem.Allocator, bytes: []const u8, max_output: usize, max_distance: u16) !Result {
+    if (max_distance == 0 or max_distance > 32768) return error.InvalidWindowSize;
     var input: std.Io.Reader = .fixed(bytes);
     var window: [std.compress.flate.max_window_len]u8 = undefined;
     var decoder = @import("flate/Decompress.zig").init(&input, .raw, &window);
+    decoder.max_distance = max_distance;
     var output: std.ArrayList(u8) = .empty;
     defer output.deinit(a);
     var chunk: [4096]u8 = undefined;
