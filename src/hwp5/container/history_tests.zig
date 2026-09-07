@@ -25,7 +25,7 @@ fn fixture(a: std.mem.Allocator) ![]u8 {
         .{ .name = "Section0", .parent = 3, .content = section },
         .{ .name = "DocHistory", .parent = 0, .kind = 1 },
         .{ .name = "VersionLog10", .parent = 5, .content = &third },
-        .{ .name = "HistoryLastDoc", .parent = 5, .content = &.{ 255, 1 } },
+        .{ .name = "HistoryLastDoc", .parent = 5, .content = &.{ 49, 2, 0, 0, 0, 'x', 0 } },
         .{ .name = "VersionLog2", .parent = 5, .content = &second },
         .{ .name = "VersionLog0", .parent = 5, .content = &raw },
     };
@@ -74,4 +74,30 @@ test "numbered stream grammar preserves section errors and bounds history indice
     try t.expectEqual(@as(?u32, null), try index(u32, "VersionLog", "OtherVersionLog0"));
     try t.expectEqual(@as(?u16, 65535), try @import("paths.zig").sectionIndex("Section65535"));
     try t.expectError(error.InvalidSectionName, @import("paths.zig").sectionIndex("Section65536"));
+}
+fn lastDocument(a: std.mem.Allocator, bytes: []const u8, late: bool) !void {
+    var opts = options;
+    opts.history.?.last_document = .observed_record;
+    opts.history.?.max_decoded_bytes = 55;
+    opts.history.?.item.framing.max_records = if (late) 6 else 7;
+    var result = c.inspect(a, bytes, opts) catch |err| {
+        if (late and err == error.LimitExceeded) return;
+        return err;
+    };
+    defer result.deinit(a);
+    if (late) return error.ExpectedLastDocumentFailure;
+    const h = result.history.?;
+    try t.expectEqual(55, h.decoded_bytes);
+    try t.expectEqual(7, h.records);
+    try t.expectEqual(1, h.last_document.?.text_units);
+    try t.expectEqual(0, result.uninspected_streams);
+}
+test "last document shares history limits and frees allocations on final stream failure" {
+    const bytes = try fixture(t.allocator);
+    defer t.allocator.free(bytes);
+    const before = try t.allocator.dupe(u8, bytes);
+    defer t.allocator.free(before);
+    try t.checkAllAllocationFailures(t.allocator, lastDocument, .{ bytes, false });
+    try t.checkAllAllocationFailures(t.allocator, lastDocument, .{ bytes, true });
+    try t.expectEqualSlices(u8, before, bytes);
 }

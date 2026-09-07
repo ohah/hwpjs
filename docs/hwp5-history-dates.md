@@ -39,7 +39,7 @@ Item.report에는 기존 8개 수치 뒤에 date_records_inspected, date_invalid
 
 기존 STAG/ETAG·presence bit·중복 레코드·길이/개수 한도 검사는 그대로 적용합니다. 잘못된 날짜 값은 진단이고 선택한 배치의 prefix 잘림은 오류입니다. 원래 raw payload를 복구하거나 날짜가 없을 때 기본 날짜를 추가하지 않습니다.
 
-컨테이너의 기본 inspect에 이력 스트림 해석을 자동 적용하지 않습니다. 명시적인 [DocHistory 컨테이너 선택](hwp5-history-container.md)은 전역 스트림 선택/한도와 Item.parse 호출을 연결합니다. 아래 날짜 구현 당시의 실파일 검사는 CFB 정확 경로 읽기와 압축 해제 후 Item.parse를 직접 호출한 기록입니다. HistoryLastDoc 연결·암호화 정책, DiffML/HWPML 해석은 계속 남아 있습니다.
+컨테이너의 기본 inspect에 이력 스트림 해석을 자동 적용하지 않습니다. 명시적인 [DocHistory 컨테이너 선택](hwp5-history-container.md)은 전역 스트림 선택/한도와 Item.parse 호출을 연결합니다. 아래 날짜 구현 당시의 실파일 검사는 CFB 정확 경로 읽기와 압축 해제 후 Item.parse를 직접 호출한 기록입니다. HistoryLastDoc의 의미 관계·암호화 정책, DiffML/HWPML 해석은 계속 남아 있습니다.
 
 ## 검증 구성
 

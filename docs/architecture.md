@@ -60,7 +60,7 @@ container Report는 document Report와 그 DocInfo backing을 소유합니다. �
 
 `xml_template/`는 표 10~12의 decoded 문자열을, `container/xml_template.zig`는 선택적 파일 연결을 소유합니다. Scripts와 `utf16_string.read32`를, DocHistory와 `container/selected_encoding.zig`를 공유합니다. 선택·codec·소유권·미지원 의미와 검증 기록은 [XMLTemplate 계약](hwp5-xml-template.md)에서 관리합니다. summary의 종결·패딩 문법은 별개입니다.
 
-`history/record.zig`는 5바이트 헤더의 독립 Iterator이며 실패 시 위치/개수를 보존합니다. `value.zig`는 태그와 다섯 공식 presence bit, 시작/버전 payload 및 raw 문자열을 소유하고 SYSTEMDATE는 deferred로 남깁니다. 시작 배치는 명세의 flag→option과 관측 option→flag를 명시적 인자로 받습니다. `item.zig`는 decoded 한 항목의 STAG/ETAG 위치와 다섯 포함 비트를 검사합니다. 중복 metadata는 진단으로 보고하며 미지 flag/option/tag·extra를 버리지 않습니다. 일반 본문 framing·CFB 조회·복호화는 포함하지 않습니다. 최종 문서 별도 스트림과의 연결을 확인하지 않았으므로 last_doc_records가 0이어도 전체 이력 유효성을 주장하지 않습니다.
+`history/record.zig`는 5바이트 헤더의 독립 Iterator이며 실패 시 위치/개수를 보존합니다. `value.zig`는 태그와 다섯 공식 presence bit, 시작/버전 payload 및 raw 문자열을 소유합니다. `item.zig`는 decoded 한 항목의 STAG/ETAG와 포함 비트를 검사하고 날짜를 명시적으로 선택합니다. `last_document.zig`는 별도 최종 문서의 관측 레코드를 검사합니다. 배치·소유권·미지원 의미와 검증 기록은 [DocHistory 계약](hwp5-history-container.md)의 주제 문서에서 관리합니다. 일반 본문 framing·복호화·이력 복원 성공과 혼동하지 않습니다.
 
 DocInfo `compatible_document.zig`와 `layout_compatibility.zig`는 각각 표 54~55의 대상 프로그램(u32 enum, 미지 값 포함), 표 56의 글자/문단/구역/개체/필드 DWORD를 해석하고 extra를 빌립니다. 공통 reader가 tag 30/31 및 level 0/1을 검사하므로 document/container에서도 같은 길이 오류가 전파됩니다. 이 두 레코드는 리소스 ID 참조를 포함하지 않아 references의 unknown_records에서는 제외되지만, 레이아웃 비트 의미·대상별 렌더링·호환성 전환은 구현하지 않았습니다.
 

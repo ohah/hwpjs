@@ -1,6 +1,7 @@
 pub const record = @import("record.zig");
 pub const value = @import("value.zig");
 pub const date = @import("date.zig");
+pub const last_document = @import("last_document.zig");
 pub const Options = struct { start_layout: value.StartLayout, framing: record.Options = .{}, date_layout: date.Layout = .preserve_raw };
 pub const Report = struct {
     records: usize = 0,

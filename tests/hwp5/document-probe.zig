@@ -7,6 +7,7 @@ pub const Selection = struct {
     xml_template_report: bool = false,
     history: @FieldType(core.hwp5.container_validation.Options, "history") = null,
     history_report: bool = false,
+    history_last_document_report: bool = false,
     forms: ?core.hwp5.form_validation.Options = null,
     view_text_report: bool = false,
     forbidden_report: bool = false,

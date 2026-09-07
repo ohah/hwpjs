@@ -9,6 +9,14 @@ pub fn history(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const selected = try @import("history-container-probe.zig").read(&r);
     return inspect(a, bytes[r.offset..], limit, false, .{ .history = selected, .history_report = true });
 }
+pub fn historyLastDocument(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const last = try r.readInt(u8);
+    if (last > 1) return error.InvalidMode;
+    var selected = try @import("history-container-probe.zig").read(&r);
+    if (selected) |*h| h.last_document = if (last == 0) .uninspected else .observed_record;
+    return inspect(a, bytes[r.offset..], limit, false, .{ .history = selected, .history_report = true, .history_last_document_report = true });
+}
 pub fn xmlTemplate(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const selected = try @import("xml-template-container-probe.zig").read(&r);
@@ -109,6 +117,7 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: boo
     try int(a, &out, u32, @intCast(report.total_decoded_bytes));
     try int(a, &out, u32, @intCast(report.uninspected_streams));
     if (selection.history_report) try @import("history-container-probe.zig").serialize(a, &out, report.history);
+    if (selection.history_last_document_report) try @import("history-last-document-probe.zig").serialize(a, &out, report.history);
     if (selection.xml_template_report) try @import("xml-template-container-probe.zig").serialize(a, &out, report.xml_template);
     return out.toOwnedSlice(a);
 }

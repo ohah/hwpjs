@@ -32,13 +32,13 @@ encoding에는 기본값이 없습니다. decoded는 저장된 바이트가 이�
 
 인덱스는 숫자 순서로 정렬합니다. 0부터 시작하거나 연속해야 한다고 강제하지 않고, 이름의 번호를 Item의 VERSION payload나 저장 시각과 같다고 가정하지 않습니다. 다른 루트의 VersionLog0, DocHistory 하위 중첩 storage의 동명 항목, 미지 직접 자식은 검사하지 않으며 미소비 상태로 남습니다. basename 검색으로 가져오지 않습니다.
 
-HistoryLastDoc은 존재와 encoded 바이트 수만 기록하고 **소비했다고 표시하지 않습니다**. 내용·LASTDOCDATA 관계·복원에 대한 검증은 남아 있습니다. 그 내용이 손상되었는지 이번 파서가 판단하지 않으므로 opaque 바이트를 압축 해제하거나 재작성하지 않습니다. 존재하지 않아도 자동 생성하거나 필수 오류로 승격하지 않습니다.
+HistoryLastDoc은 기본적으로 존재와 encoded 바이트 수만 기록하고 **소비했다고 표시하지 않습니다**. 명시적인 [최종 문서 관측 배치](hwp5-history-last-document.md)를 선택하면 단일 LASTDOCDATA 레코드 구조를 검사하고 공유 예산에 포함합니다. XML 의미·이력 관계·복원은 여전히 남아 있으며, 존재하지 않아도 자동 생성하거나 필수 오류로 승격하지 않습니다.
 
 FileHeader.history 선언과 실제 storage 존재는 각각 declared/present로 기록합니다. 선언만으로 스트림을 만들거나 codec을 결정하지 않으며, 미선택과 선택했지만 storage가 없는 경우는 null Report와 present=false로 구분합니다.
 
 ## 예산과 소유권
 
-max_items는 기본 4,096개, max_decoded_bytes는 기본 64 MiB입니다. item.framing.max_records는 한 항목마다 초기화하는 한도가 아니라 **선택된 전체 이력**이 공유합니다. max_payload_bytes는 개별 이력 레코드의 한도입니다.
+max_items는 기본 4,096개의 VersionLog 항목, max_decoded_bytes는 기본 64 MiB입니다. item.framing.max_records는 한 항목마다 초기화하는 한도가 아니라 **선택된 전체 이력**이 공유합니다. 최종 문서를 선택하면 그 소비량도 같은 바이트/레코드 예산에 포함합니다. max_payload_bytes는 개별 이력 레코드의 한도입니다.
 
 디코딩마다 이력 자체의 남은 바이트 예산과 기존 문서 전체 max_total_bytes의 남은 예산 중 작은 값을 전달합니다. 레코드 수는 DocInfo/BodyText와 ViewText가 이미 소비한 수를 문서 전체 max_total_records에서 뺀 뒤 이력 자체의 남은 레코드 한도와 함께 적용합니다. 다음 항목에서 예산을 초기화하지 않습니다. 정확한 예산은 허용하고 한 단위 부족하면 오류입니다.
 
@@ -78,4 +78,4 @@ ReleaseSafe probe에서는 추가 수동 경계 검사로 잘못된 mode/start/d
 
 ## 남은 범위
 
-이력별 암호화, 다른 저장 방식/버전, HistoryLastDoc와 LASTDOCDATA 연결, DiffML/HWPML 의미·이력 재생·복원·편집/저장은 남아 있습니다. 이번 연결로 선택한 VersionLog 검사는 컨테이너에서 실행되지만 전체 문서 이력이 유효하거나 복원 가능하다고 주장하지 않습니다.
+이력별 암호화, 다른 저장 방식/버전, 최종 문서와 DiffML/HWPML 의미 관계·이력 재생·복원·편집/저장은 남아 있습니다. VersionLog 및 선택한 최종 문서 구조 검사는 전체 문서 이력이 유효하거나 복원 가능하다는 뜻이 아닙니다.

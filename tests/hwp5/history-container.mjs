@@ -5,13 +5,13 @@ import {documentRecords} from './documents.mjs';
 import {historyContainerEvidence} from './history-container-evidence.mjs';
 import {containerTotals} from './container-report-wire.mjs';
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n>>>0);return b;};
-const prefix=(o={})=>Buffer.concat([Buffer.from([o.mode??2,o.start??1,o.date??1]),...[o.items??4096,o.bytes??67108864,o.records??1000000,o.payload??67108864].map(w)]);
+export const historyContainerPrefix=(o={})=>Buffer.concat([Buffer.from([o.mode??2,o.start??1,o.date??1]),...[o.items??4096,o.bytes??67108864,o.records??1000000,o.payload??67108864].map(w)]);
 export function historyContainerActual(call,cfb) {
   const file=readFileSync(new URL('../../reference/rhwp/samples/basic/treatise sample.hwp',import.meta.url));cfb.parse(file,{strict:true});
   const original=cfb.document(),root=original.nodes.findIndex(n=>n.name==='DocHistory'&&n.parent===0);assert.ok(root>=0);
   const logs=original.nodes.map((n,i)=>[n,i]).filter(([n])=>n.parent===root&&/^VersionLog[0-9]+$/.test(n.name));assert.equal(logs.length,4);
   const ordinary=(bytes,max=67108864,records=1000000)=>call(25,Buffer.concat([w(max),bytes]),records);
-  const run=(bytes,o={},max=67108864,records=1000000)=>call(114,Buffer.concat([prefix(o),w(max),bytes]),records);
+  const run=(bytes,o={},max=67108864,records=1000000)=>call(114,Buffer.concat([historyContainerPrefix(o),w(max),bytes]),records);
   const base=ordinary(file),e=historyContainerEvidence(base,original);let accepted=0,rejected=0;
   const check=(model=original,o={},bytes=cfb.write(model))=>{const before=Buffer.from(bytes),b=ordinary(bytes),expected=historyContainerEvidence(b,model,o);assert.deepEqual(run(bytes,o),expected.wire);assert.deepEqual(run(bytes,{...o,mode:0}),Buffer.concat([b,w(0)]));assert.deepEqual(Buffer.from(bytes),before);accepted++;return {bytes,base:b,expected};};
   check(original,{},file);assert.equal(e.decoded,107676);assert.equal(e.records,28);
