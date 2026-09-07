@@ -23,6 +23,7 @@ import {revisionTextEdges,revisionTextActual} from "./revision-text.mjs";
 import {revisionCoordinateEdges,revisionCoordinateActual} from "./revision-coordinates.mjs";
 import {formObjectEdges,formObjectActual} from "./form-object.mjs";
 import {formPropertyEdges,formPropertyActual} from "./form-property.mjs";
+import {formControlEdges,formControlActual} from "./form-control.mjs";
 import {memoEndEdges,memoEndActual} from "./memo-end.mjs";
 import {paragraphFlowEdges,paragraphFlowActual} from "./paragraph-flows.mjs";
 import {groupInfoEdges} from "./group-info.mjs";
@@ -472,6 +473,7 @@ const revisionTextResults = {edges:revisionTextEdges(call),actual:revisionTextAc
 const revisionCoordinateResults = {edges:revisionCoordinateEdges(call),actual:revisionCoordinateActual(call,cfb)};
 const formObjectResults = {edges:formObjectEdges(call),actual:formObjectActual(call,cfb)};
 const formPropertyResults = {edges:formPropertyEdges(call),actual:formPropertyActual(call,cfb)};
+const formControlResults = {edges:formControlEdges(call),actual:formControlActual(call,cfb)};
 const memoEndResults = {edges:memoEndEdges(call),actual:memoEndActual(call,cfb)};
 const paragraphFlowResults = {edges:paragraphFlowEdges(call),actual:paragraphFlowActual(call,cfb)};
 const groupInfoPairResults = groupInfoPair(call,cfb);
@@ -984,6 +986,7 @@ console.log(
       revisionCoordinateResults,
       formObjectResults,
       formPropertyResults,
+      formControlResults,
       memoEndResults,
       paragraphFlowResults,
       groupInfoPairResults,

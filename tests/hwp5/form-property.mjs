@@ -31,6 +31,7 @@ function evidence(bytes) {
   return {rows,maxDepth,wire:Buffer.concat([word(rows.length),...rows.map(r=>Buffer.concat([word(r.parent??0xffffffff),word(r.end),word(r.kind),word(r.start),word(r.raw),word(r.key.length),word(r.valueStart),word(r.value.length),r.key,...(r.kind===0?[]:[r.value])]))])};
 }
 const set=(key,body)=>`${key}:set:${body.length}:${body}`;
+export {evidence as formPropertyEvidence};
 const string=(key,value)=>`${key}:wstring:${value.length}:${value}`;
 export function formPropertyEdges(call) {
   let accepted=0,rejected=0;

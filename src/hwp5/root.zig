@@ -75,6 +75,7 @@ pub const revision_coordinates = @import("body/revision_coordinates.zig");
 pub const form_object = @import("body/form_object.zig");
 pub const form_property = @import("body/form_property.zig");
 pub const form_property_tree = @import("body/form_property_tree.zig");
+pub const form_control = @import("body/form_control.zig");
 pub const memo_ranges = @import("body/memo_ranges.zig");
 pub const shape_picture = @import("body/shape_picture.zig");
 pub const picture_color = @import("body/picture_color.zig");

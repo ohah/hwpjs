@@ -7,6 +7,7 @@ pub const column_id = id("cold");
 pub const table_id = id("tbl ");
 pub const drawing_id = id("gso ");
 pub const equation_id = id("eqed");
+pub const form_id = id("form");
 pub const Rule = struct { control_id: u32, code: u16 };
 /// Official tables 6, 127, 128; equation is an object control.
 pub const rules = [_]Rule{

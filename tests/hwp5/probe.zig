@@ -167,6 +167,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         103 => return @import("revision-text-probe.zig").mapped(a, bytes, limit),
         104 => return @import("form-probe.zig").run(a, bytes),
         105 => return @import("form-property-probe.zig").run(a, bytes, limit),
+        106 => return @import("form-control-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
