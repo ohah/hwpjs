@@ -6,17 +6,19 @@ import {revisionGroupEvidence} from './revision-groups.mjs';
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n>>>0);return b;};
 const q=n=>{const b=Buffer.alloc(8);b.writeBigUInt64LE(BigInt(n));return b;};
 const frame=(tag,level,p)=>Buffer.concat([w(tag|(level<<10)|(p.length<<20)),p]);
-const input=(bytes,version=0x05000307,o={})=>Buffer.concat([w(version),w(o.input??67108864),w(o.output??67108864),w(o.ranges??100000),Buffer.from([o.cr??0]),bytes]);
+const input=(bytes,version=0x05000307,o={},queries=null)=>Buffer.concat([w(version),w(o.input??67108864),w(o.output??67108864),w(o.ranges??100000),Buffer.from([o.cr??0]),...(queries===null?[]:[w(queries.length/8),queries]),bytes]);
 function expected(bytes) {
-  const index=revisionGroupEvidence(bytes),ps=new Map(paragraphEvidence(bytes).map(p=>[p.index,p])),byGroup=new Map(index.groupRows.map((g,i)=>[g,i])),parts=index.groupRows.map(()=>[]),sizes=index.groupRows.map(()=>0),members=[];
+  const index=revisionGroupEvidence(bytes),ps=new Map(paragraphEvidence(bytes).map(p=>[p.index,p])),byGroup=new Map(index.groupRows.map((g,i)=>[g,i])),parts=index.groupRows.map(()=>[]),sizes=index.groupRows.map(()=>0),members=[],positions=[];
   let inputBytes=0,outputBytes=0,ranges=0;
   for(const m of index.members){const p=ps.get(m.index),g=byGroup.get(m.group),out=rangeFilteredCandidate([p],17);if(p.text===null)assert.equal(p.units,1);inputBytes+=p.text?.length??2;outputBytes+=out.length;ranges+=p.ranges?.length??0;
+    positions.push({node:m.index,group:g,units:p.units,projectedStart:sizes[g]/2});
     members.push(Buffer.concat([w(m.index),w(g),w(p.units),w(out.length/2),q(m.start),q(sizes[g]/2)]));parts[g].push(out);sizes[g]+=out.length;
   }
   const groups=index.groupRows.map((g,i)=>({...g,text:Buffer.concat(parts[i])}));
   const wire=Buffer.concat([w(groups.length),w(members.length),w(inputBytes),w(outputBytes),w(ranges),...groups.map(g=>Buffer.concat([w(g.head),w(g.flow),w(g.count),w(g.text.length),q(g.units),g.text])),...members]);
-  return {wire,groups,paragraphs:members.length,inputBytes,outputBytes,ranges};
+  return {wire,groups,paragraphs:members.length,inputBytes,outputBytes,ranges,positions,sourceParagraphs:ps};
 }
+export {input as revisionTextInput,expected as revisionTextEvidence};
 function para(level,s,merge=0,remove=false) {
   const h=Buffer.alloc(24),b=Buffer.from(s,'utf16le');h.writeUInt32LE(s.length);h.writeUInt16LE(merge,22);if(remove)h.writeUInt16LE(1,14);
   return Buffer.concat([frame(66,level,h),frame(67,level+1,b),...(remove?[frame(70,level+1,Buffer.concat([w(s.length-1),w(s.length),w(0x11000000)]))]:[])]);

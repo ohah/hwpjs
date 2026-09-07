@@ -51,6 +51,17 @@ fn exercise(a: std.mem.Allocator, late: bool) !void {
     try t.expectEqual(@as(usize, 16), report.total_input_bytes);
     try t.expectEqual(@as(usize, 12), report.total_output_bytes);
     try t.expectEqual(@as(usize, 2), report.total_ranges);
+    const removed = try report.mapBoundary(report.members[0].paragraph_node, 1);
+    try t.expectEqual(@as(u64, 1), removed.projected_unit);
+    try t.expect(removed.removed_unit);
+    const end = try report.mapBoundary(report.members[0].paragraph_node, 2);
+    try t.expectEqual(removed.projected_unit, end.projected_unit);
+    try t.expect(!end.removed_unit);
+    const next = try report.mapBoundary(report.members[3].paragraph_node, 0);
+    try t.expectEqual(@as(u64, 1), next.projected_unit);
+    try t.expectEqual(@as(usize, 0), next.group_index);
+    try t.expectError(error.InvalidRevisionMember, report.mapBoundary(0xffffffff, 0));
+    try t.expectError(error.RevisionCoordinateOutOfBounds, report.mapBoundary(report.members[0].paragraph_node, 3));
 }
 test "revision text owns output across nested flows and cleans every allocation failure" {
     try t.checkAllAllocationFailures(t.allocator, exercise, .{false});

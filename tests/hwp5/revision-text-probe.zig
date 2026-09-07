@@ -2,6 +2,12 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return inspect(a, bytes, limit, false);
+}
+pub fn mapped(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return inspect(a, bytes, limit, true);
+}
+fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, query_mode: bool) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const version: core.hwp5.Version = .{ .raw = try r.readInt(u32) };
     const max_input = try r.readInt(u32);
@@ -9,6 +15,9 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const max_ranges = try r.readInt(u32);
     const cr = try r.readInt(u8);
     if (cr > 1) return error.InvalidMode;
+    const query_count = if (query_mode) try r.readInt(u32) else 0;
+    if (query_count > limit) return error.RevisionQueryLimit;
+    const queries = try r.take(try std.math.mul(usize, query_count, 8));
     var tree = try core.hwp5.body_tree.Tree.parse(a, bytes[r.offset..], version, .{ .max_records = limit });
     defer tree.deinit(a);
     var lists = try core.hwp5.list_groups.Groups.build(a, tree);
@@ -21,6 +30,18 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     defer report.deinit(a);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
+    if (query_mode) {
+        var q: core.Reader = .{ .bytes = queries };
+        for (0..query_count) |_| {
+            const node = try q.readInt(u32);
+            const position = try q.readInt(u32);
+            const mapped_position = try report.mapBoundary(node, position);
+            try int(a, &out, u32, @intCast(mapped_position.group_index));
+            try int(a, &out, u64, mapped_position.projected_unit);
+            try int(a, &out, u32, @intFromBool(mapped_position.removed_unit));
+        }
+        return out.toOwnedSlice(a);
+    }
     try int(a, &out, u32, @intCast(report.groups.len));
     try int(a, &out, u32, @intCast(report.members.len));
     inline for (.{ "total_input_bytes", "total_output_bytes", "total_ranges" }) |name| try int(a, &out, u32, @intCast(@field(report, name)));

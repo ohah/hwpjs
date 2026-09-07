@@ -2,6 +2,7 @@ const std = @import("std");
 const Tree = @import("tree.zig").Tree;
 const Index = @import("revision_groups.zig").Index;
 const projection = @import("revision_projection.zig");
+const coordinates = @import("revision_coordinates.zig");
 pub const Options = struct {
     paragraph: projection.Options = .{},
     max_total_input_bytes: usize = 64 * 1024 * 1024,
@@ -22,9 +23,11 @@ pub const Member = struct {
     projected_units: u32,
     source_start: u64,
     projected_start: u64,
+    coordinates: coordinates.Map,
 };
-/// Owns all text and scalar mappings; no source payload pointer survives.
-/// Mappings describe paragraph starts, not arbitrary character/line positions.
+pub const Boundary = struct { group_index: usize, projected_unit: u64, removed_unit: bool };
+/// Owns all text and coordinate maps; no source payload pointer survives.
+/// Coordinates refer to supplied paragraph units, not unverified layout caches.
 pub const Report = struct {
     groups: []Group,
     members: []Member,
@@ -34,8 +37,21 @@ pub const Report = struct {
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
         for (self.groups) |g| a.free(g.text);
         a.free(self.groups);
+        for (self.members) |*m| m.coordinates.deinit(a);
         a.free(self.members);
         self.* = undefined;
+    }
+    pub fn mapBoundary(self: Report, paragraph_node: usize, source_unit: u32) !Boundary {
+        var lo: usize = 0;
+        var hi = self.members.len;
+        while (lo < hi) {
+            const mid = lo + (hi - lo) / 2;
+            if (self.members[mid].paragraph_node < paragraph_node) lo = mid + 1 else hi = mid;
+        }
+        if (lo == self.members.len or self.members[lo].paragraph_node != paragraph_node) return error.InvalidRevisionMember;
+        const m = self.members[lo];
+        const mapped = try m.coordinates.mapBoundary(source_unit);
+        return .{ .group_index = m.group_index, .projected_unit = std.math.add(u64, m.projected_start, mapped.offset) catch return error.RevisionCoordinateOverflow, .removed_unit = mapped.removed_unit };
     }
 };
 /// Index must come from this same unchanged Tree. No new merge/owner inference.
@@ -50,7 +66,11 @@ pub fn collectObserved(a: std.mem.Allocator, tree: Tree, index: Index, options: 
     defer a.free(sizes);
     @memset(sizes, 0);
     const members = try a.alloc(Member, index.members.len);
-    errdefer a.free(members);
+    var initialized: usize = 0;
+    errdefer {
+        for (members[0..initialized]) |*m| m.coordinates.deinit(a);
+        a.free(members);
+    }
     const groups = try a.alloc(Group, index.groups.len);
     for (index.groups, 0..) |g, i| groups[i] = .{ .head_node = g.head_node, .flow = g.flow, .member_count = g.member_count, .source_units = g.source_units };
     errdefer {
@@ -73,12 +93,14 @@ pub fn collectObserved(a: std.mem.Allocator, tree: Tree, index: Index, options: 
         local.max_input_bytes = @min(local.max_input_bytes, input_left);
         local.max_output_bytes = @min(local.max_output_bytes, output_left);
         local.max_ranges = @min(local.max_ranges, ranges_left);
-        const bytes = try projection.projectObserved(a, text, h.characterUnits(), ranges, local);
+        const projected = try projection.projectObservedMapped(a, text, h.characterUnits(), ranges, local);
+        const bytes = projected.bytes;
         parts[i] = bytes;
         input_left -= if (text) |raw| raw.len else 2; // successful explicit observed CR
         output_left -= bytes.len;
         ranges_left -= ranges.count();
-        members[i] = .{ .paragraph_node = m.paragraph_node, .group_index = m.group_index, .source_units = h.characterUnits(), .projected_units = @intCast(bytes.len / 2), .source_start = m.source_start, .projected_start = sizes[m.group_index] / 2 };
+        members[i] = .{ .paragraph_node = m.paragraph_node, .group_index = m.group_index, .source_units = projected.coordinates.source_units, .projected_units = projected.coordinates.projected_units, .source_start = m.source_start, .projected_start = sizes[m.group_index] / 2, .coordinates = projected.coordinates };
+        initialized += 1;
         sizes[m.group_index] += bytes.len; // bounded by the shared output budget
     }
     for (groups, sizes) |*g, size| g.text = try a.alloc(u8, size);

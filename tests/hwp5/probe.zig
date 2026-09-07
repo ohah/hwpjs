@@ -164,6 +164,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         100 => return @import("revision-projection-probe.zig").run(a, bytes),
         101 => return @import("revision-groups-probe.zig").run(a, bytes, limit),
         102 => return @import("revision-text-probe.zig").run(a, bytes, limit),
+        103 => return @import("revision-text-probe.zig").mapped(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
