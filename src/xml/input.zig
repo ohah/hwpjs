@@ -3,7 +3,7 @@ pub const Encoding = scalars.Encoding;
 pub const Character = scalars.Scalar;
 pub const Options = struct { max_bytes: usize = 16 * 1024 * 1024, max_characters: usize = 16 * 1024 * 1024 };
 /// Borrowed, complete input with explicitly selected encoding. Not an XML parser.
-/// BOM/declaration recognition belongs to the future entity bootstrap layer.
+/// BOM/declaration recognition belongs to the separate entity bootstrap layer.
 pub const Input = struct {
     bytes: []const u8,
     encoding: Encoding,

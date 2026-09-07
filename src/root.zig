@@ -7,6 +7,8 @@ pub const xml = @import("xml/root.zig");
 
 test {
     _ = @import("xml/input_tests.zig");
+    _ = @import("xml/declaration_tests.zig");
+    _ = @import("xml/prolog_tests.zig");
     _ = @import("binary/reader.zig");
     _ = @import("hwp5/header_tests.zig");
     _ = @import("hwp5/record_tests.zig");

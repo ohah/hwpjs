@@ -11,6 +11,9 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, max_characters: usize) ![]u8
     };
     const max_bytes = try r.readInt(u32);
     var input = try core.xml.input.Input.init(bytes[r.offset..], encoding, .{ .max_bytes = max_bytes, .max_characters = max_characters });
+    return digest(a, &input);
+}
+pub fn digest(a: std.mem.Allocator, input: *core.xml.input.Input) ![]u8 {
     var count: u32 = 0;
     var hash: u32 = 2166136261;
     while (try input.next()) |c| {

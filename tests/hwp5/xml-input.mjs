@@ -9,6 +9,7 @@ function expected(raw,encoding) {
   for(const c of text.replace(/\r\n?/g,'\n')){count++;hash=Math.imul(hash^c.codePointAt(0),16777619)>>>0;}
   const out=Buffer.alloc(12);[count,hash,raw.length].forEach((v,i)=>out.writeUInt32LE(v,i*4));return out;
 }
+export {expected as xmlInputExpected};
 function prefix(raw,encoding,maxBytes=raw.length) {
   const p=Buffer.alloc(5);p[0]=encoding;p.writeUInt32LE(maxBytes,1);return Buffer.concat([p,raw]);
 }
