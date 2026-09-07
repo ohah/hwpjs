@@ -67,6 +67,7 @@ import {pngSampleMetadataEdges} from './png-sample-metadata.mjs';
 import {pngTimestampEdges} from './png-timestamp.mjs';
 import {pngTextEdges} from './png-text.mjs';
 import {pngCompressedTextEdges} from './png-compressed-text.mjs';
+import {bcp47Edges} from './bcp47.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -463,6 +464,7 @@ const pngSampleMetadataResults = pngSampleMetadataEdges(call,cfb);
 const pngTimestampResults = pngTimestampEdges(call,cfb);
 const pngTextResults = pngTextEdges(call,cfb);
 const pngCompressedTextResults = pngCompressedTextEdges(call,cfb);
+const bcp47Results = bcp47Edges(call);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -1001,6 +1003,7 @@ console.log(
       pngTimestampResults,
       pngTextResults,
       pngCompressedTextResults,
+      bcp47Results,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,
