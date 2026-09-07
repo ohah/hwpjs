@@ -70,6 +70,7 @@ import {pngCompressedTextEdges} from './png-compressed-text.mjs';
 import {bcp47Edges} from './bcp47.mjs';
 import {registryEdges} from './bcp47-registry.mjs';
 import {pngInternationalEdges} from './png-international.mjs';
+import {pngSuggestedEdges} from './png-suggested.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -469,6 +470,7 @@ const pngCompressedTextResults = pngCompressedTextEdges(call,cfb);
 const bcp47Results = bcp47Edges(call);
 const registryResults = registryEdges(call);
 const pngInternationalResults = pngInternationalEdges(call,cfb);
+const pngSuggestedResults = pngSuggestedEdges(call,cfb);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -1010,6 +1012,7 @@ console.log(
       bcp47Results,
       registryResults,
       pngInternationalResults,
+      pngSuggestedResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,

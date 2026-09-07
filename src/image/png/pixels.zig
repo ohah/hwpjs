@@ -4,6 +4,7 @@ const zlib = @import("../../compression/zlib.zig");
 const filter = @import("filter.zig");
 const indices = @import("palette_indices.zig");
 const metadata = @import("metadata.zig");
+const suggested_palettes = @import("suggested_palettes.zig");
 pub const Layout = @import("layout.zig").Layout;
 pub const Options = struct { structure: structure.Options = .{}, max_decoded_bytes: usize = 256 * 1024 * 1024, max_text_bytes: usize = 64 * 1024 * 1024, language: @import("international_text.zig").registry.Options = .{} };
 pub const Report = struct {
@@ -27,6 +28,7 @@ pub const Report = struct {
     compressed_text_keyword_bytes: usize,
     compressed_text_bytes: usize,
     international_text: @import("international_stats.zig").Stats,
+    suggested_palettes: suggested_palettes.Stats,
 };
 pub const Decoded = struct {
     report: Report,
@@ -52,7 +54,10 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
     var it = try structure.chunks.Iterator.init(bytes, options.structure.chunks);
     var at: usize = 0;
     var meta: metadata.State = .{};
+    var suggested: suggested_palettes.Collector = .{};
+    defer suggested.deinit(a);
     while (try it.next()) |chunk| {
+        try suggested.consume(a, chunk);
         try meta.consumeTextOptions(a, envelope.header, envelope.palette_entries, chunk, .{ .max_text_bytes = options.max_text_bytes, .language = options.language });
         if (chunk.is("IDAT")) {
             @memcpy(compressed[at..][0..chunk.payload.len], chunk.payload);
@@ -81,6 +86,8 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
     envelope.pixels_validated = true;
     envelope.ancillary_chunks_deferred -= meta.validated_chunks;
     envelope.ancillary_bytes_deferred -= meta.validated_bytes;
+    envelope.ancillary_chunks_deferred -= suggested.stats.chunks;
+    envelope.ancillary_bytes_deferred -= suggested.stats.payload_bytes;
     return .{
         .bytes = decoded.bytes,
         .layout = layout,
@@ -105,6 +112,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
             .compressed_text_keyword_bytes = meta.compressed_text_keyword_bytes,
             .compressed_text_bytes = meta.compressed_text_bytes,
             .international_text = meta.international_text,
+            .suggested_palettes = suggested.stats,
         },
     };
 }

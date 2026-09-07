@@ -200,6 +200,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         137 => return @import("bcp47-probe.zig").run(a, bytes, limit),
         138 => return @import("bcp47-registry-probe.zig").run(a, bytes, limit),
         139 => return @import("png-international-probe.zig").run(a, bytes, limit),
+        140 => return @import("png-suggested-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
