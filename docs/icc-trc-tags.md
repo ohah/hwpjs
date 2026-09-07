@@ -12,6 +12,8 @@
 
 ## 검증
 
+계산 모델의 후속 작업은 [샘플 곡선 역변환](icc-sampled-inverse.md)에 분리합니다. 이 함수는 샘플 곡선만 다루며 위 TRC 의미 보류를 자동 해제하지 않습니다.
+
 새 Debug WASM에서 독립 JS 대조를 직접 실행하여 정상 비교 50건·예상 오류 거부 1,196건이 통과했습니다. 전체 감사 완료와는 구분합니다.
 
 macOS `/System/Library/ColorSync/Profiles/`의 프로파일 11개에서 TRC 태그 29개를 실제 major에 맞춘 mode 155/156과 독립 JS 정수 읽기로 대조했으며 일치했습니다(v2 11개, v4 18개 태그). 대상은 ACESCG Linear, AdobeRGB1998, DCI(P3) RGB, Display P3, Generic Gray Gamma 2.2, Generic Gray, Generic RGB, ITU-2020, ITU-709, ROMM RGB, sRGB Profile입니다. 네 채널과 curv/para 선택을 포함하지만 모든 판본·함수 종류를 망라하지 않습니다. 샘플과 파라미터 원형, 타입·채널·보류 플래그 대조이며 곡선 출력·렌더링 검증이 아닙니다. 공유 데이터는 태그별로 세었고 수동 결과는 자동 감사 수에 합산하지 않습니다. 시스템 프로파일을 저장소로 복제하거나 변경하지 않았습니다.

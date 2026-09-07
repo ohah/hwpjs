@@ -81,6 +81,7 @@ import {iccXyzTagEdges} from './icc-xyz-tags.mjs';
 import {iccCurveEdges} from './icc-curve.mjs';
 import {iccParametricEdges} from './icc-parametric.mjs';
 import {iccTrcEdges} from './icc-trc.mjs';
+import {iccInverseEdges} from './icc-inverse.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -491,6 +492,7 @@ const iccXyzTagResults = iccXyzTagEdges(call);
 const iccCurveResults = iccCurveEdges(call);
 const iccParametricResults = iccParametricEdges(call);
 const iccTrcResults = iccTrcEdges(call);
+const iccInverseResults = iccInverseEdges(call);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -1043,6 +1045,7 @@ console.log(
       iccCurveResults,
       iccParametricResults,
       iccTrcResults,
+      iccInverseResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,
