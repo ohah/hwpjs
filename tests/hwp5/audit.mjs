@@ -87,6 +87,7 @@ import {iccAnalyticEdges} from './icc-analytic.mjs';
 import {iccTrcForwardEdges} from './icc-trc-forward.mjs';
 import {iccRequiredEdges} from './icc-required.mjs';
 import {iccMlucEdges} from './icc-mluc.mjs';
+import {iccUnicodeEdges} from './icc-unicode.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -503,6 +504,7 @@ const iccAnalyticResults = iccAnalyticEdges(call);
 const iccTrcForwardResults = iccTrcForwardEdges(call);
 const iccRequiredResults = iccRequiredEdges(call);
 const iccMlucResults = iccMlucEdges(call);
+const iccUnicodeResults = iccUnicodeEdges(call);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -1061,6 +1063,7 @@ console.log(
       iccTrcForwardResults,
       iccRequiredResults,
       iccMlucResults,
+      iccUnicodeResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,

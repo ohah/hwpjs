@@ -9,7 +9,7 @@ HWPML·HWPX XML 파서에 공통으로 사용할 메모리 기반 문자 읽기 
 ## 책임·소유권
 
 - `src/xml/characters.zig`: XML 1.0 Char의 허용 여부만 소유합니다.
-- `src/xml/scalars.zig`: 명시된 UTF-8/UTF-16LE/UTF-16BE에서 Unicode scalar와 원본 바이트 범위를 읽습니다. 잘림, 잘못된 UTF-8, 고립/잘못된 서로게이트 쌍을 오류로 반환합니다. 대체 문자나 인코딩 fallback은 없습니다.
+- `src/text/scalars.zig`: 명시된 UTF-8/UTF-16LE/UTF-16BE의 공통 Unicode scalar 해석과 원본 바이트 범위를 소유합니다. `src/xml/scalars.zig`는 기존 XML 오류 이름을 유지하는 어댑터입니다. 잘림, 잘못된 UTF-8, 고립/잘못된 서로게이트 쌍을 오류로 반환합니다. 대체 문자나 인코딩 fallback은 없습니다. 공통 계층 추출 검증은 [ICC Unicode 내용 검증](icc-localized-unicode.md)에 기록합니다.
 - `src/xml/input.zig`: 문자 허용 검사, literal CRLF/CR → LF 정규화, 전체 입력 바이트·반환 문자 수 한도를 소유합니다. 기본 한도는 각각 16 MiB/16,777,216문자입니다. U+0085와 U+2028은 그대로 반환합니다.
 - `src/xml/root.zig`: Zig 모듈 진입점입니다. 컨테이너·파일시스템·압축·외부 프로세스에 의존하지 않습니다.
 

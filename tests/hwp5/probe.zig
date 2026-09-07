@@ -221,6 +221,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         161, 162 => return @import("icc-trc-forward-probe.zig").run(a, bytes, limit, if (mode == 161) .v2_2001 else .v4_2022),
         163 => return @import("icc-required-probe.zig").run(a, bytes, limit),
         164, 165 => return @import("icc-mluc-probe.zig").run(a, bytes, limit, if (mode == 164) .v4_2022 else .v2_2001),
+        166 => return @import("icc-unicode-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
