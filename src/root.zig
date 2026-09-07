@@ -4,8 +4,10 @@ pub const cfb = @import("cfb/reader.zig");
 pub const hwp5 = @import("hwp5/root.zig");
 pub const raw_deflate = @import("compression/raw_deflate.zig");
 pub const xml = @import("xml/root.zig");
+pub const image = @import("image/root.zig");
 
 test {
+    _ = @import("image/png/tests.zig");
     _ = @import("xml/input_tests.zig");
     _ = @import("xml/declaration_tests.zig");
     _ = @import("xml/prolog_tests.zig");
