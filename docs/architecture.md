@@ -4,6 +4,8 @@ PNG 감마·색도는 [고정소수점 원값 계약](png-color-fixed.md)에 분
 
 [sRGB 동반 청크 검사](png-srgb.md)는 전용 상수·순수 검사기를 metadata에서 재사용합니다. 청크 도착 순서와 무관하게 검증하고 원값을 보정하지 않습니다.
 
+[ICC 기반 계층](icc-structure.md)은 PNG 압축과 독립적이며 헤더·extent·ID·태그/배치 책임을 분리합니다. [독립 검증 기록](icc-verification.md)에서 구조 검사와 미구현 의미 검증의 경계를 관리합니다. iCCP 픽셀 연결은 아직 하지 않았습니다.
+
 XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다. HWP5 원시 문자열 보존과 정책이 다르며, XML 문법·HWPML/HWPX 모델 검증으로 자동 승격하지 않습니다.
 
 이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 [IANA 등록 검증](bcp47-registry.md)은 다른 단계입니다. [PNG iTXt](png-international-text.md)는 등록 검사와 UTF-8·압축 검사를 조립하며 extension 의미 보류를 별도로 보고합니다.
