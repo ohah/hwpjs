@@ -2,6 +2,8 @@
 
 ## 계약과 남은 범위
 
+PNG 소비자 연결은 [iTXt 계약](png-international-text.md)에서 관리합니다. 아래는 언어 검사 모듈 자체의 책임입니다.
+
 `text.bcp47_registry.inspect(allocator, bytes, options)`는 [문법 검사](bcp47-syntax.md)를 재사용한 뒤 primary language·script·region·variant 등록 여부, extlang의 단일 개수와 필수 Prefix, extension singleton 등록 여부를 검사합니다. 원문 구간과 대소문자는 보존합니다. private-use와 RFC에 고정된 grandfathered 태그는 별도 등록 조회 없이 허용합니다.
 
 근거는 [RFC 5646 §2.2.2](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.2), [§2.2.6](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.6), [§2.2.9](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.9)입니다. 문법상 가능한 두 번째·세 번째 extlang은 등록 단계에서 거부합니다. variant Prefix와 Suppress-Script 권고를 강제 거부 조건으로 취급하지 않습니다. 폐기된 코드도 등록된 값이면 허용하며 Preferred-Value로 자동 치환하지 않습니다.

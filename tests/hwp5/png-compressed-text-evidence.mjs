@@ -12,7 +12,7 @@ export function compressedTextEvidence({chunks},maxText=64*1024*1024) {
   return {entries,keywordBytes,textBytes,payloadBytes};
 }
 export function compressedTextWire(structure,t,maxText=64*1024*1024) {
-  const plain=t.text,z=t.compressedText;assert.ok(plain.textBytes+z.textBytes<=maxText);
+  const plain=t.text,z=t.compressedText;assert.ok(plain.textBytes+z.textBytes+(t.internationalText?.fields[4]??0)<=maxText);
   const head=Buffer.alloc(32);[plain.entries.length,plain.keywordBytes,plain.textBytes,z.entries.length,z.keywordBytes,z.textBytes,t.deferredChunks,t.deferredBytes].forEach((v,i)=>head.writeUInt32LE(v,i*4));
   let pi=0,zi=0;const records=[];
   for(const {name} of structure.chunks){if(name!=='tEXt'&&name!=='zTXt')continue;const isZ=name==='zTXt',v=isZ?z.entries[zi++]:plain.entries[pi++];const lengths=Buffer.alloc(12);lengths.writeUInt32LE(isZ?1:0);lengths.writeUInt32LE(v.key.length,4);lengths.writeUInt32LE(v.text.length,8);records.push(lengths,v.key,v.text);}

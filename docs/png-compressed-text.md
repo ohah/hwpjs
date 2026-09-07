@@ -10,13 +10,13 @@
 
 ## 합계 한도와 문서 조립
 
-`pixels.Options.max_text_bytes`는 기본 64 MiB이며 tEXt와 zTXt의 **본문 바이트 합계**에 적용합니다. 키워드·청크 헤더·구분자는 여기에 더하지 않으며 별도의 기존 파일·청크·개수 한도로 제한합니다. 픽셀 출력 한도 max_decoded_bytes와도 독립적입니다. 0은 모든 텍스트를 금지하는 설정이 아니라 빈 본문만 허용하는 설정입니다.
+텍스트 합산 한도는 [iTXt 통합 계약](png-international-text.md#한도와-통합)이 소유합니다. 현재는 tEXt·zTXt·iTXt 세 종류의 본문을 함께 계산합니다. 0은 모든 텍스트를 금지하는 설정이 아니라 빈 본문만 허용하는 설정입니다.
 
-`metadata.State.consumeBounded`가 남은 본문 예산을 계산합니다. zTXt를 해제하는 중에 남은 한도를 넘으면 실패하며, 출력 후 크기를 검사하는 방식이 아닙니다. 성공한 한 청크만 카운트에 반영하고 임시 본문은 즉시 해제합니다. tEXt와 zTXt 순서가 바뀌어도 같은 합계 한도를 적용합니다. 뺄셈 전 범위를 검사해 usize 오버플로를 피합니다.
+`metadata.State.consumeTextOptions`가 남은 본문 예산을 계산하고 consumeBounded는 기본 언어 옵션으로 위임합니다. zTXt를 해제하는 중에 남은 한도를 넘으면 실패하며, 출력 후 크기를 검사하는 방식이 아닙니다. 성공한 한 청크만 카운트에 반영하고 임시 본문은 즉시 해제합니다. 뺄셈 전 범위를 검사해 usize 오버플로를 피합니다.
 
-기존 State.consume는 할당하지 않는 메타데이터 부분집합이며 zTXt를 소비하지 않습니다. PNG 전체 검사 경로는 반드시 consumeBounded를 사용합니다. tEXt 집계는 공통 recordText가 소유합니다. 픽셀 보고서의 기존 text_*는 tEXt 전용으로 유지하고 compressed_text_chunks/compressed_text_keyword_bytes/compressed_text_bytes를 zTXt 전용 통계로 추가합니다. 통계 보고서는 문자열 목록을 소유하는 문서 모델이 아닙니다.
+기존 State.consume는 할당하지 않는 메타데이터 부분집합이며 zTXt/iTXt를 소비하지 않습니다. PNG 전체 검사 경로는 consumeTextOptions를 사용합니다. tEXt 집계는 공통 recordText가 소유합니다. 픽셀 보고서의 기존 text_*는 tEXt 전용으로 유지하고 compressed_text_chunks/compressed_text_keyword_bytes/compressed_text_bytes는 zTXt 전용 통계입니다. 통계 보고서는 문자열 목록을 소유하는 문서 모델이 아닙니다.
 
-반복 키워드·여러 zTXt·IDAT 전후 배치를 허용하되 필수 PNG 청크 순서는 그대로 검사합니다. 검증한 압축 payload 바이트만 ancillary deferred에서 제외합니다. 압축 해제 본문 크기와 입력 payload 크기를 혼용하지 않습니다. iTXt·키워드별 의미·제품 JS 텍스트 API·편집·저장은 아직 미구현입니다.
+반복 키워드·여러 zTXt·IDAT 전후 배치를 허용하되 필수 PNG 청크 순서는 그대로 검사합니다. 검증한 압축 payload 바이트만 ancillary deferred에서 제외합니다. 압축 해제 본문 크기와 입력 payload 크기를 혼용하지 않습니다. 키워드별 의미·제품 JS 텍스트 API·편집·저장은 아직 미구현입니다.
 
 ## 적대적 검증
 

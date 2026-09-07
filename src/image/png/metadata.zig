@@ -9,6 +9,7 @@ const timestamp = @import("timestamp.zig");
 const text = @import("text.zig");
 const std = @import("std");
 const compressed_text = @import("compressed_text.zig");
+const international_text = @import("international_text.zig");
 
 /// Selected ancillary semantics only. Other chunks stay deferred in structure.
 pub const State = struct {
@@ -24,19 +25,32 @@ pub const State = struct {
     compressed_text_chunks: usize = 0,
     compressed_text_keyword_bytes: usize = 0,
     compressed_text_bytes: usize = 0,
+    international_text: @import("international_stats.zig").Stats = .{},
     validated_chunks: usize = 0,
     validated_bytes: usize = 0,
     palette_seen: bool = false,
     data_seen: bool = false,
-    /// Full path including allocating text. The aggregate limit covers tEXt and zTXt bodies.
+    /// Full path including allocating text. The aggregate limit covers all three text bodies.
     pub fn consumeBounded(self: *State, a: std.mem.Allocator, h: Header, palette_entries: usize, chunk: Chunk, max_text_bytes: usize) !void {
-        if (!chunk.is("tEXt") and !chunk.is("zTXt")) return self.consume(h, palette_entries, chunk);
+        return self.consumeTextOptions(a, h, palette_entries, chunk, .{ .max_text_bytes = max_text_bytes });
+    }
+    pub fn consumeTextOptions(self: *State, a: std.mem.Allocator, h: Header, palette_entries: usize, chunk: Chunk, options: international_text.Options) !void {
+        if (!chunk.is("tEXt") and !chunk.is("zTXt") and !chunk.is("iTXt")) return self.consume(h, palette_entries, chunk);
+        const max_text_bytes = options.max_text_bytes;
         if (self.text_bytes > max_text_bytes or self.compressed_text_bytes > max_text_bytes - self.text_bytes) return error.LimitExceeded;
-        const remaining = max_text_bytes - self.text_bytes - self.compressed_text_bytes;
+        const left = max_text_bytes - self.text_bytes - self.compressed_text_bytes;
+        if (self.international_text.text_bytes > left) return error.LimitExceeded;
+        const remaining = left - self.international_text.text_bytes;
         if (chunk.is("tEXt")) {
             const value = try text.parse(chunk.payload);
             if (value.text.len > remaining) return error.LimitExceeded;
             self.recordText(value, chunk.payload.len);
+        } else if (chunk.is("iTXt")) {
+            var value = try international_text.decode(a, chunk.payload, .{ .max_text_bytes = remaining, .language = options.language });
+            defer value.deinit(a);
+            self.international_text.add(value);
+            self.validated_chunks += 1;
+            self.validated_bytes += chunk.payload.len;
         } else {
             var value = try compressed_text.decode(a, chunk.payload, remaining);
             defer value.deinit(a);
@@ -54,7 +68,7 @@ pub const State = struct {
         self.validated_chunks += 1;
         self.validated_bytes += payload_bytes;
     }
-    /// Non-allocating subset only; zTXt is deliberately not consumed here.
+    /// Non-allocating subset only; zTXt/iTXt are deliberately not consumed here.
     /// Atomic on failure; caller has already validated the critical envelope.
     pub fn consume(self: *State, h: Header, palette_entries: usize, chunk: Chunk) !void {
         if (chunk.is("PLTE")) {

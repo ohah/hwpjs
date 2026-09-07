@@ -5,7 +5,7 @@ const filter = @import("filter.zig");
 const indices = @import("palette_indices.zig");
 const metadata = @import("metadata.zig");
 pub const Layout = @import("layout.zig").Layout;
-pub const Options = struct { structure: structure.Options = .{}, max_decoded_bytes: usize = 256 * 1024 * 1024, max_text_bytes: usize = 64 * 1024 * 1024 };
+pub const Options = struct { structure: structure.Options = .{}, max_decoded_bytes: usize = 256 * 1024 * 1024, max_text_bytes: usize = 64 * 1024 * 1024, language: @import("international_text.zig").registry.Options = .{} };
 pub const Report = struct {
     structure: structure.Report,
     decoded_bytes: usize,
@@ -26,6 +26,7 @@ pub const Report = struct {
     compressed_text_chunks: usize,
     compressed_text_keyword_bytes: usize,
     compressed_text_bytes: usize,
+    international_text: @import("international_stats.zig").Stats,
 };
 pub const Decoded = struct {
     report: Report,
@@ -52,7 +53,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
     var at: usize = 0;
     var meta: metadata.State = .{};
     while (try it.next()) |chunk| {
-        try meta.consumeBounded(a, envelope.header, envelope.palette_entries, chunk, options.max_text_bytes);
+        try meta.consumeTextOptions(a, envelope.header, envelope.palette_entries, chunk, .{ .max_text_bytes = options.max_text_bytes, .language = options.language });
         if (chunk.is("IDAT")) {
             @memcpy(compressed[at..][0..chunk.payload.len], chunk.payload);
             at += chunk.payload.len;
@@ -103,6 +104,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
             .compressed_text_chunks = meta.compressed_text_chunks,
             .compressed_text_keyword_bytes = meta.compressed_text_keyword_bytes,
             .compressed_text_bytes = meta.compressed_text_bytes,
+            .international_text = meta.international_text,
         },
     };
 }
