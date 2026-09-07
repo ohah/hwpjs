@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
+import {historyDateEvidence} from './history-date-evidence.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -39,16 +40,19 @@ function expected(b, mode) {
     pos += 5 + len;
   }
   const first = rows[0].b,
-    flags = first.readUInt16LE(mode === 1 ? 0 : 4),
-    option = first.readUInt32LE(mode === 1 ? 2 : 0);
-  const report = [rows.length, 0, 0, 0, 0, first.length - 6, 0, 0];
+    flags = first.readUInt16LE(mode === 1 || mode === 3 ? 0 : 4),
+    option = first.readUInt32LE(mode === 1 || mode === 3 ? 2 : 0);
+  const report = [rows.length, 0, 0, 0, 0, first.length - 6, 0, 0,0,0,0,0];
   let seen = 0;
   for (const { tag, b } of rows.slice(1)) {
     const bit = { 32: 1, 33: 2, 34: 4, 35: 8, 48: 16 }[tag] ?? 0;
     if (bit & seen) report[6]++;
     seen |= bit;
     if (tag === 32) report[5] += b.length - 4;
-    else if (tag === 33) report[2]++;
+    else if (tag === 33) {
+      if(mode<3)report[2]++;
+      else {const d=historyDateEvidence(b);report[8]++;report[9]+=Number(d.mask!==0);report[10]+=Number(d.calendar===2);report[11]+=Number(d.weekday===2);report[5]+=d.extra;}
+    }
     else if ([34, 35, 48, 49].includes(tag)) {
       report[3]++;
       report[4] += b.length / 2;
@@ -162,3 +166,4 @@ export function historyActual(call, cfb) {
   assert.equal(records, 28);
   return { items: 4, decoded, records, dateDeferred: 4 };
 }
+export {expected as historyExpected,run as historyRun};

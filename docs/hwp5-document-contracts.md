@@ -21,6 +21,6 @@
 
 - `hwp5/xml_template/string.zig`는 표 10~12의 decoded 문자열 envelope, `template.zig`는 세 선택 입력의 총 한도/부재를 소유합니다. Scripts와 `utf16_string.read32`를 공유하며 두 길이 폭 모두 실패 시 커서를 보존합니다. XML 문법/스키마 검증·외부 엔터티 로드·CFB 압축 자동 판별은 포함하지 않습니다. 실제 XMLTemplate 표본은 아직 확보하지 못했습니다.
 
-- `hwp5/history/record.zig`는 BYTE tag + UINT byte length의 별도 framing, `value.zig`는 공식 태그/포함 비트/알려진 payload, `item.zig`는 한 decoded VersionLog의 시작·끝·포함 비트를 소유합니다. 시작 payload는 spec_flag_first/observed_option_first를 명시적으로 선택합니다. SYSTEMDATE는 레이아웃 미정의로 raw deferred이며 마지막 문서 연결·DiffML/HWPML·암호화는 별도입니다. 일반 본문 record 헤더나 압축 정책을 자동 적용하지 않습니다.
+- `hwp5/history/record.zig`는 BYTE tag + UINT byte length의 별도 framing, `value.zig`는 공식 태그/포함 비트/알려진 payload, `item.zig`는 한 decoded VersionLog의 시작·끝·포함 비트를 소유합니다. 시작 payload는 spec_flag_first/observed_option_first를 명시적으로 선택합니다. SYSTEMDATE는 기본 raw deferred이고, [관측 날짜 배치](hwp5-history-dates.md)를 선택하면 필드·달력·요일 진단을 추가합니다. 마지막 문서 연결·DiffML/HWPML·암호화는 별도이며 일반 본문 record 헤더나 압축 정책을 자동 적용하지 않습니다.
 
 - summary `strings.zig`는 counted 문자열의 경계·종결·패딩을 공유합니다. LPWSTR 길이는 UTF-16 유닛, LPSTR 길이는 바이트이며 CP1200일 때도 바이트입니다. parser는 PID1의 VT_I2를 먼저 확인해 뒤에 있는 코드페이지도 적용하며 u16 비트패턴을 보존합니다. `dictionary.zig`는 명시된 코드페이지에서 항목 경계/ID만 검사합니다. 이름 인코딩·중복 의미는 별도이며, 코드페이지가 없는 HWP dictionary에 자동 기본값을 적용하지 않습니다.

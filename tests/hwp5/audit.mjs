@@ -46,6 +46,7 @@ import { scriptEdges } from "./scripts.mjs";
 import { xmlTemplateEdges } from "./xml-template.mjs";
 import { optionalSurvey } from "./optional-survey.mjs";
 import { historyEdges, historyActual } from "./history.mjs";
+import { historyDateEdges, historyDateActual } from "./history-date.mjs";
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -421,6 +422,7 @@ const codepageEdgeResults = codepageEdges(call);
 const scriptEdgeResults = scriptEdges(call);
 const xmlTemplateEdgeResults = xmlTemplateEdges(call);
 const historyEdgeResults = historyEdges(call);
+const historyDateResults = {edges:historyDateEdges(call),actual:historyDateActual(call,cfb)};
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -938,6 +940,7 @@ console.log(
       scriptEdgeResults,
       xmlTemplateEdgeResults,
       historyEdgeResults,
+      historyDateResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,
