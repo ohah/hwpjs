@@ -16,6 +16,8 @@
 
 ## 다음 검증과 책임
 
+공통 desc/cprt payload의 후속 [다국어 문자열 원시 구조](icc-localized-structure.md)를 구현·검증 중입니다. 경계 검사와 Unicode·locale 의미 검증의 보류를 구분합니다.
+
 타입별 기반 작업은 [XYZType 원시 배열](icc-xyz-type.md)부터 분리했습니다. 원시 배열 검증은 태그별 cardinality나 필수 집합 검사 완료를 의미하지 않습니다.
 
 후속 [XYZ 태그별 검사](icc-xyz-tags.md)는 다섯 태그의 요소 수와 display 백색점 규칙을 담당합니다. 필수 태그 집합과 다른 타입의 검사는 계속 남아 있습니다.
