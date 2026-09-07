@@ -2,7 +2,7 @@ const std = @import("std");
 const header = @import("header.zig");
 const signatures = @import("signatures.zig");
 /// Select the published identifier tables, not a claim about all revisions.
-pub const Edition = enum { v2_2001, v4_2022 };
+pub const Edition = @import("edition.zig").Edition;
 pub const Report = struct {
     profile_class: signatures.ProfileClass,
     data_channels: u8,
