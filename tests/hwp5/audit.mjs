@@ -64,6 +64,7 @@ import {pngPixelsEdges} from './png-pixels.mjs';
 import {pngTransparencyEdges} from './png-transparency.mjs';
 import {pngPaletteMetadataEdges} from './png-palette-metadata.mjs';
 import {pngSampleMetadataEdges} from './png-sample-metadata.mjs';
+import {pngTimestampEdges} from './png-timestamp.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -457,6 +458,7 @@ const pngPixelsResults = pngPixelsEdges(call,cfb);
 const pngTransparencyResults = pngTransparencyEdges(call,cfb);
 const pngPaletteMetadataResults = pngPaletteMetadataEdges(call,cfb);
 const pngSampleMetadataResults = pngSampleMetadataEdges(call,cfb);
+const pngTimestampResults = pngTimestampEdges(call,cfb);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -992,6 +994,7 @@ console.log(
       pngTransparencyResults,
       pngPaletteMetadataResults,
       pngSampleMetadataResults,
+      pngTimestampResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,

@@ -5,6 +5,7 @@ const background = @import("background.zig");
 const histogram = @import("histogram.zig");
 const physical = @import("physical.zig");
 const significant_bits = @import("significant_bits.zig");
+const timestamp = @import("timestamp.zig");
 
 /// Selected ancillary semantics only. Other chunks stay deferred in structure.
 pub const State = struct {
@@ -13,6 +14,7 @@ pub const State = struct {
     histogram: ?histogram.Value = null,
     physical: ?physical.Value = null,
     significant_bits: ?significant_bits.Value = null,
+    timestamp: ?timestamp.Value = null,
     validated_chunks: usize = 0,
     validated_bytes: usize = 0,
     palette_seen: bool = false,
@@ -52,6 +54,12 @@ pub const State = struct {
             if (self.data_seen) return error.InvalidPngPhysicalOrder;
             const value = try physical.parse(chunk.payload);
             self.physical = value;
+            self.validated_chunks += 1;
+            self.validated_bytes += chunk.payload.len;
+        } else if (chunk.is("tIME")) {
+            if (self.timestamp != null) return error.DuplicatePngTimestamp;
+            const value = try timestamp.parse(chunk.payload);
+            self.timestamp = value;
             self.validated_chunks += 1;
             self.validated_bytes += chunk.payload.len;
         } else if (chunk.is("sBIT")) {

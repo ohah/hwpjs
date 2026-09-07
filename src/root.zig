@@ -15,6 +15,7 @@ test {
     _ = @import("image/png/transparency_tests.zig");
     _ = @import("image/png/palette_metadata_tests.zig");
     _ = @import("image/png/sample_metadata_tests.zig");
+    _ = @import("image/png/timestamp_tests.zig");
     _ = @import("xml/input_tests.zig");
     _ = @import("xml/declaration_tests.zig");
     _ = @import("xml/prolog_tests.zig");

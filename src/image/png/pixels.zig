@@ -19,6 +19,7 @@ pub const Report = struct {
     histogram_usage_validated: bool,
     physical: ?@import("physical.zig").Value,
     significant_bits: ?@import("significant_bits.zig").Value,
+    timestamp: ?@import("timestamp.zig").Value,
 };
 pub const Decoded = struct {
     report: Report,
@@ -89,6 +90,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
             .histogram_usage_validated = meta.histogram != null and envelope.header.color_type == 3,
             .physical = meta.physical,
             .significant_bits = meta.significant_bits,
+            .timestamp = meta.timestamp,
         },
     };
 }
