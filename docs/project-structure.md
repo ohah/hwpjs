@@ -8,6 +8,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 ## 진입점과 공통 계층
 
 - `src/binary/`: 경계 검사와 바이너리 읽기.
+- `src/xml/`: [XML 1.0 문자 입력](xml-input.md). 명시적 UTF-8/UTF-16 읽기·문자 제한·줄바꿈 처리이며 XML 문법 파서는 아직 미구현입니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.
 - `src/compression/`: bounded raw DEFLATE와 MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.

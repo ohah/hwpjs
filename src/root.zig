@@ -3,8 +3,10 @@ pub const Reader = @import("binary/reader.zig").Reader;
 pub const cfb = @import("cfb/reader.zig");
 pub const hwp5 = @import("hwp5/root.zig");
 pub const raw_deflate = @import("compression/raw_deflate.zig");
+pub const xml = @import("xml/root.zig");
 
 test {
+    _ = @import("xml/input_tests.zig");
     _ = @import("binary/reader.zig");
     _ = @import("hwp5/header_tests.zig");
     _ = @import("hwp5/record_tests.zig");
