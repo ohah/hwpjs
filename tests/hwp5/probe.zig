@@ -196,6 +196,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         133 => return @import("png-sample-metadata-probe.zig").run(a, bytes, limit),
         134 => return @import("png-timestamp-probe.zig").run(a, bytes, limit),
         135 => return @import("png-text-probe.zig").run(a, bytes, limit),
+        136 => return @import("png-compressed-text-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

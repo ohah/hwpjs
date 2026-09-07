@@ -31,7 +31,7 @@ export function pngTextEdges(call,cfb){
   const all=[chunk('IHDR',header(1,3)),chunk('sBIT',Buffer.from([8,7,6])),chunk('PLTE',Buffer.alloc(3)),chunk('pHYs',Buffer.from([0,0,0,1,0,0,0,1,0])),chunk('tRNS',Buffer.from([0])),chunk('bKGD',Buffer.from([0])),chunk('hIST',Buffer.from([0,1])),chunk('tIME',Buffer.from([7,234,9,7,12,34,60])),chunk('vpAg',Buffer.from([1,2])),id,end];
   for(let i=1;i<all.length;i++){const parts=[...all];parts.splice(i,0,...repeated);const t=good(png(...parts));assert.equal(t.deferredChunks,1);assert.equal(t.deferredBytes,2);}
   // Unimplemented textual envelopes remain deferred; do not certify them as tEXt.
-  const pending=good(png(hd,tx('K'),chunk('zTXt',Buffer.from([1,2])),chunk('iTXt',Buffer.from([3])),id,end));assert.equal(pending.deferredChunks,2);assert.equal(pending.deferredBytes,3);
+  const pending=good(png(hd,tx('K'),chunk('iTXt',Buffer.from([3])),id,end));assert.equal(pending.deferredChunks,1);assert.equal(pending.deferredBytes,1);
   bad(png(tx('K'),hd,id,end));bad(png(hd,id,end,tx('K')));bad(png(hd,id,tx('K'),chunk('IDAT'),end));
   const corrupt=tx('K','text');corrupt[corrupt.length-1]^=1;bad(png(hd,corrupt,id,end));
   const whole=png(hd,tx('K','text'),id,end);for(let size=0;size<whole.length;size++)bad(whole.subarray(0,size));

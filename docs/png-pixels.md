@@ -4,7 +4,7 @@
 
 `src/image/png/pixels.zig`는 [청크 구조 검사](png-structure.md), [zlib 해제](zlib-validation.md), [행 필터 복원](png-filters.md)을 연결합니다. IHDR 기반 scanline 길이, 비인터레이스/Adam7 pass, 5종 필터와 indexed-color의 실제 사용 인덱스를 검사합니다. 기준은 [PNG §7~10 및 §11.2](https://www.w3.org/TR/png-3/)입니다.
 
-이는 기본 IDAT 이미지 데이터 검증, [tRNS 메타데이터](png-transparency.md), [배경색·히스토그램](png-palette-metadata.md), [물리적 크기·유효 비트](png-sample-metadata.md), [수정 시각](png-timestamp.md), [비압축 텍스트](png-text.md) 검증입니다. 그 외 ancillary chunk 의미·순서·중복은 deferred 보고를 유지합니다. APNG frame, 투명도 적용, 색상 프로필, zTXt/iTXt, RGBA 변환, 화면 렌더링, 이미지 저장은 이 단계에서 구현하지 않습니다. HWP 컨테이너의 PrvImage/BinData를 제품 검사에서 소비하도록 연결한 상태도 아닙니다. 제품 JS API는 계속 CFB만 제공합니다.
+이는 기본 IDAT 이미지 데이터 검증, [tRNS 메타데이터](png-transparency.md), [배경색·히스토그램](png-palette-metadata.md), [물리적 크기·유효 비트](png-sample-metadata.md), [수정 시각](png-timestamp.md), [비압축 텍스트](png-text.md), [압축 텍스트](png-compressed-text.md) 검증입니다. 그 외 ancillary chunk 의미·순서·중복은 deferred 보고를 유지합니다. APNG frame, 투명도 적용, 색상 프로필, iTXt, RGBA 변환, 화면 렌더링, 이미지 저장은 이 단계에서 구현하지 않습니다. HWP 컨테이너의 PrvImage/BinData를 제품 검사에서 소비하도록 연결한 상태도 아닙니다. 제품 JS API는 계속 CFB만 제공합니다.
 
 ## 책임과 반환값
 

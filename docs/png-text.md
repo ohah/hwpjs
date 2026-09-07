@@ -12,7 +12,7 @@ Zig의 `image.png_text.parse`는 입력을 빌리는 keyword/text 슬라이스�
 
 `pixels.Report`의 text_chunks/text_keyword_bytes/text_bytes는 검증한 tEXt 통계이며 원문 목록을 소유하는 문서 모델은 아닙니다. 원문은 청크 순회와 png_text.parse로 읽습니다. 입력·청크·개수 제한은 기존 structure/chunks가 소유하며 비압축 본문 크기도 이 한도에 포함됩니다. 별도의 무제한 문자열 복사를 하지 않습니다. 검증한 tEXt만 ancillary deferred에서 제외합니다.
 
-압축 텍스트 zTXt, 국제 텍스트 iTXt, 텍스트 표시·편집·저장, 제품 JS 텍스트 API는 아직 미구현입니다. zTXt/iTXt를 tEXt 통계에 넣거나 단순 청크 CRC 성공으로 의미 검증 완료라고 보고하지 않습니다.
+[압축 텍스트 zTXt](png-compressed-text.md)는 별도 해제 모듈과 전용 통계로 연결했습니다. tEXt/zTXt 본문 합계 한도는 해당 문서가 소유합니다. 국제 텍스트 iTXt, 텍스트 표시·편집·저장, 제품 JS 텍스트 API는 아직 미구현입니다. zTXt/iTXt를 tEXt 통계에 넣거나 단순 청크 CRC 성공으로 의미 검증 완료라고 보고하지 않습니다.
 
 ## 적대적 검증
 
