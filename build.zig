@@ -41,7 +41,7 @@ pub fn build(b: *std.Build) void {
     audit.dependOn(&run_tests.step);
     audit.dependOn(compare_step);
 
-    const line_cache_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/line-cache-evidence.test.mjs" });
+    const line_cache_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/line-cache-evidence.test.mjs", "tests/hwp5/line-cache-coordinate-evidence.test.mjs" });
     const line_cache_survey = b.addSystemCommand(&.{ "node", "tests/hwp5/line-cache-survey.mjs" });
     line_cache_survey.step.dependOn(b.getInstallStep());
     const line_cache_audit = b.step("line-cache-audit", "Verify merged paragraph line-cache evidence and malformed-input tests");
