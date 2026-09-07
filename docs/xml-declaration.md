@@ -4,7 +4,7 @@
 
 ## 범위와 출처
 
-문서 entity의 BOM과 선택적 XMLDecl을 처리하는 시작 계층입니다. `prolog.open`이라는 이름이 전체 Prolog 문법(Misc/DTD 포함)의 완료를 뜻하지 않습니다. 루트 요소·태그·namespace·일반 PI·DTD·external TextDecl·스키마와 이력 복원은 아직 미구현입니다. 빈 입력도 시작 계층에서는 반환될 수 있으며 문서 유효성은 후속 문법 검사가 판단해야 합니다.
+문서 entity의 BOM과 선택적 XMLDecl을 처리하는 시작 계층입니다. `prolog.open`이라는 이름이 전체 Prolog 문법(Misc/DTD 포함)의 완료를 뜻하지 않습니다. 루트 요소·태그·일반 PI는 [문서 구조 검증](xml-document.md)과 연결되며, namespace·DTD·external TextDecl·스키마와 이력 복원은 아직 미구현입니다. 빈 입력도 시작 계층에서는 반환될 수 있으며 문서 유효성은 문서 계층이 판단합니다.
 
 기준은 W3C XML 1.0 Fifth Edition의 [§2.8 XMLDecl](https://www.w3.org/TR/2008/REC-xml-20081126/#sec-prolog-dtd), [§4.3.3 인코딩](https://www.w3.org/TR/2008/REC-xml-20081126/#charencoding), [부록 F](https://www.w3.org/TR/2008/REC-xml-20081126/#sec-guessing)입니다. 문법과 인코딩 정책을 서로 다른 파일에서 관리합니다.
 

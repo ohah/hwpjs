@@ -1,6 +1,6 @@
 const std = @import("std");
 const Input = @import("input.zig").Input;
-const Cursor = @import("tag_cursor.zig").Cursor;
+const Cursor = @import("token_cursor.zig").Cursor;
 const names = @import("names.zig");
 const values = @import("attribute_value.zig");
 pub const Attribute = struct { name: names.Name, value: values.Value };

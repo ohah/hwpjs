@@ -1,5 +1,5 @@
 const Input = @import("input.zig").Input;
-const Cursor = @import("tag_cursor.zig").Cursor;
+const Cursor = @import("token_cursor.zig").Cursor;
 const references = @import("references.zig");
 pub const Part = union(enum) {
     literal: u21,

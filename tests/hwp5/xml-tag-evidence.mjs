@@ -29,5 +29,5 @@ export function xmlTagEvidence(source,e,limit=67108864){
   const raw=xmlEncode(source.slice(0,at),e),nameBytes=xmlEncode(tagName,e),characters=[...source.slice(0,at).replace(/\r\n?/g,'\n')].length;
   const out=[words(kind,raw.length,nameBytes.length,attrs.length,references,unresolved,raw.length,limit-characters),raw,nameBytes];
   for(const a of attrs){const n=xmlEncode(a.name,e),v=xmlEncode(a.raw,e);out.push(words(n.length,v.length,a.parts.length-a.unknown,a.refs,a.unknown),n,v);for(const p of a.parts){if(p.kind===3){const bytes=xmlEncode(p.name,e);out.push(words(3,bytes.length),bytes);}else out.push(words(p.kind,p.value));}}
-  return {wire:Buffer.concat(out),bytes:raw.length,characters,attributes:attrs.length,references,unresolved,maxNameBytes:Math.max(nameBytes.length,...attrs.map(a=>xmlEncode(a.name,e).length))};
+  return {wire:Buffer.concat(out),kind,name:tagName,units:at,bytes:raw.length,characters,attributes:attrs.length,references,unresolved,maxNameBytes:Math.max(nameBytes.length,...attrs.map(a=>xmlEncode(a.name,e).length))};
 }

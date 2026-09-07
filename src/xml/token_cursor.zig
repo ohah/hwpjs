@@ -1,7 +1,7 @@
 const Input = @import("input.zig").Input;
 const names = @import("names.zig");
 const references = @import("references.zig");
-/// Shared byte budget for the tag and every nested attribute/reference operation.
+/// Shared token byte budget, including nested name/attribute/reference operations.
 pub const Cursor = struct {
     input: Input,
     start: usize,
