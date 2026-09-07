@@ -32,6 +32,13 @@ pub fn inspectDecoded(a: std.mem.Allocator, input: Input, options: Options) !Rep
         local.framing.max_records = @min(options.framing.max_records, options.max_total_records - records);
         sections[index] = try @import("section.zig").inspectCollected(a, input.sections[input_index].bytes, header.version(), doc.resources, local, .{ .index = &memos, .allocator = a, .section = index, .ranges = &ranges });
         records += sections[index].records;
+        if (local.forms) |*budget| {
+            // Each section was already constrained by these remaining budgets.
+            const used = sections[index].forms;
+            budget.max_forms -= used.inspected_forms;
+            budget.properties.max_input_bytes -= used.property_bytes;
+            budget.properties.max_nodes -= used.property_nodes;
+        }
     }
     const memo_report = memos.inspect();
     try memo_report.validateKnown();

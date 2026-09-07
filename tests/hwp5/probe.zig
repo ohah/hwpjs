@@ -170,6 +170,8 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         106 => return @import("form-control-probe.zig").run(a, bytes, limit),
         107 => return @import("form-links-probe.zig").run(a, bytes, limit),
         108 => return @import("form-schema-probe.zig").run(a, bytes, limit),
+        109 => return @import("document-probe.zig").formed(a, bytes, limit),
+        110 => return @import("container-probe.zig").formed(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

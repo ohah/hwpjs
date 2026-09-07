@@ -4,6 +4,7 @@ import { objectActual } from "./objects.mjs";
 import { headerFooterActual } from "./header-footer.mjs";
 import { numberControlActual } from "./number-controls.mjs";
 import { reportBytes } from "./document-report-wire.mjs";
+import {unselectedForms} from './form-report-evidence.mjs';
 import { pageNumberActual } from "./page-number.mjs";
 import { indexMarkActual } from "./index-mark.mjs";
 import { visibilityActual } from "./page-visibility.mjs";
@@ -164,6 +165,7 @@ export function documentActual(call, h, doc, sections) {
       ...curveOwnerActual(call,v,b).map(w),
       ...pictureOwnerActual(call,v,b,0,bins).map(w),
       ...groupActual(call,v,b).map(w),
+      ...unselectedForms(b,records(b)).map(w),
     );
   }
   const want = Buffer.concat(expected);

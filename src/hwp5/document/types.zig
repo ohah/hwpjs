@@ -6,6 +6,8 @@ pub const DrawingStyleOptions = @import("../body/drawing_style_validation.zig").
 pub const Section = struct { index: u16, bytes: []const u8 };
 pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
 pub const Options = struct {
+    /// Explicit observed UTF-16 form interpretation; budgets span all sections.
+    forms: ?@import("../body/form_validation.zig").Options = null,
     forbidden_chars: @import("../docinfo/forbidden_validation.zig").Layout = .preserve_raw,
     picture: @import("../body/picture_validation.zig").Options = .{},
     curve_layout: @import("../body/shape_curve.zig").Layout = .observed_i32_points,
@@ -44,6 +46,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    forms: @import("../body/form_validation.zig").Report = .{},
     shape_groups: @import("../body/group_validation.zig").Report = .{},
     pictures: @import("../body/picture_validation.zig").Report = .{},
     curves: @import("../body/curve_validation.zig").Report = .{},

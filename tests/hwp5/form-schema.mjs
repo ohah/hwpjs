@@ -59,6 +59,7 @@ function rewrite(rows,changed) {
   const write=parent=>(children.get(parent)??[]).map(i=>{const r=rows[i],key=r.key.toString('utf16le');return changed.has(i)?changed.get(i):r.kind===0?set(key,write(i))+' ':scalar(key,r.kind,r.value.toString('utf16le'));}).join('');
   return write(null);
 }
+export {oracle as formSchemaEvidence,rewrite as rewriteFormProperties};
 export function formSchemaActual(call,cfb) {
   const results=[],ids=['????','tbp+','tbc+','boc+','tbr+','tde+'];
   for(const name of ['form-01.hwp','form-02.hwp']) {

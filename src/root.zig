@@ -66,6 +66,7 @@ test {
     _ = @import("hwp5/body/form_control_tests.zig");
     _ = @import("hwp5/body/form_links_tests.zig");
     _ = @import("hwp5/body/form_schema_tests.zig");
+    _ = @import("hwp5/document/form_tests.zig");
     _ = @import("hwp5/body/group_validation_tests.zig");
     _ = @import("hwp5/body/shape_picture_tests.zig");
     _ = @import("hwp5/body/picture_color_tests.zig");

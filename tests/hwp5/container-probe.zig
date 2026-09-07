@@ -4,6 +4,11 @@ const int = @import("resource-probe.zig").int;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return inspect(a, bytes, limit, false, .{});
 }
+pub fn formed(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const forms = try @import("form-selection.zig").read(&r);
+    return inspect(a, bytes[r.offset..], limit, false, .{ .forms = forms });
+}
 pub fn viewText(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return inspect(a, bytes, limit, false, .{ .view_text_report = true });
 }
@@ -44,6 +49,7 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: boo
     var r: core.Reader = .{ .bytes = bytes };
     const max_bytes = try r.readInt(u32);
     var report = try core.hwp5.container_validation.inspect(a, bytes[r.offset..], .{ .storage_layout = if (specified) .specified else .observed_optional_extension, .document = .{
+        .forms = selection.forms,
         .forbidden_chars = selection.forbidden_layout,
         .drawing_style = selection.style,
         .arc_layout = selection.arc,

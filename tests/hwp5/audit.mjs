@@ -26,6 +26,7 @@ import {formPropertyEdges,formPropertyActual} from "./form-property.mjs";
 import {formControlEdges,formControlActual} from "./form-control.mjs";
 import {formLinkEdges,formLinkActual} from "./form-links.mjs";
 import {formSchemaEdges,formSchemaActual} from "./form-schema.mjs";
+import {formDocumentActual} from "./form-document.mjs";
 import {memoEndEdges,memoEndActual} from "./memo-end.mjs";
 import {paragraphFlowEdges,paragraphFlowActual} from "./paragraph-flows.mjs";
 import {groupInfoEdges} from "./group-info.mjs";
@@ -478,6 +479,7 @@ const formPropertyResults = {edges:formPropertyEdges(call),actual:formPropertyAc
 const formControlResults = {edges:formControlEdges(call),actual:formControlActual(call,cfb)};
 const formLinkResults = {edges:formLinkEdges(call),actual:formLinkActual(call,cfb)};
 const formSchemaResults = {edges:formSchemaEdges(call),actual:formSchemaActual(call,cfb)};
+const formDocumentResults = formDocumentActual(call,cfb);
 const memoEndResults = {edges:memoEndEdges(call),actual:memoEndActual(call,cfb)};
 const paragraphFlowResults = {edges:paragraphFlowEdges(call),actual:paragraphFlowActual(call,cfb)};
 const groupInfoPairResults = groupInfoPair(call,cfb);
@@ -993,6 +995,7 @@ console.log(
       formControlResults,
       formLinkResults,
       formSchemaResults,
+      formDocumentResults,
       memoEndResults,
       paragraphFlowResults,
       groupInfoPairResults,

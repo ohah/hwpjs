@@ -3,6 +3,7 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub const Selection = struct {
+    forms: ?core.hwp5.form_validation.Options = null,
     view_text_report: bool = false,
     forbidden_report: bool = false,
     forbidden_layout: @FieldType(core.hwp5.document_validation.Options, "forbidden_chars") = .preserve_raw,
@@ -20,6 +21,11 @@ pub fn fields(a: std.mem.Allocator, out: *std.ArrayList(u8), value: anytype) !vo
 }
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return configured(a, bytes, limit, .{});
+}
+pub fn formed(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const forms = try @import("form-selection.zig").read(&r);
+    return configured(a, bytes[r.offset..], limit, .{ .forms = forms });
 }
 pub fn forbidden(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
@@ -108,6 +114,7 @@ fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: 
     }
     if (r.offset != bytes.len) return error.TrailingDocumentInput;
     var report = try d.inspectDecoded(a, .{ .header = header, .doc_info = doc, .sections = sections }, .{
+        .forms = selection.forms,
         .forbidden_chars = selection.forbidden_layout,
         .drawing_style = selection.style,
         .arc_layout = selection.arc,
@@ -178,6 +185,7 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
         try fields(a, &out, s.curves);
         try fields(a, &out, s.pictures);
         try fields(a, &out, s.shape_groups);
+        try fields(a, &out, s.forms);
     }
     return out.toOwnedSlice(a);
 }
