@@ -2,7 +2,7 @@
 
 ## 계약과 현재 범위
 
-[ICC.1:2022 §10.6·§10.18 Table 68](https://www.color.org/specifications/ICC.1-2022-05.pdf)을 기준으로 `gamma_forward`는 u8Fixed8 감마, `parametric_forward`는 기존 파서의 s15Fixed16 파라미터와 함수 0–4를 평가합니다. 원시 파서의 계약은 변경하지 않습니다. 입력은 유한한 f64의 [0,1]이며 출력은 [0,1]로 제한합니다. 이는 특정 입력의 수치 평가이며 곡선 전체 정의역·단조성·연속성·역함수·프로파일 유효성을 보증하지 않습니다. 제품 색상 변환·TRC 통합·identity dispatch는 아직 남아 있습니다.
+[ICC.1:2022 §10.6·§10.18 Table 68](https://www.color.org/specifications/ICC.1-2022-05.pdf)을 기준으로 `gamma_forward`는 u8Fixed8 감마, `parametric_forward`는 기존 파서의 s15Fixed16 파라미터와 함수 0–4를 평가합니다. 원시 파서의 계약은 변경하지 않습니다. 입력은 유한한 f64의 [0,1]이며 출력은 [0,1]로 제한합니다. 이는 특정 입력의 수치 평가이며 곡선 전체 정의역·단조성·연속성·역함수·프로파일 유효성을 보증하지 않습니다. identity를 포함한 후속 연결은 [TRC 순방향 평가](icc-trc-forward.md)에서 관리하며 제품 색상 변환은 아직 남아 있습니다.
 
 `curve_math`가 좌표 검사·실수 거듭제곱 정책·출력 제한을 공유합니다. 각 계산 함수는 ReleaseFast에서도 strict float 모드를 명시합니다. 타입별 분기와 고정소수점 변환은 전용 평가기가 소유하며 파라미터 개수는 원시 파서의 Function.count를 재사용합니다. 없는 파라미터 슬롯은 읽지 않습니다.
 

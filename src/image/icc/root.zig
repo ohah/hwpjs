@@ -7,6 +7,7 @@ pub const xyz_type = @import("xyz_type.zig");
 pub const curve_type = @import("curve_type.zig");
 pub const parametric_curve = @import("parametric_curve.zig");
 pub const trc_tag = @import("trc_tag.zig");
+pub const trc_forward = @import("trc_forward.zig");
 pub const sampled_inverse = @import("sampled_inverse.zig");
 pub const sampled_forward = @import("sampled_forward.zig");
 pub const gamma_forward = @import("gamma_forward.zig");

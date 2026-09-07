@@ -8,7 +8,7 @@ pub const max_denominator = std.math.maxInt(u64) / 65535;
 /// O(1), no allocation. x must be normalized, and denominator is bounded explicitly.
 pub fn evaluate(samples: Samples, x: Fraction) !Fraction {
     const count = try samples.checkedCount();
-    if (x.denominator == 0 or x.numerator > x.denominator) return error.InvalidIccCurveCoordinate;
+    try x.validate();
     if (x.denominator > max_denominator) return error.IccFractionLimitExceeded;
     const position = @as(u128, x.numerator) * (count - 1);
     const index: usize = @intCast(position / x.denominator);
