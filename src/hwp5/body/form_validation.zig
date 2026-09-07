@@ -17,6 +17,16 @@ pub const Report = struct {
     char_shape_invalid: usize = 0,
     char_shape_absent: usize = 0,
     char_shape_deferred: usize = 0,
+    explicit_char_shape_valid: usize = 0,
+    explicit_char_shape_invalid: usize = 0,
+    explicit_char_shape_absent: usize = 0,
+    surrounding_char_shape: usize = 0,
+    undetermined_char_shape: usize = 0,
+    choice_checked: usize = 0,
+    choice_unchecked: usize = 0,
+    choice_indeterminate: usize = 0,
+    choice_invalid: usize = 0,
+    choice_deferred: usize = 0,
 };
 /// Same Tree and Links.build result. Null selection counts raw presence only.
 /// Returns scalars, never slices into the temporary form/property arrays.
@@ -41,15 +51,37 @@ pub fn inspect(a: std.mem.Allocator, tree: Tree, links: Links, selection: ?Optio
         const schema = try @import("form_schema.zig").inspectObserved(form.properties, kind);
         report.known_property_nodes += schema.known_nodes;
         report.deferred_property_nodes += schema.deferred_nodes;
-        if (kind == .unknown) {
+        const stored: @import("form_references.zig").Resolution = if (kind == .unknown) unknown: {
             report.unknown_types += 1;
             report.char_shape_deferred += 1;
-            continue;
+            break :unknown .absent;
+        } else known: {
+            const reference = try @import("form_references.zig").storedCharShapeObserved(form.properties, schema, char_shapes);
+            switch (reference) {
+                .ordinal => report.char_shape_valid += 1,
+                .invalid => report.char_shape_invalid += 1,
+                .absent => report.char_shape_absent += 1,
+            }
+            break :known reference;
+        };
+        const semantics = @import("form_semantics.zig").inspectObserved(form.properties, schema, kind, stored);
+        switch (semantics.char_source) {
+            .undetermined => report.undetermined_char_shape += 1,
+            .surrounding => report.surrounding_char_shape += 1,
+            .explicit => switch (semantics.active_reference) {
+                .valid => report.explicit_char_shape_valid += 1,
+                .invalid => report.explicit_char_shape_invalid += 1,
+                .absent => report.explicit_char_shape_absent += 1,
+                .deferred => unreachable,
+            },
         }
-        switch (try @import("form_references.zig").storedCharShapeObserved(form.properties, schema, char_shapes)) {
-            .ordinal => report.char_shape_valid += 1,
-            .invalid => report.char_shape_invalid += 1,
-            .absent => report.char_shape_absent += 1,
+        switch (semantics.choice) {
+            .checked => report.choice_checked += 1,
+            .unchecked => report.choice_unchecked += 1,
+            .indeterminate => report.choice_indeterminate += 1,
+            .invalid => report.choice_invalid += 1,
+            .deferred => report.choice_deferred += 1,
+            .not_applicable => {},
         }
     }
     return report;

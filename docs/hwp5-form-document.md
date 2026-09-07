@@ -25,10 +25,13 @@
 | char_shape_valid / char_shape_invalid | 인식한 저장 CharShapeID가 범위 안 / 범위 밖인 수 |
 | char_shape_absent | 알려진 양식 종류에서 인식된 CharShapeID 경로가 없는 수 |
 | char_shape_deferred | 미지 양식 종류여서 저장 참조를 해석하지 않은 수 |
+| explicit_char_shape_valid / explicit_char_shape_invalid / explicit_char_shape_absent | 지정 글자 모양 출처를 선택한 양식의 저장 참조 상태별 수 |
+| surrounding_char_shape / undetermined_char_shape | 주변 글자 모양 출처를 선택한 수 / 출처 미정 수 |
+| choice_checked / choice_unchecked / choice_indeterminate / choice_invalid / choice_deferred | 선택 상자·라디오 단추의 선택 상태별 수 |
 
 미선택이면 원시 개수와 unselected 개수만 기록하고 양식 소유 관계·payload 문법·스키마를 새로 검사하지 않습니다. 다른 문단/토큰/리소스 검사는 계속 적용되므로 임의의 손상 Section을 허용한다는 뜻은 아닙니다. 선택한 경우 양식 검사 오류가 문서와 CFB 진입점까지 전파되며 부분 문서 보고서를 반환하지 않습니다.
 
-`inspected_forms`에는 속성 문법까지 읽었지만 타입과 의미는 모르는 양식도 포함되므로 전체 의미 검증 성공 수가 아닙니다. 미지 타입은 별도 unknown/deferred 카운터로 남깁니다. 범위 밖 저장 참조는 `char_shape_invalid` 진단이며 자동 오류로 승격하지 않습니다. `FollowContext`에 따른 활성 참조 여부를 아직 결정하지 않기 때문입니다. 음수/오버플로 등 명시적 저장-ID 해석 오류는 기존 참조 파서 계약대로 반환합니다.
+`inspected_forms`에는 속성 문법까지 읽었지만 타입과 의미는 모르는 양식도 포함되므로 전체 의미 검증 성공 수가 아닙니다. 미지 타입은 별도 unknown/deferred 카운터로 남깁니다. 저장 참조와 활성 참조 진단은 분리하며 범위 밖 참조를 자동 오류로 승격하지 않습니다. 음수/오버플로 등 명시적 저장-ID 해석 오류는 기존 참조 파서 계약대로 반환합니다. `form_semantics`가 소유하는 [글자 모양 선택·선택 상태 계약](hwp5-form-semantics.md)에 따라 추가 수치를 집계하며 주변 글자 모양의 실제 ID는 아직 해석하지 않습니다.
 
 일반 control_types의 `form` deferred 분류나 ParameterSet 등 다른 모듈의 미해석 진단을 양식 검사 성공만으로 제거하지 않습니다. 제품 공개 JS ABI는 변경하지 않았습니다.
 
@@ -42,7 +45,7 @@
 
 ## 실파일·적대적 검증
 
-테스트 mode 109(문서)와 110(CFB)은 선택 u8·양식/속성 바이트/노드/깊이 한도 u32 네 값 뒤에 기존 입력을 받습니다. 공통 `form-selection.zig`가 선택 접두부를 읽습니다. 전체 문서 보고서는 각 구역 끝에 forms의 14개 수치를 추가합니다. 테스트 측 stride/필드 위치 기준은 기존 `document-report-wire.mjs` 한곳입니다. 구역별 위치를 별도 구현에 하드코딩하지 않으며, report-wire 계약 테스트는 독립 고정값으로 744바이트 구역 크기와 새 필드 시작/끝·범위를 검사합니다.
+테스트 mode 109(문서)와 110(CFB)은 선택 u8·양식/속성 바이트/노드/깊이 한도 u32 네 값 뒤에 기존 입력을 받습니다. 공통 `form-selection.zig`가 선택 접두부를 읽습니다. 전체 문서 보고서는 각 구역 끝에 forms의 24개 수치를 추가합니다. 테스트 측 stride/필드 위치 기준은 기존 `document-report-wire.mjs` 한곳입니다. 구역별 위치를 별도 구현에 하드코딩하지 않으며, report-wire 계약 테스트는 독립 고정값으로 784바이트 구역 크기와 새 필드 시작/끝·범위를 검사합니다.
 
 기본 문서 대조도 독립 원시 레코드 개수로 unselected 진단을 확인하도록 갱신했습니다. 선택 결과는 기존 독립 JS 속성/스키마 증거에서 계산해 보고서 전체 바이트와 대조합니다. 변경하지 않은 다른 모듈 보고서와 CFB 부가 스트림 진단도 함께 비교합니다.
 
@@ -54,7 +57,7 @@
 
 네이티브 검사는 12개 구역에서 정상 경로와 마지막 구역의 속성 노드 예산 부족 경로에 모든 할당 실패를 주입합니다. 이전 구역의 임시 결과, 문서 보고서 배열, 메모/범위 수집 상태의 정리와 원본 바이트 불변성을 확인합니다. 양식 수 0 제한과 미선택 진단의 차이도 검사합니다.
 
-## 실행 결과와 적대적 재검토
+## 최초 통합 실행 이력 (조건 해석 추가 전)
 
 2026-09-07 최종 테스트 구성으로 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. 세 모드 모두 16/16 단계, 네이티브 290/290개, Node 47/47개와 조사 도구 22/22개가 통과했습니다. HWP5 probe 호출 계수는 각각 1,404,691이며 고유 기능 수나 전체 지원률이 아닙니다. 최종 로그는 `/tmp/hwpjs-form-document-debug-final.log`, `/tmp/hwpjs-form-document-safe.log`, `/tmp/hwpjs-form-document-fast.log`입니다.
 

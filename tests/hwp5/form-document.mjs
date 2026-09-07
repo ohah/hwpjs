@@ -6,6 +6,7 @@ import {sectionFieldOffset,reportBytes} from './document-report-wire.mjs';
 import {unselectedForms} from './form-report-evidence.mjs';
 import {formSchemaEvidence,rewriteFormProperties} from './form-schema.mjs';
 import {formPropertyEvidence} from './form-property.mjs';
+import {formSemanticCounters} from './form-semantics.mjs';
 import {controlLinkEvidence} from './links.mjs';
 const w=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n>>>0);return b;};
 const selection=(o={})=>Buffer.concat([Buffer.from([o.mode??1]),w(o.forms??100000),w(o.bytes??67108864),w(o.nodes??100000),w(o.depth??64)]);
@@ -16,6 +17,7 @@ function selected(bytes,count) {
     const b=bytes.subarray(r.start,r.end),kind=Math.max(0,kinds.indexOf(b.subarray(0,4).toString())),p=b.subarray(14,14+b.readUInt16LE(12)*2),e=formSchemaEvidence(p,kind,count);
     v[4]++;v[5]+=Number(kind===0);v[6]+=p.length;v[7]+=e.rows.length;v[8]+=e.checked;v[9]+=e.deferred;
     if(kind===0)v[13]++;else{const tag=e.wire.readUInt32LE(8);v[tag===1?10:tag===2?11:12]++;}
+    formSemanticCounters(e,kind).forEach((n,j)=>v[14+j]+=n);
   }
   return v;
 }
@@ -34,15 +36,16 @@ function replace(bytes,r,payload) {
 function changeProperty(bytes,index,key,value,kind=2) {
   const r=documentRecords(bytes).filter(r=>r.tag===91)[index],b=bytes.subarray(r.start,r.end),p=b.subarray(14,14+b.readUInt16LE(12)*2),{rows}=formPropertyEvidence(p),node=rows.findIndex(n=>n.key.toString('utf16le')===key);
   assert.ok(node>=0);
-  const text=rewriteFormProperties(rows,new Map([[node,`${key}:${['set','wstring','int','bool'][kind]}:${kind<2?value.length+':':''}${value} `]])),wide=Buffer.from(text,'utf16le'),prefix=Buffer.from(b.subarray(0,14));prefix.writeUInt32LE(wide.length/2,8);prefix.writeUInt16LE(wide.length/2,12);
+  const text=rewriteFormProperties(rows,new Map([[node,value===null?'':`${key}:${['set','wstring','int','bool'][kind]}:${kind<2?value.length+':':''}${value} `]])),wide=Buffer.from(text,'utf16le'),prefix=Buffer.from(b.subarray(0,14));prefix.writeUInt32LE(wide.length/2,8);prefix.writeUInt16LE(wide.length/2,12);
   return replace(bytes,r,Buffer.concat([prefix,wide,b.subarray(14+p.length)]));
 }
 export function formDocumentActual(call,cfb) {
-  const saved=[],results=[];let rejected=0;
+  const saved=[],results=[];let rejected=0,semanticMutations=0;
   for(const name of ['form-01.hwp','form-02.hwp']) {
     const file=readFileSync(new URL('../../reference/rhwp/samples/'+name,import.meta.url));cfb.parse(file,{strict:true});
     const model=cfb.document(),h=Buffer.from(cfb.findExact('/FileHeader').content),doc=inflateRawSync(cfb.findExact('/DocInfo').content),body=inflateRawSync(cfb.findExact('/BodyText/Section0').content),sections=[{index:0,bytes:body}],count=documentRecords(doc).filter(r=>r.tag===21).length;
     const decoded=decodedDocumentInput(h,doc,sections),base=call(24,decoded),want=expected(base,sections,count),values=selected(body,count);
+    assert.deepEqual(values.slice(14),[5,0,0,0,0,1,1,0,0,0]);
     const run=(b=decoded,o={})=>call(109,Buffer.concat([selection(o),b]));
     assert.deepEqual(run(),want);assert.deepEqual(run(decoded,{mode:0}),base);
     const exact={forms:5,bytes:values[6],nodes:values[7],depth:1};assert.deepEqual(run(decoded,exact),want);
@@ -56,6 +59,28 @@ export function formDocumentActual(call,cfb) {
     const wrongOwner=Buffer.from(body);wrongOwner.writeUInt32LE((wrongOwner.readUInt32LE(firstObject.offset)&~(1023<<10))|(1<<10),firstObject.offset);
     const duplicate=Buffer.concat([body.subarray(0,firstObject.end),body.subarray(firstObject.offset,firstObject.end),body.subarray(firstObject.end)]);
     const bodyRoot=model.nodes.findIndex(n=>n.kind===1&&n.parent===0&&n.name==='BodyText');assert.ok(bodyRoot>=0);
+    const formRecords=records.filter(r=>r.tag===91);
+    for(const index of formRecords.map((r,i)=>[r,i]).filter(([r])=>['tbc+','tbr+'].includes(body.subarray(r.start,r.start+4).toString())).map(([,i])=>i)) {
+      for(const follow of ['0','1',null,'2','-1'])for(const tri of ['0','1',null,'2']) {
+        let changed=changeProperty(body,index,'CharShapeID',String(count));
+        changed=changeProperty(changed,index,'FollowContext',follow,3);
+        changed=changeProperty(changed,index,'TriState',tri,3);
+        changed=changeProperty(changed,index,'Value','2');
+        const sections=[{index:0,bytes:changed}],d=decodedDocumentInput(h,doc,sections),out=run(d),v=selected(changed,count);
+        assert.deepEqual(out,expected(call(24,d),sections,count));
+        assert.equal(v[11],1);assert.equal(v[14],4);
+        assert.equal(v[15],Number(follow==='0'));
+        assert.equal(v[17],Number(follow==='1'));
+        assert.equal(v[18],Number(!['0','1'].includes(follow)));
+        assert.equal(v[21],Number(tri==='1'));assert.equal(v[22],Number(tri==='0'));assert.equal(v[23],Number(tri===null||tri==='2'));
+        assert.deepEqual(run(d,{mode:0}),call(24,d));
+        const changedModel={...model,nodes:model.nodes.map(n=>n.kind===2&&n.parent===bodyRoot&&n.name==='Section0'?{...n,content:deflateRawSync(changed)}:n)};
+        const rebuilt=Buffer.concat([w(67108864),cfb.write(changedModel)]),b=call(25,rebuilt);
+        assert.deepEqual(call(110,Buffer.concat([selection(),rebuilt])),expected(b,sections,count));
+        assert.deepEqual(call(110,Buffer.concat([selection({mode:0}),rebuilt])),b);
+        semanticMutations++;check();
+      }
+    }
     for(const [changed,error]of [
       [changeProperty(body,0,'CharShapeID','0',1),/FormSchemaTypeMismatch/],
       [changeProperty(body,4,'CharShapeID','4294967296'),/FormCharShapeIdOverflow/],
@@ -85,5 +110,5 @@ export function formDocumentActual(call,cfb) {
   assert.deepEqual(run({mode:0,forms:0,bytes:0,nodes:0,depth:0}),base);
   assert.deepEqual(call(109,Buffer.concat([selection(exact),decodedDocumentInput(a.h,doc,[...sections].reverse())])),want);
   assert.throws(()=>run({mode:2}),/InvalidMode/);rejected++;
-  return {actual:results,multiSection:{values:[v0,v1],budget:exact},rejected};
+  return {actual:results,multiSection:{values:[v0,v1],budget:exact},rejected,semanticMutations};
 }

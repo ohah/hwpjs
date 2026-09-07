@@ -58,6 +58,8 @@ fn exercise(a: std.mem.Allocator, late: bool) !void {
         try t.expectEqual(@as(usize, 1), s.forms.inspected_forms);
         try t.expectEqual(@as(usize, 2), s.forms.known_property_nodes);
         try t.expectEqual(@as(usize, 1), s.forms.char_shape_valid);
+        try t.expectEqual(@as(usize, 1), s.forms.undetermined_char_shape);
+        try t.expectEqual(@as(usize, 0), s.forms.explicit_char_shape_valid);
     }
 }
 test "form document validation shares budgets and releases every allocation on late failure" {

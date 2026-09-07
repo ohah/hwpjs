@@ -33,7 +33,7 @@ const groups = Object.freeze({
   curves: 6,
   pictures: 9,
   shape_groups: 4,
-  forms: 14,
+  forms: 24,
 });
 export const documentPrefixBytes = 33 * 4;
 export const sectionReportBytes = Object.values(groups).reduce(
