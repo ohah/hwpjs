@@ -13,6 +13,7 @@ pub const required_plan = @import("required_plan.zig");
 pub const required_presence = @import("required_presence.zig");
 pub const mluc = @import("mluc.zig");
 pub const mluc_unicode = @import("mluc_unicode.zig");
+pub const mluc_selection = @import("mluc_selection.zig");
 pub const localized_tag = @import("localized_tag.zig");
 pub const sampled_inverse = @import("sampled_inverse.zig");
 pub const sampled_forward = @import("sampled_forward.zig");

@@ -38,6 +38,7 @@ test {
     _ = @import("image/icc/required_tests.zig");
     _ = @import("image/icc/mluc_tests.zig");
     _ = @import("image/icc/mluc_unicode_tests.zig");
+    _ = @import("image/icc/mluc_selection_tests.zig");
     _ = @import("image/icc/sampled_inverse_tests.zig");
     _ = @import("image/icc/sampled_forward_tests.zig");
     _ = @import("image/icc/analytic_forward_tests.zig");
