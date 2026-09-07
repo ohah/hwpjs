@@ -24,6 +24,7 @@ test {
     _ = @import("image/png/international_tests.zig");
     _ = @import("image/png/suggested_tests.zig");
     _ = @import("image/png/color_fixed_tests.zig");
+    _ = @import("image/png/srgb_tests.zig");
     _ = @import("xml/input_tests.zig");
     _ = @import("xml/declaration_tests.zig");
     _ = @import("xml/prolog_tests.zig");

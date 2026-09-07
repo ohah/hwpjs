@@ -7,6 +7,7 @@ import {compressedTextEvidence} from './png-compressed-text-evidence.mjs';
 import {internationalEvidence} from './png-international-evidence.mjs';
 import {suggestedEvidence} from './png-suggested-evidence.mjs';
 import {colorFixedEvidence} from './png-color-fixed-evidence.mjs';
+import {srgbEvidence} from './png-srgb-evidence.mjs';
 export function transparencyEvidence(structure) {
   const {chunks,fields}=structure;const color=fields[3],depth=fields[2],palette=fields[8];
   const indexes=chunks.map((c,i)=>c.name==='tRNS'?i:-1).filter(i=>i>=0);assert.ok(indexes.length<=1);
@@ -28,8 +29,9 @@ export function transparencyEvidence(structure) {
   const internationalText=internationalEvidence(structure,64*1024*1024-text.textBytes-compressedText.textBytes);
   const suggestedPalettes=suggestedEvidence(structure);
   const colorFixed=colorFixedEvidence(structure);
-  const deferredChunks=fields[9]-indexes.length-paletteMetadata.validatedChunks-sampleMetadata.validatedChunks-timestampCount-text.entries.length-compressedText.entries.length-internationalText.entries.length-suggestedPalettes.fields[0]-colorFixed.count,deferredBytes=fields[10]-payloadBytes-paletteMetadata.validatedBytes-sampleMetadata.validatedBytes-timestampCount*7-text.payloadBytes-compressedText.payloadBytes-internationalText.payloadBytes-suggestedPalettes.fields[7]-colorFixed.bytes;
+  const srgb=srgbEvidence(structure,colorFixed),colorSemanticsDeferred=colorFixed.count>0||srgb.present>0;
+  const deferredChunks=fields[9]-indexes.length-paletteMetadata.validatedChunks-sampleMetadata.validatedChunks-timestampCount-text.entries.length-compressedText.entries.length-internationalText.entries.length-suggestedPalettes.fields[0]-colorFixed.count-srgb.present,deferredBytes=fields[10]-payloadBytes-paletteMetadata.validatedBytes-sampleMetadata.validatedBytes-timestampCount*7-text.payloadBytes-compressedText.payloadBytes-internationalText.payloadBytes-suggestedPalettes.fields[7]-colorFixed.bytes-srgb.present;
   const result=[indexes.length,kind,count,masked,...raw,...values,deferredChunks,deferredBytes];
   const wire=Buffer.alloc(304);result.forEach((v,i)=>wire.writeUInt32LE(v,i*4));alpha.copy(wire,48);
-  return {wire,present:indexes.length,payloadBytes,deferredChunks,deferredBytes,paletteMetadata,sampleMetadata,timestamp,text,compressedText,internationalText,suggestedPalettes,colorFixed};
+  return {wire,present:indexes.length,payloadBytes,deferredChunks,deferredBytes,paletteMetadata,sampleMetadata,timestamp,text,compressedText,internationalText,suggestedPalettes,colorFixed,srgb,colorSemanticsDeferred};
 }

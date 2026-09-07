@@ -72,6 +72,7 @@ import {registryEdges} from './bcp47-registry.mjs';
 import {pngInternationalEdges} from './png-international.mjs';
 import {pngSuggestedEdges} from './png-suggested.mjs';
 import {pngColorFixedEdges} from './png-color-fixed.mjs';
+import {pngSrgbEdges} from './png-srgb.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
 import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
 import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
@@ -473,6 +474,7 @@ const registryResults = registryEdges(call);
 const pngInternationalResults = pngInternationalEdges(call,cfb);
 const pngSuggestedResults = pngSuggestedEdges(call,cfb);
 const pngColorFixedResults = pngColorFixedEdges(call,cfb);
+const pngSrgbResults = pngSrgbEdges(call,cfb);
 const compatibilityEdgeResults = compatibilityEdges(call);
 const headerFooterEdgeResults = headerFooterEdges(call);
 const numberControlEdgeResults = numberControlEdges(call);
@@ -1016,6 +1018,7 @@ console.log(
       pngInternationalResults,
       pngSuggestedResults,
       pngColorFixedResults,
+      pngSrgbResults,
       compatibilityEdgeResults,
       headerFooterEdgeResults,
       numberControlEdgeResults,

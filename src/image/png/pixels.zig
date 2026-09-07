@@ -31,6 +31,7 @@ pub const Report = struct {
     suggested_palettes: suggested_palettes.Stats,
     gamma: ?@import("gamma.zig").Value,
     chromaticities: ?@import("chromaticities.zig").Value,
+    srgb: ?@import("srgb.zig").Intent,
     /// Wire presence is not proof of color precedence, usable gamma or valid gamut.
     color_semantics_deferred: bool,
 };
@@ -119,7 +120,8 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
             .suggested_palettes = suggested.stats,
             .gamma = meta.gamma,
             .chromaticities = meta.chromaticities,
-            .color_semantics_deferred = meta.gamma != null or meta.chromaticities != null,
+            .srgb = meta.srgb,
+            .color_semantics_deferred = meta.gamma != null or meta.chromaticities != null or meta.srgb != null,
         },
     };
 }

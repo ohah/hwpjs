@@ -42,3 +42,5 @@
 ## 감마·색도 추가 계약
 
 gAMA/cHRM 원값과 색상 해석 보류의 구분은 [PNG 감마·색도](png-color-fixed.md)를 참고합니다.
+
+sRGB의 rendering intent와 동반 청크 일치 검사는 [PNG sRGB](png-srgb.md)를 참고합니다.

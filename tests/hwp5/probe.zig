@@ -202,6 +202,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         139 => return @import("png-international-probe.zig").run(a, bytes, limit),
         140 => return @import("png-suggested-probe.zig").run(a, bytes, limit),
         141 => return @import("png-color-fixed-probe.zig").run(a, bytes, limit),
+        142 => return @import("png-srgb-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

@@ -12,6 +12,7 @@ const compressed_text = @import("compressed_text.zig");
 const international_text = @import("international_text.zig");
 const gamma = @import("gamma.zig");
 const chromaticities = @import("chromaticities.zig");
+const srgb = @import("srgb.zig");
 
 /// Selected ancillary semantics only. Other chunks stay deferred in structure.
 pub const State = struct {
@@ -23,6 +24,7 @@ pub const State = struct {
     timestamp: ?timestamp.Value = null,
     gamma: ?gamma.Value = null,
     chromaticities: ?chromaticities.Value = null,
+    srgb: ?srgb.Intent = null,
     text_chunks: usize = 0,
     text_keyword_bytes: usize = 0,
     text_bytes: usize = 0,
@@ -122,6 +124,7 @@ pub const State = struct {
             if (self.gamma != null) return error.DuplicatePngGamma;
             if (self.palette_seen or self.data_seen) return error.InvalidPngGammaOrder;
             const value = try gamma.parse(chunk.payload);
+            if (self.srgb != null) try srgb.validate(value, null);
             self.gamma = value;
             self.validated_chunks += 1;
             self.validated_bytes += chunk.payload.len;
@@ -129,7 +132,16 @@ pub const State = struct {
             if (self.chromaticities != null) return error.DuplicatePngChromaticities;
             if (self.palette_seen or self.data_seen) return error.InvalidPngChromaticitiesOrder;
             const value = try chromaticities.parse(chunk.payload);
+            if (self.srgb != null) try srgb.validate(null, value);
             self.chromaticities = value;
+            self.validated_chunks += 1;
+            self.validated_bytes += chunk.payload.len;
+        } else if (chunk.is("sRGB")) {
+            if (self.srgb != null) return error.DuplicatePngSrgb;
+            if (self.palette_seen or self.data_seen) return error.InvalidPngSrgbOrder;
+            const value = try srgb.parse(chunk.payload);
+            try srgb.validate(self.gamma, self.chromaticities);
+            self.srgb = value;
             self.validated_chunks += 1;
             self.validated_bytes += chunk.payload.len;
         } else if (chunk.is("sBIT")) {
