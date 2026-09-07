@@ -10,6 +10,7 @@ pub const image = @import("image/root.zig");
 test {
     _ = @import("compression/zlib_tests.zig");
     _ = @import("image/png/tests.zig");
+    _ = @import("image/png/filter_tests.zig");
     _ = @import("xml/input_tests.zig");
     _ = @import("xml/declaration_tests.zig");
     _ = @import("xml/prolog_tests.zig");

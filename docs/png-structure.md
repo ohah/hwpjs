@@ -25,6 +25,7 @@
 ## 검증 범위
 
 후속 [zlib 압축 검증](zlib-validation.md)은 별도 계층에 구현했습니다. 현재 structure.inspect의 IDAT 의미 미검사 계약과 pixels_validated=false는 그대로입니다.
+행 단위 [필터 복원](png-filters.md)도 별도 계층이며 아직 PNG 전체 이미지 조립에는 연결하지 않았습니다.
 
 네이티브에서 color type/bit depth 256×256 조합, compression/filter/interlace 각 바이트, 치수 경계, 정확/부족 예산, 잘림 전체 위치, palette와 IDAT 순서, 실패 상태 불변성을 검사합니다. IEND CRC의 고정값 `AE426082`도 대조합니다. 테스트용 WASM mode 126은 동일 보고서를 Node Buffer big-endian 읽기·Node CRC32·독립 배열 순서 oracle과 비교합니다. 합성 입력의 모든 바이트에 단일 비트를 뒤집고 청크 CRC/길이/타입/순서 손상을 검사합니다.
 
