@@ -14,8 +14,8 @@ pub const Property = struct {
 fn unit(bytes: []const u8, at: usize) u16 {
     return std.mem.readInt(u16, bytes[at..][0..2], .little);
 }
-fn equals(bytes: []const u8, ascii: []const u8) bool {
-    if (bytes.len / 2 != ascii.len) return false;
+pub fn equalsAscii(bytes: []const u8, ascii: []const u8) bool {
+    if (bytes.len % 2 != 0 or bytes.len / 2 != ascii.len) return false;
     for (ascii, 0..) |c, i| if (unit(bytes, i * 2) != c) return false;
     return true;
 }
@@ -65,7 +65,7 @@ pub const Iterator = struct {
         const start = r.offset;
         const key = try colon(&r);
         const name = try colon(&r);
-        const kind: Kind = if (equals(name, "set")) .set else if (equals(name, "wstring")) .wstring else if (equals(name, "int")) .integer else if (equals(name, "bool")) .boolean else return error.UnsupportedFormPropertyType;
+        const kind: Kind = if (equalsAscii(name, "set")) .set else if (equalsAscii(name, "wstring")) .wstring else if (equalsAscii(name, "int")) .integer else if (equalsAscii(name, "bool")) .boolean else return error.UnsupportedFormPropertyType;
         var value_start = r.offset;
         const value = if (kind == .set or kind == .wstring) blk: {
             const n = try count(try colon(&r));
