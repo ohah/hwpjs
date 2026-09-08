@@ -97,6 +97,7 @@ import {modelForwardEdges} from './icc-model-forward.mjs';
 import {normalizedInverseEdges} from './icc-normalized-inverse.mjs';
 import {gammaInverseEdges} from './icc-gamma-inverse.mjs';
 import {parametricDomainEdges} from './icc-parametric-domain.mjs';
+import {parametricTopologyEdges} from './icc-parametric-topology.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
 import {languageHistoryEdges} from './language-history.mjs';
@@ -526,6 +527,7 @@ const modelForwardResults = modelForwardEdges(call);
 const normalizedInverseResults = normalizedInverseEdges(call);
 const gammaInverseResults = gammaInverseEdges(call);
 const parametricDomainResults = parametricDomainEdges(call);
+const parametricTopologyResults = parametricTopologyEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
 const languageHistoryResults = languageHistoryEdges(call);
@@ -1097,6 +1099,7 @@ console.log(
       normalizedInverseResults,
       gammaInverseResults,
       parametricDomainResults,
+      parametricTopologyResults,
       modelParametricResults,
       iso639Results,
       languageHistoryResults,
