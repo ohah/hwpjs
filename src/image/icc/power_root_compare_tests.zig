@@ -9,10 +9,10 @@ test "bounded integer powers distinguish overflow and perfect roots" {
     try std.testing.expectEqual(@as(?u128, null), integer.bounded(2, 128, std.math.maxInt(u128)));
     try std.testing.expectEqual(@as(?u128, 0), integer.bounded(0, 4, 0));
     try std.testing.expectEqual(@as(?u128, 1), integer.bounded(0, 0, 1));
-    try std.testing.expectEqual(@as(?u64, 3), integer.root(81, 4));
-    try std.testing.expectEqual(@as(?u64, null), integer.root(80, 4));
-    try std.testing.expectEqual(@as(?u64, null), integer.root(std.math.maxInt(u64), 64));
-    try std.testing.expectEqual(@as(?u64, 1), integer.root(1, std.math.maxInt(u32)));
+    try std.testing.expectEqual(@as(?u128, 3), integer.root(81, 4));
+    try std.testing.expectEqual(@as(?u128, null), integer.root(80, 4));
+    try std.testing.expectEqual(@as(?u128, null), integer.root(std.math.maxInt(u64), 64));
+    try std.testing.expectEqual(@as(?u128, 1), integer.root(1, std.math.maxInt(u32)));
 }
 
 test "root comparison proves rational equality including negative reciprocal roots" {

@@ -104,6 +104,7 @@ import {powerLevelEdges} from './icc-power-level.mjs';
 import {rootCompareEdges} from './icc-root-compare.mjs';
 import {rootLocationsEdges} from './icc-root-locations.mjs';
 import {powerOrderEdges} from './icc-power-order.mjs';
+import {rationalPowerEdges} from './icc-rational-power.mjs';
 import {powerClipEdges} from './icc-power-clip.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
@@ -541,6 +542,7 @@ const powerLevelResults = powerLevelEdges(call);
 const rootCompareResults = rootCompareEdges(call);
 const rootLocationResults = rootLocationsEdges(call);
 const powerOrderResults = powerOrderEdges(call);
+const rationalPowerResults = rationalPowerEdges(call);
 const powerClipResults = powerClipEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
@@ -1120,6 +1122,7 @@ console.log(
       rootCompareResults,
       rootLocationResults,
       powerOrderResults,
+      rationalPowerResults,
       powerClipResults,
       modelParametricResults,
       iso639Results,

@@ -23,12 +23,12 @@ pub fn bounded(base: u128, exponent: u32, limit: u128) ?u128 {
 }
 
 /// Exact positive integer nth root, or null when the input is not a perfect power.
-pub fn root(value: u64, degree: u32) ?u64 {
+pub fn root(value: u128, degree: u32) ?u128 {
     if (degree == 0 or value == 0) return null;
     if (value == 1 or degree == 1) return value;
-    if (degree >= 64) return null; // 2^degree already exceeds every u64 input.
-    var lo: u64 = 1;
-    var hi: u64 = value;
+    if (degree >= 128) return null; // 2^degree already exceeds every u128 input.
+    var lo: u128 = 1;
+    var hi: u128 = value;
     while (lo <= hi) {
         const mid = lo + (hi - lo) / 2;
         if (bounded(mid, degree, value)) |power| {
