@@ -94,6 +94,7 @@ import {adaptationEdges} from './icc-adaptation.mjs';
 import {matrixEdges} from './icc-matrix.mjs';
 import {modelEdges} from './icc-model.mjs';
 import {modelForwardEdges} from './icc-model-forward.mjs';
+import {normalizedInverseEdges} from './icc-normalized-inverse.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
 import {languageHistoryEdges} from './language-history.mjs';
@@ -520,6 +521,7 @@ const adaptationResults = adaptationEdges(call);
 const matrixResults = matrixEdges(call);
 const modelResults = modelEdges(call);
 const modelForwardResults = modelForwardEdges(call);
+const normalizedInverseResults = normalizedInverseEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
 const languageHistoryResults = languageHistoryEdges(call);
@@ -1088,6 +1090,7 @@ console.log(
       matrixResults,
       modelResults,
       modelForwardResults,
+      normalizedInverseResults,
       modelParametricResults,
       iso639Results,
       languageHistoryResults,

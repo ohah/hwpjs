@@ -232,6 +232,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         174 => return @import("icc-matrix-probe.zig").run(a, bytes, limit, true),
         175 => return @import("icc-model-probe.zig").run(a, bytes, limit),
         176 => return @import("icc-model-forward-probe.zig").run(a, bytes, limit),
+        177 => return @import("icc-normalized-inverse-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

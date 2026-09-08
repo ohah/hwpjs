@@ -1,16 +1,17 @@
 import assert from 'node:assert/strict';
 // Independent preimage construction: intersect every line segment with the target ordinate.
-export function inverseReference(values,y) {
+export function inverseReference(values,y,denominator=1n) {
   if(values.length<2)throw Error('InvalidIccInverseSamples');
   const sorted=[...values].sort((a,b)=>a-b);
   if(sorted[0]===sorted.at(-1))throw Error('ConstantIccCurve');
   if(!values.every((v,i)=>v===sorted[i])&&!values.every((v,i)=>v===sorted[sorted.length-1-i]))throw Error('NonMonotonicIccCurve');
-  const target=Math.max(sorted[0],Math.min(sorted.at(-1),y)),candidates=[];
+  const low=BigInt(sorted[0])*denominator,high=BigInt(sorted.at(-1))*denominator;
+  const ordinate=BigInt(y),target=ordinate<low?low:ordinate>high?high:ordinate,candidates=[];
   for(let i=0;i<values.length-1;i++){
-    const a=values[i],b=values[i+1];
+    const a=BigInt(values[i])*denominator,b=BigInt(values[i+1])*denominator;
     if(a===b){if(target===a)candidates.push([BigInt(i),1n],[BigInt(i+1),1n]);continue;}
     const delta=BigInt(b-a),distance=BigInt(target-a);
-    if(target>=Math.min(a,b)&&target<=Math.max(a,b)){
+    if(target>=(a<b?a:b)&&target<=(a>b?a:b)){
       const sign=delta<0n?-1n:1n;candidates.push([(BigInt(i)*delta+distance)*sign,delta*sign]);
     }
   }
