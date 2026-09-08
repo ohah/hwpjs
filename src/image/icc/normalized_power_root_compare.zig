@@ -36,3 +36,10 @@ pub fn at(comptime precision: u16, root: Root, a: i32, b: i32, x: @import("fract
     const value = try @import("affine_value.zig").at(a, b, x);
     return compare(precision, root, value.numerator, value.denominator);
 }
+/// Adapter for the common affine locator; affine coordinate construction stays shared.
+pub const Wide = struct {
+    pub fn at(comptime precision: u16, root: @import("normalized_power_level.zig").Wide.Root, a: i32, b: i32, x: @import("fraction.zig").Fraction) !?std.math.Order {
+        const value = try @import("affine_value.zig").at(a, b, x);
+        return compareWide(precision, root, value.numerator, value.denominator);
+    }
+};

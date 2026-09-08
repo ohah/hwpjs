@@ -5,8 +5,8 @@ import {writeUnsigned} from './icc-wide-fraction-wire.mjs';
 import {reference as domain} from './icc-parametric-domain.mjs';
 import {paraInput} from './icc-analytic.mjs';
 const Z=[0n,1n],O=[1n,1n],H=[1n,2n],max=(1n<<128n)-1n;
-function signs(g,offset,n,d){const N=65536n*n-BigInt(offset)*d;if(g===0)return N===65536n*d?null:[];const s=admissible(g,N);return s.includes(1)?[1,...s.filter(v=>v!==1)]:s;}
-function where(g,offset,n,d,s,a,b,start,end,flags){
+export function signs(g,offset,n,d){const N=65536n*n-BigInt(offset)*d;if(g===0)return N===65536n*d?null:[];const s=admissible(g,N);return s.includes(1)?[1,...s.filter(v=>v!==1)]:s;}
+export function where(g,offset,n,d,s,a,b,start,end,flags){
   const N=65536n*n-BigInt(offset)*d;
   const at=x=>order(s,N<0n?-N:N,65536n*d,g<0?-65536:65536,Math.abs(g),BigInt(a)*x[0]+BigInt(b)*x[1],65536n*x[1]);
   if(a===0)return at(start)===0?5:0;
