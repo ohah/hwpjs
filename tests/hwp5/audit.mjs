@@ -587,6 +587,7 @@ const extendedLocationsResults = extendedLocationsEdges(call);
 const extendedPowerPreimageResults = powerPreimageEdges(call, 512);
 const extendedLinearPreimageResults = extendedLinearPreimageEdges(call);
 const extendedFractionFloatResults = extendedFractionFloatEdges(call);
+const extendedParametricPreimageResults = parametricPreimageEdges(call, 512);
 const normalizedRootCompareResults = normalizedRootCompareEdges(call);
 const normalizedLocationsResults = normalizedLocationsEdges(call);
 const powerPreimageResults = powerPreimageEdges(call);
@@ -1198,6 +1199,7 @@ console.log(
       extendedPowerPreimageResults,
       extendedLinearPreimageResults,
       extendedFractionFloatResults,
+      extendedParametricPreimageResults,
       normalizedRootCompareResults,
       normalizedLocationsResults,
       powerPreimageResults,

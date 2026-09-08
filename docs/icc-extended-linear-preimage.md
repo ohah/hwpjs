@@ -40,4 +40,4 @@ Safe/Fast 최종 audit WASM의 직접 대조에서도 신규·기존 선형 검�
 
 ## 미완료 경계
 
-이번 변경은 [넓은 거듭제곱 역상](icc-extended-power-preimage.md)과 합칠 선형 기여분의 기반입니다. 전체 parametric 역상 합집합 연결, 정규화·정렬·경계 선택, 단조성 판정, 최근접 출력과 넓은 TRC 모델 통합은 후속 범위입니다. 전체 ICC/HWP/HWPX 문서 검증은 미완료입니다.
+이 모듈은 선형 기여분을 소유합니다. [넓은 전체 도달 역상](icc-extended-parametric-preimage.md)이 거듭제곱 기여분과의 합집합을 조립합니다. 정규화·정렬·경계 선택, 단조성 판정, 최근접 출력과 넓은 TRC 모델 통합은 후속 범위입니다. 전체 ICC/HWP/HWPX 문서 검증은 미완료입니다.

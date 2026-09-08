@@ -1,5 +1,7 @@
 # ICC 전체 파라메트릭 곡선의 도달 역상
 
+u512 목표값의 solveWide 확장은 [넓은 전체 도달 역상](icc-extended-parametric-preimage.md)에서 관리합니다. 아래 기존 경로와 검증 순서·조립·빈 집합 판정을 공유합니다.
+
 ## 계약
 
 `parametric_preimage.solve(precision, curve, n, d)`는 [0,1]에서 clip(f(x))=n/d인 모든 실제 x를 두 분기의 기여분 합집합으로 보존합니다. 정규화 u128 목표와 전체 곡선의 실수 정의역을 기존 거듭제곱 역상 경로에서 먼저 검증합니다. 결과는 undecided 또는 set입니다. 어느 한 분기의 해가 미확정이면 전체 결과를 undecided로 반환하며 확정된 다른 분기만 부분적으로 노출하지 않습니다.
