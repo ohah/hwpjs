@@ -1,5 +1,7 @@
 # Matrix/TRC 역방향 연결
 
+분수 XYZ 입력의 후속 연결과 검증 상태는 [분수 Matrix/TRC 역변환](icc-fraction-matrix-trc-inverse.md)에서 관리합니다.
+
 ## 공식 순서와 현재 입력 범위
 
 [ICC.1:2022 Annex F.3 식 F.7~F.16, PDF 116쪽](https://www.color.org/specifications/ICC.1-2022-05.pdf#page=116)을 확인했습니다. 먼저 상대 XYZ에 역행렬을 적용하고, 각 선형 RGB 값을 0~1로 제한한 뒤 해당 채널 TRC 역함수에 전달합니다. XYZ 자체를 먼저 제한하거나 최종 장치값을 무조건 0/1로 대체하지 않습니다. 평탄 TRC의 0/1 역상은 장치 좌표 0/1과 다를 수 있습니다.
