@@ -42,6 +42,7 @@ test {
     _ = @import("image/icc/parametric_curve_tests.zig");
     _ = @import("image/icc/trc_tag_tests.zig");
     _ = @import("image/icc/trc_forward_tests.zig");
+    _ = @import("image/icc/trc_inverse_tests.zig");
     _ = @import("image/icc/required_tests.zig");
     _ = @import("image/icc/mluc_tests.zig");
     _ = @import("image/icc/mluc_unicode_tests.zig");

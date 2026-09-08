@@ -50,6 +50,7 @@ pub const parametric_inverse = @import("parametric_inverse.zig");
 pub const power_clip = @import("power_clip.zig");
 pub const trc_tag = @import("trc_tag.zig");
 pub const trc_forward = @import("trc_forward.zig");
+pub const trc_inverse = @import("trc_inverse.zig");
 pub const required_tag_set = @import("required_tag_set.zig");
 pub const required_plan = @import("required_plan.zig");
 pub const required_presence = @import("required_presence.zig");

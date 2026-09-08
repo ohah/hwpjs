@@ -25,3 +25,7 @@ macOS `/System/Library/ColorSync/Profiles/`의 프로파일 11개에서 TRC 태�
 테스트 mode 155/156은 각각 v2/v4 정책으로 TRC를 파싱합니다. 테스트 어댑터의 원시 결과 직렬화는 기존 곡선 probe를 재사용하며 JS 기대값은 별도로 구성합니다. 최종 Debug·ReleaseSafe·ReleaseFast 전체 감사가 모두 종료 코드 0, 20/20 단계, 네이티브 433/433, 감사 검사 4,547,710건으로 통과했습니다. 신규 비교 50건·예상 오류 거부 1,196건도 세 모드 모두 확인했습니다. 최종 로그는 로컬 `/tmp/hwpjs-icc-trc-Debug-final.log`, `/tmp/hwpjs-icc-trc-ReleaseSafe-final.log`, `/tmp/hwpjs-icc-trc-ReleaseFast-final.log`입니다. 검사 건수는 반복·변형을 포함하며 문서 수나 포맷 지원률이 아닙니다.
 
 재검토에서 기존 헤더 API의 판본 타입 별칭 유지, 공통 접두사·곡선 파서 재사용, 미지원 이름/금지 타입 구분과 성공 결과의 의미 보류 표시를 확인했습니다. 추가 결함은 발견하지 못했습니다. 초기 네이티브 실행 이후 이름 정리를 반영한 코드가 위 최종 Debug 감사에 포함됩니다.
+
+## 공통 역변환 연결
+
+파싱 결과의 역변환 연결과 검증 진행은 [TRC 공통 역변환](icc-trc-inverse.md)에서 관리합니다. 태그 파싱 성공과 프로파일 의미 검증 완료는 구분합니다.
