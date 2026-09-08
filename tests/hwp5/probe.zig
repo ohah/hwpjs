@@ -291,6 +291,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         238 => return @import("icc-model-inverse-probe.zig").runFraction(a, bytes, limit),
         239 => return @import("png-profile-inspection-probe.zig").run(a, bytes, limit),
         240 => return @import("png-required-inspection-probe.zig").run(a, bytes, limit),
+        241 => return @import("png-payload-inspection-probe.zig").run(a, bytes, limit),
         236, 237 => return @import("icc-trc-inverse-probe.zig").runWide(a, bytes, limit, if (mode == 236) .v2_2001 else .v4_2022),
         else => return error.InvalidMode,
     }

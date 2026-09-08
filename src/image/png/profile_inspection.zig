@@ -8,11 +8,13 @@ pub const Options = struct {
     layout: table.layout.Policy,
     /// null means not selected, not no missing tags. Model must be explicit.
     required: ?@import("../icc/required_table.zig").Selection = null,
+    payloads: ?@import("../icc/payload_inspection.zig").Options = null,
 };
 pub const Profile = struct {
     envelope: envelope.Envelope,
     table: table.Table,
     required: ?@import("../icc/required_table.zig").Report = null,
+    payloads: ?@import("../icc/payload_inspection.zig").Report = null,
     /// Bounds and PNG color-space compatibility do not certify tag semantics.
     semantics_deferred: bool = true,
     pub fn deinit(self: *Profile, a: std.mem.Allocator) void {
@@ -41,5 +43,6 @@ pub fn inspect(a: std.mem.Allocator, h: @import("header.zig").Header, bytes: []c
     errdefer tags.deinit(a);
     try validateColorSpace(h, tags.header.data_space);
     const required = if (options.required) |selection| try @import("../icc/required_table.zig").inspect(&tags, selection) else null;
-    return .{ .envelope = decoded, .table = tags, .required = required };
+    const payloads = if (options.payloads) |selection| try @import("../icc/payload_inspection.zig").inspect(a, &tags, selection) else null;
+    return .{ .envelope = decoded, .table = tags, .required = required, .payloads = payloads };
 }

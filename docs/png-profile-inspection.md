@@ -1,5 +1,7 @@
 # PNG iCCP와 ICC 구조 검사 연결
 
+태그 내용의 선택적 통합 검사와 검증 진행은 [ICC 태그 내용 공통 분기](icc-tag-payload-dispatch.md)에서 관리합니다.
+
 명시적으로 선택한 필수 태그 검사의 후속 계약과 검증 상태는 [ICC 필수 태그 테이블 연결](icc-required-table.md)에서 관리합니다.
 
 ## 현재 계약
