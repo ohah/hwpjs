@@ -7,12 +7,14 @@ pub fn Normalized(comptime bits: u16) type {
         64 => u64,
         128 => u128,
         256 => u256,
+        512 => u512,
         else => @compileError("unsupported ICC fraction width"),
     };
     const W = switch (bits) {
         64 => u128,
         128 => u256,
         256 => u512,
+        512 => u1024,
         else => unreachable,
     };
     return struct {

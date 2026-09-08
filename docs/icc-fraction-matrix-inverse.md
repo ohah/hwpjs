@@ -39,3 +39,5 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit가 `/tmp/hwpjs-fraction-matrix-inve
 최종 적대적 리뷰에서는 순환 인덱스의 여인수 부호와 adjugate 전치, 기존 determinant 호출 재사용, 전체 폭 입력의 누산/스케일/부호 반전 범위, 분모 0의 오류 우선순위, clipping·narrowing 부재, wire 길이와 전체 초기화를 확인했습니다. 추가 결함은 발견하지 못했습니다. Zig 포맷·변경 JS 문법·diff 공백과 관련 문서 로컬 링크 3개도 확인했습니다.
 
 이번 완료 범위는 넓은 분수 XYZ의 선형 역행렬 계산입니다. i512/u512 결과를 정확하게 정규화하여 TRC에 전달하는 모델 연결, 기호적·분수 색상 변환 왕복, PCSXYZ 인코딩·렌더링과 전체 HWP/HWPX 문서 검증은 아직 남아 있습니다.
+
+범위 제한의 후속 진행은 [넓은 선형 RGB 목표](icc-wide-linear-target.md)에서 관리합니다.

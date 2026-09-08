@@ -10,6 +10,7 @@ pub const matrix3_transform = @import("matrix3_transform.zig");
 pub const matrix_trc_model = @import("matrix_trc_model.zig");
 pub const matrix3_fraction = @import("matrix3_fraction.zig");
 pub const matrix3_fraction_inverse = @import("matrix3_fraction_inverse.zig");
+pub const linear_rgb_target = @import("linear_rgb_target.zig");
 pub const matrix3_float = @import("matrix3_float.zig");
 pub const matrix_trc_forward = @import("matrix_trc_forward.zig");
 pub const chromatic_adaptation = @import("chromatic_adaptation.zig");
