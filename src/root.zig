@@ -55,6 +55,10 @@ test {
     _ = @import("image/icc/power_root_compare_tests.zig");
     _ = @import("image/icc/positive_bounds_tests.zig");
     _ = @import("image/icc/root_location_tests.zig");
+    _ = @import("image/icc/power_root_order_tests.zig");
+    _ = @import("image/icc/power_level_order_tests.zig");
+    _ = @import("image/icc/power_clip_tests.zig");
+    _ = @import("image/icc/power_clip_classify_tests.zig");
     _ = @import("image/icc/sampled_forward_tests.zig");
     _ = @import("image/icc/analytic_forward_tests.zig");
     _ = @import("image/icc/xyz_tag_tests.zig");

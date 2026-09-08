@@ -20,17 +20,11 @@ pub fn compare(comptime precision: u16, root: Root, n: i128, d: u128) !?std.math
     const left = try A.power(try A.fraction(if (reciprocal) 65536 else radical.numerator, if (reciprocal) radical.numerator else 65536), 65536);
     const right = try A.power(try A.fraction(magnitude, d), radical.exponent_denominator);
     const order = A.separated(left, right) orelse return null;
-    return if (!radical.negative) order else switch (order) {
-        .lt => .gt,
-        .gt => .lt,
-        .eq => .eq,
-    };
+    return if (!radical.negative) order else order.invert();
 }
 /// Compare a BASE root with (a*x+b)/65536, retaining the exact normalized x.
 /// The caller owns affine orientation, active interval membership and a=0 policy.
 pub fn at(comptime precision: u16, root: Root, a: i32, b: i32, x: Fraction) !?std.math.Order {
-    try x.validate();
-    const n = @as(i128, a) * x.numerator + @as(i128, b) * x.denominator;
-    const d = @as(u128, 65536) * x.denominator;
-    return compare(precision, root, n, d);
+    const value = try @import("affine_value.zig").at(a, b, x);
+    return compare(precision, root, value.numerator, value.denominator);
 }

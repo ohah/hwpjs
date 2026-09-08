@@ -4,7 +4,7 @@ const splitter = @import("interval_split.zig");
 const root = @import("affine_root.zig");
 pub const Direction = @import("curve_direction.zig").Direction;
 pub const Piece = struct { power: segments.Power, direction: Direction };
-pub const Result = struct { pieces: [2]Piece = undefined, count: usize = 0 };
+pub const Result = struct { source: ?segments.Power = null, pieces: [2]Piece = undefined, count: usize = 0 };
 fn classify(power: segments.Power) !Piece {
     const interval = power.interval;
     if (power.a == 0 or power.g == 0 or try interval.start.order(interval.end) == .eq) return .{ .power = power, .direction = .constant };
@@ -19,7 +19,7 @@ fn classify(power: segments.Power) !Piece {
 /// The entire curve's real domain is validated by the shared branch assembler.
 pub fn partition(curve: Curve) !Result {
     const power = (try segments.assemble(curve)).power orelse return .{};
-    var result: Result = .{};
+    var result: Result = .{ .source = power };
     if (root.solve(power.a, power.b, 0)) |cut| {
         const parts = try splitter.split(power.interval, cut);
         for ([_]?segments.Interval{ parts.left, parts.right }) |part| if (part) |interval| {

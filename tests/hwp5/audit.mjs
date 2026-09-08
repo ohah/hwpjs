@@ -103,6 +103,8 @@ import {partitionEdges} from './icc-partition.mjs';
 import {powerLevelEdges} from './icc-power-level.mjs';
 import {rootCompareEdges} from './icc-root-compare.mjs';
 import {rootLocationsEdges} from './icc-root-locations.mjs';
+import {powerOrderEdges} from './icc-power-order.mjs';
+import {powerClipEdges} from './icc-power-clip.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
 import {languageHistoryEdges} from './language-history.mjs';
@@ -538,6 +540,8 @@ const partitionResults = partitionEdges(call);
 const powerLevelResults = powerLevelEdges(call);
 const rootCompareResults = rootCompareEdges(call);
 const rootLocationResults = rootLocationsEdges(call);
+const powerOrderResults = powerOrderEdges(call);
+const powerClipResults = powerClipEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
 const languageHistoryResults = languageHistoryEdges(call);
@@ -1115,6 +1119,8 @@ console.log(
       powerLevelResults,
       rootCompareResults,
       rootLocationResults,
+      powerOrderResults,
+      powerClipResults,
       modelParametricResults,
       iso639Results,
       languageHistoryResults,

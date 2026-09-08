@@ -6,11 +6,7 @@ pub const Location = enum(u32) { absent, start, interior, end, singleton, entire
 fn oriented(order: ?std.math.Order, slope: i32) ?std.math.Order {
     const value = order orelse return null;
     if (slope > 0) return value;
-    return switch (value) {
-        .lt => .gt,
-        .eq => .eq,
-        .gt => .lt,
-    };
+    return value.invert();
 }
 /// Locate the x preimage of a BASE root under (a*x+b)/65536 on a nonempty interval.
 /// Does not validate an entire parametric curve or silently resolve uncertain bounds.
