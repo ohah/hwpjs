@@ -59,6 +59,7 @@ pub const matrix_trc_inverse = @import("matrix_trc_inverse.zig");
 pub const required_tag_set = @import("required_tag_set.zig");
 pub const required_plan = @import("required_plan.zig");
 pub const required_presence = @import("required_presence.zig");
+pub const required_table = @import("required_table.zig");
 pub const mluc = @import("mluc.zig");
 pub const mluc_unicode = @import("mluc_unicode.zig");
 pub const mluc_selection = @import("mluc_selection.zig");

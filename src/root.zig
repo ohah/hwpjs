@@ -51,6 +51,8 @@ test {
     _ = @import("image/icc/matrix_trc_inverse_tests.zig");
     _ = @import("image/icc/matrix_trc_fraction_inverse_tests.zig");
     _ = @import("image/icc/required_tests.zig");
+    _ = @import("image/icc/required_table_tests.zig");
+    _ = @import("image/png/profile_required_tests.zig");
     _ = @import("image/icc/mluc_tests.zig");
     _ = @import("image/icc/mluc_unicode_tests.zig");
     _ = @import("image/icc/mluc_selection_tests.zig");

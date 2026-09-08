@@ -1,5 +1,7 @@
 # ICC 2022 필수 태그 존재 검사
 
+실제 헤더·태그 테이블 및 PNG 연결은 [필수 태그 테이블 연결](icc-required-table.md)에서 관리합니다.
+
 ## 구현 범위와 책임
 
 [ICC.1:2022 §8.2–8.9](https://www.color.org/specifications/ICC.1-2022-05.pdf)에 따라 일곱 클래스의 필수 태그 이름 집합과 누락 집합을 계산합니다. required_tag_set은 이름과 집합 표현, required_plan은 클래스·명시적 모델·색공간·측정 백색 조건, required_presence는 입력 이름 목록과의 차집합을 소유합니다. 기존 태그 바이트/경계 파서는 변경하지 않습니다.

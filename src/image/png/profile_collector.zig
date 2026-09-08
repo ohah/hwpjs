@@ -6,6 +6,7 @@ pub const Report = struct {
     version_major: u8,
     data_space: [4]u8,
     storage: @import("../icc/tag_layout.zig").Stats,
+    required: ?@import("../icc/required_table.zig").Report = null,
     semantics_deferred: bool = true,
 };
 /// Scalar-only report: no decompressed backing survives a consume call.
@@ -27,6 +28,7 @@ pub const Collector = struct {
             .version_major = profile.table.header.version.major,
             .data_space = profile.table.header.data_space,
             .storage = profile.table.storage,
+            .required = profile.required,
         };
     }
 };

@@ -6,10 +6,13 @@ pub const Options = struct {
     max_tags: usize = 100000,
     /// Explicit layout policy, never inferred from an ICC major version.
     layout: table.layout.Policy,
+    /// null means not selected, not no missing tags. Model must be explicit.
+    required: ?@import("../icc/required_table.zig").Selection = null,
 };
 pub const Profile = struct {
     envelope: envelope.Envelope,
     table: table.Table,
+    required: ?@import("../icc/required_table.zig").Report = null,
     /// Bounds and PNG color-space compatibility do not certify tag semantics.
     semantics_deferred: bool = true,
     pub fn deinit(self: *Profile, a: std.mem.Allocator) void {
@@ -37,5 +40,6 @@ pub fn inspect(a: std.mem.Allocator, h: @import("header.zig").Header, bytes: []c
     var tags = try table.parse(a, decoded.profile_bytes, .{ .max_bytes = options.envelope.max_profile_bytes, .max_tags = options.max_tags, .policy = options.layout });
     errdefer tags.deinit(a);
     try validateColorSpace(h, tags.header.data_space);
-    return .{ .envelope = decoded, .table = tags };
+    const required = if (options.required) |selection| try @import("../icc/required_table.zig").inspect(&tags, selection) else null;
+    return .{ .envelope = decoded, .table = tags, .required = required };
 }

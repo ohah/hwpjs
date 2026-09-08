@@ -1,5 +1,7 @@
 # PNG iCCP와 ICC 구조 검사 연결
 
+명시적으로 선택한 필수 태그 검사의 후속 계약과 검증 상태는 [ICC 필수 태그 테이블 연결](icc-required-table.md)에서 관리합니다.
+
 ## 현재 계약
 
 `png_profile_inspection.inspect`는 유효한 PNG 헤더와 iCCP payload를 받아 기존 압축 봉투 해제, ICC 태그 테이블 검사, PNG/ICC 색 공간 대응을 순서대로 실행합니다. `Profile`은 해제된 프로파일과 태그 descriptor를 소유하고 이름만 원래 payload를 빌립니다. deinit은 descriptor를 먼저 정리하고 backing 프로파일을 해제합니다. 실패 경로도 같은 소유권을 정리합니다.
