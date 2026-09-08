@@ -99,6 +99,7 @@ import {gammaInverseEdges} from './icc-gamma-inverse.mjs';
 import {parametricDomainEdges} from './icc-parametric-domain.mjs';
 import {parametricTopologyEdges} from './icc-parametric-topology.mjs';
 import {segmentEdges} from './icc-segments.mjs';
+import {partitionEdges} from './icc-partition.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
 import {languageHistoryEdges} from './language-history.mjs';
@@ -530,6 +531,7 @@ const gammaInverseResults = gammaInverseEdges(call);
 const parametricDomainResults = parametricDomainEdges(call);
 const parametricTopologyResults = parametricTopologyEdges(call);
 const segmentResults = segmentEdges(call);
+const partitionResults = partitionEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
 const languageHistoryResults = languageHistoryEdges(call);
@@ -1103,6 +1105,7 @@ console.log(
       parametricDomainResults,
       parametricTopologyResults,
       segmentResults,
+      partitionResults,
       modelParametricResults,
       iso639Results,
       languageHistoryResults,

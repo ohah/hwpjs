@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-function fraction(n,d=1n){
+export function fraction(n,d=1n){
   assert.notEqual(d,0n);if(d<0n){n=-n;d=-d;}
   let a=n<0n?-n:n,b=d;while(b){[a,b]=[b,a%b];}return [n/a,d/a];
 }

@@ -11,13 +11,9 @@ pub fn powerDomain(curve: Curve) !?PowerDomain {
     switch (curve.function) {
         .type0 => {},
         .type1, .type2 => {
-            if (p[1] == 0) return error.UndefinedIccCurveThreshold;
-            n = -@as(i64, p[2]);
-            d = p[1];
-            if (d < 0) {
-                n = -n;
-                d = -d;
-            }
+            const threshold = @import("affine_root.zig").unrestricted(p[1], p[2], 0) orelse return error.UndefinedIccCurveThreshold;
+            n = threshold.numerator;
+            d = threshold.denominator;
         },
         .type3, .type4 => {
             n = p[4];
