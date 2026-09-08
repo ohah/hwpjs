@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {jpegFrameMarker,jpegHeaderActual} from './jpeg-headers.mjs';
 import {jpegTablesActual} from './jpeg-tables.mjs';
+import {jpegStoreActual} from './jpeg-store.mjs';
 const words = ns => {const b = Buffer.alloc(ns.length * 4); ns.forEach((n,i)=>b.writeUInt32LE(n,i*4)); return b;};
 export function jpegFramingInput(mode, raw, maximum = 65533) {
   return Buffer.concat([Buffer.from([mode]), words([maximum]), raw]);
@@ -67,6 +68,7 @@ export function jpegFramingEdges(call) {
 export function jpegFramingActual(call, raw, headers = false, tables = false) {
   let offset=0, markers=0, entropyBytes=0, scan=false;
   let frame=null;
+  const tableEvents=[];
   while(offset<raw.length) {
     if(scan) {
       const e=jpegEntropyOracle(raw.subarray(offset));
@@ -76,6 +78,7 @@ export function jpegFramingActual(call, raw, headers = false, tables = false) {
     const m=jpegMarkerOracle(raw.subarray(offset));
     assert.deepEqual(call(245,jpegFramingInput(0,raw.subarray(offset))),m.wire);
     if(tables && (m.code===219 || m.code===196)) jpegTablesActual(call,m.code===196?1:0,m.wire.subarray(20));
+    if(tables && [219,196,218].includes(m.code)) tableEvents.push([m.code===219?0:m.code===196?1:2,m.wire.subarray(20)]);
     if(headers && jpegFrameMarker(m.code)) {
       frame={code:m.code,payload:m.wire.subarray(20)};
       jpegHeaderActual(call,frame.code,frame.payload);
@@ -85,7 +88,10 @@ export function jpegFramingActual(call, raw, headers = false, tables = false) {
       jpegHeaderActual(call,frame.code,frame.payload,m.wire.subarray(20));
     }
     offset+=m.consumed;markers++;
-    if(m.code===217)return {markers,entropyBytes,trailing:raw.length-offset};
+    if(m.code===217){
+      if(tables && headers){assert.ok(frame);jpegStoreActual(call,frame.code,frame.payload,tableEvents);}
+      return {markers,entropyBytes,trailing:raw.length-offset};
+    }
     scan=m.code===218 || (scan && (m.code===1 || m.code===220 || (m.code>=208 && m.code<=215)));
   }
   throw Error('Missing EOI in observed JPEG');

@@ -15,9 +15,9 @@
 
 기본 payload 한도는 65,533바이트, 테이블 수는 4,096개입니다. DHT의 기본 심볼 개수 한도 256은 명시적 자원 정책이며 조정할 수 있습니다. 심볼 중복/프로세스별 심볼 의미를 검증하지 않으므로 한도를 늘려 파싱한 결과를 표준 코드북 완료로 인증하지 않습니다. 0개 심볼 정의도 별도로 표현되며 실제 디코더가 사용할 수 있다는 뜻은 아닙니다. `symbol_semantics_deferred`를 유지합니다.
 
-정의와 사용 제약을 분리합니다. DQT의 `validateForFrame`은 lossless 사용을 거부하고, 모든 8비트 DCT 프로세스에서 16비트 양자화 테이블 사용을 거부합니다. DHT의 `validateForProcess`는 baseline destination 제한·lossless class 제한·Huffman 프로세스 여부를 검사합니다. 이 메서드들은 아직 활성 테이블 저장소나 스캔 검사에 자동 연결되지 않았습니다.
+정의와 사용 제약을 분리합니다. DQT의 `validateForFrame`은 lossless 사용을 거부하고, 모든 8비트 DCT 프로세스에서 16비트 양자화 테이블 사용을 거부합니다. DHT의 `validateForProcess`는 baseline destination 제한·lossless class 제한·Huffman 프로세스 여부를 검사합니다. 정의 Iterator는 이 사용 제약을 자동 적용하지 않습니다.
 
-테이블 설치/재정의·스캔별 참조·progressive 사용 중 DQT 변경 금지·abbreviated image 상속·산술 conditioning·심볼 모델·계수/픽셀 복호화는 후속입니다. HWP JPEG 지원 완료로 집계하지 않습니다.
+[테이블 설치와 스캔 선택](jpeg-table-selection.md)이 설치·선택 계층과 해당 사용 제약의 호출을 소유합니다. 스캔 간 수명과 복호화 완료 여부는 해당 문서의 경계를 참조합니다. HWP JPEG 지원 완료로 집계하지 않습니다.
 
 ## 검증 기록
 

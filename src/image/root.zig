@@ -14,3 +14,5 @@ pub const jpeg_frame = @import("jpeg/frame.zig");
 pub const jpeg_scan = @import("jpeg/scan.zig");
 pub const jpeg_quantization = @import("jpeg/quantization.zig");
 pub const jpeg_huffman = @import("jpeg/huffman.zig");
+pub const jpeg_table_store = @import("jpeg/table_store.zig");
+pub const jpeg_scan_tables = @import("jpeg/scan_tables.zig");
