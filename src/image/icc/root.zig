@@ -40,6 +40,7 @@ pub const parametric_attained_inverse = @import("parametric_attained_inverse.zig
 pub const rational_range_nearest = @import("rational_range_nearest.zig");
 pub const linear_range = @import("linear_range.zig");
 pub const power_range = @import("power_range.zig");
+pub const parametric_range = @import("parametric_range.zig");
 pub const power_ordinate = @import("power_ordinate.zig");
 pub const power_clip = @import("power_clip.zig");
 pub const trc_tag = @import("trc_tag.zig");

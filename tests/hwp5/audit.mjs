@@ -118,6 +118,7 @@ import {attainedInverseEdges} from './icc-attained-inverse.mjs';
 import {nearestRangeEdges} from './icc-nearest-range.mjs';
 import {linearRangeEdges} from './icc-linear-range.mjs';
 import {powerRangeEdges} from './icc-power-range.mjs';
+import {parametricRangeEdges} from './icc-parametric-range.mjs';
 import {powerClipEdges} from './icc-power-clip.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
@@ -569,6 +570,7 @@ const attainedInverseResults = attainedInverseEdges(call);
 const nearestRangeResults = nearestRangeEdges(call);
 const linearRangeResults = linearRangeEdges(call);
 const powerRangeResults = powerRangeEdges(call);
+const parametricRangeResults = parametricRangeEdges(call);
 const powerClipResults = powerClipEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
@@ -1162,6 +1164,7 @@ console.log(
       nearestRangeResults,
       linearRangeResults,
       powerRangeResults,
+      parametricRangeResults,
       powerClipResults,
       modelParametricResults,
       iso639Results,
