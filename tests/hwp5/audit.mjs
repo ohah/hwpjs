@@ -116,6 +116,8 @@ import {gammaWideInverseEdges} from './icc-gamma-wide-inverse.mjs';
 import {widePowerLevelEdges} from './icc-wide-power-level.mjs';
 import {extendedRootCompareEdges} from './icc-extended-root-compare.mjs';
 import {extendedLocationsEdges} from './icc-extended-locations.mjs';
+import {extendedLinearPreimageEdges} from './icc-extended-linear-preimage.mjs';
+import {extendedFractionFloatEdges} from './icc-extended-fraction-float.mjs';
 import {normalizedRootCompareEdges} from './icc-normalized-root-compare.mjs';
 import {normalizedLocationsEdges} from './icc-normalized-locations.mjs';
 import {powerPreimageEdges} from './icc-power-preimage.mjs';
@@ -583,6 +585,8 @@ const widePowerLevelResults = widePowerLevelEdges(call);
 const extendedRootCompareResults = extendedRootCompareEdges(call);
 const extendedLocationsResults = extendedLocationsEdges(call);
 const extendedPowerPreimageResults = powerPreimageEdges(call, 512);
+const extendedLinearPreimageResults = extendedLinearPreimageEdges(call);
+const extendedFractionFloatResults = extendedFractionFloatEdges(call);
 const normalizedRootCompareResults = normalizedRootCompareEdges(call);
 const normalizedLocationsResults = normalizedLocationsEdges(call);
 const powerPreimageResults = powerPreimageEdges(call);
@@ -1192,6 +1196,8 @@ console.log(
       extendedRootCompareResults,
       extendedLocationsResults,
       extendedPowerPreimageResults,
+      extendedLinearPreimageResults,
+      extendedFractionFloatResults,
       normalizedRootCompareResults,
       normalizedLocationsResults,
       powerPreimageResults,

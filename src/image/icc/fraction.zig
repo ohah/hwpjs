@@ -8,6 +8,7 @@ pub fn Normalized(comptime bits: u16) type {
         128 => u128,
         256 => u256,
         512 => u512,
+        1024 => u1024,
         else => @compileError("unsupported ICC fraction width"),
     };
     const W = switch (bits) {
@@ -15,6 +16,7 @@ pub fn Normalized(comptime bits: u16) type {
         128 => u256,
         256 => u512,
         512 => u1024,
+        1024 => u2048,
         else => unreachable,
     };
     return struct {
@@ -33,6 +35,15 @@ pub fn Normalized(comptime bits: u16) type {
         pub fn toFloat(self: Self) !f64 {
             @setFloatMode(.strict);
             try self.validate();
+            if (bits > 128) {
+                // Convert supported native integers, not LLVM wide-int libcalls.
+                // Independent scaling also avoids infinity and lost tiny ratios.
+                const ns: u10 = @intCast((bits - @as(u16, @clz(self.numerator))) -| 53);
+                const ds: u10 = @intCast((bits - @as(u16, @clz(self.denominator))) -| 53);
+                const n: u64 = @intCast(self.numerator >> @intCast(ns));
+                const d: u64 = @intCast(self.denominator >> @intCast(ds));
+                return std.math.ldexp(@as(f64, @floatFromInt(n)) / @as(f64, @floatFromInt(d)), @as(i32, ns) - @as(i32, ds));
+            }
             return @as(f64, @floatFromInt(self.numerator)) / @as(f64, @floatFromInt(self.denominator));
         }
     };

@@ -1,6 +1,7 @@
 const Fraction = @import("fraction.zig").Fraction;
 pub const Interval = Of(Fraction);
 pub const WideInterval = Of(@import("fraction.zig").WideFraction);
+pub const ExtendedInterval = Of(@import("fraction.zig").Normalized(1024));
 /// A nonempty normalized real interval, with exact endpoints and explicit inclusion.
 pub fn Of(comptime Coordinate: type) type {
     return struct {
@@ -48,6 +49,12 @@ pub fn Of(comptime Coordinate: type) type {
     };
 }
 pub fn widen(interval: Interval) !WideInterval {
+    return widenTo(WideInterval, interval);
+}
+pub fn extend(interval: Interval) !ExtendedInterval {
+    return widenTo(ExtendedInterval, interval);
+}
+fn widenTo(comptime Result: type, interval: Interval) !Result {
     try interval.validate();
     return .{ .start = .{ .numerator = interval.start.numerator, .denominator = interval.start.denominator }, .end = .{ .numerator = interval.end.numerator, .denominator = interval.end.denominator }, .start_included = interval.start_included, .end_included = interval.end_included };
 }
