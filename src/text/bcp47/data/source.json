@@ -9,6 +9,80 @@
     "subtags": "be21e91b6851f750a7b1a687f11209d46ad5a8471d6b10a1efc8d1dac4c8a926",
     "extensions": "fdf7764455c493c245a9b3b5b9cd3938391f0637302c3e943fde86aee652e376"
   },
+  "alpha2_history": {
+    "language": {
+      "bh": {
+        "deprecated": "2026-06-14",
+        "preferred": "bih"
+      },
+      "in": {
+        "deprecated": "1989-01-01",
+        "preferred": "id"
+      },
+      "iw": {
+        "deprecated": "1989-01-01",
+        "preferred": "he"
+      },
+      "ji": {
+        "deprecated": "1989-01-01",
+        "preferred": "yi"
+      },
+      "jw": {
+        "deprecated": "2001-08-13",
+        "preferred": "jv"
+      },
+      "mo": {
+        "deprecated": "2008-11-22",
+        "preferred": "ro"
+      }
+    },
+    "region": {
+      "an": {
+        "deprecated": "2011-01-07",
+        "preferred": null
+      },
+      "bu": {
+        "deprecated": "1989-12-05",
+        "preferred": "MM"
+      },
+      "cs": {
+        "deprecated": "2006-10-05",
+        "preferred": null
+      },
+      "dd": {
+        "deprecated": "1990-10-30",
+        "preferred": "DE"
+      },
+      "fx": {
+        "deprecated": "1997-07-14",
+        "preferred": "FR"
+      },
+      "nt": {
+        "deprecated": "1993-07-12",
+        "preferred": null
+      },
+      "su": {
+        "deprecated": "1992-08-30",
+        "preferred": null
+      },
+      "tp": {
+        "deprecated": "2002-05-20",
+        "preferred": "TL"
+      },
+      "yd": {
+        "deprecated": "1990-08-14",
+        "preferred": "YE"
+      },
+      "yu": {
+        "deprecated": "2003-07-23",
+        "preferred": null
+      },
+      "zr": {
+        "deprecated": "1997-07-14",
+        "preferred": "CD"
+      }
+    }
+  },
   "record_counts": {
     "language": 8276,
     "extlang": 258,
