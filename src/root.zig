@@ -70,6 +70,7 @@ test {
     _ = @import("image/icc/power_ordinate_order_tests.zig");
     _ = @import("image/icc/power_range_nearest_tests.zig");
     _ = @import("image/icc/power_ordinate_distance_tests.zig");
+    _ = @import("image/icc/parametric_nearest_tests.zig");
     _ = @import("image/icc/parametric_range_tests.zig");
     _ = @import("image/icc/power_level_order_tests.zig");
     _ = @import("image/icc/rational_power_order_tests.zig");

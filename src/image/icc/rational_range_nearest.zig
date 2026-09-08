@@ -8,13 +8,8 @@ pub fn select(target: Target, ranges: []const Interval) !Result {
     try target.validate();
     for (ranges) |interval| try interval.validate();
     var accumulator = @import("nearest_ordinate_candidates.zig").Accumulator{ .target = target };
-    const y = @import("fraction.zig").WideFraction{ .numerator = target.numerator, .denominator = target.denominator };
     for (ranges) |interval| {
-        const candidate: types.Candidate = if (try interval.contains(y)) .{ .value = y, .attained = true } else if (try y.order(interval.start) != .gt) .{
-            .value = interval.start,
-            .attained = interval.start_included,
-        } else .{ .value = interval.end, .attained = interval.end_included };
-        try accumulator.add(candidate);
+        try accumulator.add(try @import("rational_interval_nearest.zig").candidate(target, interval));
     }
     return accumulator.finish();
 }
