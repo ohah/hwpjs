@@ -2,6 +2,8 @@
 
 ## 범위
 
+이 구간 방향과 원래 분기 경계의 점프를 합치는 [전체 단조성·상수성 판정](icc-parametric-trend.md)은 별도 계층이 소유합니다.
+
 [ICC.1:2022 Table 68](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 **활성 거듭제곱 분기**에 대해 출력 0/1 클리핑을 반영한 구간을 조립합니다. [밑 영점 분할](icc-curve-partition.md), [정확한 근 비교](icc-power-root-compare.md), [근 위치 판정](icc-root-locations.md)을 재사용합니다. 하위 선형 분기와의 합집합·분기 간 점프·전체 단조성·역변환은 아직 이 결과에 포함하지 않습니다.
 
 `power_clip.partition(precision, curve)`는 기존 전체 실수 정의역 검사를 먼저 실행합니다. 클리핑 때문에 가려질 것 같은 0^0·음의 지수의 영점·음수 밑의 비정수 지수도 유효한 곡선으로 승격하지 않습니다. precision은 기존 128/256/512/1024비트 비교 정밀도입니다.

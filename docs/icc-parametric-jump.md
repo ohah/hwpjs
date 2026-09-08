@@ -2,6 +2,8 @@
 
 ## 범위와 계약
 
+각 구간 방향과 이 경계 순서를 합치는 [전체 단조성·상수성 판정](icc-parametric-trend.md)은 별도 계층입니다.
+
 [ICC.1:2022 §10.18 Table 68](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 하위 선형 분기와 상위 거듭제곱 분기가 모두 있을 때, 경계에서 **클리핑된 상위 실제 값 − 클리핑된 하위 좌극한**의 부호를 정확히 판정합니다. 공식 식의 하위 분기는 열린 끝점을 가지므로 하위 실제 함수값을 경계에서 조회하는 것이 아닙니다. 선형 식의 연속 확장으로 좌극한을 계산합니다.
 
 `parametric_jump.inspect(precision, curve)`는 먼저 기존 `parametric_segments.assemble`로 전체 실수 정의역을 검증합니다. 결과는 다음 둘 중 하나입니다.

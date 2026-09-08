@@ -13,6 +13,7 @@ function reference(kind,raw){
  const rawOrder=rationalPowerOrder(base(active,x),active.g,target);
  return {x,order:left[0]===0n?Math.max(0,rawOrder):left[0]===left[1]?Math.min(0,rawOrder):rawOrder};
 }
+export {reference as jumpReference};
 export function parametricJumpEdges(call){let comparisons=0,rejected=0,absent=0;
  function check(kind,raw,precision=256){const bytes=input(kind,raw,precision);let expected;try{expected=reference(kind,raw);}catch(e){assert.throws(()=>call(191,bytes),new RegExp(e.message));rejected++;return;}
   const out=call(191,bytes);assert.equal(out.length,24);if(!expected){assert.deepEqual(out,Buffer.alloc(24));absent++;return;}

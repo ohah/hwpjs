@@ -106,6 +106,7 @@ import {rootLocationsEdges} from './icc-root-locations.mjs';
 import {powerOrderEdges} from './icc-power-order.mjs';
 import {rationalPowerEdges} from './icc-rational-power.mjs';
 import {parametricJumpEdges} from './icc-parametric-jump.mjs';
+import {parametricTrendEdges} from './icc-parametric-trend.mjs';
 import {powerClipEdges} from './icc-power-clip.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
@@ -545,6 +546,7 @@ const rootLocationResults = rootLocationsEdges(call);
 const powerOrderResults = powerOrderEdges(call);
 const rationalPowerResults = rationalPowerEdges(call);
 const parametricJumpResults = parametricJumpEdges(call);
+const parametricTrendResults = parametricTrendEdges(call);
 const powerClipResults = powerClipEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
@@ -1126,6 +1128,7 @@ console.log(
       powerOrderResults,
       rationalPowerResults,
       parametricJumpResults,
+      parametricTrendResults,
       powerClipResults,
       modelParametricResults,
       iso639Results,
