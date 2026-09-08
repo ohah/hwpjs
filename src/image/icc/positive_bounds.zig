@@ -38,13 +38,18 @@ pub fn Arithmetic(comptime bits: u16) type {
             }
             return .{ .significand = @intCast(n), .exponent = e };
         }
-        pub fn fraction(n: u128, d: u128) !Interval {
+        pub fn fraction(n: u256, d: u256) !Interval {
             if (n == 0 or d == 0) return error.InvalidIccPositiveFraction;
-            const shift: u16 = @intCast(@as(i32, bits) - 1 + @as(i32, @intCast(@clz(n))) - @as(i32, @intCast(@clz(d))));
-            const scaled = @as(W, n) << @intCast(shift);
-            const quotient = scaled / d;
+            // At low precision a large ratio needs a shifted denominator, not
+            // a negative/unsigned numerator shift. Both scaled operands fit
+            // bits+256: their lengths are at most bits+255 and 256.
+            const Initial = std.meta.Int(.unsigned, bits + 256);
+            const shift: i32 = @as(i32, bits) - 1 + @as(i32, @intCast(@clz(n))) - @as(i32, @intCast(@clz(d)));
+            const scaled_n = if (shift >= 0) @as(Initial, n) << @intCast(shift) else @as(Initial, n);
+            const scaled_d = if (shift < 0) @as(Initial, d) << @intCast(-shift) else @as(Initial, d);
+            const quotient: W = @intCast(scaled_n / scaled_d);
             const e = -@as(i64, shift);
-            return .{ .lower = try normalize(quotient, e, false), .upper = try normalize(quotient + @intFromBool(scaled % d != 0), e, true) };
+            return .{ .lower = try normalize(quotient, e, false), .upper = try normalize(quotient + @intFromBool(scaled_n % scaled_d != 0), e, true) };
         }
         fn endpointProduct(a: Endpoint, b: Endpoint, upward: bool) !Endpoint {
             return normalize(@as(W, a.significand) * b.significand, try std.math.add(i64, a.exponent, b.exponent), upward);
