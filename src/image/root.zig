@@ -8,3 +8,5 @@ pub const png_suggested_palette = @import("png/suggested_palette.zig");
 pub const png_embedded_profile = @import("png/embedded_profile.zig");
 pub const png_profile_inspection = @import("png/profile_inspection.zig");
 pub const icc = @import("icc/root.zig");
+pub const jpeg_markers = @import("jpeg/markers.zig");
+pub const jpeg_entropy = @import("jpeg/entropy.zig");
