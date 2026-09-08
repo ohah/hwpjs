@@ -90,6 +90,7 @@ import {iccMlucEdges} from './icc-mluc.mjs';
 import {iccUnicodeEdges} from './icc-unicode.mjs';
 import {iccSelectionEdges} from './icc-selection.mjs';
 import {iccSelectionIanaEdges} from './icc-selection-iana.mjs';
+import {adaptationEdges} from './icc-adaptation.mjs';
 import {iso639Edges} from './iso639.mjs';
 import {languageHistoryEdges} from './language-history.mjs';
 import { compatibilityEdges } from "./compatibility.mjs";
@@ -511,6 +512,7 @@ const iccMlucResults = iccMlucEdges(call);
 const iccUnicodeResults = iccUnicodeEdges(call);
 const iccSelectionResults = iccSelectionEdges(call);
 const iccSelectionIanaResults = iccSelectionIanaEdges(call);
+const adaptationResults = adaptationEdges(call);
 const iso639Results = iso639Edges(call);
 const languageHistoryResults = languageHistoryEdges(call);
 const compatibilityEdgeResults = compatibilityEdges(call);
@@ -1074,6 +1076,7 @@ console.log(
       iccUnicodeResults,
       iccSelectionResults,
       iccSelectionIanaResults,
+      adaptationResults,
       iso639Results,
       languageHistoryResults,
       compatibilityEdgeResults,

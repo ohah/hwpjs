@@ -226,6 +226,8 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         168 => return @import("iso639-probe.zig").run(a, bytes, limit),
         169 => return @import("language-history-probe.zig").run(a, bytes, limit),
         170 => return @import("icc-selection-probe.zig").runWithMatching(a, bytes, limit, .iana_direct),
+        171 => return @import("icc-adaptation-probe.zig").run(a, bytes, limit, false),
+        172 => return @import("icc-adaptation-probe.zig").run(a, bytes, limit, true),
         else => return error.InvalidMode,
     }
 }
