@@ -5,7 +5,7 @@ function fraction(n,d){return d<0n?[-n,-d]:[n,d];}
 function compare(a,b){const x=a[0]*b[1]-b[0]*a[1];return x<0n?-1:x>0n?1:0;}
 // Enumerate critical points (endpoints, branch boundary, base root) and apply
 // the point-wise real-power domain rules. No endpoint sign-crossing predicate.
-function reference(kind,raw){
+export function reference(kind,raw){
  const [g,ra,rb,,d]=raw.map(BigInt),a=kind===0?65536n:ra,b=kind===0?0n:rb;
  if((kind===1||kind===2)&&a===0n)throw Error('UndefinedIccCurveThreshold');
  const threshold=kind===0?[0n,1n]:kind<=2?fraction(-b,a):[d,65536n];

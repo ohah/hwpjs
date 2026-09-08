@@ -15,6 +15,7 @@ pub const chromatic_adaptation = @import("chromatic_adaptation.zig");
 pub const curve_type = @import("curve_type.zig");
 pub const parametric_curve = @import("parametric_curve.zig");
 pub const parametric_domain = @import("parametric_domain.zig");
+pub const parametric_segments = @import("parametric_segments.zig");
 pub const trc_tag = @import("trc_tag.zig");
 pub const trc_forward = @import("trc_forward.zig");
 pub const required_tag_set = @import("required_tag_set.zig");

@@ -49,6 +49,7 @@ test {
     _ = @import("image/icc/sampled_inverse_tests.zig");
     _ = @import("image/icc/gamma_inverse_tests.zig");
     _ = @import("image/icc/parametric_domain_tests.zig");
+    _ = @import("image/icc/parametric_segments_tests.zig");
     _ = @import("image/icc/sampled_forward_tests.zig");
     _ = @import("image/icc/analytic_forward_tests.zig");
     _ = @import("image/icc/xyz_tag_tests.zig");
