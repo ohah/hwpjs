@@ -10,7 +10,8 @@ pub fn Of(comptime bits: u16) type {
         128 => u128,
         256 => u256,
         512 => u512,
-        else => @compileError("rational equality width must be 128, 256 or 512"),
+        1024 => u1024,
+        else => @compileError("rational equality width must be 128, 256, 512 or 1024"),
     };
     const I = integer.Of(bits);
     return struct {

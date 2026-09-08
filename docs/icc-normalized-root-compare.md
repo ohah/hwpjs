@@ -1,5 +1,7 @@
 # ICC 정규화 기호근의 넓은 좌표 비교
 
+u1024 radicand와 i1024/u1024 좌표를 받는 compareWide 확장은 [1024비트 기호근 비교](icc-extended-root-compare.md)에서 관리합니다. 아래 기존 경로와 동등성·상하한·부호 판정을 공유합니다.
+
 ## 계약
 
 [활성 구간 위치 판정](icc-normalized-root-locations.md)이 이 비교를 사용합니다. 위치·끝점 소유권과 전체 분기 해 수집은 해당 계층의 책임입니다.

@@ -274,6 +274,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         219 => return @import("icc-sampled-wide-inverse-probe.zig").run(a, bytes, limit),
         220 => return @import("icc-gamma-wide-inverse-probe.zig").run(a, bytes, limit),
         221 => return @import("icc-wide-power-level-probe.zig").run(a, bytes, limit),
+        222 => return @import("icc-normalized-root-compare-probe.zig").runWide(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

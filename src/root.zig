@@ -62,6 +62,7 @@ test {
     _ = @import("image/icc/positive_bounds_tests.zig");
     _ = @import("image/icc/wide_power_equality_tests.zig");
     _ = @import("image/icc/normalized_power_root_compare_tests.zig");
+    _ = @import("image/icc/extended_root_compare_tests.zig");
     _ = @import("image/icc/normalized_root_location_tests.zig");
     _ = @import("image/icc/power_preimage_tests.zig");
     _ = @import("image/icc/parametric_preimage_tests.zig");

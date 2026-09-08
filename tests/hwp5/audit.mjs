@@ -114,6 +114,7 @@ import {linearPreimageEdges} from './icc-linear-preimage.mjs';
 import {normalizedPowerLevelEdges} from './icc-normalized-power-level.mjs';
 import {gammaWideInverseEdges} from './icc-gamma-wide-inverse.mjs';
 import {widePowerLevelEdges} from './icc-wide-power-level.mjs';
+import {extendedRootCompareEdges} from './icc-extended-root-compare.mjs';
 import {normalizedRootCompareEdges} from './icc-normalized-root-compare.mjs';
 import {normalizedLocationsEdges} from './icc-normalized-locations.mjs';
 import {powerPreimageEdges} from './icc-power-preimage.mjs';
@@ -578,6 +579,7 @@ const linearPreimageResults = linearPreimageEdges(call);
 const normalizedPowerLevelResults = normalizedPowerLevelEdges(call);
 const gammaWideInverseResults = gammaWideInverseEdges(call);
 const widePowerLevelResults = widePowerLevelEdges(call);
+const extendedRootCompareResults = extendedRootCompareEdges(call);
 const normalizedRootCompareResults = normalizedRootCompareEdges(call);
 const normalizedLocationsResults = normalizedLocationsEdges(call);
 const powerPreimageResults = powerPreimageEdges(call);
@@ -1184,6 +1186,7 @@ console.log(
       normalizedPowerLevelResults,
       gammaWideInverseResults,
       widePowerLevelResults,
+      extendedRootCompareResults,
       normalizedRootCompareResults,
       normalizedLocationsResults,
       powerPreimageResults,

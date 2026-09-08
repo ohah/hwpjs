@@ -44,6 +44,9 @@ pub fn Arithmetic(comptime bits: u16) type {
         pub fn fractionWide(n: u512, d: u512) !Interval {
             return ratio(512, n, d);
         }
+        pub fn fractionExtended(n: u1024, d: u1024) !Interval {
+            return ratio(1024, n, d);
+        }
         fn ratio(comptime width: u16, n: std.meta.Int(.unsigned, width), d: std.meta.Int(.unsigned, width)) !Interval {
             if (n == 0 or d == 0) return error.InvalidIccPositiveFraction;
             // At low precision a large ratio needs a shifted denominator, not
