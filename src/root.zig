@@ -63,6 +63,7 @@ test {
     _ = @import("image/icc/power_root_order_tests.zig");
     _ = @import("image/icc/normalized_root_order_tests.zig");
     _ = @import("image/icc/parametric_preimage_bounds_tests.zig");
+    _ = @import("image/icc/parametric_attained_inverse_tests.zig");
     _ = @import("image/icc/power_level_order_tests.zig");
     _ = @import("image/icc/rational_power_order_tests.zig");
     _ = @import("image/icc/parametric_jump_tests.zig");

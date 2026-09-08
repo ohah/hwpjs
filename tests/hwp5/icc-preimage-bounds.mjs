@@ -4,7 +4,7 @@ import {readWide} from './icc-wide-fraction-wire.mjs';
 import {expected as rootOrder} from './icc-normalized-root-compare.mjs';
 import {cmp} from './icc-power-reference.mjs';
 
-function endpoint(bytes,x,attained){
+export function endpoint(bytes,x,attained){
   assert.equal(bytes.length,92);assert.equal(bytes.readUInt32LE(4),Number(attained));
   if(bytes.readUInt32LE()===0){
     const n=readWide(bytes,8),d=readWide(bytes,40);assert.ok(d>0n&&n<=d);

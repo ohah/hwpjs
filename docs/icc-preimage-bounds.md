@@ -10,6 +10,8 @@
 
 ## SSOT와 파일 책임
 
+후속 [도달 목표의 F.1(a) 선택](icc-parametric-attained-inverse.md)은 전체 곡선 검증과 경계 선택을 연결합니다. 최근접 출력 처리는 별도 미완료 범위입니다.
+
 - `parametric_preimage_bounds_types.zig`: 외부 결과 타입과 좌표 표현.
 - `parametric_preimage_bounds.zig`: 기존 전체 역상 호출과 두 분기의 경계 조립. 하위 분기의 모든 x가 상위 분기의 모든 x보다 작은 성질은 parametric_segments의 기존 분기 소유권을 사용합니다. 큰 선형 좌표를 u128로 줄이거나 기호근과 불필요하게 비교하지 않습니다.
 - `power_preimage_bounds.zig`: factory가 생성한 완전한 power Set의 내부 경계 수집. 임의로 조작한 Set의 검증 API는 아닙니다. rational/root 비교는 기존 정확 비교 모듈을 재사용합니다. 같은 경계는 attained를 OR로 합치며, 구간에서 빠진 끝점을 equality point가 포함하는 경우를 보존합니다. start/end/singleton 위치 증거가 있는 근은 원본 유리수 끝점으로 표현합니다.

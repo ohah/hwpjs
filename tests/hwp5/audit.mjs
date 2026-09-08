@@ -114,6 +114,7 @@ import {normalizedLocationsEdges} from './icc-normalized-locations.mjs';
 import {powerPreimageEdges} from './icc-power-preimage.mjs';
 import {parametricPreimageEdges} from './icc-parametric-preimage.mjs';
 import {preimageBoundsEdges} from './icc-preimage-bounds.mjs';
+import {attainedInverseEdges} from './icc-attained-inverse.mjs';
 import {powerClipEdges} from './icc-power-clip.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
@@ -561,6 +562,7 @@ const normalizedLocationsResults = normalizedLocationsEdges(call);
 const powerPreimageResults = powerPreimageEdges(call);
 const parametricPreimageResults = parametricPreimageEdges(call);
 const preimageBoundsResults = preimageBoundsEdges(call);
+const attainedInverseResults = attainedInverseEdges(call);
 const powerClipResults = powerClipEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
@@ -1150,6 +1152,7 @@ console.log(
       powerPreimageResults,
       parametricPreimageResults,
       preimageBoundsResults,
+      attainedInverseResults,
       powerClipResults,
       modelParametricResults,
       iso639Results,

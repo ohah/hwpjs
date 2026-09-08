@@ -4,10 +4,8 @@ const Fraction = @import("fraction.zig").WideFraction;
 /// An unattained supremum/infimum is not an inverse value. No nearest-y fallback here.
 pub fn select(interval: Interval) !Fraction {
     try interval.validate();
-    if (interval.end.numerator == interval.end.denominator and interval.end_included) {
-        if (!interval.start_included) return error.UnattainedIccPreimageMinimum;
-        return interval.start;
-    }
-    if (!interval.end_included) return error.UnattainedIccPreimageMaximum;
-    return interval.end;
+    return switch (try @import("preimage_choice_rule.zig").select(interval.end.numerator == interval.end.denominator, interval.start_included, interval.end_included)) {
+        .lower => interval.start,
+        .upper => interval.end,
+    };
 }
