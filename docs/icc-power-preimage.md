@@ -2,6 +2,8 @@
 
 ## 계약과 표현
 
+[전체 도달 역상](icc-parametric-preimage.md)은 이 결과를 하위 선형 분기의 역상과 함께 보존합니다. 본 모듈은 거듭제곱 분기만 소유합니다.
+
 `power_preimage.solve(precision, curve, n, d)`는 활성 거듭제곱 분기에서 clip(f(x))=n/d인 모든 실제 x의 집합을 구합니다. 정규화 u128 목표 검증과 전체 곡선 정의역 검증은 [근 위치 계층](icc-normalized-root-locations.md)이 선행합니다. 결과는 inactive, undecided, 또는 set입니다. 빈 set은 활성 분기는 있으나 해가 없다는 뜻이며 inactive와 다릅니다. undecided에는 부분 결과를 넣지 않습니다.
 
 set은 원본 Power source, 최대 여섯 기호 구간과 최대 두 위치가 판정된 기호근을 보존합니다. 구간 끝점은 기존 power_clip_types.Interval을 재사용하며 원래 포함 플래그를 유지합니다. 근과 기호 구간 경계는 source의 a/b를 통해 x를 뜻하고 f64 좌표를 생성하지 않습니다. 배열은 각 count 안에서만 읽습니다.

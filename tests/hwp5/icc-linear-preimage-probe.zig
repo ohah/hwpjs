@@ -11,14 +11,6 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
         .offset = std.mem.readInt(i32, bytes[40..44], .big),
     }, std.mem.readInt(u128, bytes[44..60], .big), std.mem.readInt(u128, bytes[60..76], .big));
     const out = try a.alloc(u8, 136);
-    @memset(out, 0);
-    if (result) |interval| {
-        std.mem.writeInt(u32, out[0..4], 1, .little);
-        std.mem.writeInt(u32, out[4..8], @as(u32, @intFromBool(interval.start_included)) | (@as(u32, @intFromBool(interval.end_included)) << 1), .little);
-        std.mem.writeInt(u256, out[8..40], interval.start.numerator, .little);
-        std.mem.writeInt(u256, out[40..72], interval.start.denominator, .little);
-        std.mem.writeInt(u256, out[72..104], interval.end.numerator, .little);
-        std.mem.writeInt(u256, out[104..136], interval.end.denominator, .little);
-    }
+    @import("icc-wide-interval-output.zig").write(out[0..136], result);
     return out;
 }
