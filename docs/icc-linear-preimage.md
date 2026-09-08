@@ -2,7 +2,7 @@
 
 ## 범위
 
-거듭제곱 쪽의 같은 u128 목표값을 다루는 [넓은 기호근](icc-normalized-power-level.md)은 별도 준비 단계입니다. 두 분기를 합친 전체 역상 구성은 아직 미완료입니다.
+거듭제곱 쪽의 같은 u128 목표값은 [클리핑 후 분기 역상](icc-power-preimage.md)에서 다룹니다. 두 분기를 합친 전체 역상 구성은 아직 미완료입니다.
 
 `linear_preimage.solve(linear, n, d)`는 [파라메트릭 곡선의 선형 분기](icc-parametric-segments.md) 하나에 대해 `clip((a*x+b)/65536)=n/d`를 만족하는 **모든 실제 x**를 구합니다. n/d는 정규화 u128 입력이며 u16/16.16 격자로 양자화하지 않습니다. 결과는 u256 분수 끝점과 포함 플래그를 가진 하나의 WideInterval, 또는 역상이 없음을 뜻하는 null입니다.
 

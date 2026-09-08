@@ -1,18 +1,6 @@
 const std = @import("std");
 const icc = @import("hwpjs").image.icc;
-fn boundary(out: *[32]u8, value: icc.power_clip.types.Boundary) void {
-    switch (value) {
-        .rational => |x| {
-            std.mem.writeInt(u64, out[4..12], x.numerator, .little);
-            std.mem.writeInt(u64, out[12..20], x.denominator, .little);
-        },
-        .level_root => |r| {
-            std.mem.writeInt(u32, out[0..4], 1, .little);
-            std.mem.writeInt(u32, out[4..8], @intFromEnum(r.level), .little);
-            @import("icc-power-root-wire.zig").write(out[8..28], r.value);
-        },
-    }
-}
+const boundary = @import("icc-power-boundary-wire.zig").write;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     if (bytes.len > limit) return error.LimitExceeded;
     if (bytes.len < 4) return error.InvalidProbeInput;

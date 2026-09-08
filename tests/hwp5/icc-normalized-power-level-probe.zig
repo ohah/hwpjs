@@ -11,14 +11,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     std.mem.writeInt(u32, out[4..8], @intCast(count), .little);
     if (result == .finite) for (result.finite.roots[0..count], 0..) |root, i| {
         const at = 8 + i * 76;
-        if (root == .nonzero) {
-            const r = root.nonzero;
-            std.mem.writeInt(i32, out[at..][0..4], if (r.negative) -1 else 1, .little);
-            std.mem.writeInt(u256, out[at + 4 ..][0..32], r.numerator, .little);
-            std.mem.writeInt(u256, out[at + 36 ..][0..32], r.denominator, .little);
-            std.mem.writeInt(i32, out[at + 68 ..][0..4], r.exponent_numerator, .little);
-            std.mem.writeInt(u32, out[at + 72 ..][0..4], r.exponent_denominator, .little);
-        }
+        @import("icc-normalized-root-wire.zig").write(out[at..][0..76], root);
     };
     return out;
 }

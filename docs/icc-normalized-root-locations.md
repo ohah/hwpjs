@@ -2,6 +2,8 @@
 
 ## 범위
 
+[클리핑 후 거듭제곱 역상](icc-power-preimage.md)은 이 위치 결과와 클리핑 평탄 구간을 함께 보존합니다. 본 계층 자체는 원시 등식 근의 위치만 소유합니다.
+
 `normalized_root_location.locate(precision, root, a, b, interval)`는 [넓은 밑 근 비교](icc-normalized-root-compare.md)를 사용해 `(a*x+b)/65536=root`의 x 위치를 판정합니다. 입력 구간은 비어 있지 않은 u64 유리수 구간이며 기존 Location 열거형 absent/start/interior/end/singleton/entire/undecided를 공유합니다.
 
 구간을 먼저 검증하고 시작 좌표를 비교합니다. a=0이면 상수 밑의 등식 여부로 entire/absent/undecided를 반환합니다. a≠0의 닫힌 단일점은 singleton 또는 absent이며, 일반 구간은 기울기 방향과 열린 끝점을 적용합니다. 한 끝점이 미확정이어도 다른 끝점이 범위 밖임을 증명하면 absent를 반환할 수 있습니다. 그렇지 않은 미확정은 그대로 남깁니다. x를 근사값으로 생성하지 않습니다.

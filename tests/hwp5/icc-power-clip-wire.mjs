@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-function boundary(out,at){
+export function boundary(out,at){
  const type=out.readUInt32LE(at);
  if(type===0){assert.deepEqual(out.subarray(at+20,at+32),Buffer.alloc(12));const x=[out.readBigUInt64LE(at+4),out.readBigUInt64LE(at+12)];assert.ok(x[1]>0n&&x[0]<=x[1]);return {x};}
  assert.equal(type,1);const level=out.readUInt32LE(at+4),s=out.readInt32LE(at+8),n=out.readBigUInt64LE(at+12),p=out.readInt32LE(at+20),q=out.readUInt32LE(at+24);assert.ok(level<=1&&[-1,0,1].includes(s));assert.deepEqual(out.subarray(at+28,at+32),Buffer.alloc(4));return {level,s,n,p,q};
