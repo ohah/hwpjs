@@ -228,6 +228,8 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         170 => return @import("icc-selection-probe.zig").runWithMatching(a, bytes, limit, .iana_direct),
         171 => return @import("icc-adaptation-probe.zig").run(a, bytes, limit, false),
         172 => return @import("icc-adaptation-probe.zig").run(a, bytes, limit, true),
+        173 => return @import("icc-matrix-probe.zig").run(a, bytes, limit, false),
+        174 => return @import("icc-matrix-probe.zig").run(a, bytes, limit, true),
         else => return error.InvalidMode,
     }
 }
