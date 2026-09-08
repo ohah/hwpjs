@@ -597,6 +597,7 @@ const preimageBoundsResults = preimageBoundsEdges(call);
 const extendedPreimageBoundsResults = preimageBoundsEdges(call,512);
 const extendedRootOrderResults = extendedRootOrderEdges(call);
 const attainedInverseResults = attainedInverseEdges(call);
+const extendedAttainedInverseResults = attainedInverseEdges(call,512);
 const nearestRangeResults = nearestRangeEdges(call);
 const linearRangeResults = linearRangeEdges(call);
 const powerRangeResults = powerRangeEdges(call);
@@ -1211,6 +1212,7 @@ console.log(
       extendedPreimageBoundsResults,
       extendedRootOrderResults,
       attainedInverseResults,
+      extendedAttainedInverseResults,
       nearestRangeResults,
       linearRangeResults,
       powerRangeResults,

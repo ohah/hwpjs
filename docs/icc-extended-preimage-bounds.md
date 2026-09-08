@@ -10,6 +10,8 @@
 
 ## SSOT와 파일 책임
 
+[확장 도달 목표 선택](icc-extended-attained-inverse.md)은 이 경계를 사용해 전체 곡선 검증 이후 F.1(a)의 입력을 선택합니다. 경계 수집과 선택 정책은 별개입니다.
+
 - `normalized_root_order.zig`: 기존·확장 근의 검증, 부호, 역수, affine 순서를 공유합니다. 곱의 폭만 다릅니다.
 - `power_level.zig`: 고정 클리핑 수준 근을 기존·확장 타입으로 올리는 검증을 공유합니다. 확장한다고 원래 좁은 입력의 허용 범위를 넓히지 않습니다.
 - `power_preimage_bounds_impl.zig`: factory가 생성한 완전한 power Set의 경계 수집·비교·병합을 소유합니다. 동일 경계의 attained는 OR로 병합하고 정확히 같은 유리수 표현을 우선합니다. 임의로 조작된 Set의 검증기는 아닙니다.
