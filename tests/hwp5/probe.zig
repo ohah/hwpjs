@@ -217,7 +217,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         155, 156 => return @import("icc-trc-probe.zig").run(a, bytes, limit, if (mode == 155) .v2_2001 else .v4_2022),
         157 => return @import("icc-inverse-probe.zig").run(a, bytes, limit),
         158 => return @import("icc-forward-probe.zig").run(a, bytes, limit),
-        159, 160 => return @import("icc-analytic-probe.zig").run(a, bytes, limit, mode == 160),
+        159, 160 => return @import("icc-analytic-probe.zig").run(a, bytes, limit, if (mode == 160) .parametric_forward else .gamma_forward),
         161, 162 => return @import("icc-trc-forward-probe.zig").run(a, bytes, limit, if (mode == 161) .v2_2001 else .v4_2022),
         163 => return @import("icc-required-probe.zig").run(a, bytes, limit),
         164, 165 => return @import("icc-mluc-probe.zig").run(a, bytes, limit, if (mode == 164) .v4_2022 else .v2_2001),
@@ -233,6 +233,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         175 => return @import("icc-model-probe.zig").run(a, bytes, limit),
         176 => return @import("icc-model-forward-probe.zig").run(a, bytes, limit),
         177 => return @import("icc-normalized-inverse-probe.zig").run(a, bytes, limit),
+        178 => return @import("icc-analytic-probe.zig").run(a, bytes, limit, .gamma_inverse),
         else => return error.InvalidMode,
     }
 }
