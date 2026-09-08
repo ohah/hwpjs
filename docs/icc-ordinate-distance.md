@@ -10,6 +10,8 @@ value가 거듭제곱 식이면 r과 `2*target-r`를 양 끝으로 하는 닫힌
 
 ## SSOT와 확장
 
+[u512 목표 거리 비교](icc-extended-ordinate-distance.md)는 공통 반사 구간과 비교 흐름을 공유하며 계산 폭을 확장합니다.
+
 `power_ordinate_rational_order.Of(128/384)`가 signed 임계 분수에서 offset을 빼는 규칙을 소유합니다. 기존 정규화 출력 순서 비교도 이 모듈을 재사용합니다. 작업 정수 폭은 각각 256/512비트이며 비교 정밀도 128/256/512/1024와 다릅니다. signed 입력 분자 폭은 분모 폭+2, offset 적용 뒤에는 분모 폭+33비트가 상한입니다.
 
 integer_power·rational_power_equality·rational_power_order의 공통 Of에 512비트를 추가했습니다. 기존 128/256 진입점은 유지합니다. positive_bounds의 fraction/fractionWide는 하나의 ratio 생성기를 사용합니다. 낮은 정밀도와 큰 입력 비율에서 분모를 이동시키는 기존 방향성 반올림을 그대로 재사용하며 초기 정수 폭은 precision+입력 폭입니다. 정확한 동등성은 공통 완전근/거듭제곱 검사로 판정하고, 방향성 경계가 겹치면 null입니다.

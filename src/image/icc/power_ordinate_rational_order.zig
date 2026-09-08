@@ -5,7 +5,7 @@ pub fn Of(comptime width: u16) type {
     const working = switch (width) {
         128 => 256,
         384 => 512,
-        512 => 1024,
+        512, 768 => 1024,
         else => @compileError("unsupported ordinate threshold width"),
     };
     const I = std.meta.Int(.signed, width + 2);
