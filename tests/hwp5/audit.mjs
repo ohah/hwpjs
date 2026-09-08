@@ -125,6 +125,7 @@ import {ordinateDistanceEdges} from './icc-ordinate-distance.mjs';
 import {parametricNearestEdges} from './icc-parametric-nearest.mjs';
 import {parametricInverseEdges} from './icc-parametric-inverse.mjs';
 import {trcInverseEdges} from './icc-trc-inverse.mjs';
+import {modelInverseEdges} from './icc-model-inverse.mjs';
 import {powerClipEdges} from './icc-power-clip.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
@@ -583,6 +584,7 @@ const ordinateDistanceResults = ordinateDistanceEdges(call);
 const parametricNearestResults = parametricNearestEdges(call);
 const parametricInverseResults = parametricInverseEdges(call);
 const trcInverseResults = trcInverseEdges(call);
+const modelInverseResults = modelInverseEdges(call);
 const powerClipResults = powerClipEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
@@ -1183,6 +1185,7 @@ console.log(
       parametricNearestResults,
       parametricInverseResults,
       trcInverseResults,
+      modelInverseResults,
       powerClipResults,
       modelParametricResults,
       iso639Results,

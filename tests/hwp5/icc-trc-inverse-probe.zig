@@ -12,17 +12,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize, edition: icc.t
         1024 => try icc.trc_inverse.select(1024, parsed.curve, target),
         else => return error.InvalidIccComparisonPrecision,
     };
-    const payload = if (result == .selected) selected: {
-        const out = try a.alloc(u8, 96);
-        std.mem.writeInt(u32, out[0..4], 5, .little);
-        @import("icc-preimage-endpoint-wire.zig").write(out[4..96], .{ .coordinate = result.selected, .attained = true });
-        break :selected out;
-    } else try @import("icc-parametric-nearest-output.zig").write(a, switch (result) {
-        .undecided => .undecided,
-        .unattained => .unattained,
-        .ambiguous => |tie| .{ .tie = tie },
-        .selected => unreachable,
-    });
+    const payload = try @import("icc-trc-inverse-output.zig").write(a, result);
     defer a.free(payload);
     const out = try a.alloc(u8, 8 + payload.len);
     std.mem.writeInt(u32, out[0..4], @intFromEnum(parsed.channel), .little);
