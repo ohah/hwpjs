@@ -7,6 +7,12 @@ pub const Radical = struct {
     /// Magnitude = (numerator/65536)^(exponent_numerator/exponent_denominator).
     exponent_numerator: i32,
     exponent_denominator: u32,
+    pub fn validate(self: Radical) !void {
+        if (self.numerator == 0 or self.numerator > 4294967295 or
+            (self.exponent_numerator != 65536 and self.exponent_numerator != -65536) or
+            self.exponent_denominator == 0 or self.exponent_denominator > 2147483648)
+            return error.InvalidIccPowerRoot;
+    }
 };
 pub const Root = union(enum) { zero, nonzero: Radical };
 pub const Finite = struct { roots: [2]Root = undefined, count: usize = 0 };

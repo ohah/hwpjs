@@ -238,6 +238,8 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         180 => return @import("icc-segments-probe.zig").run(a, bytes, limit),
         181 => return @import("icc-partition-probe.zig").run(a, bytes, limit),
         182 => return @import("icc-power-level-probe.zig").run(a, bytes, limit),
+        183 => return @import("icc-root-compare-probe.zig").run(a, bytes, limit, false),
+        184 => return @import("icc-root-compare-probe.zig").run(a, bytes, limit, true),
         else => return error.InvalidMode,
     }
 }

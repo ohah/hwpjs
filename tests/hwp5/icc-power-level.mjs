@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 // Independent reduced-rational domain/sign analysis, not a copy of root construction.
-function admissible(g, ordinate) {
+export function admissible(g, ordinate) {
   if (g === 0) return ordinate === 65536n ? null : [];
   let p = BigInt(g), q = 65536n;
   while (q > 1n && p % 2n === 0n) { p /= 2n; q /= 2n; }
