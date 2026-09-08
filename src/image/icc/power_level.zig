@@ -13,6 +13,21 @@ pub const Radical = struct {
     }
 };
 pub const Root = union(enum) { zero, nonzero: Radical };
+/// Lossless adapter; preserve the narrower input validation contract.
+pub fn widen(root: Root) !@import("normalized_power_level.zig").Root {
+    const r = switch (root) {
+        .zero => return .zero,
+        .nonzero => |value| value,
+    };
+    try r.validate();
+    return .{ .nonzero = .{
+        .negative = r.negative,
+        .numerator = r.numerator,
+        .denominator = 65536,
+        .exponent_numerator = r.exponent_numerator,
+        .exponent_denominator = r.exponent_denominator,
+    } };
+}
 pub const Finite = struct { roots: [2]Root = undefined, count: usize = 0 };
 /// g=0 has value 1 at every nonzero real base; 0^0 remains undefined.
 pub const Solutions = union(enum) { all_nonzero, finite: Finite };

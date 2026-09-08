@@ -6,18 +6,7 @@ const wide = @import("normalized_power_root_compare.zig");
 /// Equality is proved algebraically; inequalities require disjoint directed bounds.
 pub fn compare(comptime precision: u16, root: Root, n: i128, d: u128) !?std.math.Order {
     if (d == 0) return error.InvalidIccRootCoordinate;
-    const radical = switch (root) {
-        .zero => return std.math.order(@as(i128, 0), n),
-        .nonzero => |r| r,
-    };
-    try radical.validate();
-    return wide.compare(precision, .{ .nonzero = .{
-        .negative = radical.negative,
-        .numerator = radical.numerator,
-        .denominator = 65536,
-        .exponent_numerator = radical.exponent_numerator,
-        .exponent_denominator = radical.exponent_denominator,
-    } }, n, d);
+    return wide.compare(precision, try @import("power_level.zig").widen(root), n, d);
 }
 /// Compare a BASE root with (a*x+b)/65536, retaining the exact normalized x.
 /// The caller owns affine orientation, active interval membership and a=0 policy.

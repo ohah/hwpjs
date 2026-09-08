@@ -1,20 +1,9 @@
 const std = @import("std");
 const Root = @import("power_level.zig").Root;
-fn sign(root: Root) i8 {
-    return switch (root) {
-        .zero => 0,
-        .nonzero => |r| if (r.negative) -1 else 1,
-    };
-}
+const widen = @import("power_level.zig").widen;
 /// Exact order of roots with the same encoded reciprocal exponent. Zero is universal.
 pub fn compare(a: Root, b: Root) !std.math.Order {
-    if (a == .nonzero) try a.nonzero.validate();
-    if (b == .nonzero) try b.nonzero.validate();
-    if (a == .nonzero and b == .nonzero and (a.nonzero.exponent_numerator != b.nonzero.exponent_numerator or a.nonzero.exponent_denominator != b.nonzero.exponent_denominator)) return error.IncompatibleIccPowerRoots;
-    const signs = std.math.order(sign(a), sign(b));
-    if (signs != .eq or a == .zero) return signs;
-    const order = std.math.order(a.nonzero.numerator, b.nonzero.numerator);
-    return if ((a.nonzero.exponent_numerator < 0) != a.nonzero.negative) order.invert() else order;
+    return @import("normalized_root_order.zig").compare(try widen(a), try widen(b));
 }
 pub fn inAffine(a: Root, b: Root, slope: i32) !std.math.Order {
     if (slope == 0) return error.NonIsolatedIccAffineRoot;
