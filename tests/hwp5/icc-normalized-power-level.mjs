@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readWide,writeUnsigned} from './icc-wide-fraction-wire.mjs';
 import {fraction as F} from './icc-matrix-reference.mjs';
 function input(g,offset,n,d){const out=Buffer.alloc(40);out.writeInt32BE(g);out.writeInt32BE(offset,4);writeUnsigned(out,8,n,16);writeUnsigned(out,24,d,16);return out;}
-function reference(g,offset,n,d){
+export function reference(g,offset,n,d){
  if(d===0n||n>d)throw Error('InvalidIccCurveCoordinate');
  const value=F(n*65536n-BigInt(offset)*d,d*65536n);
  if(g===0)return {all:value[0]===value[1],signs:[],value};

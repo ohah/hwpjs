@@ -1,5 +1,7 @@
 # ICC 정규화 목표값의 거듭제곱 기호근
 
+u512 목표값과 i1024/u1024 중간 계산 확장은 [넓은 목표값의 근 생성](icc-wide-power-level.md)에서 관리합니다. 아래 u128 경로와 판정 규칙은 공유하며, 입력·반환 폭은 구분합니다.
+
 ## 범위
 
 `normalized_power_level.solve(g, offset, n, d)`는 정규화 u128 목표값 n/d에 대해 `z^(g/65536)+offset/65536=n/d`의 정확한 실수 **밑 변수 z** 해를 보존합니다. [기존 signed 16.16 수준 해](icc-power-level.md)와 달리 목표값을 i32로 재양자화하지 않습니다. [선형 분기의 u128 역상 입력](icc-linear-preimage.md)과 같은 목표값 폭을 다루기 위한 준비 단계입니다.

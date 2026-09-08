@@ -5,6 +5,7 @@ pub fn Of(comptime bits: u16) type {
     const U = switch (bits) {
         256 => u256,
         512 => u512,
+        1024 => u1024,
         else => @compileError("unsupported ICC radical width"),
     };
     return struct {

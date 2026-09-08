@@ -11,6 +11,12 @@ pub const Finite = struct { signs: [2]Sign = undefined, count: usize = 0, recipr
 pub const Shape = union(enum) { all_nonzero, finite: Finite };
 /// Real roots of z^(g/65536)=ordinate/denominator. Callers guarantee positive denominator.
 pub fn classify(g: i32, ordinate: i256, denominator: u256) Shape {
+    return classifyImpl(g, ordinate, denominator);
+}
+pub fn classifyWide(g: i32, ordinate: i1024, denominator: u1024) Shape {
+    return classifyImpl(g, ordinate, denominator);
+}
+fn classifyImpl(g: i32, ordinate: anytype, denominator: anytype) Shape {
     std.debug.assert(denominator != 0);
     if (g == 0) return if (ordinate > 0 and @abs(ordinate) == denominator) .all_nonzero else .{ .finite = .{} };
     var result: Finite = .{};

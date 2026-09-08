@@ -88,6 +88,7 @@ test {
     _ = @import("image/icc/preimage_choice_tests.zig");
     _ = @import("image/icc/linear_preimage_tests.zig");
     _ = @import("image/icc/normalized_power_level_tests.zig");
+    _ = @import("image/icc/wide_power_level_tests.zig");
     _ = @import("image/icc/power_clip_tests.zig");
     _ = @import("image/icc/power_clip_classify_tests.zig");
     _ = @import("image/icc/sampled_forward_tests.zig");
