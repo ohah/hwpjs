@@ -603,6 +603,7 @@ const linearRangeResults = linearRangeEdges(call);
 const powerRangeResults = powerRangeEdges(call);
 const parametricRangeResults = parametricRangeEdges(call);
 const ordinateOrderResults = ordinateOrderEdges(call);
+const extendedOrdinateOrderResults = ordinateOrderEdges(call,512);
 const powerNearestResults = powerNearestEdges(call);
 const ordinateDistanceResults = ordinateDistanceEdges(call);
 const parametricNearestResults = parametricNearestEdges(call);
@@ -1218,6 +1219,7 @@ console.log(
       powerRangeResults,
       parametricRangeResults,
       ordinateOrderResults,
+      extendedOrdinateOrderResults,
       powerNearestResults,
       ordinateDistanceResults,
       parametricNearestResults,

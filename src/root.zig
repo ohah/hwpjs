@@ -81,6 +81,7 @@ test {
     _ = @import("image/icc/linear_range_tests.zig");
     _ = @import("image/icc/power_range_tests.zig");
     _ = @import("image/icc/power_ordinate_order_tests.zig");
+    _ = @import("image/icc/extended_ordinate_order_tests.zig");
     _ = @import("image/icc/power_range_nearest_tests.zig");
     _ = @import("image/icc/power_ordinate_distance_tests.zig");
     _ = @import("image/icc/parametric_nearest_tests.zig");

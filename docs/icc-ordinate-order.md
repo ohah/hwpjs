@@ -2,6 +2,8 @@
 
 ## 계약과 책임
 
+[u512 목표 확장 비교](icc-extended-ordinate-order.md)는 기존 값 표현과 검증 흐름을 공유하며 offset 적용 작업 폭을 1024비트로 확장합니다.
+
 `power_ordinate_order.compare(precision,value,target)`는 power_ordinate.Value와 정규화된 u128 목표 분수의 순서를 반환합니다. 결과는 lt/eq/gt 또는 정밀도 부족을 뜻하는 null입니다. 유리수 출력은 기존 WideFraction의 u512 교차곱을 사용합니다. 거듭제곱 출력 `base^(g/65536)+offset/65536`은 목표에서 오프셋을 정확히 뺀 뒤 공통 유리수 거듭제곱 비교기로 전달합니다.
 
 오프셋 차감 분자는 `65536*n-offset*d`, 분모는 `65536*d`입니다. u128 목표와 i32 offset은 분자에 최대 161 signed 비트, 분모에 최대 144 unsigned 비트가 필요하므로 i128로 줄이지 않고 i256/u256을 사용합니다. 부동소수점·16.16 재양자화·근삿값 동등 판정은 하지 않습니다.
