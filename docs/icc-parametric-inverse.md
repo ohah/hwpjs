@@ -15,6 +15,8 @@ ConstantIccCurve·NonMonotonicIccCurve·실수 정의역 오류를 먼저 거부
 
 ## 책임 분리와 SSOT
 
+[u512 목표 전체 역변환](icc-extended-parametric-inverse.md)은 기존 gate·최근접 출력·입력 선택 흐름을 공유하며 목표를 좁히지 않습니다.
+
 parametric_inverse_gate가 기존 parametric_trend의 비상수·단조 전제를 검사합니다. 기존 도달 목표용 parametric_attained_inverse도 이 gate를 재사용합니다. 전체 역변환 조립기는 gate 뒤 [전체 최근접 출력](icc-parametric-nearest.md)을 호출하고, parametric_inverse_choice가 출력에서 입력을 선택합니다. 타입은 parametric_inverse_types에 둡니다.
 
 유리수 출력과 클리핑된 0/1은 기존 parametric_attained_inverse에 전달하여 역상 전체 범위와 F.1(a) 평탄 구간 규칙을 재사용합니다. 현재 factory의 선형 출력 분모는 최대 80비트, 분자는 그 이하이며 원래 목표는 u128입니다. u256 표현을 u128로 넘길 때에도 checked cast를 사용합니다. factory가 증명한 실제 출력에 역상이 없다는 결과가 나오면 불변식 오류로 보고하고 임의 좌표로 대체하지 않습니다.

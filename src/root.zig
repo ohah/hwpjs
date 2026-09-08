@@ -88,6 +88,7 @@ test {
     _ = @import("image/icc/parametric_nearest_tests.zig");
     _ = @import("image/icc/extended_parametric_nearest_tests.zig");
     _ = @import("image/icc/parametric_inverse_tests.zig");
+    _ = @import("image/icc/extended_parametric_inverse_tests.zig");
     _ = @import("image/icc/parametric_range_tests.zig");
     _ = @import("image/icc/power_level_order_tests.zig");
     _ = @import("image/icc/rational_power_order_tests.zig");
