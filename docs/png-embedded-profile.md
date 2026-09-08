@@ -1,8 +1,10 @@
 # PNG iCCP 구현·검증 작업
 
+압축 봉투 이후의 구조·색 공간 검사와 픽셀 검사 연결은 [PNG/ICC 검사 연결](png-profile-inspection.md)에서 관리합니다.
+
 ## 현재 상태
 
-이 파트는 진행 중입니다. `src/image/png/embedded_profile.zig`에 iCCP 압축 봉투 해제만 구현했으며, PNG 픽셀 검사·제품 JS API에는 아직 연결하지 않았습니다. 따라서 기존 iCCP ancillary deferred 보고는 그대로 유지됩니다. ICC 전체 지원이나 유효한 프로파일 검증 완료가 아닙니다.
+이 파트는 진행 중입니다. `src/image/png/embedded_profile.zig`는 압축 봉투 해제를 소유하고, 후속 검사기와 collector가 ICC 구조·색 공간 검사를 PNG 픽셀 검사에 연결합니다. 의미 검증이 남아 있어 기존 iCCP ancillary deferred 보고는 유지합니다. 제품 JS API·ICC 전체 지원이나 유효한 프로파일 검증 완료가 아닙니다.
 
 ## 압축 봉투 계약
 
@@ -22,4 +24,4 @@ ICC 헤더·버전·선언 크기·프로파일 ID의 현재 구현은 [ICC 구�
 
 2026-09-07 `zig build test --summary all` 401/401 통과를 확인했습니다. 새 네이티브 테스트는 0..255 바이너리 원값과 버퍼 소유권, 입력/출력 정확한 한도, 압축 방법 256값, 모든 잘림 위치, 후미 바이트, 이름 경계, 빈 출력, 체크섬 실패를 포함한 모든 할당 실패 지점 정리를 검사합니다. 포맷과 `git diff --check`도 통과했습니다.
 
-이후 [WASM·실파일·전체 audit 기록](icc-verification.md)은 별도 문서에서 관리합니다. 압축 해제를 ICC 유효성 검사로 표시하지 않으며 PNG 픽셀 검사 연결은 아직 미완료입니다.
+이후 기존 ICC [WASM·실파일·전체 audit 기록](icc-verification.md)은 별도 문서에서 관리합니다. 새 픽셀 연결 검증은 위 연결 문서에서 관리하며 압축 해제를 ICC 유효성 검사로 표시하지 않습니다.

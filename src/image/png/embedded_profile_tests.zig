@@ -1,22 +1,7 @@
 const std = @import("std");
 const t = std.testing;
 const profile = @import("embedded_profile.zig");
-/// Independent stored-block fixture; deliberately allows arbitrary non-ICC bytes.
-fn payload(a: std.mem.Allocator, name: []const u8, bytes: []const u8) ![]u8 {
-    if (bytes.len > 65535) return error.FixtureTooLarge;
-    const out = try a.alloc(u8, name.len + 13 + bytes.len);
-    @memcpy(out[0..name.len], name);
-    out[name.len] = 0;
-    out[name.len + 1] = 0;
-    const at = name.len + 2;
-    out[at..][0..3].* = .{ 0x78, 1, 1 };
-    const len: u16 = @intCast(bytes.len);
-    std.mem.writeInt(u16, out[at + 3 ..][0..2], len, .little);
-    std.mem.writeInt(u16, out[at + 5 ..][0..2], ~len, .little);
-    @memcpy(out[at + 7 ..][0..bytes.len], bytes);
-    std.mem.writeInt(u32, out[at + 7 + bytes.len ..][0..4], std.hash.Adler32.hash(bytes), .big);
-    return out;
-}
+const payload = @import("embedded_profile_fixture.zig").payload;
 test "PNG embedded profile envelope all binary bytes ownership and exact quotas" {
     var raw: [256]u8 = undefined;
     for (&raw, 0..) |*b, i| b.* = @intCast(i);

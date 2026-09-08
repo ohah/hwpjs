@@ -32,9 +32,11 @@ export function pngSrgbEdges(call,cfb){
     const bytes=png(hd,chunk('sRGB',Buffer.from([intent])),g,c,...(color===3?[palette]:[]),chunk('IDAT',deflateSync(Buffer.alloc(1+channels))),end);
     assert.ok(check(bytes));const p=pngPixelsEvidence(bytes),limit=Buffer.alloc(4);limit.writeUInt32LE(p.decoded.length);assert.deepEqual(call(130,Buffer.concat([limit,bytes])),p.wire);
   }
-  // Unsupported profiles remain deferred: this suite does not certify their payloads.
-  for(const other of ['iCCP','cICP','vpAg'])for(const order of [[s,chunk(other,Buffer.from([1,2]))],[chunk(other,Buffer.from([1,2])),s]]){
-    const r=check(png(h,...order,id,end));assert.equal(r.readUInt32LE(16),1);assert.equal(r.readUInt32LE(20),1);assert.equal(r.readUInt32LE(24),2);
+  // iCCP bounds are checked, but profile semantics remain deferred.
+  const profile=Buffer.alloc(132);profile.writeUInt32BE(132);profile[8]=4;profile.write('GRAY',16);profile.write('acsp',36);
+  const iccp=Buffer.concat([Buffer.from([80,0,0]),deflateSync(profile)]);
+  for(const other of ['iCCP','cICP','vpAg'])for(const order of [[s,chunk(other,other==='iCCP'?iccp:Buffer.from([1,2]))],[chunk(other,other==='iCCP'?iccp:Buffer.from([1,2])),s]]){
+    const r=check(png(h,...order,id,end));assert.equal(r.readUInt32LE(16),1);assert.equal(r.readUInt32LE(20),1);assert.equal(r.readUInt32LE(24),other==='iCCP'?iccp.length:2);
   }
   const absent=check(png(h,id,end));assert.equal(absent.readUInt32LE(0),0);assert.equal(absent.readUInt32LE(16),0);
   const alone=check(png(h,s,id,end));assert.equal(alone.readUInt32LE(0),1);assert.equal(alone.readUInt32LE(8),0);assert.equal(alone.readUInt32LE(12),0);assert.equal(alone.readUInt32LE(16),1);

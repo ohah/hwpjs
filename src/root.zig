@@ -30,6 +30,8 @@ test {
     _ = @import("image/png/color_fixed_tests.zig");
     _ = @import("image/png/srgb_tests.zig");
     _ = @import("image/png/embedded_profile_tests.zig");
+    _ = @import("image/png/profile_inspection_tests.zig");
+    _ = @import("image/png/profile_collector_tests.zig");
     _ = @import("image/icc/header_tests.zig");
     _ = @import("image/icc/profile_id_tests.zig");
     _ = @import("image/icc/tag_table_tests.zig");

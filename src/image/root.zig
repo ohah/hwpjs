@@ -6,4 +6,5 @@ pub const png_compressed_text = @import("png/compressed_text.zig");
 pub const png_international_text = @import("png/international_text.zig");
 pub const png_suggested_palette = @import("png/suggested_palette.zig");
 pub const png_embedded_profile = @import("png/embedded_profile.zig");
+pub const png_profile_inspection = @import("png/profile_inspection.zig");
 pub const icc = @import("icc/root.zig");

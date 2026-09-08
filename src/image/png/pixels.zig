@@ -5,8 +5,9 @@ const filter = @import("filter.zig");
 const indices = @import("palette_indices.zig");
 const metadata = @import("metadata.zig");
 const suggested_palettes = @import("suggested_palettes.zig");
+const profile_collector = @import("profile_collector.zig");
 pub const Layout = @import("layout.zig").Layout;
-pub const Options = struct { structure: structure.Options = .{}, max_decoded_bytes: usize = 256 * 1024 * 1024, max_text_bytes: usize = 64 * 1024 * 1024, language: @import("international_text.zig").registry.Options = .{} };
+pub const Options = struct { structure: structure.Options = .{}, max_decoded_bytes: usize = 256 * 1024 * 1024, max_text_bytes: usize = 64 * 1024 * 1024, language: @import("international_text.zig").registry.Options = .{}, profile: @import("profile_inspection.zig").Options = .{ .layout = .bounded } };
 pub const Report = struct {
     structure: structure.Report,
     decoded_bytes: usize,
@@ -32,6 +33,7 @@ pub const Report = struct {
     gamma: ?@import("gamma.zig").Value,
     chromaticities: ?@import("chromaticities.zig").Value,
     srgb: ?@import("srgb.zig").Intent,
+    profile: ?profile_collector.Report,
     /// Wire presence is not proof of color precedence, usable gamma or valid gamut.
     color_semantics_deferred: bool,
 };
@@ -60,8 +62,10 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
     var at: usize = 0;
     var meta: metadata.State = .{};
     var suggested: suggested_palettes.Collector = .{};
+    var profile: profile_collector.Collector = .{};
     defer suggested.deinit(a);
     while (try it.next()) |chunk| {
+        try profile.consume(a, envelope.header, chunk, options.profile);
         try suggested.consume(a, chunk);
         try meta.consumeTextOptions(a, envelope.header, envelope.palette_entries, chunk, .{ .max_text_bytes = options.max_text_bytes, .language = options.language });
         if (chunk.is("IDAT")) {
@@ -121,7 +125,8 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
             .gamma = meta.gamma,
             .chromaticities = meta.chromaticities,
             .srgb = meta.srgb,
-            .color_semantics_deferred = meta.gamma != null or meta.chromaticities != null or meta.srgb != null,
+            .profile = profile.report,
+            .color_semantics_deferred = meta.gamma != null or meta.chromaticities != null or meta.srgb != null or profile.report != null,
         },
     };
 }
