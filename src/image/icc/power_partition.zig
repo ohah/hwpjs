@@ -12,7 +12,7 @@ fn classify(power: segments.Power) !Piece {
     const d = @as(i128, interval.start.denominator) + interval.end.denominator;
     const base = @as(i128, power.a) * n + @as(i128, power.b) * d;
     var increasing = (power.a > 0) == (power.g > 0);
-    if (base < 0 and @mod(@divTrunc(power.g, 65536), 2) == 0) increasing = !increasing;
+    if (base < 0 and @import("fixed16_exponent.zig").classify(power.g) == .even_integer) increasing = !increasing;
     return .{ .power = power, .direction = if (increasing) .increasing else .decreasing };
 }
 /// Split at the exact base root and report PRE-clipping direction only.

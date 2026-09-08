@@ -100,6 +100,7 @@ import {parametricDomainEdges} from './icc-parametric-domain.mjs';
 import {parametricTopologyEdges} from './icc-parametric-topology.mjs';
 import {segmentEdges} from './icc-segments.mjs';
 import {partitionEdges} from './icc-partition.mjs';
+import {powerLevelEdges} from './icc-power-level.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
 import {languageHistoryEdges} from './language-history.mjs';
@@ -532,6 +533,7 @@ const parametricDomainResults = parametricDomainEdges(call);
 const parametricTopologyResults = parametricTopologyEdges(call);
 const segmentResults = segmentEdges(call);
 const partitionResults = partitionEdges(call);
+const powerLevelResults = powerLevelEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
 const languageHistoryResults = languageHistoryEdges(call);
@@ -1106,6 +1108,7 @@ console.log(
       parametricTopologyResults,
       segmentResults,
       partitionResults,
+      powerLevelResults,
       modelParametricResults,
       iso639Results,
       languageHistoryResults,

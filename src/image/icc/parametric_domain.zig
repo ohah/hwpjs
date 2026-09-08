@@ -35,7 +35,7 @@ pub fn validate(curve: Curve) !void {
     const start = @as(i128, power.a) * power.start.numerator + @as(i128, power.b) * power.start.denominator;
     const end = @as(i64, power.a) + power.b;
     // A linear base takes its extreme values at the closed interval endpoints.
-    if (@rem(power.g, 65536) != 0 and (start < 0 or end < 0)) return error.UndefinedIccCurvePower;
+    if (@import("fixed16_exponent.zig").classify(power.g) == .fractional and (start < 0 or end < 0)) return error.UndefinedIccCurvePower;
     const contains_zero = start == 0 or end == 0 or (start < 0 and end > 0) or (start > 0 and end < 0);
     if (power.g <= 0 and contains_zero) return error.UndefinedIccCurvePower;
 }

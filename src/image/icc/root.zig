@@ -18,6 +18,7 @@ pub const parametric_domain = @import("parametric_domain.zig");
 pub const parametric_segments = @import("parametric_segments.zig");
 pub const linear_clip = @import("linear_clip.zig");
 pub const power_partition = @import("power_partition.zig");
+pub const power_level = @import("power_level.zig");
 pub const trc_tag = @import("trc_tag.zig");
 pub const trc_forward = @import("trc_forward.zig");
 pub const required_tag_set = @import("required_tag_set.zig");
