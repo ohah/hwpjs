@@ -2,6 +2,8 @@
 
 ## 범위와 반환값
 
+후속 [활성 구간 위치 판정](icc-root-locations.md)은 선형 방향·끝점 포함·상수 밑을 다루며 이 비교 계층을 재사용합니다.
+
 [기호적 실근](icc-power-level.md)을 실제 밑 좌표와 비교합니다. 기반 식은 [ICC.1:2022 Table 68](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 거듭제곱 분기입니다. 근이나 좌표를 f64로 바꾸지 않습니다.
 
 `power_root_compare.compare(precision, root, n, d)`는 근과 정확한 signed i128/u128 좌표 n/d의 순서를 반환합니다. d=0은 오류입니다. `.lt/.eq/.gt`는 증명된 순서이고 `null`은 선택 정밀도로 판정하지 못했다는 뜻입니다. null을 같음, 범위 밖, 근 부재로 바꾸면 안 됩니다. 호출자가 더 높은 정밀도로 재시도하거나 미확정을 전파해야 합니다.

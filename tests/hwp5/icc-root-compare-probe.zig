@@ -10,11 +10,7 @@ fn evaluate(comptime precision: u16, root: icc.power_level.Root, bytes: []const 
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize, affine: bool) ![]u8 {
     if (bytes.len > limit) return error.LimitExceeded;
     if (bytes.len != @as(usize, if (affine) 44 else 52)) return error.InvalidProbeInput;
-    const result = icc.power_level.solve(std.mem.readInt(i32, bytes[4..8], .big), std.mem.readInt(i32, bytes[8..12], .big), std.mem.readInt(i32, bytes[12..16], .big));
-    if (result != .finite) return error.NonIsolatedIccPowerRoot;
-    const index = std.mem.readInt(u32, bytes[16..20], .big);
-    if (index >= result.finite.count) return error.InvalidIccPowerRootIndex;
-    const root = result.finite.roots[index];
+    const root = try @import("icc-root-input.zig").selected(bytes);
     const order = switch (std.mem.readInt(u32, bytes[0..4], .big)) {
         128 => try evaluate(128, root, bytes, affine),
         256 => try evaluate(256, root, bytes, affine),

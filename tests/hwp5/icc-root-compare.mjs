@@ -21,6 +21,7 @@ function expected(g,offset,target,rootSign,n,d) {
   const order=sign(a**p*d**q-b**p*abs(n)**q);
   return order===0?0:rootSign*order;
 }
+export {expected as rootOrderReference, ordered as orderedRootSigns};
 export function rootCompareEdges(call) {
   let comparisons=0,rejected=0,undecided=0;
   function check(g,offset,target,n,d,precision=256) {

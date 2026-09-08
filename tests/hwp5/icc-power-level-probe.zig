@@ -11,15 +11,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     std.mem.writeInt(u32, out[4..8], @intCast(count), .little);
     if (result == .finite) for (result.finite.roots[0..count], 0..) |root, i| {
         const slot = out[8 + 20 * i ..][0..20];
-        switch (root) {
-            .zero => {},
-            .nonzero => |r| {
-                std.mem.writeInt(i32, slot[0..4], if (r.negative) -1 else 1, .little);
-                std.mem.writeInt(u64, slot[4..12], r.numerator, .little);
-                std.mem.writeInt(i32, slot[12..16], r.exponent_numerator, .little);
-                std.mem.writeInt(u32, slot[16..20], r.exponent_denominator, .little);
-            },
-        }
+        @import("icc-power-root-wire.zig").write(slot, root);
     };
     return out;
 }
