@@ -4,7 +4,8 @@ import {reference as domain} from './icc-parametric-domain.mjs';
 import {reference as linearRange} from './icc-linear-range.mjs';
 import {readWide} from './icc-wide-fraction-wire.mjs';
 import {cmp} from './icc-power-reference.mjs';
-export function referenceLinearRange(kind,raw){const active=domain(kind,raw);if(active&&cmp(active.start,[0n,1n])===0)return null;return linearRange({start:[0n,1n],end:active?active.start:[1n,1n],flags:active?1:3,a:kind>=3?raw[3]:0,b:kind===2?raw[3]:kind===4?raw[6]:0});}
+export function referenceLinearSource(kind,raw){const active=domain(kind,raw);if(active&&cmp(active.start,[0n,1n])===0)return null;return {start:[0n,1n],end:active?active.start:[1n,1n],flags:active?1:3,a:kind>=3?raw[3]:0,b:kind===2?raw[3]:kind===4?raw[6]:0};}
+export function referenceLinearRange(kind,raw){const line=referenceLinearSource(kind,raw);return line?linearRange(line):null;}
 export function parametricRangeEdges(call){let ranges=0,rejected=0;
  function check(kind,raw,precision=512){const input=powerRangeInput(kind,raw,precision);let active;try{active=domain(kind,raw);}catch(e){assert.throws(()=>call(207,input),new RegExp(e.message));rejected++;return;}
   const out=call(207,input);assert.equal(out.readUInt32LE(),1);assert.equal(out.length,active?312:144);

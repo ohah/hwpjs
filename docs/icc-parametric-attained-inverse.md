@@ -12,7 +12,7 @@ F.1(b)의 최근접 출력 검색은 **아직 이 API에 포함되지 않습니�
 
 ## SSOT와 책임
 
-해가 없는 목표의 후속 처리 기반은 [유리수 출력 범위의 최근접 값](icc-rational-range-nearest.md)에서 관리합니다. 아직 전체 파라메트릭 출력 범위와 연결된 F.1(b) 구현은 아닙니다.
+이 도달 목표 전용 API는 그대로 유지합니다. 후속 [전체 parametric 역변환](icc-parametric-inverse.md)에서 최근접 출력 검색·단조성 gate 공유·입력 선택 연결의 구현 및 검증 상태를 관리합니다. 아래의 F.1(b) 미구현 문장은 이 도달 목표 전용 단계의 이력입니다.
 
 `preimage_choice_rule.zig`가 경계의 실제 포함 여부와 정의역 끝 여부로 선택할 쪽을 결정합니다. 기존 connected interval용 preimage_choice와 새 파라메트릭 경로가 공유합니다. 샘플 곡선의 최근접 목표 클램프는 기존 sampled_inverse가 소유하며 이 변경으로 제거하지 않습니다.
 

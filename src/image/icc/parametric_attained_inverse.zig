@@ -13,12 +13,7 @@ fn atDomainEnd(comptime precision: u16, coordinate: Coordinate) !?bool {
 /// missing_preimage requires F.1(b); it is not a full inverse or nearest-y result.
 pub fn select(comptime precision: u16, curve: Curve, n: u128, d: u128) !Result {
     try (@import("fraction.zig").Normalized(128){ .numerator = n, .denominator = d }).validate();
-    switch (try @import("parametric_trend.zig").inspect(precision, curve)) {
-        .constant => return error.ConstantIccCurve,
-        .nonmonotonic => return error.NonMonotonicIccCurve,
-        .undecided => return .undecided,
-        .nondecreasing, .nonincreasing => {},
-    }
+    if (!try @import("parametric_inverse_gate.zig").validate(precision, curve)) return .undecided;
     const result = try @import("parametric_preimage_bounds.zig").solve(precision, curve, n, d);
     const bounds = switch (result) {
         .empty => return .missing_preimage,

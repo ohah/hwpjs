@@ -266,6 +266,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         209 => return @import("icc-power-nearest-probe.zig").run(a, bytes, limit),
         210 => return @import("icc-ordinate-distance-probe.zig").run(a, bytes, limit),
         211 => return @import("icc-parametric-nearest-probe.zig").run(a, bytes, limit),
+        212 => return @import("icc-parametric-inverse-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
