@@ -259,6 +259,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         201 => return @import("icc-preimage-bounds-probe.zig").run(a, bytes, limit),
         202 => return @import("icc-attained-inverse-probe.zig").run(a, bytes, limit),
         203 => return @import("icc-nearest-range-probe.zig").run(a, bytes, limit),
+        204 => return @import("icc-linear-range-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

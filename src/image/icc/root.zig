@@ -38,6 +38,7 @@ pub const parametric_preimage = @import("parametric_preimage.zig");
 pub const parametric_preimage_bounds = @import("parametric_preimage_bounds.zig");
 pub const parametric_attained_inverse = @import("parametric_attained_inverse.zig");
 pub const rational_range_nearest = @import("rational_range_nearest.zig");
+pub const linear_range = @import("linear_range.zig");
 pub const power_clip = @import("power_clip.zig");
 pub const trc_tag = @import("trc_tag.zig");
 pub const trc_forward = @import("trc_forward.zig");

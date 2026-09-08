@@ -3,7 +3,7 @@ import {readWide,writeUnsigned} from './icc-wide-fraction-wire.mjs';
 import {cmp} from './icc-power-reference.mjs';
 import {validateInterval} from './icc-linear-preimage-reference.mjs';
 export function nearestRangeInput(target,ranges){const out=Buffer.alloc(36+ranges.length*132);writeUnsigned(out,0,target[0],16);writeUnsigned(out,16,target[1],16);out.writeUInt32BE(ranges.length,32);ranges.forEach((r,i)=>{const p=36+i*132;[...r.start,...r.end].forEach((x,j)=>writeUnsigned(out,p+j*32,x));out.writeUInt32BE(r.flags,p+128);});return out;}
-function reference(target,ranges){
+export function reference(target,ranges){
   if(target[1]===0n||target[0]>target[1])throw Error('InvalidIccCurveCoordinate');
   ranges.forEach(validateInterval);const candidates=[];
   for(const r of ranges){candidates.push({x:r.start,actual:!!(r.flags&1)},{x:r.end,actual:!!(r.flags&2)});const lo=cmp(target,r.start),hi=cmp(target,r.end);if((lo>0||(lo===0&&(r.flags&1)))&&(hi<0||(hi===0&&(r.flags&2))))candidates.push({x:target,actual:true});}
