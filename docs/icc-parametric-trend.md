@@ -2,6 +2,8 @@
 
 ## 계약
 
+후속 [선형 분기의 역상과 평탄 구간 선택](icc-linear-preimage.md)은 별도 계층입니다. 거듭제곱 분기와 합친 전체 파라메트릭 역변환은 아직 미구현입니다.
+
 `parametric_trend.inspect(precision, curve)`는 [ICC.1:2022 §10.18 Table 68](https://www.color.org/specifications/ICC.1-2022-05.pdf) 식에 출력 [0,1] 클리핑을 적용한 **전체 실수 입력 구간 [0,1]**의 방향을 분류합니다. 전체 실수 정의역 검증을 먼저 수행하며 정의되지 않은 입력은 기존 오류입니다. 비단조라도 정의된 순방향 함수라면 오류로 바꾸지 않고 분류값을 반환합니다.
 
 | Trend / wire 값 | 의미 |

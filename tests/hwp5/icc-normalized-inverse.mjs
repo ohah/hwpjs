@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {inverseInput,inverseReference} from './icc-inverse.mjs';
+import {readWide} from './icc-wide-fraction-wire.mjs';
 function input(values,n,d){
   const out=Buffer.concat([Buffer.alloc(32),inverseInput(values,0).subarray(2)]);
   for(const [offset,value] of [[0,n],[16,d]]){
@@ -8,7 +9,6 @@ function input(values,n,d){
   }
   return out;
 }
-function readWide(b,offset){let v=0n;for(let i=3;i>=0;i--)v=(v<<64n)|b.readBigUInt64LE(offset+i*8);return v;}
 export function normalizedInverseEdges(call){
   let comparisons=0,rejected=0;
   function check(values,n,d){

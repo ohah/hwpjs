@@ -3,7 +3,7 @@ const Samples = @import("curve_type.zig").Samples;
 /// Normalized device coordinate. Exact fraction, not necessarily reduced.
 pub const Fraction = @import("fraction.zig").Fraction;
 /// Wide exact output for normalized u128 inputs; never narrowed or rounded.
-pub const WideFraction = struct { numerator: u256, denominator: u256 };
+pub const WideFraction = @import("fraction.zig").WideFraction;
 /// ICC.1:2022 Annex F.1, sampled piecewise-linear curves only.
 /// y is encoded in 0..65535. Validates the entire curve before returning a result.
 pub fn invert(samples: Samples, y: u16) !Fraction {
@@ -46,9 +46,10 @@ fn invertOrdinate(samples: Samples, numerator: u256, denominator: u128) !WideFra
         }
     }
     if (equal_start) |start| {
-        // F.1(a): right edge of interior/start flats, left edge of a terminal flat.
-        const index = if (equal_end == count - 1) start else equal_end;
-        return .{ .numerator = @intCast(index), .denominator = intervals };
+        return @import("preimage_choice.zig").select(.{
+            .start = .{ .numerator = @intCast(start), .denominator = intervals },
+            .end = .{ .numerator = @intCast(equal_end), .denominator = intervals },
+        });
     }
     for (0..count - 1) |i| {
         const a = @as(u256, try samples.at(i)) * denominator;
