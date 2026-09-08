@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {jpegFrameMarker,jpegHeaderActual} from './jpeg-headers.mjs';
+import {jpegTablesActual} from './jpeg-tables.mjs';
 const words = ns => {const b = Buffer.alloc(ns.length * 4); ns.forEach((n,i)=>b.writeUInt32LE(n,i*4)); return b;};
 export function jpegFramingInput(mode, raw, maximum = 65533) {
   return Buffer.concat([Buffer.from([mode]), words([maximum]), raw]);
@@ -63,7 +64,7 @@ export function jpegFramingEdges(call) {
   return {comparisons,rejected};
 }
 /// Framing walk for observed scans, not a JPEG process/pixel oracle.
-export function jpegFramingActual(call, raw, headers = false) {
+export function jpegFramingActual(call, raw, headers = false, tables = false) {
   let offset=0, markers=0, entropyBytes=0, scan=false;
   let frame=null;
   while(offset<raw.length) {
@@ -74,6 +75,7 @@ export function jpegFramingActual(call, raw, headers = false) {
     }
     const m=jpegMarkerOracle(raw.subarray(offset));
     assert.deepEqual(call(245,jpegFramingInput(0,raw.subarray(offset))),m.wire);
+    if(tables && (m.code===219 || m.code===196)) jpegTablesActual(call,m.code===196?1:0,m.wire.subarray(20));
     if(headers && jpegFrameMarker(m.code)) {
       frame={code:m.code,payload:m.wire.subarray(20)};
       jpegHeaderActual(call,frame.code,frame.payload);

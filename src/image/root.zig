@@ -12,3 +12,5 @@ pub const jpeg_markers = @import("jpeg/markers.zig");
 pub const jpeg_entropy = @import("jpeg/entropy.zig");
 pub const jpeg_frame = @import("jpeg/frame.zig");
 pub const jpeg_scan = @import("jpeg/scan.zig");
+pub const jpeg_quantization = @import("jpeg/quantization.zig");
+pub const jpeg_huffman = @import("jpeg/huffman.zig");

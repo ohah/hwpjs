@@ -42,6 +42,7 @@ import { containerActual, containerEdges } from "./containers.mjs";
 import {containerImagesEdges, containerImagesActual} from './container-images.mjs';
 import {jpegFramingEdges} from './jpeg-framing.mjs';
 import {jpegHeaderEdges} from './jpeg-headers.mjs';
+import {jpegTablesEdges} from './jpeg-tables.mjs';
 import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
 import { codepageEdges } from "./codepage.mjs";
@@ -765,6 +766,7 @@ const containerEdgeResults = containerEdges(call, cfb);
 const containerImagesResults = containerImagesEdges(call, cfb);
 const jpegFramingResults = jpegFramingEdges(call);
 const jpegHeaderResults = jpegHeaderEdges(call);
+const jpegTablesResults = jpegTablesEdges(call);
 const containerImageFiles = {files: 0, png: 0, unhandled: 0};
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
@@ -1193,6 +1195,7 @@ console.log(
       containerImagesResults,
       jpegFramingResults,
       jpegHeaderResults,
+      jpegTablesResults,
       containerImageFiles,
       iccResults,
       iccSemanticResults,
