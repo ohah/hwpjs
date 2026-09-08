@@ -9,7 +9,8 @@ pub fn Of(comptime bits: u16) type {
     const I = switch (bits) {
         128 => i128,
         256 => i256,
-        else => @compileError("power order width must be 128 or 256"),
+        512 => i512,
+        else => @compileError("power order width must be 128, 256 or 512"),
     };
     const U = std.meta.Int(.unsigned, bits);
     const equality = @import("rational_power_equality.zig").Of(bits);
@@ -34,8 +35,8 @@ pub fn Of(comptime bits: u16) type {
             const n = @abs(target_n);
             if (equality.matches(a, b, p, 65536, n, target_d)) return .eq;
             const A = bounds.Arithmetic(precision);
-            const left = try A.power(try A.fraction(a, b), p);
-            const right = try A.power(try A.fraction(n, target_d), 65536);
+            const left = try A.power(if (bits == 512) try A.fractionWide(a, b) else try A.fraction(a, b), p);
+            const right = try A.power(if (bits == 512) try A.fractionWide(n, target_d) else try A.fraction(n, target_d), 65536);
             const order = A.separated(left, right) orelse return null;
             return if (negative) order.invert() else order;
         }

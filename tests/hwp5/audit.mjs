@@ -121,6 +121,7 @@ import {powerRangeEdges} from './icc-power-range.mjs';
 import {parametricRangeEdges} from './icc-parametric-range.mjs';
 import {ordinateOrderEdges} from './icc-ordinate-order.mjs';
 import {powerNearestEdges} from './icc-power-nearest.mjs';
+import {ordinateDistanceEdges} from './icc-ordinate-distance.mjs';
 import {powerClipEdges} from './icc-power-clip.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
@@ -575,6 +576,7 @@ const powerRangeResults = powerRangeEdges(call);
 const parametricRangeResults = parametricRangeEdges(call);
 const ordinateOrderResults = ordinateOrderEdges(call);
 const powerNearestResults = powerNearestEdges(call);
+const ordinateDistanceResults = ordinateDistanceEdges(call);
 const powerClipResults = powerClipEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
@@ -1171,6 +1173,7 @@ console.log(
       parametricRangeResults,
       ordinateOrderResults,
       powerNearestResults,
+      ordinateDistanceResults,
       powerClipResults,
       modelParametricResults,
       iso639Results,

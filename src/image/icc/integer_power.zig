@@ -9,7 +9,8 @@ pub fn Of(comptime bits: u16) type {
     const U = switch (bits) {
         128 => u128,
         256 => u256,
-        else => @compileError("integer power width must be 128 or 256"),
+        512 => u512,
+        else => @compileError("integer power width must be 128, 256 or 512"),
     };
     return struct {
         pub fn bounded(base: U, exponent: u32, limit: U) ?U {

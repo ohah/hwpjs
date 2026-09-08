@@ -1,9 +1,10 @@
 const Power = @import("parametric_segments.zig").Power;
 const Fraction = @import("fraction.zig").Fraction;
+pub const PowerValue = struct { base: @import("affine_value.zig").Value, g: i32, offset: i32 };
 pub const Value = union(enum) {
     rational: @import("fraction.zig").WideFraction,
     /// Exact base^(g/65536)+offset/65536, proved strictly between 0 and 1.
-    power: struct { base: @import("affine_value.zig").Value, g: i32, offset: i32 },
+    power: PowerValue,
 };
 /// Included point only. Whole-branch real-domain validation belongs to caller.
 /// null means clipping could not be decided at the requested precision.

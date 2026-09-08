@@ -7,11 +7,6 @@ pub fn compare(comptime precision: u16, value: @import("power_ordinate.zig").Val
     try target.validate();
     return switch (value) {
         .rational => |r| try r.order(.{ .numerator = target.numerator, .denominator = target.denominator }),
-        .power => |p| blk: {
-            // <=161 signed bits and <=144 unsigned bits, including minInt(i32).
-            const n = @as(i256, 65536) * target.numerator - @as(i256, p.offset) * target.denominator;
-            const d = @as(u256, 65536) * target.denominator;
-            break :blk try @import("rational_power_order.zig").Of(256).compare(precision, p.base.numerator, p.base.denominator, p.g, n, d);
-        },
+        .power => |p| try @import("power_ordinate_rational_order.zig").Of(128).compare(precision, p, target.numerator, target.denominator),
     };
 }
