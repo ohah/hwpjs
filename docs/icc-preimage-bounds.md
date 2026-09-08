@@ -10,6 +10,8 @@
 
 ## SSOT와 파일 책임
 
+[u512 목표의 확장 경계](icc-extended-preimage-bounds.md)는 기존 경로와 폭별 타입·경계 병합 구현을 공유합니다. 내부 병합 소유자는 `power_preimage_bounds_impl.zig`이며 `power_preimage_bounds.zig`는 폭별 별칭을 제공합니다.
+
 후속 [도달 목표의 F.1(a) 선택](icc-parametric-attained-inverse.md)은 전체 곡선 검증과 경계 선택을 연결합니다. 최근접 출력 처리는 별도 미완료 범위입니다.
 
 - `parametric_preimage_bounds_types.zig`: 외부 결과 타입과 좌표 표현.

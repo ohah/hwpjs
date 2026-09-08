@@ -15,6 +15,12 @@ pub const Radical = struct {
 pub const Root = union(enum) { zero, nonzero: Radical };
 /// Lossless adapter; preserve the narrower input validation contract.
 pub fn widen(root: Root) !@import("normalized_power_level.zig").Root {
+    return widenTo(@import("normalized_power_level.zig").Root, root);
+}
+pub fn widenExtended(root: Root) !@import("normalized_power_level.zig").Wide.Root {
+    return widenTo(@import("normalized_power_level.zig").Wide.Root, root);
+}
+fn widenTo(comptime Result: type, root: Root) !Result {
     const r = switch (root) {
         .zero => return .zero,
         .nonzero => |value| value,

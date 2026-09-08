@@ -35,6 +35,7 @@ pub const preimage_choice = @import("preimage_choice.zig");
 pub const normalized_power_level = @import("normalized_power_level.zig");
 pub const normalized_power_root_compare = @import("normalized_power_root_compare.zig");
 pub const normalized_root_location = @import("normalized_root_location.zig");
+pub const normalized_root_order = @import("normalized_root_order.zig");
 pub const normalized_level_locations = @import("normalized_level_locations.zig");
 pub const power_preimage = @import("power_preimage.zig");
 pub const parametric_preimage = @import("parametric_preimage.zig");

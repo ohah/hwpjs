@@ -281,6 +281,8 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         226 => return @import("icc-linear-preimage-probe.zig").runWide(a, bytes, limit),
         227 => return @import("icc-extended-fraction-float-probe.zig").run(a, bytes, limit),
         228 => return @import("icc-parametric-preimage-probe.zig").runWide(a, bytes, limit),
+        229 => return @import("icc-extended-root-order-probe.zig").run(a, bytes, limit),
+        230 => return @import("icc-preimage-bounds-probe.zig").runWide(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

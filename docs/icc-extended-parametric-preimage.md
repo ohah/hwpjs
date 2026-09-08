@@ -10,6 +10,8 @@
 
 ## 경계와 SSOT
 
+전체 집합의 하한·상한과 도달 여부는 [확장 경계](icc-extended-preimage-bounds.md)에서 별도로 구합니다. 집합 조립과 역함수 선택의 책임은 합치지 않습니다.
+
 기존 [u128 전체 역상](icc-parametric-preimage.md)과 solveFor가 검증 순서·분기 조립을 공유합니다. parametric_preimage_types.Of가 두 폭의 Set/Result와 isEmpty를 공유하며 별도의 합집합 알고리즘을 복제하지 않습니다.
 
 parametric_segments의 하위 [0,start)·상위 [start,1] 소유권을 그대로 유지합니다. start=1이면 상위 닫힌 단일점이 남고, 상위가 비활성이면 하위의 끝 1이 포함됩니다. 선형·거듭제곱 해 계산은 각각 기존 모듈이 소유하며 전체 조립은 할당·파일 접근·실수 근사를 하지 않습니다. 기존 solve/Result와 제품 JS API는 유지합니다.
