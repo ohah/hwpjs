@@ -1,17 +1,7 @@
 const shape = @import("power_level_shape.zig");
 /// Positive magnitude = (numerator/denominator)^(exponent_numerator/exponent_denominator).
 /// The radicand is not restricted to [0,1]; only solve's target is normalized.
-pub const Radical = struct {
-    negative: bool,
-    numerator: u256,
-    denominator: u256,
-    exponent_numerator: i32,
-    exponent_denominator: u32,
-    pub fn validate(self: Radical) !void {
-        if (self.numerator == 0 or self.denominator == 0) return error.InvalidIccPowerRoot;
-        try (shape.Reciprocal{ .numerator = self.exponent_numerator, .denominator = self.exponent_denominator }).validate();
-    }
-};
+pub const Radical = @import("power_radical.zig").Of(256);
 pub const Root = union(enum) { zero, nonzero: Radical };
 pub const Finite = struct { roots: [2]Root = undefined, count: usize = 0 };
 pub const Solutions = union(enum) { all_nonzero, finite: Finite };

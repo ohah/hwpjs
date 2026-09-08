@@ -1,5 +1,7 @@
 # ICC 감마 역변환
 
+이 문서는 f64 근사 API의 계약입니다. 넓은 분수를 반올림하지 않는 별도 경로는 [정확한 gamma 역변환 표현](icc-gamma-wide-inverse.md)에서 관리합니다.
+
 ## 계약
 
 [ICC.1:2022 §10.6·Annex F.1](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 curveType 단일 값은 순방향 지수 γ입니다. `gamma_inverse.evaluate(raw, y)`는 γ=raw/256인 곡선의 역함수 `y^(256/raw)`를 계산합니다. 입력은 유한한 f64 [0,1]이고 결과는 근사 f64입니다. 역지수를 다시 u8Fixed8로 인코딩하거나 샘플 배열로 근사하지 않습니다.

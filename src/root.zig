@@ -53,6 +53,7 @@ test {
     _ = @import("image/icc/sampled_inverse_tests.zig");
     _ = @import("image/icc/sampled_wide_inverse_tests.zig");
     _ = @import("image/icc/gamma_inverse_tests.zig");
+    _ = @import("image/icc/gamma_wide_inverse_tests.zig");
     _ = @import("image/icc/parametric_domain_tests.zig");
     _ = @import("image/icc/parametric_segments_tests.zig");
     _ = @import("image/icc/curve_partition_tests.zig");

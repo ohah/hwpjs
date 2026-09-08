@@ -112,6 +112,7 @@ import {parametricJumpEdges} from './icc-parametric-jump.mjs';
 import {parametricTrendEdges} from './icc-parametric-trend.mjs';
 import {linearPreimageEdges} from './icc-linear-preimage.mjs';
 import {normalizedPowerLevelEdges} from './icc-normalized-power-level.mjs';
+import {gammaWideInverseEdges} from './icc-gamma-wide-inverse.mjs';
 import {normalizedRootCompareEdges} from './icc-normalized-root-compare.mjs';
 import {normalizedLocationsEdges} from './icc-normalized-locations.mjs';
 import {powerPreimageEdges} from './icc-power-preimage.mjs';
@@ -574,6 +575,7 @@ const parametricJumpResults = parametricJumpEdges(call);
 const parametricTrendResults = parametricTrendEdges(call);
 const linearPreimageResults = linearPreimageEdges(call);
 const normalizedPowerLevelResults = normalizedPowerLevelEdges(call);
+const gammaWideInverseResults = gammaWideInverseEdges(call);
 const normalizedRootCompareResults = normalizedRootCompareEdges(call);
 const normalizedLocationsResults = normalizedLocationsEdges(call);
 const powerPreimageResults = powerPreimageEdges(call);
@@ -1178,6 +1180,7 @@ console.log(
       parametricTrendResults,
       linearPreimageResults,
       normalizedPowerLevelResults,
+      gammaWideInverseResults,
       normalizedRootCompareResults,
       normalizedLocationsResults,
       powerPreimageResults,

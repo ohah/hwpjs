@@ -65,6 +65,7 @@ pub const sampled_inverse = @import("sampled_inverse.zig");
 pub const sampled_forward = @import("sampled_forward.zig");
 pub const gamma_forward = @import("gamma_forward.zig");
 pub const gamma_inverse = @import("gamma_inverse.zig");
+pub const gamma_wide_inverse = @import("gamma_wide_inverse.zig");
 pub const parametric_forward = @import("parametric_forward.zig");
 pub const xyz_values = @import("xyz_values.zig");
 pub const xyz_tag = @import("xyz_tag.zig");
