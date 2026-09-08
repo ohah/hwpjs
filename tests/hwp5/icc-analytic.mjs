@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 export function gammaInput(g,x){const b=Buffer.alloc(22);b.writeDoubleBE(x);b.write('curv',8);b.writeUInt32BE(1,16);b.writeUInt16BE(g,20);return b;}
-function paraInput(kind,values,x){const b=Buffer.alloc(20+values.length*4);b.writeDoubleBE(x);b.write('para',8);b.writeUInt16BE(kind,16);values.forEach((v,i)=>b.writeInt32BE(v,20+i*4));return b;}
+export function paraInput(kind,values,x){const b=Buffer.alloc(20+values.length*4);b.writeDoubleBE(x);b.write('para',8);b.writeUInt16BE(kind,16);values.forEach((v,i)=>b.writeInt32BE(v,20+i*4));return b;}
 // Independent Table 68 equations; compare numeric results, not implementation bytes.
 function reference(kind,raw,x){const [g,a,b,c,d,e,f]=raw.map(v=>v/65536);let y;
   switch(kind){

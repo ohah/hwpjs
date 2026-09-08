@@ -234,6 +234,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         176 => return @import("icc-model-forward-probe.zig").run(a, bytes, limit),
         177 => return @import("icc-normalized-inverse-probe.zig").run(a, bytes, limit),
         178 => return @import("icc-analytic-probe.zig").run(a, bytes, limit, .gamma_inverse),
+        179 => return @import("icc-parametric-domain-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
