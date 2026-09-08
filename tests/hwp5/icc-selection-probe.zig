@@ -1,6 +1,9 @@
 const std = @import("std");
 const icc = @import("hwpjs").image.icc;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return runWithMatching(a, bytes, limit, .raw);
+}
+pub fn runWithMatching(a: std.mem.Allocator, bytes: []const u8, limit: usize, matching: icc.mluc_selection.Matching) ![]u8 {
     if (bytes.len > limit) return error.LimitExceeded;
     if (bytes.len < 12) return error.InvalidProbeInput;
     const max_records = std.mem.readInt(u32, bytes[0..4], .big);
@@ -16,7 +19,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
         p.* = .{ .language = b[1..3].*, .country = if (b[0] == 1) b[3..5].* else null };
     }
     const view = try icc.mluc.parse(bytes[12 + count * 5 ..], .{ .max_bytes = limit, .max_records = max_records });
-    const selected = try icc.mluc_selection.select(view, prefs, .{ .max_records = max_records, .max_preferences = max_preferences });
+    const selected = try icc.mluc_selection.select(view, prefs, .{ .max_records = max_records, .max_preferences = max_preferences, .matching = matching });
     const out = try a.alloc(u8, 24);
     @memset(out, 0);
     if (selected) |s| {

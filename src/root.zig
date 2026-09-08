@@ -14,6 +14,7 @@ test {
     _ = @import("text/iso639/tests.zig");
     _ = @import("text/bcp47/registry_tests.zig");
     _ = @import("text/bcp47/alpha2_history_tests.zig");
+    _ = @import("text/bcp47/alpha2_match_tests.zig");
     _ = @import("compression/zlib_tests.zig");
     _ = @import("image/png/tests.zig");
     _ = @import("image/png/filter_tests.zig");

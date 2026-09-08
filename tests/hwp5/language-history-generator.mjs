@@ -8,7 +8,12 @@ export function historyGeneratorEdges(catalog){let accepted=0,rejected=0;
   const registered={language:new Set(['aa','aaa','bb']),region:new Set(['aa','bb','419'])};
   assert.ok(historyTable(expected,registered).includes('"aaa"'));accepted++;
   const preferenceOnly={language:{aa:{deprecated:null,preferred:'bb'}},region:{aa:{deprecated:null,preferred:'419'}}};
-  assert.ok(historyTable(preferenceOnly,registered).includes('"419"'));accepted++;
+  assert.throws(()=>historyTable(preferenceOnly,registered),/requires deprecation/);rejected++;
+  const regionOnly=structuredClone(expected);regionOnly.region.aa={deprecated:null,preferred:'419'};
+  assert.throws(()=>historyTable(regionOnly,registered),/requires deprecation/);rejected++;
+  for(const kind of ['language','region']){
+    assert.throws(()=>alpha2History(records(`Type: ${kind}\nSubtag: aa\nPreferred-Value: bb\n`)),/requires deprecation/);rejected++;
+  }
   for(const invalid of [raw.replace('2024-02-29','2023-02-29'),raw.replace('2024-02-29','1900-02-29'),raw.replace('2024-02-29','2024-13-01'),raw.replace('Subtag: aa','Subtag: aa\nSubtag: bb'),raw.replace('Type: language','Type: language\nType: region'),raw.replace('Deprecated: 2024-02-29','Deprecated: 2024-02-29\nDeprecated: 2024-02-29'),raw.replace('Preferred-Value: aaa','Preferred-Value: aaa\nPreferred-Value: bb'),raw+'%%\nType: language\nSubtag: aa\nDeprecated: 2024-01-01\n']){
     assert.throws(()=>alpha2History(records(invalid)));rejected++;
   }

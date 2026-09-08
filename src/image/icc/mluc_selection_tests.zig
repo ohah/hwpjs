@@ -17,6 +17,40 @@ fn fixture() [68]u8 {
     @memcpy(b[64..], &[_]u8{ 0xdc, 0, 0, 0 });
     return b;
 }
+test "IANA selection is opt in and preserves policy ties and deferred validation" {
+    var b = fixture();
+    for ([_]*const [4]u8{ "frFR", "iwUS", "heBU", "heMM" }, 0..) |locale, i|
+        @memcpy(b[16 + i * 12 ..][0..4], locale);
+    const view = try mluc.parse(&b, .{});
+    const prefs = &[_]selection.Preference{.{ .language = "HE".*, .country = "MM".* }};
+    const raw = (try selection.select(view, prefs, .{})).?;
+    try t.expectEqual(selection.Reason.first_record, raw.reason);
+    const mapped = (try selection.select(view, prefs, .{ .matching = .iana_direct })).?;
+    try t.expectEqual(@as(usize, 2), mapped.index);
+    try t.expectEqual(selection.Reason.exact, mapped.reason);
+    try t.expect(mapped.locale_deferred and mapped.unicode_deferred);
+    const language = (try selection.select(view, &.{.{ .language = "he".* }}, .{ .matching = .iana_direct })).?;
+    try t.expectEqual(@as(usize, 1), language.index);
+    try t.expectEqual(selection.Reason.language, language.reason);
+    try t.expectError(error.LimitExceeded, selection.select(view, prefs, .{ .matching = .iana_direct, .max_records = 3 }));
+    try t.expectError(error.LimitExceeded, selection.select(view, prefs, .{ .matching = .iana_direct, .max_preferences = 0 }));
+}
+test "IANA selection does not invent ambiguous language or country aliases" {
+    for ([_][2]*const [4]u8{ .{ "shRS", "srRS" }, .{ "bhIN", "biIN" }, .{ "zzUS", "ZZUS" } }) |pair| {
+        var b = fixture();
+        @memcpy(b[16..20], pair[0]);
+        const view = try mluc.parse(&b, .{});
+        const s = (try selection.select(view, &.{.{ .language = pair[1][0..2].*, .country = pair[1][2..4].* }}, .{ .matching = .iana_direct })).?;
+        try t.expectEqual(selection.Reason.first_record, s.reason);
+    }
+    for ([_][2]*const [2]u8{ .{ "UK", "GB" }, .{ "AN", "CW" } }) |pair| {
+        var b = fixture();
+        @memcpy(b[18..20], pair[0]);
+        const s = (try selection.select(try mluc.parse(&b, .{}), &.{.{ .language = "en".*, .country = pair[1].* }}, .{ .matching = .iana_direct })).?;
+        try t.expectEqual(selection.Reason.language, s.reason);
+        try t.expectEqual(@as(usize, 0), s.index);
+    }
+}
 test "mluc selection prefers late exact match and retains wire order on ties" {
     const b = fixture();
     const view = try mluc.parse(&b, .{});

@@ -1,5 +1,7 @@
 # IANA 두 글자 언어·지역 이력 조회
 
+후속 [ICC 명시적 IANA 비교](icc-localized-iana-matching.md)에서 이력 조회를 재사용합니다. 해당 작업의 공식 문서 재검토로 발견한 Preferred-Value/Deprecated 필수 관계 누락과 수정 기록도 그 문서에 둡니다. 아래 검증 기록은 당시 결과이며 후속 수정본의 전체 감사 완료를 의미하지 않습니다.
+
 ## 근거와 데이터
 
 [RFC 5646 §3.1.6](https://www.rfc-editor.org/rfc/rfc5646.html#section-3.1.6)의 Deprecated와 [§3.1.7](https://www.rfc-editor.org/rfc/rfc5646.html#section-3.1.7)의 Preferred-Value를 두 글자 language/region 레코드에 한정해 보존합니다. 폐기 날짜의 부재와 단일 권장 값의 부재는 각각 null이며, 주석에서 임의 대체 코드를 만들지 않습니다. 값은 조회만 제공하며 자동 canonicalization은 하지 않습니다.
