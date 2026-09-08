@@ -35,6 +35,7 @@ pub const normalized_root_location = @import("normalized_root_location.zig");
 pub const normalized_level_locations = @import("normalized_level_locations.zig");
 pub const power_preimage = @import("power_preimage.zig");
 pub const parametric_preimage = @import("parametric_preimage.zig");
+pub const parametric_preimage_bounds = @import("parametric_preimage_bounds.zig");
 pub const power_clip = @import("power_clip.zig");
 pub const trc_tag = @import("trc_tag.zig");
 pub const trc_forward = @import("trc_forward.zig");

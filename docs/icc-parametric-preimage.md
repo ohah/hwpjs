@@ -12,6 +12,8 @@ set.linear는 [선형 역상](icc-linear-preimage.md)의 선택적 WideInterval�
 
 후속 극값 조립에 필요한 [넓은 기호근 순서 비교](icc-normalized-root-order.md)는 별도 모듈이 소유합니다. 비교 기반의 구현을 극값 선택 완료로 간주하지 않습니다.
 
+전체 역상의 하한·상한과 실제 도달 여부는 [역상 경계](icc-preimage-bounds.md)에서 관리합니다. 이는 F.1의 최종 선택과 별개입니다.
+
 parametric_segments가 하위 [0,start)와 상위 [start,1]의 소유권을 결정합니다. start=1이면 상위의 닫힌 단일점이 남고, 상위가 비활성이면 하위 [0,1]의 끝이 포함됩니다. 이 계층은 그 규칙을 다시 구현하지 않고 기존 분기 역상 결과의 끝점 포함 정보를 유지합니다.
 
 power_preimage와 linear_preimage가 각각의 해 집합을 소유하고, parametric_preimage는 검증 순서와 조립만 수행합니다. 결과 타입과 isEmpty는 parametric_preimage_types에 분리합니다. 반복 호출되는 순수 assemble은 같은 정의역·분기 정책을 공유하며 계산 규칙을 복제하지 않습니다. 코어는 할당·파일 접근·부동소수점 근사를 하지 않습니다.
