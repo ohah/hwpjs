@@ -13,6 +13,7 @@ function reference(kind,raw,x){const [g,a,b,c,d,e,f]=raw.map(v=>v/65536);let y;
   }
   return Math.max(0,Math.min(1,y));
 }
+export {reference as parametricReference};
 export function iccAnalyticEdges(call){let comparisons=0,rejected=0;
   function compare(mode,b,expected){const out=call(mode,b);assert.equal(out.length,8);const actual=out.readDoubleLE();assert.ok(Number.isFinite(actual));assert.ok(Math.abs(actual-expected)<=2e-12,`${actual} != ${expected}`);comparisons++;}
   function reject(mode,b,pattern,limit=b.length){assert.throws(()=>call(mode,b,limit),pattern);rejected++;}

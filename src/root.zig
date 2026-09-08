@@ -37,6 +37,7 @@ test {
     _ = @import("image/icc/chromatic_adaptation_tests.zig");
     _ = @import("image/icc/matrix3_transform_tests.zig");
     _ = @import("image/icc/matrix_trc_model_tests.zig");
+    _ = @import("image/icc/matrix_trc_forward_tests.zig");
     _ = @import("image/icc/curve_type_tests.zig");
     _ = @import("image/icc/parametric_curve_tests.zig");
     _ = @import("image/icc/trc_tag_tests.zig");
