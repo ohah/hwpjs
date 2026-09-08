@@ -2,6 +2,8 @@
 
 ## 범위와 반환값
 
+현재 비교 구현은 [넓은 근 비교](icc-normalized-root-compare.md)를 공유하며 아래의 기존 좁은 Root·좌표 계약은 어댑터가 유지합니다. radical_equality 어댑터의 과거 역할과 최초 실행 기록은 아래에 남깁니다.
+
 후속 [활성 구간 위치 판정](icc-root-locations.md)은 선형 방향·끝점 포함·상수 밑을 다루며 이 비교 계층을 재사용합니다.
 
 [기호적 실근](icc-power-level.md)을 실제 밑 좌표와 비교합니다. 기반 식은 [ICC.1:2022 Table 68](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 거듭제곱 분기입니다. 근이나 좌표를 f64로 바꾸지 않습니다.

@@ -251,6 +251,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         193 => return @import("icc-linear-preimage-probe.zig").run(a, bytes, limit),
         194 => return @import("icc-preimage-choice-probe.zig").run(a, bytes, limit),
         195 => return @import("icc-normalized-power-level-probe.zig").run(a, bytes, limit),
+        196 => return @import("icc-normalized-root-compare-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
