@@ -43,6 +43,7 @@ pub const power_range = @import("power_range.zig");
 pub const parametric_range = @import("parametric_range.zig");
 pub const power_ordinate = @import("power_ordinate.zig");
 pub const power_ordinate_order = @import("power_ordinate_order.zig");
+pub const power_range_nearest = @import("power_range_nearest.zig");
 pub const power_clip = @import("power_clip.zig");
 pub const trc_tag = @import("trc_tag.zig");
 pub const trc_forward = @import("trc_forward.zig");
