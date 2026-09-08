@@ -9,6 +9,7 @@ pub const image = @import("image/root.zig");
 pub const text = @import("text/root.zig");
 
 test {
+    _ = @import("image/jpeg/header_tests.zig");
     _ = @import("image/jpeg/framing_tests.zig");
     _ = @import("hwp5/container/image_tests.zig");
     _ = @import("text/bcp47/tests.zig");

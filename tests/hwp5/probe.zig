@@ -296,6 +296,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         243 => return @import("png-payload-inspection-probe.zig").runUnicode(a, bytes, limit),
         244 => return @import("container-probe.zig").images(a, bytes, limit),
         245 => return @import("jpeg-framing-probe.zig").run(a, bytes, limit),
+        246 => return @import("jpeg-header-probe.zig").run(a, bytes, limit),
         236, 237 => return @import("icc-trc-inverse-probe.zig").runWide(a, bytes, limit, if (mode == 236) .v2_2001 else .v4_2022),
         else => return error.InvalidMode,
     }

@@ -10,3 +10,5 @@ pub const png_profile_inspection = @import("png/profile_inspection.zig");
 pub const icc = @import("icc/root.zig");
 pub const jpeg_markers = @import("jpeg/markers.zig");
 pub const jpeg_entropy = @import("jpeg/entropy.zig");
+pub const jpeg_frame = @import("jpeg/frame.zig");
+pub const jpeg_scan = @import("jpeg/scan.zig");

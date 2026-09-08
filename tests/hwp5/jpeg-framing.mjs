@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {jpegFrameMarker,jpegHeaderActual} from './jpeg-headers.mjs';
 const words = ns => {const b = Buffer.alloc(ns.length * 4); ns.forEach((n,i)=>b.writeUInt32LE(n,i*4)); return b;};
 export function jpegFramingInput(mode, raw, maximum = 65533) {
   return Buffer.concat([Buffer.from([mode]), words([maximum]), raw]);
@@ -62,8 +63,9 @@ export function jpegFramingEdges(call) {
   return {comparisons,rejected};
 }
 /// Framing walk for observed scans, not a JPEG process/pixel oracle.
-export function jpegFramingActual(call, raw) {
+export function jpegFramingActual(call, raw, headers = false) {
   let offset=0, markers=0, entropyBytes=0, scan=false;
+  let frame=null;
   while(offset<raw.length) {
     if(scan) {
       const e=jpegEntropyOracle(raw.subarray(offset));
@@ -72,6 +74,14 @@ export function jpegFramingActual(call, raw) {
     }
     const m=jpegMarkerOracle(raw.subarray(offset));
     assert.deepEqual(call(245,jpegFramingInput(0,raw.subarray(offset))),m.wire);
+    if(headers && jpegFrameMarker(m.code)) {
+      frame={code:m.code,payload:m.wire.subarray(20)};
+      jpegHeaderActual(call,frame.code,frame.payload);
+    }
+    if(headers && m.code===218) {
+      assert.ok(frame,'observed scan requires a frame');
+      jpegHeaderActual(call,frame.code,frame.payload,m.wire.subarray(20));
+    }
     offset+=m.consumed;markers++;
     if(m.code===217)return {markers,entropyBytes,trailing:raw.length-offset};
     scan=m.code===218 || (scan && (m.code===1 || m.code===220 || (m.code>=208 && m.code<=215)));
