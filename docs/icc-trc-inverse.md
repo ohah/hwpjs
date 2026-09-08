@@ -1,5 +1,7 @@
 # TRC 공통 역변환
 
+u512 목표를 받는 공통 진입점의 계약과 후속 검증은 [확장 TRC 역변환](icc-extended-trc-inverse.md)에서 관리합니다. 아래 수치는 기존 경로 구현 당시의 검증 기록입니다.
+
 ## 범위와 책임
 
 `src/image/icc/trc_inverse.zig`는 이미 파싱한 TRC를 받아 정규화 u128 목표의 역변환 좌표를 반환합니다. identity는 원래 분수를 u256으로 보존하고, sampled는 기존 [sampled 역변환](icc-sampled-inverse.md)을 호출합니다. gamma는 `gamma_parametric.zig`에서 u8.8 원값을 256배 하여 정확한 s15.16 지수로 변환합니다. gamma와 parametric은 기존 [파라메트릭 역변환](icc-parametric-inverse.md)을 재사용합니다. raw gamma 0은 NonInvertibleIccGamma로 거부합니다.

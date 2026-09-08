@@ -45,6 +45,7 @@ test {
     _ = @import("image/icc/trc_tag_tests.zig");
     _ = @import("image/icc/trc_forward_tests.zig");
     _ = @import("image/icc/trc_inverse_tests.zig");
+    _ = @import("image/icc/trc_wide_inverse_tests.zig");
     _ = @import("image/icc/matrix_trc_inverse_tests.zig");
     _ = @import("image/icc/required_tests.zig");
     _ = @import("image/icc/mluc_tests.zig");
