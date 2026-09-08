@@ -25,6 +25,7 @@ pub const power_level_locations = @import("power_level_locations.zig");
 pub const power_root_order = @import("power_root_order.zig");
 pub const power_level_order = @import("power_level_order.zig");
 pub const rational_power_order = @import("rational_power_order.zig");
+pub const parametric_jump = @import("parametric_jump.zig");
 pub const power_clip = @import("power_clip.zig");
 pub const trc_tag = @import("trc_tag.zig");
 pub const trc_forward = @import("trc_forward.zig");

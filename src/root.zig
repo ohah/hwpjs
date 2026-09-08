@@ -58,6 +58,7 @@ test {
     _ = @import("image/icc/power_root_order_tests.zig");
     _ = @import("image/icc/power_level_order_tests.zig");
     _ = @import("image/icc/rational_power_order_tests.zig");
+    _ = @import("image/icc/parametric_jump_tests.zig");
     _ = @import("image/icc/power_clip_tests.zig");
     _ = @import("image/icc/power_clip_classify_tests.zig");
     _ = @import("image/icc/sampled_forward_tests.zig");

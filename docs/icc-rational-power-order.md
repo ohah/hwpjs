@@ -2,6 +2,8 @@
 
 ## 필요성과 범위
 
+이 수치 비교를 사용하는 [분기 경계 점프 판정](icc-parametric-jump.md)은 원본 계수·오프셋·좌극한·클리핑 연결을 소유합니다.
+
 [ICC.1:2022 §10.18 Table 68](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 type3/type4 분기 연결에서는 하위 선형 식의 좌극한과 상위 거듭제곱 식의 실제 값을 비교해야 합니다. 원시 c=d=1이면 하위 값 c*d는 1/4294967296입니다. 이를 다시 signed 16.16으로 반올림하면 정확한 경계 판정을 할 수 없습니다. 공식 표의 x<d / x>=d 및 출력 [0,1] 제한을 재확인했습니다.
 
 `rational_power_order.compare(precision, base_n, base_d, g, target_n, target_d)`는 `(base_n/base_d)^(g/65536)`과 `target_n/target_d`의 순서를 반환합니다. 분자는 i128, 양의 분모는 u128, g는 원시 i32입니다. 결과는 lt/eq/gt 또는 현재 정밀도에서 미확정인 null입니다. precision은 128/256/512/1024입니다.

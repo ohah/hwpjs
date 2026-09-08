@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {cmp,exponent,integerPower} from './icc-power-reference.mjs';
+import {exponent,rationalPowerOrder} from './icc-power-reference.mjs';
 function input(precision,g,a,b,n,d){
  const out=Buffer.alloc(72);out.writeUInt32BE(precision);out.writeInt32BE(g,4);
  for(const [i,v] of [a,b,n,d].entries()){
@@ -12,7 +12,7 @@ export function rationalPowerEdges(call){let comparisons=0,rejected=0,undecided=
  for(const a of [-4n,-1n,0n,1n,3n,4n])for(const b of [1n,3n,7n])for(const n of [-4n,-1n,0n,1n,3n,4n])for(const d of [1n,3n,7n]){
   const [p,q]=exponent(g),bytes=input(256,g,a,b,n,d);
   if((a===0n&&g<=0)||(a<0n&&q>1n)){assert.throws(()=>call(190,bytes),/UndefinedIccCurvePower/);rejected++;continue;}
-  const expected=p===0n?cmp([1n,1n],[n,d]):q>1n&&n<0n?1:cmp(integerPower([a,b],p),integerPower([n,d],q));
+  const expected=rationalPowerOrder([a,b],g,[n,d]);
   assert.equal(call(190,bytes).readInt32LE(),expected);comparisons++;
  }
  for(const precision of [128,256,512,1024]){

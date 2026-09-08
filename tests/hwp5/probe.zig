@@ -246,6 +246,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         188 => return @import("icc-root-order-probe.zig").run(a, bytes, limit),
         189 => return @import("icc-power-clip-probe.zig").run(a, bytes, limit),
         190 => return @import("icc-rational-power-probe.zig").run(a, bytes, limit),
+        191 => return @import("icc-parametric-jump-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
