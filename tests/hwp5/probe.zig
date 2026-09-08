@@ -262,6 +262,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         204 => return @import("icc-linear-range-probe.zig").run(a, bytes, limit),
         205, 206 => return @import("icc-power-range-probe.zig").run(a, bytes, limit, mode == 206),
         207 => return @import("icc-parametric-range-probe.zig").run(a, bytes, limit),
+        208 => return @import("icc-ordinate-order-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
