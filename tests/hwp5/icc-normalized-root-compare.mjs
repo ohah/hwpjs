@@ -9,7 +9,7 @@ function input(s,a,b,p,q,n,d,precision=512){
   writeUnsigned(out,80,BigInt.asUintN(256,n));writeUnsigned(out,112,d);return out;
 }
 // Independent exact BigInt expansion, not perfect-root search or interval bounds.
-function expected(s,a,b,p,q,n,d){
+export function expected(s,a,b,p,q,n,d){
   if(s===0)return -sign(n)||0;
   if(s!==sign(n))return s;
   if(p<0)[a,b]=[b,a];

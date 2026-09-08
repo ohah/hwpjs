@@ -110,6 +110,7 @@ import {parametricTrendEdges} from './icc-parametric-trend.mjs';
 import {linearPreimageEdges} from './icc-linear-preimage.mjs';
 import {normalizedPowerLevelEdges} from './icc-normalized-power-level.mjs';
 import {normalizedRootCompareEdges} from './icc-normalized-root-compare.mjs';
+import {normalizedLocationsEdges} from './icc-normalized-locations.mjs';
 import {powerClipEdges} from './icc-power-clip.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
@@ -553,6 +554,7 @@ const parametricTrendResults = parametricTrendEdges(call);
 const linearPreimageResults = linearPreimageEdges(call);
 const normalizedPowerLevelResults = normalizedPowerLevelEdges(call);
 const normalizedRootCompareResults = normalizedRootCompareEdges(call);
+const normalizedLocationsResults = normalizedLocationsEdges(call);
 const powerClipResults = powerClipEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
@@ -1138,6 +1140,7 @@ console.log(
       linearPreimageResults,
       normalizedPowerLevelResults,
       normalizedRootCompareResults,
+      normalizedLocationsResults,
       powerClipResults,
       modelParametricResults,
       iso639Results,

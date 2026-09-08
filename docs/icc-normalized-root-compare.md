@@ -2,6 +2,8 @@
 
 ## 계약
 
+[활성 구간 위치 판정](icc-normalized-root-locations.md)이 이 비교를 사용합니다. 위치·끝점 소유권과 전체 분기 해 수집은 해당 계층의 책임입니다.
+
 `normalized_power_root_compare.compare(precision, root, n, d)`는 [정규화 거듭제곱 근](icc-normalized-power-level.md)과 signed i256/u256 밑 좌표 n/d를 비교합니다. d=0 또는 잘못 구성된 비영 근은 부호 조기 반환 전에 거부합니다. 결과는 증명된 lt/eq/gt 또는 선택 정밀도에서 미확정인 null입니다. null을 같음이나 근 부재로 바꾸지 않습니다.
 
 `at`은 기존 u64 정규화 x를 공통 affine_value로 정확한 밑 좌표로 바꿉니다. x 좌표순 정렬, 활성 구간 포함 판정, 넓은 x 분수, 출력 클리핑 역상·전체 역변환은 아직 이 계층이 처리하지 않습니다.

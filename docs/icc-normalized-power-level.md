@@ -4,7 +4,7 @@
 
 `normalized_power_level.solve(g, offset, n, d)`는 정규화 u128 목표값 n/d에 대해 `z^(g/65536)+offset/65536=n/d`의 정확한 실수 **밑 변수 z** 해를 보존합니다. [기존 signed 16.16 수준 해](icc-power-level.md)와 달리 목표값을 i32로 재양자화하지 않습니다. [선형 분기의 u128 역상 입력](icc-linear-preimage.md)과 같은 목표값 폭을 다루기 위한 준비 단계입니다.
 
-이 결과는 아직 x 좌표·활성 구간의 역상·출력 클리핑 후 역상·선형/거듭제곱 합집합이 아닙니다. a=0인 상수 밑, 근의 실제 위치, y=0/1 클리핑 평탄 구간, 전체 역상 선택은 후속 계층이 처리해야 합니다. 새 넓은 Root를 기존 좁은 power_root_compare에 축소해서 전달하지 않습니다. [넓은 근의 좌표 비교](icc-normalized-root-compare.md)는 별도 계층이며 활성 구간 위치 판정 연결은 남아 있습니다.
+이 결과는 아직 x 좌표·활성 구간의 역상·출력 클리핑 후 역상·선형/거듭제곱 합집합이 아닙니다. a=0인 상수 밑과 근의 위치는 [활성 구간 위치](icc-normalized-root-locations.md)가 [넓은 근의 좌표 비교](icc-normalized-root-compare.md)를 사용해 처리합니다. y=0/1 클리핑 평탄 구간과 전체 역상 선택은 후속 범위입니다. 새 넓은 Root를 기존 좁은 power_root_compare에 축소해서 전달하지 않습니다.
 
 ## 표현과 정확성
 

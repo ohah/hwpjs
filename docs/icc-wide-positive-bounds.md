@@ -4,7 +4,7 @@
 
 `positive_bounds.Arithmetic(bits).fraction(n, d)`는 양의 u256 분자·분모를 받아 128/256/512/1024비트 유효숫자의 하한·상한으로 감쌉니다. 영 분자·분모는 InvalidIccPositiveFraction입니다. 기존 u128 입력 호출자는 같은 함수로 승격하며, 곱·거듭제곱·구간 분리 판정 알고리즘은 복제하지 않습니다.
 
-이는 [정규화 거듭제곱 근](icc-normalized-power-level.md)의 넓은 radicand를 다루기 위한 공통 기반입니다. [넓은 근 비교](icc-normalized-root-compare.md)가 이 계층을 사용하며 활성 구간 위치 판정 연결은 남아 있습니다. 상하한이 겹치면 같음이 아니라 미확정이라는 기존 계약을 유지합니다.
+이는 [정규화 거듭제곱 근](icc-normalized-power-level.md)의 넓은 radicand를 다루기 위한 공통 기반입니다. [넓은 근 비교](icc-normalized-root-compare.md)와 이를 통한 [활성 구간 위치](icc-normalized-root-locations.md)가 이 계층을 사용합니다. 상하한이 겹치면 같음이 아니라 미확정이라는 기존 계약을 유지합니다.
 
 ## 연산 폭과 방향성
 
