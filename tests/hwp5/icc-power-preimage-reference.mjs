@@ -54,7 +54,9 @@ export function verify(set,active,offset,n,d){
   for(const r of unique)check(r);
   for(let i=1;i<unique.length;i++){
     let num=1n,den=2n,found=false;
-    for(let step=0;step<512;step++){
+    // Wide targets can place a root more than 512 bisections from an endpoint.
+    const isolationBudget=Math.max(512,2*Math.max(n.toString(2).length,d.toString(2).length)+128);
+    for(let step=0;step<isolationBudget;step++){
       const r={x:[num,den]};
       if(order(unique[i-1],r)>=0)num=2n*num+1n;
       else if(order(unique[i],r)<=0)num=2n*num-1n;

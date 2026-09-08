@@ -1,7 +1,13 @@
 const std = @import("std");
 const Result = @import("hwpjs").image.icc.power_preimage.Result;
 pub fn write(a: std.mem.Allocator, result: Result) ![]u8 {
-    const size = if (result == .set) 68 + result.set.interval_count * 68 + result.set.point_count * 80 else 12;
+    return writeFor(80, a, result);
+}
+pub fn writeWide(a: std.mem.Allocator, result: @import("hwpjs").image.icc.power_preimage.Wide.Result) ![]u8 {
+    return writeFor(272, a, result);
+}
+fn writeFor(comptime stride: usize, a: std.mem.Allocator, result: anytype) ![]u8 {
+    const size = if (result == .set) 68 + result.set.interval_count * 68 + result.set.point_count * stride else 12;
     const out = try a.alloc(u8, size);
     @memset(out, 0);
     std.mem.writeInt(u32, out[0..4], switch (result) {
@@ -22,9 +28,9 @@ pub fn write(a: std.mem.Allocator, result: Result) ![]u8 {
             std.mem.writeInt(u32, slot[64..68], @as(u32, @intFromBool(interval.start_included)) | (@as(u32, @intFromBool(interval.end_included)) << 1), .little);
         }
         for (set.points[0..set.point_count], 0..) |point, i| {
-            const slot = out[68 + set.interval_count * 68 + i * 80 ..][0..80];
+            const slot = out[68 + set.interval_count * 68 + i * stride ..][0..stride];
             std.mem.writeInt(u32, slot[0..4], @intFromEnum(point.location), .little);
-            @import("icc-normalized-root-wire.zig").write(slot[4..80], point.root);
+            if (stride == 80) @import("icc-normalized-root-wire.zig").write(slot[4..80], point.root) else @import("icc-normalized-root-wire.zig").writeWide(slot[4..272], point.root);
         }
     }
     return out;

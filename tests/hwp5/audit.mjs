@@ -582,6 +582,7 @@ const gammaWideInverseResults = gammaWideInverseEdges(call);
 const widePowerLevelResults = widePowerLevelEdges(call);
 const extendedRootCompareResults = extendedRootCompareEdges(call);
 const extendedLocationsResults = extendedLocationsEdges(call);
+const extendedPowerPreimageResults = powerPreimageEdges(call, 512);
 const normalizedRootCompareResults = normalizedRootCompareEdges(call);
 const normalizedLocationsResults = normalizedLocationsEdges(call);
 const powerPreimageResults = powerPreimageEdges(call);
@@ -1190,6 +1191,7 @@ console.log(
       widePowerLevelResults,
       extendedRootCompareResults,
       extendedLocationsResults,
+      extendedPowerPreimageResults,
       normalizedRootCompareResults,
       normalizedLocationsResults,
       powerPreimageResults,

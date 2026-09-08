@@ -277,6 +277,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         222 => return @import("icc-normalized-root-compare-probe.zig").runWide(a, bytes, limit),
         223 => return @import("icc-normalized-locations-probe.zig").pointWide(a, bytes, limit),
         224 => return @import("icc-normalized-locations-probe.zig").activeWide(a, bytes, limit),
+        225 => return @import("icc-power-preimage-probe.zig").runWide(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
