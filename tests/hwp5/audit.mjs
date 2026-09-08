@@ -608,6 +608,7 @@ const powerNearestResults = powerNearestEdges(call);
 const ordinateDistanceResults = ordinateDistanceEdges(call);
 const extendedOrdinateDistanceResults = ordinateDistanceEdges(call,512);
 const parametricNearestResults = parametricNearestEdges(call);
+const extendedParametricNearestResults = parametricNearestEdges(call,512);
 const parametricInverseResults = parametricInverseEdges(call);
 const trcInverseResults = trcInverseEdges(call);
 const modelInverseResults = modelInverseEdges(call);
@@ -1225,6 +1226,7 @@ console.log(
       ordinateDistanceResults,
       extendedOrdinateDistanceResults,
       parametricNearestResults,
+      extendedParametricNearestResults,
       parametricInverseResults,
       trcInverseResults,
       modelInverseResults,

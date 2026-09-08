@@ -13,7 +13,10 @@ test "whole nearest preserves unattained infimum and attained ties" {
 }
 test "whole nearest deduplicates common output and supports inactive power" {
     var curve = Curve{ .function = .type4, .values = .{ 65536, 0, 16384, 0, 32768, 0, 16384 } };
-    const same = (try select(512, curve, .{ .numerator = 1, .denominator = 2 })).selected.rational;
+    const result = try select(512, curve, .{ .numerator = 1, .denominator = 2 });
+    try std.testing.expect(result == .selected);
+    try std.testing.expect(result.selected == .rational);
+    const same = result.selected.rational;
     try std.testing.expectEqual(.eq, try same.order(.{ .numerator = 1, .denominator = 4 }));
     curve.values = .{ 65536, 65536, 0, -65536, 65537, 0, 65536 };
     const inactive = (try select(512, curve, .{ .numerator = 1, .denominator = 3 })).selected.rational;

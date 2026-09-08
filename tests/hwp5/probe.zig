@@ -286,6 +286,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         231 => return @import("icc-attained-inverse-probe.zig").runWide(a, bytes, limit),
         232 => return @import("icc-ordinate-order-probe.zig").runWide(a, bytes, limit),
         233 => return @import("icc-ordinate-distance-probe.zig").runWide(a, bytes, limit),
+        234 => return @import("icc-parametric-nearest-probe.zig").runWide(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
