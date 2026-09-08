@@ -6,6 +6,7 @@
 
 - [변경 추적 ViewText 계약·조사](hwp5-track-change-viewtext.md)는 별도 압축·framing·구역 경계 검증, 공유 한도와 미완료 의미 검증을 관리합니다.
 - [양식 문서 통합](hwp5-form-document.md)은 선택한 양식 검사·구역 진단·문서 전체 공유 예산을 관리합니다.
+- [BinData 이미지 검사](hwp5-bin-data-images.md)는 선택적 PNG 연결·이미지 예산·미지원 콘텐츠 진단을 관리합니다.
 
 - [배포용 형태 ViewText](hwp5-distribution-viewtext.md)는 별도 envelope·키 유도·블록·꼬리 검증과 배포용 플래그 문서 전체 지원의 차이를 관리합니다.
 

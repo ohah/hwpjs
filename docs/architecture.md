@@ -64,7 +64,7 @@ CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계�
 
 `container/validation.zig`는 파일 바이트를 strict CFB로 열고 이 decoded 진입점을 호출하는 상위 어댑터입니다. CFB 원본/스트림 한도와 HWP 압축 해제 합계 한도는 별도입니다. `paths.zig`는 정확한 계층 조회와 이름 생성, `sections.zig`는 BodyText 직접 자식 수집/해제, `binaries.zig`는 DocInfo 항목으로 내부 스트림을 찾고 기존 BinData 압축 정책을 호출합니다. 이름 길이/금지 문자/대소문자 동등성은 CFB name_order를 재사용합니다. 외부 링크는 실행하지 않고 보류합니다. 모든 데이터가 raw DEFLATE라는 가정이나 손상 후 원본 fallback을 넣지 않습니다.
 
-container Report는 document Report와 그 DocInfo backing을 소유합니다. 입력 CFB와 임시 구역/바이너리 데이터는 반환 뒤 필요하지 않습니다. 미소비 CFB 스트림은 uninspected_streams로 보고하며 이미지/OLE 콘텐츠 해석이나 미지원 스트림의 유효성을 주장하지 않습니다. 동일 BinData 스트림을 여러 항목이 참조하면 각 항목의 압축 정책으로 검사하고 총 decode 한도도 항목별로 계산합니다.
+container Report는 document Report와 그 DocInfo backing을 소유합니다. 입력 CFB와 임시 구역/바이너리 데이터는 반환 뒤 필요하지 않습니다. 미소비 CFB 스트림은 uninspected_streams로 보고합니다. 선택적 [BinData PNG 검사](hwp5-bin-data-images.md)는 별도 이미지 예산과 scalar 보고서를 연결하며, 다른 이미지/OLE 및 미지원 스트림의 유효성을 주장하지 않습니다. 동일 BinData 스트림을 여러 항목이 참조하면 각 항목의 압축 정책으로 검사하고 총 decode 한도도 항목별로 계산합니다.
 
 `preview/text.zig`는 raw UTF-16LE 바이트를 빌리는 뷰와 코드 유닛/Unicode scalar/고립 서로게이트/NUL/BOM 수치를 소유합니다. 길이 접두사가 있는 DocInfo 문자열, 제어문자 문법이 있는 본문 텍스트와 별도 형식입니다. `container/preview.zig`는 루트 PrvText의 선택적 존재·kind·전역 바이트 한도만 담당하고 문서 compressed 비트와 무관하게 원문을 전달합니다. container Report의 preview_text=null과 0유닛 Stats는 부재/빈 텍스트를 구분하며, 통계만 저장하므로 임시 CFB를 해제한 뒤의 포인터를 남기지 않습니다. total_decoded_bytes에는 이 비압축 소비량도 포함합니다.
 

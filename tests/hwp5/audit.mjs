@@ -39,6 +39,7 @@ import { connectorPair } from "./connector-pair.mjs";
 import {connectorOwnerEdges,connectorDocumentReference} from "./connector-validation.mjs";
 import { documentActual, documentEdges } from "./documents.mjs";
 import { containerActual, containerEdges } from "./containers.mjs";
+import {containerImagesEdges, containerImagesActual} from './container-images.mjs';
 import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
 import { codepageEdges } from "./codepage.mjs";
@@ -759,6 +760,8 @@ const overlapReferenceResults = overlapReference(call, cfb);
 const visibilityReferenceResults = visibilityReference(call, cfb);
 const optionalStreamObservations = Array(6).fill(0);
 const containerEdgeResults = containerEdges(call, cfb);
+const containerImagesResults = containerImagesEdges(call, cfb);
+const containerImageFiles = {files: 0, png: 0, unhandled: 0};
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
   for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
@@ -967,6 +970,10 @@ try {
       docPlain,
       decodedSections,
     ).forEach((n, i) => (containerReport[i] += n));
+    const imageResult = containerImagesActual(call, fileBytes);
+    containerImageFiles.files++;
+    containerImageFiles.png += imageResult.png;
+    containerImageFiles.unhandled += imageResult.unhandled;
     documentActual(call, hdr, docPlain, decodedSections).forEach(
       (n, i) => (documentReport[i] += n),
     );
@@ -1179,6 +1186,8 @@ console.log(
       pngPayloadResults,
       pngV2TextResults,
       pngV2UnicodeResults,
+      containerImagesResults,
+      containerImageFiles,
       iccResults,
       iccSemanticResults,
       iccRegistryResults,

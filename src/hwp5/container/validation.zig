@@ -5,6 +5,7 @@ const paths = @import("paths.zig");
 const sections = @import("sections.zig");
 const binaries = @import("binaries.zig");
 pub const Options = struct {
+    images: ?@import("images.zig").Options = null,
     xml: ?@import("../xml_validation.zig").Options = null,
     xml_template: ?@import("xml_template.zig").Options = null,
     history: ?@import("history.zig").Options = null,
@@ -15,8 +16,9 @@ pub const Options = struct {
     max_summary_properties: usize = 4096,
 };
 /// Owns DocInfo backing bytes and the document report. Does NOT own the input CFB.
-/// Decoded binary bytes are checked for compression integrity, not image/OLE semantics.
+/// Image inspection is explicit and partial; unhandled image/OLE semantics remain deferred.
 pub const Report = struct {
+    images: ?@import("images.zig").Report,
     xml: ?@import("../xml_validation.zig").Report,
     xml_template: ?@import("xml_template.zig").Report,
     history: ?@import("history.zig").Report,
@@ -40,6 +42,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     try options.document.validate();
     var xml_budget = if (options.xml) |selected| try @import("../xml_validation.zig").Budget.init(selected) else null;
     const xml = if (xml_budget) |*budget| budget else null;
+    var image_budget: ?@import("images.zig").Budget = if (options.images) |selected| .{ .options = selected } else null;
     var cfb_options = options.cfb;
     cfb_options.strict = true; // Hierarchical exact lookup needs a valid CFB directory.
     var file = try cfb.File.open(a, bytes, cfb_options);
@@ -64,7 +67,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     var report = try d.inspectDecoded(a, .{ .header = &header.raw, .doc_info = doc, .sections = body }, options.document);
     errdefer report.deinit(a);
     const view = try @import("view_text.zig").inspect(a, &file, &header, used, &remaining, options.document.max_total_records - report.total_records, report.sections.len, options.document, options.max_viewtext_ciphertext_bytes);
-    const bins = try binaries.inspect(a, &file, &header, doc, options.document.framing, options.storage_layout, used, &remaining);
+    const bins = try binaries.inspectWithImages(a, &file, &header, doc, options.document.framing, options.storage_layout, used, &remaining, if (image_budget) |*budget| budget else null);
     const preview = try @import("preview.zig").inspect(&file, used, &remaining);
     const summary = try @import("summary.zig").inspect(a, &file, used, &remaining, options.max_summary_properties);
     const scripts = try @import("scripts.zig").inspect(a, &file, &header, used, &remaining);
@@ -74,5 +77,5 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     for (file.entries, used) |entry, consumed| if (entry.kind == 2 and !consumed) {
         uninspected += 1;
     };
-    return .{ .xml = if (xml) |budget| budget.report else null, .xml_template = xml_template, .history = history, .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
+    return .{ .images = if (image_budget) |budget| budget.report else null, .xml = if (xml) |budget| budget.report else null, .xml_template = xml_template, .history = history, .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
 }
