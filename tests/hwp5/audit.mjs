@@ -97,6 +97,7 @@ import {wideLinearTargetEdges} from './icc-wide-linear-target.mjs';
 import {modelEdges} from './icc-model.mjs';
 import {modelForwardEdges} from './icc-model-forward.mjs';
 import {normalizedInverseEdges} from './icc-normalized-inverse.mjs';
+import {sampledWideInverseEdges} from './icc-sampled-wide-inverse.mjs';
 import {gammaInverseEdges} from './icc-gamma-inverse.mjs';
 import {parametricDomainEdges} from './icc-parametric-domain.mjs';
 import {parametricTopologyEdges} from './icc-parametric-topology.mjs';
@@ -558,6 +559,7 @@ const wideLinearTargetResults = wideLinearTargetEdges(call);
 const modelResults = modelEdges(call);
 const modelForwardResults = modelForwardEdges(call);
 const normalizedInverseResults = normalizedInverseEdges(call);
+const sampledWideInverseResults = sampledWideInverseEdges(call);
 const gammaInverseResults = gammaInverseEdges(call);
 const parametricDomainResults = parametricDomainEdges(call);
 const parametricTopologyResults = parametricTopologyEdges(call);
@@ -1161,6 +1163,7 @@ console.log(
       modelResults,
       modelForwardResults,
       normalizedInverseResults,
+      sampledWideInverseResults,
       gammaInverseResults,
       parametricDomainResults,
       parametricTopologyResults,
