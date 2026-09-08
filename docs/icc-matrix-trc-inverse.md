@@ -50,3 +50,5 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit는 `/tmp/hwpjs-model-inverse-{Debug
 최종 적대적 검토에서는 역행렬 이후에만 범위 제한 적용, 정확한 0/1과 범위 밖 진단 구분, clipping 뒤에도 평탄 TRC 역변환 호출, 양수 분모와 i128/u128 변환 경계, RGB별 결과 보존 및 후속 오류 전파, borrowed profile 수명, 중간 할당 실패 시 해제, 채널 길이 합과 출력 전체 초기화를 확인했습니다. 추가 결함은 발견하지 못했습니다. Zig 포맷·변경 JS 문법·diff 공백 및 관련 로컬 문서 링크 5개도 확인했습니다.
 
 현재 완료 범위는 signed 16.16 XYZ 입력의 모델 역방향 연결입니다. 임의 정밀도 분수 입력과 순방향의 넓은 분수 결과를 직접 받아 수행하는 왕복, PCSXYZ wire 변환, LUT 우선순위·전체 프로파일 의미 검증, 픽셀 렌더링 및 전체 HWP/HWPX 문서 검증은 아직 남아 있습니다.
+
+넓은 분수 XYZ를 받는 선형 계산과 검증 진행은 [분수 역행렬](icc-fraction-matrix-inverse.md)에서 관리합니다. 해당 계산의 성공을 TRC 모델 연결 완료로 대체하지 않습니다.

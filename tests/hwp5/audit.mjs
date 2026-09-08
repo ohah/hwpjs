@@ -92,6 +92,7 @@ import {iccSelectionEdges} from './icc-selection.mjs';
 import {iccSelectionIanaEdges} from './icc-selection-iana.mjs';
 import {adaptationEdges} from './icc-adaptation.mjs';
 import {matrixEdges} from './icc-matrix.mjs';
+import {fractionMatrixInverseEdges} from './icc-fraction-matrix-inverse.mjs';
 import {modelEdges} from './icc-model.mjs';
 import {modelForwardEdges} from './icc-model-forward.mjs';
 import {normalizedInverseEdges} from './icc-normalized-inverse.mjs';
@@ -551,6 +552,7 @@ const iccSelectionResults = iccSelectionEdges(call);
 const iccSelectionIanaResults = iccSelectionIanaEdges(call);
 const adaptationResults = adaptationEdges(call);
 const matrixResults = matrixEdges(call);
+const fractionMatrixInverseResults = fractionMatrixInverseEdges(call);
 const modelResults = modelEdges(call);
 const modelForwardResults = modelForwardEdges(call);
 const normalizedInverseResults = normalizedInverseEdges(call);
@@ -1152,6 +1154,7 @@ console.log(
       iccSelectionIanaResults,
       adaptationResults,
       matrixResults,
+      fractionMatrixInverseResults,
       modelResults,
       modelForwardResults,
       normalizedInverseResults,

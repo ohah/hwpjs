@@ -269,6 +269,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         212 => return @import("icc-parametric-inverse-probe.zig").run(a, bytes, limit),
         213, 214 => return @import("icc-trc-inverse-probe.zig").run(a, bytes, limit, if (mode == 213) .v2_2001 else .v4_2022),
         215 => return @import("icc-model-inverse-probe.zig").run(a, bytes, limit),
+        216 => return @import("icc-fraction-matrix-inverse-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }
