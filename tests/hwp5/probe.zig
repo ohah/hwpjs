@@ -230,6 +230,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         172 => return @import("icc-adaptation-probe.zig").run(a, bytes, limit, true),
         173 => return @import("icc-matrix-probe.zig").run(a, bytes, limit, false),
         174 => return @import("icc-matrix-probe.zig").run(a, bytes, limit, true),
+        175 => return @import("icc-model-probe.zig").run(a, bytes, limit),
         else => return error.InvalidMode,
     }
 }

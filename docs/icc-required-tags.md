@@ -16,6 +16,8 @@
 
 ## 다음 검증과 책임
 
+[행렬/TRC 모델 조립](icc-matrix-trc-model.md)은 실제 헤더와 6개 모델 태그의 payload를 기존 파서로 연결하고 세 모드 전체 감사를 통과했습니다. 전체 프로파일 검증·LUT 우선순위는 별도로 남아 있습니다.
+
 [색순응 행렬](icc-chromatic-adaptation.md)은 sf32 원시 배열·chad 요소 수·정확한 비특이 검사를 분리해 구현하고 세 모드 전체 감사를 통과했습니다. 실제 백색점 변환과 전체 프로파일 검증은 별도로 남아 있습니다.
 
 공통 desc/cprt payload의 후속 [다국어 문자열 원시 구조](icc-localized-structure.md)를 구현·검증 중입니다. 경계 검사와 Unicode·locale 의미 검증의 보류를 구분합니다.
