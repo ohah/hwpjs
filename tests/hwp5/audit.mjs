@@ -108,6 +108,7 @@ import {rationalPowerEdges} from './icc-rational-power.mjs';
 import {parametricJumpEdges} from './icc-parametric-jump.mjs';
 import {parametricTrendEdges} from './icc-parametric-trend.mjs';
 import {linearPreimageEdges} from './icc-linear-preimage.mjs';
+import {normalizedPowerLevelEdges} from './icc-normalized-power-level.mjs';
 import {powerClipEdges} from './icc-power-clip.mjs';
 import {modelParametricEdges} from './icc-model-parametric.mjs';
 import {iso639Edges} from './iso639.mjs';
@@ -549,6 +550,7 @@ const rationalPowerResults = rationalPowerEdges(call);
 const parametricJumpResults = parametricJumpEdges(call);
 const parametricTrendResults = parametricTrendEdges(call);
 const linearPreimageResults = linearPreimageEdges(call);
+const normalizedPowerLevelResults = normalizedPowerLevelEdges(call);
 const powerClipResults = powerClipEdges(call);
 const modelParametricResults = modelParametricEdges(call);
 const iso639Results = iso639Edges(call);
@@ -1132,6 +1134,7 @@ console.log(
       parametricJumpResults,
       parametricTrendResults,
       linearPreimageResults,
+      normalizedPowerLevelResults,
       powerClipResults,
       modelParametricResults,
       iso639Results,

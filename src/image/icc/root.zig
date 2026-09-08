@@ -29,6 +29,7 @@ pub const parametric_jump = @import("parametric_jump.zig");
 pub const parametric_trend = @import("parametric_trend.zig");
 pub const linear_preimage = @import("linear_preimage.zig");
 pub const preimage_choice = @import("preimage_choice.zig");
+pub const normalized_power_level = @import("normalized_power_level.zig");
 pub const power_clip = @import("power_clip.zig");
 pub const trc_tag = @import("trc_tag.zig");
 pub const trc_forward = @import("trc_forward.zig");

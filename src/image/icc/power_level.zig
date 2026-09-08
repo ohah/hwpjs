@@ -8,10 +8,8 @@ pub const Radical = struct {
     exponent_numerator: i32,
     exponent_denominator: u32,
     pub fn validate(self: Radical) !void {
-        if (self.numerator == 0 or self.numerator > 4294967295 or
-            (self.exponent_numerator != 65536 and self.exponent_numerator != -65536) or
-            self.exponent_denominator == 0 or self.exponent_denominator > 2147483648)
-            return error.InvalidIccPowerRoot;
+        if (self.numerator == 0 or self.numerator > 4294967295) return error.InvalidIccPowerRoot;
+        try (@import("power_level_shape.zig").Reciprocal{ .numerator = self.exponent_numerator, .denominator = self.exponent_denominator }).validate();
     }
 };
 pub const Root = union(enum) { zero, nonzero: Radical };
@@ -22,32 +20,16 @@ pub const Solutions = union(enum) { all_nonzero, finite: Finite };
 /// Preserve radicals symbolically; never approximate, exponentiate or allocate.
 pub fn solve(g: i32, offset: i32, target: i32) Solutions {
     const ordinate = @as(i64, target) - offset;
-    if (g == 0) return if (ordinate == 65536) .all_nonzero else .{ .finite = .{} };
-    if (ordinate == 0) {
-        var result: Finite = .{};
-        if (g > 0) {
-            result.roots[0] = .zero;
-            result.count = 1;
-        }
-        return .{ .finite = result };
-    }
-    const exponent = @import("fixed16_exponent.zig").classify(g);
-    const magnitude = Radical{
-        .negative = false,
-        .numerator = @intCast(if (ordinate < 0) -ordinate else ordinate),
-        .exponent_numerator = if (g < 0) -65536 else 65536,
-        .exponent_denominator = @intCast(if (g < 0) -@as(i64, g) else g),
-    };
+    const shape = @import("power_level_shape.zig").classify(g, ordinate, 65536);
+    if (shape == .all_nonzero) return .all_nonzero;
     var result: Finite = .{};
-    if (ordinate > 0) {
-        result.roots[0] = .{ .nonzero = magnitude };
-        result.count = 1;
-    }
-    // Negative bases require an integer exponent. Its parity determines the sign.
-    if ((ordinate < 0 and exponent == .odd_integer) or (ordinate > 0 and exponent == .even_integer)) {
-        var negative = magnitude;
-        negative.negative = true;
-        result.roots[result.count] = .{ .nonzero = negative };
+    for (shape.finite.signs[0..shape.finite.count]) |sign| {
+        result.roots[result.count] = if (sign == .zero) .zero else .{ .nonzero = .{
+            .negative = sign == .negative,
+            .numerator = @intCast(@abs(ordinate)),
+            .exponent_numerator = shape.finite.reciprocal.?.numerator,
+            .exponent_denominator = shape.finite.reciprocal.?.denominator,
+        } };
         result.count += 1;
     }
     return .{ .finite = result };
