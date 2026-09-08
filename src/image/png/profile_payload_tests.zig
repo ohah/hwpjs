@@ -1,14 +1,6 @@
 const std = @import("std");
 const t = std.testing;
-fn expectRejected(a: std.mem.Allocator, bytes: []const u8, options: @import("pixels.zig").Options, expected: anyerror) !void {
-    _ = @import("pixels.zig").inspect(a, bytes, options) catch |err| {
-        // Let the allocation-failure runner observe injected allocation errors.
-        if (err == error.OutOfMemory) return err;
-        try t.expectEqual(expected, err);
-        return;
-    };
-    return error.TestExpectedError;
-}
+const expectRejected = @import("inspection_test_helpers.zig").expectRejected;
 fn inspect(a: std.mem.Allocator) !void {
     const raw = try @import("../icc/tag_fixture.zig").make(a, 156, &.{.{ .signature = "rTRC".*, .offset = 144, .size = 12 }});
     defer a.free(raw);

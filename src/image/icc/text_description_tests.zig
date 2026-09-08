@@ -1,21 +1,7 @@
 const std = @import("std");
 const t = std.testing;
 const api = @import("text_description.zig");
-fn fixture(a: std.mem.Allocator, ascii_count: usize, unicode_units: usize, script_count: u8) ![]u8 {
-    const b = try a.alloc(u8, 90 + ascii_count + 2 * unicode_units);
-    @memset(b, 0);
-    b[0..4].* = "desc".*;
-    std.mem.writeInt(u32, b[8..12], @intCast(ascii_count), .big);
-    if (ascii_count > 0) @memset(b[12 .. 12 + ascii_count - 1], 'a');
-    const at = 12 + ascii_count;
-    std.mem.writeInt(u32, b[at..][0..4], 0x12345678, .big);
-    std.mem.writeInt(u32, b[at + 4 ..][0..4], @intCast(unicode_units), .big);
-    if (unicode_units > 1) std.mem.writeInt(u16, b[at + 8 ..][0..2], 0xac00, .big);
-    const script = at + 8 + unicode_units * 2;
-    std.mem.writeInt(u16, b[script..][0..2], 42, .big);
-    b[script + 2] = script_count;
-    return b;
-}
+const fixture = @import("text_description_fixture.zig").make;
 test "ICC v2 description preserves unaligned counted regions and raw metadata" {
     for (1..9) |ascii| for ([_]usize{ 0, 1, 2, 3 }) |units| for ([_]u8{ 0, 1, 66, 67 }) |script| {
         const bytes = try fixture(t.allocator, ascii, units, script);

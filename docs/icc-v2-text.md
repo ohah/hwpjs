@@ -1,5 +1,7 @@
 # ICC v2 문자열 구조
 
+후속 [명시적 UTF-16BE 내용 검사](icc-v2-unicode.md)는 별도 모듈에서 진행합니다. 이 원시 파서의 보존·보류 계약과 구분합니다.
+
 ## 근거와 책임
 
 [ICC.1:2001-04 §6.5.17–18, 표 68–70](https://www.color.org/specification/ICC.1-2001-04.pdf)을 대조했습니다. `text_type.zig`는 textType의 ASCII와 종료 NUL을 검사합니다. `text_description.zig`는 desc의 ASCII·Unicode·ScriptCode 영역을 길이 기반으로 읽습니다. ASCII 공통 검사는 `ascii_terminated.zig`, 경계 검사는 기존 binary.Reader가 소유합니다.
@@ -12,7 +14,7 @@ Unicode 문자 유효성·언어 코드 의미·ScriptCode 인코딩은 보류�
 
 `localized_kind`가 desc/cprt 이름과 종류의 단일 출처이며 기존 v4 localized_tag와 통합 tag_payload가 공유합니다. v4 전용 API는 유지하고, 통합 분기에서 v2 desc는 description_v2, cprt는 copyright_v2로 반환합니다. 알려진 잘못된 타입은 미지원 상태로 숨기지 않습니다. v2 chad는 여전히 미지원입니다.
 
-집계 보고서는 v2_description/v2_copyright와 v2_unicode_bytes_deferred/v2_script_bytes_deferred/v2_trailing_bytes_deferred를 별도 집계합니다. 미사용 영역을 포함한 ScriptCode 저장 67바이트 전체가 미검증입니다. v2 Unicode는 아직 내용을 스캔하지 않으므로 기존 unicode_bytes(검사한 mluc 바이트)에 넣지 않습니다. 모든 v2 태그 바이트는 기존 프로파일 전체 max_payload_bytes에 차감됩니다. 언어 의미와 전체 의미 보류도 해제하지 않습니다.
+집계 보고서는 v2_description/v2_copyright와 v2_unicode_bytes_deferred/v2_script_bytes_deferred/v2_trailing_bytes_deferred를 별도 집계합니다. 미사용 영역을 포함한 ScriptCode 저장 67바이트 전체가 미검증입니다. 기본 설정에서는 v2 Unicode 내용을 스캔하지 않으므로 공통 unicode_bytes에 넣지 않습니다. 명시적으로 선택한 내용 검사는 위 후속 문서에서 관리합니다. 모든 v2 태그 바이트는 기존 프로파일 전체 max_payload_bytes에 차감됩니다. 언어 의미와 전체 의미 보류도 해제하지 않습니다.
 
 네이티브 PNG 테스트는 고립 surrogate를 의도적으로 넣고 구조 파싱과 Unicode 검증을 혼동하지 않는지 확인합니다. 입력을 빌리는 분기 결과, 프로파일 정리 후 스칼라 보고서, 모든 할당 실패 지점, ancillary/색 의미 보류를 확인했고 전체 Debug 707/707로 통과했습니다.
 

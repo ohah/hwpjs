@@ -7,6 +7,7 @@ pub const tag_table = @import("tag_table.zig");
 pub const tag_payload = @import("tag_payload.zig");
 pub const text_type = @import("text_type.zig");
 pub const text_description = @import("text_description.zig");
+pub const description_unicode = @import("description_unicode.zig");
 pub const payload_inspection = @import("payload_inspection.zig");
 pub const xyz_type = @import("xyz_type.zig");
 pub const s15_fixed16_array = @import("s15_fixed16_array.zig");

@@ -5,6 +5,8 @@ pub const Options = struct {
     max_payload_bytes: usize = 64 * 1024 * 1024,
     max_localized_records: usize = 100000,
     max_unicode_bytes: usize = 64 * 1024 * 1024,
+    /// Explicit interpretation; false preserves raw v2 Unicode without scanning.
+    v2_unicode_utf16be: bool = false,
 };
 pub const Report = struct {
     tags: usize = 0,
@@ -25,13 +27,18 @@ pub const Report = struct {
     v2_unicode_bytes_deferred: usize = 0,
     v2_script_bytes_deferred: usize = 0,
     v2_trailing_bytes_deferred: usize = 0,
+    v2_unicode_descriptions_checked: usize = 0,
+    v2_unicode_utf16be_selected: bool = false,
+    v2_unicode_scalars: usize = 0,
+    v2_unicode_nul_scalars: usize = 0,
+    v2_unicode_bom_scalars: usize = 0,
     /// Aggregate support is partial even when every signature is recognized.
     semantics_deferred: bool = true,
 };
 /// Requires a parsed table; borrows all input and returns scalar-only evidence.
 pub fn inspect(a: std.mem.Allocator, table: *const @import("tag_table.zig").Table, options: Options) !Report {
     const ids = try @import("header_identifiers.zig").inspect(table.header, options.edition);
-    var r: Report = .{};
+    var r: Report = .{ .v2_unicode_utf16be_selected = options.v2_unicode_utf16be };
     for (table.tags) |tag| {
         if (tag.data.len > options.max_payload_bytes - r.payload_bytes) return error.LimitExceeded;
         const value = try @import("tag_payload.zig").parse(tag.signature, tag.data, options.edition, .{
@@ -53,7 +60,14 @@ pub fn inspect(a: std.mem.Allocator, table: *const @import("tag_table.zig").Tabl
             .adaptation => r.adaptation += 1,
             .description_v2 => |text| {
                 r.v2_description += 1;
-                r.v2_unicode_bytes_deferred += text.unicode.len;
+                if (options.v2_unicode_utf16be) {
+                    const unicode = try @import("description_unicode.zig").inspectUtf16BE(text, options.max_unicode_bytes - r.unicode_bytes);
+                    r.v2_unicode_descriptions_checked += 1;
+                    r.unicode_bytes += unicode.inspected_bytes;
+                    r.v2_unicode_scalars += unicode.text.scalars;
+                    r.v2_unicode_nul_scalars += unicode.text.nul_scalars;
+                    r.v2_unicode_bom_scalars += unicode.text.bom_scalars;
+                } else r.v2_unicode_bytes_deferred += text.unicode.len;
                 r.v2_script_bytes_deferred += text.script.len + text.script_unused.len;
                 r.v2_trailing_bytes_deferred += text.trailing.len;
             },

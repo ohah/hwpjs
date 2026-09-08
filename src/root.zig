@@ -38,6 +38,7 @@ test {
     _ = @import("image/icc/tag_payload_tests.zig");
     _ = @import("image/icc/text_type_tests.zig");
     _ = @import("image/icc/text_description_tests.zig");
+    _ = @import("image/icc/description_unicode_tests.zig");
     _ = @import("image/icc/payload_inspection_tests.zig");
     _ = @import("image/icc/xyz_type_tests.zig");
     _ = @import("image/icc/chromatic_adaptation_tests.zig");
@@ -59,6 +60,7 @@ test {
     _ = @import("image/png/profile_required_tests.zig");
     _ = @import("image/png/profile_payload_tests.zig");
     _ = @import("image/png/profile_v2_text_tests.zig");
+    _ = @import("image/png/profile_v2_unicode_tests.zig");
     _ = @import("image/icc/mluc_tests.zig");
     _ = @import("image/icc/mluc_unicode_tests.zig");
     _ = @import("image/icc/mluc_selection_tests.zig");
