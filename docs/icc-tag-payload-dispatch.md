@@ -2,7 +2,7 @@
 
 `tag_payload.parse(signature,data,edition,options)`는 XYZ·TRC·v4 다국어 문자열·v4 색순응 행렬의 기존 파서를 연결합니다. 실제 파싱 규칙과 서명 목록은 각 파서가 계속 소유합니다. 새 모듈은 typed 결과와 호출 순서만 소유합니다.
 
-결과는 xyz/trc/localized/adaptation, 해당 판본 미구현 unsupported_edition, 서명 미구현 unhandled로 구분합니다. v2 desc/cprt/chad는 기존 파서의 UnsupportedIccLocalizedEdition/UnsupportedIccAdaptationEdition만 명시적으로 상태에 옮깁니다. 그 밖의 알려진 잘못된 타입·길이·한도 오류를 unknown이나 성공으로 바꾸지 않습니다. LUT 등 미구현 태그는 unhandled입니다.
+결과는 xyz/trc/localized/adaptation, v2 description_v2/copyright_v2, 해당 판본 미구현 unsupported_edition, 서명 미구현 unhandled로 구분합니다. [v2 문자열 연결](icc-v2-text.md) 이후 desc/cprt는 별도 타입으로 읽으며 chad는 여전히 미지원입니다. 그 밖의 알려진 잘못된 타입·길이·한도 오류를 unknown이나 성공으로 바꾸지 않습니다. LUT 등 미구현 태그는 unhandled입니다. 아래 초기 통합 검증 기록의 v2 미지원 결과는 당시 범위입니다.
 
 이 계층은 전체 프로파일·태그 의미 검증이 아닙니다. XYZ 원값을 보존하고 클래스별 수치 정책은 적용하지 않습니다. TRC 계산 모델·색순응 의미·다국어 문자열 Unicode/locale/확장 영역 보류를 기존 결과 그대로 전달합니다. 문자열과 샘플 곡선의 view는 입력 태그 데이터를 빌리며 새 할당은 없습니다.
 

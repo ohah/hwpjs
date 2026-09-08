@@ -20,6 +20,11 @@ pub const Report = struct {
     localized_records: usize = 0,
     unicode_bytes: usize = 0,
     localized_extensions_deferred: usize = 0,
+    v2_description: usize = 0,
+    v2_copyright: usize = 0,
+    v2_unicode_bytes_deferred: usize = 0,
+    v2_script_bytes_deferred: usize = 0,
+    v2_trailing_bytes_deferred: usize = 0,
     /// Aggregate support is partial even when every signature is recognized.
     semantics_deferred: bool = true,
 };
@@ -46,6 +51,13 @@ pub fn inspect(a: std.mem.Allocator, table: *const @import("tag_table.zig").Tabl
             },
             .trc => r.trc += 1,
             .adaptation => r.adaptation += 1,
+            .description_v2 => |text| {
+                r.v2_description += 1;
+                r.v2_unicode_bytes_deferred += text.unicode.len;
+                r.v2_script_bytes_deferred += text.script.len + text.script_unused.len;
+                r.v2_trailing_bytes_deferred += text.trailing.len;
+            },
+            .copyright_v2 => r.v2_copyright += 1,
             .localized => |text| {
                 const unicode = try @import("mluc_unicode.zig").inspect(a, text.strings, .{
                     .max_records = options.max_localized_records - r.localized_records,

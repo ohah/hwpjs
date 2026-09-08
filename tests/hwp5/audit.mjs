@@ -76,6 +76,7 @@ import {pngSrgbEdges} from './png-srgb.mjs';
 import {pngProfileEdges} from './png-profile.mjs';
 import {pngRequiredEdges} from './png-required-inspection.mjs';
 import {pngPayloadEdges} from './png-payload-inspection.mjs';
+import {pngV2TextEdges} from './png-v2-text.mjs';
 import {iccEdges} from './icc.mjs';
 import {iccSemanticEdges} from './icc-semantics.mjs';
 import {iccRegistryEdges} from './icc-registry.mjs';
@@ -549,6 +550,7 @@ const pngSrgbResults = pngSrgbEdges(call,cfb);
 const pngProfileResults = pngProfileEdges(call);
 const pngRequiredResults = pngRequiredEdges(call);
 const pngPayloadResults = pngPayloadEdges(call);
+const pngV2TextResults = pngV2TextEdges(call);
 const iccResults = iccEdges(call);
 const iccSemanticResults = iccSemanticEdges(call);
 const iccRegistryResults = iccRegistryEdges(call);
@@ -1173,6 +1175,7 @@ console.log(
       pngProfileResults,
       pngRequiredResults,
       pngPayloadResults,
+      pngV2TextResults,
       iccResults,
       iccSemanticResults,
       iccRegistryResults,

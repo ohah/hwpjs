@@ -3,9 +3,8 @@ const t = std.testing;
 const api = @import("tag_payload.zig");
 test "ICC payload dispatch separates unknown edition and invalid known type" {
     try t.expect((try api.parse("A2B0".*, "mft1", .v4_2022, .{})) == .unhandled);
-    for ([_][4]u8{ "desc".*, "cprt".*, "chad".* }) |name| {
-        try t.expect((try api.parse(name, &.{}, .v2_2001, .{})) == .unsupported_edition);
-    }
+    try t.expect((try api.parse("chad".*, &.{}, .v2_2001, .{})) == .unsupported_edition);
+    for ([_][4]u8{ "desc".*, "cprt".* }) |name| try t.expectError(error.InvalidIccTagDataSize, api.parse(name, &.{}, .v2_2001, .{}));
     const invalid = [_]u8{ 'd', 'a', 't', 'a', 0, 0, 0, 0 };
     try t.expectError(error.InvalidIccTrcType, api.parse("rTRC".*, &invalid, .v4_2022, .{}));
     try t.expectError(error.InvalidIccMlucType, api.parse("desc".*, &invalid, .v4_2022, .{}));

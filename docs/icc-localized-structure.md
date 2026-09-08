@@ -1,5 +1,7 @@
 # ICC 다국어 문자열 원시 구조
 
+v2의 별도 문자열 타입 작업은 [ICC v2 문자열 구조](icc-v2-text.md)에서 관리합니다. 아래 v4 mluc API의 판본 계약을 자동 변경하지 않습니다.
+
 ## 계약
 
 [ICC.1:2022 §10.15 Table 54](https://www.color.org/specifications/ICC.1-2022-05.pdf)에 따라 mluc의 개수·레코드 크기·언어/국가 코드 원형·문자열 길이/오프셋을 읽습니다. mluc.zig는 경계와 빌린 View를 소유하고 localized_tag.zig는 v4_2022의 desc/cprt 이름과 허용 타입을 연결합니다. 알려지지 않은 이름은 null이며 v2의 알려진 태그는 명시적으로 미지원 오류입니다.

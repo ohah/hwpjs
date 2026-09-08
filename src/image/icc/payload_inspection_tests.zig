@@ -50,10 +50,7 @@ test "ICC aggregate shared payload work budgets and allocation failures" {
     }) |options| try t.expectError(error.LimitExceeded, api.inspect(t.allocator, &table, options));
     table.header.version.major = 2;
     try t.expectError(error.IccEditionMismatch, api.inspect(t.allocator, &table, .{ .edition = .v4_2022 }));
-    const v2 = try api.inspect(t.allocator, &table, .{ .edition = .v2_2001 });
-    try t.expectEqual(@as(usize, 2), v2.unsupported_edition);
-    try t.expectEqual(@as(usize, 0), v2.localized);
-    try t.expect(v2.semantics_deferred);
+    try t.expectError(error.InvalidIccDescriptionType, api.inspect(t.allocator, &table, .{ .edition = .v2_2001 }));
 }
 
 test "ICC aggregate propagates malformed Unicode and known payload errors" {

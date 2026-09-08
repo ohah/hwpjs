@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {profilePng,profilePayload} from './png-profile.mjs';
-function profile(entries,major=4) {
+export function profile(entries,major=4) {
   const end=132+12*entries.length;
   const b=Buffer.alloc(end+entries.reduce((n,[,data])=>n+Math.ceil(data.length/4)*4,0));
   b.writeUInt32BE(b.length);b[8]=major;b.write('mntr',12);b.write('RGB ',16);b.write('XYZ ',20);b.write('acsp',36);b.writeUInt32BE(entries.length,128);
@@ -29,7 +29,7 @@ export function pngPayloadEdges(call) {
   for(const opts of [{bytes:143},{records:1},{unicode:3}])reject(payloadInput(profile(entries),opts),/LimitExceeded/);
   check(payloadInput(profile(entries),{selected:0}),[1,0,1,1,...Array(14).fill(0)]);
   check(payloadInput(null),Array(18).fill(0));
-  check(payloadInput(profile(entries,2),{edition:2}),[1,1,1,1,6,144,1,1,0,0,1,3,1,0,0,0,0,1]);
+  reject(payloadInput(profile(entries,2),{edition:2}),/InvalidIccDescriptionType/);
   reject(payloadInput(profile(entries),{edition:2}),/IccEditionMismatch/);
   const malformed=strings();malformed.writeUInt16BE(0xdc00,28);
   reject(payloadInput(profile([['desc',malformed]])),/InvalidUnicodeEncoding/);
