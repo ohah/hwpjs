@@ -39,3 +39,6 @@ pub const jpeg_jfxx = @import("jpeg/jfxx.zig");
 pub const jpeg_jfxx_jpeg = @import("jpeg/jfxx_jpeg.zig");
 pub const jpeg_jfif_layout = @import("jpeg/jfif_layout.zig");
 pub const jpeg_jfif_colour = @import("jpeg/jfif_colour.zig");
+pub const jpeg_sample_axis = @import("jpeg/sample_axis.zig");
+pub const jpeg_sample_interpolation = @import("jpeg/sample_interpolation.zig");
+pub const jpeg_upsampling = @import("jpeg/upsampling.zig");

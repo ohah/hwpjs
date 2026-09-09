@@ -49,7 +49,7 @@ Debug JPEG 네이티브 95/95개 통과. 정상 baseline, 모든 할당 실패 �
 
 ReleaseSafe와 ReleaseFast의 별도 WASM에서도 각각 비압축/미지 확장 비교 3,736건·거부 1,207건, 압축 썸네일 비교 271건·거부 159건, 기존 JFIF 비교 67,414건·거부 66,003건이 통과했습니다. 비압축/미검증 출력 1,026바이트와 압축 평면 출력 978바이트의 개별 변조도 두 모드 모두 검출했습니다.
 
-실제 HWP의 JPEG 참조 8건과 `reference/rhwp/samples/s1.jpg`의 JFIF 헤더·프레임 제약도 두 릴리즈 모드에서 다시 일치했습니다. 참조 수는 고유 이미지 수가 아니며, 이 회귀 검사는 실제 JFXX 복호화나 progressive 픽셀 복호화를 입증하지 않습니다. 제품 JS API는 여전히 CFB만 제공하며 HWP BinData의 JPEG 연결·업샘플링·색 변환은 후속 범위입니다.
+실제 HWP의 JPEG 참조 8건과 `reference/rhwp/samples/s1.jpg`의 JFIF 헤더·프레임 제약도 두 릴리즈 모드에서 다시 일치했습니다. 참조 수는 고유 이미지 수가 아니며, 이 회귀 검사는 실제 JFXX 복호화나 progressive 픽셀 복호화를 입증하지 않습니다. 제품 JS API는 여전히 CFB만 제공하며 HWP BinData의 JPEG 연결·파일 전체 RGB 출력은 후속 범위입니다.
 
 ## 전체 회귀 검증
 

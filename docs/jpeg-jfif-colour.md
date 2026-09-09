@@ -1,5 +1,7 @@
 # JFIF 8비트 색 변환
 
+서로 다른 크기의 성분 재구성은 별도 [업샘플링 계약](jpeg-upsampling.md)이 소유합니다.
+
 ## 계약과 공식 근거
 
 [ITU-T T.871](https://www.itu.int/rec/T-REC-T.871-201105-I/en) 7절의 공식 PDF에서 양방향 변환, `floor(x + 0.5)` 반올림 및 0~255 제한을 확인했습니다. `src/image/jpeg/jfif_colour.zig`는 정수 Y/Cb/Cr 또는 R/G/B 한 샘플의 변환만 소유합니다. 파일 형식 판단, 메타데이터 우선순위, 업샘플링, 메모리 할당은 하지 않습니다.
@@ -30,4 +32,4 @@ ReleaseSafe와 ReleaseFast의 별도 WASM에서도 각각 비교 516건·거부 
 
 전체 회귀 검사를 Debug → ReleaseSafe → ReleaseFast 순서로 완료했습니다. 각 모드 모두 20/20 단계, 네이티브 816/816개, checks 7,656,891건이 통과했습니다. 로그는 `/tmp/hwpjs-jfif-colour-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 남겼습니다. 검사 수는 포맷 전체 지원률이나 모든 디코더와의 픽셀 일치를 뜻하지 않습니다.
 
-SSOT 검토에서 변환 계수와 정수 반올림·clamp가 `jfif_colour.zig` 한 곳에 있고, 테스트용 배치 직렬화·입력 길이 검사는 별도 probe가 담당하는 것을 확인했습니다. 독립 소수식 및 BigInt 분수식은 제품 구현에서 기대 출력을 생성하지 않습니다. 업샘플링 및 실제 파일의 RGB 출력 연결은 후속 단계입니다.
+SSOT 검토에서 변환 계수와 정수 반올림·clamp가 `jfif_colour.zig` 한 곳에 있고, 테스트용 배치 직렬화·입력 길이 검사는 별도 probe가 담당하는 것을 확인했습니다. 독립 소수식 및 BigInt 분수식은 제품 구현에서 기대 출력을 생성하지 않습니다. 업샘플링은 위의 별도 계약에서 관리하며 실제 파일의 RGB 출력 연결은 후속 단계입니다.
