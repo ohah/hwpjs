@@ -3,6 +3,14 @@ const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return runMode(a, bytes, limit, false);
+}
+
+pub fn runDequantized(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return runMode(a, bytes, limit, true);
+}
+
+fn runMode(a: std.mem.Allocator, bytes: []const u8, limit: usize, dequantize: bool) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const blocks = try r.readInt(u32);
     const scans = try r.readInt(u32);
@@ -14,10 +22,20 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     try out.appendNTimes(a, 0, 36);
-    while (try decoder.next()) |block| {
-        if (limit - out.items.len < 272) return error.LimitExceeded;
+    while (try decoder.next()) |decoded| {
+        const block = decoded.coefficients;
+        if (limit - out.items.len < (if (dequantize) @as(usize, 664) else 272)) return error.LimitExceeded;
         for ([_]u32{ block.component_id, @intCast(block.frame_component), block.x, block.y }) |n| try int(a, &out, u32, n);
-        for (block.values) |value| try int(a, &out, i32, value);
+        if (dequantize) {
+            const table = decoded.quantization;
+            try int(a, &out, u32, table.destination);
+            try int(a, &out, u32, table.precision);
+            for (0..64) |i| try int(a, &out, u16, table.value(i).?);
+            const values = core.image.jpeg_dequantization.block(block.values, table);
+            for (values) |value| try int(a, &out, i64, value);
+        } else {
+            for (block.values) |value| try int(a, &out, i32, value);
+        }
     }
     const report = decoder.boundaries;
     const coverage = decoder.coverage.?;

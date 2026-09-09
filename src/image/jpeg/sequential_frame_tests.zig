@@ -62,7 +62,7 @@ test "JPEG sequential frame commits completed scans and resets predictions betwe
     try bytes.appendSlice(t.allocator, &.{ 255, 217 });
     var decoder = try Decoder.init(bytes.items, .{});
     for ([_]u8{ 7, 9, 4 }, 0..) |id, i| {
-        const block = (try decoder.next()).?;
+        const block = (try decoder.next()).?.coefficients;
         try t.expectEqual(id, block.component_id);
         try t.expectEqual(@as(i32, 1), block.values[0]);
         try t.expectEqual(i, decoder.coverage.?.covered);
@@ -120,4 +120,51 @@ test "JPEG sequential frame resolves DNL and applies a global block budget acros
     try t.expectError(error.LimitExceeded, limited.next());
     try t.expectEqual(@as(usize, 2), limited.blocks);
     try t.expectEqual(@as(usize, 1), limited.coverage.?.covered);
+}
+
+test "JPEG frame blocks retain the active quantization view after destination redefinition" {
+    var bytes: std.ArrayList(u8) = .empty;
+    defer bytes.deinit(t.allocator);
+    try start(&bytes, &frame);
+    try one(&bytes, 9, 0x5f);
+    const second_q = [_]u8{0} ++ [_]u8{3} ** 64;
+    try segment(&bytes, 0xdb, &second_q);
+    try one(&bytes, 4, 0x5f);
+    const third_q = [_]u8{0} ++ [_]u8{5} ** 64;
+    try segment(&bytes, 0xdb, &third_q);
+    try one(&bytes, 7, 0x5f);
+    try bytes.appendSlice(t.allocator, &.{ 255, 217 });
+    var decoder = try Decoder.init(bytes.items, .{});
+    const first = (try decoder.next()).?;
+    const second = (try decoder.next()).?;
+    const third = (try decoder.next()).?;
+    try t.expect(try decoder.next() == null);
+    for ([_]@TypeOf(first){ first, second, third }, [_]u16{ 1, 3, 5 }) |block, value| {
+        for (0..64) |i| try t.expectEqual(value, block.quantization.value(i).?);
+        const dequantized = @import("dequantization.zig").block(block.coefficients.values, block.quantization);
+        try t.expectEqual(@as(i64, value), dequantized[0]);
+    }
+    try t.expectEqual(@as(u16, 5), decoder.store.quantization[0].?.value(0).?);
+}
+
+test "JPEG frame quantization snapshots select component destinations not scan positions" {
+    var bytes: std.ArrayList(u8) = .empty;
+    defer bytes.deinit(t.allocator);
+    var selected = frame;
+    selected[8] = 2;
+    selected[14] = 3;
+    try start(&bytes, &selected);
+    const q2 = [_]u8{2} ++ [_]u8{7} ** 64;
+    const q3 = [_]u8{3} ++ [_]u8{11} ** 64;
+    try segment(&bytes, 0xdb, &q2);
+    try segment(&bytes, 0xdb, &q3);
+    for ([_]u8{ 7, 9, 4 }) |id| try one(&bytes, id, 0x5f);
+    try bytes.appendSlice(t.allocator, &.{ 255, 217 });
+    var decoder = try Decoder.init(bytes.items, .{});
+    for ([_]u8{ 3, 2, 0 }, [_]u16{ 11, 7, 1 }) |destination, value| {
+        const block = (try decoder.next()).?;
+        try t.expectEqual(destination, block.quantization.destination);
+        try t.expectEqual(value, block.quantization.value(0).?);
+    }
+    try t.expect(try decoder.next() == null);
 }

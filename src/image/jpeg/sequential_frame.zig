@@ -7,8 +7,12 @@ const Rules = @import("sequential_symbols.zig").Rules;
 const Store = @import("table_store.zig").Store;
 const Coverage = @import("sequential_coverage.zig").State;
 const scan_decoder = @import("sequential_scan.zig");
+const Quantization = @import("quantization.zig").Table;
 
 pub const Options = struct { structure: structure.Options = .{}, max_blocks: usize = 4000000 };
+/// The active table view survives later destination redefinitions as long as
+/// the original immutable JPEG input remains alive.
+pub const Block = struct { coefficients: scan_decoder.Coefficients, quantization: Quantization };
 
 /// Whole non-hierarchical Huffman sequential image, streamed as quantized
 /// zigzag blocks. Input/table views are borrowed; no implicit/default tables.
@@ -34,7 +38,7 @@ pub const Decoder = struct {
 
     /// Errors preserve this call's state. Earlier yielded blocks are not revoked.
     /// Only null after EOI certifies all component scans and final padding.
-    pub fn next(self: *Decoder) !?scan_decoder.Coefficients {
+    pub fn next(self: *Decoder) !?Block {
         if (self.complete) return null;
         var next_state = self.*;
         const result = try next_state.advance();
@@ -42,12 +46,15 @@ pub const Decoder = struct {
         return result;
     }
 
-    fn advance(self: *Decoder) !?scan_decoder.Coefficients {
+    fn advance(self: *Decoder) !?Block {
         while (true) {
             if (self.active) |*active| {
                 if (try active.next()) |block| {
+                    const frame = self.coverage.?.frame;
+                    const component = frame.components.get(block.frame_component).?;
+                    const quantization = self.store.quantization[component.quantization].?;
                     self.blocks += 1;
-                    return block;
+                    return .{ .coefficients = block, .quantization = quantization };
                 }
                 self.markers.reader.offset = self.scan_start + active.reader.offset;
                 self.restarts += active.restarts.count;

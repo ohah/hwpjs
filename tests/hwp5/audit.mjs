@@ -50,6 +50,8 @@ import {jpegCodecEdges} from './jpeg-codec.mjs';
 import {jpegSequentialEdges} from './jpeg-sequential.mjs';
 import {jpegScanEdges} from './jpeg-scan.mjs';
 import {jpegFrameEdges} from './jpeg-frame.mjs';
+import {jpegDequantEdges} from './jpeg-dequant.mjs';
+import {jpegFrameDequantEdges} from './jpeg-frame-dequant.mjs';
 import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
 import { codepageEdges } from "./codepage.mjs";
@@ -781,6 +783,8 @@ const jpegCodecResults = jpegCodecEdges(call);
 const jpegSequentialResults = jpegSequentialEdges(call);
 const jpegScanResults = jpegScanEdges(call);
 const jpegFrameResults = jpegFrameEdges(call);
+const jpegDequantResults = jpegDequantEdges(call);
+const jpegFrameDequantResults = jpegFrameDequantEdges(call);
 const containerImageFiles = {files: 0, png: 0, unhandled: 0};
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
@@ -1217,6 +1221,8 @@ console.log(
       jpegSequentialResults,
       jpegScanResults,
       jpegFrameResults,
+      jpegDequantResults,
+      jpegFrameDequantResults,
       containerImageFiles,
       iccResults,
       iccSemanticResults,

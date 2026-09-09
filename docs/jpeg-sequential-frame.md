@@ -1,6 +1,6 @@
 # JPEG sequential 프레임 연결 작업
 
-Huffman sequential 프레임의 계수 복호화와 성분 포함 검증을 구현했습니다. 픽셀 복호화나 제품 JS 공개 API 연결은 포함하지 않습니다.
+Huffman sequential 프레임의 계수 복호화와 성분 포함 검증을 구현했습니다. 반환 블록의 양자화 테이블 보존과 역양자화 진행 현황은 [역양자화 작업](jpeg-dequantization.md)이 소유합니다. 픽셀 복호화나 제품 JS 공개 API 연결은 포함하지 않습니다.
 
 ## 근거와 책임
 
