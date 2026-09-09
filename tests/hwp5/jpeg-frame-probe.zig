@@ -1,16 +1,21 @@
 const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
+const Output = enum { coefficients, dequantized, samples };
 
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
-    return runMode(a, bytes, limit, false);
+    return runMode(a, bytes, limit, .coefficients);
 }
 
 pub fn runDequantized(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
-    return runMode(a, bytes, limit, true);
+    return runMode(a, bytes, limit, .dequantized);
 }
 
-fn runMode(a: std.mem.Allocator, bytes: []const u8, limit: usize, dequantize: bool) ![]u8 {
+pub fn runSamples(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    return runMode(a, bytes, limit, .samples);
+}
+
+fn runMode(a: std.mem.Allocator, bytes: []const u8, limit: usize, output: Output) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const blocks = try r.readInt(u32);
     const scans = try r.readInt(u32);
@@ -24,15 +29,29 @@ fn runMode(a: std.mem.Allocator, bytes: []const u8, limit: usize, dequantize: bo
     try out.appendNTimes(a, 0, 36);
     while (try decoder.next()) |decoded| {
         const block = decoded.coefficients;
-        if (limit - out.items.len < (if (dequantize) @as(usize, 664) else 272)) return error.LimitExceeded;
+        const stride: usize = switch (output) {
+            .coefficients => 272,
+            .dequantized => 664,
+            .samples => 660,
+        };
+        if (limit - out.items.len < stride) return error.LimitExceeded;
         for ([_]u32{ block.component_id, @intCast(block.frame_component), block.x, block.y }) |n| try int(a, &out, u32, n);
-        if (dequantize) {
+        if (output == .dequantized) {
             const table = decoded.quantization;
             try int(a, &out, u32, table.destination);
             try int(a, &out, u32, table.precision);
             for (0..64) |i| try int(a, &out, u16, table.value(i).?);
             const values = core.image.jpeg_dequantization.block(block.values, table);
             for (values) |value| try int(a, &out, i64, value);
+        } else if (output == .samples) {
+            const precision = decoder.coverage.?.frame.precision;
+            const format = try core.image.jpeg_sample_restoration.Format.init(precision);
+            const values = core.image.jpeg_dequantization.block(block.values, decoded.quantization);
+            const centered = core.image.jpeg_idct.transform(values);
+            const samples = try format.block(centered);
+            try int(a, &out, u32, precision);
+            for (centered) |value| try int(a, &out, u64, @bitCast(value));
+            for (samples) |value| try int(a, &out, u16, value);
         } else {
             for (block.values) |value| try int(a, &out, i32, value);
         }

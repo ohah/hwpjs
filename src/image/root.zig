@@ -30,3 +30,5 @@ pub const jpeg_sequential_coverage = @import("jpeg/sequential_coverage.zig");
 pub const jpeg_sequential_frame = @import("jpeg/sequential_frame.zig");
 pub const jpeg_zigzag = @import("jpeg/zigzag.zig");
 pub const jpeg_dequantization = @import("jpeg/dequantization.zig");
+pub const jpeg_idct = @import("jpeg/idct.zig");
+pub const jpeg_sample_restoration = @import("jpeg/sample_restoration.zig");

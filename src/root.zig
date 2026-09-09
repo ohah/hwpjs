@@ -9,6 +9,7 @@ pub const image = @import("image/root.zig");
 pub const text = @import("text/root.zig");
 
 test {
+    _ = @import("image/jpeg/idct_tests.zig");
     _ = @import("image/jpeg/dequantization_tests.zig");
     _ = @import("image/jpeg/sequential_frame_tests.zig");
     _ = @import("image/jpeg/sequential_scan_tests.zig");
