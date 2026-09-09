@@ -45,10 +45,20 @@ fn ignoreMarker(_: markers.Marker) !void {}
 /// The check observes each parsed marker, including SOI/EOI, but not entropy
 /// bytes. Checks should be side-effect free; failure can occur later in input.
 pub fn inspectWithMarkerCheck(bytes: []const u8, options: Options, comptime check: fn (markers.Marker) anyerror!void) !Report {
+    return inspectWithContext(bytes, options, {}, struct {
+        fn accept(_: void, marker: markers.Marker) !void {
+            try check(marker);
+        }
+    }.accept);
+}
+
+/// Stateful observers own their state. Earlier callbacks are not rolled back
+/// if a later marker or entropy boundary fails validation.
+pub fn inspectWithContext(bytes: []const u8, options: Options, context: anytype, comptime check: fn (@TypeOf(context), markers.Marker) anyerror!void) !Report {
     var it = try markers.Iterator.init(bytes, options.markers);
     const first = (try it.next()) orelse return error.MissingJpegSoi;
     if (first.code != 0xd8) return error.MissingJpegSoi;
-    try check(first);
+    try check(context, first);
     var frame: ?frame_parser.Frame = null;
     var restart: restarts.State = .{};
     var report: Report = .{};
@@ -59,7 +69,7 @@ pub fn inspectWithMarkerCheck(bytes: []const u8, options: Options, comptime chec
             report.stuffed_bytes += segment.stuffed_bytes;
         }
         const marker = (try it.next()) orelse return error.MissingJpegEoi;
-        try check(marker);
+        try check(context, marker);
         if (marker.code >= 0xd0 and marker.code <= 0xd7) {
             try restart.accept(marker.code, options.max_restarts);
             continue;

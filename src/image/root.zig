@@ -37,3 +37,4 @@ pub const jpeg_sample_planes = @import("jpeg/sample_planes.zig");
 pub const jpeg_jfif = @import("jpeg/jfif.zig");
 pub const jpeg_jfxx = @import("jpeg/jfxx.zig");
 pub const jpeg_jfxx_jpeg = @import("jpeg/jfxx_jpeg.zig");
+pub const jpeg_jfif_layout = @import("jpeg/jfif_layout.zig");

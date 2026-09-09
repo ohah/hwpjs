@@ -57,6 +57,7 @@ import {jpegPlanesEdges} from './jpeg-planes.mjs';
 import {jpegJfifEdges} from './jpeg-jfif.mjs';
 import {jpegJfxxEdges} from './jpeg-jfxx.mjs';
 import {jpegJfxxJpegEdges} from './jpeg-jfxx-jpeg.mjs';
+import {jpegJfifLayoutEdges} from './jpeg-jfif-layout.mjs';
 import {jpegFrameDequantEdges} from './jpeg-frame-dequant.mjs';
 import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
@@ -796,6 +797,7 @@ const jpegPlanesResults = jpegPlanesEdges(call);
 const jpegJfifResults = jpegJfifEdges(call);
 const jpegJfxxResults = jpegJfxxEdges(call);
 const jpegJfxxJpegResults = jpegJfxxJpegEdges(call);
+const jpegJfifLayoutResults = jpegJfifLayoutEdges(call);
 const jpegFrameDequantResults = jpegFrameDequantEdges(call);
 const containerImageFiles = {files: 0, png: 0, unhandled: 0};
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
@@ -1240,6 +1242,7 @@ console.log(
       jpegJfifResults,
       jpegJfxxResults,
       jpegJfxxJpegResults,
+      jpegJfifLayoutResults,
       jpegFrameDequantResults,
       containerImageFiles,
       iccResults,
