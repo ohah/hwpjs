@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {jpegFramingActual} from './jpeg-framing.mjs';
 import {jpegStructureActual} from './jpeg-structure.mjs';
 import {jpegSequentialFileActual} from './jpeg-scan.mjs';
+import {jpegFrameFileActual} from './jpeg-frame.mjs';
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { decodedDocumentInput, documentRecords } from "./documents.mjs";
 import { previewActual } from "./preview.mjs";
@@ -61,6 +62,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
       jpegFramingActual(call, plain, true, true);
       jpegStructureActual(call, plain);
       jpegSequentialFileActual(call, plain);
+      jpegFrameFileActual(call, plain);
     }
     stats[2] += plain.length;
     used.add(path.toLowerCase());

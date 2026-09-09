@@ -29,7 +29,7 @@ pub const Report = struct {
     semantics_deferred: bool = true,
 };
 
-fn isFrame(code: u8) bool {
+pub fn isFrame(code: u8) bool {
     return code >= 0xc0 and code <= 0xcf and code != 0xc4 and code != 0xc8 and code != 0xcc;
 }
 

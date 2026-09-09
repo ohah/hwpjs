@@ -26,3 +26,5 @@ pub const jpeg_sequential_symbols = @import("jpeg/sequential_symbols.zig");
 pub const jpeg_sequential_block = @import("jpeg/sequential_block.zig");
 pub const jpeg_mcu_layout = @import("jpeg/mcu_layout.zig");
 pub const jpeg_sequential_scan = @import("jpeg/sequential_scan.zig");
+pub const jpeg_sequential_coverage = @import("jpeg/sequential_coverage.zig");
+pub const jpeg_sequential_frame = @import("jpeg/sequential_frame.zig");

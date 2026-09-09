@@ -304,6 +304,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         251 => return @import("jpeg-codec-probe.zig").run(a, bytes, limit),
         252 => return @import("jpeg-sequential-probe.zig").run(a, bytes, limit),
         253 => return @import("jpeg-scan-probe.zig").run(a, bytes, limit),
+        254 => return @import("jpeg-frame-probe.zig").run(a, bytes, limit),
         236, 237 => return @import("icc-trc-inverse-probe.zig").runWide(a, bytes, limit, if (mode == 236) .v2_2001 else .v4_2022),
         else => return error.InvalidMode,
     }

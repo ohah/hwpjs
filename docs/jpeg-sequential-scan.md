@@ -35,4 +35,4 @@ Huffman sequential 단일 스캔의 계수 복호화를 구현했습니다. 제�
 
 Debug/ReleaseSafe/ReleaseFast 전체 audit는 각각 20/20 단계, 네이티브 777/777 테스트, 총 7,314,803건 검사로 통과했습니다. 전체 회귀 합계이며 전체 문서 구현이나 픽셀 동일성의 증명은 아닙니다.
 
-여러 스캔 간 성분 중복/누락 검사, progressive·lossless·산술 복호화, 역양자화·IDCT·픽셀 출력은 별도 후속입니다.
+여러 스캔 간 성분 중복/누락 검사와 이미지 단위 연결의 진행 현황은 [sequential 프레임 작업](jpeg-sequential-frame.md)이 소유합니다. Progressive·lossless·산술 복호화, 역양자화·IDCT·픽셀 출력은 별도 후속입니다.

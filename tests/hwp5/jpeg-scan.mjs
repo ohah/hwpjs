@@ -49,11 +49,11 @@ export function jpegScanActual(call,raw,options){const out=call(253,jpegScanInpu
 
 // Read-only fixture walker: retains each scan's table definitions and entropy
 // including RSTs. Structure validity is checked separately by the caller.
-export function jpegSequentialFileActual(call,raw){
+export function jpegSequentialScans(raw){
   let at=0,frame=null,code=0,height=0,interval=0;const q=[],h=[],scans=[];
   while(at<raw.length){
     const marker=jpegMarkerOracle(raw.subarray(at)),payload=marker.wire.subarray(20);at+=marker.consumed;
-    if([192,193,194].includes(marker.code)){code=marker.code;frame=payload;height=frame.readUInt16BE(1);if(code===194)return {scans:0,blocks:0,restarts:0,deferred:true};}
+    if([192,193,194].includes(marker.code)){code=marker.code;frame=payload;height=frame.readUInt16BE(1);if(code===194)return {frame,code,height,scans:[],deferred:true};}
     if(marker.code===219)q.push(payload);
     if(marker.code===196)h.push(payload);
     if(marker.code===221)interval=payload.readUInt16BE();
@@ -64,6 +64,11 @@ export function jpegSequentialFileActual(call,raw){
     }
     if(marker.code===217)break;
   }
+  return {frame,code,height,scans,deferred:false};
+}
+export function jpegSequentialFileActual(call,raw){
+  const {scans,height,deferred}=jpegSequentialScans(raw);
+  if(deferred)return {scans:0,blocks:0,restarts:0,deferred:true};
   let blocks=0,restarts=0;for(const s of scans){const result=jpegScanActual(call,s.raw,{...s.options,height});blocks+=result.blocks;restarts+=result.restarts;}
   return {scans:scans.length,blocks,restarts,deferred:false};
 }
