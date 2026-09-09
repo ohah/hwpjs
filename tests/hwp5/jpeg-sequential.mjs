@@ -7,26 +7,38 @@ export function jpegSequentialInput(raw,{frame=jpegFrameFixture(),code=192,dc,ac
   const h=Buffer.alloc(7);h[0]=code;h[1]=+finish;h[2]=skip;h.writeInt32LE(predictor,3);
   return Buffer.concat([h,sized(frame),sized(dc),sized(ac),raw]);
 }
-export function jpegSequentialOracle(raw,{frame=jpegFrameFixture(),code=192,dc,ac,predictor=0,skip=0,finish=false}){
-  assert.ok([192,193].includes(code));assert.ok([8,12].includes(frame[0]));
-  assert.equal(dc[0]>>4,0);assert.equal(ac[0]>>4,1);
+export function jpegCoefficientReader(raw,skip=0){
   const {text,ends}=unstuff(raw);let at=skip;assert.ok(at<=text.length);
   const read=width=>{assert.ok(at+width<=text.length);const s=text.slice(at,at+width);at+=width;return s;};
   const receive=width=>{const s=read(width);return width===0?0:s[0]==='1'?parseInt(s,2):-parseInt([...s].map(n=>n==='0'?'1':'0').join(''),2);};
   const lookup=t=>new Map(huffmanCodewords(t).map(c=>[c.bits,c.symbol]));
   const symbol=map=>{let prefix='';for(let n=0;n<16;n++){prefix+=read(1);if(map.has(prefix))return map.get(prefix);}assert.fail('invalid prefix');};
-  const category=symbol(lookup(dc));assert.ok(category<=frame[0]+3);
-  const values=[predictor+receive(category)];assert.ok(values[0]>=-2147483648&&values[0]<=2147483647);
-  const acCodes=lookup(ac);
-  while(values.length<64){
-    const rs=symbol(acCodes);
-    if(rs===0){while(values.length<64)values.push(0);break;}
-    if(rs===240){values.push(...Array(16).fill(0));assert.ok(values.length<=64);continue;}
-    const width=rs%16;assert.ok(width>=1&&width<=frame[0]+2);
-    values.push(...Array(Math.floor(rs/16)).fill(0));assert.ok(values.length<64);values.push(receive(width));
-  }
-  let remaining=(8-at%8)%8;const offset=at?ends[Math.ceil(at/8)-1]:0;
-  if(finish){assert.equal(offset,raw.length);assert.ok(/^1*$/.test(text.slice(at)));remaining=0;}
+  const cache=new Map(),codes=t=>{if(!cache.has(t))cache.set(t,lookup(t));return cache.get(t);};
+  return {
+    block(dc,ac,precision,predictor){
+      assert.equal(dc[0]>>4,0);assert.equal(ac[0]>>4,1);
+      const category=symbol(codes(dc));assert.ok(category<=precision+3);
+      const values=[predictor+receive(category)];assert.ok(values[0]>=-2147483648&&values[0]<=2147483647);
+      const acCodes=codes(ac);
+      while(values.length<64){
+        const rs=symbol(acCodes);
+        if(rs===0){while(values.length<64)values.push(0);break;}
+        if(rs===240){values.push(...Array(16).fill(0));assert.ok(values.length<=64);continue;}
+        const width=rs%16;assert.ok(width>=1&&width<=precision+2);
+        values.push(...Array(Math.floor(rs/16)).fill(0));assert.ok(values.length<64);values.push(receive(width));
+      }
+      return values;
+    },
+    position(finish=false){
+      let remaining=(8-at%8)%8;const offset=at?ends[Math.ceil(at/8)-1]:0;
+      if(finish){assert.equal(offset,raw.length);assert.ok(/^1*$/.test(text.slice(at)));remaining=0;}
+      return {offset,remaining};
+    }
+  };
+}
+export function jpegSequentialOracle(raw,{frame=jpegFrameFixture(),code=192,dc,ac,predictor=0,skip=0,finish=false}){
+  assert.ok([192,193].includes(code));assert.ok([8,12].includes(frame[0]));
+  const reader=jpegCoefficientReader(raw,skip),values=reader.block(dc,ac,frame[0],predictor),{offset,remaining}=reader.position(finish);
   const out=Buffer.alloc(264);out.writeUInt32LE(offset);out.writeUInt32LE(remaining,4);values.forEach((n,i)=>out.writeInt32LE(n,8+i*4));return out;
 }
 export function jpegSequentialActual(call,raw,options){assert.deepEqual(call(252,jpegSequentialInput(raw,options)),jpegSequentialOracle(raw,options));}

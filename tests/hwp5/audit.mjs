@@ -48,6 +48,7 @@ import {jpegProgressiveEdges} from './jpeg-progressive.mjs';
 import {jpegStructureEdges} from './jpeg-structure.mjs';
 import {jpegCodecEdges} from './jpeg-codec.mjs';
 import {jpegSequentialEdges} from './jpeg-sequential.mjs';
+import {jpegScanEdges} from './jpeg-scan.mjs';
 import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
 import { codepageEdges } from "./codepage.mjs";
@@ -777,6 +778,7 @@ const jpegProgressiveResults = jpegProgressiveEdges(call);
 const jpegStructureResults = jpegStructureEdges(call);
 const jpegCodecResults = jpegCodecEdges(call);
 const jpegSequentialResults = jpegSequentialEdges(call);
+const jpegScanResults = jpegScanEdges(call);
 const containerImageFiles = {files: 0, png: 0, unhandled: 0};
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
@@ -1211,6 +1213,7 @@ console.log(
       jpegStructureResults,
       jpegCodecResults,
       jpegSequentialResults,
+      jpegScanResults,
       containerImageFiles,
       iccResults,
       iccSemanticResults,

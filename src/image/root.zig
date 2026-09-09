@@ -24,3 +24,5 @@ pub const jpeg_huffman_decoder = @import("jpeg/huffman_decoder.zig");
 pub const jpeg_amplitude = @import("jpeg/amplitude.zig");
 pub const jpeg_sequential_symbols = @import("jpeg/sequential_symbols.zig");
 pub const jpeg_sequential_block = @import("jpeg/sequential_block.zig");
+pub const jpeg_mcu_layout = @import("jpeg/mcu_layout.zig");
+pub const jpeg_sequential_scan = @import("jpeg/sequential_scan.zig");
