@@ -6,17 +6,18 @@ import {progressiveBlockInput,progressiveBlockOracle,progressiveZero} from './jp
 // Test-only scheduling of blocks from real files. This is not a product frame
 // decoder. The product block primitive is checked against independent expected
 // coefficients and positions; later inputs always use the oracle's results.
-export function jpegProgressiveBlocksFileActual(call,raw,verify=null) {
+export function jpegProgressiveBlocksFileActual(call,raw,verify=null,scanCheck=null) {
   let at=0,frame=null,interval=0,scans=0,blocks=0,restarts=0;
   let ended=false;
   assert.deepEqual(raw.subarray(0,2),Buffer.from([255,216]));
   const kinds={dcFirst:0,dcRefine:0,acFirst:0,acRefine:0};
-  const tables=new Map(),coefficients=new Map(),levels=[];
+  const tables=new Map(),coefficients=new Map(),levels=[],quantization=[];
   while(at<raw.length) {
     const marker=jpegMarkerOracle(raw.subarray(at)),p=marker.wire.subarray(20);at+=marker.consumed;
     if([192,193].includes(marker.code))return {deferred:true,scans:0,blocks:0};
     if(marker.code===194){assert.equal(frame,null);frame=p;assert.ok(frame.readUInt16BE(1)>0,'test walker requires declared height');for(let i=0;i<frame[5];i++)levels.push(Array(64).fill(-1));}
     if(marker.code===196)for(let pos=0;pos<p.length;){const size=17+p.subarray(pos+1,pos+17).reduce((a,b)=>a+b,0);assert.ok(pos+size<=p.length);tables.set(p[pos],p.subarray(pos,pos+size));pos+=size;}
+    if(marker.code===219)quantization.push(p);
     if(marker.code===221)interval=p.readUInt16BE();
     if(marker.code===218) {
       assert.ok(frame);scans++;
@@ -24,7 +25,7 @@ export function jpegProgressiveBlocksFileActual(call,raw,verify=null) {
       kinds[start===0?(ah===0?'dcFirst':'dcRefine'):(ah===0?'acFirst':'acRefine')]++;
       const g=jpegScanGeometry(frame,scan,frame.readUInt16BE(1));assert.ok(g.columns*g.rows*g.perMcu<=4000000);
       for(const c of g.components){if(start>0)assert.ok(levels[c.index][0]>=0);for(let k=start;k<=end;k++){assert.equal(levels[c.index][k],ah===0?-1:ah);levels[c.index][k]=al;}}
-      let mcu=0,rst=0;
+      let mcu=0,rst=0;const scanStart=at,scanPrior=[];
       while(mcu<g.columns*g.rows) {
         const segment=jpegEntropyOracle(raw.subarray(at)),entropy=raw.subarray(at,at+segment.consumed);at+=segment.consumed;
         const stop=Math.min(g.columns*g.rows,mcu+(interval||g.columns*g.rows)),entries=[];
@@ -39,6 +40,7 @@ export function jpegProgressiveBlocksFileActual(call,raw,verify=null) {
           // only adjacent blocks of the same component, retaining predictors.
           while(index<entries.length&&entries[index].c.index===c.index)index++;
           const batch=entries.slice(first,index),initial=batch.map(e=>coefficients.get(e.key)??progressiveZero());
+          if(scanCheck)for(const b of initial)scanPrior.push(b);
           const table=start===0&&ah!==0?null:tables.get(start===0?c.tables>>4:16+(c.tables&15));
           assert.ok(table!==undefined);
           const options={frame,scan,start,end,ah,al,table,blocks:initial,predictor:predictors.get(c.index)??0,skip,finish:index===entries.length};
@@ -55,6 +57,7 @@ export function jpegProgressiveBlocksFileActual(call,raw,verify=null) {
         if(mcu<g.columns*g.rows){const marker=jpegMarkerOracle(raw.subarray(at));assert.equal(marker.code,208+rst%8);at+=marker.consumed;rst++;restarts++;}
       }
       const terminal=jpegMarkerOracle(raw.subarray(at));assert.ok(terminal.code<208||terminal.code>215);
+      if(scanCheck)scanCheck(raw.subarray(scanStart,at+terminal.consumed),{frame,scan,q:Buffer.concat(quantization),h:Buffer.concat([...tables.values()]),interval,prior:scanPrior});
     }
     if(marker.code===217){assert.equal(at,raw.length);ended=true;break;}
   }

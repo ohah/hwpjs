@@ -5,13 +5,12 @@ const selection = @import("scan_tables.zig");
 const Layout = @import("mcu_layout.zig").Layout;
 const Block = @import("sequential_block.zig").Decoder;
 const Bits = @import("entropy_bits.zig").Bits;
-const entropy = @import("entropy.zig");
-const markers = @import("markers.zig");
+const transport = @import("scan_entropy.zig");
 const Restart = @import("restarts.zig").State;
 const Rules = @import("sequential_symbols.zig").Rules;
 
-pub const Options = struct { max_bytes: usize = 64 * 1024 * 1024, max_blocks: usize = 4000000, max_restarts: usize = 65536 };
-pub const Coefficients = struct { component_id: u8, frame_component: usize, x: u32, y: u32, values: [64]i32 };
+pub const Options = transport.Options;
+pub const Coefficients = @import("coefficient_block.zig").Block;
 
 /// Streaming coefficients for one complete sequential scan. Borrowed bytes start
 /// after SOS and include a terminating marker, which remains unconsumed.
@@ -34,8 +33,8 @@ pub const Decoder = struct {
         const resolved = try selection.resolve(store, frame, scan_payload);
         const layout = try Layout.init(frame, resolved.scan, height, options.max_blocks);
         var reader: Reader = .{ .bytes = bytes };
-        const segment = try entropy.takeUntilMarker(&reader, options.max_bytes);
-        var result: Decoder = .{ .layout = layout, .decoders = undefined, .ids = undefined, .reader = reader, .bits = try Bits.init(segment.raw, options.max_bytes), .restarts = .{ .interval = interval }, .options = options };
+        const bits = try transport.begin(&reader, options.max_bytes);
+        var result: Decoder = .{ .layout = layout, .decoders = undefined, .ids = undefined, .reader = reader, .bits = bits, .restarts = .{ .interval = interval }, .options = options };
         for (0..resolved.count) |i| {
             const c = resolved.components[i];
             result.ids[i] = c.id;
@@ -55,29 +54,14 @@ pub const Decoder = struct {
         return result;
     }
 
-    fn marker(self: *const Decoder) !struct { value: markers.Marker, end: usize } {
-        var it = try markers.Iterator.init(self.reader.bytes, .{ .max_bytes = self.options.max_bytes });
-        it.reader.offset = self.reader.offset;
-        return .{ .value = (try it.next()) orelse return error.UnexpectedEnd, .end = it.reader.offset };
-    }
-
     fn advance(self: *Decoder) !?Coefficients {
         if (self.emitted == self.layout.blocks) {
-            try self.bits.finish();
-            const terminal = try self.marker();
-            if (terminal.value.code >= 0xd0 and terminal.value.code <= 0xd7) return error.InvalidJpegRestartPosition;
-            self.restarts.endScan();
+            try transport.finish(self.reader, &self.bits, &self.restarts, self.options);
             self.complete = true;
             return null;
         }
-        const mcu = self.emitted / self.layout.count;
-        if (self.emitted != 0 and self.emitted % self.layout.count == 0 and self.restarts.interval != 0 and mcu % self.restarts.interval == 0) {
-            try self.bits.finish();
-            const restart = try self.marker();
-            try self.restarts.accept(restart.value.code, self.options.max_restarts);
-            self.reader.offset = restart.end;
-            const segment = try entropy.takeUntilMarker(&self.reader, self.options.max_bytes);
-            self.bits = try Bits.init(segment.raw, self.options.max_bytes);
+        if (transport.due(self.emitted, self.layout.count, self.restarts.interval)) {
+            try transport.restart(&self.reader, &self.bits, &self.restarts, self.options);
             self.predictors = @splat(0);
         }
         const position = self.layout.position(self.emitted).?;

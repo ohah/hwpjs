@@ -4,7 +4,7 @@ import {jpegMarkerOracle,jpegEntropyOracle} from './jpeg-framing.mjs';
 import {jpegStoreOracle} from './jpeg-store.mjs';
 import {encodeCodes} from './jpeg-codec.mjs';
 
-const headerBytes=24,blockBytes=272;
+export const headerBytes=24,blockBytes=272;
 const sized=b=>{const n=Buffer.alloc(2);n.writeUInt16LE(b.length);return Buffer.concat([n,b]);};
 export function jpegScanInput(raw,{code=192,frame,scan,q,h,height=frame.readUInt16BE(1),interval=0,blocks=4000000,restarts=65536}){
   const head=Buffer.alloc(13);head[0]=code;head.writeUInt16LE(height,1);head.writeUInt16LE(interval,3);head.writeUInt32LE(blocks,5);head.writeUInt32LE(restarts,9);

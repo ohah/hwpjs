@@ -31,6 +31,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [JPEG Adobe APP14 원값·인쇄용 색 해석 경계](jpeg-adobe.md)
 - [JFIF RGB 샘플 조립·미완료 색 관리 경계](jpeg-rgb.md)
 - [Progressive JPEG 블록 계수 복호화](jpeg-progressive-block.md)
+- [Progressive JPEG 스캔·restart 조립](jpeg-progressive-scan.md)
 - [PNG 감마·색도 원값 검사](png-color-fixed.md)
 - [PNG sRGB 필드·동반 청크 검사](png-srgb.md)
 - [PNG iCCP 구현 작업·미완료 경계](png-embedded-profile.md)

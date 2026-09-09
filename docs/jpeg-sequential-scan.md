@@ -7,7 +7,7 @@ Huffman sequential 단일 스캔의 계수 복호화를 구현했습니다. 제�
 [ITU-T T.81](https://www.w3.org/Graphics/JPEG/itu-t81.pdf)의 A.1~A.2, E.2, F.2를 참조합니다.
 
 - `mcu_layout.zig`: 파싱된 프레임·스캔과 호출자가 SOF/DNL에서 확정한 높이를 받아 DCT 블록 순서를 계산합니다. 단일 성분 스캔은 MCU당 한 블록입니다. 여러 성분 스캔은 각 성분의 H×V 블록을 좌→우·상→하로 순회하며, 프레임 전체의 최대 샘플링 값으로 MCU 격자를 구합니다. 가장자리의 추가 패딩 블록도 포함합니다. 성분은 숫자 ID가 아닌 프레임 선언 위치로 연결합니다.
-- `sequential_scan.zig`: 기존 활성 테이블 선택과 [블록 디코더](jpeg-sequential-block.md)를 조합합니다. 성분별 DC 예측값, MCU 단위 재시작 간격, 기존 RST 번호 검증, 구간 패딩 검사와 예측값 초기화를 소유합니다. 코어는 할당하지 않으며 입력·테이블의 불변 바이트를 빌립니다.
+- `sequential_scan.zig`: 기존 활성 테이블 선택과 [블록 디코더](jpeg-sequential-block.md)를 조합하고 성분별 DC 예측값·초기화와 호출 원자성을 소유합니다. MCU restart 시점·구간 패딩·RST 전환은 [progressive 스캔 작업](jpeg-progressive-scan.md)에서 분리한 공통 `scan_entropy.zig`를 재사용합니다. 출력 타입은 `coefficient_block.zig`를 공유합니다. 코어는 할당하지 않으며 입력·테이블의 불변 바이트를 빌립니다.
 
 입력은 SOS 직후부터 시작하며 종결 마커를 포함해야 합니다. 종결 마커는 소비하지 않습니다. 스캔 다음의 문서/이미지 구조 의미는 호출자가 검사합니다. `next`는 한 블록의 zigzag 계수와 성분 ID·프레임 위치·블록 좌표를 반환합니다. 오류 시 해당 호출 시작의 상태로 유지하지만 앞서 성공적으로 반환한 블록을 취소하지는 않습니다.
 
