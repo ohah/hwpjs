@@ -57,6 +57,15 @@ pub fn build(b: *std.Build) void {
     line_cache_audit.dependOn(&line_cache_survey.step);
     audit.dependOn(line_cache_audit);
 
+    const preview_image_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/preview-image-evidence.test.mjs" });
+    preview_image_tests.step.dependOn(b.getInstallStep());
+    const preview_image_survey = b.addSystemCommand(&.{ "node", "tests/hwp5/preview-image-survey.mjs" });
+    preview_image_survey.step.dependOn(b.getInstallStep());
+    const preview_image_audit = b.step("preview-image-audit", "Read-only PrvImage corpus evidence and adversarial survey tests");
+    preview_image_audit.dependOn(&preview_image_tests.step);
+    preview_image_audit.dependOn(&preview_image_survey.step);
+    audit.dependOn(preview_image_audit);
+
     const history_xml_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/history-xml-query.test.mjs" });
     audit.dependOn(&history_xml_tests.step);
     const history_xml_survey = b.addSystemCommand(&.{ "node", "tests/hwp5/history-xml-survey.mjs" });
