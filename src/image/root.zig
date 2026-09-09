@@ -47,3 +47,5 @@ pub const jpeg_icc_extraction = @import("jpeg/icc_extraction.zig");
 pub const jpeg_icc_profile = @import("jpeg/icc_profile.zig");
 pub const jpeg_adobe = @import("jpeg/adobe.zig");
 pub const jpeg_adobe_inspection = @import("jpeg/adobe_inspection.zig");
+pub const jpeg_rgb_raster = @import("jpeg/rgb_raster.zig");
+pub const jpeg_jfif_rgb = @import("jpeg/jfif_rgb.zig");

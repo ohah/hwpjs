@@ -62,6 +62,7 @@ import {jpegJfifColourEdges} from './jpeg-jfif-colour.mjs';
 import {jpegUpsamplingEdges} from './jpeg-upsampling.mjs';
 import {jpegIccEdges} from './jpeg-icc.mjs';
 import {jpegAdobeEdges} from './jpeg-adobe.mjs';
+import {jpegRgbEdges} from './jpeg-rgb.mjs';
 import {jpegFrameDequantEdges} from './jpeg-frame-dequant.mjs';
 import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
@@ -806,6 +807,7 @@ const jpegJfifColourResults = jpegJfifColourEdges(call);
 const jpegUpsamplingResults = jpegUpsamplingEdges(call);
 const jpegIccResults = jpegIccEdges(call);
 const jpegAdobeResults = jpegAdobeEdges(call);
+const jpegRgbResults = jpegRgbEdges(call);
 const jpegFrameDequantResults = jpegFrameDequantEdges(call);
 const containerImageFiles = {files: 0, png: 0, unhandled: 0};
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
@@ -1255,6 +1257,7 @@ console.log(
       jpegUpsamplingResults,
       jpegIccResults,
       jpegAdobeResults,
+      jpegRgbResults,
       jpegFrameDequantResults,
       containerImageFiles,
       iccResults,

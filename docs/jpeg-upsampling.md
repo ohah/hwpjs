@@ -32,4 +32,4 @@
 
 직사각형 테스트 보강 후 전체 회귀를 Debug → ReleaseSafe → ReleaseFast 순서로 다시 완료했습니다. 각 모드 모두 20/20 단계, 네이티브 821/821개, checks 7,659,485건이 통과했습니다. 로그는 `/tmp/hwpjs-upsampling-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 남겼습니다. 중단한 보강 전 실행은 성공 근거에 포함하지 않습니다.
 
-SSOT 검토에서는 좌표·가중치가 `sample_axis.zig`, bilinear 반올림이 `sample_interpolation.zig`, 평면 길이와 인덱싱이 `upsampling.zig`에 분리되어 있고, 테스트 bridge가 좌표나 보간 공식을 복제하지 않는 것을 확인했습니다. 검사 수는 전체 포맷 지원률이나 한글과의 픽셀 일치 증명이 아닙니다. 색 메타데이터 선택과 파일 전체 RGB 연결은 후속 범위입니다.
+SSOT 검토에서는 좌표·가중치가 `sample_axis.zig`, bilinear 반올림이 `sample_interpolation.zig`, 평면 길이와 인덱싱이 `upsampling.zig`에 분리되어 있고, 테스트 bridge가 좌표나 보간 공식을 복제하지 않는 것을 확인했습니다. 검사 수는 전체 포맷 지원률이나 한글과의 픽셀 일치 증명이 아닙니다. 이후의 명시적 JFIF 파일 연결은 [RGB 샘플 조립](jpeg-rgb.md)이 소유하며 일반 메타데이터 자동 선택·색 관리는 별도입니다.

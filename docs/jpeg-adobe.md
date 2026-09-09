@@ -17,6 +17,8 @@ Report는 descriptor 배열을 소유하고 extra는 원본 JPEG를 빌립니다
 
 T.872 국소 색 대응의 성공은 전체 인쇄 적합성을 뜻하지 않습니다. 프레임 제약·ICC 배치·메타데이터 우선순위·progressive 픽셀 복호화·CMYK/YCCK 픽셀 변환·색 관리는 별도입니다. 원값 파싱은 RGB 출력이나 HWP BinData JPEG 연결 완료가 아닙니다. 제품 JS API는 변경하지 않았습니다.
 
+이후 명시적 [JFIF RGB 조립](jpeg-rgb.md)은 별도 충돌 정책을 적용합니다. printEncoding을 일반 JFIF 색 판별기로 재사용하지 않으며 원값 검사와 파일별 해석을 구분합니다.
+
 ## 검증 기록
 
 테스트용 bridge mode 274는 payload를 여섯 u32 필드(version/flags0/flags1/transform/extra 길이/인쇄 식별자 여부)와 extra로 반환합니다. mode 275는 최대 헤더 수와 전체 JPEG를 받아 개수와 각 헤더를 반환합니다. mode 276은 성분 수와 payload를 받아 국소 색 대응을 반환합니다. 이 wire는 제품 ABI가 아닙니다.

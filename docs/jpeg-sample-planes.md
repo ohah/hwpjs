@@ -49,4 +49,4 @@ Debug의 17×17·3성분·역순 스캔·Q 재정의 입력에서 헤더/평면 
 
 수정본 Debug/ReleaseSafe/ReleaseFast 전체 audit는 각각 20/20 단계, 네이티브 799/799개, 총 7,517,016건 검사로 통과했습니다. 로그는 `/tmp/hwpjs-planes-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 있습니다. 전체 회귀 합계이며 전체 문서 지원 완료나 한글과의 렌더링 동일성을 뜻하지 않습니다.
 
-Progressive 복호화·업샘플링·색 변환·제품 HWP 이미지 지원 연결도 후속 단계이며 이 작업의 완료로 대체하지 않습니다.
+이 평면 작업의 완료는 progressive 복호화·제품 HWP 이미지 지원 연결을 대신하지 않습니다. 이후 [업샘플링](jpeg-upsampling.md)·[색 변환](jpeg-jfif-colour.md)·[JFIF RGB 조립](jpeg-rgb.md)의 계약과 실측은 각 주제 문서에서 관리합니다.
