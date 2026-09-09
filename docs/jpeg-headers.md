@@ -19,7 +19,7 @@ Progressive AC 스캔은 단일 성분이어야 하며 DC 구간은 Ss=Se=0입�
 
 테이블 selector 값 범위와 실제 테이블 존재/활성화/재정의는 다른 검사입니다. 현재는 값 범위만 검사합니다. 계층형 프레임, DNL 수명, 전체 스캔 진행, 압축 계수·픽셀, 메타데이터, 전체 JPEG 문서 지원은 아직 미완료입니다. HWP 보고서의 JPEG 미지원 집계를 줄이지 않습니다.
 
-[DQT·DHT 내용 검사](jpeg-tables.md)와 [테이블 설치·스캔 선택](jpeg-table-selection.md)은 별도 계층입니다. 스캔 간 수명과 진행 이력 검증은 아직 후속입니다.
+[DQT·DHT 내용 검사](jpeg-tables.md), [테이블 설치·스캔 선택](jpeg-table-selection.md), [progressive 스캔 이력](jpeg-progression.md)은 별도 계층입니다. 전체 JPEG 파일 수명 검증은 아직 후속입니다.
 
 ## 검증 기록
 

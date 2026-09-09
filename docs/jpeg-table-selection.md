@@ -13,7 +13,7 @@
 
 Sequential DCT는 Q·DC·AC, lossless Huffman은 DC만 필요합니다. Progressive는 Q와 함께 최초 DC 스캔에는 DC, AC 최초/보정 스캔에는 AC를 선택합니다. DC 보정은 비압축 비트이므로 Huffman 테이블을 요구하지 않습니다. 선택한 테이블에만 기존 precision/process 검사기를 적용합니다. 사용하지 않는 정의를 임의로 거부하지 않습니다. 심볼이 없는 DHT는 정의로 보존할 수 있지만 사용 시 `EmptyJpegHuffmanTable`입니다.
 
-산술 프로세스는 `UnsupportedJpegArithmeticTables`로 명시적으로 보류합니다. 선택 성공은 심볼 의미·계수 복호화 성공이 아니며 `symbol_semantics_deferred`를 유지합니다. 이 계층은 한 스캔의 선택을 검사합니다. 스캔 순서/밴드별 approximation 이력, progressive 성분의 Q 변경 금지, DNL/재시작/프레임 수명은 다음 상태 계층에서 검사해야 합니다. 단일 스캔 검사만으로 전체 progressive 파일을 유효하다고 인증하지 않습니다.
+산술 프로세스는 `UnsupportedJpegArithmeticTables`로 명시적으로 보류합니다. 선택 성공은 심볼 의미·계수 복호화 성공이 아니며 `symbol_semantics_deferred`를 유지합니다. 이 계층은 한 스캔의 선택을 검사합니다. [Progressive 스캔 이력](jpeg-progression.md)이 계수별 approximation 이력과 성분의 Q 변경 검사를 조립합니다. DNL/재시작/프레임 수명은 후속입니다. 단일 스캔 검사만으로 전체 progressive 파일을 유효하다고 인증하지 않습니다.
 
 ## 검증 기록
 

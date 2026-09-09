@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {jpegFrameMarker,jpegHeaderActual} from './jpeg-headers.mjs';
 import {jpegTablesActual} from './jpeg-tables.mjs';
 import {jpegStoreActual} from './jpeg-store.mjs';
+import {jpegProgressiveActual} from './jpeg-progressive.mjs';
 const words = ns => {const b = Buffer.alloc(ns.length * 4); ns.forEach((n,i)=>b.writeUInt32LE(n,i*4)); return b;};
 export function jpegFramingInput(mode, raw, maximum = 65533) {
   return Buffer.concat([Buffer.from([mode]), words([maximum]), raw]);
@@ -90,6 +91,7 @@ export function jpegFramingActual(call, raw, headers = false, tables = false) {
     offset+=m.consumed;markers++;
     if(m.code===217){
       if(tables && headers){assert.ok(frame);jpegStoreActual(call,frame.code,frame.payload,tableEvents);}
+      if(tables && headers && frame.code===194) jpegProgressiveActual(call,frame.payload,tableEvents);
       return {markers,entropyBytes,trailing:raw.length-offset};
     }
     scan=m.code===218 || (scan && (m.code===1 || m.code===220 || (m.code>=208 && m.code<=215)));
