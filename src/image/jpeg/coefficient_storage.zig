@@ -45,8 +45,16 @@ pub const Grid = struct {
     }
 
     pub fn at(self: *Grid, x: u32, y: u32) ?*Values {
+        return &self.values[self.index(x, y) orelse return null];
+    }
+
+    pub fn atConst(self: *const Grid, x: u32, y: u32) ?*const Values {
+        return &self.values[self.index(x, y) orelse return null];
+    }
+
+    fn index(self: *const Grid, x: u32, y: u32) ?usize {
         if (x >= self.extent.width or y >= self.extent.height) return null;
-        return &self.values[@as(usize, y) * self.extent.width + x];
+        return @as(usize, y) * self.extent.width + x;
     }
 
     pub fn deinit(self: *Grid, a: std.mem.Allocator) void {

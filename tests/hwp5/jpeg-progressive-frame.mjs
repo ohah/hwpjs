@@ -67,3 +67,19 @@ export function progressiveFrameActual(call,raw,options={}) {
   const expected=progressiveFrameOracle(raw,options);assert.deepEqual(call(281,progressiveFrameInput(raw,options)),expected);
   return {stored:expected.readUInt32LE(16),visits:expected.readUInt32LE(20),scans:expected.readUInt32LE(24),restarts:expected.readUInt32LE(28),unseen:expected.readUInt32LE(32),partial:expected.readUInt32LE(36)};
 }
+
+// Reader for this test-only frame wire. Consumers share descriptor offsets
+// here; it is never used to derive expectations from a product frame result.
+export function progressiveFramePlanes(wire) {
+  const planes=[];let at=frameHeaderBytes;
+  for(let i=0;i<wire.readUInt32LE(12);i++) {
+    assert.ok(at+planeHeaderBytes<=wire.length);
+    const get=k=>wire.readUInt32LE(at+k*4);
+    const [id,sampling,destination,width,height,columns,rows,present]=Array.from({length:8},(_,k)=>get(k));
+    const levels=wire.subarray(at+40,at+104);
+    const quantizers=present?Array.from({length:64},(_,k)=>wire.readUInt16LE(at+104+k*2)):null;
+    const end=at+planeHeaderBytes+columns*rows*256;assert.ok(end<=wire.length);
+    planes.push({id,sampling,destination,width,height,columns,rows,levels,quantizers,coefficients:wire.subarray(at+planeHeaderBytes,end)});at=end;
+  }
+  assert.equal(at,wire.length);return planes;
+}

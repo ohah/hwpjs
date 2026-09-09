@@ -2,8 +2,7 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 
-pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
-    var r: core.Reader = .{ .bytes = bytes };
+pub fn readOptions(r: *core.Reader, limit: usize) !core.image.jpeg_progressive_frame.Options {
     const policy = try r.readInt(u8);
     if (policy > 1) return error.InvalidJpegCompletionPolicy;
     const trailing = try r.readInt(u8);
@@ -13,7 +12,14 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const scans = try r.readInt(u32);
     const restarts = try r.readInt(u32);
     const pixels = try r.readInt(u64);
-    var image = try core.image.jpeg_progressive_frame.decode(a, bytes[r.offset..], .{ .completion = if (policy == 0) .preserve_partial else .require_full, .structure = .{ .allow_trailing_bytes = trailing != 0, .max_scans = scans, .max_restarts = restarts, .frame = .{ .max_pixels = pixels }, .markers = .{ .max_bytes = limit } }, .storage = .{ .max_blocks = stored, .max_bytes = @min(storage_bytes, limit) }, .max_block_visits = visits });
+    return .{ .completion = if (policy == 0) .preserve_partial else .require_full, .structure = .{ .allow_trailing_bytes = trailing != 0, .max_scans = scans, .max_restarts = restarts, .frame = .{ .max_pixels = pixels }, .markers = .{ .max_bytes = limit } }, .storage = .{ .max_blocks = stored, .max_bytes = storage_bytes }, .max_block_visits = visits };
+}
+
+pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    var options = try readOptions(&r, limit);
+    options.storage.max_bytes = @min(options.storage.max_bytes, limit);
+    var image = try core.image.jpeg_progressive_frame.decode(a, bytes[r.offset..], options);
     defer image.deinit(a);
     if (48 + @as(u64, image.planes.len) * 232 + @as(u64, image.stored_blocks) * 256 > limit) return error.LimitExceeded;
     var out: std.ArrayList(u8) = .empty;

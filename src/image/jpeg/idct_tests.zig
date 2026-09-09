@@ -2,6 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const idct = @import("idct.zig");
 const Format = @import("sample_restoration.zig").Format;
+const rational = @import("idct_rational.zig");
 
 fn reference(coefficients: [64]i64, x: usize, y: usize) f64 {
     @setFloatMode(.strict);
@@ -51,6 +52,71 @@ test "JPEG IDCT mixed signed coefficients preserve orientation and stay finite" 
     for ([_]i64{ std.math.minInt(i64), std.math.maxInt(i64) }) |value| {
         const result = idct.transform(@splat(value));
         for (result) |sample| try t.expect(std.math.isFinite(sample));
+    }
+}
+
+test "JPEG IDCT exact AC cancellation preserves positive and negative half ties" {
+    for ([_]i64{ 420, -300, 900, -516 }) |dc| for (1..8) |frequency| {
+        var values: [64]i64 = @splat(0);
+        values[0] = dc;
+        values[frequency] = 6;
+        values[frequency * 8] = -6;
+        const result = idct.transform(values);
+        const exact = @as(f64, @floatFromInt(dc)) / 8;
+        for (0..8) |position| try t.expectEqual(exact, result[position * 8 + position]);
+    };
+    var values: [64]i64 = @splat(0);
+    values[0] = 420;
+    values[1] = -6;
+    values[8] = -6;
+    const exact = idct.transform(values)[2 * 8 + 5];
+    try t.expectEqual(@as(f64, 52.5), exact);
+    try t.expectEqual(@as(u16, 181), try (try Format.init(8)).sample(exact));
+}
+
+test "JPEG IDCT fourth frequencies preserve exact signed rational contributions" {
+    const signs = [_]i64{ 1, -1, -1, 1, 1, -1, -1, 1 };
+    for ([_]i64{ 750, -750, 4, -4 }) |dc| {
+        var values: [64]i64 = @splat(0);
+        values[0] = dc;
+        values[4] = 10;
+        values[32] = -14;
+        values[36] = 18;
+        const result = idct.transform(values);
+        for (signs, 0..) |sy, y| for (signs, 0..) |sx, x| {
+            const exact = @as(f64, @floatFromInt(dc + sx * 10 - sy * 14 + sx * sy * 18)) / 8;
+            try t.expectEqual(exact, result[y * 8 + x]);
+        };
+    }
+}
+
+test "JPEG IDCT rational classification rejects irrational terms and uses wide sums" {
+    var values: [64]i64 = @splat(0);
+    values[0] = 4;
+    values[1] = 1;
+    for (0..8) |y| for (0..8) |x| try t.expectEqual(@as(?f64, null), rational.at(&values, x, y));
+    const signs = [_]i128{ 1, -1, -1, 1, 1, -1, -1, 1 };
+    values[1] = 0;
+    values[0] = std.math.maxInt(i64);
+    values[4] = std.math.minInt(i64);
+    values[32] = std.math.minInt(i64);
+    values[36] = std.math.maxInt(i64);
+    for (signs, 0..) |sy, y| for (signs, 0..) |sx, x| {
+        const numerator = @as(i128, values[0]) + sx * values[4] + sy * values[32] + sx * sy * values[36];
+        try t.expectEqual(@as(f64, @floatFromInt(numerator)) / 8, rational.at(&values, x, y).?);
+    };
+}
+
+test "JPEG sample restoration does not erase the last bit before level shifting" {
+    for ([_]u8{ 8, 12 }) |precision| {
+        const format = try Format.init(precision);
+        // Adjacent representable values, not an epsilon rounding policy.
+        const positive_below: f64 = @bitCast(@as(u64, @bitCast(@as(f64, 0.5))) - 1);
+        const negative_below: f64 = @bitCast(@as(u64, @bitCast(@as(f64, -0.5))) + 1);
+        try t.expectEqual(format.level, try format.sample(positive_below));
+        try t.expectEqual(format.level - 1, try format.sample(negative_below));
+        try t.expectEqual(format.level + 1, try format.sample(0.5));
+        try t.expectEqual(format.level, try format.sample(-0.5));
     }
 }
 

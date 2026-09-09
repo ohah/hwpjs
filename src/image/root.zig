@@ -28,6 +28,7 @@ pub const jpeg_mcu_layout = @import("jpeg/mcu_layout.zig");
 pub const jpeg_sequential_scan = @import("jpeg/sequential_scan.zig");
 pub const jpeg_progressive_scan = @import("jpeg/progressive_scan.zig");
 pub const jpeg_progressive_frame = @import("jpeg/progressive_frame.zig");
+pub const jpeg_progressive_samples = @import("jpeg/progressive_samples.zig");
 pub const jpeg_sequential_coverage = @import("jpeg/sequential_coverage.zig");
 pub const jpeg_sequential_frame = @import("jpeg/sequential_frame.zig");
 pub const jpeg_zigzag = @import("jpeg/zigzag.zig");

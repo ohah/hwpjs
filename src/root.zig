@@ -29,6 +29,7 @@ test {
     _ = @import("image/jpeg/sequential_scan_tests.zig");
     _ = @import("image/jpeg/progressive_scan_tests.zig");
     _ = @import("image/jpeg/progressive_frame_tests.zig");
+    _ = @import("image/jpeg/progressive_samples_tests.zig");
     _ = @import("image/jpeg/sequential_block_tests.zig");
     _ = @import("image/jpeg/sequential_symbols_tests.zig");
     _ = @import("image/jpeg/amplitude_tests.zig");

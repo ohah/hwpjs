@@ -19,7 +19,11 @@ pub const Format = struct {
         const maximum: f64 = @floatFromInt(self.maximum);
         if (centered <= -level) return 0;
         if (centered >= maximum - level) return self.maximum;
-        return @intFromFloat(@floor(centered + level + 0.5));
+        // Adding the level first can erase the last bit below a half tie.
+        // Only shift after rounding; both remaining additions are integers.
+        const lower = @floor(centered);
+        const rounded = lower + @as(f64, if (centered - lower >= 0.5) 1 else 0);
+        return @intFromFloat(rounded + level);
     }
 
     /// Failure returns no partial block; caller's input is unchanged.

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {jpegIdctRationalBlock} from './jpeg-idct-rational.mjs';
 
 export function jpegIdctInput(precision, values, transform = true) {
   assert.equal(values.length, 64);
@@ -10,7 +11,9 @@ export function jpegIdctInput(precision, values, transform = true) {
 // Direct two-dimensional summation; no product basis table or separable pass.
 export function jpegIdctReference(values) {
   if (values.slice(1).every(value => value === 0n || value === 0)) return Array(64).fill(Number(values[0]) / 8);
+  const rational=jpegIdctRationalBlock(values);
   return Array.from({length: 64}, (_, i) => {
+    if(rational[i]!==null)return rational[i];
     const x = i % 8, y = Math.floor(i / 8); let sum = 0;
     for (let v = 0; v < 8; v++) for (let u = 0; u < 8; u++) {
       sum += Number(values[v * 8 + u]) * (u ? 1 : Math.SQRT1_2) * (v ? 1 : Math.SQRT1_2)
@@ -22,7 +25,11 @@ export function jpegIdctReference(values) {
 
 export function jpegRestoredSample(value, precision) {
   assert.ok(Number.isFinite(value));
-  return Math.max(0, Math.min(2 ** precision - 1, Math.floor(value + 2 ** (precision - 1) + 0.5)));
+  const level=2 ** (precision-1),maximum=2 ** precision-1;
+  if(value<=-level)return 0;
+  if(value>=maximum-level)return maximum;
+  const lower=Math.floor(value);
+  return (value<lower+0.5?lower:lower+1)+level;
 }
 
 export function jpegIdctActual(call, precision, values) {
@@ -62,6 +69,39 @@ export function jpegIdctEdges(call) {
       const values = Array(64).fill(0); values[at] = magnitude; check(precision, values);
     }
     for (const scale of [1, 1000000]) check(precision, Array.from({length: 64}, (_, i) => (((i * 37 + 11) % 257) - 128) * scale));
+    // Exact algebraic cancellations and a hand-derived fourth-frequency sign
+    // pattern test both the product and the independent symbolic oracle.
+    const exactCheck=(values,positions)=>{
+      const actual=call(257,jpegIdctInput(precision,values)),reference=jpegIdctReference(values);
+      jpegIdctVerify(actual,precision,values);
+      for(const [at,value] of positions){
+        assert.equal(reference[at],value);
+        assert.equal(actual.readDoubleLE(at*8),value);
+        assert.equal(actual.readUInt16LE(512+at*2),jpegRestoredSample(value,precision));
+      }
+      comparisons++;
+    };
+    for(const dc of [-516,-300,4,420,750,900])for(let frequency=1;frequency<8;frequency++)for(const mirror of [false,true]){
+      const values=Array(64).fill(0);values[0]=dc;values[frequency]=6;values[frequency*8]=mirror&&frequency%2?6:-6;
+      exactCheck(values,Array.from({length:8},(_,x)=>[(mirror?7-x:x)*8+x,dc/8]));
+    }
+    const signs=[1,-1,-1,1,1,-1,-1,1];
+    for(const dc of [750,-750,4,-4]){
+      const values=Array(64).fill(0);values[0]=dc;values[4]=10;values[32]=-14;values[36]=18;
+      exactCheck(values,Array.from({length:64},(_,at)=>{const sx=signs[at%8],sy=signs[Math.floor(at/8)];return [at,(dc+sx*10-sy*14+sx*sy*18)/8];}));
+    }
+    for(let base=0;base<2**precision;base+=64)for(const direction of [-1n,0n,1n]){
+      const values=Array.from({length:64},(_,i)=>{
+        const value=base+i-2**(precision-1)+0.5,bits=Buffer.alloc(8);bits.writeDoubleLE(value);
+        bits.writeBigUInt64LE(bits.readBigUInt64LE()+(value<0?-direction:direction));return bits.readDoubleLE();
+      });
+      const actual=call(258,jpegIdctInput(precision,values,false));assert.equal(actual.length,128);
+      values.forEach((value,i)=>{
+        const expected=Math.min(2**precision-1,base+i+(direction<0n?0:1));
+        assert.equal(jpegRestoredSample(value,precision),expected);
+        assert.equal(actual.readUInt16LE(i*2),expected);
+      });comparisons++;
+    }
     for (let base = 0; base < 2 ** precision; base += 64) for (const delta of [0, 0.5, 0.5 - 1e-9]) {
       const values = Array.from({length: 64}, (_, i) => base + i - 2 ** (precision - 1) + delta);
       const actual = call(258, jpegIdctInput(precision, values, false)); assert.equal(actual.length, 128);

@@ -4,7 +4,7 @@
 
 [ITU-T T.81](https://www.w3.org/Graphics/JPEG/itu-t81.pdf)의 A.1~A.2, E.2.3~E.2.5, G.1~G.2를 대조했습니다. Restart 간격은 블록이 아닌 MCU 수입니다. 구간 시작에는 성분별 DC 예측값과 EOBRUN을 초기화하며, run이 다음 구간으로 넘어가도록 허용하지 않습니다. Huffman 구간 끝에는 남은 비트의 1-padding을 확인합니다.
 
-`progressive_scan.Decoder`는 8/12비트 Huffman progressive DCT의 한 스캔을 복호화합니다. DC 초기/보정과 AC 초기/보정을 지원하며, 이전 계수를 받아 새 계수와 위치를 반환합니다. 전체 프레임의 스캔 이력·DQT 수명·계수 저장소는 후속 [프레임 계층](jpeg-progressive-frame.md)이 조립합니다. Progressive 샘플 평면/RGB, HWP BinData JPEG 연결은 아직 미완료입니다. 산술·lossless·hierarchical JPEG를 지원한다고 주장하지 않습니다. 제품 JS API는 CFB-only 그대로입니다.
+`progressive_scan.Decoder`는 8/12비트 Huffman progressive DCT의 한 스캔을 복호화합니다. DC 초기/보정과 AC 초기/보정을 지원하며, 이전 계수를 받아 새 계수와 위치를 반환합니다. 전체 프레임의 스캔 이력·DQT 수명·계수 저장소는 후속 [프레임 계층](jpeg-progressive-frame.md)이 조립하고 샘플 복원은 [샘플 평면](jpeg-progressive-samples.md)이 담당합니다. Progressive RGB, HWP BinData JPEG 연결은 아직 미완료입니다. 산술·lossless·hierarchical JPEG를 지원한다고 주장하지 않습니다. 제품 JS API는 CFB-only 그대로입니다.
 
 ## 책임과 SSOT
 

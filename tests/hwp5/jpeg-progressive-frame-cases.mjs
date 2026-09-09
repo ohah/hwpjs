@@ -27,6 +27,21 @@ export function progressiveFrameFixture({width=17,height=9,sampling=[34,17,17],g
   parts.push(Buffer.from([255,217]));return Buffer.concat(parts);
 }
 
+export function progressiveSharedQuantizationFixture() {
+  const frame=Buffer.from([8,0,1,0,1,2,9,17,0,4,17,0]),q=n=>Buffer.from([0,...Array(64).fill(n)]),dc=progressiveSingle(0,1),ac=progressiveSingle(16,0);
+  const parts=[Buffer.from([255,216]),segment(219,q(3)),segment(196,Buffer.concat([dc,ac])),segment(194,frame)];
+  for(const [id,value] of [[9,7],[4,11]])parts.push(segment(218,Buffer.from([1,id,0,0,0,0])),encodeCodes(['01']),segment(218,Buffer.from([1,id,0,1,63,0])),encodeCodes(['0']),segment(219,q(value)));
+  return Buffer.concat([...parts,Buffer.from([255,217])]);
+}
+
+export function progressiveWideQuantizationFixture(precision=12) {
+  const wideQ=Buffer.from([19,...Array(64).fill([18,52]).flat()]),narrowQ=Buffer.from([2,...Array(64).fill(5)]);
+  const frame=Buffer.from([precision,0,1,0,1,2,9,17,3,4,17,2]);
+  const parts=[Buffer.from([255,216]),segment(219,Buffer.concat([wideQ,narrowQ])),segment(194,frame),segment(196,Buffer.concat([progressiveSingle(2,1),progressiveSingle(3,2),progressiveSingle(17,0)]))];
+  for(const [id,selector,bits] of [[9,32,'01'],[4,48,'010']])parts.push(segment(218,Buffer.from([1,id,selector,0,0,0])),encodeCodes([bits]),segment(218,Buffer.from([1,id,1,1,63,0])),encodeCodes(['0']));
+  return Buffer.concat([...parts,Buffer.from([255,217])]);
+}
+
 export function progressiveFrameEdges(call) {
   let comparisons=0,rejected=0;
   const check=(raw,options={})=>{progressiveFrameActual(call,raw,options);comparisons++;};
@@ -47,22 +62,15 @@ export function progressiveFrameEdges(call) {
   const trailing=Buffer.concat([good,Buffer.from([3,4,5])]);reject(trailing,/TrailingJpegBytes/);check(trailing,{full:true,trailing:true});
   // Table lifetime: a completed component retains its Q even if a shared
   // destination is reused by a later component, then replaced after both.
-  const frame=Buffer.from([8,0,1,0,1,2,9,17,0,4,17,0]),q=n=>Buffer.from([0,...Array(64).fill(n)]),dc=progressiveSingle(0,1),ac=progressiveSingle(16,0);
-  const parts=[Buffer.from([255,216]),segment(219,q(3)),segment(196,Buffer.concat([dc,ac])),segment(194,frame)];
-  for(const [id,value] of [[9,7],[4,11]]){parts.push(segment(218,Buffer.from([1,id,0,0,0,0])),encodeCodes(['01']),segment(218,Buffer.from([1,id,0,1,63,0])),encodeCodes(['0']),segment(219,q(value)));}
-  parts.push(Buffer.from([255,217]));check(Buffer.concat(parts),{full:true});
+  check(progressiveSharedQuantizationFixture(),{full:true});
+  const q=n=>Buffer.from([0,...Array(64).fill(n)]),dc=progressiveSingle(0,1),ac=progressiveSingle(16,0);
   const repeated=progressiveFrameFixture({groups:[[0],[0]],initial:0,refine:false,ac:false});reject(repeated,/DuplicateJpegInitialBand/);
   const base=[Buffer.from([255,216]),segment(219,q(1)),segment(196,Buffer.concat([dc,ac])),segment(194,Buffer.from([8,0,1,0,1,1,9,17,0]))];
   const first=[...base,segment(218,Buffer.from([1,9,0,0,0,1])),encodeCodes(['01'])];
   reject(Buffer.concat([...first,segment(219,Buffer.concat([q(2),q(1)])),segment(218,Buffer.from([1,9,0,0,0,16])),encodeCodes(['0']),Buffer.from([255,217])]),/AlteredJpegProgressiveQuantization/);
   reject(Buffer.concat([...base,segment(218,Buffer.from([1,9,0,1,63,0])),encodeCodes(['0']),Buffer.from([255,217])]),/MissingJpegInitialDcScan/);
   const badPad=Buffer.from(good);badPad[badPad.length-3]&=0xfe;reject(badPad,/InvalidJpegEntropyPadding/);
-  const wideQ=Buffer.from([19,...Array(64).fill([18,52]).flat()]),narrowQ=Buffer.from([2,...Array(64).fill(5)]);
-  const wideFrame=Buffer.from([12,0,1,0,1,2,9,17,3,4,17,2]);
-  const wideParts=[Buffer.from([255,216]),segment(219,Buffer.concat([wideQ,narrowQ])),segment(194,wideFrame),segment(196,Buffer.concat([progressiveSingle(2,1),progressiveSingle(3,2),progressiveSingle(17,0)]))];
-  for(const [id,selector,bits] of [[9,32,'01'],[4,48,'010']])wideParts.push(segment(218,Buffer.from([1,id,selector,0,0,0])),encodeCodes([bits]),segment(218,Buffer.from([1,id,1,1,63,0])),encodeCodes(['0']));
-  wideParts.push(Buffer.from([255,217]));check(Buffer.concat(wideParts),{full:true});
-  const narrowFrame=Buffer.from(wideFrame);narrowFrame[0]=8;
-  const unsupportedQ=wideParts.slice();unsupportedQ[2]=segment(194,narrowFrame);reject(Buffer.concat(unsupportedQ),/InvalidJpegQuantizationPrecision/);
+  check(progressiveWideQuantizationFixture(),{full:true});
+  reject(progressiveWideQuantizationFixture(8),/InvalidJpegQuantizationPrecision/);
   return {comparisons,rejected};
 }

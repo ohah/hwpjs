@@ -1,4 +1,5 @@
 const std = @import("std");
+const rational = @import("idct_rational.zig");
 
 // T.81 A.3.3, including the C(0) and 1/2 factors in each dimension.
 const basis: [8][8]f64 = blk: {
@@ -33,7 +34,7 @@ pub fn transform(coefficients: [64]i64) [64]f64 {
     for (0..8) |y| for (0..8) |x| {
         var value: f64 = 0;
         for (0..8) |v| value += horizontal[v * 8 + x] * basis[y][v];
-        result[y * 8 + x] = value;
+        result[y * 8 + x] = rational.at(&coefficients, x, y) orelse value;
     };
     return result;
 }
