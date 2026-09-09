@@ -4,6 +4,7 @@ import {jpegTablesActual} from './jpeg-tables.mjs';
 import {jpegStoreActual} from './jpeg-store.mjs';
 import {jpegProgressiveActual} from './jpeg-progressive.mjs';
 import {jpegEntropyBitsActual,jpegHuffmanCodesActual} from './jpeg-codec.mjs';
+import {jpegSequentialActual} from './jpeg-sequential.mjs';
 const words = ns => {const b = Buffer.alloc(ns.length * 4); ns.forEach((n,i)=>b.writeUInt32LE(n,i*4)); return b;};
 export function jpegFramingInput(mode, raw, maximum = 65533) {
   return Buffer.concat([Buffer.from([mode]), words([maximum]), raw]);
@@ -70,18 +71,24 @@ export function jpegFramingEdges(call) {
 export function jpegFramingActual(call, raw, headers = false, tables = false) {
   let offset=0, markers=0, entropyBytes=0, scan=false;
   let frame=null;
+  const huffmanTables=new Map();let firstBlock=null,sequentialBlocks=0;
   const tableEvents=[];
   while(offset<raw.length) {
     if(scan) {
       const e=jpegEntropyOracle(raw.subarray(offset));
       assert.deepEqual(call(245,jpegFramingInput(1,raw.subarray(offset),raw.length)),e.wire);
       if(tables && headers) jpegEntropyBitsActual(call,e.wire.subarray(12));
+      if(firstBlock){jpegSequentialActual(call,e.wire.subarray(12),firstBlock);firstBlock=null;sequentialBlocks++;}
       offset+=e.consumed; entropyBytes+=e.consumed;
     }
     const m=jpegMarkerOracle(raw.subarray(offset));
     assert.deepEqual(call(245,jpegFramingInput(0,raw.subarray(offset))),m.wire);
     if(tables && (m.code===219 || m.code===196)) jpegTablesActual(call,m.code===196?1:0,m.wire.subarray(20));
     if(tables && headers && m.code===196) jpegHuffmanCodesActual(call,m.wire.subarray(20));
+    if(tables && headers && m.code===196){
+      const payload=m.wire.subarray(20);
+      for(let at=0;at<payload.length;){const size=17+payload.subarray(at+1,at+17).reduce((a,b)=>a+b,0);huffmanTables.set(payload[at],payload.subarray(at,at+size));at+=size;}
+    }
     if(tables && [219,196,218].includes(m.code)) tableEvents.push([m.code===219?0:m.code===196?1:2,m.wire.subarray(20)]);
     if(headers && jpegFrameMarker(m.code)) {
       frame={code:m.code,payload:m.wire.subarray(20)};
@@ -90,12 +97,17 @@ export function jpegFramingActual(call, raw, headers = false, tables = false) {
     if(headers && m.code===218) {
       assert.ok(frame,'observed scan requires a frame');
       jpegHeaderActual(call,frame.code,frame.payload,m.wire.subarray(20));
+      if(tables && [192,193].includes(frame.code)){
+        const selectors=m.wire.subarray(20)[2];
+        firstBlock={frame:frame.payload,code:frame.code,dc:huffmanTables.get(selectors>>4),ac:huffmanTables.get(16+(selectors&15))};
+        assert.ok(firstBlock.dc);assert.ok(firstBlock.ac);
+      }
     }
     offset+=m.consumed;markers++;
     if(m.code===217){
       if(tables && headers){assert.ok(frame);jpegStoreActual(call,frame.code,frame.payload,tableEvents);}
       if(tables && headers && frame.code===194) jpegProgressiveActual(call,frame.payload,tableEvents);
-      return {markers,entropyBytes,trailing:raw.length-offset};
+      return {markers,entropyBytes,trailing:raw.length-offset,sequentialBlocks};
     }
     scan=m.code===218 || (scan && (m.code===1 || (m.code>=208 && m.code<=215)));
   }

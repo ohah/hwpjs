@@ -21,3 +21,6 @@ pub const jpeg_scan_fields = @import("jpeg/scan_fields.zig");
 pub const jpeg_structure = @import("jpeg/structure.zig");
 pub const jpeg_entropy_bits = @import("jpeg/entropy_bits.zig");
 pub const jpeg_huffman_decoder = @import("jpeg/huffman_decoder.zig");
+pub const jpeg_amplitude = @import("jpeg/amplitude.zig");
+pub const jpeg_sequential_symbols = @import("jpeg/sequential_symbols.zig");
+pub const jpeg_sequential_block = @import("jpeg/sequential_block.zig");

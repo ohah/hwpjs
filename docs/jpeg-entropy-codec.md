@@ -11,7 +11,7 @@
 
 ## 지원 범위
 
-Huffman 출력은 원시 u8 심볼입니다. 중복 심볼도 prefix 해석 차원에서는 보존하며 DC category·AC run/size 의미 검증을 대신하지 않습니다. amplitude 부호 확장·DC 예측·AC 계수 배치·progressive 보정/EOB run·lossless 예측·산술 복호화·MCU 간격/행·역양자화/IDCT/픽셀은 후속입니다. 한 심볼 복호화 성공을 완전한 JPEG 이미지 복호화로 인증하지 않습니다. 제품 JS API와 HWP JPEG 미지원 집계는 변경하지 않았습니다.
+Huffman 출력은 원시 u8 심볼입니다. 중복 심볼도 prefix 해석 차원에서는 보존하며 DC category·AC run/size 의미 검증을 대신하지 않습니다. amplitude 부호 확장·DC 차이 합산·AC 계수 배치는 [sequential 계수 블록](jpeg-sequential-block.md)이 소유합니다. progressive 보정/EOB run·lossless 예측·산술 복호화·MCU 간격/행·역양자화/IDCT/픽셀은 후속입니다. 한 심볼 복호화 성공을 완전한 JPEG 이미지 복호화로 인증하지 않습니다. 제품 JS API와 HWP JPEG 미지원 집계는 변경하지 않았습니다.
 
 ## 검증 기록
 

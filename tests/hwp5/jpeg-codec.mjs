@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {huffmanFixture,jpegTablesOracle} from './jpeg-tables.mjs';
 const words=ns=>{const b=Buffer.alloc(ns.length*4);ns.forEach((n,i)=>b.writeUInt32LE(n,i*4));return b;};
 export function stuff(raw){return Buffer.from([...raw].flatMap(n=>n===255?[255,0]:[n]));}
-function unstuff(raw){const data=[],ends=[];for(let i=0;i<raw.length;i++){const n=raw[i];if(n===255){assert.equal(raw[++i],0);}data.push(n);ends.push(i+1);}return {text:data.map(n=>n.toString(2).padStart(8,'0')).join(''),ends};}
+export function unstuff(raw){const data=[],ends=[];for(let i=0;i<raw.length;i++){const n=raw[i];if(n===255){assert.equal(raw[++i],0);}data.push(n);ends.push(i+1);}return {text:data.map(n=>n.toString(2).padStart(8,'0')).join(''),ends};}
 export function jpegCodecInput(raw,{widths=[],table=null,count=0,skip=0,finish=false}={}){
   const h=Buffer.alloc(7);h[0]=+(table!==null);h[1]=+finish;h[2]=skip;h.writeUInt32LE(table===null?widths.length:count,3);
   if(table===null)return Buffer.concat([h,Buffer.from(widths),raw]);
