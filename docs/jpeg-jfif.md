@@ -5,6 +5,7 @@ JFIF 헤더 해석과 아래 범위의 검증을 구현했습니다. APP0 payloa
 후속 [JFXX 확장 작업](jpeg-jfxx.md)은 별도 계약과 검증 기록으로 관리합니다.
 파일 내 순서·중복·연속성은 [JFIF/JFXX 배치 검사](jpeg-jfif-layout.md)가 소유합니다.
 단일 8비트 성분의 양방향 변환은 [JFIF 색 변환](jpeg-jfif-colour.md)이 소유합니다.
+[JPEG ICC 조각 재조립](jpeg-icc.md)은 별도 메타데이터 계층이며 색 해석 선택과 구분합니다.
 
 ## 공식 근거
 

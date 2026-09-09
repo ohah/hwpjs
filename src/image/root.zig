@@ -42,3 +42,6 @@ pub const jpeg_jfif_colour = @import("jpeg/jfif_colour.zig");
 pub const jpeg_sample_axis = @import("jpeg/sample_axis.zig");
 pub const jpeg_sample_interpolation = @import("jpeg/sample_interpolation.zig");
 pub const jpeg_upsampling = @import("jpeg/upsampling.zig");
+pub const jpeg_icc_chunks = @import("jpeg/icc_chunks.zig");
+pub const jpeg_icc_extraction = @import("jpeg/icc_extraction.zig");
+pub const jpeg_icc_profile = @import("jpeg/icc_profile.zig");
