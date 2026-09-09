@@ -27,9 +27,16 @@ pub const Report = struct {
 };
 
 pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options, remaining_rgba_bytes: usize) !Report {
+    return (try inspectProfiled(a, bytes, options, remaining_rgba_bytes, null, 0)).bitmap;
+}
+pub const Profiled = struct { bitmap: Report, profile: @import("bmp_profiles.zig").Report };
+pub fn inspectProfiled(a: std.mem.Allocator, bytes: []const u8, options: Options, remaining_rgba_bytes: usize, profile_options: ?@import("bmp_profiles.zig").Options, remaining_profile_bytes: usize) !Profiled {
     var selected = options;
     selected.max_rgba_bytes = @min(selected.max_rgba_bytes, remaining_rgba_bytes);
-    var image = try pixels.decode(a, bytes, selected);
+    const view = try @import("../../image/bmp/structure.zig").inspect(bytes, selected.structure);
+    if (profile_options != null) _ = try @import("../../image/bmp/pixel_image.zig").byteCount(view.header.width, view.header.height, selected.max_rgba_bytes);
+    const profile = if (profile_options) |p| try @import("bmp_profiles.zig").inspect(a, view, p, remaining_profile_bytes) else @import("bmp_profiles.zig").Report{};
+    var image = try pixels.decodeView(a, view, selected);
     defer image.deinit(a);
     var report: Report = .{ .images = 1, .rgba_bytes = image.rgba.len, .metadata_deferred_images = @intFromBool(image.metadata_deferred) };
     if (image.rle) |evidence| {
@@ -42,5 +49,5 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options, remain
         report.rle_palette_zero_pixels = if (evidence.unwritten == .palette_zero) evidence.unwritten_pixels else 0;
         report.rle_transparent_pixels = if (evidence.unwritten == .transparent) evidence.unwritten_pixels else 0;
     }
-    return report;
+    return .{ .bitmap = report, .profile = profile };
 }

@@ -8,6 +8,7 @@ pub const Selection = struct {
     jpeg_images_report: bool = false,
     bmp_images_report: bool = false,
     bmp_rle_report: bool = false,
+    bmp_profile_report: bool = false,
     xml: @FieldType(core.hwp5.container_validation.Options, "xml") = null,
     xml_report: bool = false,
     xml_template: @FieldType(core.hwp5.container_validation.Options, "xml_template") = null,

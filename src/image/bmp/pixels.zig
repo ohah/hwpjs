@@ -13,6 +13,10 @@ pub const Options = struct {
 pub const Image = output.Image;
 pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Image {
     const view = try structure.inspect(bytes, options.structure);
+    return decodeView(a, view, options);
+}
+/// Requires structure.inspect's View. The structure options are already applied.
+pub fn decodeView(a: std.mem.Allocator, view: structure.View, options: Options) !Image {
     if (!view.header.uncompressed()) {
         if (options.rle) |selected| switch (view.header.compression) {
             .rle4, .rle8 => return rle.decode(a, view, selected, options.max_rgba_bytes),

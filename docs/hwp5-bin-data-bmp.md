@@ -14,6 +14,8 @@ RLE4/8은 [별도 RGBA 선택](hwp5-bin-data-bmp-rle.md)으로 연결합니다. 
 
 ## 책임·한도·소유권
 
+V5 프로파일의 범위·ICC 검사는 [별도 HWP 선택 연결](hwp5-bin-data-bmp-profile.md)로 제공합니다. 기본 null은 기존 동작이며 프로파일 통계·예산은 픽셀과 별도로 관리합니다.
+
 - `container/images.zig`: 선택, 전체 항목 수, 형식별 누적 예산, 원자적인 scalar 보고서 갱신.
 - `container/bmp_images.zig`: 원래 BMP 디코더에 옵션/남은 예산 전달 → 소유 RGBA 해제 → scalar 근거 반환. 헤더·팔레트·마스크·픽셀을 다시 파싱하지 않습니다.
 - `image/bmp/`: [파일/DIB 구조](bmp-structure.md)와 [픽셀](bmp-pixels.md)의 기존 SSOT를 유지합니다. HWP 경로나 압축 정책을 넣지 않습니다.

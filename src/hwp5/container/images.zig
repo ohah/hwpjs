@@ -2,16 +2,20 @@ const std = @import("std");
 const png = @import("../../image/png/pixels.zig");
 const jpeg = @import("jpeg_images.zig");
 const bmp = @import("bmp_images.zig");
+const bmp_profiles = @import("bmp_profiles.zig");
 pub const Options = struct {
     png: png.Options = .{},
     jpeg: ?jpeg.Options = null,
     bmp: ?bmp.Options = null,
+    bmp_profile: ?bmp_profiles.Options = null,
+    max_total_bmp_profile_bytes: usize = 64 * 1024 * 1024,
     max_total_bmp_rgba_bytes: usize = 256 * 1024 * 1024,
     max_total_jpeg_rgb_bytes: usize = 256 * 1024 * 1024,
     max_binaries: usize = 100000,
     max_total_pixel_bytes: usize = 256 * 1024 * 1024,
 };
 pub const Report = struct {
+    bmp_profile: bmp_profiles.Report = .{},
     bmp: bmp.Report = .{},
     jpeg: jpeg.Report = .{},
     binaries: usize = 0,
@@ -30,6 +34,7 @@ pub const Budget = struct {
     options: Options,
     report: Report = .{},
     pub fn consume(self: *Budget, a: std.mem.Allocator, bytes: []const u8, extension_utf16: ?[]const u8) !void {
+        if (self.options.bmp_profile != null and self.options.bmp == null) return error.InvalidBmpProfileSelection;
         if (self.report.binaries >= self.options.max_binaries) return error.LimitExceeded;
         var next = self.report;
         next.binaries += 1;
@@ -52,9 +57,15 @@ pub const Budget = struct {
                 const bmp_hint = isExtension(extension, "bmp");
                 if (bmp_hint or std.mem.startsWith(u8, bytes, "BM")) {
                     if (next.bmp.rgba_bytes > self.options.max_total_bmp_rgba_bytes) return error.LimitExceeded;
-                    var result = try bmp.inspect(a, bytes, selected, self.options.max_total_bmp_rgba_bytes - next.bmp.rgba_bytes);
+                    const profile_remaining = if (self.options.bmp_profile != null) blk: {
+                        if (next.bmp_profile.stored_bytes > self.options.max_total_bmp_profile_bytes) return error.LimitExceeded;
+                        break :blk self.options.max_total_bmp_profile_bytes - next.bmp_profile.stored_bytes;
+                    } else 0;
+                    const profiled = try bmp.inspectProfiled(a, bytes, selected, self.options.max_total_bmp_rgba_bytes - next.bmp.rgba_bytes, self.options.bmp_profile, profile_remaining);
+                    var result = profiled.bitmap;
                     result.extension_disagreements = @intFromBool(!bmp_hint and extension.len != 0);
                     next.bmp = try next.bmp.plus(result);
+                    next.bmp_profile = try next.bmp_profile.plus(profiled.profile);
                     self.report = next;
                     return;
                 }

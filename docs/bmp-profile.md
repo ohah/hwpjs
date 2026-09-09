@@ -22,7 +22,7 @@ View의 data, before_profile, after_profile은 입력 BMP를 빌립니다. befor
 
 Profile은 태그 descriptor 배열만 소유하므로 deinit이 필요합니다. transport와 태그 data는 계속 원본 BMP를 빌립니다. 실패 시 이미 할당한 descriptor를 해제합니다. 링크형을 이 ICC 진입점에 넣으면 UnsupportedBmpLinkedProfile이며, 부재 null이나 검사를 마친 ICC로 바꾸지 않습니다.
 
-두 API 모두 semantics_deferred=true입니다. BMP 색공간·intent·endpoints/gamma의 의미 검증, ICC 색 변환과 렌더링 동일성은 별도입니다. 기존 pixels.decode와 HWP images.Budget에는 아직 이 검사를 자동 연결하지 않았으며, 제품 JS API는 여전히 CFB 전용입니다.
+두 API 모두 semantics_deferred=true입니다. BMP 색공간·intent·endpoints/gamma의 의미 검증, ICC 색 변환과 렌더링 동일성은 별도입니다. 기존 pixels.decode는 자동 프로파일 검사를 하지 않습니다. 후속 [HWP 선택 연결](hwp5-bin-data-bmp-profile.md)은 별도 계약이며, 제품 JS API는 여전히 CFB 전용입니다.
 
 ## 현재 검증 기록
 
