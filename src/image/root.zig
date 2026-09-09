@@ -2,6 +2,7 @@ pub const png_structure = @import("png/structure.zig");
 pub const bmp_header = @import("bmp/header.zig");
 pub const bmp_structure = @import("bmp/structure.zig");
 pub const bmp_pixels = @import("bmp/pixels.zig");
+pub const bmp_rle = @import("bmp/rle.zig");
 pub const png_filter = @import("png/filter.zig");
 pub const png_pixels = @import("png/pixels.zig");
 pub const png_text = @import("png/text.zig");

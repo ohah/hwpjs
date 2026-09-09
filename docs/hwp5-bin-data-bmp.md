@@ -10,7 +10,7 @@ BinData 표 17~18의 내부 항목별 압축 정책으로 얻은 바이트를 [B
 
 예를 들어 bmp 확장자의 PNG 서명은 PNG로 처리하고, JPEG를 켰다면 bmp 확장자의 FF D8은 JPEG로 처리합니다. 반대로 jpg 확장자의 BM은 JPEG를 켰으면 JPEG 오류이며, JPEG를 끄고 BMP를 켰다면 BMP 불일치 통계로 처리합니다. 우선순위는 자동 형식 복구 휴리스틱이 아니라 기존 선택 규칙을 보존하는 명시적 정책입니다.
 
-RLE4/8·내장 JPEG/PNG는 구조 경계를 읽더라도 UnsupportedBmpPixelCompression으로 거부합니다. OS/2 등 미지원 헤더·packed DIB·V5 프로파일 의미 검사·색 관리·한글 화면 동일성까지 지원했다고 주장하지 않습니다. V5 raw profile offset/size를 보존하는 기존 메타데이터 보류 정책도 완화하거나 완료로 바꾸지 않습니다.
+RLE4/8의 [색인 평면 복호화](bmp-rle.md)는 별도 API이며 이 HWP 연결의 RGBA 경로로 아직 승격하지 않았습니다. RLE4/8·내장 JPEG/PNG는 여기서 UnsupportedBmpPixelCompression으로 거부합니다. OS/2 등 미지원 헤더·packed DIB·V5 프로파일 의미 검사·색 관리·한글 화면 동일성까지 지원했다고 주장하지 않습니다. V5 raw profile offset/size를 보존하는 기존 메타데이터 보류 정책도 완화하거나 완료로 바꾸지 않습니다.
 
 ## 책임·한도·소유권
 

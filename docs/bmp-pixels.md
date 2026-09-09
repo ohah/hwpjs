@@ -4,7 +4,7 @@
 
 `image.bmp_pixels.decode(allocator, bytes, options)`는 [BMP 구조 검사](bmp-structure.md) 이후 BI_RGB/BI_BITFIELDS의 픽셀을 복원합니다. 1/4/8 bpp 색인, RGB555, BGR24, BGRX32, 명시적 16/32비트 마스크를 지원합니다. 팔레트/헤더/마스크/stride를 다시 파싱하지 않습니다. 후속 [HWP BinData BMP 연결](hwp5-bin-data-bmp.md)은 별도 adapter가 소유하며 제품 JS 공개 API는 CFB 전용입니다.
 
-RLE4/8·내장 JPEG/PNG를 구조적으로 읽더라도 여기서는 UnsupportedBmpPixelCompression으로 거부합니다. 썸네일이나 다른 형식을 대신 반환하지 않습니다. V5 프로파일 수명·extent·ICC와 색 변환도 아직 검사하지 않으며, raw 필드 보존과 실제 의미 검증을 구분합니다.
+RLE4/8의 [색인 평면 복호화](bmp-rle.md)는 별도 API입니다. 이 RGBA API는 여전히 RLE4/8·내장 JPEG/PNG를 UnsupportedBmpPixelCompression으로 거부합니다. 썸네일이나 다른 형식을 대신 반환하지 않습니다. V5 프로파일 수명·extent·ICC와 색 변환도 아직 검사하지 않으며, raw 필드 보존과 실제 의미 검증을 구분합니다.
 
 options.colour_management=.unmanaged와 mask_scaling=.nearest_normalized를 반드시 지정합니다. 전자는 색 관리된 sRGB/화면 동일성을 주장하지 않는 선택이고, 후자는 n비트 채널을 0..255로 정규화해 가장 가까운 정수로 만드는 명시적 수치 정책입니다. Windows/libjpeg·브라우저와 모든 반올림/색상 결과가 같다는 근거로 사용하지 않습니다.
 

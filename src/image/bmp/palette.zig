@@ -12,8 +12,11 @@ pub const Palette = struct {
     pub fn count(self: Palette) usize {
         return self.bytes.len / self.entry_bytes;
     }
-    pub fn rgba(self: Palette, index: u8) ![4]u8 {
+    pub fn validateIndex(self: Palette, index: u8) !void {
         if (index >= self.count()) return error.InvalidBmpPaletteIndex;
+    }
+    pub fn rgba(self: Palette, index: u8) ![4]u8 {
+        try self.validateIndex(index);
         const at = @as(usize, index) * self.entry_bytes;
         return .{ self.bytes[at + 2], self.bytes[at + 1], self.bytes[at], 255 };
     }
