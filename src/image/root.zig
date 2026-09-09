@@ -34,3 +34,4 @@ pub const jpeg_idct = @import("jpeg/idct.zig");
 pub const jpeg_sample_restoration = @import("jpeg/sample_restoration.zig");
 pub const jpeg_component_geometry = @import("jpeg/component_geometry.zig");
 pub const jpeg_sample_planes = @import("jpeg/sample_planes.zig");
+pub const jpeg_jfif = @import("jpeg/jfif.zig");
