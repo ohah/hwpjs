@@ -10,11 +10,8 @@ pub const Rules = struct {
 
     pub fn forFrame(frame: Frame) !Rules {
         if (frame.process.coding != .huffman or (frame.process.mode != .baseline and frame.process.mode != .sequential)) return error.UnsupportedJpegSequentialProcess;
-        return switch (frame.precision) {
-            8 => .{ .dc_maximum = 11, .ac_maximum = 10 },
-            12 => .{ .dc_maximum = 15, .ac_maximum = 14 },
-            else => error.InvalidJpegPrecision,
-        };
+        const limits = try @import("dct_categories.zig").forPrecision(frame.precision);
+        return .{ .dc_maximum = limits.dc, .ac_maximum = limits.ac };
     }
 
     pub fn dc(self: Rules, symbol: u8) !u8 {
