@@ -4,7 +4,7 @@
 
 [ITU-T T.81](https://www.w3.org/Graphics/JPEG/itu-t81.pdf)의 A.4, G.1.1~G.1.2.3, G.2를 대조했습니다. DC와 AC의 point transform은 음수 처리에서 다르며, DC 보정은 비트 덧붙이기, AC 보정은 부호를 유지한 크기 증가입니다. G.2는 별도 디코더 흐름도 대신 인코더 절차의 역변환을 정의합니다.
 
-이 작업은 Huffman progressive의 블록 계수 네 경로(DC 초기/보정, AC 초기/보정)를 구현합니다. 후속 [스캔 계층](jpeg-progressive-scan.md)은 MCU·restart 순회를 조립합니다. 전체 프레임 복호화, progressive 샘플 평면/RGB 연결, 실 HWP의 progressive JPEG 지원 완료가 아닙니다. arithmetic·hierarchical 처리는 포함하지 않습니다.
+이 작업은 Huffman progressive의 블록 계수 네 경로(DC 초기/보정, AC 초기/보정)를 구현합니다. 후속 [스캔 계층](jpeg-progressive-scan.md)은 MCU·restart 순회, [프레임 계층](jpeg-progressive-frame.md)은 계수 저장과 스캔 이력을 조립합니다. Progressive 샘플 평면/RGB 연결, 실 HWP의 progressive JPEG 지원 완료는 아닙니다. arithmetic·hierarchical 처리는 포함하지 않습니다.
 
 ## 책임과 수명
 
@@ -53,4 +53,4 @@ Debug/ReleaseSafe/ReleaseFast 각각 비교 8,707건·오류 거부 403건과 �
 
 `/tmp/hwpjs-progressive-mutants.GjV46D/`의 격리 소스에서 DC 음수 보정 변경·AC 음수 보정 변경·EOB 현재 블록 차감 누락·ZRL 끝 지연·오류 시 부분 계수 반영을 주입했습니다. 모두 세 모드에서 컴파일 후 테스트 실패로 검출했습니다. 필터 9개 중 실패는 순서대로 2/5/1/1/2개입니다. 제품 소스에는 변형을 적용하지 않았습니다.
 
-블록 단계 당시 Debug·ReleaseSafe·ReleaseFast 전체 회귀는 각각 20/20단계·845/845 네이티브 테스트·checks 7,803,300건으로 통과했습니다. 로그는 `/tmp/hwpjs-progressive-block-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 회귀 종료 후 최종 `zig build test --summary all`도 845/845, `zig build -Doptimize=ReleaseSafe --summary all`도 5/5단계로 통과했습니다. 포맷·변경 JS 문법·diff 공백 검사도 통과했습니다. 이후 스캔 조립과 최신 검증 상태는 [스캔 작업](jpeg-progressive-scan.md)이 소유하며, 제품 progressive 프레임·샘플/RGB 연결은 아직 미완료입니다.
+블록 단계 당시 Debug·ReleaseSafe·ReleaseFast 전체 회귀는 각각 20/20단계·845/845 네이티브 테스트·checks 7,803,300건으로 통과했습니다. 로그는 `/tmp/hwpjs-progressive-block-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 회귀 종료 후 최종 `zig build test --summary all`도 845/845, `zig build -Doptimize=ReleaseSafe --summary all`도 5/5단계로 통과했습니다. 포맷·변경 JS 문법·diff 공백 검사도 통과했습니다. 이후 조립과 최신 검증 상태는 [스캔 작업](jpeg-progressive-scan.md)과 [프레임 작업](jpeg-progressive-frame.md)이 소유하며, 제품 progressive 샘플/RGB 연결은 아직 미완료입니다.
