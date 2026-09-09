@@ -94,7 +94,7 @@ export function jpegFramingActual(call, raw, headers = false, tables = false) {
       if(tables && headers && frame.code===194) jpegProgressiveActual(call,frame.payload,tableEvents);
       return {markers,entropyBytes,trailing:raw.length-offset};
     }
-    scan=m.code===218 || (scan && (m.code===1 || m.code===220 || (m.code>=208 && m.code<=215)));
+    scan=m.code===218 || (scan && (m.code===1 || (m.code>=208 && m.code<=215)));
   }
   throw Error('Missing EOI in observed JPEG');
 }

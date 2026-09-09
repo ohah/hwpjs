@@ -17,3 +17,5 @@ pub const jpeg_huffman = @import("jpeg/huffman.zig");
 pub const jpeg_table_store = @import("jpeg/table_store.zig");
 pub const jpeg_scan_tables = @import("jpeg/scan_tables.zig");
 pub const jpeg_progressive = @import("jpeg/progressive.zig");
+pub const jpeg_scan_fields = @import("jpeg/scan_fields.zig");
+pub const jpeg_structure = @import("jpeg/structure.zig");
