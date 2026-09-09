@@ -45,3 +45,5 @@ pub const jpeg_upsampling = @import("jpeg/upsampling.zig");
 pub const jpeg_icc_chunks = @import("jpeg/icc_chunks.zig");
 pub const jpeg_icc_extraction = @import("jpeg/icc_extraction.zig");
 pub const jpeg_icc_profile = @import("jpeg/icc_profile.zig");
+pub const jpeg_adobe = @import("jpeg/adobe.zig");
+pub const jpeg_adobe_inspection = @import("jpeg/adobe_inspection.zig");

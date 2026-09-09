@@ -28,6 +28,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 ## 상세 문서
 
 - [JPEG 마커·엔트로피 경계](jpeg-framing.md)
+- [JPEG Adobe APP14 원값·인쇄용 색 해석 경계](jpeg-adobe.md)
 - [PNG 감마·색도 원값 검사](png-color-fixed.md)
 - [PNG sRGB 필드·동반 청크 검사](png-srgb.md)
 - [PNG iCCP 구현 작업·미완료 경계](png-embedded-profile.md)
