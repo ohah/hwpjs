@@ -1,29 +1,26 @@
 const std = @import("std");
 const structure = @import("structure.zig");
 const masks = @import("masks.zig");
+const output = @import("pixel_image.zig");
+const rle = @import("rle_rgba.zig");
 pub const Options = struct {
     structure: structure.Options = .{},
     colour_management: enum { unmanaged },
     mask_scaling: masks.Scaling,
     max_rgba_bytes: usize = 256 * 1024 * 1024,
+    rle: ?rle.Options = null,
 };
-pub const Image = struct {
-    width: u32,
-    height: u32,
-    /// Owned top-down RGBA channels; no compositing, colour management or gamma.
-    rgba: []u8,
-    metadata_deferred: bool = true,
-    pub fn deinit(self: *Image, a: std.mem.Allocator) void {
-        a.free(self.rgba);
-        self.* = undefined;
-    }
-};
+pub const Image = output.Image;
 pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Image {
     const view = try structure.inspect(bytes, options.structure);
-    if (!view.header.uncompressed()) return error.UnsupportedBmpPixelCompression;
-    const pixels = @as(u64, view.header.width) * view.header.height;
-    if (pixels > options.max_rgba_bytes / 4) return error.LimitExceeded;
-    const out = try a.alloc(u8, @as(usize, @intCast(pixels)) * 4);
+    if (!view.header.uncompressed()) {
+        if (options.rle) |selected| switch (view.header.compression) {
+            .rle4, .rle8 => return rle.decode(a, view, selected, options.max_rgba_bytes),
+            else => {},
+        };
+        return error.UnsupportedBmpPixelCompression;
+    }
+    const out = try a.alloc(u8, try output.byteCount(view.header.width, view.header.height, options.max_rgba_bytes));
     errdefer a.free(out);
     const width: usize = view.header.width;
     const height: usize = view.header.height;

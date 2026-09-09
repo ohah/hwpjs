@@ -13,15 +13,19 @@ export function containerBmpInput(bytes,{bmp=1,rgba=268435456,perImage=268435456
 // Explicit independent wire order; PNG and selected JPEG retain dispatch priority.
 export function containerBmpOracle(entries,{enabled=1,trailing=false}={}) {
   const sums=[0,0,0,0];
-  for(const {raw,extension} of entries) {
-    if(/^png$/i.test(extension??'')||raw.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))continue;
-    if(enabled&&(/^(jpg|jpeg)$/i.test(extension??'')||raw.subarray(0,2).equals(Buffer.of(255,216))))continue;
-    if(!/^bmp$/i.test(extension??'')&&!raw.subarray(0,2).equals(Buffer.from('BM')))continue;
+  for(const {raw,extension} of selectedBmpEntries(entries,{enabled})) {
     const pixels=bmpPixelsOracle(raw,{trailing});
     const row=[1,pixels.readUInt32LE(8),+!!(extension&&!/^bmp$/i.test(extension)),pixels.readUInt32LE(12)];
     row.forEach((n,i)=>sums[i]+=n);
   }
   return sums;
+}
+export function selectedBmpEntries(entries,{enabled=1}={}) {
+  return entries.filter(({raw,extension})=>{
+    if(/^png$/i.test(extension??'')||raw.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))return false;
+    if(enabled&&(/^(jpg|jpeg)$/i.test(extension??'')||raw.subarray(0,2).equals(Buffer.of(255,216))))return false;
+    return /^bmp$/i.test(extension??'')||raw.subarray(0,2).equals(Buffer.from('BM'));
+  });
 }
 export function containerBmpActual(call,bytes,entries,options={}) {
   const old=call(284,containerJpegInput(bytes,options));

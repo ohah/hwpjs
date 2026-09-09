@@ -19,6 +19,11 @@ pub fn bmpImages(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const selection = try @import("container-bmp-probe.zig").read(&r);
     return inspect(a, bytes[r.offset..], limit, false, selection);
 }
+pub fn bmpRle(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const selection = try @import("container-bmp-rle-probe.zig").read(&r);
+    return inspect(a, bytes[r.offset..], limit, false, selection);
+}
 pub fn xmlDocuments(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const selection = try @import("xml-container-probe.zig").read(&r);
@@ -143,5 +148,6 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: boo
     if (selection.images_report) try @import("container-images-probe.zig").serialize(a, &out, report.images);
     if (selection.jpeg_images_report) try @import("container-jpeg-probe.zig").serialize(a, &out, report.images, selection.images != null and selection.images.?.jpeg != null);
     if (selection.bmp_images_report) try @import("container-bmp-probe.zig").serialize(a, &out, report.images, selection.images != null and selection.images.?.bmp != null);
+    if (selection.bmp_rle_report) try @import("container-bmp-rle-probe.zig").serialize(a, &out, report.images, selection.images != null and selection.images.?.bmp != null and selection.images.?.bmp.?.rle != null);
     return out.toOwnedSlice(a);
 }

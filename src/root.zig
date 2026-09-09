@@ -48,6 +48,8 @@ test {
     _ = @import("hwp5/container/bmp_image_tests.zig");
     _ = @import("image/bmp/tests.zig");
     _ = @import("image/bmp/rle_tests.zig");
+    _ = @import("image/bmp/rle_rgba_tests.zig");
+    _ = @import("hwp5/container/bmp_rle_tests.zig");
     _ = @import("text/bcp47/tests.zig");
     _ = @import("text/utf16_tests.zig");
     _ = @import("text/iso639/tests.zig");

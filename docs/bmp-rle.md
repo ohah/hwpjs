@@ -4,7 +4,7 @@
 
 Microsoft [GDI Bitmap Compression](https://learn.microsoft.com/en-us/windows/win32/gdi/bitmap-compression)과 [MS-WMF RLE4](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/73b57f24-6d78-4eeb-9c06-8f892d88f1ab)의 encoded/absolute·EOL/EOB·delta 규칙을 대조했습니다. 두 공식 예제 바이트열을 테스트하며 설명의 표시 좌표와 저장 행 좌표를 혼용하지 않습니다.
 
-`image.bmp_rle.decode(allocator, bmp_bytes, options)`는 기존 BMP 파일/헤더/팔레트/저장 경계를 검사한 뒤 BI_RLE4/BI_RLE8을 색인 평면으로 복호화합니다. 다른 압축 형식은 UnsupportedBmpRleCompression입니다. RGBA 변환이나 HWP images.Budget의 RLE 지원은 아직 연결하지 않았습니다. 현재 [비압축 RGBA](bmp-pixels.md)·[HWP BMP 검사](hwp5-bin-data-bmp.md)의 RLE 미지원 오류는 그대로입니다.
+`image.bmp_rle.decode(allocator, bmp_bytes, options)`는 기존 BMP 파일/헤더/팔레트/저장 경계를 검사한 뒤 BI_RLE4/BI_RLE8을 색인 평면으로 복호화합니다. 다른 압축 형식은 UnsupportedBmpRleCompression입니다. 후속 [RGBA 연결](bmp-rle-rgba.md)과 [HWP 연결](hwp5-bin-data-bmp-rle.md)은 별도 선택 계약이며 이 색인 API의 반환 형식은 유지합니다.
 
 delta·짧은 행·조기 EOB는 픽셀을 지정하지 않을 수 있습니다. 명세 예제의 미지정 값을 0으로 두는 가정을 일반 렌더링 계약으로 확대하지 않습니다. 반환 indices는 u16이며 0..255는 실제 팔레트 색인, 256은 미지정입니다. 유효한 색인 0과 구분합니다. RGBA 채움/합성 정책은 이 정보의 소비자가 후속 단계에서 명시적으로 정해야 합니다.
 

@@ -3,11 +3,9 @@ import {bmpWords} from './bmp-oracle.mjs';
 import {bmpFixture} from './bmp-fixture.mjs';
 import {bmpRleFixture,rleExample4,rleExample8,rleAbsolute} from './bmp-rle-fixture.mjs';
 import {bmpRleOracle} from './bmp-rle-oracle.mjs';
+import {expectBmpError as parserError,isBmpOracleRejection} from './bmp-errors.mjs';
 export function bmpRleInput(raw,{padding=0,full=false,trailing=false,indices=268435456,commands=1000000,compressed=67108864}={}) {
   return Buffer.concat([Buffer.of(padding,+full,+trailing),bmpWords([indices,commands,compressed]),raw]);
-}
-function parserError(run,pattern) {
-  assert.throws(run,error=>error?.constructor===Error&&pattern.test(error.message));
 }
 export function bmpRleEdges(call) {
   let comparisons=0,rejected=0;
@@ -66,7 +64,7 @@ function mutationChecks(call) {
     for(let i=0;i<1500;i++){
       const raw=Buffer.from(original);raw[offset+random()%size]^=1+random()%255;
       let expected;try{expected=bmpRleOracle(raw);}catch(error){
-        if(!(error instanceof assert.AssertionError)&&!(error?.constructor===Error&&error.message==='missing EOB'))throw error;
+        if(!isBmpOracleRejection(error))throw error;
       }
       if(expected){assert.deepEqual(call(289,bmpRleInput(raw)),expected);accepted++;}
       else{parserError(()=>call(289,bmpRleInput(raw)),/^(UnexpectedEnd|MissingBmpRleEnd|TrailingBmpRleBytes|InvalidBmpRlePadding|InvalidBmpRlePosition|InvalidBmpPaletteIndex)$/);rejected++;}

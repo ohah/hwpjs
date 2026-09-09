@@ -18,5 +18,6 @@ pub fn read(r: *core.Reader) !doc.Selection {
 pub fn serialize(a: std.mem.Allocator, out: *std.ArrayList(u8), report: @FieldType(core.hwp5.container_validation.Report, "images"), enabled: bool) !void {
     try @import("resource-probe.zig").int(a, out, u32, @intFromBool(enabled));
     const r: std.meta.Child(@TypeOf(report)) = report orelse .{};
-    try doc.fields(a, out, r.bmp);
+    // Preserve mode 288's original four-field wire contract.
+    for ([_]usize{ r.bmp.images, r.bmp.rgba_bytes, r.bmp.extension_disagreements, r.bmp.metadata_deferred_images }) |value| try @import("resource-probe.zig").int(a, out, u32, @intCast(value));
 }

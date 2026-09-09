@@ -10,7 +10,7 @@ BinData 표 17~18의 내부 항목별 압축 정책으로 얻은 바이트를 [B
 
 예를 들어 bmp 확장자의 PNG 서명은 PNG로 처리하고, JPEG를 켰다면 bmp 확장자의 FF D8은 JPEG로 처리합니다. 반대로 jpg 확장자의 BM은 JPEG를 켰으면 JPEG 오류이며, JPEG를 끄고 BMP를 켰다면 BMP 불일치 통계로 처리합니다. 우선순위는 자동 형식 복구 휴리스틱이 아니라 기존 선택 규칙을 보존하는 명시적 정책입니다.
 
-RLE4/8의 [색인 평면 복호화](bmp-rle.md)는 별도 API이며 이 HWP 연결의 RGBA 경로로 아직 승격하지 않았습니다. RLE4/8·내장 JPEG/PNG는 여기서 UnsupportedBmpPixelCompression으로 거부합니다. OS/2 등 미지원 헤더·packed DIB·V5 프로파일 의미 검사·색 관리·한글 화면 동일성까지 지원했다고 주장하지 않습니다. V5 raw profile offset/size를 보존하는 기존 메타데이터 보류 정책도 완화하거나 완료로 바꾸지 않습니다.
+RLE4/8은 [별도 RGBA 선택](hwp5-bin-data-bmp-rle.md)으로 연결합니다. 기본 rle=null과 내장 JPEG/PNG는 UnsupportedBmpPixelCompression으로 거부합니다. OS/2 등 미지원 헤더·packed DIB·V5 프로파일 의미 검사·색 관리·한글 화면 동일성까지 지원했다고 주장하지 않습니다. V5 raw profile offset/size를 보존하는 기존 메타데이터 보류 정책도 완화하거나 완료로 바꾸지 않습니다.
 
 ## 책임·한도·소유권
 
@@ -22,7 +22,7 @@ RLE4/8의 [색인 평면 복호화](bmp-rle.md)는 별도 API이며 이 HWP 연�
 
 max_binaries는 모든 처리/미처리 항목 수입니다. 동일 스트림을 반복 참조해도 매 항목마다 RGBA와 항목 수를 계산합니다. BMP 파일 바이트·헤더 픽셀 수·팔레트 수·저장 바이트·trailing 정책은 원래 개별 Options를 그대로 전달합니다. RGBA 한도 초과는 복원 버퍼 할당 전에 거부됩니다.
 
-`Report.bmp`는 images, rgba_bytes, extension_disagreements, metadata_deferred_images 네 가산 scalar입니다. overflow는 LimitExceeded이며, 파싱·복원·가산이 모두 성공한 뒤에만 보고서를 교체합니다. 상위 semantics_deferred와 BMP metadata_deferred_images는 그대로 남습니다. 보고서는 입력 CFB·decoded BinData·픽셀 버퍼를 빌리지 않습니다.
+`Report.bmp`의 기본 통계는 images, rgba_bytes, extension_disagreements, metadata_deferred_images 네 가산 scalar이며, 후속 RLE 통계는 위 별도 주제 문서가 소유합니다. overflow는 LimitExceeded이며, 파싱·복원·가산이 모두 성공한 뒤에만 보고서를 교체합니다. 상위 semantics_deferred와 BMP metadata_deferred_images는 그대로 남습니다. 보고서는 입력 CFB·decoded BinData·픽셀 버퍼를 빌리지 않습니다.
 
 ## 독립 검증 기록
 
