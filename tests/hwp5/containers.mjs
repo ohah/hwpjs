@@ -3,6 +3,8 @@ import {containerJpegActual} from './container-jpeg.mjs';
 import {containerBmpActual} from './container-bmp.mjs';
 import {containerBmpRleActual} from './container-bmp-rle.mjs';
 import {bmpActual} from './bmp.mjs';
+import {bmpProfileActual} from './bmp-profile.mjs';
+import {selectedBmpEntries} from './container-bmp.mjs';
 import {jpegFramingActual} from './jpeg-framing.mjs';
 import {jpegStructureActual} from './jpeg-structure.mjs';
 import {jpegSequentialFileActual} from './jpeg-scan.mjs';
@@ -137,6 +139,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
   containerJpegActual(call, bytes, imageEntries, {documentBytes: total});
   containerBmpActual(call, bytes, imageEntries, {documentBytes: total});
   containerBmpRleActual(call, bytes, imageEntries, {documentBytes: total});
+  for(const {raw} of selectedBmpEntries(imageEntries))bmpProfileActual(call,raw);
   assert.deepEqual(run(call, bytes, total, expected.readUInt32LE(16) + viewRecords), want);
   assert.throws(() => run(call, bytes, total - 1), /LimitExceeded/);
   return [

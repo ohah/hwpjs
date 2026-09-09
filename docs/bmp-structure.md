@@ -20,7 +20,7 @@ CORE의 폭·높이는 u16이며 top_down=false입니다. INFO 이후는 폭 i32
 
 Header.info는 CORE에서 null이고 INFO 이후에는 image_bytes·부호 있는 X/Y 해상도·colours_used·important_colours를 가집니다. 0으로 선언된 image_bytes와 필드가 존재하지 않는 CORE를 합치지 않습니다. V4/V5의 Header.colour는 원본 RGBA 마스크, 색공간 식별자, 부호 있는 2.30 endpoints 9개, unsigned 16.16 gamma 3개입니다. Header.profile은 V5에만 존재하며 intent/offset/size를 원형으로 보존합니다. V5 예약 DWORD는 0이어야 합니다.
 
-색공간·endpoint/gamma 의미, 렌더링 intent와 important_colours 의미는 아직 검증하지 않습니다. 특히 **V5 profile offset/size는 읽고 보존할 뿐 따라가지 않습니다.** Profile의 파일 내 extent, ICC 내부, CP1252 링크 문자열, 색 변환도 후속 범위입니다. 엉뚱한 profile offset이 raw 필드로 반환돼도 프로파일이 유효하다는 뜻이 아닙니다. 외부 경로·네트워크를 열지 않습니다.
+색공간·endpoint/gamma 의미, 렌더링 intent와 important_colours 의미는 아직 검증하지 않습니다. 특히 **이 구조 계층은 V5 profile offset/size를 읽고 보존할 뿐 따라가지 않습니다.** 파일 내 범위와 ICC 검사는 [별도 프로파일 API](bmp-profile.md)로 선택합니다. CP1252 경로 의미·색 변환은 여전히 후속 범위입니다. 엉뚱한 profile offset이 raw 필드로 반환돼도 프로파일이 유효하다는 뜻이 아닙니다. 외부 경로·네트워크를 열지 않습니다.
 
 ## 형식·팔레트·마스크
 

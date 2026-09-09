@@ -45,6 +45,7 @@ import {containerBmpEdges} from './container-bmp.mjs';
 import {bmpEdges} from './bmp.mjs';
 import {bmpRleEdges} from './bmp-rle.mjs';
 import {bmpRleRgbaEdges} from './bmp-rle-rgba.mjs';
+import {bmpProfileEdges} from './bmp-profile.mjs';
 import {containerBmpRleEdges} from './container-bmp-rle.mjs';
 import {jpegFramingEdges} from './jpeg-framing.mjs';
 import {jpegHeaderEdges} from './jpeg-headers.mjs';
@@ -801,6 +802,7 @@ const containerBmpResults = containerBmpEdges(call, cfb);
 const bmpResults = bmpEdges(call);
 const bmpRleResults = bmpRleEdges(call);
 const bmpRleRgbaResults = bmpRleRgbaEdges(call);
+const bmpProfileResults = bmpProfileEdges(call);
 const containerBmpRleResults = containerBmpRleEdges(call,cfb);
 const jpegFramingResults = jpegFramingEdges(call);
 const jpegHeaderResults = jpegHeaderEdges(call);
@@ -1262,6 +1264,7 @@ console.log(
       bmpResults,
       bmpRleResults,
       bmpRleRgbaResults,
+      bmpProfileResults,
       containerBmpRleResults,
       jpegFramingResults,
       jpegHeaderResults,

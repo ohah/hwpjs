@@ -31,6 +31,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [BMP 비압축 RGBA·검증](bmp-pixels.md)
 - [BMP RLE4/RLE8 명령·색인 평면](bmp-rle.md)
 - [BMP RLE RGBA·채움 정책](bmp-rle-rgba.md)
+- [BMP V5 프로파일 범위·ICC 검사](bmp-profile.md)
 - [HWP BMP RLE 검사](hwp5-bin-data-bmp-rle.md)
 - [JPEG 마커·엔트로피 경계](jpeg-framing.md)
 - [JPEG Adobe APP14 원값·인쇄용 색 해석 경계](jpeg-adobe.md)
