@@ -27,6 +27,8 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 
 ## 상세 문서
 
+- [GIF 블록·LZW·색인 프레임](gif-indexed.md)
+
 - [BMP 파일·DIB 헤더·저장 경계](bmp-structure.md)
 - [BMP 비압축 RGBA·검증](bmp-pixels.md)
 - [BMP RLE4/RLE8 명령·색인 평면](bmp-rle.md)

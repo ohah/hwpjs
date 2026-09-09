@@ -302,6 +302,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         291 => return @import("container-probe.zig").bmpRle(a, bytes, limit),
         292, 293 => return @import("bmp-profile-probe.zig").run(a, bytes, limit, mode),
         294 => return @import("container-probe.zig").bmpProfile(a, bytes, limit),
+        295 => return @import("gif-probe.zig").run(a, bytes, limit),
         245 => return @import("jpeg-framing-probe.zig").run(a, bytes, limit),
         246 => return @import("jpeg-header-probe.zig").run(a, bytes, limit),
         247 => return @import("jpeg-tables-probe.zig").run(a, bytes, limit),

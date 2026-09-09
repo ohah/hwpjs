@@ -46,6 +46,8 @@ import {bmpEdges} from './bmp.mjs';
 import {bmpRleEdges} from './bmp-rle.mjs';
 import {bmpRleRgbaEdges} from './bmp-rle-rgba.mjs';
 import {bmpProfileEdges} from './bmp-profile.mjs';
+import {gifEdges,gifActual} from './gif.mjs';
+import {imageSignature} from './preview-image-evidence.mjs';
 import {containerBmpProfileEdges} from './container-bmp-profile.mjs';
 import {containerBmpRleEdges} from './container-bmp-rle.mjs';
 import {jpegFramingEdges} from './jpeg-framing.mjs';
@@ -801,6 +803,8 @@ const containerImagesResults = containerImagesEdges(call, cfb);
 const containerJpegResults = containerJpegEdges(call, cfb);
 const containerBmpResults = containerBmpEdges(call, cfb);
 const bmpResults = bmpEdges(call);
+const gifResults = gifEdges(call);
+const gifPreviewResults = {files:0,frames:0,pixels:0};
 const bmpRleResults = bmpRleEdges(call);
 const bmpRleRgbaResults = bmpRleRgbaEdges(call);
 const bmpProfileResults = bmpProfileEdges(call);
@@ -845,6 +849,14 @@ try {
     assert.deepEqual(call(0, hdr).subarray(0, 16), hdr.subarray(32, 48));
     versions.add(hdr.readUInt32LE(32).toString(16));
     files++;
+    const previewImage=cfb.findExact('/PrvImage');
+    if(previewImage?.type===2){
+      const raw=Buffer.from(previewImage.content??[]);
+      if(['gif87a','gif89a'].includes(imageSignature(raw))){
+        const decoded=gifActual(call,raw);gifPreviewResults.files++;gifPreviewResults.frames+=decoded.frames.length;
+        gifPreviewResults.pixels+=decoded.frames.reduce((n,f)=>n+f.indices.length,0);
+      }
+    }
     if (hdr.readUInt32LE(36) & (2 | 4 | 16 | 256 | 1024)) {
       assert.throws(
         () => call(3, hdr),
@@ -1065,6 +1077,8 @@ try {
   cfb.close();
 }
 assert.equal(files, 48);
+assert.equal(gifPreviewResults.files,14);
+assert.equal(gifPreviewResults.frames,14);
 assert.deepEqual(headerFooterReport, [3, 3, 3, 0, 60]);
 assert.deepEqual(headerFooterDocumentReport, { controls: 3, rejected: 18 });
 assert.equal(numberDocumentChecks, 32);
@@ -1268,6 +1282,8 @@ console.log(
       bmpRleRgbaResults,
       bmpProfileResults,
       containerBmpProfileResults,
+      gifResults,
+      gifPreviewResults,
       containerBmpRleResults,
       jpegFramingResults,
       jpegHeaderResults,
