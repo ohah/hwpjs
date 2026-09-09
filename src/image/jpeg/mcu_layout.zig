@@ -1,5 +1,6 @@
 const Frame = @import("frame.zig").Frame;
 const Scan = @import("scan.zig").Scan;
+const Geometry = @import("component_geometry.zig").Geometry;
 
 pub const Slot = struct { component: usize, frame_component: usize, x: u32, y: u32, horizontal: u32, vertical: u32 };
 pub const Position = struct { component: usize, frame_component: usize, x: u32, y: u32 };
@@ -15,15 +16,7 @@ pub const Layout = struct {
     blocks: u64,
 
     pub fn init(frame: Frame, scan: Scan, height: u16, maximum: usize) !Layout {
-        if (frame.process.mode == .lossless) return error.UnsupportedJpegDctLayout;
-        if (height == 0) return error.MissingJpegDnl;
-        var horizontal: u32 = 0;
-        var vertical: u32 = 0;
-        for (0..frame.components.count()) |i| {
-            const c = frame.components.get(i).?;
-            horizontal = @max(horizontal, c.horizontal());
-            vertical = @max(vertical, c.vertical());
-        }
+        const geometry = try Geometry.init(frame, height);
         const single = scan.components.count() == 1;
         var result: Layout = .{ .columns = 0, .rows = 0, .slots = undefined, .count = 0, .mcus = 0, .blocks = 0 };
         for (0..scan.components.count()) |i| {
@@ -38,8 +31,9 @@ pub const Layout = struct {
             const h: u32 = if (single) 1 else fc.horizontal();
             const v: u32 = if (single) 1 else fc.vertical();
             if (single) {
-                result.columns = ceil(@as(u32, frame.width) * fc.horizontal(), 8 * horizontal);
-                result.rows = ceil(@as(u32, height) * fc.vertical(), 8 * vertical);
+                const grid = geometry.component(fi).?.blocks();
+                result.columns = grid.width;
+                result.rows = grid.height;
             }
             for (0..v) |y| for (0..h) |x| {
                 if (result.count == result.slots.len) return error.InvalidJpegMcuSampling;
@@ -48,8 +42,9 @@ pub const Layout = struct {
             };
         }
         if (!single) {
-            result.columns = ceil(frame.width, 8 * horizontal);
-            result.rows = ceil(height, 8 * vertical);
+            const grid = geometry.interleaved();
+            result.columns = grid.width;
+            result.rows = grid.height;
         }
         result.mcus = @as(u64, result.columns) * result.rows;
         result.blocks = result.mcus * result.count;
@@ -64,7 +59,3 @@ pub const Layout = struct {
         return .{ .component = slot.component, .frame_component = slot.frame_component, .x = @as(u32, @intCast(mcu % self.columns)) * slot.horizontal + slot.x, .y = @as(u32, @intCast(mcu / self.columns)) * slot.vertical + slot.y };
     }
 };
-
-fn ceil(n: u32, d: u32) u32 {
-    return n / d + @intFromBool(n % d != 0);
-}

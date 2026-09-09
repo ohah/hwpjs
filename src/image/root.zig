@@ -32,3 +32,5 @@ pub const jpeg_zigzag = @import("jpeg/zigzag.zig");
 pub const jpeg_dequantization = @import("jpeg/dequantization.zig");
 pub const jpeg_idct = @import("jpeg/idct.zig");
 pub const jpeg_sample_restoration = @import("jpeg/sample_restoration.zig");
+pub const jpeg_component_geometry = @import("jpeg/component_geometry.zig");
+pub const jpeg_sample_planes = @import("jpeg/sample_planes.zig");

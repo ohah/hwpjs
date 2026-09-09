@@ -53,6 +53,7 @@ import {jpegFrameEdges} from './jpeg-frame.mjs';
 import {jpegDequantEdges} from './jpeg-dequant.mjs';
 import {jpegIdctEdges} from './jpeg-idct.mjs';
 import {jpegFrameSamplesEdges} from './jpeg-frame-samples.mjs';
+import {jpegPlanesEdges} from './jpeg-planes.mjs';
 import {jpegFrameDequantEdges} from './jpeg-frame-dequant.mjs';
 import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
@@ -788,6 +789,7 @@ const jpegFrameResults = jpegFrameEdges(call);
 const jpegDequantResults = jpegDequantEdges(call);
 const jpegIdctResults = jpegIdctEdges(call);
 const jpegFrameSamplesResults = jpegFrameSamplesEdges(call);
+const jpegPlanesResults = jpegPlanesEdges(call);
 const jpegFrameDequantResults = jpegFrameDequantEdges(call);
 const containerImageFiles = {files: 0, png: 0, unhandled: 0};
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
@@ -1228,6 +1230,7 @@ console.log(
       jpegDequantResults,
       jpegIdctResults,
       jpegFrameSamplesResults,
+      jpegPlanesResults,
       jpegFrameDequantResults,
       containerImageFiles,
       iccResults,
