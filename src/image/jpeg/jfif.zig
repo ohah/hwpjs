@@ -1,6 +1,7 @@
 const std = @import("std");
 const Reader = @import("../../binary/reader.zig").Reader;
 const Frame = @import("frame.zig").Frame;
+const Rgb = @import("thumbnail.zig").Rgb;
 
 pub const Units = enum(u8) { aspect_ratio = 0, dots_per_inch = 1, dots_per_centimetre = 2 };
 
@@ -29,11 +30,9 @@ pub const Header = struct {
         const horizontal = try big16(&reader);
         const vertical = try big16(&reader);
         if (horizontal == 0 or vertical == 0) return error.InvalidJfifDensity;
-        const width = try reader.readInt(u8);
-        const height = try reader.readInt(u8);
-        const thumbnail = try reader.take(@as(usize, width) * height * 3);
+        const thumbnail = try Rgb.read(&reader, false);
         if (reader.offset != bytes.len) return error.TrailingJfifBytes;
-        return .{ .version = version, .units = units, .horizontal_density = horizontal, .vertical_density = vertical, .thumbnail_width = width, .thumbnail_height = height, .thumbnail_rgb = thumbnail };
+        return .{ .version = version, .units = units, .horizontal_density = horizontal, .vertical_density = vertical, .thumbnail_width = thumbnail.dimensions.width, .thumbnail_height = thumbnail.dimensions.height, .thumbnail_rgb = thumbnail.bytes };
     }
 };
 
