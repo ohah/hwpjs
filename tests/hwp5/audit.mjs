@@ -41,6 +41,7 @@ import { documentActual, documentEdges } from "./documents.mjs";
 import { containerActual, containerEdges } from "./containers.mjs";
 import {containerImagesEdges, containerImagesActual} from './container-images.mjs';
 import {containerJpegEdges} from './container-jpeg.mjs';
+import {containerBmpEdges} from './container-bmp.mjs';
 import {bmpEdges} from './bmp.mjs';
 import {jpegFramingEdges} from './jpeg-framing.mjs';
 import {jpegHeaderEdges} from './jpeg-headers.mjs';
@@ -793,6 +794,7 @@ const optionalStreamObservations = Array(6).fill(0);
 const containerEdgeResults = containerEdges(call, cfb);
 const containerImagesResults = containerImagesEdges(call, cfb);
 const containerJpegResults = containerJpegEdges(call, cfb);
+const containerBmpResults = containerBmpEdges(call, cfb);
 const bmpResults = bmpEdges(call);
 const jpegFramingResults = jpegFramingEdges(call);
 const jpegHeaderResults = jpegHeaderEdges(call);
@@ -1250,6 +1252,7 @@ console.log(
       pngV2UnicodeResults,
       containerImagesResults,
       containerJpegResults,
+      containerBmpResults,
       bmpResults,
       jpegFramingResults,
       jpegHeaderResults,

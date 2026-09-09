@@ -6,7 +6,7 @@ Microsoft의 [파일 헤더](https://learn.microsoft.com/en-us/windows/win32/api
 
 BM 파일 헤더와 12/40/108/124바이트 Windows DIB 헤더를 읽습니다. OS/2 확장 16/64바이트, 비표준 52/56바이트, 배열·아이콘·파일 헤더 없는 packed DIB 자동 탐지는 이 진입점의 지원 범위가 아닙니다. 모르는 크기에서 가까운 버전을 추측하지 않고 UnsupportedBmpHeader로 거부합니다.
 
-현재 이 계층은 헤더와 저장 경계를 검사하며, [비압축 픽셀](bmp-pixels.md)은 별도 디코더가 담당합니다. RLE4/8·내장 JPEG/PNG의 header/저장 바이트를 읽는 것과 그 압축 내용을 복호화하는 것은 다릅니다. HWP BinData의 제품 BMP 검사 연결은 아직 하지 않았습니다.
+현재 이 계층은 헤더와 저장 경계를 검사하며, [비압축 픽셀](bmp-pixels.md)은 별도 디코더가 담당합니다. RLE4/8·내장 JPEG/PNG의 header/저장 바이트를 읽는 것과 그 압축 내용을 복호화하는 것은 다릅니다. 후속 [HWP BinData BMP 검사](hwp5-bin-data-bmp.md)는 별도 선택 계약으로 연결합니다.
 
 ## 책임과 필드의 부재
 

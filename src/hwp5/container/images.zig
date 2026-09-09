@@ -1,14 +1,18 @@
 const std = @import("std");
 const png = @import("../../image/png/pixels.zig");
 const jpeg = @import("jpeg_images.zig");
+const bmp = @import("bmp_images.zig");
 pub const Options = struct {
     png: png.Options = .{},
     jpeg: ?jpeg.Options = null,
+    bmp: ?bmp.Options = null,
+    max_total_bmp_rgba_bytes: usize = 256 * 1024 * 1024,
     max_total_jpeg_rgb_bytes: usize = 256 * 1024 * 1024,
     max_binaries: usize = 100000,
     max_total_pixel_bytes: usize = 256 * 1024 * 1024,
 };
 pub const Report = struct {
+    bmp: bmp.Report = .{},
     jpeg: jpeg.Report = .{},
     binaries: usize = 0,
     png_images: usize = 0,
@@ -21,7 +25,7 @@ pub const Report = struct {
     png_zlib_trailing_bytes: usize = 0,
     semantics_deferred: bool = true,
 };
-/// Scalar-only evidence; does not retain decoded BinData, PNG views or JPEG RGB.
+/// Scalar-only evidence; does not retain decoded BinData or image buffers.
 pub const Budget = struct {
     options: Options,
     report: Report = .{},
@@ -40,6 +44,17 @@ pub const Budget = struct {
                     var result = try jpeg.inspect(a, bytes, selected, self.options.max_total_jpeg_rgb_bytes - next.jpeg.rgb_bytes);
                     result.extension_disagreements = @intFromBool(!jpeg_hint and extension.len != 0);
                     next.jpeg = try next.jpeg.plus(result);
+                    self.report = next;
+                    return;
+                }
+            }
+            if (self.options.bmp) |selected| {
+                const bmp_hint = isExtension(extension, "bmp");
+                if (bmp_hint or std.mem.startsWith(u8, bytes, "BM")) {
+                    if (next.bmp.rgba_bytes > self.options.max_total_bmp_rgba_bytes) return error.LimitExceeded;
+                    var result = try bmp.inspect(a, bytes, selected, self.options.max_total_bmp_rgba_bytes - next.bmp.rgba_bytes);
+                    result.extension_disagreements = @intFromBool(!bmp_hint and extension.len != 0);
+                    next.bmp = try next.bmp.plus(result);
                     self.report = next;
                     return;
                 }

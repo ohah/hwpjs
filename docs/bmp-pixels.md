@@ -2,7 +2,7 @@
 
 ## API와 현재 범위
 
-`image.bmp_pixels.decode(allocator, bytes, options)`는 [BMP 구조 검사](bmp-structure.md) 이후 BI_RGB/BI_BITFIELDS의 픽셀을 복원합니다. 1/4/8 bpp 색인, RGB555, BGR24, BGRX32, 명시적 16/32비트 마스크를 지원합니다. 팔레트/헤더/마스크/stride를 다시 파싱하지 않습니다. 제품 HWP BinData BMP 연결과 JS 공개 API는 변경하지 않았습니다.
+`image.bmp_pixels.decode(allocator, bytes, options)`는 [BMP 구조 검사](bmp-structure.md) 이후 BI_RGB/BI_BITFIELDS의 픽셀을 복원합니다. 1/4/8 bpp 색인, RGB555, BGR24, BGRX32, 명시적 16/32비트 마스크를 지원합니다. 팔레트/헤더/마스크/stride를 다시 파싱하지 않습니다. 후속 [HWP BinData BMP 연결](hwp5-bin-data-bmp.md)은 별도 adapter가 소유하며 제품 JS 공개 API는 CFB 전용입니다.
 
 RLE4/8·내장 JPEG/PNG를 구조적으로 읽더라도 여기서는 UnsupportedBmpPixelCompression으로 거부합니다. 썸네일이나 다른 형식을 대신 반환하지 않습니다. V5 프로파일 수명·extent·ICC와 색 변환도 아직 검사하지 않으며, raw 필드 보존과 실제 의미 검증을 구분합니다.
 
@@ -30,7 +30,7 @@ max_rgba_bytes 기본 256 MiB는 구조의 파일/픽셀 저장 한도와 독립
 
 세 모드 직접 검사는 각각 총 3,500건을 통과했습니다: 정상 출력 대조 3,333건, 압축 픽셀 미지원 확인 4건, 기타 거부 163건입니다. 도구의 comparisons=3,337에는 위 미지원 확인 4건이 포함되어 있습니다. CORE/INFO/V4/V5, 1/4/8/16/24/32 bpp, 부호·비대칭 크기·gap/tail·0/비영 image_bytes·선택 팔레트와 여러 마스크 위치/폭을 조합했습니다. 출력 한도 테스트는 입력 자체가 해당 limit보다 작음을 먼저 확인합니다.
 
-세 모드에서 noori의 2개 BMP와 위 추가 레퍼런스의 26개 BMP가 모두 독립 헤더/구간/픽셀 결과와 일치했습니다. 실제 HWP 테스트 조립에도 이 독립 검사를 넣었으며 제품 images.Budget의 BMP 지원으로 승격한 것은 아닙니다.
+세 모드에서 noori의 2개 BMP와 위 추가 레퍼런스의 26개 BMP가 모두 독립 헤더/구간/픽셀 결과와 일치했습니다. 당시 실제 HWP 테스트 조립에도 이 독립 검사를 넣었으며, 후속 제품 images.Budget 연결 검증은 위 별도 주제에서 관리합니다.
 
 CORE 색인과 V5 alpha-bitfield 표본의 mode 285/286/287 출력 총 840바이트를 각각 XOR 1로 바꿔 세 모드에서 모두 검출했습니다. 원본 픽셀뿐 아니라 optional 필드와 raw 구간도 포함합니다.
 

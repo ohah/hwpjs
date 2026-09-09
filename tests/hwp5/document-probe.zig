@@ -6,6 +6,7 @@ pub const Selection = struct {
     images: @FieldType(core.hwp5.container_validation.Options, "images") = null,
     images_report: bool = false,
     jpeg_images_report: bool = false,
+    bmp_images_report: bool = false,
     xml: @FieldType(core.hwp5.container_validation.Options, "xml") = null,
     xml_report: bool = false,
     xml_template: @FieldType(core.hwp5.container_validation.Options, "xml_template") = null,
