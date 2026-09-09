@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {containerJpegActual} from './container-jpeg.mjs';
+import {bmpActual} from './bmp.mjs';
 import {jpegFramingActual} from './jpeg-framing.mjs';
 import {jpegStructureActual} from './jpeg-structure.mjs';
 import {jpegSequentialFileActual} from './jpeg-scan.mjs';
@@ -68,6 +69,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
         : raw;
     stats[1]++;
     imageEntries.push({raw: plain, extension: ext});
+    if (plain.subarray(0,2).equals(Buffer.from('BM'))) bmpActual(call, plain);
     if (plain[0] === 255 && plain[1] === 216) {
       jpegFramingActual(call, plain, true, true);
       jpegStructureActual(call, plain);
