@@ -67,6 +67,7 @@ import {progressiveBlockEdges} from './jpeg-progressive-block.mjs';
 import {progressiveScanEdges} from './jpeg-progressive-scan.mjs';
 import {progressiveFrameEdges} from './jpeg-progressive-frame-cases.mjs';
 import {progressiveSamplesEdges} from './jpeg-progressive-samples.mjs';
+import {progressiveRgbEdges} from './jpeg-progressive-rgb.mjs';
 import {jpegFrameDequantEdges} from './jpeg-frame-dequant.mjs';
 import { previewEdges } from "./preview.mjs";
 import { summaryEdges } from "./summary.mjs";
@@ -816,6 +817,7 @@ const jpegProgressiveBlockResults = progressiveBlockEdges(call);
 const jpegProgressiveScanResults = progressiveScanEdges(call);
 const jpegProgressiveFrameResults = progressiveFrameEdges(call);
 const jpegProgressiveSamplesResults = progressiveSamplesEdges(call);
+const jpegProgressiveRgbResults = progressiveRgbEdges(call);
 const jpegFrameDequantResults = jpegFrameDequantEdges(call);
 const containerImageFiles = {files: 0, png: 0, unhandled: 0};
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
@@ -1270,6 +1272,7 @@ console.log(
       jpegProgressiveScanResults,
       jpegProgressiveFrameResults,
       jpegProgressiveSamplesResults,
+      jpegProgressiveRgbResults,
       jpegFrameDequantResults,
       containerImageFiles,
       iccResults,

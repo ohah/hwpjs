@@ -6,8 +6,8 @@ import {progressiveSingle} from './jpeg-progressive-block.mjs';
 import {encodeCodes} from './jpeg-codec.mjs';
 
 const scalar=n=>{const b=Buffer.alloc(2);b.writeUInt16BE(n);return b;};
-export function progressiveFrameFixture({width=17,height=9,sampling=[34,17,17],groups=[sampling.map((_,i)=>i)],precision=8,initial=2,interval=0,dnl=false,refine=true,ac=true}={}) {
-  const base=jpegScanFixture({width,height,sampling,precision,selected:groups[0]}).options,frame=Buffer.from(base.frame);
+export function progressiveFrameFixture({width=17,height=9,sampling=[34,17,17],groups=[sampling.map((_,i)=>i)],precision=8,initial=2,interval=0,dnl=false,refine=true,ac=true,ids}={}) {
+  const base=jpegScanFixture({width,height,sampling,precision,selected:groups[0],ids}).options,frame=Buffer.from(base.frame);
   if(dnl)frame.writeUInt16BE(0,1);
   const dc=progressiveSingle(0,1),acTable=Buffer.from([16,0,2,...Array(14).fill(0),1,0]);
   const parts=[Buffer.from([255,216]),segment(219,base.q),segment(196,dc),segment(194,frame),segment(196,acTable),segment(221,scalar(interval))];

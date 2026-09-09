@@ -73,9 +73,10 @@ export function jpegSequentialFileActual(call,raw){
   return {scans:scans.length,blocks,restarts,deferred:false};
 }
 
-export function jpegScanFixture({width=17,height=17,sampling=[34,17,17],selected=sampling.map((_,i)=>i),interval=0,precision=8}={}){
+export function jpegScanFixture({width=17,height=17,sampling=[34,17,17],selected=sampling.map((_,i)=>i),interval=0,precision=8,ids=sampling.map((_,i)=>9-i*2)}={}){
   const frame=Buffer.alloc(6+3*sampling.length);frame[0]=precision;frame.writeUInt16BE(height,1);frame.writeUInt16BE(width,3);frame[5]=sampling.length;
-  sampling.forEach((s,i)=>{frame[6+3*i]=9-i*2;frame[7+3*i]=s;});
+  assert.equal(ids.length,sampling.length);
+  sampling.forEach((s,i)=>{frame[6+3*i]=ids[i];frame[7+3*i]=s;});
   const scan=Buffer.from([selected.length,...selected.flatMap(i=>[frame[6+i*3],0]),0,63,0]);
   const q=Buffer.from([0,...Array(64).fill(1)]),h=Buffer.from([0,1,...Array(15).fill(0),1,16,1,...Array(15).fill(0),0]);
   const g=jpegScanGeometry(frame,scan,height),parts=[];let bits=[];

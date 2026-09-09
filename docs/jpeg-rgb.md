@@ -6,17 +6,20 @@
 
 출력은 JFIF로 명시적으로 해석한 RGB 샘플입니다. 색 관리된 sRGB·화면 렌더링·한글 프로그램과의 픽셀 동일성·모든 JPEG 프로세스 지원을 뜻하지 않습니다. 제품 JS API와 HWP BinData 이미지 검사에는 아직 연결하지 않았습니다.
 
+후속 [progressive JFIF RGB](jpeg-progressive-rgb.md)는 별도 명시적 진입점으로 제공하며 메타데이터 준비/렌더링과 기존 Image 타입을 공유합니다. 이 문서의 기존 decode는 계속 순차 전용입니다.
+
 ## 책임과 API
 
 - `rgb_raster.zig`: 빌린 sample_planes.Image를 받아 소유권 있는 packed RGB를 생성합니다. 호출자가 gray/rgb/ycbcr 해석과 nearest/bilinear 방법을 반드시 지정합니다. 성분 ID나 값에서 색을 추측하지 않습니다. 8비트 정밀도·성분 수·각 평면 크기/길이·0~255 샘플을 확인하며, u32 extent를 검사한 뒤 u16 축으로 전달합니다. 출력은 행 우선 RGBRGB 순서이고 반전이나 aspect 보정은 하지 않습니다.
 - `jfif_adobe.zig`: JFIF 해석을 선택한 경우에만 적용하는 보수적인 충돌 정책입니다. 3성분은 Adobe transform 1, gray는 transform 0만 허용하고 모든 헤더를 확인합니다. 뒤의 정상 헤더가 앞의 충돌을 덮지 않습니다. 미지 transform은 별도 미지원 오류입니다. Adobe 버전/flags 의미 인증이나 T.872의 인쇄용 식별자 검사로 대체하지 않습니다.
-- `jfif_rgb.zig`: 기존 JFIF 전체 배치 검사 → 출력 크기 사전 검사 → Adobe 전체 순회 → ICC 조각 재조립 → 순차 샘플 복원 → Adobe 충돌 검사 → RGB 조립을 호출합니다. 구조 순회는 여러 번 수행하지만 마커 파서를 복제하지 않습니다. 색 해석은 API 이름이 지정하는 JFIF이며 일반 JPEG 자동 판별기는 아닙니다.
+- `jfif_render.zig`: 순차/progressive 공통 JFIF 전체 배치 검사 → 출력 크기 사전 검사 → Adobe 전체 순회 → ICC 조각 재조립의 준비 단계와, 샘플 이후의 Adobe 충돌 검사 → RGB 조립을 소유합니다. Image와 렌더링 기본 한도도 공유합니다.
+- `jfif_rgb.zig`: 위 공통 준비와 렌더링 사이에 순차 샘플 복원을 호출합니다. 구조 순회는 여러 번 수행하지만 마커 파서를 복제하지 않습니다. 색 해석은 API 이름이 지정하는 JFIF이며 일반 JPEG 자동 판별기는 아닙니다.
 
-`jfif_rgb.Options`는 `upsampling`과 `colour_management = .unmanaged`가 필수입니다. 출력은 자체 RGB 버퍼와 scalar 진단만 소유하므로 JPEG 입력을 해제해도 유효합니다. Image.deinit으로 해제합니다. 임시 ICC 바이트·Adobe descriptor·샘플 평면은 성공/실패 모두 정리합니다.
+`jfif_rgb.Options`는 `upsampling`과 `colour_management = .unmanaged`가 필수입니다. 출력은 자체 RGB 버퍼와 scalar 진단만 소유하므로 JPEG 입력을 해제해도 유효합니다. Image.deinit으로 해제합니다. 임시 ICC 바이트는 준비 단계에서 조각 수를 복사한 뒤 해제하며 Adobe descriptor·샘플 평면도 성공/실패 모두 정리합니다.
 
 `metadata_deferred`는 항상 true입니다. ICC는 조각 연결만 확인하고 내부 프로파일 유효성·CMM은 확인하지 않습니다. 예를 들어 번호가 완비된 3바이트 ICC 내용도 unmanaged 출력은 만들 수 있지만 유효 프로파일로 인증하지 않습니다. Exif orientation·다른 APP 의미·Adobe flags·미지 JFXX·압축 썸네일 의미도 완료로 보고하지 않습니다. JFIF 버전·Adobe 개수·ICC 조각 수·기타 APP 수·미검사 압축 썸네일·미지 확장 개수를 별도로 반환합니다. orientation·density 보정은 RGB 바이트에 적용하지 않습니다.
 
-progressive 및 그 밖의 미지원 엔트로피는 오류로 반환하며 썸네일이나 미리보기로 대체하지 않습니다. 기존 순차 디코더의 마지막 EOI·성분 coverage·엔트로피 padding 검사를 통과한 뒤에만 출력합니다. trailing 정책은 기존 structure 옵션을 따릅니다.
+기존 순차 decode는 progressive 및 그 밖의 미지원 엔트로피를 오류로 반환하며 썸네일이나 미리보기로 대체하지 않습니다. 순차 디코더의 마지막 EOI·성분 coverage·엔트로피 padding 검사를 통과한 뒤에만 출력합니다. trailing 정책은 기존 structure 옵션을 따릅니다.
 
 ## 자원 경계
 

@@ -52,4 +52,5 @@ pub const jpeg_adobe = @import("jpeg/adobe.zig");
 pub const jpeg_adobe_inspection = @import("jpeg/adobe_inspection.zig");
 pub const jpeg_rgb_raster = @import("jpeg/rgb_raster.zig");
 pub const jpeg_jfif_rgb = @import("jpeg/jfif_rgb.zig");
+pub const jpeg_jfif_progressive_rgb = @import("jpeg/jfif_progressive_rgb.zig");
 pub const jpeg_progressive_block = @import("jpeg/progressive_block.zig");

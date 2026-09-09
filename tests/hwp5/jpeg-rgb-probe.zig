@@ -44,7 +44,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize, mode: u32) ![]
     return serialize(a, result, &.{}, limit);
 }
 
-fn serialize(a: std.mem.Allocator, result: core.image.jpeg_rgb_raster.Raster, extra: []const u32, limit: usize) ![]u8 {
+pub fn serialize(a: std.mem.Allocator, result: core.image.jpeg_rgb_raster.Raster, extra: []const u32, limit: usize) ![]u8 {
     if (@as(u64, result.rgb.len) + 12 + extra.len * 4 > limit) return error.LimitExceeded;
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);

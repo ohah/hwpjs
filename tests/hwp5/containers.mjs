@@ -7,6 +7,8 @@ import {jpegFrameDequantFileActual} from './jpeg-frame-dequant.mjs';
 import {jpegFrameSamplesActual} from './jpeg-frame-samples.mjs';
 import {jpegPlanesActual} from './jpeg-planes.mjs';
 import {progressiveSamplesActual} from './jpeg-progressive-samples.mjs';
+import {progressiveRgbActual} from './jpeg-progressive-rgb.mjs';
+import {jpegRgbFileActual} from './jpeg-rgb.mjs';
 import {jpegJfifFileActual} from './jpeg-jfif.mjs';
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { decodedDocumentInput, documentRecords } from "./documents.mjs";
@@ -70,8 +72,12 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
       jpegFrameFileActual(call, plain);
       jpegFrameDequantFileActual(call, plain);
       jpegFrameSamplesActual(call, plain);
-      if (jpegPlanesActual(call, plain).deferred) progressiveSamplesActual(call, plain);
-      jpegJfifFileActual(call, plain);
+      const progressive = jpegPlanesActual(call, plain).deferred;
+      if (progressive) progressiveSamplesActual(call, plain);
+      if (jpegJfifFileActual(call, plain).headers === 1) {
+        jpegRgbFileActual(call, plain);
+        if (progressive) for (const method of [0, 1]) progressiveRgbActual(call, plain, {method});
+      }
     }
     stats[2] += plain.length;
     used.add(path.toLowerCase());

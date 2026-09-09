@@ -32,12 +32,16 @@ export function jpegRgbRasterOracle(planes,method,encoding) {
   const rgb=encoding===2?jpegJfifColourOracle(packed,266):packed;
   return Buffer.concat([words([width,height,rgb.length]),rgb]);
 }
-export function jpegRgbOracle(raw,method) {
-  const metadata=jpegJfifLayoutOracle(raw),planes=jpegPlanesOracle(raw),count=planes.readUInt32LE(12),headers=adobeParts(raw);
+export function jpegRgbMetadataOracle(raw,count) {
+  const metadata=jpegJfifLayoutOracle(raw),headers=adobeParts(raw);
   for(const h of headers){assert.ok(h.length>=12);assert.equal(h[11],count===1?0:1);}
   const profile=jpegIccOracle(jpegIccParts(raw));
+  return words([metadata.readUInt32LE(16),headers.length,profile.readUInt32LE(0),metadata.readUInt32LE(12),metadata.readUInt32LE(8),metadata.readUInt32LE(4),1]);
+}
+export function jpegRgbOracle(raw,method) {
+  const planes=jpegPlanesOracle(raw),count=planes.readUInt32LE(12),metadata=jpegRgbMetadataOracle(raw,count);
   const raster=jpegRgbRasterOracle(planes,method,count===1?0:2);
-  return Buffer.concat([raster.subarray(0,12),words([metadata.readUInt32LE(16),headers.length,profile.readUInt32LE(0),metadata.readUInt32LE(12),metadata.readUInt32LE(8),metadata.readUInt32LE(4),1]),raster.subarray(12)]);
+  return Buffer.concat([raster.subarray(0,12),metadata,raster.subarray(12)]);
 }
 export function jpegRgbFileActual(call,raw) {
   if(jpegSequentialScans(raw).deferred){assert.throws(()=>call(278,jpegRgbInput(raw)),/UnsupportedJpegSequentialProcess/);return {deferred:true};}
