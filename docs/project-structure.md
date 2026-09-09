@@ -11,7 +11,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - `src/text/`: [BCP 47 문법·중복 검사](bcp47-syntax.md), [IANA 등록 검증](bcp47-registry.md), [공통 Unicode scalar 해석·UTF-16 검사](icc-localized-unicode.md). PNG iTXt가 공통 언어 검사를, XML과 ICC가 공통 문자 해석을 재사용합니다.
 
   [ISO 639 두 글자 코드 조회](iso639-alpha2.md)는 IANA 목록과 별도의 고정 ISO 목록·확인된 폐기 이력을 다룹니다.
-- `src/image/`: [PNG 청크 구조·CRC 검사](png-structure.md), [행 필터 복원](png-filters.md), [IDAT 이미지 데이터 검증](png-pixels.md), [tRNS 투명도](png-transparency.md), [배경색·히스토그램](png-palette-metadata.md), [물리적 크기·유효 비트](png-sample-metadata.md), [수정 시각](png-timestamp.md), [비압축 텍스트](png-text.md), [압축 텍스트](png-compressed-text.md), [국제 텍스트](png-international-text.md), [추천 팔레트](png-suggested-palettes.md). HWP의 선택적 연결은 [BinData 이미지 검사](hwp5-bin-data-images.md)가 소유합니다. RGBA 변환·다른 이미지 형식은 후속 단계입니다.
+- `src/image/`: [PNG 청크 구조·CRC 검사](png-structure.md), [행 필터 복원](png-filters.md), [IDAT 이미지 데이터 검증](png-pixels.md), [tRNS 투명도](png-transparency.md), [배경색·히스토그램](png-palette-metadata.md), [물리적 크기·유효 비트](png-sample-metadata.md), [수정 시각](png-timestamp.md), [비압축 텍스트](png-text.md), [압축 텍스트](png-compressed-text.md), [국제 텍스트](png-international-text.md), [추천 팔레트](png-suggested-palettes.md). HWP의 선택적 연결은 [BinData 이미지 검사](hwp5-bin-data-images.md)가 소유합니다. [JPEG의 별도 선택 연결](hwp5-bin-data-jpeg.md)도 제공합니다. PNG RGBA 변환·BMP 등 다른 이미지 형식은 후속 단계입니다.
 - `src/xml/`: [XML 1.0 문자 입력](xml-input.md), [선언·인코딩 시작 처리](xml-declaration.md), [이름·참조](xml-names-references.md), [태그·속성 토큰](xml-tags.md), [문서 구조 검증](xml-document.md), [namespace 검증](xml-namespaces.md). DTD·스키마 검증과 HWPX 통합은 아직 미구현입니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.

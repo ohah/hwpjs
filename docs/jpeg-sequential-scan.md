@@ -1,6 +1,6 @@
 # JPEG sequential 스캔 복호화 작업
 
-Huffman sequential 단일 스캔의 계수 복호화를 구현했습니다. 제품 JS 공개 API나 HWP JPEG 지원 완료로 연결하지 않았습니다.
+Huffman sequential 단일 스캔의 계수 복호화를 구현했습니다. 이 단일 스캔 검증을 제품 JS API나 전체 JPEG 지원 완료로 해석하지 않습니다. 후속 [HWP BinData 검사](hwp5-bin-data-jpeg.md)는 별도 계약입니다.
 
 ## 근거와 책임
 

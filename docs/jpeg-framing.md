@@ -25,6 +25,6 @@
 
 ## 후속 검증
 
-[프레임/스캔 필드와 참조 검사](jpeg-headers.md), [테이블 내용](jpeg-tables.md), [테이블 선택](jpeg-table-selection.md), [progressive 이력](jpeg-progression.md), [파일 구조·DRI/DNL/RST](jpeg-structure.md)는 별도 계층입니다. 복호화에 의존하는 MCU/계수/픽셀 검증과 HWP 제품 연결은 후속이며 현재 완료 범위가 아닙니다.
+[프레임/스캔 필드와 참조 검사](jpeg-headers.md), [테이블 내용](jpeg-tables.md), [테이블 선택](jpeg-table-selection.md), [progressive 이력](jpeg-progression.md), [파일 구조·DRI/DNL/RST](jpeg-structure.md)는 별도 계층입니다. 복호화에 의존하는 MCU/계수/픽셀 검증은 이 경계 계층의 완료 범위가 아닙니다. 후속 [HWP BinData 연결](hwp5-bin-data-jpeg.md)은 기존 복원 계층을 조립하는 별도 계약입니다.
 
 실제 8개 참조의 독립 바이트 조사에서 SOF0 7건·SOF2 1건, precision 8, 성분 수 1 또는 3을 관측했습니다. `noori.hwp`의 SOF2는 7개 스캔에 분산된 주파수 구간을 사용했습니다. 따라서 다음 프레임/스캔 계층을 baseline 단일 스캔 전용으로 설계하지 않습니다. 관측값이 명세의 전체 허용값을 대체하지는 않습니다.

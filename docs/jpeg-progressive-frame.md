@@ -4,7 +4,7 @@
 
 [ITU-T T.81](https://www.w3.org/Graphics/JPEG/itu-t81.pdf)의 A.1~A.2, B.2.4, E.2, G.1~G.2와 기존 [스캔 이력](jpeg-progression.md)·[스캔 복호화](jpeg-progressive-scan.md)를 연결합니다. Huffman progressive DCT의 받은 스캔을 EOI까지 복호화하여 소유권이 있는 계수 격자를 반환합니다. 양자화 표가 같은 목적지를 공유해도, 앞 성분의 마지막 스캔 이후 다른 성분용으로 바뀐 표를 앞 성분에 소급 적용하지 않습니다.
 
-이는 8/12비트 양자화 계수 단계입니다. 후속 샘플·IDCT 연결은 [샘플 평면 계약](jpeg-progressive-samples.md), RGB 조립은 [progressive JFIF RGB](jpeg-progressive-rgb.md)가 소유합니다. HWP BinData JPEG 검사 연결과 제품 HWP JS API는 아직 미완료입니다. 산술·lossless·hierarchical 처리나 실제 한글 화면과의 픽셀 동일성을 주장하지 않습니다. 제품 JS API는 CFB-only 그대로입니다.
+이는 8/12비트 양자화 계수 단계입니다. 후속 샘플·IDCT 연결은 [샘플 평면 계약](jpeg-progressive-samples.md), RGB 조립은 [progressive JFIF RGB](jpeg-progressive-rgb.md)가 소유합니다. 후속 [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 별도 선택으로 연결하며 제품 HWP JS API는 미완료입니다. 산술·lossless·hierarchical 처리나 실제 한글 화면과의 픽셀 동일성을 주장하지 않습니다. 제품 JS API는 CFB-only 그대로입니다.
 
 ## 책임과 SSOT
 

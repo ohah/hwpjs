@@ -1,6 +1,6 @@
 # Progressive JFIF RGB 조립
 
-Progressive 샘플 평면을 JFIF RGB로 연결했습니다. 아래 선택 검증과 Debug/ReleaseSafe/ReleaseFast 전체 회귀를 통과했습니다. 제품 JS API와 HWP BinData 이미지 검사에는 아직 연결하지 않았습니다.
+Progressive 샘플 평면을 JFIF RGB로 연결했습니다. 아래 선택 검증과 Debug/ReleaseSafe/ReleaseFast 전체 회귀를 통과했습니다. 제품 JS API는 아직 CFB 전용이며, 후속 [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 별도 선택으로 연결합니다.
 
 ## 근거와 책임
 
@@ -46,7 +46,7 @@ full 9×17·3성분과 partial 1×1·단일 성분의 출력 총 838바이트 �
 
 격리 경로 `/tmp/hwpjs-progressive-rgb-mutants.fXt0WR/`에서 YCbCr 변환 생략·Adobe 충돌 검사 제거·levels 0 덮기·완료 통계 위조·metadata_deferred=false·렌더링 한도 전달 누락·첫 할당 전 예산 검사 제거·마지막 Adobe 헤더만 검사하는 여덟 소스 결함을 주입했습니다. 모두 세 모드에서 컴파일 후 테스트 실패로 검출했습니다. 필터 8개 중 실패는 순서대로 1/1/1/1/2/2/1/1개입니다. 제품 소스에는 변형을 적용하지 않았습니다.
 
-실제 HWP 컨테이너 테스트에도 JFIF가 있는 순차/progressive의 RGB 독립 대조를 연결했습니다. 제품 HWP BinData JPEG 지원으로 승격한 것은 아닙니다.
+이 단계에서 실제 HWP 컨테이너 테스트에도 JFIF가 있는 순차/progressive의 RGB 독립 대조를 연결했습니다. 이 당시 기록은 제품 HWP BinData JPEG 지원으로 승격한 근거가 아니며, 후속 adapter 검증은 위 연결 문서에서 관리합니다.
 
 전체 audit는 공유 산출물이 겹치지 않게 Debug → ReleaseSafe → ReleaseFast 순서로 실행했고, 각각 20/20단계·네이티브 883/883개·대조/거부 검사 7,812,266건을 통과했습니다. 로그는 `/tmp/hwpjs-progressive-rgb-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 남겼습니다. 유한한 시험의 통과이며 모든 JPEG 입력이나 전체 HWP 문서 지원을 보증하지 않습니다.
 

@@ -1,11 +1,15 @@
 const std = @import("std");
 const png = @import("../../image/png/pixels.zig");
+const jpeg = @import("jpeg_images.zig");
 pub const Options = struct {
     png: png.Options = .{},
+    jpeg: ?jpeg.Options = null,
+    max_total_jpeg_rgb_bytes: usize = 256 * 1024 * 1024,
     max_binaries: usize = 100000,
     max_total_pixel_bytes: usize = 256 * 1024 * 1024,
 };
 pub const Report = struct {
+    jpeg: jpeg.Report = .{},
     binaries: usize = 0,
     png_images: usize = 0,
     unhandled_binaries: usize = 0,
@@ -17,7 +21,7 @@ pub const Report = struct {
     png_zlib_trailing_bytes: usize = 0,
     semantics_deferred: bool = true,
 };
-/// Scalar-only evidence; does not retain decoded BinData or PNG borrowed views.
+/// Scalar-only evidence; does not retain decoded BinData, PNG views or JPEG RGB.
 pub const Budget = struct {
     options: Options,
     report: Report = .{},
@@ -29,6 +33,17 @@ pub const Budget = struct {
         const hinted = isPngExtension(extension);
         const signature = std.mem.startsWith(u8, bytes, @import("../../image/png/chunks.zig").signature);
         if (!hinted and !signature) {
+            if (self.options.jpeg) |selected| {
+                const jpeg_hint = isExtension(extension, "jpg") or isExtension(extension, "jpeg");
+                if (jpeg_hint or std.mem.startsWith(u8, bytes, &.{ 255, 216 })) {
+                    if (next.jpeg.rgb_bytes > self.options.max_total_jpeg_rgb_bytes) return error.LimitExceeded;
+                    var result = try jpeg.inspect(a, bytes, selected, self.options.max_total_jpeg_rgb_bytes - next.jpeg.rgb_bytes);
+                    result.extension_disagreements = @intFromBool(!jpeg_hint and extension.len != 0);
+                    next.jpeg = try next.jpeg.plus(result);
+                    self.report = next;
+                    return;
+                }
+            }
             next.unhandled_binaries = try add(next.unhandled_binaries, 1);
             self.report = next;
             return;
@@ -49,8 +64,11 @@ pub const Budget = struct {
 };
 /// HWP format hint only; path/UTF-16 validity remains owned by container.paths.
 fn isPngExtension(bytes: []const u8) bool {
-    if (bytes.len != 6) return false;
-    for ("png", 0..) |c, i| {
+    return isExtension(bytes, "png");
+}
+fn isExtension(bytes: []const u8, ascii: []const u8) bool {
+    if (bytes.len != 2 * ascii.len) return false;
+    for (ascii, 0..) |c, i| {
         if (bytes[2 * i + 1] != 0 or std.ascii.toLower(bytes[2 * i]) != c) return false;
     }
     return true;

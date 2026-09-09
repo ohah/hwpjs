@@ -9,6 +9,11 @@ pub fn images(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const selection = try @import("container-images-probe.zig").read(&r);
     return inspect(a, bytes[r.offset..], limit, false, selection);
 }
+pub fn jpegImages(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var r: core.Reader = .{ .bytes = bytes };
+    const selection = try @import("container-jpeg-probe.zig").read(&r);
+    return inspect(a, bytes[r.offset..], limit, false, selection);
+}
 pub fn xmlDocuments(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
     const selection = try @import("xml-container-probe.zig").read(&r);
@@ -131,5 +136,6 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified: boo
     if (selection.history_last_document_report) try @import("history-last-document-probe.zig").serialize(a, &out, report.history);
     if (selection.xml_template_report) try @import("xml-template-container-probe.zig").serialize(a, &out, report.xml_template);
     if (selection.images_report) try @import("container-images-probe.zig").serialize(a, &out, report.images);
+    if (selection.jpeg_images_report) try @import("container-jpeg-probe.zig").serialize(a, &out, report.images, selection.images != null and selection.images.?.jpeg != null);
     return out.toOwnedSlice(a);
 }

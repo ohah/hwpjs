@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {containerJpegActual} from './container-jpeg.mjs';
 import {jpegFramingActual} from './jpeg-framing.mjs';
 import {jpegStructureActual} from './jpeg-structure.mjs';
 import {jpegSequentialFileActual} from './jpeg-scan.mjs';
@@ -38,6 +39,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     ...sections.map((s) => `/bodytext/section${s.index}`),
   ]);
   const stats = [0, 0, 0, 0, 0];
+  const imageEntries = [];
   for (const r of documentRecords(doc)) {
     if (r.tag !== 18) continue;
     stats[0]++;
@@ -65,6 +67,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
         ? inflateRawSync(raw)
         : raw;
     stats[1]++;
+    imageEntries.push({raw: plain, extension: ext});
     if (plain[0] === 255 && plain[1] === 216) {
       jpegFramingActual(call, plain, true, true);
       jpegStructureActual(call, plain);
@@ -127,6 +130,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     ...preview.map(w),
     ...[...stats, total, uninspected].map(w),
   ]);
+  containerJpegActual(call, bytes, imageEntries, {documentBytes: total});
   assert.deepEqual(run(call, bytes, total, expected.readUInt32LE(16) + viewRecords), want);
   assert.throws(() => run(call, bytes, total - 1), /LimitExceeded/);
   return [

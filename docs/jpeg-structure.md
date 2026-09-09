@@ -16,7 +16,7 @@ DNL은 첫 스캔을 종료하는 위치에서 한 번만 허용됩니다. SOF�
 
 재정의한 높이와 실제로 부호화된 MCU 행의 일치, DNL 위치가 정수 MCU 행 경계인지, Ri와 실제 MCU 개수/마지막 간격의 일치, lossless Ri의 MCU 행 배수 조건은 아직 복호화 계층의 후속 검사입니다. 빈 엔트로피 구간·누락 재시작을 헤더만으로 완전히 검증했다고 주장하지 않습니다.
 
-이 검사는 테이블 payload/선택/progressive 이력을 재구현하지 않습니다. 실제 HWP 검증은 기존 해당 검사와 함께 실행합니다. 구조 보고서는 `semantics_deferred=true`이며 테이블 없는 합성 구조가 통과해도 완전한 JPEG라는 뜻은 아닙니다. 계층형 이미지·tables-only 생략 형식·TEM/미해석 확장 마커는 현재 이 진입점에서 지원하지 않습니다. APP/COM/DQT/DHT/DAC는 경계만 통과시키고 내용 의미는 별도입니다. 제품 JS API와 HWP JPEG 미지원 집계는 변경하지 않았습니다.
+이 검사는 테이블 payload/선택/progressive 이력을 재구현하지 않습니다. 실제 HWP 검증은 기존 해당 검사와 함께 실행합니다. 구조 보고서는 `semantics_deferred=true`이며 테이블 없는 합성 구조가 통과해도 완전한 JPEG라는 뜻은 아닙니다. 계층형 이미지·tables-only 생략 형식·TEM/미해석 확장 마커는 현재 이 진입점에서 지원하지 않습니다. APP/COM/DQT/DHT/DAC는 경계만 통과시키고 내용 의미는 별도입니다. 이 구조 단계 당시 제품 JS API와 HWP JPEG 미지원 집계는 변경하지 않았습니다. 현재 선택적 [BinData 연결](hwp5-bin-data-jpeg.md)은 별도 계약입니다.
 
 ## 검증 기록
 

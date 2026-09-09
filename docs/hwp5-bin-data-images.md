@@ -2,13 +2,13 @@
 
 ## 범위와 책임
 
-HWP5 표 17~18의 BinData 항목별 압축 정책으로 얻은 바이트를 기존 PNG 검사기에 연결합니다. `container.Options.images`는 기본 null이며, 미선택을 정상 이미지 판정으로 해석하지 않습니다.
+HWP5 표 17~18의 BinData 항목별 압축 정책으로 얻은 바이트를 PNG 검사기에 연결합니다. `container.Options.images`는 기본 null이며, 미선택을 정상 이미지 판정으로 해석하지 않습니다. 별도로 켜는 [JPEG 검사와 독립 RGB 예산](hwp5-bin-data-jpeg.md)은 해당 주제 문서가 소유합니다. 아래 PNG 기본 동작과 바이트 통계는 유지합니다.
 
 - `container/binaries.zig`: 기존 정확한 경로 조회·항목별 압축 해제 뒤 이미지 예산에 전달합니다. LINK는 외부 접근 없이 보류합니다. 압축·이미지 오류 뒤 원본 fallback은 없습니다.
 - `container/images.zig`: 형식 선택·문서 전체 픽셀 바이트/항목 한도·scalar 통계만 소유합니다. PNG 청크·압축·ICC 규칙은 [PNG 검사기](png-profile-inspection.md)를 재사용합니다.
 - `container/validation.zig`: 선택 옵션·예산 수명·최종 보고서 연결을 소유합니다. 기존 BinData 보고서와 제품 JS ABI는 변경하지 않습니다.
 
-UTF-16LE 확장자가 ASCII 대소문자 무관하게 png이면 PNG 검사를 요구합니다. 그렇지 않아도 PNG 서명이 있으면 검사하며, 비어 있지 않은 다른 확장자는 불일치 통계로 남깁니다. 경로/확장자 유효성은 기존 paths 책임입니다. 다른 이미지 및 OLE는 `unhandled_binaries`로 남기며 유효성을 보증하지 않습니다.
+UTF-16LE 확장자가 ASCII 대소문자 무관하게 png이면 PNG 검사를 요구합니다. 그렇지 않아도 PNG 서명이 있으면 검사하며, 비어 있지 않은 다른 확장자는 불일치 통계로 남깁니다. 경로/확장자 유효성은 기존 paths 책임입니다. JPEG를 별도로 선택하지 않은 기본 동작에서 다른 이미지 및 OLE는 `unhandled_binaries`로 남기며 유효성을 보증하지 않습니다.
 
 ## 한도와 수명
 
@@ -16,7 +16,7 @@ UTF-16LE 확장자가 ASCII 대소문자 무관하게 png이면 PNG 검사를 �
 
 실패한 consume은 누적 보고서를 변경하지 않습니다. 보고서는 scalar만 복사하여 임시 decoded BinData/PNG/ICC 버퍼를 보유하지 않습니다. `semantics_deferred`는 항상 남으며 구조·픽셀 검사 성공을 렌더링/색상 의미 완료로 바꾸지 않습니다. ICC 상세 검사와 v2 UTF-16BE 해석은 기존 명시적 PNG 옵션을 그대로 전달합니다.
 
-## 검증 기록
+## PNG 최초 연결 시 검증 기록
 
 - 네이티브: 반복 참조의 한도 경계, 미선택 손상 PNG 보존, 선택 시 잘림/CRC 오류 전파, 입력 해제 뒤 보고서 수명, ICC 옵션 전달 및 미지원 의미 유지, 할당 실패 정리 검사.
 - 테스트용 WASM mode 244: 기존 mode 25 보고서 뒤 44바이트 선택/이미지 통계를 추가합니다. 독립 JS 생성기로 압축/비압축 × 1/2/5회 참조, 정확한 한도와 한도-1, 오류 뒤 재호출을 대조했습니다. 세 모드 직접 실행에서 각각 비교 26건·거부 14건 통과.

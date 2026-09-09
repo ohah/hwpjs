@@ -41,4 +41,4 @@ Debug/ReleaseSafe/ReleaseFast 전체 audit는 각각 20/20 단계, 네이티브 
 
 2026-09-09에 [ITU 공식 T.83 안내](https://www.itu.int/ITU-T/recommendations/rec.aspx?id=2635)를 확인했습니다. T.81 구현·압축 데이터의 적합성 시험을 별도 정의하고 시험 데이터를 포함한다고 안내하지만, 본문은 유료 제공으로 표시되어 있습니다. 해당 시험 원문과 데이터에 따른 적합성 검증은 아직 수행하지 않았으며 현재 수식 대조로 대체하지 않습니다.
 
-정확한 유리수 상쇄는 후속 수정에서 분리했지만 일반 비유리수의 부동소수점 합 순서에 따른 경계 차이를 모두 해결했다는 뜻은 아닙니다. 한글·libjpeg와 비트 단위 동일성 또는 T.83 정확도 적합성을 주장하지 않습니다. 후속 성분 조립은 [순차 평면](jpeg-sample-planes.md)·[progressive 평면](jpeg-progressive-samples.md), 업샘플링·색 변환 연결은 [JFIF RGB](jpeg-rgb.md)를 참조합니다. HWP JPEG 지원 보고 연결은 미완료이며 반환한 블록 샘플을 완성된 RGB 이미지로 취급하지 않습니다.
+정확한 유리수 상쇄는 후속 수정에서 분리했지만 일반 비유리수의 부동소수점 합 순서에 따른 경계 차이를 모두 해결했다는 뜻은 아닙니다. 한글·libjpeg와 비트 단위 동일성 또는 T.83 정확도 적합성을 주장하지 않습니다. 후속 성분 조립은 [순차 평면](jpeg-sample-planes.md)·[progressive 평면](jpeg-progressive-samples.md), 업샘플링·색 변환 연결은 [JFIF RGB](jpeg-rgb.md)를 참조합니다. [HWP JPEG 보고 연결](hwp5-bin-data-jpeg.md)은 별도 adapter가 소유하며 반환한 블록 샘플을 완성된 RGB 이미지로 취급하지 않습니다.

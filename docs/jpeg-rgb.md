@@ -4,7 +4,7 @@
 
 [ITU-T T.871](https://www.itu.int/rec/T-REC-T.871-201105-I/en) 6.1~6.2의 8비트 1/3성분, 7절 색 좌표, 8절 위에서 아래로의 행 순서, 9절 성분 위치를 기존 구현과 연결합니다. [샘플 평면](jpeg-sample-planes.md), [중심 정렬 업샘플링](jpeg-upsampling.md), [JFIF 색 변환](jpeg-jfif-colour.md)의 공식과 경계 규칙은 각 기존 모듈이 소유합니다. 이 연결 계층에 계수·IDCT·보간식을 다시 구현하지 않습니다.
 
-출력은 JFIF로 명시적으로 해석한 RGB 샘플입니다. 색 관리된 sRGB·화면 렌더링·한글 프로그램과의 픽셀 동일성·모든 JPEG 프로세스 지원을 뜻하지 않습니다. 제품 JS API와 HWP BinData 이미지 검사에는 아직 연결하지 않았습니다.
+출력은 JFIF로 명시적으로 해석한 RGB 샘플입니다. 색 관리된 sRGB·화면 렌더링·한글 프로그램과의 픽셀 동일성·모든 JPEG 프로세스 지원을 뜻하지 않습니다. 제품 JS API는 아직 CFB 전용이며, 후속 [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 별도 선택으로 연결합니다.
 
 후속 [progressive JFIF RGB](jpeg-progressive-rgb.md)는 별도 명시적 진입점으로 제공하며 메타데이터 준비/렌더링과 기존 Image 타입을 공유합니다. 이 문서의 기존 decode는 계속 순차 전용입니다.
 
