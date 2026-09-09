@@ -9,6 +9,7 @@ pub const image = @import("image/root.zig");
 pub const text = @import("text/root.zig");
 
 test {
+    _ = @import("image/jpeg/jfif_colour_tests.zig");
     _ = @import("image/jpeg/jfif_layout_tests.zig");
     _ = @import("image/jpeg/jfxx_jpeg_tests.zig");
     _ = @import("image/jpeg/jfxx_tests.zig");

@@ -316,6 +316,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         263 => return @import("jpeg-jfxx-probe.zig").run(a, bytes, limit),
         264 => return @import("jpeg-planes-probe.zig").runJfxx(a, bytes, limit),
         265 => return @import("jpeg-jfif-layout-probe.zig").run(a, bytes, limit),
+        266...268 => return @import("jpeg-jfif-colour-probe.zig").run(a, bytes, limit, mode),
         236, 237 => return @import("icc-trc-inverse-probe.zig").runWide(a, bytes, limit, if (mode == 236) .v2_2001 else .v4_2022),
         else => return error.InvalidMode,
     }
