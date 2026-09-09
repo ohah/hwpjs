@@ -19,3 +19,5 @@ pub const jpeg_scan_tables = @import("jpeg/scan_tables.zig");
 pub const jpeg_progressive = @import("jpeg/progressive.zig");
 pub const jpeg_scan_fields = @import("jpeg/scan_fields.zig");
 pub const jpeg_structure = @import("jpeg/structure.zig");
+pub const jpeg_entropy_bits = @import("jpeg/entropy_bits.zig");
+pub const jpeg_huffman_decoder = @import("jpeg/huffman_decoder.zig");

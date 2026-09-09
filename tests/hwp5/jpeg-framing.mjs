@@ -3,6 +3,7 @@ import {jpegFrameMarker,jpegHeaderActual} from './jpeg-headers.mjs';
 import {jpegTablesActual} from './jpeg-tables.mjs';
 import {jpegStoreActual} from './jpeg-store.mjs';
 import {jpegProgressiveActual} from './jpeg-progressive.mjs';
+import {jpegEntropyBitsActual,jpegHuffmanCodesActual} from './jpeg-codec.mjs';
 const words = ns => {const b = Buffer.alloc(ns.length * 4); ns.forEach((n,i)=>b.writeUInt32LE(n,i*4)); return b;};
 export function jpegFramingInput(mode, raw, maximum = 65533) {
   return Buffer.concat([Buffer.from([mode]), words([maximum]), raw]);
@@ -74,11 +75,13 @@ export function jpegFramingActual(call, raw, headers = false, tables = false) {
     if(scan) {
       const e=jpegEntropyOracle(raw.subarray(offset));
       assert.deepEqual(call(245,jpegFramingInput(1,raw.subarray(offset),raw.length)),e.wire);
+      if(tables && headers) jpegEntropyBitsActual(call,e.wire.subarray(12));
       offset+=e.consumed; entropyBytes+=e.consumed;
     }
     const m=jpegMarkerOracle(raw.subarray(offset));
     assert.deepEqual(call(245,jpegFramingInput(0,raw.subarray(offset))),m.wire);
     if(tables && (m.code===219 || m.code===196)) jpegTablesActual(call,m.code===196?1:0,m.wire.subarray(20));
+    if(tables && headers && m.code===196) jpegHuffmanCodesActual(call,m.wire.subarray(20));
     if(tables && [219,196,218].includes(m.code)) tableEvents.push([m.code===219?0:m.code===196?1:2,m.wire.subarray(20)]);
     if(headers && jpegFrameMarker(m.code)) {
       frame={code:m.code,payload:m.wire.subarray(20)};

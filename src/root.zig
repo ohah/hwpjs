@@ -9,6 +9,8 @@ pub const image = @import("image/root.zig");
 pub const text = @import("text/root.zig");
 
 test {
+    _ = @import("image/jpeg/entropy_bits_tests.zig");
+    _ = @import("image/jpeg/huffman_decoder_tests.zig");
     _ = @import("image/jpeg/structure_tests.zig");
     _ = @import("image/jpeg/progressive_tests.zig");
     _ = @import("image/jpeg/table_store_tests.zig");
