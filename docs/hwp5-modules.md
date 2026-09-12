@@ -29,6 +29,7 @@
   - [첫 배율 값 블록의 라벨까지 조사](hwp5-chart-value-prefix-evidence.md)
   - [배율 값의 TextBlock 기반 클래스 조사](hwp5-chart-value-text-evidence.md)
   - [배율 값의 String/Double 선택 필드](hwp5-chart-value-number-evidence.md)
+  - [Axis 선택 배치의 연속 경계 검증](hwp5-chart-axis-evidence.md)
   - [TextBlock 보조 Backdrop·문자열 재참조](hwp5-chart-text-block-objects.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
