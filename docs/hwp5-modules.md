@@ -32,6 +32,7 @@
   - [Axis 선택 배치의 연속 경계 검증](hwp5-chart-axis-evidence.md)
   - [TextBlock 기반 클래스 본문](hwp5-chart-text-block-body.md)
   - [String/Double 값 객체와 공통 사전](hwp5-chart-value-objects.md)
+  - [TextFormat v1](hwp5-chart-text-format.md)
   - [TextBlock 보조 Backdrop·문자열 재참조](hwp5-chart-text-block-objects.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
