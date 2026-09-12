@@ -230,6 +230,7 @@ import {chartStrings} from './chart-strings.mjs';
 import {chartBackdrops} from './chart-backdrops.mjs';
 import {chartTextBlocks} from './chart-text-blocks.mjs';
 import {chartFootnotes} from './chart-footnotes.mjs';
+import {chartLegends} from './chart-legends.mjs';
 import { shapeComponentEdges, shapeComponentReference } from "./shape-component.mjs";
 import { shapeValidationEdges } from "./shape-validation.mjs";
 import { shapeBorderEdges, shapeBorderReference } from "./shape-border.mjs";
@@ -827,6 +828,7 @@ const chartStringResults = await chartStrings(call);
 const chartBackdropResults = await chartBackdrops(call);
 const chartTextBlockResults = await chartTextBlocks(call);
 const chartFootnoteResults = await chartFootnotes(call);
+const chartLegendResults = await chartLegends(call);
 assert.deepEqual(oleReferencePolicyResults.map(r=>[r.originalId,r.binItems,r.accepted,r.rejected]),[[1,1,21,12],[1,1,21,12],[0,18,27,12]]);
 const shapeComponentReferenceResults = shapeComponentReference(call, cfb);
 const shapeBorderReferenceResults = shapeBorderReference(call, cfb);
@@ -1568,6 +1570,7 @@ console.log(
       chartBackdropResults,
       chartTextBlockResults,
       chartFootnoteResults,
+      chartLegendResults,
       equationReferenceResults,
       noteControlReferenceResults,
       rubyDocumentResults,

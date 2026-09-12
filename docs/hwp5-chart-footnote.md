@@ -42,6 +42,6 @@ WASM 검사는 원본·원시 필드·비연속 객체/새 타입 ID·문자열 
 
 검증 중 별도 읽기 전용 조사로 다음 Legend의 Font 이름을 확인했습니다. 무조건 새 String 객체가 온다고 읽는 첫 가설은 세 번째 표본에서 실패했습니다. 43개 중 41개는 앞서 읽은 Footnote의 이름 String 객체 ID를 네 바이트로 재사용하며 타입 참조·문자열 본문·기반 참조가 다시 나오지 않았습니다. 기존 ID로 이름을 찾고 이어지는 Font 원시 14바이트와 VtObject를 대조하면 43개 모두 진행됩니다. 나머지 2개는 길이 16/22바이트의 새 이름 String을 저장합니다.
 
-이 결과는 다음 Legend 구현에 객체 참조 해결이 필요하다는 근거입니다. 현재 inline String/Font 파서를 그대로 범례 전체에 적용할 수 있다고 주장하지 않습니다. 타입 ID 재등장과 객체 ID 재참조를 구분하고, 아직 전체 객체 레지스트리·순환/전역 동일성을 구현한 것은 아닙니다.
+이 결과를 바탕으로 추가한 [Legend·String 재참조 구현](hwp5-chart-legend.md)은 별도 계약으로 관리합니다. inline String/Font 파서를 그대로 범례 전체에 적용하지 않습니다. 타입 ID 재등장과 객체 ID 재참조를 구분하며, 전체 객체 종류의 재참조·순환/전역 동일성을 구현한 것은 아닙니다.
 
 읽기 전용 조사 출력은 `/tmp/hwpjs-chart-legend-reference-survey.json`에 있습니다. 예를 들어 내부 Contents SHA-256 `888c03ffd1e630417699b9a3b106ef680515a4e7be75482bea56e0b8e0dff3eb`의 offset 1419에 이름 ID 27이 있으며, 앞서 읽은 Footnote 이름 ID도 27입니다. 반면 `2e56516aabde4ff7cb73f946860e83c345d0944b0c11e0322f09b739cac1d56a`는 offset 1413에서 새로운 ID 34를 읽습니다(Footnote 이름 ID 27). 해시는 외부 HWP 전체가 아니라 내부 Contents 기준입니다.

@@ -21,7 +21,7 @@ export function chartBackdropOracle(b,start){
  const pictureData=p;assert.equal(long(),0xffffffff);
  const bases=[p];assert.equal(long(),4);const suffix=take(2);
  bases.push(p);assert.equal(long(),4);bases.push(p);assert.equal(long(),4);
- return {end:p,declarations,pictureData,bases,wire:Buffer.concat([u32(p),...objects.map(u32),suffix,b.subarray(start,start+26),...raw])};
+ return {end:p,declarations,pictureData,bases,objectIds:objects,wire:Buffer.concat([u32(p),...objects.map(u32),suffix,b.subarray(start,start+26),...raw])};
 }
 export async function chartBackdrops(call){
  const cfb=await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));

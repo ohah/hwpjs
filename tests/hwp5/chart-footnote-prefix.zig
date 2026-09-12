@@ -3,6 +3,7 @@ const core = @import("hwpjs");
 pub const Prefix = struct {
     grid: core.hwp5.chart_grid_cells.Grid,
     reader: core.Reader,
+    backdrop: core.hwp5.chart_backdrop.Backdrop,
     pub fn deinit(self: *Prefix) void {
         self.grid.deinit();
         self.* = undefined;
@@ -14,6 +15,6 @@ pub fn read(a: std.mem.Allocator, contents: []const u8, limit: usize) !Prefix {
     errdefer grid.deinit();
     var reader: core.Reader = .{ .bytes = contents, .offset = grid.payload_offset };
     _ = try reader.take(26);
-    _ = try core.hwp5.chart_backdrop.readObservedEmptyPicture(&reader, &grid.prelude.types);
-    return .{ .grid = grid, .reader = reader };
+    const backdrop = try core.hwp5.chart_backdrop.readObservedEmptyPicture(&reader, &grid.prelude.types);
+    return .{ .grid = grid, .reader = reader, .backdrop = backdrop };
 }
