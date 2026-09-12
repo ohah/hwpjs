@@ -39,4 +39,4 @@ node --test tests/hwp5/chart-plot-evidence.test.mjs
 node tests/hwp5/chart-plot-survey.mjs
 ```
 
-다음 구현은 관측 배열 헤더와 광원 객체를 책임별로 분리하고, 이 조사와 별도로 Zig/WASM에서 소유권·할당 실패·한도·실파일 대조를 검증하는 것입니다. Plot 전체, Axis, 일반 객체 재참조, 비어 있지 않은 첫 배열과 다른 버전은 여전히 남아 있습니다.
+후속 Zig 구현은 [배열 헤더](hwp5-chart-array-header.md)와 [광원 객체](hwp5-chart-light.md)로 책임을 분리했습니다. 소유권·할당 실패·한도·실파일 대조 결과는 해당 계약이 소유하며, 이 조사 기록과 구분합니다. Plot 전체, Axis, 일반 객체 재참조, 비어 있지 않은 첫 배열과 다른 버전은 여전히 남아 있습니다.

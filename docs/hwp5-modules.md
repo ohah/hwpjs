@@ -23,6 +23,8 @@
   - [차트 객체 목록·String 재참조](hwp5-chart-object-table.md)
   - [관측 Legend·이름 재참조](hwp5-chart-legend.md)
   - [Plot·배열·광원 경계 조사](hwp5-chart-plot-evidence.md)
+  - [관측 VtArray 헤더](hwp5-chart-array-header.md)
+  - [관측 Light·광원 원소](hwp5-chart-light.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
 - [DocInfo·리소스](hwp5-docinfo-contracts.md)
