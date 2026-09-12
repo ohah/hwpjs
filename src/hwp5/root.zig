@@ -63,6 +63,7 @@ pub const chart_text_block_body = @import("chart/text_block_body.zig");
 pub const chart_value_object = @import("chart/value_object.zig");
 pub const chart_text_format = @import("chart/text_format.zig");
 pub const chart_value_block = @import("chart/value_block.zig");
+pub const chart_axis = @import("chart/axis.zig");
 pub const chart_footnote = @import("chart/footnote.zig");
 pub const chart_object_table = @import("chart/object_table.zig");
 pub const chart_legend = @import("chart/legend.zig");

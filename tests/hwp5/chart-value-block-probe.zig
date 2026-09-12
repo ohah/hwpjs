@@ -35,6 +35,9 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     }
     var reader: core.Reader = .{ .bytes = bytes[input.offset..] };
     const b = try core.hwp5.chart_value_block.readObservedV1(&reader, &types, &objects, .{ .max_string_bytes = per, .max_total_string_bytes = total });
+    return serialize(a, b, &objects);
+}
+pub fn serialize(a: std.mem.Allocator, b: core.hwp5.chart_value_block.Block, objects: *const core.hwp5.chart_object_table.Table) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     inline for (.{ b.header_word, b.raw_before_label, b.end, @intFromBool(b.format != null) }) |field| try int(a, &out, u32, @intCast(field));
@@ -56,7 +59,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
         try string(a, &out, f.code, f.code_introduced);
     }
     try string(a, &out, b.label.value, b.label.introduced);
-    const body = try @import("chart-text-body-probe.zig").serialize(a, b.text, &objects);
+    const body = try @import("chart-text-body-probe.zig").serialize(a, b.text, objects);
     defer a.free(body);
     try out.appendSlice(a, body);
     return out.toOwnedSlice(a);

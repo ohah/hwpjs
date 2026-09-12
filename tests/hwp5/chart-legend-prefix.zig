@@ -22,7 +22,7 @@ pub fn read(a: std.mem.Allocator, contents: []const u8, limit: usize, max_name: 
     // are not guessed to be object IDs. Caller retains the complete Contents.
     for (prefix.grid.cells) |cell| switch (cell.value) {
         .empty => {},
-        .number => try objects.registerOther(cell.object_id.?),
+        .number => |n| try objects.registerNumber(.{ .object_id = cell.object_id.?, .bits = n.bits, .trailer = n.trailer }),
         .string => |s| try objects.registerString(.{ .object_id = cell.object_id.?, .bytes = s.bytes, .trailer = s.trailer }),
     };
     for (prefix.backdrop.object_ids) |id| try objects.registerOther(id);

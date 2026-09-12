@@ -16,11 +16,15 @@ export function valueBlockCase(bytes,result,prior){
  for(const [id,v] of numbers)scope.push(integer(id),number(v),integer(v.trailer,2));
  const seed=Buffer.concat(scope);
  const input=(data=body,limits={})=>Buffer.concat([...[limits.per??per,limits.total??total,limits.objects??objects,limits.stored??stored,types.size,strings.size,numbers.size].map(n=>integer(n)),seed,data]);
- const out=[...[p.headerWord,p.rawBeforeLabel,t.end-start,Number(p.format!==null)].map(n=>integer(n)),Buffer.from(result.value.rawSuffix,'hex')];
+ return {body,start,input,wire:valueBlockWire(result.value,start,objects,stored),per,total,objects,stored};
+}
+export function valueBlockWire(value,start,objects,stored){
+ const p=value.prefix,t=value.text;
+ const out=[...[p.headerWord,p.rawBeforeLabel,t.end-start,Number(p.format!==null)].map(n=>integer(n)),Buffer.from(value.rawSuffix,'hex')];
  if(!p.reference)out.push(integer(0));
  else if(p.reference.kind==='number'){const r=p.reference;out.push(...[2,r.id,r.trailer,Number(r.introduced)].map(n=>integer(n)),number(r));}
  else out.push(integer(1),string(p.reference));
  if(p.format){const f=p.format;out.push(...[f.headerWord,f.rawWord,f.end-start].map(n=>integer(n)),string(f.code));}
  out.push(string(p.label),textBodyWire(t,start,objects,stored));
- return {body,start,input,wire:Buffer.concat(out),per,total,objects,stored};
+ return Buffer.concat(out);
 }
