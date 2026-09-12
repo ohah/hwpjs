@@ -2,7 +2,7 @@
 
 ## 범위와 책임
 
-`src/image/gif/document.zig`의 decode는 GIF87a/89a 파일의 블록을 순회하고 각 이미지의 top-down u8 색인 평면을 반환합니다. [PrvImage 조사](hwp5-preview-image-evidence.md)에서 확인한 GIF 입력을 실제로 복호화하는 코어입니다. HWP 컨테이너의 PrvImage 소비·제품 JS 공개 API에는 아직 연결하지 않았습니다.
+`src/image/gif/document.zig`의 decode는 GIF87a/89a 파일의 블록을 순회하고 각 이미지의 top-down u8 색인 평면을 반환합니다. [PrvImage 조사](hwp5-preview-image-evidence.md)에서 확인한 GIF 입력을 실제로 복호화하는 코어입니다. HWP 컨테이너 연결의 현재 범위와 검증은 [PrvImage 검사](hwp5-preview-image.md)가 소유합니다. 제품 JS 공개 API에는 아직 연결하지 않았습니다.
 
 참조는 [CompuServe GIF89a 원문(W3C 보관)](https://www.w3.org/Graphics/GIF/spec-gif89a.txt)의 본문·부록입니다. GIF 형식과 GIF 서비스 마크의 원 권리자는 CompuServe Incorporated입니다. 외부 구현 코드는 이식하지 않았으며 GPL/LGPL 의존성을 추가하지 않았습니다.
 

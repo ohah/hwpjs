@@ -47,6 +47,7 @@ import {bmpRleEdges} from './bmp-rle.mjs';
 import {bmpRleRgbaEdges} from './bmp-rle-rgba.mjs';
 import {bmpProfileEdges} from './bmp-profile.mjs';
 import {gifEdges,gifActual} from './gif.mjs';
+import {previewImageEdges,previewImageActual} from './preview-image.mjs';
 import {imageSignature} from './preview-image-evidence.mjs';
 import {containerBmpProfileEdges} from './container-bmp-profile.mjs';
 import {containerBmpRleEdges} from './container-bmp-rle.mjs';
@@ -804,6 +805,7 @@ const containerJpegResults = containerJpegEdges(call, cfb);
 const containerBmpResults = containerBmpEdges(call, cfb);
 const bmpResults = bmpEdges(call);
 const gifResults = gifEdges(call);
+const previewImageResults = {edges:previewImageEdges(call,cfb),files:0,inspected:0};
 const gifPreviewResults = {files:0,frames:0,pixels:0};
 const bmpRleResults = bmpRleEdges(call);
 const bmpRleRgbaResults = bmpRleRgbaEdges(call);
@@ -865,6 +867,9 @@ try {
       unsupported.push(name);
       continue;
     }
+    const previewReport=previewImageActual(call,cfb,fileBytes,previewImage?Buffer.from(previewImage.content??[]):null);
+    previewImageResults.files++;
+    previewImageResults.inspected+=Number(previewReport.readUInt32LE(previewReport.length-276)===2);
     const docBytes = Buffer.from(cfb.findExact("/DocInfo").content);
     const docPlain =
       hdr.readUInt32LE(36) & 1 ? inflateRawSync(docBytes) : docBytes;
@@ -1131,6 +1136,8 @@ assert.deepEqual(formatting, {
 });
 assert.ok(streams >= 90);
 assert.equal(unsupported.length, 3);
+assert.equal(previewImageResults.files,45);
+assert.equal(previewImageResults.inspected,45);
 assert.deepEqual(resources, {
   binData: 13,
   faceNames: 861,
@@ -1283,6 +1290,7 @@ console.log(
       bmpProfileResults,
       containerBmpProfileResults,
       gifResults,
+      previewImageResults,
       gifPreviewResults,
       containerBmpRleResults,
       jpegFramingResults,

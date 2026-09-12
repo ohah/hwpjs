@@ -16,7 +16,7 @@
 
 - `hwp5/preview/text.zig`는 길이 접두사 없는 raw UTF-16LE 미리보기 뷰/진단, `container/preview.zig`는 선택 루트 PrvText 조회와 전체 소비 한도를 소유합니다. 본문 제어문자 문법·NUL 종결·BOM 제거·2048바이트 상한을 임의 적용하지 않습니다. 고립 서로게이트는 치환하지 않고 수치로 진단합니다. 검사 보고서 존재를 무조건 Unicode 정상 판정으로 해석하지 않습니다.
 
-- [PrvImage 형식 조사](hwp5-preview-image-evidence.md)는 BMP/GIF 명세와 실제 PNG/JPEG 관측, 미구현 GIF·컨테이너 연결 요구사항을 관리합니다. 시그니처 조사 성공을 이미지 검증이나 스트림 소비 완료로 세지 않습니다.
+- [PrvImage 형식 조사](hwp5-preview-image-evidence.md)는 BMP/GIF 명세와 실제 PNG/JPEG 관측을, [PrvImage 검사](hwp5-preview-image.md)는 선택 코덱 연결·소비·한도 계약과 검증 기록을 관리합니다. 시그니처 조사 성공을 이미지 검증이나 스트림 소비 완료로 세지 않습니다.
 
 - `hwp5/summary/`: header는 HWP FMTID/단일 set envelope, parser는 속성 offset/중복/배열 수명, value는 알려진 typed value, rules는 ID별 기대 타입을 소유합니다. PID 0 dictionary는 TypedPropertyValue로 읽지 않습니다. LPWSTR 문자열 길이는 u32 코드 유닛이며 NUL 종결/패딩을 검사하되 원문·extra·64비트 FILETIME을 보존합니다. `container/summary.zig`는 제어문자 0x05를 포함한 정확한 루트 경로와 전역 한도만 연결합니다. 미지원 타입/ID·dictionary·꼬리를 완료로 치환하지 않습니다.
 

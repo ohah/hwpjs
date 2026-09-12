@@ -3,7 +3,12 @@ const png = @import("../../image/png/pixels.zig");
 const jpeg = @import("jpeg_images.zig");
 const bmp = @import("bmp_images.zig");
 const bmp_profiles = @import("bmp_profiles.zig");
+const gif = @import("gif_images.zig");
 pub const Options = struct {
+    gif: ?gif.Options = null,
+    max_total_gif_index_bytes: usize = (gif.Options{}).max_total_pixels,
+    max_total_gif_codes: usize = (gif.Options{}).max_total_codes,
+    max_total_gif_frames: usize = (gif.Options{}).max_frames,
     png: png.Options = .{},
     jpeg: ?jpeg.Options = null,
     bmp: ?bmp.Options = null,
@@ -15,6 +20,7 @@ pub const Options = struct {
     max_total_pixel_bytes: usize = 256 * 1024 * 1024,
 };
 pub const Report = struct {
+    gif: gif.Report = .{},
     bmp_profile: bmp_profiles.Report = .{},
     bmp: bmp.Report = .{},
     jpeg: jpeg.Report = .{},
@@ -66,6 +72,20 @@ pub const Budget = struct {
                     result.extension_disagreements = @intFromBool(!bmp_hint and extension.len != 0);
                     next.bmp = try next.bmp.plus(result);
                     next.bmp_profile = try next.bmp_profile.plus(profiled.profile);
+                    self.report = next;
+                    return;
+                }
+            }
+            if (self.options.gif) |selected| {
+                const gif_hint = isExtension(extension, "gif");
+                // Recognize the family so unsupported versions fail explicitly.
+                if (gif_hint or std.mem.startsWith(u8, bytes, "GIF")) {
+                    if (next.gif.index_bytes > self.options.max_total_gif_index_bytes or
+                        next.gif.codes > self.options.max_total_gif_codes or
+                        next.gif.frames > self.options.max_total_gif_frames) return error.LimitExceeded;
+                    var result = try gif.inspect(a, bytes, selected, self.options.max_total_gif_index_bytes - next.gif.index_bytes, self.options.max_total_gif_codes - next.gif.codes, self.options.max_total_gif_frames - next.gif.frames);
+                    result.extension_disagreements = @intFromBool(!gif_hint and extension.len != 0);
+                    next.gif = try next.gif.plus(result);
                     self.report = next;
                     return;
                 }

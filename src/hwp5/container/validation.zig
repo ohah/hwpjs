@@ -5,6 +5,7 @@ const paths = @import("paths.zig");
 const sections = @import("sections.zig");
 const binaries = @import("binaries.zig");
 pub const Options = struct {
+    preview_image: ?@import("preview_image.zig").Options = null,
     images: ?@import("images.zig").Options = null,
     xml: ?@import("../xml_validation.zig").Options = null,
     xml_template: ?@import("xml_template.zig").Options = null,
@@ -18,6 +19,7 @@ pub const Options = struct {
 /// Owns DocInfo backing bytes and the document report. Does NOT own the input CFB.
 /// Image inspection is explicit and partial; unhandled image/OLE semantics remain deferred.
 pub const Report = struct {
+    preview_image: ?@import("preview_image.zig").Report,
     images: ?@import("images.zig").Report,
     xml: ?@import("../xml_validation.zig").Report,
     xml_template: ?@import("xml_template.zig").Report,
@@ -69,6 +71,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     const view = try @import("view_text.zig").inspect(a, &file, &header, used, &remaining, options.document.max_total_records - report.total_records, report.sections.len, options.document, options.max_viewtext_ciphertext_bytes);
     const bins = try binaries.inspectWithImages(a, &file, &header, doc, options.document.framing, options.storage_layout, used, &remaining, if (image_budget) |*budget| budget else null);
     const preview = try @import("preview.zig").inspect(&file, used, &remaining);
+    const preview_image = if (options.preview_image) |selected| try @import("preview_image.zig").inspect(a, &file, used, &remaining, selected) else null;
     const summary = try @import("summary.zig").inspect(a, &file, used, &remaining, options.max_summary_properties);
     const scripts = try @import("scripts.zig").inspect(a, &file, &header, used, &remaining);
     const xml_template = if (options.xml_template) |selected| try @import("xml_template.zig").inspectWithXml(a, &file, header.has(.xml_template), used, &remaining, selected, xml) else null;
@@ -77,5 +80,5 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     for (file.entries, used) |entry, consumed| if (entry.kind == 2 and !consumed) {
         uninspected += 1;
     };
-    return .{ .images = if (image_budget) |budget| budget.report else null, .xml = if (xml) |budget| budget.report else null, .xml_template = xml_template, .history = history, .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
+    return .{ .preview_image = preview_image, .images = if (image_budget) |budget| budget.report else null, .xml = if (xml) |budget| budget.report else null, .xml_template = xml_template, .history = history, .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
 }
