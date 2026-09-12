@@ -222,6 +222,7 @@ test {
     _ = @import("hwp5/chart/text_block_body_tests.zig");
     _ = @import("hwp5/chart/footnote_tests.zig");
     _ = @import("hwp5/chart/object_table_tests.zig");
+    _ = @import("hwp5/chart/number_object_tests.zig");
     _ = @import("hwp5/chart/legend_tests.zig");
     _ = @import("hwp5/chart/light_tests.zig");
     _ = @import("hwp5/chart/string_value_tests.zig");

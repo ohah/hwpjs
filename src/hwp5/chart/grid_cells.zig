@@ -2,7 +2,7 @@ const std = @import("std");
 const Reader = @import("../../binary/reader.zig").Reader;
 const prelude = @import("grid_prelude.zig");
 const values = @import("cell_value.zig");
-const requireType = @import("type_checks.zig").require;
+const value_objects = @import("value_object.zig");
 
 pub const Options = struct {
     prelude: prelude.Options = .{},
@@ -54,13 +54,11 @@ pub fn readObservedV6(a: std.mem.Allocator, bytes: []const u8, options: Options)
         if (object.found_existing) return error.UnsupportedChartObjectReference;
         const reference = try head.types.readObserved16(&reader);
         if (reference.declaration.version != 1) return error.UnsupportedChartTypeVersion;
-        const value = try values.read(&reader, reference.declaration.raw_name, @min(options.max_string_bytes, options.max_total_string_bytes - string_bytes));
+        const value = try value_objects.readBody(&reader, &head.types, reference.declaration.raw_name, @min(options.max_string_bytes, options.max_total_string_bytes - string_bytes));
         switch (value) {
             .string => |s| string_bytes += s.bytes.len,
             else => {},
         }
-        try requireType(&head.types, &reader, "VtValue\x00", 1);
-        try requireType(&head.types, &reader, "VtObject\x00", 1);
         try cells.append(a, .{ .object_id = id, .start = start, .end = reader.offset, .value = value });
     }
     return .{ .allocator = a, .prelude = head, .cells = try cells.toOwnedSlice(a), .string_bytes = string_bytes, .payload_offset = reader.offset };

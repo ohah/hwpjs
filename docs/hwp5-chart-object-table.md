@@ -2,7 +2,7 @@
 
 ## 범위와 책임
 
-`chart/object_table.zig`는 타입 목록과 별개의 객체 ID 목록입니다. 현재 값 종류는 String v1과 ‘그 외 객체’입니다. 일반 객체 그래프 복원기·전방 참조/순환 해결기·모든 종류의 객체 재참조를 구현한 것은 아닙니다. 현재 참조 해석은 String에 한정합니다.
+`chart/object_table.zig`는 타입 목록과 별개의 객체 ID 목록입니다. 이 문서는 String v1 재참조와 공통 사전 계약을 소유합니다. 후속 Number v1 복사값·registerNumber·String/Double 공통 resolver 계약은 [값 객체와 공통 사전](hwp5-chart-value-objects.md)에 둡니다. 일반 객체 그래프 복원기·전방 참조/순환 해결기·모든 종류의 객체 재참조를 구현한 것은 아닙니다.
 
 호출자는 선택한 직렬화 범위에서 앞서 확인한 객체를 빠짐없이 등록해야 합니다. registerString은 이미 파싱한 String 원본을, registerOther는 문자열이 아닌 객체 ID를 등록합니다. 같은 ID의 재등록은 DuplicateChartObjectId로 거부하고 기존 정의를 덮어쓰지 않습니다. ID 0은 유효하며 FFFFFFFF는 관측 null이므로 등록/읽기를 거부합니다. 검사는 기존 object_ids와 공유합니다.
 
