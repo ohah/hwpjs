@@ -304,6 +304,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         294 => return @import("container-probe.zig").bmpProfile(a, bytes, limit),
         295 => return @import("gif-probe.zig").run(a, bytes, limit),
         296 => return @import("preview-image-probe.zig").run(a, bytes, limit),
+        297 => return @import("view-semantic-probe.zig").run(a, bytes, limit),
         245 => return @import("jpeg-framing-probe.zig").run(a, bytes, limit),
         246 => return @import("jpeg-header-probe.zig").run(a, bytes, limit),
         247 => return @import("jpeg-tables-probe.zig").run(a, bytes, limit),

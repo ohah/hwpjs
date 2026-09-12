@@ -18,34 +18,9 @@ pub fn inspectDecoded(a: std.mem.Allocator, input: Input, options: Options) !Rep
     local.framing.max_records = @min(options.framing.max_records, options.max_total_records);
     const doc = try @import("docinfo.zig").inspect(a, input.doc_info, header.version(), local);
     if (doc.properties.section_count != input.sections.len) return error.SectionCountMismatch;
-    // Allocate from checked supplied sections, never only from a declared count.
-    const order = try @import("section_order.zig").build(a, input.sections);
-    defer a.free(order);
-    const sections = try a.alloc(types.SectionReport, input.sections.len);
-    errdefer a.free(sections);
-    var records = doc.records;
-    var memos: @import("../memo_references.zig").Index = .{};
-    defer memos.deinit(a);
-    var ranges: @import("../body/memo_range_collection.zig").Collection = .{};
-    defer ranges.deinit(a);
-    for (order, 0..) |input_index, index| {
-        local.framing.max_records = @min(options.framing.max_records, options.max_total_records - records);
-        sections[index] = try @import("section.zig").inspectCollected(a, input.sections[input_index].bytes, header.version(), doc.resources, local, .{ .index = &memos, .allocator = a, .section = index, .ranges = &ranges });
-        records += sections[index].records;
-        if (local.forms) |*budget| {
-            // Each section was already constrained by these remaining budgets.
-            const used = sections[index].forms;
-            budget.max_forms -= used.inspected_forms;
-            budget.properties.max_input_bytes -= used.property_bytes;
-            budget.properties.max_nodes -= used.property_nodes;
-        }
-    }
-    const memo_report = memos.inspect();
-    try memo_report.validateKnown();
-    const memo_end_report = memos.inspectEnds();
-    try memo_end_report.validateKnown();
-    const range_report = try @import("../body/memo_ranges.zig").inspect(a, ranges.events.items);
-    return .{ .header = header, .doc_info = doc, .sections = sections, .total_bytes = options.max_total_bytes - remaining, .total_records = records, .memo_references = memo_report, .memo_end_references = memo_end_report, .memo_ranges = range_report };
+    const set = try @import("section_set.zig").inspect(a, input.sections, header.version(), doc.resources, options, options.max_total_records - doc.records);
+    // Transfer the section array into the document report; all other fields are scalar.
+    return .{ .header = header, .doc_info = doc, .sections = set.sections, .total_bytes = options.max_total_bytes - remaining, .total_records = doc.records + set.records, .memo_references = set.memo_references, .memo_end_references = set.memo_end_references, .memo_ranges = set.memo_ranges };
 }
 fn charge(remaining: *usize, count: usize) !void {
     if (count > remaining.*) return error.LimitExceeded;

@@ -5,6 +5,7 @@ const paths = @import("paths.zig");
 const sections = @import("sections.zig");
 const binaries = @import("binaries.zig");
 pub const Options = struct {
+    view_text_semantics: @import("view_text.zig").SemanticPolicy = .uninspected,
     preview_image: ?@import("preview_image.zig").Options = null,
     images: ?@import("images.zig").Options = null,
     xml: ?@import("../xml_validation.zig").Options = null,
@@ -16,9 +17,10 @@ pub const Options = struct {
     cfb: @import("../../cfb/types.zig").Options = .{ .strict = true },
     max_summary_properties: usize = 4096,
 };
-/// Owns DocInfo backing bytes and the document report. Does NOT own the input CFB.
+/// Owns DocInfo backing, document and selected ViewText reports. Does NOT own the input CFB.
 /// Image inspection is explicit and partial; unhandled image/OLE semantics remain deferred.
 pub const Report = struct {
+    view_text_semantics: ?@import("../document/section_set.zig").Report,
     preview_image: ?@import("preview_image.zig").Report,
     images: ?@import("images.zig").Report,
     xml: ?@import("../xml_validation.zig").Report,
@@ -34,6 +36,7 @@ pub const Report = struct {
     uninspected_streams: usize,
     doc_info_backing: []const u8,
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
+        if (self.view_text_semantics) |*view| view.deinit(a);
         if (self.history) |*h| h.deinit(a);
         self.document.deinit(a);
         a.free(self.doc_info_backing);
@@ -68,7 +71,9 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     defer sections.deinit(a, body);
     var report = try d.inspectDecoded(a, .{ .header = &header.raw, .doc_info = doc, .sections = body }, options.document);
     errdefer report.deinit(a);
-    const view = try @import("view_text.zig").inspect(a, &file, &header, used, &remaining, options.document.max_total_records - report.total_records, report.sections.len, options.document, options.max_viewtext_ciphertext_bytes);
+    var inspected_view = try @import("view_text.zig").inspectDetailed(a, &file, &header, used, &remaining, options.document.max_total_records - report.total_records, report.sections.len, options.document, options.max_viewtext_ciphertext_bytes, if (options.view_text_semantics == .strict_document_rules) .{ .resources = report.doc_info.resources, .body_sections = report.sections } else null);
+    errdefer inspected_view.deinit(a);
+    const view = inspected_view.framing;
     const bins = try binaries.inspectWithImages(a, &file, &header, doc, options.document.framing, options.storage_layout, used, &remaining, if (image_budget) |*budget| budget else null);
     const preview = try @import("preview.zig").inspect(&file, used, &remaining);
     const preview_image = if (options.preview_image) |selected| try @import("preview_image.zig").inspect(a, &file, used, &remaining, selected) else null;
@@ -80,5 +85,5 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     for (file.entries, used) |entry, consumed| if (entry.kind == 2 and !consumed) {
         uninspected += 1;
     };
-    return .{ .preview_image = preview_image, .images = if (image_budget) |budget| budget.report else null, .xml = if (xml) |budget| budget.report else null, .xml_template = xml_template, .history = history, .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
+    return .{ .view_text_semantics = inspected_view.semantics, .preview_image = preview_image, .images = if (image_budget) |budget| budget.report else null, .xml = if (xml) |budget| budget.report else null, .xml_template = xml_template, .history = history, .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
 }

@@ -5,6 +5,7 @@
 이 문서는 해당 주제의 현재 책임·소유권·미지원 경계를 소유합니다. 계약과 새 검증 결과는 해당 주제에서 관리하고, 내용이 커지면 별도 문서로 분리하여 연결합니다.
 
 - [변경 추적 ViewText 계약·조사](hwp5-track-change-viewtext.md)는 별도 압축·framing·구역 경계 검증, 공유 한도와 미완료 의미 검증을 관리합니다.
+- [ViewText 의미 검사 선택과 검증](hwp5-viewtext-semantic-inspection.md)는 공통 구역 검사기·선택 정책·뷰별 메모 참조·공유 예산과 검증 기록을 관리합니다.
 - [양식 문서 통합](hwp5-form-document.md)은 선택한 양식 검사·구역 진단·문서 전체 공유 예산을 관리합니다.
 - [BinData 이미지 검사](hwp5-bin-data-images.md)는 선택적 PNG 연결·이미지 예산·미지원 콘텐츠 진단을 관리합니다. [JPEG 연결](hwp5-bin-data-jpeg.md)은 별도 선택·RGB 예산·progressive 정밀도 진단을, [BMP 연결](hwp5-bin-data-bmp.md)은 별도 선택·RGBA 예산·메타데이터 보류를 관리합니다.
 

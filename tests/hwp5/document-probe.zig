@@ -3,6 +3,8 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub const Selection = struct {
+    view_text_semantics: @FieldType(core.hwp5.container_validation.Options, "view_text_semantics") = .uninspected,
+    view_text_semantic_report: bool = false,
     preview_image: @FieldType(core.hwp5.container_validation.Options, "preview_image") = null,
     preview_image_report: bool = false,
     images: @FieldType(core.hwp5.container_validation.Options, "images") = null,
@@ -167,40 +169,43 @@ pub fn serialize(a: std.mem.Allocator, report: core.hwp5.document_validation.Rep
     for (info.resources.counts) |n| try int(a, &out, u32, @intCast(n));
     inline for (.{ "checked", "invalid", "deferred", "unknown_records" }) |name| try int(a, &out, u32, @intCast(@field(info.references, name)));
     try fields(a, &out, info.parameters);
-    for (report.sections) |s| {
-        try int(a, &out, u32, @intCast(s.records));
-        try fields(a, &out, s.paragraphs);
-        try fields(a, &out, s.definition);
-        try fields(a, &out, s.control_types);
-        try fields(a, &out, s.lists);
-        try fields(a, &out, s.tables);
-        try fields(a, &out, s.parameters);
-        try int(a, &out, u32, @intCast(s.object_properties));
-        try fields(a, &out, s.header_footer);
-        try fields(a, &out, s.number_controls);
-        try fields(a, &out, s.page_number);
-        try fields(a, &out, s.index_marks);
-        try fields(a, &out, s.page_visibility);
-        try fields(a, &out, s.bookmarks);
-        try fields(a, &out, s.char_overlap);
-        try int(a, &out, u32, @intCast(s.observed_field_links));
-        try fields(a, &out, s.fields);
-        try fields(a, &out, s.ruby);
-        try fields(a, &out, s.hidden_comments);
-        try fields(a, &out, s.notes);
-        try fields(a, &out, s.equations);
-        try fields(a, &out, s.ole);
-        try fields(a, &out, s.shapes);
-        try fields(a, &out, s.drawing_styles);
-        try fields(a, &out, s.lines);
-        try fields(a, &out, s.rectangles);
-        try fields(a, &out, s.ellipses);
-        try fields(a, &out, s.arcs);
-        try fields(a, &out, s.polygons);
-        try fields(a, &out, s.curves);
-        try fields(a, &out, s.pictures);
-        try fields(a, &out, s.shape_groups);
-        try fields(a, &out, s.forms);
-    }
+    try serializeSections(a, &out, report.sections);
     return out.toOwnedSlice(a);
+}
+pub fn serializeSections(a: std.mem.Allocator, out: *std.ArrayList(u8), sections: []const core.hwp5.document_validation.types.SectionReport) !void {
+    for (sections) |s| {
+        try int(a, out, u32, @intCast(s.records));
+        try fields(a, out, s.paragraphs);
+        try fields(a, out, s.definition);
+        try fields(a, out, s.control_types);
+        try fields(a, out, s.lists);
+        try fields(a, out, s.tables);
+        try fields(a, out, s.parameters);
+        try int(a, out, u32, @intCast(s.object_properties));
+        try fields(a, out, s.header_footer);
+        try fields(a, out, s.number_controls);
+        try fields(a, out, s.page_number);
+        try fields(a, out, s.index_marks);
+        try fields(a, out, s.page_visibility);
+        try fields(a, out, s.bookmarks);
+        try fields(a, out, s.char_overlap);
+        try int(a, out, u32, @intCast(s.observed_field_links));
+        try fields(a, out, s.fields);
+        try fields(a, out, s.ruby);
+        try fields(a, out, s.hidden_comments);
+        try fields(a, out, s.notes);
+        try fields(a, out, s.equations);
+        try fields(a, out, s.ole);
+        try fields(a, out, s.shapes);
+        try fields(a, out, s.drawing_styles);
+        try fields(a, out, s.lines);
+        try fields(a, out, s.rectangles);
+        try fields(a, out, s.ellipses);
+        try fields(a, out, s.arcs);
+        try fields(a, out, s.polygons);
+        try fields(a, out, s.curves);
+        try fields(a, out, s.pictures);
+        try fields(a, out, s.shape_groups);
+        try fields(a, out, s.forms);
+    }
 }

@@ -9,7 +9,7 @@ pub fn header() [256]u8 {
     put(&h, 32, u32, 0x05000107);
     return h;
 }
-fn frame(a: std.mem.Allocator, out: *std.ArrayList(u8), tag: u10, level: u10, b: []const u8) !void {
+pub fn frame(a: std.mem.Allocator, out: *std.ArrayList(u8), tag: u10, level: u10, b: []const u8) !void {
     var word: [4]u8 = undefined;
     put(&word, 0, u32, @as(u32, tag) | (@as(u32, level) << 10) | (@as(u32, @intCast(b.len)) << 20));
     try out.appendSlice(a, &word);

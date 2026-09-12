@@ -3,20 +3,37 @@ const File = @import("../../cfb/reader.zig").File;
 const Header = @import("../file_header.zig").Header;
 const sections = @import("sections.zig");
 const framing = @import("../record.zig");
+const section_set = @import("../document/section_set.zig");
+pub const SemanticPolicy = enum { uninspected, strict_document_rules };
+pub const SemanticContext = struct {
+    resources: @import("../docinfo/resources.zig").Report,
+    body_sections: []const @import("../document/types.zig").SectionReport,
+};
+pub const Detailed = struct {
+    framing: Report,
+    semantics: ?section_set.Report = null,
+    pub fn deinit(self: *Detailed, a: std.mem.Allocator) void {
+        if (self.semantics) |*report| report.deinit(a);
+        self.* = undefined;
+    }
+};
 pub const Report = struct {
     declared: bool,
     present: bool = false,
     sections: usize = 0,
     records: usize = 0,
     decoded_bytes: usize = 0,
-    /// Every payload remains semantically unvalidated; framing is not field support.
+    /// This framing-only report never claims payload support; see the separate semantic report.
     deferred_records: usize = 0,
 };
 pub fn inspect(a: std.mem.Allocator, file: *const File, header: *const Header, used: []bool, remaining_bytes: *usize, remaining_records: usize, expected_sections: usize, options: @import("../document/types.zig").Options, max_ciphertext: usize) !Report {
+    return (try inspectDetailed(a, file, header, used, remaining_bytes, remaining_records, expected_sections, options, max_ciphertext, null)).framing;
+}
+pub fn inspectDetailed(a: std.mem.Allocator, file: *const File, header: *const Header, used: []bool, remaining_bytes: *usize, remaining_records: usize, expected_sections: usize, options: @import("../document/types.zig").Options, max_ciphertext: usize, semantic_context: ?SemanticContext) !Detailed {
     var report: Report = .{ .declared = header.has(.track_changes) };
     const root = try file.findExact("/ViewText") orelse {
         if (report.declared) return error.MissingViewText;
-        return report;
+        return .{ .framing = report };
     };
     if (file.entries[root].kind != 1) return error.InvalidHwpEntryKind;
     report.present = true;
@@ -36,5 +53,11 @@ pub fn inspect(a: std.mem.Allocator, file: *const File, header: *const Header, u
     }
     report.sections = decoded.len;
     report.deferred_records = report.records;
-    return report;
+    var semantics: ?section_set.Report = null;
+    if (semantic_context) |context| {
+        var local = options;
+        for (context.body_sections) |body| try @import("../document/form_budget.zig").consume(&local.forms, body.forms);
+        semantics = try section_set.inspect(a, decoded, header.version(), context.resources, local, remaining_records);
+    }
+    return .{ .framing = report, .semantics = semantics };
 }

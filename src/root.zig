@@ -56,6 +56,8 @@ test {
     _ = @import("hwp5/container/bmp_profile_tests.zig");
     _ = @import("hwp5/container/gif_image_tests.zig");
     _ = @import("hwp5/container/preview_image_tests.zig");
+    _ = @import("hwp5/container/view_semantic_tests.zig");
+    _ = @import("hwp5/container/view_memo_tests.zig");
     _ = @import("text/bcp47/tests.zig");
     _ = @import("text/utf16_tests.zig");
     _ = @import("text/iso639/tests.zig");

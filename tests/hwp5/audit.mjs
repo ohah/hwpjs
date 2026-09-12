@@ -14,6 +14,7 @@ import {forbiddenDocument} from "./forbidden-document.mjs";
 import {trackAuthorEdges,trackAuthorDocument} from "./track-author.mjs";
 import {trackChangeEdges,trackChangeDocument} from "./track-change.mjs";
 import {viewTextDocument} from "./view-text.mjs";
+import {viewSemanticActual} from "./view-semantic.mjs";
 import {distributionEdges,distributionActual} from "./distribution.mjs";
 import {revisionDeleteEdges} from "./revision-delete.mjs";
 import {revisionSignEdges,revisionSignActual} from "./revision-sign.mjs";
@@ -719,6 +720,11 @@ const forbiddenDocumentResults = forbiddenDocument(call,cfb);
 const trackAuthorResults = {edges:trackAuthorEdges(call),document:trackAuthorDocument(call,cfb)};
 const trackChangeResults = {edges:trackChangeEdges(call),document:trackChangeDocument(call,cfb)};
 const viewTextResults = viewTextDocument(call,cfb);
+const viewSemanticResults = viewSemanticActual(call,cfb);
+assert.deepEqual(viewSemanticResults.map(({strict,controlBytes,viewBytes,viewRecords})=>({strict,controlBytes,viewBytes,viewRecords})), [
+  {strict:'InvalidLinePosition',controlBytes:956,viewBytes:105182,viewRecords:2814},
+  {strict:956,controlBytes:956,viewBytes:8015903,viewRecords:265451},
+]);
 const distributionResults = {edges:distributionEdges(call),actual:distributionActual(call,cfb)};
 const revisionDeleteResults = revisionDeleteEdges(call);
 const revisionSignResults = {edges:revisionSignEdges(call),actual:revisionSignActual(call,cfb)};
@@ -1449,6 +1455,7 @@ console.log(
       trackAuthorResults,
       trackChangeResults,
       viewTextResults,
+      viewSemanticResults,
       distributionResults,
       revisionDeleteResults,
       revisionSignResults,

@@ -4,6 +4,8 @@
 
 이 문서는 ViewText의 압축·framing·구역 경계 검증과 아직 미완료인 의미 검증을 구분합니다. 전체 변경 추적 필드 해석을 구현 완료한 문서가 아닙니다.
 
+명시적으로 선택하는 엄격 문서 규칙 검사와 별도 의미 보고서는 [ViewText 의미 검사 선택과 검증](hwp5-viewtext-semantic-inspection.md)이 소유합니다. 아래 경계 보고서의 의미와 기본 정책은 유지됩니다.
+
 ## 공개 답변으로 확인한 역할
 
 [한컴 디벨로퍼 포럼의 2024년 답변](https://forum.developer.hancom.com/t/hwp-binary-format/1963)은 태그 32에 변경 추적 상태·암호 정보, 태그 96에 유형·시간·글자/문단 모양 ID, 태그 97에 검토자 정보가 들어간다고 설명합니다. 하지만 필드별 바이트 오프셋·길이·참조 기준은 제공하지 않습니다.
@@ -20,7 +22,7 @@ ViewText가 있으면 변경 추적 플래그와 무관하게 검사합니다. �
 
 ViewText 해제 바이트는 `max_total_bytes`의 공유 예산을 소비하며 DocInfo/BodyText에서 사용한 뒤 남은 `max_total_records` 안에서 검사합니다. 구역마다 전체 레코드 예산을 다시 부여하지 않습니다. 실패 시 전체 컨테이너 검증을 종료하고 문서 보고서·임시 해제 버퍼·구역 순서 배열을 정리합니다. 성공 보고서는 ViewText 원문 포인터를 남기지 않습니다.
 
-`Report.view_text`는 declared/present, sections, records, decoded_bytes, deferred_records를 제공합니다. 모든 ViewText 레코드는 아직 의미 검증 전이므로 deferred_records는 records와 같습니다. framing을 검사한 스트림은 uninspected_streams에서 빠지지만, 이를 payload 검증 완료로 해석하지 않습니다. 기존 BodyText 보고서와 섞지 않으며 총 decode 바이트에는 ViewText를 포함합니다. 테스트 mode 98은 위 여섯 값을 반환하고 mode 25도 같은 기본 검증을 수행합니다.
+`Report.view_text`는 declared/present, sections, records, decoded_bytes, deferred_records를 제공합니다. 이 보고서는 framing 검사만 나타내므로 deferred_records는 records와 같습니다. 별도 선택 의미 보고서의 결과를 여기에서 자동 차감하지 않습니다. framing을 검사한 스트림은 uninspected_streams에서 빠지지만, 이를 payload 검증 완료로 해석하지 않습니다. 기존 BodyText 보고서와 섞지 않으며 총 decode 바이트에는 ViewText를 포함합니다. 테스트 mode 98은 위 여섯 값을 반환하고 mode 25도 같은 기본 검증을 수행합니다.
 
 ## 수정 전 누락 재현
 
