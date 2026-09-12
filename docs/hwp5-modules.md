@@ -17,6 +17,7 @@
   - [관측 차트 셀 배열·null 위치](hwp5-chart-grid-cells.md)
   - [관측 차트 문자열 해석](hwp5-chart-strings.md)
   - [차트 셀 이후 경계 조사](hwp5-chart-grid-tail-evidence.md)
+  - [관측 Backdrop·빈 Picture](hwp5-chart-backdrop.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
 - [DocInfo·리소스](hwp5-docinfo-contracts.md)
