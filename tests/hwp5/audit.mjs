@@ -16,6 +16,9 @@ import {trackChangeEdges,trackChangeDocument} from "./track-change.mjs";
 import {viewTextDocument} from "./view-text.mjs";
 import {viewSemanticActual} from "./view-semantic.mjs";
 import {distributionEdges,distributionActual} from "./distribution.mjs";
+import {distributionContainerActual} from "./distribution-container.mjs";
+import {distributionContainerEdges} from "./distribution-container-edges.mjs";
+import {distributionPolicyEvidence} from "./distribution-policy-evidence.mjs";
 import {revisionDeleteEdges} from "./revision-delete.mjs";
 import {revisionSignEdges,revisionSignActual} from "./revision-sign.mjs";
 import {revisionProjectionEdges,revisionProjectionActual} from "./revision-projection.mjs";
@@ -726,6 +729,16 @@ assert.deepEqual(viewSemanticResults.map(({strict,controlBytes,viewBytes,viewRec
   {strict:956,controlBytes:956,viewBytes:8015903,viewRecords:265451},
 ]);
 const distributionResults = {edges:distributionEdges(call),actual:distributionActual(call,cfb)};
+const distributionPolicyResults = distributionPolicyEvidence(call,cfb);
+const distributionContainerResults = distributionContainerActual(call,cfb);
+const distributionContainerEdgeResults = distributionContainerEdges(call,cfb);
+assert.deepEqual(distributionContainerEdgeResults,{targets:3,accepted:5,rejected:30});
+assert.deepEqual(distributionContainerResults.map(({flags,primarySource,sections,reportBytes,decodedBytes,uninspectedStreams})=>({flags,primarySource,sections,reportBytes,decodedBytes,uninspectedStreams})), [
+  {flags:5,primarySource:1,sections:1,reportBytes:1064,decodedBytes:570694,uninspectedStreams:3},
+  {flags:1,primarySource:0,sections:1,reportBytes:1064,decodedBytes:586234,uninspectedStreams:2},
+  {flags:131077,primarySource:1,sections:6,reportBytes:5064,decodedBytes:1106070,uninspectedStreams:3},
+  {flags:5,primarySource:1,sections:1,reportBytes:1064,decodedBytes:105188,uninspectedStreams:3},
+]);
 const revisionDeleteResults = revisionDeleteEdges(call);
 const revisionSignResults = {edges:revisionSignEdges(call),actual:revisionSignActual(call,cfb)};
 const revisionProjectionResults = {edges:revisionProjectionEdges(call),actual:revisionProjectionActual(call,cfb)};
@@ -1457,6 +1470,9 @@ console.log(
       viewTextResults,
       viewSemanticResults,
       distributionResults,
+      distributionPolicyResults,
+      distributionContainerResults,
+      distributionContainerEdgeResults,
       revisionDeleteResults,
       revisionSignResults,
       revisionProjectionResults,

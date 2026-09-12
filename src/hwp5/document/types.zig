@@ -6,6 +6,8 @@ pub const DrawingStyleOptions = @import("../body/drawing_style_validation.zig").
 pub const Section = struct { index: u16, bytes: []const u8 };
 pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
 pub const Options = struct {
+    /// Explicit observed distribution policy; callers supply the primary decoded view.
+    distribution: @import("../feature_policy.zig").Distribution = .reject,
     /// Explicit observed UTF-16 form interpretation; budgets span all sections.
     forms: ?@import("../body/form_validation.zig").Options = null,
     forbidden_chars: @import("../docinfo/forbidden_validation.zig").Layout = .preserve_raw,

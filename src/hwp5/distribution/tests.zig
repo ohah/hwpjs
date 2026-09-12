@@ -26,6 +26,26 @@ fn failure(a: std.mem.Allocator, bytes: []const u8) !void {
     defer a.free(output);
     return error.ExpectedDistributionFailure;
 }
+test "distribution policy ViewText requires valid envelope and never falls back" {
+    const f = @import("../document/test_fixture.zig");
+    var raw_header = f.header();
+    f.put(&raw_header, 36, u32, 5);
+    const h = try @import("../file_header.zig").Header.parse(&raw_header);
+    const view = @import("../container/view_stream.zig");
+    const good = fixture(false);
+    try t.expectError(error.UnsupportedDistribution, view.decode(t.allocator, &h, &good, 1, 48));
+    const output = try view.decodeWithPolicy(t.allocator, &h, &good, 1, 48, .observed_viewtext);
+    defer t.allocator.free(output);
+    try t.expectEqualSlices(u8, "A", output);
+    const bad = fixture(true);
+    try t.expectError(error.InvalidChecksum, view.decodeWithPolicy(t.allocator, &h, &bad, 1, 48, .observed_viewtext));
+    try t.expectError(error.LimitExceeded, view.decodeWithPolicy(t.allocator, &h, &good, 1, 47, .observed_viewtext));
+    try t.expectError(error.LimitExceeded, view.decodeWithPolicy(t.allocator, &h, &good, 0, 48, .observed_viewtext));
+    var ordinary = [_]u8{0} ** 5;
+    f.put(&ordinary, 0, u32, 999 | (1 << 20));
+    try t.expectError(error.InvalidDistributionRecord, view.decodeWithPolicy(t.allocator, &h, &ordinary, 100, 100, .observed_viewtext));
+    try t.expectEqualSlices(u8, &raw_header, &h.raw);
+}
 test "distribution decoder success and late checksum failure clean all allocations" {
     const good = fixture(false);
     const bad = fixture(true);

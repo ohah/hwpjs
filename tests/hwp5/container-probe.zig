@@ -98,6 +98,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified:
     const max_bytes = try r.readInt(u32);
     var report = try core.hwp5.container_validation.inspect(a, bytes[r.offset..], .{ .view_text_semantics = selection.view_text_semantics, .preview_image = selection.preview_image, .images = selection.images, .xml = selection.xml, .xml_template = selection.xml_template, .history = selection.history, .storage_layout = if (specified) .specified else .observed_optional_extension, .document = .{
         .forms = selection.forms,
+        .distribution = selection.distribution,
         .forbidden_chars = selection.forbidden_layout,
         .drawing_style = selection.style,
         .arc_layout = selection.arc,
@@ -157,5 +158,6 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified:
     if (selection.bmp_rle_report) try @import("container-bmp-rle-probe.zig").serialize(a, &out, report.images, selection.images != null and selection.images.?.bmp != null and selection.images.?.bmp.?.rle != null);
     if (selection.bmp_profile_report) try @import("container-bmp-profile-probe.zig").serialize(a, &out, report.images, selection.images != null and selection.images.?.bmp_profile != null);
     if (selection.preview_image_report) try @import("preview-image-probe.zig").serialize(a, &out, report.preview_image, selection.preview_image);
+    if (selection.primary_source_report) try int(a, &out, u32, @intFromEnum(report.primary_source));
     return out.toOwnedSlice(a);
 }

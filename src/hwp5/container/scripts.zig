@@ -10,6 +10,9 @@ pub const Report = struct {
 /// Exact optional children only. Presence does not imply script execution support.
 /// Scalar report only; raw fields are available through the borrowed payload parsers.
 pub fn inspect(a: std.mem.Allocator, file: *const File, header: *const Header, used: []bool, remaining: *usize) !Report {
+    return inspectWithPolicy(a, file, header, used, remaining, .reject, 64 * 1024 * 1024);
+}
+pub fn inspectWithPolicy(a: std.mem.Allocator, file: *const File, header: *const Header, used: []bool, remaining: *usize, policy: @import("../feature_policy.zig").Distribution, max_ciphertext: usize) !Report {
     var result: Report = .{};
     const storage = try file.findExact("/Scripts") orelse return result;
     if (file.entries[storage].kind != 1) return error.InvalidHwpEntryKind;
@@ -17,7 +20,7 @@ pub fn inspect(a: std.mem.Allocator, file: *const File, header: *const Header, u
         if (try file.findExact(path)) |index| {
             const entry = file.entries[index];
             if (entry.kind != 2) return error.InvalidHwpEntryKind;
-            const bytes = try @import("../stream.zig").decode(a, header, entry.content, remaining.*);
+            const bytes = try @import("../scripts/stream.zig").decode(a, header, entry.content, remaining.*, max_ciphertext, policy);
             defer a.free(bytes);
             if (kind == 0) {
                 const version = try @import("../scripts/version.zig").Version.parse(bytes);

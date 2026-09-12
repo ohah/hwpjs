@@ -9,6 +9,9 @@ pub fn decode(a: std.mem.Allocator, file: *const File, header: *const @import(".
 }
 /// Shared bounded decoding of direct canonical Section children of a checked storage.
 pub fn decodeAt(a: std.mem.Allocator, file: *const File, body: usize, header: *const @import("../file_header.zig").Header, used: []bool, remaining: *usize, max_sections: usize, view_ciphertext_limit: ?usize) ![]Section {
+    return decodeAtWithPolicy(a, file, body, header, used, remaining, max_sections, view_ciphertext_limit, .reject);
+}
+pub fn decodeAtWithPolicy(a: std.mem.Allocator, file: *const File, body: usize, header: *const @import("../file_header.zig").Header, used: []bool, remaining: *usize, max_sections: usize, view_ciphertext_limit: ?usize, policy: @import("../feature_policy.zig").Distribution) ![]Section {
     var result: std.ArrayList(Section) = .empty;
     errdefer {
         for (result.items) |s| a.free(s.bytes);
@@ -19,7 +22,7 @@ pub fn decodeAt(a: std.mem.Allocator, file: *const File, body: usize, header: *c
         const index = try paths.sectionIndex(entry.name) orelse continue;
         if (entry.kind != 2) return error.InvalidHwpEntryKind;
         if (result.items.len >= max_sections) return error.LimitExceeded;
-        const bytes = if (view_ciphertext_limit) |limit| try @import("view_stream.zig").decode(a, header, entry.content, remaining.*, limit) else try @import("../stream.zig").decode(a, header, entry.content, remaining.*);
+        const bytes = if (view_ciphertext_limit) |limit| try @import("view_stream.zig").decodeWithPolicy(a, header, entry.content, remaining.*, limit, policy) else try @import("../stream.zig").decodeWithPolicy(a, header, entry.content, remaining.*, policy);
         errdefer a.free(bytes);
         try result.append(a, .{ .index = index, .bytes = bytes });
         remaining.* -= bytes.len;

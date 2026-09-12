@@ -10,6 +10,7 @@
 - [BinData 이미지 검사](hwp5-bin-data-images.md)는 선택적 PNG 연결·이미지 예산·미지원 콘텐츠 진단을 관리합니다. [JPEG 연결](hwp5-bin-data-jpeg.md)은 별도 선택·RGB 예산·progressive 정밀도 진단을, [BMP 연결](hwp5-bin-data-bmp.md)은 별도 선택·RGBA 예산·메타데이터 보류를 관리합니다.
 
 - [배포용 형태 ViewText](hwp5-distribution-viewtext.md)는 별도 envelope·키 유도·블록·꼬리 검증과 배포용 플래그 문서 전체 지원의 차이를 관리합니다.
+- [배포용 문서 본문 선택 조사](hwp5-distribution-document-policy.md)는 BodyText와 ViewText의 실제 구역 수 차이 및 전체 정책 연결 전 검증 근거를 관리합니다.
 - [DocOptions 조사](hwp5-doc-options-evidence.md)는 `_LinkDoc` 등 필드 배치가 미확정인 스트림의 관측 근거와 검증 보류 경계를 관리합니다.
 
 - `src/hwp5/document/`: types는 입력/소유권/보고서, docinfo는 리소스 검증 연결, section은 기존 본문 검사기 조립, validation은 헤더 지원 정책·구역 수/인덱스·전역 한도를 소유합니다. inspectDecoded 입력은 이미 압축 해제된 스트림이며 CFB를 검색하지 않습니다. 구역 보고서는 인덱스 순서로 소유하고 DocInfo 원문 슬라이스는 빌립니다. 레벨·ID·구역 정의 첫 문단 조건 등 기존 의미 규칙을 이 계층에 복제하지 않습니다.
@@ -22,7 +23,7 @@
 
 - `hwp5/summary/`: header는 HWP FMTID/단일 set envelope, parser는 속성 offset/중복/배열 수명, value는 알려진 typed value, rules는 ID별 기대 타입을 소유합니다. PID 0 dictionary는 TypedPropertyValue로 읽지 않습니다. LPWSTR 문자열 길이는 u32 코드 유닛이며 NUL 종결/패딩을 검사하되 원문·extra·64비트 FILETIME을 보존합니다. `container/summary.zig`는 제어문자 0x05를 포함한 정확한 루트 경로와 전역 한도만 연결합니다. 미지원 타입/ID·dictionary·꼬리를 완료로 치환하지 않습니다.
 
-- `hwp5/scripts/version.zig`는 버전 두 DWORD, `source.zig`는 u32 길이의 네 UTF-16 필드와 -1 종료 표식을 소유합니다. summary의 NUL/패딩 규칙을 재사용하지 않습니다. `container/scripts.zig`는 정확한 선택 경로·공통 stream.decode·전역 소비 한도를 연결하며 scalar 보고서만 반환합니다. 미지 버전/꼬리는 보존·보고하고 스크립트를 실행하지 않습니다.
+- `hwp5/scripts/version.zig`는 버전 두 DWORD, `source.zig`는 u32 길이의 네 UTF-16 필드와 -1 종료 표식을 소유합니다. summary의 NUL/패딩 규칙을 재사용하지 않습니다. `container/scripts.zig`는 정확한 선택 경로·scripts/stream의 역할별 선택 디코딩·전역 소비 한도를 연결하며 scalar 보고서만 반환합니다. 미지 버전/꼬리는 보존·보고하고 스크립트를 실행하지 않습니다.
 
 - [XMLTemplate](hwp5-xml-template.md)은 표 10~12의 decoded 문자열과 명시적인 컨테이너 선택을 검사합니다. 선택적 XML 문법·namespace 검사는 [내부 XML 검증 연결](hwp5-xml-validation.md)이 소유하며, 스키마 의미 검증·외부 엔터티 로드·CFB 압축 자동 판별은 포함하지 않습니다. 실제 XMLTemplate 표본은 아직 확보하지 못했습니다.
 

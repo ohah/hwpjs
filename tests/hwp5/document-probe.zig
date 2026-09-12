@@ -3,6 +3,8 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub const Selection = struct {
+    distribution: @FieldType(core.hwp5.document_validation.Options, "distribution") = .reject,
+    primary_source_report: bool = false,
     view_text_semantics: @FieldType(core.hwp5.container_validation.Options, "view_text_semantics") = .uninspected,
     view_text_semantic_report: bool = false,
     preview_image: @FieldType(core.hwp5.container_validation.Options, "preview_image") = null,
@@ -113,7 +115,7 @@ pub fn readStyle(r: *core.Reader) !core.hwp5.document_validation.types.DrawingSt
     if (mode > 5) return error.InvalidMode;
     return .{ .border = @enumFromInt(mode & 1), .tail = if (mode >= 4) .alpha_shadow_metadata else if (mode & 2 != 0) .fill_only else .alpha_shadow };
 }
-fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: Selection) ![]u8 {
+pub fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: Selection) ![]u8 {
     const d = core.hwp5.document_validation;
     var r: core.Reader = .{ .bytes = bytes };
     const max_bytes = try r.readInt(u32);
@@ -132,6 +134,7 @@ fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: 
     if (r.offset != bytes.len) return error.TrailingDocumentInput;
     var report = try d.inspectDecoded(a, .{ .header = header, .doc_info = doc, .sections = sections }, .{
         .forms = selection.forms,
+        .distribution = selection.distribution,
         .forbidden_chars = selection.forbidden_layout,
         .drawing_style = selection.style,
         .arc_layout = selection.arc,

@@ -4,6 +4,7 @@ import {inflateRawSync} from 'node:zlib';
 import {documentRecords} from './documents.mjs';
 import {word as w,makeDistribution,distributionOracle} from './distribution-oracle.mjs';
 const input=(raw,output=67108864,cipher=67108864,compressed=true)=>Buffer.concat([Buffer.from([compressed?1:0]),w(cipher),w(output),raw]);
+export const distributionSamples=Object.freeze(['20250130-hongbo-no.hwp','20250130-hongbo.hwp','한글문서파일형식_5.0_revision1.3.hwp','issue5756/156732409_superscript_advance.hwp']);
 export function distributionEdges(call){
   let accepted=0,rejected=0;
   const original=makeDistribution(Buffer.from('distribution'));
@@ -33,7 +34,7 @@ export function distributionEdges(call){
 }
 export function distributionActual(call,cfb){
   const out=[];
-  for(const name of ['20250130-hongbo-no.hwp','20250130-hongbo.hwp','한글문서파일형식_5.0_revision1.3.hwp','issue5756/156732409_superscript_advance.hwp']){
+  for(const name of distributionSamples){
     const file=readFileSync(new URL('../../reference/rhwp/samples/'+name,import.meta.url));cfb.parse(file,{strict:true});
     const raw=Buffer.from(cfb.findExact('/ViewText/Section0').content),expected=distributionOracle(raw);
     assert.deepEqual(call(99,input(raw,expected.length,raw.length-260)),expected);

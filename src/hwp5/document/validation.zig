@@ -13,7 +13,7 @@ pub fn inspectDecoded(a: std.mem.Allocator, input: Input, options: Options) !Rep
     try charge(&remaining, input.doc_info.len);
     for (input.sections) |s| try charge(&remaining, s.bytes.len);
     const header = try types.Header.parse(input.header);
-    try @import("../stream.zig").requireSupported(&header);
+    try @import("../feature_policy.zig").requireSupported(&header, options.distribution);
     var local = options;
     local.framing.max_records = @min(options.framing.max_records, options.max_total_records);
     const doc = try @import("docinfo.zig").inspect(a, input.doc_info, header.version(), local);
