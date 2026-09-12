@@ -26,6 +26,8 @@ String은 기존 관측 배치인 ID·VtString v1·u16 길이·원시 바이트�
 
 ## 잘못된 가정의 재현과 수정
 
+위 관측 표는 첫 Axis의 이력입니다. 후속 [String/Double 선택 필드 조사](hwp5-chart-value-number-evidence.md)는 두 번째 Axis 반례에 따라 첫 선택 값에 숫자와 숫자 재참조를 추가합니다. 라벨·서식 코드의 String 제한은 유지합니다.
+
 초기 조사기는 라벨 뒤에 원시 u16과 u32 TextBlock 헤더가 이어진다고 가정했습니다. 실제 입력에서 UnsupportedValueObservationType으로 실패했습니다. 첫 라벨 끝 뒤 바이트는 `2e 00 00 0d 00 00 00 ...`, 다른 표본은 `00 00 00 0d 00 00 00 ...`였습니다. 이 사실만으로 헤더 폭이나 다음 객체 시작을 확정할 수 없습니다. 해당 소비 코드를 제거하고 경계를 라벨 끝으로 제한했습니다. 0 헤더가 두 번 반복된다는 초기 추정도 확정 사실에서 제외했습니다.
 
 이 조사 단계에서는 다음 TextBlock 본문, ValueBlock 꼬리, 다른 값 블록, AxisScaleBlock/Axis 전체 끝과 필드 의미를 확정하지 않았습니다. 후속 [TextBlock 기반 클래스 조사](hwp5-chart-value-text-evidence.md)는 원시 3바이트 뒤의 기반 클래스 본문을 별도로 검증합니다. 길이 추측이나 타입 문자열 검색으로 강제 연결하지 않습니다.
