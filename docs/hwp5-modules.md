@@ -13,6 +13,7 @@
   - [차트 Contents 명세·실측](hwp5-chart-contents-evidence.md)
   - [차트 타입 선언](hwp5-chart-type-declaration.md)
   - [차트 타입 목록·재등장](hwp5-chart-type-table.md)
+  - [관측 차트 격자 전처리](hwp5-chart-grid-prelude.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
 - [DocInfo·리소스](hwp5-docinfo-contracts.md)

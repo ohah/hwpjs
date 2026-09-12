@@ -313,6 +313,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         307 => return @import("ole-binaries-probe.zig").run(a, bytes, limit),
         308 => return @import("chart-declaration-probe.zig").run(a, bytes, limit),
         309 => return @import("chart-type-table-probe.zig").run(a, bytes, limit),
+        310 => return @import("chart-grid-prelude-probe.zig").run(a, bytes, limit),
         245 => return @import("jpeg-framing-probe.zig").run(a, bytes, limit),
         246 => return @import("jpeg-header-probe.zig").run(a, bytes, limit),
         247 => return @import("jpeg-tables-probe.zig").run(a, bytes, limit),

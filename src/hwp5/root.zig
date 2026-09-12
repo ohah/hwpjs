@@ -53,6 +53,7 @@ pub const ole = @import("body/ole.zig");
 pub const ole_container = @import("ole/container.zig");
 pub const chart_type_declaration = @import("chart/type_declaration.zig");
 pub const chart_type_table = @import("chart/type_table.zig");
+pub const chart_grid_prelude = @import("chart/grid_prelude.zig");
 pub const ole_validation = @import("body/ole_validation.zig");
 pub const shape_component = @import("body/shape_component.zig");
 pub const shape_validation = @import("body/shape_validation.zig");
