@@ -25,6 +25,7 @@
   - [Plot·배열·광원 경계 조사](hwp5-chart-plot-evidence.md)
   - [관측 VtArray 헤더](hwp5-chart-array-header.md)
   - [관측 Light·광원 원소](hwp5-chart-light.md)
+  - [Axis 제목·선택적 배율 객체 조사](hwp5-chart-axis-prefix-evidence.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
 - [DocInfo·리소스](hwp5-docinfo-contracts.md)
