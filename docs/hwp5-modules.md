@@ -19,6 +19,7 @@
   - [차트 셀 이후 경계 조사](hwp5-chart-grid-tail-evidence.md)
   - [관측 Backdrop·빈 Picture](hwp5-chart-backdrop.md)
   - [관측 TextBlock·글꼴·문자열 객체](hwp5-chart-text-block.md)
+  - [관측 Footnote·ChartSection 조립](hwp5-chart-footnote.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
 - [DocInfo·리소스](hwp5-docinfo-contracts.md)

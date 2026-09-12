@@ -29,6 +29,6 @@ export function chartTextBlockOracle(b){
  const start=p,id=object();type('VtTextBlock',2);const prefix=raw(12),auxiliary=p;assert.equal(long(),0xffffffff);
  const fontId=object();type('VtFont');const name=string(),fontRaw=raw(14);base('VtObject');
  const middle=raw(24),text=string(),suffix=raw(26);base('VtObject');
- return {start,end:p,footnoteId,declarations,objectOffsets,rawOffsets,strings,bases,auxiliary,
+ return {start,end:p,footnoteStart:backdrop.end,footnoteId,types,declarations,objectOffsets,rawOffsets,strings,bases,auxiliary,
   wire:Buffer.concat([...[p,id,fontId,name.id,text.id,name.bytes.length,name.trailer,text.bytes.length,text.trailer].map(u32),prefix,fontRaw,middle,suffix,name.bytes,text.bytes])};
 }
