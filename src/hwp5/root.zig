@@ -59,6 +59,7 @@ pub const chart_grid_cells = @import("chart/grid_cells.zig");
 pub const chart_string_value = @import("chart/string_value.zig");
 pub const chart_backdrop = @import("chart/backdrop.zig");
 pub const chart_text_block = @import("chart/text_block.zig");
+pub const chart_text_block_body = @import("chart/text_block_body.zig");
 pub const chart_footnote = @import("chart/footnote.zig");
 pub const chart_object_table = @import("chart/object_table.zig");
 pub const chart_legend = @import("chart/legend.zig");

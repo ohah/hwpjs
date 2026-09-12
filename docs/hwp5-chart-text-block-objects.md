@@ -10,6 +10,8 @@ Backdrop 필드 읽기를 복제하지 않고, 읽은 세 ID를 공통 객체 �
 
 ## 한도·소유권
 
+본문 읽기와 Options 정의는 [공통 기반 클래스 본문](hwp5-chart-text-block-body.md)을 재사용합니다. 이 문서의 inline 진입점은 여전히 본문 String이 필수이며, 별도 기반 클래스 진입점의 null 허용과 혼동하지 않습니다.
+
 max_string_bytes는 각 필드 길이에 적용합니다. max_total_string_bytes는 이름 길이와 본문 길이의 합이며 같은 저장 String을 재사용해도 두 번 계산합니다. 객체 목록의 저장 String 합계는 고유 정의만 계산하는 별도 상한입니다. 따라서 저장량과 읽어 낸 필드 합계를 혼동하지 않습니다.
 
 String은 등록된 원본 버퍼를 빌리고 raw/Backdrop은 복사합니다. 실패 시 외부 reader는 유지하지만 타입/객체 목록은 갱신됐을 수 있으므로 둘 다 폐기해야 합니다. 별도 소유 할당은 Block에 추가하지 않았습니다.

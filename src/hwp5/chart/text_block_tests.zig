@@ -122,6 +122,9 @@ test "chart text block references classes versions and independent limits" {
     f = original;
     std.mem.writeInt(u32, f.bytes[1..5], 0xffffffff, .little);
     try reject(t.allocator, f.bytes[0..f.end], error.UnsupportedChartObjectReference, .{}, .{});
+    f = original;
+    std.mem.writeInt(u32, f.bytes[1..5], std.mem.readInt(u32, f.bytes[f.text_id..][0..4], .little), .little);
+    try reject(t.allocator, f.bytes[0 .. f.end - 1], error.UnsupportedChartObjectReference, .{}, .{});
     for (original.names, original.versions) |name, version| {
         f = original;
         f.bytes[name] = 'X';
