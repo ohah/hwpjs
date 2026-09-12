@@ -228,6 +228,7 @@ import {chartGridPreludes} from './chart-grid-preludes.mjs';
 import {chartGridCells} from './chart-grid-cells.mjs';
 import {chartValueObjects} from './chart-value-objects.mjs';
 import {chartTextFormats} from './chart-text-formats.mjs';
+import {chartValueBlocks} from './chart-value-blocks.mjs';
 import {chartStrings} from './chart-strings.mjs';
 import {chartBackdrops} from './chart-backdrops.mjs';
 import {chartTextBlocks} from './chart-text-blocks.mjs';
@@ -831,6 +832,7 @@ const chartGridPreludeResults = await chartGridPreludes(call);
 const chartGridCellResults = await chartGridCells(call);
 const chartValueObjectResults = await chartValueObjects(call);
 const chartTextFormatResults = await chartTextFormats(call);
+const chartValueBlockResults = await chartValueBlocks(call);
 const chartStringResults = await chartStrings(call);
 const chartBackdropResults = await chartBackdrops(call);
 const chartTextBlockResults = await chartTextBlocks(call);
@@ -1578,6 +1580,7 @@ console.log(
       chartGridCellResults,
       chartValueObjectResults,
       chartTextFormatResults,
+      chartValueBlockResults,
       chartStringResults,
       chartBackdropResults,
       chartTextBlockResults,

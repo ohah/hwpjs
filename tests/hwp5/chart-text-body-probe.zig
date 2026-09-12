@@ -30,6 +30,11 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     for (0..other_count) |_| try objects.registerOther(try input.readInt(u32));
     var reader: core.Reader = .{ .bytes = bytes[input.offset..] };
     const body = try core.hwp5.chart_text_block_body.readObservedV2(&reader, &types, &objects, .{ .max_string_bytes = per, .max_total_string_bytes = total });
+    return serialize(a, body, &objects);
+}
+
+// Shared test wire for standalone bodies and enclosing ValueBlock probes.
+pub fn serialize(a: std.mem.Allocator, body: core.hwp5.chart_text_block_body.Body, objects: *const core.hwp5.chart_object_table.Table) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     inline for (.{ body.end, body.font.object_id, body.font.name.object_id, body.font.name.bytes.len, body.font.name.trailer, @intFromBool(body.font.name_introduced), @intFromBool(body.text != null), if (body.text) |s| s.object_id else 0xffffffff, if (body.text) |s| s.bytes.len else 0, if (body.text) |s| s.trailer else 0, @intFromBool(body.text_introduced), @intFromBool(body.backdrop != null), objects.entries.count(), objects.string_bytes }) |field|

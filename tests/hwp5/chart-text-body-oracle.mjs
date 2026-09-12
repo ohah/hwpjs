@@ -15,9 +15,13 @@ export function textBodyCase(bytes,result,prior){
  for(const id of numbers.keys())scope.push(integer(id));
  const seed=Buffer.concat(scope);
  const input=(data=body,limits={})=>Buffer.concat([...[limits.per??per,limits.total??total,limits.objects??objects,limits.stored??stored,types.size,strings.size,numbers.size].map(n=>integer(n)),seed,data]);
- const out=[...[body.length,t.fontId,name.id,nameBytes.length,name.trailer,Number(name.introduced),Number(text!==null),text?.id??0xffffffff,textBytes.length,text?.trailer??0,Number(text?.introduced??false),Number(t.background!==null),objects,stored].map(n=>integer(n))];
+ return {body,start,input,wire:textBodyWire(t,start,objects,stored),per,total,objects,stored,text:t};
+}
+export function textBodyWire(t,start,objects,stored){
+ const name=t.fontName,text=t.text,nameBytes=Buffer.from(name.hex,'hex'),textBytes=Buffer.from(text?.hex??'','hex');
+ const out=[...[t.end-start,t.fontId,name.id,nameBytes.length,name.trailer,Number(name.introduced),Number(text!==null),text?.id??0xffffffff,textBytes.length,text?.trailer??0,Number(text?.introduced??false),Number(t.background!==null),objects,stored].map(n=>integer(n))];
  for(const size of [12,14,24,26])out.push(Buffer.from(t.rawFields.find(r=>r.n===size).hex,'hex'));
  if(t.background){out.push(...t.background.ids.map(n=>integer(n)),integer(t.backgroundEnd-start),integer(t.background.suffix,2));for(const size of [50,34,4])out.push(Buffer.from(t.rawFields.find(r=>r.n===size).hex,'hex'));}
  out.push(nameBytes,textBytes);
- return {body,start,input,wire:Buffer.concat(out),per,total,objects,stored,text:t};
+ return Buffer.concat(out);
 }
