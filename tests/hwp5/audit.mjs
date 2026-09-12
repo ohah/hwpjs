@@ -225,6 +225,7 @@ import {oleBinaries} from './ole-binaries.mjs';
 import {chartDeclarations} from './chart-declarations.mjs';
 import {chartTypeTables} from './chart-type-tables.mjs';
 import {chartGridPreludes} from './chart-grid-preludes.mjs';
+import {chartGridCells} from './chart-grid-cells.mjs';
 import { shapeComponentEdges, shapeComponentReference } from "./shape-component.mjs";
 import { shapeValidationEdges } from "./shape-validation.mjs";
 import { shapeBorderEdges, shapeBorderReference } from "./shape-border.mjs";
@@ -817,6 +818,7 @@ const oleBinaryResults = await oleBinaries(call,cfb);
 const chartDeclarationResults = await chartDeclarations(call);
 const chartTypeTableResults = await chartTypeTables(call);
 const chartGridPreludeResults = await chartGridPreludes(call);
+const chartGridCellResults = await chartGridCells(call);
 assert.deepEqual(oleReferencePolicyResults.map(r=>[r.originalId,r.binItems,r.accepted,r.rejected]),[[1,1,21,12],[1,1,21,12],[0,18,27,12]]);
 const shapeComponentReferenceResults = shapeComponentReference(call, cfb);
 const shapeBorderReferenceResults = shapeBorderReference(call, cfb);
@@ -1553,6 +1555,7 @@ console.log(
       chartDeclarationResults,
       chartTypeTableResults,
       chartGridPreludeResults,
+      chartGridCellResults,
       equationReferenceResults,
       noteControlReferenceResults,
       rubyDocumentResults,

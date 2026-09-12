@@ -215,6 +215,7 @@ test {
     _ = @import("hwp5/chart/type_declaration_tests.zig");
     _ = @import("hwp5/chart/type_table_tests.zig");
     _ = @import("hwp5/chart/grid_prelude_tests.zig");
+    _ = @import("hwp5/chart/grid_cells_tests.zig");
     _ = @import("hwp5/body/ole_references_tests.zig");
     _ = @import("hwp5/document/ole_reference_tests.zig");
     _ = @import("hwp5/docinfo/storage_tests.zig");
