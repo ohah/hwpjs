@@ -220,6 +220,7 @@ import { oleValidationEdges } from "./ole-validation.mjs";
 import { storageEdges } from "./storage-extension.mjs";
 import { oleReferenceEvidence } from "./ole-reference-evidence.mjs";
 import {oleReferencePolicyActual} from './ole-reference-policy.mjs';
+import {oleContainers} from './ole-container.mjs';
 import { shapeComponentEdges, shapeComponentReference } from "./shape-component.mjs";
 import { shapeValidationEdges } from "./shape-validation.mjs";
 import { shapeBorderEdges, shapeBorderReference } from "./shape-border.mjs";
@@ -807,6 +808,7 @@ const equationReferenceResults = equationReference(call, cfb);
 const oleReferenceResults = oleReference(call, cfb);
 const oleReferenceEvidenceResults = await oleReferenceEvidence(call, cfb);
 const oleReferencePolicyResults = oleReferencePolicyActual(call,cfb);
+const oleContainerResults = await oleContainers(call);
 assert.deepEqual(oleReferencePolicyResults.map(r=>[r.originalId,r.binItems,r.accepted,r.rejected]),[[1,1,21,12],[1,1,21,12],[0,18,27,12]]);
 const shapeComponentReferenceResults = shapeComponentReference(call, cfb);
 const shapeBorderReferenceResults = shapeBorderReference(call, cfb);
@@ -1538,6 +1540,7 @@ console.log(
       oleReferenceResults,
       oleReferenceEvidenceResults,
       oleReferencePolicyResults,
+      oleContainerResults,
       equationReferenceResults,
       noteControlReferenceResults,
       rubyDocumentResults,

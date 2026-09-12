@@ -50,6 +50,7 @@ pub const note_validation = @import("body/note_validation.zig");
 pub const equation = @import("body/equation.zig");
 pub const equation_validation = @import("body/equation_validation.zig");
 pub const ole = @import("body/ole.zig");
+pub const ole_container = @import("ole/container.zig");
 pub const ole_validation = @import("body/ole_validation.zig");
 pub const shape_component = @import("body/shape_component.zig");
 pub const shape_validation = @import("body/shape_validation.zig");

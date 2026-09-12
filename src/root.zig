@@ -210,6 +210,7 @@ test {
     _ = @import("hwp5/body/note_control_tests.zig");
     _ = @import("hwp5/body/equation_tests.zig");
     _ = @import("hwp5/body/ole_tests.zig");
+    _ = @import("hwp5/ole/container_tests.zig");
     _ = @import("hwp5/body/ole_references_tests.zig");
     _ = @import("hwp5/document/ole_reference_tests.zig");
     _ = @import("hwp5/docinfo/storage_tests.zig");
