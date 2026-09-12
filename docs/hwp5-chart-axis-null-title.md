@@ -34,3 +34,5 @@ node tests/hwp5/chart-axis-null-title-survey.mjs --verify
 전체 회귀 대기 중 추가 읽기 전용 진단에서 nullable 축 끝의 raw u16 다음에 CLineItem 두 개를 순서대로 확인했습니다. 각 후보는 객체 ID·VtCLineItem v1·raw52·VtObject v1이며 선택된 43개에서 총 86개가 이 배치에 맞았습니다. 앞선 raw u16은 43개 모두 1, raw52는 두 종류였습니다. 타입 사전으로 새 선언/기존 참조를 구분한 결과이며 문자열 검색으로 위치를 선택하지 않았습니다.
 
 이 결과는 다음 파트의 가설입니다. u16 값 1을 개수 2로 해석하는 규칙을 만들거나, 일반 파일에 CLineItem 두 개만 있다고 가정하지 않습니다. raw52의 의미, 소유권, 이후 데이터와의 연결 및 잘림/변형 검증은 아직 남아 있습니다.
+
+후속 [CLineItem 경계 조사](hwp5-chart-line-item-evidence.md)에서 잘림·변형·선행 ID 중복을 검증했습니다. 위 문단은 당시 가설 이력이며 현재 검증 범위는 후속 문서가 소유합니다.

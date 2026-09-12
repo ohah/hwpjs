@@ -38,6 +38,7 @@
   - [SurfaceDesc 접두부 조사](hwp5-chart-surface-evidence.md)
   - [Surface 이후 nullable 제목 축](hwp5-chart-axis-null-title.md)
   - [Nullable 제목 제품 파서](hwp5-chart-nullable-title-parser.md)
+  - [CLineItem 경계 조사](hwp5-chart-line-item-evidence.md)
   - [TextBlock 보조 Backdrop·문자열 재참조](hwp5-chart-text-block-objects.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
