@@ -224,6 +224,7 @@ import { shapeValidationEdges } from "./shape-validation.mjs";
 import { shapeBorderEdges, shapeBorderReference } from "./shape-border.mjs";
 import { drawingStyleEdges } from "./drawing-style.mjs";
 import { drawingStyleSurvey } from "./drawing-style-survey.mjs";
+import {videoValidationActual} from './video-validation.mjs';
 import { styleDocumentReference } from "./drawing-style-document.mjs";
 import { lineEdges } from "./shape-line.mjs";
 import { lineOwnerEdges } from "./line-validation.mjs";
@@ -807,6 +808,8 @@ const oleReferenceEvidenceResults = await oleReferenceEvidence(call, cfb);
 const shapeComponentReferenceResults = shapeComponentReference(call, cfb);
 const shapeBorderReferenceResults = shapeBorderReference(call, cfb);
 const drawingStyleSurveyResults = drawingStyleSurvey(call, cfb);
+const videoValidationResults = videoValidationActual(call, cfb);
+assert.deepEqual(videoValidationResults,{accepted:10,rejected:52,actualVideoFiles:0,syntheticPayloadVariants:2});
 const styleDocumentReferenceResults = styleDocumentReference(call, cfb);
 const lineDocumentReferenceResults = lineDocumentReference(call, cfb);
 const rectanglePairResults = rectanglePair(call,cfb);
@@ -1519,6 +1522,7 @@ console.log(
       ellipseOwnerEdgeResults,
       shapeBorderReferenceResults,
       drawingStyleSurveyResults,
+      videoValidationResults,
       styleDocumentReferenceResults,
       lineDocumentReferenceResults,
       rectanglePairResults,

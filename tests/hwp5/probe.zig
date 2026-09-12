@@ -307,6 +307,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         297 => return @import("view-semantic-probe.zig").run(a, bytes, limit),
         298 => return @import("distribution-container-probe.zig").run(a, bytes, limit),
         299 => return @import("distribution-container-probe.zig").decoded(a, bytes, limit),
+        300...302 => return @import("video-validation-probe.zig").run(a, bytes, limit, mode),
         245 => return @import("jpeg-framing-probe.zig").run(a, bytes, limit),
         246 => return @import("jpeg-header-probe.zig").run(a, bytes, limit),
         247 => return @import("jpeg-tables-probe.zig").run(a, bytes, limit),

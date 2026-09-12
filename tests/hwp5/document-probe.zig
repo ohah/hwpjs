@@ -3,6 +3,8 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub const Selection = struct {
+    video_layout: ?core.hwp5.video_data.WebLayout = null,
+    video_report: bool = false,
     distribution: @FieldType(core.hwp5.document_validation.Options, "distribution") = .reject,
     primary_source_report: bool = false,
     view_text_semantics: @FieldType(core.hwp5.container_validation.Options, "view_text_semantics") = .uninspected,
@@ -133,6 +135,7 @@ pub fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selecti
     }
     if (r.offset != bytes.len) return error.TrailingDocumentInput;
     var report = try d.inspectDecoded(a, .{ .header = header, .doc_info = doc, .sections = sections }, .{
+        .video_layout = selection.video_layout,
         .forms = selection.forms,
         .distribution = selection.distribution,
         .forbidden_chars = selection.forbidden_layout,
@@ -150,6 +153,7 @@ pub fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selecti
         .framing = .{ .max_records = limit },
     });
     defer report.deinit(a);
+    if (selection.video_report) return @import("video-validation-probe.zig").serialize(a, report);
     if (selection.forbidden_report) {
         var out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(a);
