@@ -45,6 +45,7 @@ test {
     _ = @import("image/jpeg/header_tests.zig");
     _ = @import("image/jpeg/framing_tests.zig");
     _ = @import("hwp5/container/image_tests.zig");
+    _ = @import("hwp5/container/ole_binary_tests.zig");
     _ = @import("hwp5/container/jpeg_image_tests.zig");
     _ = @import("hwp5/container/bmp_image_tests.zig");
     _ = @import("image/bmp/tests.zig");

@@ -8,6 +8,7 @@ pub const Options = struct {
     view_text_semantics: @import("view_text.zig").SemanticPolicy = .uninspected,
     preview_image: ?@import("preview_image.zig").Options = null,
     images: ?@import("images.zig").Options = null,
+    ole: ?@import("ole_binaries.zig").Options = null,
     xml: ?@import("../xml_validation.zig").Options = null,
     xml_template: ?@import("xml_template.zig").Options = null,
     history: ?@import("history.zig").Options = null,
@@ -25,6 +26,7 @@ pub const Report = struct {
     view_text_semantics: ?@import("../document/section_set.zig").Report,
     preview_image: ?@import("preview_image.zig").Report,
     images: ?@import("images.zig").Report,
+    ole: ?@import("ole_binaries.zig").Report,
     xml: ?@import("../xml_validation.zig").Report,
     xml_template: ?@import("xml_template.zig").Report,
     history: ?@import("history.zig").Report,
@@ -50,6 +52,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     var xml_budget = if (options.xml) |selected| try @import("../xml_validation.zig").Budget.init(selected) else null;
     const xml = if (xml_budget) |*budget| budget else null;
     var image_budget: ?@import("images.zig").Budget = if (options.images) |selected| .{ .options = selected } else null;
+    var ole_budget: ?@import("ole_binaries.zig").Budget = if (options.ole) |selected| .{ .options = selected } else null;
     var cfb_options = options.cfb;
     cfb_options.strict = true; // Hierarchical exact lookup needs a valid CFB directory.
     var file = try cfb.File.open(a, bytes, cfb_options);
@@ -76,7 +79,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     var inspected_view = if (body.source == .distribution_viewtext) body.viewReport(&header, report) else try @import("view_text.zig").inspectDetailed(a, &file, &header, used, &remaining, options.document.max_total_records - report.total_records, report.sections.len, options.document, options.max_viewtext_ciphertext_bytes, if (options.view_text_semantics == .strict_document_rules) .{ .resources = report.doc_info.resources, .body_sections = report.sections } else null);
     errdefer inspected_view.deinit(a);
     const view = inspected_view.framing;
-    const bins = try binaries.inspectWithPolicy(a, &file, &header, doc, options.document.framing, options.storage_layout, used, &remaining, if (image_budget) |*budget| budget else null, options.document.distribution);
+    const bins = try binaries.inspectSelected(a, &file, &header, doc, options.document.framing, options.storage_layout, used, &remaining, if (image_budget) |*budget| budget else null, options.document.distribution, if (ole_budget) |*budget| budget else null);
     const preview = try @import("preview.zig").inspect(&file, used, &remaining);
     const preview_image = if (options.preview_image) |selected| try @import("preview_image.zig").inspect(a, &file, used, &remaining, selected) else null;
     const summary = try @import("summary.zig").inspect(a, &file, used, &remaining, options.max_summary_properties);
@@ -88,5 +91,5 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
     for (file.entries, used) |entry, consumed| if (entry.kind == 2 and !consumed) {
         uninspected += 1;
     };
-    return .{ .primary_source = body.source, .view_text_semantics = inspected_view.semantics, .preview_image = preview_image, .images = if (image_budget) |budget| budget.report else null, .xml = if (xml) |budget| budget.report else null, .xml_template = xml_template, .history = history, .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
+    return .{ .ole = if (ole_budget) |budget| budget.report else null, .primary_source = body.source, .view_text_semantics = inspected_view.semantics, .preview_image = preview_image, .images = if (image_budget) |budget| budget.report else null, .xml = if (xml) |budget| budget.report else null, .xml_template = xml_template, .history = history, .view_text = view, .document = report, .binary_data = bins, .preview_text = preview, .summary_information = summary, .scripts = scripts, .total_decoded_bytes = options.document.max_total_bytes - remaining, .uninspected_streams = uninspected, .doc_info_backing = doc };
 }

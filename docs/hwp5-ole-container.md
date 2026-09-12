@@ -6,7 +6,7 @@
 
 `hwp5/ole/container.zig`는 그 결과를 기존 CFB File.open으로 전달하며 strict 검사를 강제합니다. 별도 CFB 파서·시그니처·섹터 규칙을 복제하지 않습니다. max_input_bytes는 접두사를 포함한 전체 decoded 입력에 적용하고, 나머지 CFB 자원 한도도 전달합니다. 반환 File은 입력과 독립적으로 소유되며 호출자가 deinit해야 합니다.
 
-현재 독립 Zig API와 비공개 WASM 시험 연결만 구현했습니다. HWP 컨테이너의 BinData 순회에 자동 연결하지 않았습니다. OLE 참조의 ordinal→저장 경로 해결, 내부 Contents/OlePres/Workbook/Package의 의미 해석, 차트 스키마, OLE 실행, 재귀 열기, 편집·저장은 완료하지 않았습니다. 제품 JS 공개 API도 변경하지 않습니다.
+이 문서는 독립 Zig API와 비공개 WASM 시험 연결을 다룹니다. 후속 HWP 컨테이너의 선택적 연결은 [BinData OLE 검사 연결](hwp5-ole-binaries.md)이 소유합니다. OLE 참조의 ordinal→저장 경로 해결, 내부 Contents/OlePres/Workbook/Package의 의미 해석, 차트 스키마, OLE 실행, 재귀 열기, 편집·저장은 완료하지 않았습니다. 제품 JS 공개 API도 변경하지 않습니다.
 
 ## 명세와 표본
 

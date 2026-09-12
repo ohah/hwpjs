@@ -10,6 +10,9 @@ pub fn inspectWithImages(a: std.mem.Allocator, file: *const File, header: *const
     return inspectWithPolicy(a, file, header, doc, options, storage_layout, used, remaining, images, .reject);
 }
 pub fn inspectWithPolicy(a: std.mem.Allocator, file: *const File, header: *const Header, doc: []const u8, options: @import("../record.zig").Options, storage_layout: @import("../docinfo/bin_data.zig").StorageLayout, used: []bool, remaining: *usize, images: ?*@import("images.zig").Budget, policy: @import("../feature_policy.zig").Distribution) !Report {
+    return inspectSelected(a, file, header, doc, options, storage_layout, used, remaining, images, policy, null);
+}
+pub fn inspectSelected(a: std.mem.Allocator, file: *const File, header: *const Header, doc: []const u8, options: @import("../record.zig").Options, storage_layout: @import("../docinfo/bin_data.zig").StorageLayout, used: []bool, remaining: *usize, images: ?*@import("images.zig").Budget, policy: @import("../feature_policy.zig").Distribution, ole: ?*@import("ole_binaries.zig").Budget) !Report {
     var it = try @import("../docinfo/reader.zig").Iterator.init(doc, header.version(), options);
     var report: Report = .{};
     while (try it.next()) |record| {
@@ -37,6 +40,7 @@ pub fn inspectWithPolicy(a: std.mem.Allocator, file: *const File, header: *const
         const bytes = try @import("../bin_data_stream.zig").decodeWithPolicy(a, header, item, file.entries[index].content, remaining.*, policy);
         defer a.free(bytes);
         if (images) |budget| try budget.consume(a, bytes, extension);
+        if (ole) |budget| try budget.consume(a, bytes, item.data == .storage, extension);
         remaining.* -= bytes.len;
         report.decoded += 1;
         report.decoded_bytes += bytes.len;

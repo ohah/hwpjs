@@ -4,6 +4,7 @@ const jpeg = @import("jpeg_images.zig");
 const bmp = @import("bmp_images.zig");
 const bmp_profiles = @import("bmp_profiles.zig");
 const gif = @import("gif_images.zig");
+const isExtension = @import("extension.zig").is;
 pub const Options = struct {
     gif: ?gif.Options = null,
     max_total_gif_index_bytes: usize = (gif.Options{}).max_total_pixels,
@@ -111,13 +112,6 @@ pub const Budget = struct {
 /// HWP format hint only; path/UTF-16 validity remains owned by container.paths.
 fn isPngExtension(bytes: []const u8) bool {
     return isExtension(bytes, "png");
-}
-fn isExtension(bytes: []const u8, ascii: []const u8) bool {
-    if (bytes.len != 2 * ascii.len) return false;
-    for (ascii, 0..) |c, i| {
-        if (bytes[2 * i + 1] != 0 or std.ascii.toLower(bytes[2 * i]) != c) return false;
-    }
-    return true;
 }
 fn add(a: usize, b: usize) !usize {
     return std.math.add(usize, a, b) catch error.LimitExceeded;
