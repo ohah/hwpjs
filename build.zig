@@ -65,6 +65,14 @@ pub fn build(b: *std.Build) void {
     preview_image_audit.dependOn(&preview_image_tests.step);
     preview_image_audit.dependOn(&preview_image_survey.step);
     audit.dependOn(preview_image_audit);
+    const doc_options_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/doc-options-evidence.test.mjs", "tests/hwp5/hwp-corpus-evidence.test.mjs" });
+    doc_options_tests.step.dependOn(b.getInstallStep());
+    const doc_options_survey = b.addSystemCommand(&.{ "node", "tests/hwp5/doc-options-survey.mjs" });
+    doc_options_survey.step.dependOn(b.getInstallStep());
+    const doc_options_audit = b.step("doc-options-audit", "Read-only DocOptions corpus evidence and malformed snapshot tests");
+    doc_options_audit.dependOn(&doc_options_tests.step);
+    doc_options_audit.dependOn(&doc_options_survey.step);
+    audit.dependOn(doc_options_audit);
 
     const history_xml_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/history-xml-query.test.mjs" });
     audit.dependOn(&history_xml_tests.step);

@@ -22,6 +22,8 @@ zig build audit -Doptimize=ReleaseSafe
 
 `zig build preview-image-audit --summary all`은 제품 WASM 빌드 후 조사 도구 테스트와 기본 HWP fixture의 읽기 전용 시그니처 조사를 실행하며 정규 audit에도 포함됩니다. 제품 이미지 검사 명령이 아닙니다. 범위를 넓히려면 빌드 후 아래 명령에 디렉터리를 명시합니다. 직접 자식 파일만 조사합니다. 계약·미구현 범위는 [PrvImage 형식 조사](hwp5-preview-image-evidence.md)에 둡니다.
 
+`zig build doc-options-audit --summary all`은 DocOptions 관측 테스트와 기본 corpus 조사를 실행합니다. 확장 조사는 `node tests/hwp5/doc-options-survey.mjs legacy/rust/crates/hwp-core/tests/fixtures reference/rhwp/samples`로 재현합니다. 직접 자식 HWP 파일만 읽으며 내부 문서 경로는 출력하지 않습니다. 필드 검증과의 경계는 [DocOptions 조사](hwp5-doc-options-evidence.md)에 둡니다.
+
 ```sh
 node tests/hwp5/preview-image-survey.mjs legacy/rust/crates/hwp-core/tests/fixtures reference/rhwp/samples
 ```

@@ -9,6 +9,7 @@
 - [BinData 이미지 검사](hwp5-bin-data-images.md)는 선택적 PNG 연결·이미지 예산·미지원 콘텐츠 진단을 관리합니다. [JPEG 연결](hwp5-bin-data-jpeg.md)은 별도 선택·RGB 예산·progressive 정밀도 진단을, [BMP 연결](hwp5-bin-data-bmp.md)은 별도 선택·RGBA 예산·메타데이터 보류를 관리합니다.
 
 - [배포용 형태 ViewText](hwp5-distribution-viewtext.md)는 별도 envelope·키 유도·블록·꼬리 검증과 배포용 플래그 문서 전체 지원의 차이를 관리합니다.
+- [DocOptions 조사](hwp5-doc-options-evidence.md)는 `_LinkDoc` 등 필드 배치가 미확정인 스트림의 관측 근거와 검증 보류 경계를 관리합니다.
 
 - `src/hwp5/document/`: types는 입력/소유권/보고서, docinfo는 리소스 검증 연결, section은 기존 본문 검사기 조립, validation은 헤더 지원 정책·구역 수/인덱스·전역 한도를 소유합니다. inspectDecoded 입력은 이미 압축 해제된 스트림이며 CFB를 검색하지 않습니다. 구역 보고서는 인덱스 순서로 소유하고 DocInfo 원문 슬라이스는 빌립니다. 레벨·ID·구역 정의 첫 문단 조건 등 기존 의미 규칙을 이 계층에 복제하지 않습니다.
 
