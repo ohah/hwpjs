@@ -2,7 +2,7 @@
 
 ## 범위와 책임
 
-`chart/text_block.zig`는 호출자가 확정한 VtTextBlock v2 위치에서 시작하는 관측 레이아웃입니다. Font v1·두 String v1 객체를 조립하며 Footnote 전체, 제목/범례/축의 전체 객체 그래프, 글꼴 선택·색상·배치·렌더링이나 저장을 구현했다는 뜻이 아닙니다.
+이 문서는 `chart/text_block.zig`의 기존 readObservedV2 계약과 검증 이력입니다. 호출자가 확정한 VtTextBlock v2 위치에서 Font v1·두 inline String v1 객체를 조립합니다. 별도 readObservedWithObjects의 보조 객체·재참조 계약은 [확장 경로](hwp5-chart-text-block-objects.md)에 둡니다. Footnote 전체, 제목/범례/축의 전체 객체 그래프, 글꼴 선택·색상·배치·렌더링이나 저장을 구현했다는 뜻이 아닙니다.
 
 HWP 명세의 차트 항목과 공식 차트 revision 1.2의 3.3 VtFont, 3.27 Footnote, 3.56 TextLayout을 대조했습니다. API 속성 표가 wire 순서를 정의한다고 가정하지 않았습니다. 원시 필드에 표시 여부·크기·좌표 등의 의미를 임의 부여하지 않습니다.
 

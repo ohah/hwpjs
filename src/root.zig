@@ -218,6 +218,7 @@ test {
     _ = @import("hwp5/chart/grid_cells_tests.zig");
     _ = @import("hwp5/chart/backdrop_tests.zig");
     _ = @import("hwp5/chart/text_block_tests.zig");
+    _ = @import("hwp5/chart/text_block_objects_tests.zig");
     _ = @import("hwp5/chart/footnote_tests.zig");
     _ = @import("hwp5/chart/object_table_tests.zig");
     _ = @import("hwp5/chart/legend_tests.zig");

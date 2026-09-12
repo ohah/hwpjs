@@ -45,4 +45,6 @@ node tests/hwp5/chart-axis-prefix-survey.mjs --verify
 
 ## 다음 구현 경계
 
-기존 TextBlock의 readObservedV2는 보조 값 null과 inline String 이름만 지원합니다. 이번 실제 Axis 제목에는 Backdrop 보조 객체와 이름 재참조가 있어 그대로 연결하면 UnsupportedChartTextReference가 납니다. 다음 구현에서는 기존 진입점 계약을 유지하면서, Backdrop 소비와 객체 목록 기반 Font/String 해석을 재사용하는 경로를 분리해야 합니다. 그 뒤 Axis와 선택적 배율 객체를 조립합니다. 전체 Axis·Plot·문서 지원 완료는 아닙니다.
+기존 TextBlock의 readObservedV2는 보조 값 null과 inline String 이름만 지원합니다. 이번 실제 Axis 제목에는 Backdrop 보조 객체와 이름 재참조가 있어 그대로 연결하면 UnsupportedChartTextReference가 납니다. 후속 [TextBlock 확장 경로](hwp5-chart-text-block-objects.md)는 기존 진입점 계약을 유지하면서 Backdrop 소비와 객체 목록 기반 Font/String 해석을 재사용합니다. Axis와 선택적 배율 객체의 전체 조립은 아직 남아 있습니다.
+
+후속 정규 대조와 타입/문자열 사전 준비를 중복하지 않도록 `chart-axis-context.mjs`를 공유합니다. 관측 결과에는 문자열 정의/참조 위치, Backdrop 끝, 타입 참조·객체 위치 메타데이터를 추가했으며 기존 원시 값과 경계 계약은 유지합니다.
