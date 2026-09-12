@@ -328,6 +328,7 @@ fn run(mode: u32, bytes: []const u8, limit: usize) ![]u8 {
         322 => return @import("chart-value-block-probe.zig").run(a, bytes, limit),
         323 => return @import("chart-axes-probe.zig").run(a, bytes, limit),
         324 => return @import("chart-nullable-title-probe.zig").run(a, bytes, limit),
+        325 => return @import("chart-line-items-probe.zig").run(a, bytes, limit),
         245 => return @import("jpeg-framing-probe.zig").run(a, bytes, limit),
         246 => return @import("jpeg-header-probe.zig").run(a, bytes, limit),
         247 => return @import("jpeg-tables-probe.zig").run(a, bytes, limit),

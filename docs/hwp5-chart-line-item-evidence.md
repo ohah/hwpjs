@@ -33,4 +33,4 @@ node tests/hwp5/chart-line-item-survey.mjs --verify
 
 ## 남은 범위
 
-raw52의 의미와 일반 버전/확장 배치, 앞의 u16 의미, 두 항목의 소유 관계, 뒤쪽 데이터 조립은 아직 미확인입니다. 이번 경계 검증을 바탕으로 단일 CLineItem 코어 및 실제 WASM 대조를 다음에 구현합니다. Chart 전체 지원이나 렌더링 완료를 주장하지 않습니다.
+raw52의 의미와 일반 버전/확장 배치, 앞의 u16 의미, 두 항목의 소유 관계, 뒤쪽 데이터 조립은 아직 미확인입니다. 후속 단일 CLineItem 코어와 실제 WASM 대조는 [코어 계약·검증](hwp5-chart-line-item.md)에 기록합니다. Chart 전체 지원이나 렌더링 완료를 주장하지 않습니다.
