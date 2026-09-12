@@ -223,6 +223,7 @@ import {oleReferencePolicyActual} from './ole-reference-policy.mjs';
 import {oleContainers} from './ole-container.mjs';
 import {oleBinaries} from './ole-binaries.mjs';
 import {chartDeclarations} from './chart-declarations.mjs';
+import {chartTypeTables} from './chart-type-tables.mjs';
 import { shapeComponentEdges, shapeComponentReference } from "./shape-component.mjs";
 import { shapeValidationEdges } from "./shape-validation.mjs";
 import { shapeBorderEdges, shapeBorderReference } from "./shape-border.mjs";
@@ -813,6 +814,7 @@ const oleReferencePolicyResults = oleReferencePolicyActual(call,cfb);
 const oleContainerResults = await oleContainers(call);
 const oleBinaryResults = await oleBinaries(call,cfb);
 const chartDeclarationResults = await chartDeclarations(call);
+const chartTypeTableResults = await chartTypeTables(call);
 assert.deepEqual(oleReferencePolicyResults.map(r=>[r.originalId,r.binItems,r.accepted,r.rejected]),[[1,1,21,12],[1,1,21,12],[0,18,27,12]]);
 const shapeComponentReferenceResults = shapeComponentReference(call, cfb);
 const shapeBorderReferenceResults = shapeBorderReference(call, cfb);
@@ -1547,6 +1549,7 @@ console.log(
       oleContainerResults,
       oleBinaryResults,
       chartDeclarationResults,
+      chartTypeTableResults,
       equationReferenceResults,
       noteControlReferenceResults,
       rubyDocumentResults,
