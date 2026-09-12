@@ -1,5 +1,12 @@
 // Selected layout evidence only. 82 raw bytes are not a general Axis rule.
 export function observeAxisPrefix(bytes, offset, priorTypes, priorStrings){
+ return observe(bytes,offset,priorTypes,priorStrings,false);
+}
+// A base-class body starts at its type, without another object ID.
+export function observeTextBlockBase(bytes, offset, priorTypes, priorStrings){
+ return observe(bytes,offset,priorTypes,priorStrings,true);
+}
+function observe(bytes, offset, priorTypes, priorStrings, baseOnly){
  const b=Buffer.from(bytes);
  if(!Number.isSafeInteger(offset)||offset<0||offset>b.length)throw new RangeError('InvalidObservationOffset');
  let p=offset;const types=new Map(priorTypes),strings=new Map(priorStrings),objects=new Set(strings.keys()),rawFields=[],declarations=[],references=[],objectOffsets=[];
@@ -29,13 +36,18 @@ export function observeAxisPrefix(bytes, offset, priorTypes, priorStrings){
   const start=p,id=object();type('VtArray');const first=word();type('VtCollection');const second=word();type('VtObject');
   return {start,id,first,second,end:p};
  };
- const axisId=object();type('VtAxis',3);raw(82);
- const blockStart=p,blockId=object();type('VtTextBlock',2);raw(12);
+ let axisId;
+ if(!baseOnly){axisId=object();type('VtAxis',3);raw(82);}
+ const blockStart=p,blockId=baseOnly?null:object();type('VtTextBlock',2);raw(12);
  const auxiliaryOffset=p;let background=null;
  if(b.length-p<4)fail('IncompleteAxisObservation');
  if(b.readUInt32LE(p)===0xffffffff)long();else background=backdrop();
  const backgroundEnd=background?p:null,fontOffset=p,fontId=object();type('VtFont');const fontName=string();raw(14);type('VtObject');raw(24);
- const text=string();raw(26);type('VtObject');const blockEnd=p,scaleArray=array();
+ let text;
+ if(baseOnly&&b.length-p>=4&&b.readUInt32LE(p)===0xffffffff){long();text=null;}else text=string();
+ raw(26);type('VtObject');const blockEnd=p;
+ if(baseOnly)return {start:offset,blockStart,blockId,auxiliaryOffset,background,backgroundEnd,fontOffset,fontId,fontName,text,blockEnd,end:p,rawFields,declarations,references,objectOffsets};
+ const scaleArray=array();
  // Record only the first nested header; do not infer either array word's meaning.
  let scale=null;
  if(scaleArray.first===1&&scaleArray.second===1){const id=object();type('VtAxisScaleBlock');scale={id,array:array()};}
