@@ -99,6 +99,8 @@ pub fn build(b: *std.Build) void {
     hwp_probe.step.dependOn(&icc_registry_check.step);
     hwp_probe.rdynamic = true;
     const hwp_check = b.addSystemCommand(&.{ "node", "tests/hwp5/audit.mjs" });
+    const drawing_evidence_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/drawing-section-evidence.test.mjs" });
+    hwp_check.step.dependOn(&drawing_evidence_tests.step);
     hwp_check.addArtifactArg(hwp_probe);
     hwp_check.step.dependOn(b.getInstallStep());
     b.step("hwp5-audit", "Verify HWP5 foundation in WASM against independent byte oracles").dependOn(&hwp_check.step);

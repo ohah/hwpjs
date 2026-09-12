@@ -1,6 +1,10 @@
 const std = @import("std");
 const t = std.testing;
 const v = @import("video_data.zig");
+test "video record tag matches HWP specification BEGIN plus 82" {
+    // Independent specification value, not an expectation derived from v.tag.
+    try t.expectEqual(@as(u10, 0x10 + 82), v.tag);
+}
 test "video wire fields preserve IDs raw UTF16 and explicitly bounded extra" {
     const local = [_]u8{ 0, 0, 0, 0, 0, 128, 255, 255, 9, 128, 255 };
     const p = try v.Video.parse(&local, .specified_remainder);

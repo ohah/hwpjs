@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { documentRecords } from "./documents.mjs";
+import { inspectDrawingSection } from './drawing-section-evidence.mjs';
 import { drawingStyleActual } from "./drawing-style.mjs";
 import { lineActual } from "./shape-line.mjs";
 import { groupInfoActual } from "./group-info.mjs";
@@ -82,10 +83,7 @@ export function drawingStyleSurvey(call, cfb) {
     for (const section of sections) {
       let bytes, records;
       try {
-        bytes = call(3, Buffer.concat([header, section.raw]));
-        records = documentRecords(bytes);
-        const version = header.subarray(32, 36);
-        call(51, Buffer.concat([version, bytes]));
+        ({bytes, records} = inspectDrawingSection(call, header, section, name, out.videoRecords));
       } catch (e) {
         if (e instanceof WebAssembly.RuntimeError) throw e;
         out.failures.push({ name, section: section.name, stage: "shape hierarchy", error: e.message });
@@ -107,7 +105,6 @@ export function drawingStyleSurvey(call, cfb) {
       }
       const stack = [];
       for (const record of records) {
-        if(record.tag===98)out.videoRecords.push({name,section:section.name,offset:record.offset,bytes:record.end-record.start});
         if(record.tag===85){
           const p=bytes.subarray(record.start,record.end),stats=pictureActual(call,p);
           out.pictures.parsed++;out.pictures.rejected+=stats.rejected;
