@@ -32,3 +32,5 @@ node tests/hwp5/chart-series-prefix-survey.mjs --verify
 ## 남은 범위
 
 다음은 이 접두부의 코어·WASM 대조와 뒤쪽 배열/Series 본문 검증입니다. 두 1/1·4/4 표본에서는 접두부 끝의 다음 헤더가 VtSeriesPoint v1(26바이트)로 관측됐습니다. 본문이나 원소 수를 검증한 것은 아니며 41개 0/0 표본의 뒤쪽 경로와 구별해 조사해야 합니다. 첫 Series만 대상으로 했으므로 나머지 계열·배열 소유권·raw 의미·전체 Chart 조립·렌더링·저장은 미완료입니다.
+
+후속 [접두부 코어·WASM 검증](hwp5-chart-series-prefix.md)은 별도 계약으로 기록합니다. 위 문단은 조사 당시 후속 범위이며 현재 제품 검증 결과는 해당 문서가 소유합니다.
