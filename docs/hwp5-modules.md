@@ -10,6 +10,7 @@
 - [그리기·개체](hwp5-drawings-contracts.md)
   - [OLE 내부 컨테이너](hwp5-ole-container.md)
   - [BinData OLE 검사 연결](hwp5-ole-binaries.md)
+  - [차트 Contents 명세·실측](hwp5-chart-contents-evidence.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
 - [DocInfo·리소스](hwp5-docinfo-contracts.md)

@@ -28,6 +28,10 @@ zig build audit -Doptimize=ReleaseSafe
 node tests/hwp5/preview-image-survey.mjs legacy/rust/crates/hwp-core/tests/fixtures reference/rhwp/samples
 ```
 
+## 차트 Contents 관측
+
+제품 WASM 빌드 후 루트에서 `node --test tests/hwp5/chart-contents-evidence.test.mjs`와 `node tests/hwp5/chart-contents-survey.mjs`를 실행합니다. 조사 범위와 의미 해석의 경계는 [차트 Contents 실측](hwp5-chart-contents-evidence.md)에 둡니다. 정규 audit와 별개의 읽기 전용 조사입니다.
+
 ## 세 빌드 모드 회귀 검증
 
 GIF의 macOS ImageIO 제3 구현 대조는 선택적 테스트이며 정규 audit나 제품 빌드에 Swift/CoreGraphics 의존성을 추가하지 않습니다. `swiftc tests/hwp5/gif-imageio-oracle.swift -O -o /tmp/hwpjs-gif-imageio-oracle`로 oracle을 빌드할 수 있습니다. stdin으로 GIF를 받고 프레임 RGBA JSON을 출력하며, `tests/hwp5/gif-imageio.mjs`의 compareGifImageIo가 단일 프레임/팔레트/크기 전제를 확인한 뒤 픽셀을 대조합니다. 대상과 결과는 [GIF 복호화 기록](gif-indexed.md)에 둡니다.
