@@ -7,12 +7,12 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const count = try input.readInt(u32);
     if (count > 32) return error.LimitExceeded; // Test request bound only.
     const contents = bytes[input.offset..];
-    var prefix = try @import("chart-nullable-title-prefix.zig").read(a, contents, limit, 65535, 7 * 65535, max_objects, 16 * 1024 * 1024);
+    var prefix = try @import("chart-line-items-prefix.zig").read(a, contents, limit, max_objects);
     defer prefix.deinit();
-    const reader = &prefix.previous.previous.previous.reader;
-    const types = &prefix.previous.previous.previous.grid.prelude.types;
-    const objects = &prefix.previous.previous.objects;
-    const word = try reader.readInt(u16); // Raw prefix, not the item count.
+    const reader = &prefix.previous.previous.previous.previous.reader;
+    const types = &prefix.previous.previous.previous.previous.grid.prelude.types;
+    const objects = &prefix.previous.previous.previous.objects;
+    const word = prefix.word;
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     try out.appendSlice(a, &@as([20]u8, @splat(0)));

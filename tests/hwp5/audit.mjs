@@ -232,6 +232,7 @@ import {chartValueBlocks} from './chart-value-blocks.mjs';
 import {chartAxes} from './chart-axes.mjs';
 import {chartNullableTitles} from './chart-nullable-titles.mjs';
 import {chartLineItems} from './chart-line-items.mjs';
+import {chartPostLines} from './chart-post-lines.mjs';
 import {chartStrings} from './chart-strings.mjs';
 import {chartBackdrops} from './chart-backdrops.mjs';
 import {chartTextBlocks} from './chart-text-blocks.mjs';
@@ -839,6 +840,7 @@ const chartValueBlockResults = await chartValueBlocks(call);
 const chartAxisResults = await chartAxes(call);
 const chartNullableTitleResults = await chartNullableTitles(call);
 const chartLineItemResults = await chartLineItems(call);
+const chartPostLineResults = await chartPostLines(call);
 const chartStringResults = await chartStrings(call);
 const chartBackdropResults = await chartBackdrops(call);
 const chartTextBlockResults = await chartTextBlocks(call);
@@ -1590,6 +1592,7 @@ console.log(
       chartAxisResults,
       chartNullableTitleResults,
       chartLineItemResults,
+      chartPostLineResults,
       chartStringResults,
       chartBackdropResults,
       chartTextBlockResults,

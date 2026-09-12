@@ -228,6 +228,7 @@ test {
     _ = @import("hwp5/chart/axis_tests.zig");
     _ = @import("hwp5/chart/nullable_title_tests.zig");
     _ = @import("hwp5/chart/line_item_tests.zig");
+    _ = @import("hwp5/chart/post_line_tests.zig");
     _ = @import("hwp5/chart/legend_tests.zig");
     _ = @import("hwp5/chart/light_tests.zig");
     _ = @import("hwp5/chart/string_value_tests.zig");
