@@ -8,6 +8,13 @@ import {integer,textBodyWire} from './chart-text-body-oracle.mjs';
 import {valueBlockWire} from './chart-value-block-oracle.mjs';
 const ints=values=>Buffer.concat(values.map(n=>integer(n)));
 const array=h=>ints([h.id,h.first,h.second,h.end]);
+export function axisWire(r,objects,stored){
+ const x=r.axis,v=r.value;
+ const out=[ints([x.axisId,r.end,Number(v!==null),x.blockId]),Buffer.from(x.rawFields[0].hex,'hex'),textBodyWire({...x,end:x.blockEnd},0,objects,stored),array(x.scaleArray)];
+ if(v)out.push(ints([x.scale.id,v.end]),array(x.scale.array),valueBlockWire(v,0,objects,stored));
+ out.push(ints([Number(r.tail.extra!==null),r.end]),Buffer.from(r.tail.prefix,'hex'));if(r.tail.extra!==null)out.push(Buffer.from(r.tail.extra,'hex'));out.push(Buffer.from(r.tail.suffix,'hex'));
+ return Buffer.concat(out);
+}
 export function axesOracle(b,count=4){
  const context=chartAxisContext(b),g=chartGridCellsOracle(b),bd=chartBackdropOracle(b,g.end),foot=chartFootnoteOracle(b),seen=new Set(),numbers=new Map();
  const add=id=>{assert.notEqual(id,0xffffffff);assert(!seen.has(id),'duplicate observed object ID');seen.add(id);};
@@ -26,12 +33,9 @@ export function axesOracle(b,count=4){
   const strings=[x.fontName,x.text,...(v?[v.prefix.reference?.kind==='number'?null:v.prefix.reference,v.prefix.format?.code,v.prefix.label,v.text.fontName,v.text.text]:[])].filter(Boolean);
   const axisPer=Math.max(...strings.map(s=>s.hex.length/2)),axisTotal=strings.reduce((n,s)=>n+s.hex.length/2,0);
   per=Math.max(per,axisPer);total=Math.max(total,axisTotal);stored+=strings.filter(s=>s.introduced).reduce((n,s)=>n+s.hex.length/2,0);
-  const out=[ints([x.axisId,r.end,Number(v!==null),x.blockId]),Buffer.from(x.rawFields[0].hex,'hex'),textBodyWire({...x,end:x.blockEnd},0,seen.size,stored),array(x.scaleArray)];
-  if(v)out.push(ints([x.scale.id,v.end]),array(x.scale.array),valueBlockWire(v,0,seen.size,stored));
-  out.push(ints([Number(r.tail.extra!==null),r.end]),Buffer.from(r.tail.prefix,'hex'));if(r.tail.extra!==null)out.push(Buffer.from(r.tail.extra,'hex'));out.push(Buffer.from(r.tail.suffix,'hex'));
-  parts.push(Buffer.concat(out));rows.push({result:r,per:axisPer,total:axisTotal});state=r;offset=r.end;
+  parts.push(axisWire(r,seen.size,stored));rows.push({result:r,per:axisPer,total:axisTotal});state=r;offset=r.end;
  }
  const objects=seen.size,wire=Buffer.concat([ints([count,offset,state.types.size,objects,stored]),...parts]);
  const input=(bytes=b,limits={})=>Buffer.concat([ints([limits.per??per,limits.total??total,limits.objects??objects,limits.stored??stored,count]),bytes]);
- return {wire,input,rows,start:p.end,end:offset,per,total,objects,stored};
+ return {wire,input,rows,start:p.end,end:offset,per,total,objects,stored,seen};
 }

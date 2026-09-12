@@ -53,7 +53,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 fn array(a: std.mem.Allocator, out: *std.ArrayList(u8), h: core.hwp5.chart_array_header.Header) !void {
     inline for (.{ h.object_id, h.first_word, h.second_word, h.end }) |v| try int(a, out, u32, @intCast(v));
 }
-fn serialize(a: std.mem.Allocator, out: *std.ArrayList(u8), axis: core.hwp5.chart_axis.Axis, objects: *const Objects) !void {
+pub fn serialize(a: std.mem.Allocator, out: *std.ArrayList(u8), axis: anytype, objects: *const Objects) !void {
     inline for (.{ axis.object_id, axis.end, @intFromBool(axis.scale != null), axis.title.object_id }) |v| try int(a, out, u32, @intCast(v));
     try out.appendSlice(a, &axis.raw);
     const t = axis.title;

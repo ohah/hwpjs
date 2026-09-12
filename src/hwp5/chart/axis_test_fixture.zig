@@ -1,5 +1,6 @@
 const std = @import("std");
 const values = @import("value_block_test_fixture.zig");
+pub const TitleKind = enum { absent, empty, fresh, alias };
 pub const Fixture = struct {
     bytes: [2048]u8 = @splat(0xa5),
     end: usize,
@@ -15,7 +16,11 @@ pub const Fixture = struct {
     slots: usize = 0,
     scale_start: usize = 0,
     scale_end: usize = 0,
-    total: usize = 4,
+    title_start: usize = 0,
+    title_end: usize = 0,
+    text_start: usize = 0,
+    name_start: usize = 0,
+    total: usize = 2,
     stored: usize = 2,
     objects: u32 = 0,
     fn int(f: *Fixture, comptime T: type, n: T) void {
@@ -50,6 +55,9 @@ pub const Fixture = struct {
     }
 };
 pub fn make(scale: bool, long: bool, start: usize) Fixture {
+    return makeTitle(scale, long, start, .alias);
+}
+pub fn makeTitle(scale: bool, long: bool, start: usize, kind: TitleKind) Fixture {
     var f: Fixture = .{ .end = start };
     f.object(1000);
     f.typ(0, "VtAxis\x00", 3);
@@ -57,12 +65,14 @@ pub fn make(scale: bool, long: bool, start: usize) Fixture {
     f.end += 6;
     f.int(u16, @intFromBool(long));
     f.end += 74;
+    f.title_start = f.end;
     f.object(1001);
     f.typ(1, "VtTextBlock\x00", 2);
     f.end += 12;
     f.int(u32, 0xffffffff);
     f.object(1002);
     f.typ(2, "VtFont\x00", 1);
+    f.name_start = f.end;
     f.object(1003);
     f.typ(3, "VtString\x00", 1);
     f.int(u16, 2);
@@ -73,9 +83,29 @@ pub fn make(scale: bool, long: bool, start: usize) Fixture {
     f.end += 14;
     f.typ(5, "VtObject\x00", 1);
     f.end += 24;
-    f.int(u32, 1003);
+    f.text_start = f.end;
+    switch (kind) {
+        .absent => f.int(u32, 0xffffffff),
+        .alias => {
+            f.int(u32, 1003);
+            f.total += 2;
+        },
+        .empty, .fresh => {
+            f.object(1007);
+            f.typ(3, "VtString\x00", 1);
+            const n: u16 = if (kind == .fresh) 3 else 0;
+            f.int(u16, n);
+            for (0..n) |_| f.int(u8, 0x81);
+            f.int(u8, 99);
+            f.typ(4, "VtValue\x00", 1);
+            f.typ(5, "VtObject\x00", 1);
+            f.total += n;
+            f.stored += n;
+        },
+    }
     f.end += 26;
     f.typ(5, "VtObject\x00", 1);
+    f.title_end = f.end;
     f.array(1004, @intFromBool(scale), @intFromBool(scale));
     f.outer_first = f.array_first;
     f.outer_second = f.array_second;
