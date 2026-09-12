@@ -6,6 +6,7 @@ pub const DrawingStyleOptions = @import("../body/drawing_style_validation.zig").
 pub const Section = struct { index: u16, bytes: []const u8 };
 pub const Input = struct { header: []const u8, doc_info: []const u8, sections: []const Section };
 pub const Options = struct {
+    ole_references: @import("../body/ole_references.zig").Policy = .uninspected,
     /// Explicit table 123 payload layout for each VIDEO_DATA record; no owner inference.
     video_layout: ?@import("../body/video_data.zig").WebLayout = null,
     /// Explicit observed distribution policy; callers supply the primary decoded view.
@@ -50,6 +51,7 @@ pub const DocInfo = struct {
 };
 pub const Lists = struct { groups: usize = 0, paragraphs: usize = 0, intervening_records: usize = 0 };
 pub const SectionReport = struct {
+    ole_references: @import("../body/ole_references.zig").Report = .{},
     videos: @import("../body/video_validation.zig").Report = .{},
     forms: @import("../body/form_validation.zig").Report = .{},
     shape_groups: @import("../body/group_validation.zig").Report = .{},

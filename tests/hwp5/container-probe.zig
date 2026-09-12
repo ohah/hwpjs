@@ -97,6 +97,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified:
     var r: core.Reader = .{ .bytes = bytes };
     const max_bytes = try r.readInt(u32);
     var report = try core.hwp5.container_validation.inspect(a, bytes[r.offset..], .{ .view_text_semantics = selection.view_text_semantics, .preview_image = selection.preview_image, .images = selection.images, .xml = selection.xml, .xml_template = selection.xml_template, .history = selection.history, .storage_layout = if (specified) .specified else .observed_optional_extension, .document = .{
+        .ole_references = selection.ole_references,
         .video_layout = selection.video_layout,
         .forms = selection.forms,
         .distribution = selection.distribution,
@@ -113,6 +114,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified:
         .max_total_records = limit,
     } });
     defer report.deinit(a);
+    if (selection.ole_reference_report) return @import("ole-reference-probe.zig").serialize(a, report.document);
     if (selection.video_report) return @import("video-validation-probe.zig").serialize(a, report.document);
     if (selection.view_text_semantic_report) return @import("view-semantic-probe.zig").serialize(a, report);
     if (selection.xml_report) return @import("xml-container-probe.zig").serialize(a, report);

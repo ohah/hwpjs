@@ -49,7 +49,9 @@ pub fn inspectCollected(a: std.mem.Allocator, bytes: []const u8, version: @impor
     const parameter_report = try sources.inspectBodyDetailed(a, tree, types.parameterOptions(options, counts.bin_data_count));
     const char_overlap = try @import("../body/char_overlap_validation.zig").inspect(tree, options.overlap_layout, counts.count(.char_shape));
     const shapes = try @import("../body/shape_validation.zig").inspectDetailed(tree, options.drawing_style, counts.bin_data_count);
+    const ole = try @import("../body/ole_validation.zig").inspectDetailed(tree, options.ole_layout, counts.bin_data_count, options.ole_references);
     return .{
+        .ole_references = ole.references,
         .videos = try @import("../body/video_validation.zig").inspect(tree, options.video_layout),
         .forms = try @import("../body/form_validation.zig").inspect(a, tree, links, options.forms, counts.count(.char_shape)),
         .shapes = shapes.shapes,
@@ -62,7 +64,7 @@ pub fn inspectCollected(a: std.mem.Allocator, bytes: []const u8, version: @impor
         .polygons = try @import("../body/polygon_validation.zig").inspect(tree, options.polygon_layout),
         .curves = try @import("../body/curve_validation.zig").inspect(tree, options.curve_layout),
         .pictures = try @import("../body/picture_validation.zig").inspect(tree, options.picture, counts.bin_data_count),
-        .ole = try @import("../body/ole_validation.zig").inspect(tree, options.ole_layout),
+        .ole = ole.ole,
         .equations = try @import("../body/equation_validation.zig").inspect(tree, options.equation_layout),
         .notes = try @import("../body/note_validation.zig").inspect(tree, groups.items, options.note_layout, options.list_layout),
         .hidden_comments = try @import("../body/hidden_comment.zig").inspect(tree, groups.items, options.list_layout),

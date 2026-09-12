@@ -4,7 +4,7 @@
 
 ## 현재 경계
 
-OLE payload 파서와 직접 부모·개수 검사는 구현되어 있지만 ID의 참조 의미는 `pending_references`로 남아 있습니다. 명세 4.3.9.5 표 118의 BinData ID와 4.2.3 표 17의 저장 ID가 항상 같은 값이라는 규칙은 정의되어 있지 않습니다. 이 조사는 참조 의미를 구별하는 표본 증거이며 제품의 기본 정책을 바꾸지 않습니다.
+OLE payload 파서와 직접 부모·개수 검사는 구현되어 있으며 기본 정책은 ID 참조를 `pending_references`로 남깁니다. 후속 선택적 순번 범위 검사는 아래 별도 절에서 관리합니다. 명세 4.3.9.5 표 118의 BinData ID와 4.2.3 표 17의 저장 ID가 항상 같은 값이라는 규칙은 정의되어 있지 않습니다. 이 조사는 참조 의미를 구별하는 표본 증거이며 제품의 기본 정책을 바꾸지 않습니다.
 
 ## 전체 표본 재조사
 
@@ -40,3 +40,29 @@ ID 0은 `task1725/text_footnote_tail_overpagination.hwp`에서 1개 관측했습
 변경 소스·테스트를 고정해 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. `/tmp/hwpjs-ole-paired-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에서 각 모드 27/27 단계·982/982 네이티브 테스트·HWP/WASM 7,840,996회 검사를 통과했고 종료 코드 0을 확인했습니다. 실제 paired 결과의 storage ID 3 및 위 XML 해시도 출력에서 확인했습니다. 추가된 Node 비교 assertion은 HWP/WASM 호출 수와 별개이며 검사 횟수를 인위적으로 늘리지 않습니다. 변경 파일 포맷·JS 구문·공백과 변경 문서의 로컬 링크 5개 검사도 통과했습니다.
 
 최종 `zig build test --summary all`은 5/5 단계·982/982 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0). 이 단계는 참조 해석의 증거 보강이며 제품의 모든 OLE 참조 해결 완료가 아닙니다.
+
+## 선택적 순번 범위 검사
+
+문서 옵션 `ole_references`는 기본 uninspected와 명시적 observed_ordinal을 구분합니다. `body/ole_references.zig`가 정책·집계를 소유하고 양수 ID의 범위 계산은 기존 DocInfo `reference_rules.resolve(.one_based, ...)`를 재사용합니다. 선택하지 않거나 개수가 없으면 미검증으로 남기며 선택한 범위 초과는 InvalidOleBinaryReference입니다. ID 0은 실제 표본에서 관측했지만 부재/오류 의미가 확정되지 않아 zero_ids로 집계하고 pending을 유지합니다. 실패한 범위 검사는 누적 통계를 변경하지 않습니다.
+
+`ole_validation.inspectDetailed`는 기존 소유권·payload 검사를 재사용해 OLE 보고서와 참조 보고서를 함께 반환합니다. 기존 inspect는 uninspected wrapper로 유지합니다. 문서 구역은 실측 BinData 항목 수와 선택 정책을 전달하고, 기존 OLE 보고서와 별도 `ole_references` 보고서를 보유합니다. ordinal_references는 항목 범위 검사이며 실제 저장 경로 해결·콘텐츠 검사·외부 링크 접근 완료가 아닙니다.
+
+초기 네이티브 검증은 기존 OLE 테스트와 정책 조합·실패 시 통계 보존 테스트를 포함해 root 포함 5/5 통과했습니다. 이후 두 payload 배치에서 파싱된 ID와 비영 테두리 색을 분리하는 연결 테스트를 추가했습니다. 문서·CFB·WASM 및 적대적 검증 결과는 아래 절에서 관리합니다. 위 982개 전체 검증은 이전 증거 보강 커밋의 결과이지 이 후속 소스 변경의 결과가 아닙니다.
+
+### 문서·CFB 연결 보강
+
+비공개 WASM mode 303은 정책 u8·버전 u32·배치 u8·BinData 개수 u32(0xffffffff는 미제공)·본문을, 304/305는 정책 u8 뒤 기존 decoded/CFB 입력을 받습니다. 출력은 기존 OLE 7개 u32와 참조 진단 4개 u32이며 304/305는 구역 수와 구역별 보고서를 반환합니다. 기존 serializer와 공개 제품 JS API는 변경하지 않습니다.
+
+`ole-reference-policy.mjs`는 순번/저장 ID가 다른 차트, `한셀OLE.hwp`, 실제 ID 0을 가진 task1725 표본을 사용합니다. 원본 또는 메모리 복사본의 ID를 0/1/개수/개수+1/65535로 바꾸고 독립 본문·decoded·재생성 CFB에서 결과를 대조합니다. Debug WASM에서 정상 21/21/27건과 오류 12/12/12건을 확인했습니다. 기본 정책은 기존 pending을 유지하고 선택 정책만 양수 범위를 검사합니다. 잘못된 정책·레코드 한도 1 부족도 거부하며, 오류 후 원본 검사로 복구를 확인합니다. 정상 집계는 한도 정확 일치 검사도 포함합니다.
+
+별도 네이티브 문서 테스트는 BinData 항목 순번 1/storage ID 3과 두 구역을 생성해 역순 입력으로 전달합니다. 정상·ID 0·뒤쪽 구역의 범위 오류 및 모든 OOM 주입을 검사하고, 명시적 allocator 잔량도 0인지 확인합니다. Debug/ReleaseSafe/ReleaseFast OLE 필터는 각각 root 포함 7/7 통과했습니다. 세 모드 실제 WASM도 각 정상 69건·오류 36건을 통과했습니다.
+
+### 소스·출력 적대적 검증
+
+별도 복사본 /tmp/hwpjs-ole-reference-mutants.ictrcH에서 범위 오류를 성공으로 변경(range), 선택된 ID 0을 검사 완료로 변경(zero), 선택 시 Tree 해제 생략(leak)의 세 변형을 각 빌드 모드에서 실행했습니다. range와 zero는 각 모드의 테스트 4개가 실패했고 leak는 각 모드 명시적 allocator 잔량 2,240바이트를 검출해 실패했습니다(누수 검사 panic으로 인한 ABRT 포함). 절대 소스 경로를 사용했으며 제품 소스는 변형하지 않았습니다.
+
+선택된 순번 참조 보고서를 대상으로 mode 303의 44바이트, 304/305의 각 48바이트를 한 바이트씩 XOR 1 하는 실제 WASM 응답 변형을 실행했습니다. 세 모드 각각 140/140 검출했습니다. InvalidOleBinaryReference를 같은 메시지의 WebAssembly.RuntimeError로 바꾼 경우도 정상 거부로 세지 않고 실패했습니다.
+
+소스·테스트를 고정해 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. /tmp/hwpjs-ole-reference-{Debug,ReleaseSafe,ReleaseFast}-audit.log에서 각 모드 27/27 단계·986/986 네이티브 테스트·HWP/WASM 7,841,134회 검사가 통과했고 종료 코드 0을 확인했습니다. 이는 선택된 순번 범위 검사의 구현·검증이며 저장 경로 해결·내부 OLE 형식 전체 검사·ID 0 의미 확정·모든 버전 지원 완료를 뜻하지 않습니다.
+
+최종 zig build test --summary all은 5/5 단계·986/986 테스트, zig build -Doptimize=ReleaseSafe --summary all은 5/5 단계로 통과했습니다(종료 코드 0). 변경 파일 포맷·JS 구문·공백과 변경 문서의 로컬 링크 1개 검사도 통과했습니다.
