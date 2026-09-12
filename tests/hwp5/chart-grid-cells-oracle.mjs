@@ -34,5 +34,5 @@ export function chartGridCellsOracle(b){
   ...[rows,columns,cells.length,p,types.size,stringBytes].map(u32),
   ...cells.map(c=>Buffer.concat([...[c.id,c.kind,c.start,c.end,c.trailer,c.raw.length].map(u32),c.raw])),
  ]);
- return {rows,columns,cells,end:p,typeCount:types.size,stringBytes,maxString,wire};
+ return {rows,columns,cells,end:p,typeCount:types.size,stringBytes,maxString,wire,types};
 }

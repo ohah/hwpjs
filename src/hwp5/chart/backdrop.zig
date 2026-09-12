@@ -1,6 +1,7 @@
 const Reader = @import("../../binary/reader.zig").Reader;
 const types = @import("type_table.zig");
 const requireType = @import("type_checks.zig").require;
+const objectId = @import("object_ids.zig").readInline;
 
 pub const Backdrop = struct {
     object_ids: [3]u32,
@@ -38,10 +39,4 @@ pub fn readObservedEmptyPicture(reader: *Reader, table: *types.Table) !Backdrop 
     out.end = next.offset;
     reader.* = next;
     return out;
-}
-
-fn objectId(reader: *Reader) !u32 {
-    const id = try reader.readInt(u32);
-    if (id == 0xffffffff) return error.UnsupportedChartObjectReference;
-    return id;
 }

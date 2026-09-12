@@ -8,7 +8,7 @@ const u32=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 
 // Independent selected-corpus oracle: walks declarations and base references;
 // neither marker searching nor product output establishes the expected end.
-function expected(b,start){
+export function chartBackdropOracle(b,start){
  let p=start+26;
  const take=n=>{assert.ok(n<=b.length-p);const v=b.subarray(p,p+n);p+=n;return v;};
  const long=()=>take(4).readUInt32LE(),word=()=>take(2).readUInt16LE();
@@ -29,8 +29,8 @@ export async function chartBackdrops(call){
  try{await oleContainerSurvey((envelope,payload)=>{
   cfb.parse(Buffer.from(payload),{strict:true});const entry=cfb.findExact('/Contents');if(!entry)return;
   const b=Buffer.from(streamBytes(entry));if(b.indexOf(Buffer.from('VtChart\0'))<0)return;
-  roots++;const start=chartGridCellsOracle(b).end,e=expected(b,start);
-  const accept=bytes=>{assert.deepEqual(call(313,bytes,bytes.length),expected(bytes,start).wire);accepted++;};
+  roots++;const start=chartGridCellsOracle(b).end,e=chartBackdropOracle(b,start);
+  const accept=bytes=>{assert.deepEqual(call(313,bytes,bytes.length),chartBackdropOracle(bytes,start).wire);accepted++;};
   const reject=(bytes,error,limit=bytes.length)=>{
    assert.throws(()=>call(313,bytes,limit),err=>err.constructor===Error&&err.message===error);rejected++;
    assert.deepEqual(call(313,b,b.length),e.wire);
