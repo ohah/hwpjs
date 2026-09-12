@@ -20,6 +20,8 @@ SurfaceDesc와 후속 배열의 두 ID는 null/중복을 거부하지만 전체 
 
 후속 배열 끝에서 기존 Axis 관측기로 이어 읽는 별도 진단은 43개 모두 UnsupportedAxisObservationObject로 실패했습니다. 첫 표본에서는 시작 5,056, 오류 위치 5,228(상대 +172)에서 FFFFFFFF가 관측됐습니다. 타입 이름이 같다는 이유만으로 기존 첫 네 축의 필드 필수 여부를 적용할 수 없습니다. null이 허용되는 다른 배치인지 등은 다음 조사 대상이며, 이 단계에서는 기존 제품 Axis 계약을 변경하지 않았습니다.
 
+후속 [nullable 제목 조사](hwp5-chart-axis-null-title.md)는 실패 위치가 제목 텍스트임을 확인하고, 기존 필수 제목 경로와 별도의 명시적 관측 경로로 구분합니다.
+
 ```sh
 node --test tests/hwp5/chart-surface-evidence.test.mjs
 node tests/hwp5/chart-surface-survey.mjs --verify
