@@ -5,6 +5,7 @@
 이 문서는 해당 주제의 현재 책임·소유권·미지원 경계를 소유합니다. 계약과 새 검증 결과는 해당 주제에서 관리하고, 내용이 커지면 별도 문서로 분리하여 연결합니다.
 
 - [동영상 레코드 조사·연결 경계](hwp5-video-evidence.md)는 집계 순서의 편향 수정과 실제 표본 조사, 문서 검사 미연결 범위를 관리합니다.
+- [OLE 참조 ID 대응 증거](hwp5-ole-reference-evidence.md)는 HWP/HWPX 짝의 내부 XML 대조와 순번·저장 ID의 미확정 범위를 관리합니다.
 
 - `equation.zig`는 EQEDIT 전용 payload이며 eqed의 object_common 헤더를 중복 소비하지 않습니다. 관측 version_only/with_font 배치는 명시적이고 baseline 뒤 미지 u16을 보존합니다. counted UTF-16은 utf16_string을 공유하며 폰트 부재/null과 빈 문자열을 구분합니다. `equation_validation.zig`는 Tree의 직접 부모/서브트리 경계로 eqed당 EQEDIT 하나와 고아·중복·누락을 검사합니다. 문서 equation_layout 기본값은 version_only이고 이후 폰트 바이트는 extra입니다. 수식 언어 실행/조판은 별도입니다.
 
