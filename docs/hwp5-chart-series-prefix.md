@@ -35,3 +35,5 @@ Debug·ReleaseSafe·ReleaseFast 전체 `zig build audit --summary all`(최적화
 ## 다음 분기 후보
 
 전체 회귀 대기 중 0/0 표본 41개에서 접두부의 정확한 끝 +66을 읽기 전용으로 조사했습니다. 모두 신규 String 객체 ID·알려진 VtString v1·길이 접두사·원문·trailer·VtValue v1/VtObject v1 이후 새 VtSeriesLabel v1 헤더 배치가 관측됐습니다. 이는 다음 단계의 경계 후보이며 두 번째 raw66이나 String의 API 의미를 확정하지 않습니다. 별도 잘림/변형 검증이 필요합니다. 1/1·4/4의 두 표본은 VtSeriesPoint v1부터 시작하므로 이 후보로 건너뛰지 않습니다.
+
+후속 [Series 본문 두 분기 조사](hwp5-chart-series-branch-evidence.md)에서 두 경로의 SeriesLabel 헤더까지 잘림·별칭·타입/ID 반례를 검증했습니다. 현재 검증 범위와 미완료 본문은 해당 문서가 소유합니다.
