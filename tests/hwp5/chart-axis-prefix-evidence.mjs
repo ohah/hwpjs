@@ -1,4 +1,5 @@
 // Selected layout evidence only. 82 raw bytes are not a general Axis rule.
+import {readEmptyPictureFields} from './chart-empty-picture-fields-evidence.mjs';
 export function observeAxisPrefix(bytes, offset, priorTypes, priorStrings){
  return observe(bytes,offset,priorTypes,priorStrings,false);
 }
@@ -32,8 +33,9 @@ function observe(bytes, offset, priorTypes, priorStrings, baseOnly, allowNullTit
   const value={hex,trailer,lengthOffset,payloadOffset,trailerOffset};strings.set(id,value);return {id,...value,introduced:true,start,end:p};
  };
  const backdrop=()=>{
-  const ids=[];for(const [name,n] of [['VtBackdrop',50],['VtFill',34],['VtPicture',4]]){ids.push(object());type(name);raw(n);}
-  if(long()!==0xffffffff)fail('UnsupportedAxisObservationPicture');type('VtObject');const suffix=word();type('VtObject');type('VtObject');return {ids,suffix};
+  const ids=[];for(const [name,n] of [['VtBackdrop',50],['VtFill',34]]){ids.push(object());type(name);raw(n);}
+  ids.push(readEmptyPictureFields({object,type,raw,long,reject:()=>fail('UnsupportedAxisObservationPicture')}).id);
+  const suffix=word();type('VtObject');type('VtObject');return {ids,suffix};
  };
  const array=()=>{
   const start=p,id=object();type('VtArray');const first=word();type('VtCollection');const second=word();type('VtObject');

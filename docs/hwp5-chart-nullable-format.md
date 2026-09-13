@@ -41,3 +41,5 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit가 모두 종료 코드 0으로 완
 ## 남은 범위
 
 새 nullable 경로는 기존 필수 API를 대체하지 않습니다. 뒤쪽 raw 꼬리의 경계·의미, Series 전체 조립·계열 반복·일반 배열 규칙, 전체 Chart 조립·렌더링·저장은 미완료입니다. 공식 API 속성 표를 바이너리 저장 순서로 해석하지 않습니다.
+
+후속 [빈 Picture 조사](hwp5-chart-series-picture-evidence.md)에서 다음 Picture의 끝과 그 뒤 기반 타입 가설의 모호성을 검증했습니다. 조사 결과와 제품 지원 범위는 구분합니다.
