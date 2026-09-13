@@ -5,6 +5,7 @@ const Objects = @import("object_table.zig");
 const TextBlock = @import("text_block.zig");
 const TextBody = @import("text_block_body.zig").Body;
 const TextFormat = @import("text_format.zig");
+const ValueBlock = @import("value_block.zig").Block;
 const ids = @import("object_ids.zig");
 const patches = @import("contents_patch.zig");
 
@@ -15,6 +16,7 @@ pub const BatchRequest = union(enum) {
     nullable_text_block: struct { block: *const TextBlock.NullableBlock, new_object_id: u32, bytes: []const u8, trailer: u8 },
     null_nullable_text_block: struct { block: *const TextBlock.NullableBlock, new_object_id: u32, bytes: []const u8, trailer: u8 },
     null_nullable_text_format: struct { format: *const TextFormat.NullableFormat, new_object_id: u32, bytes: []const u8, trailer: u8 },
+    null_text_format_object: struct { block: *const ValueBlock, format_object_id: u32, code_object_id: u32, format_type_id: u32, raw_word: u16, bytes: []const u8, trailer: u8 },
 };
 
 /// Forks multiple aliases from one original Contents coordinate space.
@@ -30,34 +32,10 @@ pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const 
     defer for (replacements[0..built]) |replacement| a.free(replacement);
 
     for (requests, 0..) |request, i| {
-        const spec = switch (request) {
-            .font_name => |item| Spec{ .target = Target{ .object_id = item.font.name.object_id, .start = item.font.name_start, .end = item.font.name_end, .introduced = item.font.name_introduced }, .enclosing_object_id = item.font.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = true },
-            .text_body => |item| blk: {
-                const string = item.body.text orelse return error.UnsupportedChartStringForkValue;
-                break :blk Spec{ .target = Target{ .object_id = string.object_id, .start = item.body.text_start, .end = item.body.text_end, .introduced = item.body.text_introduced }, .enclosing_object_id = null, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = true };
-            },
-            .null_text_body => |item| blk: {
-                if (item.body.text != null) return error.ExpectedNullChartString;
-                break :blk Spec{ .target = Target{ .object_id = 0xffffffff, .start = item.body.text_start, .end = item.body.text_end, .introduced = false }, .enclosing_object_id = null, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = false };
-            },
-            .nullable_text_block => |item| blk: {
-                const string = item.block.text orelse return error.UnsupportedChartStringForkValue;
-                break :blk Spec{ .target = Target{ .object_id = string.object_id, .start = item.block.text_start, .end = item.block.text_end, .introduced = item.block.text_introduced }, .enclosing_object_id = item.block.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = true };
-            },
-            .null_nullable_text_block => |item| blk: {
-                if (item.block.text != null) return error.ExpectedNullChartString;
-                break :blk Spec{ .target = Target{ .object_id = 0xffffffff, .start = item.block.text_start, .end = item.block.text_end, .introduced = false }, .enclosing_object_id = item.block.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = false };
-            },
-            .null_nullable_text_format => |item| blk: {
-                if (item.format.code != null) return error.ExpectedNullChartString;
-                break :blk Spec{ .target = Target{ .object_id = 0xffffffff, .start = item.format.code_start, .end = item.format.code_end, .introduced = false }, .enclosing_object_id = item.format.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = false };
-            },
-        };
-        for (requests[0..i]) |previous| if (requestObjectId(previous) == spec.new_object_id) return error.DuplicateChartObjectId;
-        const replacement = try makeReplacement(a, value, spec.target, spec.enclosing_object_id, spec.new_object_id, spec.bytes, spec.trailer, spec.require_original);
-        replacements[i] = replacement;
+        const prepared = try prepare(a, value, request, requests[0..i]);
+        replacements[i] = prepared.replacement;
         built += 1;
-        output_patches[i] = .{ .start = spec.target.start, .end = spec.target.end, .replacement = replacement };
+        output_patches[i] = .{ .start = prepared.start, .end = prepared.end, .replacement = prepared.replacement };
     }
     std.mem.sort(patches.Patch, output_patches, {}, struct {
         fn lessThan(_: void, left: patches.Patch, right: patches.Patch) bool {
@@ -67,15 +45,61 @@ pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const 
     return patches.applyOriginal(a, value, output_patches, max_output_bytes);
 }
 
-fn requestObjectId(request: BatchRequest) u32 {
+fn requestHasId(request: BatchRequest, id: u32) bool {
     return switch (request) {
-        .font_name => |item| item.new_object_id,
-        .text_body => |item| item.new_object_id,
-        .null_text_body => |item| item.new_object_id,
-        .nullable_text_block => |item| item.new_object_id,
-        .null_nullable_text_block => |item| item.new_object_id,
-        .null_nullable_text_format => |item| item.new_object_id,
+        .font_name => |item| item.new_object_id == id,
+        .text_body => |item| item.new_object_id == id,
+        .null_text_body => |item| item.new_object_id == id,
+        .nullable_text_block => |item| item.new_object_id == id,
+        .null_nullable_text_block => |item| item.new_object_id == id,
+        .null_nullable_text_format => |item| item.new_object_id == id,
+        .null_text_format_object => |item| item.format_object_id == id or item.code_object_id == id,
     };
+}
+
+const Prepared = struct { start: usize, end: usize, replacement: []u8 };
+
+fn prepare(a: std.mem.Allocator, value: *const Contents, request: BatchRequest, previous: []const BatchRequest) !Prepared {
+    if (request == .null_text_format_object) {
+        const item = request.null_text_format_object;
+        for (previous) |prior| {
+            if (requestHasId(prior, item.format_object_id) or requestHasId(prior, item.code_object_id))
+                return error.DuplicateChartObjectId;
+        }
+        for (previous) |prior| switch (prior) {
+            .null_text_format_object => |prior_item| if (prior_item.format_type_id == item.format_type_id) return error.DuplicateChartTypeId,
+            else => {},
+        };
+        const replacement = try @import("format_materialize.zig").replacement(a, value, item.block, item.format_object_id, item.code_object_id, item.format_type_id, item.raw_word, item.bytes, item.trailer);
+        return .{ .start = item.block.format_start, .end = item.block.format_end, .replacement = replacement };
+    }
+    const spec = switch (request) {
+        .font_name => |item| Spec{ .target = Target{ .object_id = item.font.name.object_id, .start = item.font.name_start, .end = item.font.name_end, .introduced = item.font.name_introduced }, .enclosing_object_id = item.font.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = true },
+        .text_body => |item| blk: {
+            const string = item.body.text orelse return error.UnsupportedChartStringForkValue;
+            break :blk Spec{ .target = Target{ .object_id = string.object_id, .start = item.body.text_start, .end = item.body.text_end, .introduced = item.body.text_introduced }, .enclosing_object_id = null, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = true };
+        },
+        .null_text_body => |item| blk: {
+            if (item.body.text != null) return error.ExpectedNullChartString;
+            break :blk Spec{ .target = Target{ .object_id = 0xffffffff, .start = item.body.text_start, .end = item.body.text_end, .introduced = false }, .enclosing_object_id = null, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = false };
+        },
+        .nullable_text_block => |item| blk: {
+            const string = item.block.text orelse return error.UnsupportedChartStringForkValue;
+            break :blk Spec{ .target = Target{ .object_id = string.object_id, .start = item.block.text_start, .end = item.block.text_end, .introduced = item.block.text_introduced }, .enclosing_object_id = item.block.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = true };
+        },
+        .null_nullable_text_block => |item| blk: {
+            if (item.block.text != null) return error.ExpectedNullChartString;
+            break :blk Spec{ .target = Target{ .object_id = 0xffffffff, .start = item.block.text_start, .end = item.block.text_end, .introduced = false }, .enclosing_object_id = item.block.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = false };
+        },
+        .null_nullable_text_format => |item| blk: {
+            if (item.format.code != null) return error.ExpectedNullChartString;
+            break :blk Spec{ .target = Target{ .object_id = 0xffffffff, .start = item.format.code_start, .end = item.format.code_end, .introduced = false }, .enclosing_object_id = item.format.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = false };
+        },
+        .null_text_format_object => unreachable,
+    };
+    for (previous) |prior| if (requestHasId(prior, spec.new_object_id)) return error.DuplicateChartObjectId;
+    const replacement = try makeReplacement(a, value, spec.target, spec.enclosing_object_id, spec.new_object_id, spec.bytes, spec.trailer, spec.require_original);
+    return .{ .start = spec.target.start, .end = spec.target.end, .replacement = replacement };
 }
 
 /// Replaces one existing Font String alias with a new inline String definition.

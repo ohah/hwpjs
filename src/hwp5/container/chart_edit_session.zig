@@ -8,6 +8,7 @@ const Font = @import("../chart/font.zig").Font;
 const TextBody = @import("../chart/text_block_body.zig").Body;
 const NullableTextBlock = @import("../chart/text_block.zig").NullableBlock;
 const NullableTextFormat = @import("../chart/text_format.zig").NullableFormat;
+const ValueBlock = @import("../chart/value_block.zig").Block;
 const paths = @import("paths.zig");
 
 pub const Options = struct {
@@ -63,6 +64,10 @@ pub fn materializeSeriesSuffixFormatCode(a: std.mem.Allocator, hwp: []const u8, 
     return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .null_series_suffix_format_code = .{ .series_index = series_index, .format_index = format_index, .bytes = new_code, .trailer = trailer } }}, options);
 }
 
+pub fn materializePrimaryAxisScaleFormat(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, axis_index: usize, raw_word: u16, code: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .null_primary_axis_scale_format = .{ .axis_index = axis_index, .raw_word = raw_word, .bytes = code, .trailer = trailer } }}, options);
+}
+
 pub const StringEdit = union(enum) {
     primary_axis_title_font_name: struct { axis_index: usize, bytes: []const u8, trailer: u8 },
     secondary_axis_title_font_name: struct { bytes: []const u8, trailer: u8 },
@@ -74,6 +79,7 @@ pub const StringEdit = union(enum) {
     null_secondary_axis_title_text: struct { bytes: []const u8, trailer: u8 },
     series_suffix_text: struct { series_index: usize, bytes: []const u8, trailer: u8 },
     null_series_suffix_format_code: struct { series_index: usize, format_index: usize, bytes: []const u8, trailer: u8 },
+    null_primary_axis_scale_format: struct { axis_index: usize, raw_word: u16, bytes: []const u8, trailer: u8 },
 };
 
 const Resolved = union(enum) {
@@ -83,6 +89,7 @@ const Resolved = union(enum) {
     nullable_text_block: struct { value: *const NullableTextBlock, bytes: []const u8, trailer: u8 },
     null_nullable_text_block: struct { value: *const NullableTextBlock, bytes: []const u8, trailer: u8 },
     null_nullable_text_format: struct { value: *const NullableTextFormat, bytes: []const u8, trailer: u8 },
+    null_text_format_object: struct { value: *const ValueBlock, raw_word: u16, bytes: []const u8, trailer: u8 },
 };
 pub const Command = StringEdit;
 
@@ -207,6 +214,7 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
                 forbidden[reserved] = target.value.object_id;
                 reserved += 1;
             },
+            .null_text_format_object => |target| starts[i] = target.value.format_start,
         }
     }
     for (order, 0..) |*slot, i| slot.* = i;
@@ -215,20 +223,48 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
         while (at > 0 and (starts[order[at]] < starts[order[at - 1]] or (starts[order[at]] == starts[order[at - 1]] and order[at] < order[at - 1]))) : (at -= 1)
             std.mem.swap(usize, &order[at], &order[at - 1]);
     }
-    for (order) |i| {
+    for (order, 0..) |i, request_at| {
+        if (resolved[i] == .null_text_format_object) {
+            const target = resolved[i].null_text_format_object;
+            const format_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
+            forbidden[reserved] = format_id;
+            reserved += 1;
+            const code_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
+            forbidden[reserved] = code_id;
+            reserved += 1;
+            const format_type_id = try findLowestTypeId(&chart.prefix.grid.prelude.types, requests[0..request_at]);
+            requests[request_at] = .{ .null_text_format_object = .{ .block = target.value, .format_object_id = format_id, .code_object_id = code_id, .format_type_id = format_type_id, .raw_word = target.raw_word, .bytes = target.bytes, .trailer = target.trailer } };
+            continue;
+        }
         const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
         forbidden[reserved] = new_id;
         reserved += 1;
-        requests[i] = switch (resolved[i]) {
+        requests[request_at] = switch (resolved[i]) {
             .font => |target| .{ .font_name = .{ .font = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .text_body => |target| .{ .text_body = .{ .body = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .null_text_body => |target| .{ .null_text_body = .{ .body = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .nullable_text_block => |target| .{ .nullable_text_block = .{ .block = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .null_nullable_text_block => |target| .{ .null_nullable_text_block = .{ .block = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .null_nullable_text_format => |target| .{ .null_nullable_text_format = .{ .format = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
+            .null_text_format_object => unreachable,
         };
     }
     return fork.forkMany(a, &chart, requests, max_output_bytes);
+}
+
+fn findLowestTypeId(types: *const @import("../chart/type_table.zig").Table, previous: []const @import("../chart/contents_string_fork.zig").BatchRequest) !u32 {
+    var skip: usize = 0;
+    for (previous) |request| switch (request) {
+        .null_text_format_object => skip += 1,
+        else => {},
+    };
+    var candidate: u32 = 0;
+    while (candidate != 0xffffffff) : (candidate += 1) {
+        if (types.definitions.contains(candidate)) continue;
+        if (skip == 0) return candidate;
+        skip -= 1;
+    }
+    return error.LimitExceeded;
 }
 
 fn resolve(chart: *const ChartContents, command: StringEdit) !Resolved {
@@ -272,6 +308,12 @@ fn resolve(chart: *const ChartContents, command: StringEdit) !Resolved {
             const formats = &chart.series.items[item.series_index].suffix.formats;
             if (item.format_index >= formats.len) return error.InvalidChartFormatIndex;
             break :blk .{ .null_nullable_text_format = .{ .value = &formats[item.format_index], .bytes = item.bytes, .trailer = item.trailer } };
+        },
+        .null_primary_axis_scale_format => |item| blk: {
+            if (item.axis_index >= chart.primary_axes.len) return error.InvalidChartAxisIndex;
+            if (chart.primary_axes[item.axis_index].scale == null) return error.MissingChartAxisScale;
+            const scale = &chart.primary_axes[item.axis_index].scale.?;
+            break :blk .{ .null_text_format_object = .{ .value = &scale.value, .raw_word = item.raw_word, .bytes = item.bytes, .trailer = item.trailer } };
         },
     };
 }

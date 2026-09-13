@@ -37,7 +37,7 @@ pub fn assertCurrent() void {
         fields(h.chart_axis.Axis, &.{ "object_id", "raw", "title", "scale_array", "scale", "tail", "end" });
         fields(@typeInfo(@TypeOf(@as(h.chart_axis.Axis, undefined).scale)).optional.child, &.{ "object_id", "array", "value", "end" });
         fields(@TypeOf(@as(h.chart_axis.Axis, undefined).tail), &.{ "prefix", "extra", "suffix", "end" });
-        fields(h.chart_value_block.Block, &.{ "header_word", "reference", "format", "raw_before_label", "label", "raw_suffix", "text", "end" });
+        fields(h.chart_value_block.Block, &.{ "header_word", "reference", "format", "format_start", "format_end", "raw_before_label", "label", "raw_suffix", "text", "end" });
         fields(h.chart_object_table.Reference, &.{ "value", "introduced", "start", "end" });
         fields(h.chart_object_table.ValueReference, &.{ "value", "introduced", "start", "end" });
         fields(h.chart_text_format.Format, &.{ "object_id", "raw_word", "code", "code_introduced", "code_start", "code_end", "end" });

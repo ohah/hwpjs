@@ -13,6 +13,8 @@ pub const Block = struct {
     header_word: u32,
     reference: ?Objects.ValueReference,
     format: ?formats.Format,
+    format_start: usize,
+    format_end: usize,
     raw_before_label: u16,
     label: Objects.Reference,
     raw_suffix: [3]u8,
@@ -35,7 +37,9 @@ pub fn readObservedV1(reader: *Reader, types: *Types, objects: *Objects.Table, o
         .string => |s| remaining -= s.bytes.len,
         .number => {},
     };
+    const format_start = next.offset;
     const format = if (try consumeNull(&next)) null else try formats.readObservedV1(&next, types, objects, @min(options.max_string_bytes, remaining));
+    const format_end = next.offset;
     if (format) |f| remaining -= f.code.bytes.len;
     const raw_before_label = try next.readInt(u16);
     const label = try objects.readStringObservedV1(&next, types, @min(options.max_string_bytes, remaining));
@@ -43,7 +47,7 @@ pub fn readObservedV1(reader: *Reader, types: *Types, objects: *Objects.Table, o
     const raw_suffix = (try next.take(3))[0..3].*;
     const body = try bodies.readObservedV2(&next, types, objects, .{ .max_string_bytes = options.max_string_bytes, .max_total_string_bytes = remaining });
     reader.* = next;
-    return .{ .header_word = header, .reference = reference, .format = format, .raw_before_label = raw_before_label, .label = label, .raw_suffix = raw_suffix, .text = body, .end = next.offset };
+    return .{ .header_word = header, .reference = reference, .format = format, .format_start = format_start, .format_end = format_end, .raw_before_label = raw_before_label, .label = label, .raw_suffix = raw_suffix, .text = body, .end = next.offset };
 }
 
 // Peeking never consumes a non-null ID. Nullable Value/Format fields share this

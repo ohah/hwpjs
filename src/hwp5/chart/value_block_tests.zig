@@ -29,6 +29,8 @@ fn exercise(a: std.mem.Allocator, kind: Kind, with_format: bool, start: usize) !
     try t.expectEqual(@as(u16, 0x4567), b.raw_before_label);
     try t.expectEqualSlices(u8, &.{ 0x81, 0x23, 0x45 }, &b.raw_suffix);
     try t.expectEqual(with_format, b.format != null);
+    try t.expect(b.format_start < b.format_end);
+    try t.expectEqual(if (with_format) b.format.?.end else b.format_start + 4, b.format_end);
     if (b.format) |v| {
         try t.expectEqual(@as(u16, 0x1234), v.raw_word);
         try t.expectEqual(kind != .string and kind != .alias, v.code_introduced);
