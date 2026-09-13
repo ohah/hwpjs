@@ -20,4 +20,4 @@ series label 확장 뒤에는 공개 wrapper를 axis 대상으로 오배선, ser
 
 ## 남은 범위
 
-현재 typed 대상은 observed V6 차트의 primary-axis title Font name alias와 series main-label body alias입니다. 이미 inline인 문자열, 다른 Font 위치, point label, TextBlock·TextFormat의 다른 위치, 같은 차트의 여러 의미 변경과 여러 차트의 typed batch는 각 기존 writer를 이 계층에 추가 연결해야 합니다. chart layout은 opaque wire 값에서 추측하지 않으며 caller가 신뢰할 수 있는 구조 count를 명시해야 합니다. 차트 렌더링·수식 재계산·한글 프로그램과의 시각 동일성은 이 저장 성공으로 증명되지 않습니다.
+현재 typed 대상은 observed V6 차트의 primary-axis title Font name alias와 series main-label body alias입니다. 고정 실제 fixture의 point label 본문은 전부 null 또는 inline이라 기존 alias fork의 성공 근거로 사용할 수 없으며, 해당 typed API를 합성 fixture만으로 노출하지 않습니다. 이미 inline인 문자열, 다른 Font 위치, TextBlock·TextFormat의 다른 위치, 같은 차트의 여러 의미 변경과 여러 차트의 typed batch는 별도 wire 계약이나 기존 writer 연결이 필요합니다. chart layout은 opaque wire 값에서 추측하지 않으며 caller가 신뢰할 수 있는 구조 count를 명시해야 합니다. 차트 렌더링·수식 재계산·한글 프로그램과의 시각 동일성은 이 저장 성공으로 증명되지 않습니다.
