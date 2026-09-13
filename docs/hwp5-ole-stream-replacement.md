@@ -2,7 +2,7 @@
 
 ## 계약과 책임
 
-`hwp5/ole/stream_replace.zig`의 `replaceExact`는 이미 압축 해제된 HWP OLE BinData 한 개에서 내부 CFB stream 하나를 교체합니다. 기존 strict OLE container open, CFB `findExact`, `File.toNodes`, canonical writer를 순서대로 재사용하며 CFB 파싱·경로 비교·섹터 직렬화를 다시 구현하지 않습니다.
+`hwp5/ole/stream_replace.zig`의 `replaceExact`는 이미 압축 해제된 HWP OLE BinData 한 개에서 내부 CFB stream 하나를 교체합니다. 기존 strict OLE container open과 공통 `cfb/stream_replace.zig`를 재사용하며 CFB 파싱·경로 비교·compact node mapping·섹터 직렬화를 다시 구현하지 않습니다.
 
 입력의 `raw_cfb` 또는 `observed_size_prefix` 배치를 caller가 명시하며 출력도 같은 배치를 유지합니다. CFB major version 3/4, 다른 storage/stream의 내용과 디렉터리 메타데이터를 보존합니다. 물리 섹터 배치와 트리 색상 같은 canonical writer의 정규화 범위는 [CFB API](cfb-reader.md)와 동일합니다.
 

@@ -1,6 +1,5 @@
 const std = @import("std");
 const cfb = @import("../../cfb/reader.zig");
-const writer = @import("../../cfb/writer.zig");
 const container = @import("container.zig");
 const envelope = @import("envelope.zig");
 
@@ -15,18 +14,9 @@ pub const Options = struct {
 pub fn replaceExact(a: std.mem.Allocator, bytes: []const u8, layout: envelope.Layout, path: []const u8, replacement: []const u8, options: Options) ![]u8 {
     var file = try container.open(a, bytes, layout, options.limits);
     defer file.deinit();
-    const entry_index = try file.findExact(path) orelse return error.StreamNotFound;
-    if (file.entries[entry_index].kind != 2) return error.NotAStream;
-    const node_index = try file.nodeIndex(entry_index);
-    const nodes = try file.toNodes(a);
-    defer a.free(nodes);
-    nodes[node_index].content = replacement;
-
     const envelope_bytes: usize = if (layout == .raw_cfb) 0 else 4;
     if (options.max_output_bytes < envelope_bytes) return error.LimitExceeded;
-    var output_limits = options.limits;
-    output_limits.max_input_bytes = @min(output_limits.max_input_bytes, options.max_output_bytes - envelope_bytes);
-    const raw = try writer.write(a, nodes, .{ .version = file.header.major, .limits = output_limits });
+    const raw = try cfb.stream_replace.rebuildExact(a, &file, path, replacement, .{ .limits = options.limits, .max_output_bytes = options.max_output_bytes - envelope_bytes });
     if (layout == .raw_cfb) {
         if (raw.len > options.max_output_bytes) {
             a.free(raw);

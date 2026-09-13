@@ -6,6 +6,7 @@ const Allocator = std.mem.Allocator;
 pub const Options = @import("types.zig").Options;
 pub const Entry = @import("types.zig").Entry;
 pub const writer = @import("writer.zig");
+pub const stream_replace = @import("stream_replace.zig");
 const Sectors = @import("sectors.zig").Sectors;
 const Allocation = @import("allocation.zig").Allocation;
 /// Owns all returned data; input may be released after open. No filesystem/clock dependency.
