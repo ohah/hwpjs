@@ -1,0 +1,2 @@
+const incomplete=new Set(['IncompleteSeriesPrefixObservation','IncompleteSeriesBranchObservation','IncompleteAxisObservation','IncompleteSeriesPointObservation','IncompleteSeriesSuffixObservation','IncompleteTextFormatObservation','IncompleteSeriesPictureObservation','IncompleteSeriesTrailerObservation','IncompleteChartTitleHeaderObservation']);
+export const incompleteSeriesCollection=e=>e.constructor===Error&&incomplete.has(e.message);
