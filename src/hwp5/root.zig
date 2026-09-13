@@ -94,6 +94,7 @@ pub const chart_initial_objects = @import("chart/initial_objects.zig");
 pub const chart_contents_prefix = @import("chart/contents_prefix.zig");
 pub const chart_observed_contents = @import("chart/observed_contents.zig");
 pub const chart_contents_original = @import("chart/contents_original.zig");
+pub const chart_contents_patch = @import("chart/contents_patch.zig");
 pub const chart_light_source = @import("chart/light_source.zig");
 pub const chart_light = @import("chart/light.zig");
 pub const ole_validation = @import("body/ole_validation.zig");

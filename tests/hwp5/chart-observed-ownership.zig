@@ -20,6 +20,9 @@ fn exercise(a: std.mem.Allocator) !void {
     const replay = try core.hwp5.chart_contents_original.copyOriginal(a, &value, bytes.len);
     defer a.free(replay);
     try t.expectEqualSlices(u8, &bytes, replay);
+    const patched = try core.hwp5.chart_contents_patch.applyOriginal(a, &value, &.{}, bytes.len);
+    defer a.free(patched);
+    try t.expectEqualSlices(u8, &bytes, patched);
     try t.expectEqual(bytes.len, value.end);
     try t.expectEqual(fixture.point_counts.len, value.series.items.len);
     for (value.series.items, layout.series_point_counts) |item, n| try t.expectEqual(n, item.section.points.len);
@@ -33,6 +36,46 @@ fn exercise(a: std.mem.Allocator) !void {
     try t.expectEqual(original_first, replay[0]);
     try t.expectEqual(@as(u8, 0xcc), name[0]);
     try t.expectEqualSlices(u8, &raw, &value.prefix.transition.raw);
+}
+test "actual Contents sorted patch splice and extent" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const patches = [_]core.hwp5.chart_contents_patch.Patch{
+        .{ .start = 40, .end = 43, .replacement = "AB" },
+        .{ .start = 100, .end = 100, .replacement = "xyz" },
+        .{ .start = 200, .end = 205, .replacement = "" },
+    };
+    const out = try core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &patches, bytes.len);
+    defer t.allocator.free(out);
+    try t.expectEqual(bytes.len - 3, out.len);
+    try t.expectEqual(@as(u32, @intCast(out.len - 36)), std.mem.readInt(u32, out[32..36], .little));
+    try t.expectEqualSlices(u8, bytes[0..32], out[0..32]);
+    try t.expectEqualSlices(u8, "AB", out[40..42]);
+    try t.expectEqualSlices(u8, "xyz", out[99..102]);
+    try t.expectEqualSlices(u8, bytes[43..100], out[42..99]);
+    try t.expectEqualSlices(u8, bytes[205..], out[202..]);
+}
+test "actual Contents patch validation" {
+    var bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const Patch = core.hwp5.chart_contents_patch.Patch;
+    try t.expectError(error.InvalidChartPatchBoundary, core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &.{.{ .start = 50, .end = 49, .replacement = "" }}, bytes.len));
+    try t.expectError(error.InvalidChartPatchBoundary, core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &.{.{ .start = bytes.len, .end = bytes.len + 1, .replacement = "" }}, bytes.len));
+    try t.expectError(error.OverlappingChartPatches, core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &.{ .{ .start = 50, .end = 60, .replacement = "" }, .{ .start = 59, .end = 70, .replacement = "" } }, bytes.len));
+    for ([_]Patch{ .{ .start = 32, .end = 32, .replacement = "x" }, .{ .start = 31, .end = 33, .replacement = "x" }, .{ .start = 35, .end = 37, .replacement = "x" } }) |patch|
+        try t.expectError(error.ChartExtentPatchForbidden, core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &.{patch}, bytes.len + 1));
+    const after_extent = try core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &.{.{ .start = 36, .end = 36, .replacement = "x" }}, bytes.len + 1);
+    defer t.allocator.free(after_extent);
+    try t.expectEqual(@as(u32, @intCast(after_extent.len - 36)), std.mem.readInt(u32, after_extent[32..36], .little));
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &.{.{ .start = 40, .end = 40, .replacement = "x" }}, bytes.len));
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &.{ .{ .start = 0, .end = 32, .replacement = "" }, .{ .start = 36, .end = bytes.len, .replacement = "" } }, bytes.len));
+    value.end -= 1;
+    try t.expectError(error.InvalidChartSourceBoundary, core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &.{}, bytes.len));
+    value.end += 1;
+    bytes[32] ^= 1;
+    try t.expectError(error.InvalidChartSourceExtent, core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &.{}, bytes.len));
 }
 test "actual Contents original copy boundaries" {
     const bytes = try decode();

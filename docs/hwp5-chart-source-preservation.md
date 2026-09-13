@@ -12,7 +12,7 @@
 
 `chart/contents_original.zig`의 `copyOriginal`은 source를 caller allocator의 새 버퍼로 byte-for-byte 복제합니다. `end == source.len`을 확인하고 명시적 최대 출력 크기를 적용합니다. 반환 버퍼는 caller가 해제하며 이후 입력 변경과 분리됩니다. 이름 그대로 원본 복제 전용이고 의미 필드를 직렬화하거나 변경 내용을 반영하지 않습니다. 수정된 모델을 이 API에 전달해도 변경 저장이 되는 것처럼 가장하지 않도록 일반 `save` 이름을 사용하지 않습니다.
 
-향후 수정 저장은 확정된 span과 serializer를 사용해 교체하되 미해석 구간을 보존해야 합니다. `source`와 `copyOriginal`만으로 수정 writer·span 교체·CFB 스트림 교체·파일 전체 byte-identical round trip이 구현됐다고 주장하지 않습니다.
+확정된 원본 span의 안전한 조립은 후속 [차트 patch writer](hwp5-chart-patch-writer.md)에 연결했습니다. 필드별 span/serializer, CFB 스트림 교체와 파일 전체 round trip은 여전히 별도입니다.
 
 ## 검증
 
