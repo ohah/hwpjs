@@ -116,11 +116,12 @@ test "actual HWP OLE CONTENTS is an explicitly selected payload-sized placeable 
     try t.expectEqual(@as(usize, 1689), text.escape_bytes);
     try t.expectEqual(@as(usize, 1), text.escape_padding);
     try t.expectEqual(@as(usize, 0), text.nonzero_escape_padding);
-    const enhanced = try core.image.wmf_enhanced_metafile_records.inspect(fixture.bytes, value, records);
+    const enhanced = try core.image.wmf_enhanced_metafile_records.inspect(t.allocator, fixture.bytes, value, records, .{ .max_records_per_sequence = records.count, .max_bytes_per_sequence = fixture.bytes.len });
     try t.expectEqual(@as(usize, 118), enhanced.candidates);
     try t.expectEqual(@as(usize, 0), enhanced.conforming);
     try t.expectEqual(@as(usize, 118), enhanced.nonconforming);
     try t.expectEqual(@as(usize, 0), enhanced.chunk_bytes);
+    try t.expectEqual(@as(usize, 0), enhanced.sequences);
 }
 
 test "public WMF text audit pins alignment padding Dx rectangle and escape length" {

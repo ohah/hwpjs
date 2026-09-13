@@ -17,7 +17,9 @@ hash-pinned HWP의 WMF에는 EscapeFunction이 `0x000f`인 META_ESCAPE가 118개
 
 일반 `escape.zig`는 이 관찰값을 arbitrary EscapeData로 손실 없이 보존한다. `enhanced_metafile.zig`는 명세 준수 payload만 해석하고, `enhanced_metafile_records.zig`는 실제 표본에서 후보 118개, 준수 0개, 비준수 118개라는 차이를 명시적으로 보고한다. 비준수 payload의 의미를 휴리스틱으로 추정하지 않는다.
 
-`enhanced_metafile_sequence.zig`는 명세 준수 청크 배열의 record count, 공통 metadata, 입력 순서에 따른 RemainingBytes, 전체 크기와 XOR checksum을 검증한다. caller가 지정한 최대 바이트를 넘으면 할당 전에 거부하고, 모든 검증이 끝난 뒤 정확한 전체 크기를 한 번만 할당해 순서대로 복사한다. 빈 입력과 홀수 길이 EMF stream은 checksum WORD 계약을 만족할 수 없어 거부한다. 원래 WMF에서 레코드가 물리적으로 연속했는지 확인하는 scanner와 재조립된 EMF의 자체 framing 검증은 후속 단계다.
+`enhanced_metafile_sequence.zig`는 명세 준수 청크 배열의 record count, 공통 metadata, 입력 순서에 따른 RemainingBytes, 전체 크기와 XOR checksum을 검증한다. caller가 지정한 최대 바이트를 넘으면 할당 전에 거부하고, 모든 검증이 끝난 뒤 정확한 전체 크기를 한 번만 할당해 순서대로 복사한다. 빈 입력과 홀수 길이 EMF stream은 checksum WORD 계약을 만족할 수 없어 거부한다.
+
+`enhanced_metafile_records.zig`는 WMF record iterator에서 첫 strict 청크가 선언한 개수만큼 바로 다음 레코드를 소비한다. 중간에 다른 record/function이 나타나거나 후속 청크가 strict payload가 아니면 연속성 오류다. caller가 지정한 레코드 수 제한을 확인한 뒤 임시 chunk view 배열을 할당하고, 공통 sequence validator를 호출해 필드 규칙을 복제하지 않는다. 비준수 `0x000f` 후보는 시작 청크로 추정하지 않고 기존 관찰 리포트에만 센다. 재조립된 EMF의 자체 framing 검증은 후속 단계다.
 
 ## 적대적 검증
 
@@ -34,3 +36,5 @@ hash-pinned HWP의 WMF에는 EscapeFunction이 `0x000f`인 META_ESCAPE가 118개
 시퀀스 재조립에는 별도의 5개 변이를 적용했다. 전체 record count, 청크 간 metadata 일관성, RemainingBytes 순서, 완성 stream checksum, caller byte limit 검사를 각각 제거했으며 유효한 15회 모두 Debug/ReleaseSafe/ReleaseFast에서 실제 잘못된 수용으로 탐지됐다. 최초 count 입력은 검사를 제거해도 후속 크기 검사에서 거부되어 무효 처리하고, 바이트·잔여량·checksum은 자기완결적이지만 record count만 2인 단일 청크 입력으로 교체했다.
 
 구현 자체의 적대적 검토에서는 각 청크 길이를 짝수로 강제하던 초기 오류를 발견했다. 명세는 전체 EMF checksum을 WORD 단위로 정의할 뿐 청크 경계를 WORD 경계로 제한하지 않는다. 따라서 홀수 청크의 마지막 바이트를 다음 청크의 첫 바이트와 결합하도록 고쳤고, 1바이트/3바이트 분할 회귀 테스트로 고정했다. 전체 stream 길이가 홀수인 경우만 거부한다.
+
+물리적 scanner에는 비연속 레코드를 오류 없이 부분 리포트로 반환, record limit 제거, byte limit 전달 누락, sequence validator 오류를 부분 성공으로 변환, 후속 후보 계수 누락의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 유효한 15회 모두 각각 데이터 잘림, 제한 우회, 오류 은폐 또는 report 손실로 탐지됐다. 모든 변이를 제거한 정상 구현은 별도로 전체 검증한다.
