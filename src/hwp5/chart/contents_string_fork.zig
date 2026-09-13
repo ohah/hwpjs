@@ -20,6 +20,7 @@ pub const BatchRequest = union(enum) {
     inline_string: struct { reference: Objects.Reference, new_object_id: u32, bytes: []const u8, trailer: u8 },
     number_payload: struct { number: @import("value_object.zig").Number, bits: u64, trailer: u16 },
     null_grid_string: struct { cell: *const @import("grid_cells.zig").Cell, object_id: u32, string_type_id: u32, value_type_id: u32, bytes: []const u8, trailer: u8 },
+    null_grid_number: struct { cell: *const @import("grid_cells.zig").Cell, object_id: u32, number_type_id: u32, value_type_id: u32, bits: u64, trailer: u16 },
 };
 
 /// Forks multiple aliases from one original Contents coordinate space.
@@ -82,6 +83,7 @@ fn requestSpan(request: BatchRequest) @import("contents_inline_fork.zig").Span {
         .inline_string => |item| .{ .start = item.reference.start, .end = item.reference.end },
         .number_payload => |item| .{ .start = item.number.payload_start, .end = item.number.payload_end },
         .null_grid_string => |item| .{ .start = item.cell.start, .end = item.cell.end },
+        .null_grid_number => |item| .{ .start = item.cell.start, .end = item.cell.end },
     };
 }
 
@@ -97,6 +99,7 @@ fn requestHasId(request: BatchRequest, id: u32) bool {
         .inline_string => |item| item.new_object_id == id,
         .number_payload => false,
         .null_grid_string => |item| item.object_id == id,
+        .null_grid_number => |item| item.object_id == id,
     };
 }
 
@@ -112,6 +115,12 @@ fn prepare(a: std.mem.Allocator, value: *const Contents, request: BatchRequest, 
         const item = request.null_grid_string;
         for (previous) |prior| if (requestHasId(prior, item.object_id)) return error.DuplicateChartObjectId;
         const replacement = try @import("grid_string_materialize.zig").replacement(a, value, item.cell, item.object_id, item.string_type_id, item.value_type_id, item.bytes, item.trailer);
+        return .{ .start = item.cell.start, .end = item.cell.end, .replacement = replacement };
+    }
+    if (request == .null_grid_number) {
+        const item = request.null_grid_number;
+        for (previous) |prior| if (requestHasId(prior, item.object_id)) return error.DuplicateChartObjectId;
+        const replacement = try @import("grid_number_materialize.zig").replacement(a, value, item.cell, item.object_id, item.number_type_id, item.value_type_id, item.bits, item.trailer);
         return .{ .start = item.cell.start, .end = item.cell.end, .replacement = replacement };
     }
     if (request == .null_text_format_object) {
@@ -153,6 +162,7 @@ fn prepare(a: std.mem.Allocator, value: *const Contents, request: BatchRequest, 
         .inline_string => unreachable,
         .number_payload => unreachable,
         .null_grid_string => unreachable,
+        .null_grid_number => unreachable,
     };
     for (previous) |prior| if (requestHasId(prior, spec.new_object_id)) return error.DuplicateChartObjectId;
     const replacement = try makeReplacement(a, value, spec.target, spec.enclosing_object_id, spec.new_object_id, spec.bytes, spec.trailer, spec.require_original);

@@ -85,6 +85,8 @@ fn exercise(a: std.mem.Allocator) !void {
     const null_grid_cell = try core.hwp5.chart_grid_null_target.resolve(&value, 0, 0);
     const grid_materialized = try core.hwp5.chart_grid_string_materialize.replacement(a, &value, null_grid_cell, 0xffffffe0, 0xffffffe1, 0xffffffe2, "n", 3);
     defer a.free(grid_materialized);
+    const grid_number_materialized = try core.hwp5.chart_grid_number_materialize.replacement(a, &value, null_grid_cell, 0xffffffd0, 0xffffffd1, 0xffffffd2, 1, 2);
+    defer a.free(grid_number_materialized);
     const shared_mixed_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .inline_string = .{ .reference = shared_inline_reference, .new_object_id = 0xffffffed, .bytes = "j", .trailer = 10 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xffffffec, .bytes = "k", .trailer = 11 } } }, bytes.len + 160);
     defer a.free(shared_mixed_forked);
     const inline_reference: core.hwp5.chart_object_table.Reference = .{ .value = value.title.block.text.?, .introduced = value.title.block.text_introduced, .start = value.title.block.text_start, .end = value.title.block.text_end };
@@ -408,6 +410,9 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectError(error.InvalidChartGridRow, core.hwp5.chart_edit_session.materializeGridCellString(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, value.prefix.grid.prelude.rows, 0, "x", 0, edit_options));
     try t.expectError(error.InvalidChartGridColumn, core.hwp5.chart_edit_session.materializeGridCellString(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.prefix.grid.prelude.columns, "x", 0, edit_options));
     try t.expectError(error.ExpectedNullChartCell, core.hwp5.chart_edit_session.materializeGridCellString(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, 1, "x", 0, edit_options));
+    try t.expectError(error.InvalidChartGridRow, core.hwp5.chart_edit_session.materializeGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, value.prefix.grid.prelude.rows, 0, 0, 0, edit_options));
+    try t.expectError(error.InvalidChartGridColumn, core.hwp5.chart_edit_session.materializeGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.prefix.grid.prelude.columns, 0, 0, edit_options));
+    try t.expectError(error.ExpectedNullChartCell, core.hwp5.chart_edit_session.materializeGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 1, 1, 0, 0, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.forkSeriesPointLabelFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, "x", 0, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, 0, point_replacement, 0x77, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, point_replacement, 0x77, edit_options));
@@ -694,6 +699,22 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectEqual(@as(u8, 0xcc), null_grid_chart.prefix.grid.cells[0].value.string.trailer);
     try t.expectEqual(value.prefix.grid.prelude.types.definitions.count() + 2, null_grid_chart.prefix.grid.prelude.types.definitions.count());
     try t.expectEqual(value.prefix.objects.entries.count() + 1, null_grid_chart.prefix.objects.entries.count());
+
+    const null_grid_number_saved = try core.hwp5.chart_edit_session.materializeGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, 0, 0x7ff8000000005678, 0xcd01, null_grid_options);
+    defer t.allocator.free(null_grid_number_saved);
+    var null_grid_number_outer = try core.cfb.File.open(t.allocator, null_grid_number_saved, .{ .strict = true });
+    defer null_grid_number_outer.deinit();
+    const null_grid_number_header = try core.hwp5.Header.parse(null_grid_number_outer.entries[(try null_grid_number_outer.findExact("/FileHeader")).?].content);
+    const null_grid_number_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &null_grid_number_header, item, null_grid_number_outer.entries[(try null_grid_number_outer.findExact("/BinData/BIN0001.OLE")).?].content, 64 * 1024);
+    defer t.allocator.free(null_grid_number_inner);
+    var null_grid_number_ole = try core.cfb.File.open(t.allocator, null_grid_number_inner, .{ .strict = true });
+    defer null_grid_number_ole.deinit();
+    var null_grid_number_chart = try contents.readObservedV6(t.allocator, null_grid_number_ole.entries[(try null_grid_number_ole.findExact("/Contents")).?].content, layout, .{});
+    defer null_grid_number_chart.deinit();
+    try t.expectEqual(@as(u64, 0x7ff8000000005678), null_grid_number_chart.prefix.grid.cells[0].value.number.bits);
+    try t.expectEqual(@as(u16, 0xcd01), null_grid_number_chart.prefix.grid.cells[0].value.number.trailer);
+    try t.expectEqual(value.prefix.grid.prelude.types.definitions.count() + 2, null_grid_number_chart.prefix.grid.prelude.types.definitions.count());
+    try t.expectEqual(value.prefix.objects.entries.count() + 1, null_grid_number_chart.prefix.objects.entries.count());
 
     const inline_bytes = "inline-file-edit";
     const old_footnote_font = value.prefix.footnote.block.font.name;
@@ -1253,6 +1274,30 @@ test "actual Contents null Grid String materializer validates identities and sou
     try t.expectError(error.DuplicateChartTypeId, core.hwp5.chart_grid_string_materialize.replacement(t.allocator, &value, cell, 0xfffffff0, existing_type, 0xfffffff2, "x", 7));
     bytes[cell.start] ^= 1;
     try t.expectError(error.InvalidChartGridCellSpan, core.hwp5.chart_grid_string_materialize.replacement(t.allocator, &value, cell, 0xfffffff0, 0xfffffff1, 0xfffffff2, "x", 7));
+}
+test "actual Contents null Grid Number materializer validates exact wire" {
+    var bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const cell = try core.hwp5.chart_grid_null_target.resolve(&value, 0, 0);
+    const valid = try core.hwp5.chart_grid_number_materialize.replacement(t.allocator, &value, cell, 0xfffffff0, 0xfffffff1, 0xfffffff2, 0x8000000000000000, 0xa55a);
+    defer t.allocator.free(valid);
+    try t.expectEqual(@as(usize, 51), valid.len);
+    try t.expectEqual(@as(u32, 0xfffffff0), std.mem.readInt(u32, valid[0..4], .little));
+    try t.expectEqual(@as(u32, 0xfffffff1), std.mem.readInt(u32, valid[4..8], .little));
+    try t.expectEqualSlices(u8, "VtDouble\x00", valid[10..19]);
+    try t.expectEqual(@as(u64, 0x8000000000000000), std.mem.readInt(u64, valid[21..29], .little));
+    try t.expectEqual(@as(u16, 0xa55a), std.mem.readInt(u16, valid[29..31], .little));
+    try t.expectEqual(@as(u32, 0xfffffff2), std.mem.readInt(u32, valid[31..35], .little));
+    try t.expectEqualSlices(u8, "VtValue\x00", valid[37..45]);
+    try t.expectEqual(@as(u16, 1), std.mem.readInt(u16, valid[45..47], .little));
+    try t.expectEqual(value.prefix.grid.prelude.types.findLowestId("VtObject\x00", 1).?, std.mem.readInt(u32, valid[47..51], .little));
+    try t.expectError(error.ExpectedNullChartCell, core.hwp5.chart_grid_number_materialize.replacement(t.allocator, &value, &value.prefix.grid.cells[1], 0xfffffff0, 0xfffffff1, 0xfffffff2, 0, 0));
+    try t.expectError(error.UnsupportedChartObjectReference, core.hwp5.chart_grid_number_materialize.replacement(t.allocator, &value, cell, 0xffffffff, 0xfffffff1, 0xfffffff2, 0, 0));
+    try t.expectError(error.DuplicateChartObjectId, core.hwp5.chart_grid_number_materialize.replacement(t.allocator, &value, cell, value.prefix.grid.cells[1].object_id.?, 0xfffffff1, 0xfffffff2, 0, 0));
+    try t.expectError(error.DuplicateChartTypeId, core.hwp5.chart_grid_number_materialize.replacement(t.allocator, &value, cell, 0xfffffff0, 0xfffffff1, 0xfffffff1, 0, 0));
+    bytes[cell.start] ^= 1;
+    try t.expectError(error.InvalidChartGridCellSpan, core.hwp5.chart_grid_number_materialize.replacement(t.allocator, &value, cell, 0xfffffff0, 0xfffffff1, 0xfffffff2, 0, 0));
 }
 test "actual Contents String ValueReference forks and rejects Number" {
     const bytes = try decode();
