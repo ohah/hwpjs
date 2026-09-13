@@ -7,12 +7,12 @@ const Footnote = @import("footnote.zig").Footnote;
 pub fn register(objects: *Objects, grid: Grid, backdrop: Backdrop, footnote: Footnote) !void {
     for (grid.cells) |cell| switch (cell.value) {
         .empty => {},
-        .number => |n| try objects.registerNumber(.{ .object_id = cell.object_id.?, .bits = n.bits, .trailer = n.trailer }),
-        .string => |s| try objects.registerString(.{ .object_id = cell.object_id.?, .bytes = s.bytes, .trailer = s.trailer }),
+        .number => |n| try objects.registerInitialNumber(.{ .object_id = cell.object_id.?, .bits = n.bits, .trailer = n.trailer }, cell.start, cell.end),
+        .string => |s| try objects.registerInitialString(.{ .object_id = cell.object_id.?, .bytes = s.bytes, .trailer = s.trailer }, cell.start, cell.end),
     };
     for (backdrop.object_ids) |id| try objects.registerOther(id);
     for ([_]u32{ footnote.object_id, footnote.block.object_id, footnote.block.font.object_id } ++ footnote.section.backdrop.object_ids) |id|
         try objects.registerOther(id);
-    try objects.registerString(footnote.block.font.name);
-    try objects.registerString(footnote.block.text);
+    try objects.registerInitialString(footnote.block.font.name, footnote.block.font.name_start, footnote.block.font.name_end);
+    try objects.registerInitialString(footnote.block.text, footnote.block.text_start, footnote.block.text_end);
 }

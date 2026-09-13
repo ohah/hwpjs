@@ -99,6 +99,7 @@ pub const chart_contents_patch = @import("chart/contents_patch.zig");
 pub const chart_contents_string_edit = @import("chart/contents_string_edit.zig");
 pub const chart_contents_string_fork = @import("chart/contents_string_fork.zig");
 pub const chart_format_materialize = @import("chart/format_materialize.zig");
+pub const chart_contents_inline_fork = @import("chart/contents_inline_fork.zig");
 pub const ole_stream_replace = @import("ole/stream_replace.zig");
 pub const chart_light_source = @import("chart/light_source.zig");
 pub const chart_light = @import("chart/light.zig");

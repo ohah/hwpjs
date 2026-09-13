@@ -35,6 +35,13 @@ fn exercise(a: std.mem.Allocator) !void {
         try t.expectEqual(@as(u32, 2), objects.entries.count());
         try t.expectEqualSlices(u8, value.value.bytes, r.value.bytes);
     }
+    try t.expectEqual(@as(usize, 101), objects.references.items.len);
+    try t.expect(objects.references.items[0].introduced);
+    try t.expectEqual(@as(usize, 0), objects.references.items[0].start);
+    try t.expectEqual(inline_string.len, objects.references.items[0].end);
+    try t.expect(!objects.references.items[100].introduced);
+    try t.expectEqual(@as(usize, 1), objects.references.items[100].start);
+    try t.expectEqual(@as(usize, 5), objects.references.items[100].end);
     reader = .{ .bytes = &reference, .offset = 1 };
     try t.expectError(error.LimitExceeded, objects.readStringObservedV1(&reader, &types, 1));
     try t.expectEqual(@as(usize, 1), reader.offset);
@@ -91,6 +98,20 @@ test "chart object table source lifetime accounting and independent registration
     try t.expectEqual(@as(usize, 0), reader.offset);
     try t.expectEqual(@as(u32, 2), objects.entries.count());
     try t.expectEqual(@as(usize, 2), objects.string_bytes);
+}
+
+test "chart object table reference limit is logical and cursor atomic" {
+    var objects = Objects.init(t.allocator, .{ .max_references = 1 });
+    defer objects.deinit();
+    var types = Types.init(t.allocator, .{});
+    defer types.deinit();
+    var reader: Reader = .{ .bytes = &inline_string };
+    _ = try objects.readStringObservedV1(&reader, &types, 2);
+    const reference = [_]u8{ 90, 0, 0, 0 };
+    reader = .{ .bytes = &reference };
+    try t.expectError(error.LimitExceeded, objects.readStringObservedV1(&reader, &types, 2));
+    try t.expectEqual(@as(usize, 0), reader.offset);
+    try t.expectEqual(@as(usize, 1), objects.references.items.len);
 }
 
 fn fresh(a: std.mem.Allocator) !void {

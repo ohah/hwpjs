@@ -6,12 +6,14 @@ const ids = @import("object_ids.zig");
 const values = @import("value_object.zig");
 pub const Options = struct {
     max_objects: usize = 1000000,
+    max_references: usize = 1000000,
     max_string_bytes: usize = 65535,
     max_total_string_bytes: usize = 16 * 1024 * 1024,
 };
 pub const Entry = union(enum) { other, string: strings.String, number: values.Number };
 pub const Reference = struct { value: strings.String, introduced: bool, start: usize, end: usize };
 pub const ValueReference = struct { value: values.Value, introduced: bool, start: usize, end: usize };
+pub const ReferenceSpan = struct { object_id: u32, introduced: bool, start: usize, end: usize };
 
 /// Owns only its map. Every registered String borrows caller-retained input.
 /// Caller must register prior objects completely for the selected scope.
@@ -19,11 +21,15 @@ pub const Table = struct {
     allocator: std.mem.Allocator,
     options: Options,
     entries: std.AutoHashMapUnmanaged(u32, Entry) = .empty,
+    /// Every successfully parsed value-reference site in wire order. This is
+    /// the authoritative source for relocating an inline definition safely.
+    references: std.ArrayListUnmanaged(ReferenceSpan) = .empty,
     string_bytes: usize = 0,
     pub fn init(a: std.mem.Allocator, options: Options) Table {
         return .{ .allocator = a, .options = options };
     }
     pub fn deinit(self: *Table) void {
+        self.references.deinit(self.allocator);
         self.entries.deinit(self.allocator);
         self.* = undefined;
     }
@@ -43,9 +49,23 @@ pub const Table = struct {
         try self.entries.put(self.allocator, value.object_id, .{ .string = value });
         self.string_bytes += value.bytes.len;
     }
+    pub fn registerInitialString(self: *Table, value: strings.String, start: usize, end: usize) !void {
+        if (start > end or end - start < 4) return error.InvalidChartStringDefinitionSpan;
+        if (self.references.items.len >= self.options.max_references) return error.LimitExceeded;
+        try self.references.ensureUnusedCapacity(self.allocator, 1);
+        try self.registerString(value);
+        self.references.appendAssumeCapacity(.{ .object_id = value.object_id, .introduced = true, .start = start, .end = end });
+    }
     pub fn registerNumber(self: *Table, value: values.Number) !void {
         try self.checkNew(value.object_id);
         try self.entries.put(self.allocator, value.object_id, .{ .number = value });
+    }
+    pub fn registerInitialNumber(self: *Table, value: values.Number, start: usize, end: usize) !void {
+        if (start > end or end - start < 4) return error.InvalidChartValueDefinitionSpan;
+        if (self.references.items.len >= self.options.max_references) return error.LimitExceeded;
+        try self.references.ensureUnusedCapacity(self.allocator, 1);
+        try self.registerNumber(value);
+        self.references.appendAssumeCapacity(.{ .object_id = value.object_id, .introduced = true, .start = start, .end = end });
     }
     /// Known strings consume only the object ID; unknown IDs start an inline
     /// definition. No byte-pattern fallback. On error the reader and this map's
@@ -63,6 +83,7 @@ pub const Table = struct {
         const start = reader.offset;
         var next = reader.*;
         const id = try ids.readInline(&next);
+        if (self.references.items.len >= self.options.max_references) return error.LimitExceeded;
         const limit = @min(@min(max_bytes, self.options.max_string_bytes), 65535);
         if (self.entries.get(id)) |entry| {
             const value: values.Value = switch (entry) {
@@ -73,6 +94,8 @@ pub const Table = struct {
                 },
                 .number => |n| if (allow_number) .{ .number = n } else return error.UnsupportedChartObjectReference,
             };
+            try self.references.ensureUnusedCapacity(self.allocator, 1);
+            self.references.appendAssumeCapacity(.{ .object_id = id, .introduced = false, .start = start, .end = next.offset });
             reader.* = next;
             return .{ .value = value, .introduced = false, .start = start, .end = next.offset };
         }
@@ -81,10 +104,12 @@ pub const Table = struct {
         next = reader.*;
         const remaining = @min(limit, self.options.max_total_string_bytes - self.string_bytes);
         const value: values.Value = if (allow_number) try values.readObservedV1(&next, types, remaining) else .{ .string = try values.readStringObservedV1(&next, types, remaining) };
+        try self.references.ensureUnusedCapacity(self.allocator, 1);
         switch (value) {
             .string => |s| try self.registerString(s),
             .number => |n| try self.registerNumber(n),
         }
+        self.references.appendAssumeCapacity(.{ .object_id = id, .introduced = true, .start = start, .end = next.offset });
         reader.* = next;
         return .{ .value = value, .introduced = true, .start = start, .end = next.offset };
     }

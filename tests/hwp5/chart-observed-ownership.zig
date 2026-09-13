@@ -185,6 +185,19 @@ test "actual chart string reference inventory remains explicit" {
     try t.expectEqualSlices(usize, &.{ 13, 6, 6 }, &texts);
     try t.expectEqual(@as(usize, 3), missing_formats);
     try t.expectEqualSlices(usize, &.{ 6, 0, 0 }, &format_codes);
+    const ReferenceCount = struct {
+        fn of(objects: *const core.hwp5.chart_object_table.Table, object_id: u32) usize {
+            var count: usize = 0;
+            for (objects.references.items) |reference| if (reference.object_id == object_id) {
+                count += 1;
+            };
+            return count;
+        }
+    };
+    try t.expectEqual(@as(usize, 22), ReferenceCount.of(&value.prefix.objects, value.prefix.footnote.block.font.name.object_id));
+    try t.expectEqual(@as(usize, 4), ReferenceCount.of(&value.prefix.objects, value.prefix.legend.font.name.object_id));
+    for ([_]u32{ value.title.block.font.name.object_id, value.prefix.footnote.block.text.object_id, value.primary_axes[0].title.text.object_id, value.primary_axes[1].title.text.object_id, value.primary_axes[2].title.text.object_id, value.primary_axes[3].title.text.object_id, value.title.block.text.?.object_id }) |object_id|
+        try t.expectEqual(@as(usize, 1), ReferenceCount.of(&value.prefix.objects, object_id));
 }
 test "actual Contents TextBlock text adapters fork aliases and reject other states" {
     const bytes = try decode();
@@ -821,6 +834,68 @@ test "actual Contents Font String fork validation" {
     const string_type = value.prefix.grid.prelude.types.findLowestId("VtString\x00", 1).?;
     value.prefix.grid.prelude.types.definitions.getPtr(string_type).?.version = 2;
     try t.expectError(error.MissingChartStringForkType, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, 0xfffffffe, "x", 0, bytes.len + 16));
+}
+test "actual inline String fork relocates shared definition and isolates singleton" {
+    var bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+
+    const shared_font = &value.prefix.footnote.block.font;
+    const shared: core.hwp5.chart_object_table.Reference = .{ .value = shared_font.name, .introduced = shared_font.name_introduced, .start = shared_font.name_start, .end = shared_font.name_end };
+    const old_id = shared.value.object_id;
+    const old_bytes = shared.value.bytes;
+    const old_trailer = shared.value.trailer;
+    const new_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{});
+    const replacement = "isolated-footnote-font";
+    const shared_max = bytes.len - old_bytes.len + replacement.len + old_bytes.len + 15;
+    const forked = try core.hwp5.chart_contents_inline_fork.forkIntroduced(t.allocator, &value, &shared, new_id, replacement, 0xc1, shared_max);
+    defer t.allocator.free(forked);
+    var reparsed = try contents.readObservedV6(t.allocator, forked, layout, .{});
+    defer reparsed.deinit();
+    try t.expectEqual(new_id, reparsed.prefix.footnote.block.font.name.object_id);
+    try t.expectEqualSlices(u8, replacement, reparsed.prefix.footnote.block.font.name.bytes);
+    try t.expectEqual(@as(u8, 0xc1), reparsed.prefix.footnote.block.font.name.trailer);
+    var old_references: usize = 0;
+    var old_definitions: usize = 0;
+    for (reparsed.prefix.objects.references.items) |reference| if (reference.object_id == old_id) {
+        old_references += 1;
+        old_definitions += @intFromBool(reference.introduced);
+    };
+    try t.expectEqual(@as(usize, 21), old_references);
+    try t.expectEqual(@as(usize, 1), old_definitions);
+    const retained = reparsed.prefix.objects.entries.get(old_id).?.string;
+    try t.expectEqualSlices(u8, old_bytes, retained.bytes);
+    try t.expectEqual(old_trailer, retained.trailer);
+
+    const singleton_block = &value.title.block;
+    const singleton: core.hwp5.chart_object_table.Reference = .{ .value = singleton_block.text.?, .introduced = singleton_block.text_introduced, .start = singleton_block.text_start, .end = singleton_block.text_end };
+    const singleton_bytes = "isolated-title";
+    const singleton_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{new_id});
+    const singleton_max = bytes.len - singleton.value.bytes.len + singleton_bytes.len;
+    const singleton_forked = try core.hwp5.chart_contents_inline_fork.forkIntroduced(t.allocator, &value, &singleton, singleton_id, singleton_bytes, 0xc2, singleton_max);
+    defer t.allocator.free(singleton_forked);
+    var singleton_reparsed = try contents.readObservedV6(t.allocator, singleton_forked, layout, .{});
+    defer singleton_reparsed.deinit();
+    try t.expectEqual(singleton_id, singleton_reparsed.title.block.text.?.object_id);
+    try t.expectEqualSlices(u8, singleton_bytes, singleton_reparsed.title.block.text.?.bytes);
+    try t.expectEqual(@as(u8, 0xc2), singleton_reparsed.title.block.text.?.trailer);
+    try t.expect(!singleton_reparsed.prefix.objects.entries.contains(singleton.value.object_id));
+
+    const alias_font = &value.primary_axes[0].title.font;
+    const alias: core.hwp5.chart_object_table.Reference = .{ .value = alias_font.name, .introduced = alias_font.name_introduced, .start = alias_font.name_start, .end = alias_font.name_end };
+    try t.expectError(error.ExpectedInlineChartString, core.hwp5.chart_contents_inline_fork.forkIntroduced(t.allocator, &value, &alias, 0xffffff00, "x", 0, bytes.len + 64));
+    try t.expectError(error.DuplicateChartObjectId, core.hwp5.chart_contents_inline_fork.forkIntroduced(t.allocator, &value, &shared, old_id, "x", 0, bytes.len + 64));
+    var bad_span = shared;
+    bad_span.end -= 1;
+    try t.expectError(error.InvalidChartStringReferenceGraph, core.hwp5.chart_contents_inline_fork.forkIntroduced(t.allocator, &value, &bad_span, 0xffffff00, "x", 0, bytes.len + 64));
+    bytes[shared.start] ^= 1;
+    try t.expectError(error.InvalidChartStringDefinitionSpan, core.hwp5.chart_contents_inline_fork.forkIntroduced(t.allocator, &value, &shared, 0xffffff00, "x", 0, bytes.len + 64));
+    bytes[shared.start] ^= 1;
+    for (value.prefix.objects.references.items) |*reference| if (reference.start == shared.start) {
+        reference.introduced = false;
+        break;
+    };
+    try t.expectError(error.InvalidChartStringReferenceGraph, core.hwp5.chart_contents_inline_fork.forkIntroduced(t.allocator, &value, &shared, 0xffffff00, "x", 0, bytes.len + 64));
 }
 test "actual Contents null TextFormat materialization validation" {
     var bytes = try decode();
