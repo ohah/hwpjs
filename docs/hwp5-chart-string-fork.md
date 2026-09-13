@@ -2,7 +2,7 @@
 
 ## 계약
 
-`chart/contents_string_fork.zig`의 `forkStringReference`는 기존 String object ID를 재참조하는 `object_table.Reference` 한 곳을 새 inline String 정의로 교체합니다. `forkStringValueReference`는 String/Number union에서 String만 같은 경로로 전달하고 Number를 명시적으로 거부합니다. `forkFontName`, `forkTextBlockText`, `forkNullableTextBlockText`, `forkTextBodyText`는 평탄화된 필드를 같은 내부 `Target`으로 변환하는 adapter입니다. 모든 진입점은 직렬화 규칙을 복제하지 않습니다. 대상은 `introduced == false`이고 [보존된 참조 span](hwp5-chart-string-reference-spans.md)이 정확히 4바이트여야 합니다. span의 u32 ID, 결과 모델의 ID, 객체 사전의 String entry가 모두 일치해야 합니다.
+`chart/contents_string_fork.zig`의 `forkStringReference`는 기존 String object ID를 재참조하는 `object_table.Reference` 한 곳을 새 inline String 정의로 교체합니다. `forkStringValueReference`는 String/Number union에서 String만 같은 경로로 전달하고 Number를 명시적으로 거부합니다. `forkFontName`, `forkTextBlockText`, `forkNullableTextBlockText`, `forkTextBodyText`, `forkTextFormatCode`, `forkNullableTextFormatCode`는 평탄화된 필드를 같은 내부 `Target`으로 변환하는 adapter입니다. 모든 진입점은 직렬화 규칙을 복제하지 않습니다. 대상은 `introduced == false`이고 [보존된 참조 span](hwp5-chart-string-reference-spans.md)이 정확히 4바이트여야 합니다. span의 u32 ID, 결과 모델의 ID, 객체 사전의 String entry가 모두 일치해야 합니다.
 
 caller가 새 object ID, 원시 bytes, trailer와 출력 한도를 제공합니다. ID는 null sentinel이 아니고 기존 객체 사전 및 Font object ID와 충돌하지 않아야 합니다. writer가 임의 ID를 고르지 않으므로 ID 할당 정책은 호출자 소유입니다. 문자열 최대 길이는 wire의 u16과 같은 65,535바이트입니다.
 
@@ -19,6 +19,8 @@ SHA-256 고정 9,876바이트 Contents의 첫 주축 Font 이름 alias를 Font a
 
 null ID, 기존 ID 충돌, inline 정의 대상, 65,536바이트 입력, 잘못된 span·원본 ID·객체 사전 entry, 필수 타입 version 부재는 정확한 오류로 거부합니다. 실제 axis scale의 Number `ValueReference`도 `UnsupportedChartStringForkValue`로 거부합니다. TextBlock adapter는 실제 series section label의 alias 본문 하나를 분리하고 전체 Contents를 재파싱해 대상만 새 ID·bytes·trailer를 얻는지 확인합니다. 실제 Footnote·주축의 inline 본문과 보조축 null 본문도 각각 상태별 오류로 거부합니다.
 
+현재 고정 corpus에는 alias인 TextFormat code가 없습니다. 따라서 TextFormat adapter의 성공 경로는 실제 Font alias의 String 값과 source span을 합성 `Format` view로 감싸 adapter가 공용 writer에 정확히 전달하는지만 검증하고, 출력 전체 Contents를 재파싱해 해당 실제 Font 위치의 새 ID·bytes·trailer를 확인합니다. 이는 실제 TextFormat alias 표본 검증으로 간주하지 않습니다. nullable adapter는 실제 series suffix의 null code를 `UnsupportedChartStringForkValue`로 거부하고, 실제 inline String span을 감싼 required view는 `UnsupportedChartStringForkTarget`으로 거부합니다.
+
 ## 적대적 검증
 
 문자열 길이를 0으로 기록, 새 ID 대신 기존 ID 기록, `VtValue` 자리에 `VtObject` 기록, 기존 object ID 충돌 검사 제거, `VtString` version 2 선택의 다섯 변이를 Debug·ReleaseSafe·ReleaseFast에서 각각 컴파일·실행했습니다. 15개 조합은 모두 컴파일 성공 후 실제 재파싱 또는 정확 오류 assertion 실패로 거부됐습니다. 컴파일 실패나 trap은 검출로 세지 않았습니다.
@@ -29,6 +31,8 @@ null ID, 기존 ID 충돌, inline 정의 대상, 65,536바이트 입력, 잘못�
 
 TextBlock adapter에는 Body 시작+1·끝-1·introduced=true, nullable null 오류 변경, required Block introduced=false의 다섯 변이를 세 모드에서 실행했습니다. 15개 조합은 모두 컴파일 성공 후 실제 재파싱 또는 정확 오류 assertion 실패로 거부됐고 trap은 검출로 세지 않았습니다.
 
+TextFormat adapter에는 required 시작+1·끝-1·introduced=true, nullable null 오류 변경, required String object ID 변경의 다섯 변이를 세 모드에서 실행했습니다. 15개 조합 모두 컴파일 성공 후 실제 assertion 실패와 종료 코드 1로 검출했습니다. 컴파일 실패나 trap은 검출로 세지 않았습니다. 격리 로그는 `/tmp/hwpjs-text-format-adapter-mutants.gzkHRq`에 남겼습니다.
+
 ## 미구현 범위
 
-범용 API는 `object_table.Reference`, String arm의 `ValueReference`, Font 이름과 TextBlock 본문에 적용할 수 있습니다. Number와 null을 String으로 재형식화하지 않습니다. 값을 평탄화한 다른 필드는 별도 span 보존과 얇은 adapter가 필요합니다. 자동 object ID 탐색, 새 type ID·선언 생성, 문자열 인코딩 변환, 여러 편집의 일괄 트랜잭션, CFB 스트림 저장은 제공하지 않습니다.
+범용 API는 `object_table.Reference`, String arm의 `ValueReference`, Font 이름, TextBlock 본문과 TextFormat code에 적용할 수 있습니다. Number와 null을 String으로 재형식화하지 않습니다. 값을 평탄화한 다른 필드는 별도 span 보존과 얇은 adapter가 필요합니다. 자동 object ID 탐색, 새 type ID·선언 생성, 문자열 인코딩 변환, 여러 편집의 일괄 트랜잭션, CFB 스트림 저장은 제공하지 않습니다.

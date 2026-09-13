@@ -77,6 +77,10 @@ fn exercise(a: std.mem.Allocator) !void {
     defer a.free(value_forked);
     const body_forked = try core.hwp5.chart_contents_string_fork.forkTextBodyText(a, &value, &value.series.items[0].section.label.body, 0xfffffffb, "q", 0, bytes.len + 16);
     defer a.free(body_forked);
+    const font = value.primary_axes[0].title.font;
+    const format_alias: core.hwp5.chart_text_format.Format = .{ .object_id = font.object_id, .raw_word = 0, .code = font.name, .code_introduced = font.name_introduced, .code_start = font.name_start, .code_end = font.name_end, .end = font.name_end };
+    const format_forked = try core.hwp5.chart_contents_string_fork.forkTextFormatCode(a, &value, &format_alias, 0xfffffff9, "f", 0, bytes.len + 16);
+    defer a.free(format_forked);
     const begin = @intFromPtr(&bytes);
     try t.expect(@intFromPtr(name.ptr) >= begin and @intFromPtr(name.ptr) + name.len <= begin + bytes.len);
     const raw = value.prefix.transition.raw;
@@ -150,6 +154,35 @@ test "actual Contents TextBlock text adapters fork aliases and reject other stat
     try t.expectError(error.UnsupportedChartStringForkTarget, core.hwp5.chart_contents_string_fork.forkTextBlockText(t.allocator, &value, &value.prefix.footnote.block, 0xfffffffa, "x", 0, bytes.len + 16));
     try t.expectError(error.UnsupportedChartStringForkTarget, core.hwp5.chart_contents_string_fork.forkTextBlockText(t.allocator, &value, &value.primary_axes[0].title, 0xfffffffa, "x", 0, bytes.len + 16));
     try t.expectError(error.UnsupportedChartStringForkValue, core.hwp5.chart_contents_string_fork.forkNullableTextBlockText(t.allocator, &value, &value.secondary_axis.title, 0xfffffffa, "x", 0, bytes.len + 16));
+}
+test "TextFormat adapters map actual source spans to the shared String fork" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+
+    // The fixed corpus has no TextFormat code alias. Wrap an actual Font alias
+    // span to test only the adapter-to-writer mapping against real source bytes.
+    const font = value.primary_axes[0].title.font;
+    const target: core.hwp5.chart_text_format.Format = .{ .object_id = font.object_id, .raw_word = 0, .code = font.name, .code_introduced = font.name_introduced, .code_start = font.name_start, .code_end = font.name_end, .end = font.name_end };
+    try t.expect(!target.code_introduced);
+    const replacement = "format-adapter-code";
+    const expected_len = bytes.len + replacement.len + 15;
+    const forked = try core.hwp5.chart_contents_string_fork.forkTextFormatCode(t.allocator, &value, &target, 0xfffffff9, replacement, 0x2a, expected_len);
+    defer t.allocator.free(forked);
+    var reparsed = try contents.readObservedV6(t.allocator, forked, layout, .{});
+    defer reparsed.deinit();
+    try t.expectEqual(@as(u32, 0xfffffff9), reparsed.primary_axes[0].title.font.name.object_id);
+    try t.expectEqualSlices(u8, replacement, reparsed.primary_axes[0].title.font.name.bytes);
+    try t.expectEqual(@as(u8, 0x2a), reparsed.primary_axes[0].title.font.name.trailer);
+
+    const nullable = &value.series.items[0].suffix.formats[0];
+    try t.expect(nullable.code == null);
+    try t.expectError(error.UnsupportedChartStringForkValue, core.hwp5.chart_contents_string_fork.forkNullableTextFormatCode(t.allocator, &value, nullable, 0xfffffff8, "x", 0, bytes.len + 16));
+
+    const inline_reference = value.series.items[0].section.text;
+    const introduced: core.hwp5.chart_text_format.Format = .{ .object_id = font.object_id, .raw_word = 0, .code = inline_reference.value, .code_introduced = inline_reference.introduced, .code_start = inline_reference.start, .code_end = inline_reference.end, .end = inline_reference.end };
+    try t.expect(introduced.code_introduced);
+    try t.expectError(error.UnsupportedChartStringForkTarget, core.hwp5.chart_contents_string_fork.forkTextFormatCode(t.allocator, &value, &introduced, 0xfffffff8, "x", 0, bytes.len + 16));
 }
 test "actual Contents patch validation" {
     var bytes = try decode();
