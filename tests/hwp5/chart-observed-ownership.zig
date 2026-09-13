@@ -16,6 +16,10 @@ fn exercise(a: std.mem.Allocator) !void {
     try t.expectEqual(bytes.len, value.source.len);
     try t.expectEqual(@intFromPtr(&bytes), @intFromPtr(value.source.ptr));
     try t.expectEqualSlices(u8, &bytes, value.source);
+    const original_first = bytes[0];
+    const replay = try core.hwp5.chart_contents_original.copyOriginal(a, &value, bytes.len);
+    defer a.free(replay);
+    try t.expectEqualSlices(u8, &bytes, replay);
     try t.expectEqual(bytes.len, value.end);
     try t.expectEqual(fixture.point_counts.len, value.series.items.len);
     for (value.series.items, layout.series_point_counts) |item, n| try t.expectEqual(n, item.section.points.len);
@@ -26,8 +30,17 @@ fn exercise(a: std.mem.Allocator) !void {
     const raw = value.prefix.transition.raw;
     @memset(&bytes, 0xcc);
     try t.expectEqual(@as(u8, 0xcc), value.source[0]);
+    try t.expectEqual(original_first, replay[0]);
     try t.expectEqual(@as(u8, 0xcc), name[0]);
     try t.expectEqualSlices(u8, &raw, &value.prefix.transition.raw);
+}
+test "actual Contents original copy boundaries" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_contents_original.copyOriginal(t.allocator, &value, bytes.len - 1));
+    value.end -= 1;
+    try t.expectError(error.InvalidChartSourceBoundary, core.hwp5.chart_contents_original.copyOriginal(t.allocator, &value, bytes.len));
 }
 test "actual Contents success ownership and all allocation failures" {
     try t.checkAllAllocationFailures(t.allocator, exercise, .{});
