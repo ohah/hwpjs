@@ -83,3 +83,5 @@ pub const wmf_text_align = @import("wmf/text_align.zig");
 pub const wmf_ext_text_out = @import("wmf/ext_text_out.zig");
 pub const wmf_escape = @import("wmf/escape.zig");
 pub const wmf_text_records = @import("wmf/text_records.zig");
+pub const wmf_enhanced_metafile = @import("wmf/enhanced_metafile.zig");
+pub const wmf_enhanced_metafile_records = @import("wmf/enhanced_metafile_records.zig");
