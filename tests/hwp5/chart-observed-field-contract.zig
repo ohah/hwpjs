@@ -18,7 +18,7 @@ pub fn assertCurrent() void {
         fields(h.chart_observed_contents.Contents, &.{ "allocator", "source", "prefix", "plot", "light", "primary_axes", "surface", "secondary_axis", "line_word", "line_items", "post_line", "series", "title", "tail", "end" });
         fields(h.chart_contents_prefix.Prefix, &.{ "grid", "transition", "footnote", "objects", "legend", "end" });
         fields(h.chart_grid_cells.Grid, &.{ "allocator", "prelude", "cells", "string_bytes", "payload_offset" });
-        fields(h.chart_grid_cells.Cell, &.{ "object_id", "start", "end", "value" });
+        fields(h.chart_grid_cells.Cell, &.{ "object_id", "start", "end", "payload_start", "payload_end", "value" });
         fields(h.chart_grid_prelude.Prelude, &.{ "prefix", "root_prefix", "grid_prefix", "collection_prefix", "rows", "columns", "payload_offset", "types" });
         fields(h.chart_grid_backdrop.Block, &.{ "raw", "backdrop", "end" });
         fields(h.chart_backdrop.Backdrop, &.{ "object_ids", "raw_backdrop", "raw_fill", "raw_picture", "fill_suffix", "end" });
@@ -27,7 +27,7 @@ pub fn assertCurrent() void {
         fields(h.chart_text_block_body.Body, &.{ "prefix", "font", "middle", "text", "suffix", "end", "backdrop", "text_introduced", "text_start", "text_end" });
         fields(@TypeOf(@as(h.chart_text_block.Block, undefined).font), &.{ "object_id", "name", "raw", "name_introduced", "name_start", "name_end" });
         fields(h.chart_value_object.String, &.{ "object_id", "bytes", "trailer" });
-        fields(h.chart_value_object.Number, &.{ "object_id", "bits", "trailer" });
+        fields(h.chart_value_object.Number, &.{ "object_id", "bits", "trailer", "payload_start", "payload_end" });
         fields(h.chart_section.Section, &.{ "raw", "backdrop", "end" });
         fields(h.chart_legend.Legend, &.{ "object_id", "font", "raw", "section", "end" });
         fields(h.chart_plot_prefix.Prefix, &.{ "object_id", "initial", "raw", "end" });

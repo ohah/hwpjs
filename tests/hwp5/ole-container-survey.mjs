@@ -46,7 +46,7 @@ for(const root of ['legacy/rust/crates/hwp-core/tests/fixtures','reference/rhwp/
  }
  out.envelopes[kind]=(out.envelopes[kind]??0)+1;
  if(!payload){out.exceptions.push({name,path,kind,length:bytes.length,prefix:bytes.subarray(0,16).toString('hex')});continue;}
- inspect(bytes, payload);
+ inspect(bytes, payload, {name,path,type,extension,compression,kind});
  try{
  inner.parse(Buffer.from(payload),{strict:true});out.innerAccepted++;
  for(const n of inner.document().nodes.filter(n=>n.kind===2))out.streamNames[n.name]=(out.streamNames[n.name]??0)+1;

@@ -65,6 +65,24 @@ pub fn build(b: *std.Build) void {
     const chart_fixture_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/chart-native-fixture-module.test.mjs" });
     chart_ownership_step.dependOn(&chart_fixture_tests.step);
     audit.dependOn(chart_ownership_step);
+    const wmf_fixture = b.addSystemCommand(&.{ "node", "tests/hwp5/wmf-contents-fixture.mjs" });
+    wmf_fixture.has_side_effects = true;
+    wmf_fixture.step.dependOn(b.getInstallStep());
+    const wmf_ownership_module = b.createModule(.{
+        .root_source_file = b.path("tests/hwp5/wmf-contents-ownership.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    wmf_ownership_module.addImport("hwpjs", core);
+    wmf_ownership_module.addImport("wmf_fixture", b.createModule(.{
+        .root_source_file = wmf_fixture.captureStdOut(.{ .basename = "wmf-fixture.zig" }),
+        .target = target,
+        .optimize = optimize,
+    }));
+    const wmf_ownership = b.addRunArtifact(b.addTest(.{ .root_module = wmf_ownership_module }));
+    const wmf_ownership_step = b.step("wmf-contents-audit", "Verify the HWP OLE placeable WMF Contents header");
+    wmf_ownership_step.dependOn(&wmf_ownership.step);
+    audit.dependOn(wmf_ownership_step);
     const icc_registry_tests = b.addSystemCommand(&.{ "node", "--test", "tools/icc-registry/csv.test.mjs", "tools/icc-registry/download.test.mjs", "tools/icc-registry/snapshot.test.mjs", "tools/icc-registry/generate.test.mjs" });
     icc_registry_tests.step.dependOn(&icc_registry_check.step);
     const icc_registry_audit = b.step("icc-registry-audit", "Verify offline ICC registry snapshot and generation contracts");
