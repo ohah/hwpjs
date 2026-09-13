@@ -45,3 +45,5 @@ node tests/hwp5/chart-series-collection-survey.mjs --verify
 ## 남은 범위
 
 제품 코어의 전체 계열 조립·WASM 연결, raw106의 필드 의미, Title 본문과 나머지 Chart, 표본 밖 버전·배열 형태는 미완료입니다. 이번 조사 결과를 전체 차트 지원·렌더링·무손실 저장 완료로 해석하지 않습니다.
+
+위 내용은 조사 단계의 이력입니다. 후속 제품 조립과 검증의 현재 범위는 [Series 조립·Title 헤더 코어](hwp5-chart-series-collection.md)가 소유합니다.
