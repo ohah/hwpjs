@@ -153,4 +153,5 @@ pub const char_overlap = @import("body/char_overlap.zig");
 pub const char_overlap_validation = @import("body/char_overlap_validation.zig");
 pub const page_visibility_validation = @import("body/page_visibility_validation.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");
+pub const bin_data_selection = @import("docinfo/bin_data_selection.zig");
 pub const bin_data_replace = @import("container/bin_data_replace.zig");

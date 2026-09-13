@@ -8,6 +8,8 @@ const paths = @import("paths.zig");
 
 pub const Options = struct {
     cfb: cfb.Options = .{},
+    framing: @import("../record.zig").Options = .{},
+    max_doc_info_bytes: usize = 256 * 1024 * 1024,
     max_encoded_bytes: usize = 256 * 1024 * 1024,
     max_output_bytes: usize = 256 * 1024 * 1024,
     distribution: Distribution = .reject,
@@ -24,11 +26,32 @@ pub fn replaceDecoded(a: std.mem.Allocator, hwp: []const u8, item: BinData, stor
     const header_index = try paths.required(&file, "/FileHeader", 2);
     const header = try Header.parse(file.entries[header_index].content);
 
-    const encoded = try @import("../bin_data_stream.zig").encodeWithPolicy(a, &header, item, decoded, options.max_encoded_bytes, options.distribution);
+    return replaceOpened(a, &file, &header, item, storage_layout, decoded, options);
+}
+
+/// Resolves the one-based BinData ordinal from the actual DocInfo stream in
+/// this HWP, then replaces only that record's exact physical stream.
+pub fn replaceDecodedAt(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, decoded: []const u8, options: Options) ![]u8 {
+    var read_options = options.cfb;
+    read_options.strict = true;
+    var file = try cfb.File.open(a, hwp, read_options);
+    defer file.deinit();
+    const header_index = try paths.required(&file, "/FileHeader", 2);
+    const header = try Header.parse(file.entries[header_index].content);
+    const doc_info_index = try paths.required(&file, "/DocInfo", 2);
+    const doc_info = try @import("../stream.zig").decodeWithPolicy(a, &header, file.entries[doc_info_index].content, options.max_doc_info_bytes, options.distribution);
+    defer a.free(doc_info);
+    const item = try @import("../docinfo/bin_data_selection.zig").byOrdinal(doc_info, header.version(), options.framing, ordinal);
+
+    return replaceOpened(a, &file, &header, item, storage_layout, decoded, options);
+}
+
+fn replaceOpened(a: std.mem.Allocator, file: *const cfb.File, header: *const Header, item: BinData, storage_layout: StorageLayout, decoded: []const u8, options: Options) ![]u8 {
+    const encoded = try @import("../bin_data_stream.zig").encodeWithPolicy(a, header, item, decoded, options.max_encoded_bytes, options.distribution);
     defer a.free(encoded);
     const target = (try item.target(storage_layout)) orelse return error.UnsupportedBinDataType;
     const path = try paths.binary(a, target.id, target.extension_utf16 orelse &.{});
     defer a.free(path);
-    _ = try paths.required(&file, path, 2);
-    return cfb.stream_replace.rebuildExact(a, &file, path, encoded, .{ .limits = options.cfb, .max_output_bytes = options.max_output_bytes });
+    _ = try paths.required(file, path, 2);
+    return cfb.stream_replace.rebuildExact(a, file, path, encoded, .{ .limits = options.cfb, .max_output_bytes = options.max_output_bytes });
 }

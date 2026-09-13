@@ -244,16 +244,22 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     @memcpy(header[0..17], "HWP Document File");
     std.mem.writeInt(u32, header[32..36], 0x05000107, .little);
     std.mem.writeInt(u32, header[36..40], 1, .little);
+    var doc_info = [_]u8{0} ** 16;
+    std.mem.writeInt(u32, doc_info[0..4], 18 | (1 << 10) | (12 << 20), .little);
+    @memcpy(doc_info[4..], &[_]u8{ 2, 0, 1, 0, 3, 0, 'O', 0, 'L', 0, 'E', 0 });
+    const stored_doc_info = try core.raw_deflate.encodeStored(t.allocator, &doc_info, 32);
+    defer t.allocator.free(stored_doc_info);
     const outer = try core.cfb.writer.write(t.allocator, &.{
         .{ .name = "Root Entry", .kind = 5 },
         .{ .name = "FileHeader", .parent = 0, .content = &header },
+        .{ .name = "DocInfo", .parent = 0, .content = stored_doc_info },
         .{ .name = "BinData", .kind = 1, .parent = 0 },
-        .{ .name = "BIN0001.OLE", .parent = 2, .content = "old" },
+        .{ .name = "BIN0001.OLE", .parent = 3, .content = "old" },
         .{ .name = "Sibling", .parent = 0, .content = "outer-preserved" },
     }, .{ .version = 3 });
     defer t.allocator.free(outer);
     const item: core.hwp5.docinfo.BinData = .{ .attributes = 2, .data = .{ .storage = 1 }, .extra = &.{ 3, 0, 'O', 0, 'L', 0, 'E', 0 } };
-    const saved_outer = try core.hwp5.bin_data_replace.replaceDecoded(t.allocator, outer, item, .observed_optional_extension, saved_inner, .{ .max_encoded_bytes = saved_inner.len + 16, .max_output_bytes = outer.len + saved_inner.len + 4096 });
+    const saved_outer = try core.hwp5.bin_data_replace.replaceDecodedAt(t.allocator, outer, 1, .observed_optional_extension, saved_inner, .{ .max_doc_info_bytes = 32, .max_encoded_bytes = saved_inner.len + 16, .max_output_bytes = outer.len + saved_inner.len + 4096 });
     defer t.allocator.free(saved_outer);
 
     var outer_file = try core.cfb.File.open(t.allocator, saved_outer, .{ .strict = true });

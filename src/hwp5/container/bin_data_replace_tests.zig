@@ -24,6 +24,41 @@ fn make(a: std.mem.Allocator, version: u16, default_compressed: bool) ![]u8 {
     }, .{ .version = version });
 }
 
+fn makeBound(a: std.mem.Allocator, compressed: bool) ![]u8 {
+    var header = fixture.header();
+    fixture.put(&header, 36, u32, @intFromBool(compressed));
+    var doc: std.ArrayList(u8) = .empty;
+    defer doc.deinit(a);
+    var first = [_]u8{ 0x22, 0, 7, 0 };
+    var second = [_]u8{ 0x22, 0, 9, 0 };
+    try fixture.frame(a, &doc, 18, 1, &first);
+    try fixture.frame(a, &doc, 18, 1, &second);
+    const stored_doc = if (compressed)
+        try @import("../../compression/raw_deflate.zig").encodeStored(a, doc.items, 1024)
+    else
+        try a.dupe(u8, doc.items);
+    defer a.free(stored_doc);
+    return writer.write(a, &.{
+        .{ .name = "Root Entry", .kind = 5 },
+        .{ .name = "FileHeader", .parent = 0, .content = &header },
+        .{ .name = "DocInfo", .parent = 0, .content = stored_doc },
+        .{ .name = "BinData", .kind = 1, .parent = 0 },
+        .{ .name = "BIN0007", .parent = 3, .content = "first" },
+        .{ .name = "BIN0009", .parent = 3, .content = "second" },
+    }, .{ .version = 4 });
+}
+
+fn exerciseBound(a: std.mem.Allocator, compressed: bool) !void {
+    const input = try makeBound(a, compressed);
+    defer a.free(input);
+    const saved = try replace.replaceDecodedAt(a, input, 2, .specified, "selected", .{ .max_doc_info_bytes = 64, .max_encoded_bytes = 64, .max_output_bytes = 64 * 1024 });
+    defer a.free(saved);
+    var file = try cfb.File.open(a, saved, .{ .strict = true });
+    defer file.deinit();
+    try t.expectEqualStrings("first", file.entries[(try file.findExact("/BinData/BIN0007")).?].content);
+    try t.expectEqualStrings("selected", file.entries[(try file.findExact("/BinData/BIN0009")).?].content);
+}
+
 fn exercise(a: std.mem.Allocator, version: u16, default_compressed: bool, compression: Compression) !void {
     const input = try make(a, version, default_compressed);
     defer a.free(input);
@@ -82,4 +117,20 @@ test "outer HWP BinData replacement uses explicit embedding and storage extensio
         try t.expectEqualStrings("new", file.entries[(try file.findExact("/BinData/BIN0001.OLE")).?].content);
     }
     try t.expectError(error.MissingHwpEntry, replace.replaceDecoded(t.allocator, input, storage, .specified, "new", .{}));
+}
+
+test "outer HWP replacement resolves the actual one-based DocInfo BinData record" {
+    for ([_]bool{ false, true }) |compressed| {
+        try exerciseBound(t.allocator, compressed);
+        try t.checkAllAllocationFailures(t.allocator, exerciseBound, .{compressed});
+    }
+}
+
+test "DocInfo-bound replacement rejects ordinal bounds budgets and hidden trailing failures" {
+    const input = try makeBound(t.allocator, false);
+    defer t.allocator.free(input);
+    try t.expectError(error.InvalidBinDataOrdinal, replace.replaceDecodedAt(t.allocator, input, 0, .specified, "x", .{}));
+    try t.expectError(error.BinDataNotFound, replace.replaceDecodedAt(t.allocator, input, 3, .specified, "x", .{}));
+    try t.expectError(error.LimitExceeded, replace.replaceDecodedAt(t.allocator, input, 1, .specified, "x", .{ .max_doc_info_bytes = 15 }));
+    try t.expectError(error.LimitExceeded, replace.replaceDecodedAt(t.allocator, input, 1, .specified, "x", .{ .framing = .{ .max_records = 1 } }));
 }
