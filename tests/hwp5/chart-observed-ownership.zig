@@ -399,6 +399,9 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectError(error.InvalidChartGridRow, core.hwp5.chart_edit_session.replaceGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, value.prefix.grid.prelude.rows, 0, 0, 0, edit_options));
     try t.expectError(error.InvalidChartGridColumn, core.hwp5.chart_edit_session.replaceGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.prefix.grid.prelude.columns, 0, 0, edit_options));
     try t.expectError(error.ExpectedChartNumber, core.hwp5.chart_edit_session.replaceGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, 0, 0, 0, edit_options));
+    try t.expectError(error.InvalidChartGridRow, core.hwp5.chart_edit_session.replaceGridCellString(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, value.prefix.grid.prelude.rows, 0, "x", 0, edit_options));
+    try t.expectError(error.InvalidChartGridColumn, core.hwp5.chart_edit_session.replaceGridCellString(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.prefix.grid.prelude.columns, "x", 0, edit_options));
+    try t.expectError(error.ExpectedChartString, core.hwp5.chart_edit_session.replaceGridCellString(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 1, 1, "x", 0, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.forkSeriesPointLabelFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, "x", 0, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, 0, point_replacement, 0x77, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, point_replacement, 0x77, edit_options));
@@ -743,7 +746,7 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectEqualSlices(u8, all_fonts, mixed_chart.series.items[2].section.points[3].label.body.font.name.bytes);
 
     const all_texts = "all-non-inline-texts";
-    var complete_commands: [74]core.hwp5.chart_edit_session.Edit = undefined;
+    var complete_commands: [81]core.hwp5.chart_edit_session.Edit = undefined;
     var complete_at: usize = 0;
     @memcpy(complete_commands[complete_at..][0..inline_commands.len], &inline_commands);
     complete_at += inline_commands.len;
@@ -772,6 +775,14 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
         cell_index -= 1;
         if (value.prefix.grid.cells[cell_index].value == .number) {
             complete_commands[complete_at] = .{ .grid_cell_number = .{ .row = cell_index / value.prefix.grid.prelude.columns, .column = cell_index % value.prefix.grid.prelude.columns, .bits = 0x3ff0000000000000 + cell_index, .trailer = @intCast(0xd000 + cell_index) } };
+            complete_at += 1;
+        }
+    }
+    cell_index = value.prefix.grid.cells.len;
+    while (cell_index > 0) {
+        cell_index -= 1;
+        if (value.prefix.grid.cells[cell_index].value == .string) {
+            complete_commands[complete_at] = .{ .grid_cell_string = .{ .row = cell_index / value.prefix.grid.prelude.columns, .column = cell_index % value.prefix.grid.prelude.columns, .bytes = "grid-all", .trailer = 0xd1 } };
             complete_at += 1;
         }
     }
@@ -807,6 +818,10 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
         try t.expectEqual(value.prefix.grid.cells[index].object_id, cell.object_id);
         try t.expectEqual(@as(u64, 0x3ff0000000000000) + index, cell.value.number.bits);
         try t.expectEqual(@as(u16, @intCast(0xd000 + index)), cell.value.number.trailer);
+    };
+    for (complete_chart.prefix.grid.cells) |cell| if (cell.value == .string) {
+        try t.expectEqualSlices(u8, "grid-all", cell.value.string.bytes);
+        try t.expectEqual(@as(u8, 0xd1), cell.value.string.trailer);
     };
     for (complete_chart.series.items) |series| {
         try t.expectEqualSlices(u8, all_fonts, series.section.label.body.font.name.bytes);
@@ -1164,6 +1179,21 @@ test "actual Contents Grid number target validates coordinate kind and sharing" 
     try t.expectEqual(value.prefix.grid.cells[11].object_id.?, number.object_id);
     try value.prefix.objects.references.append(t.allocator, .{ .object_id = number.object_id, .introduced = false, .start = 0, .end = 4 });
     try t.expectError(error.SharedChartNumberObject, core.hwp5.chart_grid_number_target.resolve(&value, 2, 3));
+}
+test "actual Contents Grid string target preserves inline coordinate span" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    try t.expectError(error.InvalidChartGridRow, core.hwp5.chart_grid_string_target.resolve(&value, value.prefix.grid.prelude.rows, 0));
+    try t.expectError(error.InvalidChartGridColumn, core.hwp5.chart_grid_string_target.resolve(&value, 0, value.prefix.grid.prelude.columns));
+    try t.expectError(error.ExpectedChartString, core.hwp5.chart_grid_string_target.resolve(&value, 1, 1));
+    const reference = try core.hwp5.chart_grid_string_target.resolve(&value, 2, 0);
+    const cell = value.prefix.grid.cells[8];
+    try t.expect(reference.introduced);
+    try t.expectEqual(cell.start, reference.start);
+    try t.expectEqual(cell.end, reference.end);
+    try t.expectEqual(cell.object_id.?, reference.value.object_id);
+    try t.expectEqualSlices(u8, cell.value.string.bytes, reference.value.bytes);
 }
 test "actual Contents String ValueReference forks and rejects Number" {
     const bytes = try decode();

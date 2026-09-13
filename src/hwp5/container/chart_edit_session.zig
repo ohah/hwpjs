@@ -54,6 +54,10 @@ pub fn replaceGridCellNumber(a: std.mem.Allocator, hwp: []const u8, ordinal: usi
     return applyEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .grid_cell_number = .{ .row = row, .column = column, .bits = bits, .trailer = trailer } }}, options);
 }
 
+pub fn replaceGridCellString(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, row: usize, column: usize, bytes: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .grid_cell_string = .{ .row = row, .column = column, .bytes = bytes, .trailer = trailer } }}, options);
+}
+
 /// Forks one primary-axis title Font name in an observed chart Contents and
 /// commits it through the OLE and outer HWP atomic edit layers.
 pub fn forkPrimaryAxisTitleFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, axis_index: usize, new_name: []const u8, trailer: u8, options: Options) ![]u8 {
@@ -122,6 +126,7 @@ pub const Edit = union(enum) {
     null_primary_axis_scale_format: struct { axis_index: usize, raw_word: u16, bytes: []const u8, trailer: u8 },
     primary_axis_scale_number: struct { axis_index: usize, bits: u64, trailer: u16 },
     grid_cell_number: struct { row: usize, column: usize, bits: u64, trailer: u16 },
+    grid_cell_string: struct { row: usize, column: usize, bytes: []const u8, trailer: u8 },
 };
 
 /// Backward-compatible name retained for callers created before non-string
@@ -408,6 +413,7 @@ fn resolve(chart: *const ChartContents, command: Edit) !Resolved {
             const number = try @import("../chart/grid_number_target.zig").resolve(chart, item.row, item.column);
             break :blk .{ .number_payload = .{ .value = number, .bits = item.bits, .trailer = item.trailer } };
         },
+        .grid_cell_string => |item| .{ .inline_string = .{ .value = try @import("../chart/grid_string_target.zig").resolve(chart, item.row, item.column), .bytes = item.bytes, .trailer = item.trailer } },
     };
 }
 
