@@ -154,3 +154,4 @@ pub const char_overlap_validation = @import("body/char_overlap_validation.zig");
 pub const page_visibility_validation = @import("body/page_visibility_validation.zig");
 pub const bin_data_stream = @import("bin_data_stream.zig");
 pub const bin_data_replace = @import("container/bin_data_replace.zig");
+pub const ole_edit_session = @import("container/ole_edit_session.zig");

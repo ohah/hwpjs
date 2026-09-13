@@ -333,6 +333,7 @@ test {
     _ = @import("hwp5/compression_tests.zig");
     _ = @import("hwp5/bin_data_stream_tests.zig");
     _ = @import("hwp5/container/bin_data_replace_tests.zig");
+    _ = @import("hwp5/container/ole_edit_session_tests.zig");
     _ = @import("cfb/tests.zig");
     _ = @import("cfb/mutation_tests.zig");
     _ = @import("cfb/extended_tests.zig");
