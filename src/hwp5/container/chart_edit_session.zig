@@ -58,6 +58,10 @@ pub fn replaceGridCellString(a: std.mem.Allocator, hwp: []const u8, ordinal: usi
     return applyEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .grid_cell_string = .{ .row = row, .column = column, .bytes = bytes, .trailer = trailer } }}, options);
 }
 
+pub fn materializeGridCellString(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, row: usize, column: usize, bytes: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .null_grid_cell_string = .{ .row = row, .column = column, .bytes = bytes, .trailer = trailer } }}, options);
+}
+
 /// Forks one primary-axis title Font name in an observed chart Contents and
 /// commits it through the OLE and outer HWP atomic edit layers.
 pub fn forkPrimaryAxisTitleFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, axis_index: usize, new_name: []const u8, trailer: u8, options: Options) ![]u8 {
@@ -127,6 +131,7 @@ pub const Edit = union(enum) {
     primary_axis_scale_number: struct { axis_index: usize, bits: u64, trailer: u16 },
     grid_cell_number: struct { row: usize, column: usize, bits: u64, trailer: u16 },
     grid_cell_string: struct { row: usize, column: usize, bytes: []const u8, trailer: u8 },
+    null_grid_cell_string: struct { row: usize, column: usize, bytes: []const u8, trailer: u8 },
 };
 
 /// Backward-compatible name retained for callers created before non-string
@@ -143,6 +148,7 @@ const Resolved = union(enum) {
     null_nullable_text_format: struct { value: *const NullableTextFormat, bytes: []const u8, trailer: u8 },
     null_text_format_object: struct { value: *const ValueBlock, raw_word: u16, bytes: []const u8, trailer: u8 },
     number_payload: struct { value: ChartNumber, bits: u64, trailer: u16 },
+    null_grid_string: struct { value: *const @import("../chart/grid_cells.zig").Cell, bytes: []const u8, trailer: u8 },
 };
 pub const Command = Edit;
 
@@ -253,6 +259,7 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
         switch (item.*) {
             .inline_string => |target| starts[i] = target.value.start,
             .number_payload => |target| starts[i] = target.value.payload_start,
+            .null_grid_string => |target| starts[i] = target.value.start,
             .font => |target| {
                 starts[i] = target.value.name_start;
                 forbidden[reserved] = target.value.object_id;
@@ -290,6 +297,16 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             requests[request_at] = .{ .number_payload = .{ .number = target.value, .bits = target.bits, .trailer = target.trailer } };
             continue;
         }
+        if (resolved[i] == .null_grid_string) {
+            const target = resolved[i].null_grid_string;
+            const object_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
+            forbidden[reserved] = object_id;
+            reserved += 1;
+            const string_type_id = try findLowestTypeIdAvoiding(&chart.prefix.grid.prelude.types, requests[0..request_at], &.{});
+            const value_type_id = try findLowestTypeIdAvoiding(&chart.prefix.grid.prelude.types, requests[0..request_at], &.{string_type_id});
+            requests[request_at] = .{ .null_grid_string = .{ .cell = target.value, .object_id = object_id, .string_type_id = string_type_id, .value_type_id = value_type_id, .bytes = target.bytes, .trailer = target.trailer } };
+            continue;
+        }
         if (resolved[i] == .null_text_format_object) {
             const target = resolved[i].null_text_format_object;
             const format_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
@@ -298,7 +315,7 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             const code_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
             forbidden[reserved] = code_id;
             reserved += 1;
-            const format_type_id = try findLowestTypeId(&chart.prefix.grid.prelude.types, requests[0..request_at]);
+            const format_type_id = try findLowestTypeIdAvoiding(&chart.prefix.grid.prelude.types, requests[0..request_at], &.{});
             requests[request_at] = .{ .null_text_format_object = .{ .block = target.value, .format_object_id = format_id, .code_object_id = code_id, .format_type_id = format_type_id, .raw_word = target.raw_word, .bytes = target.bytes, .trailer = target.trailer } };
             continue;
         }
@@ -315,22 +332,24 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             .null_nullable_text_format => |target| .{ .null_nullable_text_format = .{ .format = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .null_text_format_object => unreachable,
             .number_payload => unreachable,
+            .null_grid_string => unreachable,
         };
     }
     return fork.forkMany(a, &chart, requests, max_output_bytes);
 }
 
-fn findLowestTypeId(types: *const @import("../chart/type_table.zig").Table, previous: []const @import("../chart/contents_string_fork.zig").BatchRequest) !u32 {
-    var skip: usize = 0;
-    for (previous) |request| switch (request) {
-        .null_text_format_object => skip += 1,
-        else => {},
-    };
+fn findLowestTypeIdAvoiding(types: *const @import("../chart/type_table.zig").Table, previous: []const @import("../chart/contents_string_fork.zig").BatchRequest, extra: []const u32) !u32 {
     var candidate: u32 = 0;
     while (candidate != 0xffffffff) : (candidate += 1) {
         if (types.definitions.contains(candidate)) continue;
-        if (skip == 0) return candidate;
-        skip -= 1;
+        var blocked = false;
+        for (extra) |id| blocked = blocked or id == candidate;
+        for (previous) |request| switch (request) {
+            .null_text_format_object => |item| blocked = blocked or item.format_type_id == candidate,
+            .null_grid_string => |item| blocked = blocked or item.string_type_id == candidate or item.value_type_id == candidate,
+            else => {},
+        };
+        if (!blocked) return candidate;
     }
     return error.LimitExceeded;
 }
@@ -414,6 +433,7 @@ fn resolve(chart: *const ChartContents, command: Edit) !Resolved {
             break :blk .{ .number_payload = .{ .value = number, .bits = item.bits, .trailer = item.trailer } };
         },
         .grid_cell_string => |item| .{ .inline_string = .{ .value = try @import("../chart/grid_string_target.zig").resolve(chart, item.row, item.column), .bytes = item.bytes, .trailer = item.trailer } },
+        .null_grid_cell_string => |item| .{ .null_grid_string = .{ .value = try @import("../chart/grid_null_target.zig").resolve(chart, item.row, item.column), .bytes = item.bytes, .trailer = item.trailer } },
     };
 }
 
