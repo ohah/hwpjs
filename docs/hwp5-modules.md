@@ -54,6 +54,7 @@
   - [Series 반복·Title 헤더 경계 조사](hwp5-chart-series-collection-evidence.md)
   - [Series 조립·Title 헤더 코어](hwp5-chart-series-collection.md)
   - [Title의 ChartText·ChartSection 구간 조사](hwp5-chart-title-body-evidence.md)
+  - [Title의 선택된 ChartText·ChartSection 코어](hwp5-chart-title.md)
   - [TextBlock 보조 Backdrop·문자열 재참조](hwp5-chart-text-block-objects.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)

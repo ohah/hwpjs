@@ -3,16 +3,9 @@ const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 const Objects = core.hwp5.chart_object_table.Table;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
-    var input: core.Reader = .{ .bytes = bytes };
-    const max_objects = try input.readInt(u32);
-    const count = try input.readInt(u32);
-    if (count > 16) return error.LimitExceeded;
-    var counts: [16]usize = undefined;
-    for (counts[0..count]) |*n| n.* = try input.readInt(u32);
-    var prefix = try @import("chart-post-line-prefix.zig").read(a, bytes[input.offset..], limit, max_objects);
+    var prefix = try @import("chart-series-collection-prefix.zig").read(a, bytes, limit);
     defer prefix.deinit();
-    var c = try core.hwp5.chart_series_collection.readObserved(a, prefix.reader(), prefix.types(), prefix.objects(), counts[0..count], .{});
-    defer c.deinit();
+    const c = prefix.collection;
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     inline for (.{ c.items.len, c.end, c.title.object_id, c.title.end, prefix.types().definitions.count(), prefix.objects().entries.count(), prefix.objects().string_bytes }) |v| try int(a, &out, u32, @intCast(v));
@@ -34,7 +27,11 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
         try label(a, &out, s.section.label, prefix.objects());
         const b = s.suffix.block;
         try int(a, &out, u32, b.object_id);
-        try body(a, &out, .{ .prefix = b.prefix, .font = b.font, .middle = b.middle, .text = b.text, .suffix = b.suffix, .end = b.end, .backdrop = b.backdrop, .text_introduced = b.text_introduced }, prefix.objects());
+        {
+            const wire = try @import("chart-text-body-probe.zig").serializeNullableBlock(a, b, prefix.objects());
+            defer a.free(wire);
+            try out.appendSlice(a, wire);
+        }
         try int(a, &out, u32, s.suffix.raw_word);
         for (s.suffix.formats) |f| {
             inline for (.{ f.object_id, f.raw_word, @intFromBool(f.code != null), if (f.code) |v| v.object_id else 0xffffffff, if (f.code) |v| v.bytes.len else 0, if (f.code) |v| v.trailer else 0, @intFromBool(f.code_introduced), f.end }) |v| try int(a, &out, u32, @intCast(v));

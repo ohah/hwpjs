@@ -2,6 +2,7 @@ const Reader = @import("../../binary/reader.zig").Reader;
 const types = @import("type_table.zig");
 const requireType = @import("type_checks.zig").require;
 const objectId = @import("object_ids.zig").readInline;
+const Objects = @import("object_table.zig").Table;
 
 pub const Backdrop = struct {
     object_ids: [3]u32,
@@ -37,4 +38,16 @@ pub fn readObservedEmptyPicture(reader: *Reader, table: *types.Table) !Backdrop 
     out.end = next.offset;
     reader.* = next;
     return out;
+}
+
+/// Shared whole-scope variant. Preserve the existing TextBlock ordering:
+/// validate the complete Backdrop first, then register its three IDs. Local
+/// duplicates keep the legacy UnsupportedChartObjectReference precedence.
+/// Failure preserves reader but requires discarding both changed tables.
+pub fn readObservedEmptyPictureWithObjects(reader: *Reader, table: *types.Table, objects: *Objects) !Backdrop {
+    var next = reader.*;
+    const value = try readObservedEmptyPicture(&next, table);
+    for (value.object_ids) |id| try objects.registerOther(id);
+    reader.* = next;
+    return value;
 }

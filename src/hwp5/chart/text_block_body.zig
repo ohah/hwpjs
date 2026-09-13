@@ -70,7 +70,5 @@ fn readAuxiliary(reader: *Reader, table: *Table, objects: ?*Objects) !?backdrops
         return null;
     }
     const scope = objects orelse return error.UnsupportedChartTextReference;
-    const value = try backdrops.readObservedEmptyPicture(reader, table);
-    for (value.object_ids) |id| try scope.registerOther(id);
-    return value;
+    return try backdrops.readObservedEmptyPictureWithObjects(reader, table, scope);
 }

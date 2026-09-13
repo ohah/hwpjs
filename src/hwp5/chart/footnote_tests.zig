@@ -117,6 +117,29 @@ fn reject(a: std.mem.Allocator, bytes: []const u8, expected: anyerror, options: 
     };
     return error.ExpectedFootnoteRejection;
 }
+fn rejectTextLimit(a: std.mem.Allocator, options: @import("text_block.zig").Options) !void {
+    const f = fixture();
+    var table = types.Table.init(a, .{});
+    defer table.deinit();
+    var reader: Reader = .{ .bytes = f.bytes[0..f.end], .offset = 1 };
+    _ = footnotes.readObservedV1(&reader, &table, options) catch |err| {
+        try t.expectEqual(@as(usize, 1), reader.offset);
+        if (err == error.OutOfMemory) return err;
+        try t.expectEqual(error.LimitExceeded, err);
+        return;
+    };
+    return error.ExpectedFootnoteRejection;
+}
+test "chart footnote shared ChartText propagates per and total text limits" {
+    for ([_]@import("text_block.zig").Options{ .{ .max_string_bytes = 1 }, .{ .max_total_string_bytes = 4 } }) |options| {
+        try rejectTextLimit(t.allocator, options);
+        try t.checkAllAllocationFailures(t.allocator, rejectTextLimit, .{options});
+        var gpa: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+        defer t.expect(gpa.deinit() == .ok) catch @panic("footnote text limit leak");
+        try rejectTextLimit(gpa.allocator(), options);
+        try t.expectEqual(@as(usize, 0), gpa.total_requested_bytes);
+    }
+}
 test "chart footnote composition ownership and OOM" {
     try exercise(t.allocator);
     try t.checkAllAllocationFailures(t.allocator, exercise, .{});

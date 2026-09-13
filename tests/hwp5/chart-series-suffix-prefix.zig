@@ -29,7 +29,7 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, limit: usize) !Prefix {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     try int(a, &out, u32, block.object_id);
-    const body = try @import("chart-text-body-probe.zig").serialize(a, .{ .prefix = block.prefix, .font = block.font, .middle = block.middle, .text = block.text, .suffix = block.suffix, .end = block.end, .backdrop = block.backdrop, .text_introduced = block.text_introduced }, prefix.objects());
+    const body = try @import("chart-text-body-probe.zig").serializeNullableBlock(a, block, prefix.objects());
     defer a.free(body);
     try out.appendSlice(a, body);
     try int(a, &out, u32, try prefix.reader().readInt(u16));

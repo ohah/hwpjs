@@ -52,3 +52,5 @@ node tests/hwp5/chart-title-body-survey.mjs --verify
 ## 다음 단계
 
 기존 ChartSection/Backdrop 코어의 전체 객체 범위 검사와 필드 읽기를 공유하여 선택된 Title 구간을 Zig·WASM에 연결해야 합니다. 이어 남은 78바이트와 미해석 계열 raw106을 조사합니다. 자동 형식 선택·전체 Chart 모델·렌더링·편집·저장은 여전히 미완료입니다.
+
+위 내용은 조사 단계의 이력입니다. 후속 구현·WASM 검증의 현재 범위는 [Title 코어](hwp5-chart-title.md)가 소유합니다.

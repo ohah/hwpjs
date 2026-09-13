@@ -3,6 +3,7 @@ const Table = @import("type_table.zig").Table;
 const requireType = @import("type_checks.zig").require;
 const blocks = @import("text_block.zig");
 const sections = @import("chart_section.zig");
+const texts = @import("chart_text.zig");
 const ids = @import("object_ids.zig");
 pub const Footnote = struct { object_id: u32, block: blocks.Block, section: sections.Section, end: usize };
 
@@ -13,9 +14,9 @@ pub fn readObservedV1(reader: *Reader, table: *Table, options: blocks.Options) !
     var next = reader.*;
     const id = try ids.readInline(&next);
     try requireType(table, &next, "VtChartFootnote\x00", 1);
-    try requireType(table, &next, "VtChartText\x00", 1);
-    const block = try blocks.readObservedV2(&next, table, options);
-    const section = try sections.readObservedV1(&next, table);
+    const text = try texts.readObservedV1(&next, table, options);
+    const block = text.block;
+    const section = text.section;
     try ids.requireUnique(&(@as([5]u32, .{ id, block.object_id, block.font.object_id, block.font.name.object_id, block.text.object_id }) ++ section.backdrop.object_ids));
     reader.* = next;
     return .{ .object_id = id, .block = block, .section = section, .end = next.offset };

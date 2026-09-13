@@ -238,6 +238,7 @@ import {chartSeriesLabels} from './chart-series-labels.mjs';
 import {chartSeriesSuffixes} from './chart-series-suffixes.mjs';
 import {chartSeriesPictures} from './chart-series-pictures.mjs';
 import {chartSeriesCollections} from './chart-series-collections.mjs';
+import {chartTitleBodies} from './chart-title-bodies.mjs';
 import {chartStrings} from './chart-strings.mjs';
 import {chartBackdrops} from './chart-backdrops.mjs';
 import {chartTextBlocks} from './chart-text-blocks.mjs';
@@ -851,6 +852,7 @@ const chartSeriesLabelResults = await chartSeriesLabels(call);
 const chartSeriesSuffixResults = await chartSeriesSuffixes(call);
 const chartSeriesPictureResults = await chartSeriesPictures(call);
 const chartSeriesCollectionResults = await chartSeriesCollections(call);
+const chartTitleBodyResults = await chartTitleBodies(call);
 const chartStringResults = await chartStrings(call);
 const chartBackdropResults = await chartBackdrops(call);
 const chartTextBlockResults = await chartTextBlocks(call);
@@ -1608,6 +1610,7 @@ console.log(
       chartSeriesSuffixResults,
       chartSeriesPictureResults,
       chartSeriesCollectionResults,
+      chartTitleBodyResults,
       chartStringResults,
       chartBackdropResults,
       chartTextBlockResults,

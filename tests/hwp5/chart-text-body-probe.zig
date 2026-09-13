@@ -33,6 +33,11 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return serialize(a, body, &objects);
 }
 
+// One adapter for inline nullable blocks and their base-body test wire.
+pub fn serializeNullableBlock(a: std.mem.Allocator, block: core.hwp5.chart_text_block.NullableBlock, objects: *const core.hwp5.chart_object_table.Table) ![]u8 {
+    return serialize(a, .{ .prefix = block.prefix, .font = block.font, .middle = block.middle, .text = block.text, .suffix = block.suffix, .end = block.end, .backdrop = block.backdrop, .text_introduced = block.text_introduced }, objects);
+}
+
 // Shared test wire for standalone bodies and enclosing ValueBlock probes.
 pub fn serialize(a: std.mem.Allocator, body: core.hwp5.chart_text_block_body.Body, objects: *const core.hwp5.chart_object_table.Table) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
