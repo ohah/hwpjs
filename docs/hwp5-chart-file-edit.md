@@ -42,4 +42,4 @@ axis scale의 3개 outer null은 TextFormat 객체 전체와 그 code String을 
 
 ## 남은 범위
 
-현재 typed 대상은 observed V6 차트에서 실제 alias로 관측된 Font 23개 전체, non-inline Text 19개 전체, 존재하는 nullable TextFormat의 null code 6개 전체와 axis scale의 부재 TextFormat 3개 전체이며, 같은 차트와 여러 차트/BinData 모두 원자적 batch로 조합할 수 있습니다. 실제 fixture의 footnote/legend/root-title Font와 primary-axis/root-title Text는 inline이므로 기존 alias fork 대상으로 취급하지 않습니다. 이미 inline인 target 교체는 실제 편집 근거와 공유 참조 영향 계약 없이 지원한다고 주장하지 않습니다. chart layout은 opaque wire 값에서 추측하지 않으며 caller가 신뢰할 수 있는 구조 count를 명시해야 합니다. 차트 렌더링·수식 재계산·한글 프로그램과의 시각 동일성은 이 저장 성공으로 증명되지 않습니다.
+현재 typed 대상은 observed V6 차트에서 관측된 Font alias 23개와 inline 3개 전체, Text null 13개·alias 6개·inline 6개 전체, 존재하는 nullable TextFormat의 null code 6개 전체와 axis scale의 부재 TextFormat 3개 전체이며, 같은 차트와 여러 차트/BinData 모두 원자적 batch로 조합할 수 있습니다. inline 대상은 기존 공유 ID를 전역 수정하지 않고 정의를 첫 뒤쪽 alias로 이전해 대상만 새 ID로 격리합니다. 상세 identity 계약은 [inline String 격리 편집](hwp5-chart-inline-string-edit.md)에 둡니다. chart layout은 opaque wire 값에서 추측하지 않으며 caller가 신뢰할 수 있는 구조 count를 명시해야 합니다. 차트 렌더링·수식 재계산·한글 프로그램과의 시각 동일성은 이 저장 성공으로 증명되지 않습니다.

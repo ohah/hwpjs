@@ -17,6 +17,7 @@ pub const BatchRequest = union(enum) {
     null_nullable_text_block: struct { block: *const TextBlock.NullableBlock, new_object_id: u32, bytes: []const u8, trailer: u8 },
     null_nullable_text_format: struct { format: *const TextFormat.NullableFormat, new_object_id: u32, bytes: []const u8, trailer: u8 },
     null_text_format_object: struct { block: *const ValueBlock, format_object_id: u32, code_object_id: u32, format_type_id: u32, raw_word: u16, bytes: []const u8, trailer: u8 },
+    inline_string: struct { reference: Objects.Reference, new_object_id: u32, bytes: []const u8, trailer: u8 },
 };
 
 /// Forks multiple aliases from one original Contents coordinate space.
@@ -24,25 +25,44 @@ pub const BatchRequest = union(enum) {
 /// affect patch order or output bytes.
 pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const BatchRequest, max_output_bytes: usize) ![]u8 {
     if (requests.len == 0) return error.EmptyChartStringForkBatch;
-    const output_patches = try a.alloc(patches.Patch, requests.len);
+    const patch_capacity = std.math.mul(usize, requests.len, 2) catch return error.LimitExceeded;
+    const output_patches = try a.alloc(patches.Patch, patch_capacity);
     defer a.free(output_patches);
-    const replacements = try a.alloc([]u8, requests.len);
+    const replacements = try a.alloc([]u8, patch_capacity);
     defer a.free(replacements);
     var built: usize = 0;
     defer for (replacements[0..built]) |replacement| a.free(replacement);
 
+    var patch_count: usize = 0;
     for (requests, 0..) |request, i| {
+        if (request == .inline_string) {
+            const item = request.inline_string;
+            for (requests[0..i]) |prior| if (requestHasId(prior, item.new_object_id)) return error.DuplicateChartObjectId;
+            const prepared = try @import("contents_inline_fork.zig").prepare(a, value, &item.reference, item.new_object_id, item.bytes, item.trailer);
+            replacements[built] = prepared.target;
+            built += 1;
+            output_patches[patch_count] = .{ .start = prepared.target_start, .end = prepared.target_end, .replacement = prepared.target };
+            patch_count += 1;
+            if (prepared.relocation) |relocation| {
+                replacements[built] = relocation;
+                built += 1;
+                output_patches[patch_count] = .{ .start = prepared.relocation_start, .end = prepared.relocation_end, .replacement = relocation };
+                patch_count += 1;
+            }
+            continue;
+        }
         const prepared = try prepare(a, value, request, requests[0..i]);
-        replacements[i] = prepared.replacement;
+        replacements[built] = prepared.replacement;
         built += 1;
-        output_patches[i] = .{ .start = prepared.start, .end = prepared.end, .replacement = prepared.replacement };
+        output_patches[patch_count] = .{ .start = prepared.start, .end = prepared.end, .replacement = prepared.replacement };
+        patch_count += 1;
     }
-    std.mem.sort(patches.Patch, output_patches, {}, struct {
+    std.mem.sort(patches.Patch, output_patches[0..patch_count], {}, struct {
         fn lessThan(_: void, left: patches.Patch, right: patches.Patch) bool {
             return left.start < right.start;
         }
     }.lessThan);
-    return patches.applyOriginal(a, value, output_patches, max_output_bytes);
+    return patches.applyOriginal(a, value, output_patches[0..patch_count], max_output_bytes);
 }
 
 fn requestHasId(request: BatchRequest, id: u32) bool {
@@ -54,6 +74,7 @@ fn requestHasId(request: BatchRequest, id: u32) bool {
         .null_nullable_text_block => |item| item.new_object_id == id,
         .null_nullable_text_format => |item| item.new_object_id == id,
         .null_text_format_object => |item| item.format_object_id == id or item.code_object_id == id,
+        .inline_string => |item| item.new_object_id == id,
     };
 }
 
@@ -96,6 +117,7 @@ fn prepare(a: std.mem.Allocator, value: *const Contents, request: BatchRequest, 
             break :blk Spec{ .target = Target{ .object_id = 0xffffffff, .start = item.format.code_start, .end = item.format.code_end, .introduced = false }, .enclosing_object_id = item.format.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = false };
         },
         .null_text_format_object => unreachable,
+        .inline_string => unreachable,
     };
     for (previous) |prior| if (requestHasId(prior, spec.new_object_id)) return error.DuplicateChartObjectId;
     const replacement = try makeReplacement(a, value, spec.target, spec.enclosing_object_id, spec.new_object_id, spec.bytes, spec.trailer, spec.require_original);

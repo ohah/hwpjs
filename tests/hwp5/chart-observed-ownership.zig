@@ -77,7 +77,11 @@ fn exercise(a: std.mem.Allocator) !void {
     defer a.free(value_forked);
     const body_forked = try core.hwp5.chart_contents_string_fork.forkTextBodyText(a, &value, &value.series.items[0].section.label.body, 0xfffffffb, "q", 0, bytes.len + 16);
     defer a.free(body_forked);
-    const batch_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .null_text_format_object = .{ .block = &value.primary_axes[0].scale.?.value, .format_object_id = 0xfffffff1, .code_object_id = 0xfffffff2, .format_type_id = 0xfffffff0, .raw_word = 7, .bytes = "g", .trailer = 7 } }, .{ .null_nullable_text_format = .{ .format = &value.series.items[0].suffix.formats[0], .new_object_id = 0xfffffff3, .bytes = "f", .trailer = 6 } }, .{ .null_nullable_text_block = .{ .block = &value.secondary_axis.title, .new_object_id = 0xfffffff4, .bytes = "e", .trailer = 5 } }, .{ .nullable_text_block = .{ .block = &value.series.items[0].suffix.block, .new_object_id = 0xfffffff5, .bytes = "d", .trailer = 4 } }, .{ .null_text_body = .{ .body = &value.series.items[0].section.points[0].label.body, .new_object_id = 0xfffffff6, .bytes = "c", .trailer = 3 } }, .{ .text_body = .{ .body = &value.series.items[0].section.label.body, .new_object_id = 0xfffffff8, .bytes = "b", .trailer = 2 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xfffffff7, .bytes = "a", .trailer = 1 } } }, bytes.len + 192);
+    const shared_inline_reference: core.hwp5.chart_object_table.Reference = .{ .value = value.prefix.footnote.block.font.name, .introduced = value.prefix.footnote.block.font.name_introduced, .start = value.prefix.footnote.block.font.name_start, .end = value.prefix.footnote.block.font.name_end };
+    const shared_inline_forked = try core.hwp5.chart_contents_inline_fork.forkIntroduced(a, &value, &shared_inline_reference, 0xffffffee, "i", 9, bytes.len + 128);
+    defer a.free(shared_inline_forked);
+    const inline_reference: core.hwp5.chart_object_table.Reference = .{ .value = value.title.block.text.?, .introduced = value.title.block.text_introduced, .start = value.title.block.text_start, .end = value.title.block.text_end };
+    const batch_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .inline_string = .{ .reference = inline_reference, .new_object_id = 0xffffffef, .bytes = "h", .trailer = 8 } }, .{ .null_text_format_object = .{ .block = &value.primary_axes[0].scale.?.value, .format_object_id = 0xfffffff1, .code_object_id = 0xfffffff2, .format_type_id = 0xfffffff0, .raw_word = 7, .bytes = "g", .trailer = 7 } }, .{ .null_nullable_text_format = .{ .format = &value.series.items[0].suffix.formats[0], .new_object_id = 0xfffffff3, .bytes = "f", .trailer = 6 } }, .{ .null_nullable_text_block = .{ .block = &value.secondary_axis.title, .new_object_id = 0xfffffff4, .bytes = "e", .trailer = 5 } }, .{ .nullable_text_block = .{ .block = &value.series.items[0].suffix.block, .new_object_id = 0xfffffff5, .bytes = "d", .trailer = 4 } }, .{ .null_text_body = .{ .body = &value.series.items[0].section.points[0].label.body, .new_object_id = 0xfffffff6, .bytes = "c", .trailer = 3 } }, .{ .text_body = .{ .body = &value.series.items[0].section.label.body, .new_object_id = 0xfffffff8, .bytes = "b", .trailer = 2 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xfffffff7, .bytes = "a", .trailer = 1 } } }, bytes.len + 256);
     defer a.free(batch_forked);
     const font = value.primary_axes[0].title.font;
     const format_alias: core.hwp5.chart_text_format.Format = .{ .object_id = font.object_id, .raw_word = 0, .code = font.name, .code_introduced = font.name_introduced, .code_start = font.name_start, .code_end = font.name_end, .end = font.name_end };
@@ -369,6 +373,7 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectError(error.InvalidChartFormatIndex, core.hwp5.chart_edit_session.materializeSeriesSuffixFormatCode(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, 2, "x", 0, edit_options));
     try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.materializePrimaryAxisScaleFormat(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, 0, "x", 0, edit_options));
     try t.expectError(error.MissingChartAxisScale, core.hwp5.chart_edit_session.materializePrimaryAxisScaleFormat(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 3, 0, "x", 0, edit_options));
+    try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.forkInlinePrimaryAxisTitleText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, "x", 0, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.forkSeriesPointLabelFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, "x", 0, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, 0, point_replacement, 0x77, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, point_replacement, 0x77, edit_options));
@@ -602,6 +607,58 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
         try t.expectEqual(@as(u8, @intCast(0xb1 + axis_index)), materialized.code.trailer);
         try t.expect(materialized.object_id != materialized.code.object_id);
     }
+
+    const inline_bytes = "inline-file-edit";
+    const old_footnote_font = value.prefix.footnote.block.font.name;
+    const old_legend_font = value.prefix.legend.font.name;
+    const old_inline_ids = [_]u32{ old_footnote_font.object_id, old_legend_font.object_id, value.title.block.font.name.object_id, value.prefix.footnote.block.text.object_id, value.primary_axes[0].title.text.object_id, value.primary_axes[1].title.text.object_id, value.primary_axes[2].title.text.object_id, value.primary_axes[3].title.text.object_id, value.title.block.text.?.object_id };
+    const inline_commands = [_]core.hwp5.chart_edit_session.StringEdit{
+        .{ .inline_root_title_text = .{ .bytes = inline_bytes, .trailer = 0xd9 } },
+        .{ .inline_root_title_font_name = .{ .bytes = inline_bytes, .trailer = 0xd3 } },
+        .{ .inline_primary_axis_title_text = .{ .axis_index = 3, .bytes = inline_bytes, .trailer = 0xd8 } },
+        .{ .inline_primary_axis_title_text = .{ .axis_index = 2, .bytes = inline_bytes, .trailer = 0xd7 } },
+        .{ .inline_primary_axis_title_text = .{ .axis_index = 1, .bytes = inline_bytes, .trailer = 0xd6 } },
+        .{ .inline_primary_axis_title_text = .{ .axis_index = 0, .bytes = inline_bytes, .trailer = 0xd5 } },
+        .{ .inline_footnote_text = .{ .bytes = inline_bytes, .trailer = 0xd4 } },
+        .{ .inline_legend_font_name = .{ .bytes = inline_bytes, .trailer = 0xd2 } },
+        .{ .inline_footnote_font_name = .{ .bytes = inline_bytes, .trailer = 0xd1 } },
+    };
+    var inline_options = edit_options;
+    inline_options.max_edited_contents_bytes = bytes.len + inline_commands.len * (inline_bytes.len + 100);
+    const inline_saved = try core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &inline_commands, inline_options);
+    defer t.allocator.free(inline_saved);
+    var inline_outer = try core.cfb.File.open(t.allocator, inline_saved, .{ .strict = true });
+    defer inline_outer.deinit();
+    const inline_header = try core.hwp5.Header.parse(inline_outer.entries[(try inline_outer.findExact("/FileHeader")).?].content);
+    const inline_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &inline_header, item, inline_outer.entries[(try inline_outer.findExact("/BinData/BIN0001.OLE")).?].content, 64 * 1024);
+    defer t.allocator.free(inline_inner);
+    var inline_ole = try core.cfb.File.open(t.allocator, inline_inner, .{ .strict = true });
+    defer inline_ole.deinit();
+    var inline_chart = try contents.readObservedV6(t.allocator, inline_ole.entries[(try inline_ole.findExact("/Contents")).?].content, layout, .{});
+    defer inline_chart.deinit();
+    const changed_inline = [_]struct { string: core.hwp5.chart_value_object.String, trailer: u8 }{
+        .{ .string = inline_chart.prefix.footnote.block.font.name, .trailer = 0xd1 },
+        .{ .string = inline_chart.prefix.legend.font.name, .trailer = 0xd2 },
+        .{ .string = inline_chart.title.block.font.name, .trailer = 0xd3 },
+        .{ .string = inline_chart.prefix.footnote.block.text, .trailer = 0xd4 },
+        .{ .string = inline_chart.primary_axes[0].title.text, .trailer = 0xd5 },
+        .{ .string = inline_chart.primary_axes[1].title.text, .trailer = 0xd6 },
+        .{ .string = inline_chart.primary_axes[2].title.text, .trailer = 0xd7 },
+        .{ .string = inline_chart.primary_axes[3].title.text, .trailer = 0xd8 },
+        .{ .string = inline_chart.title.block.text.?, .trailer = 0xd9 },
+    };
+    for (changed_inline, 0..) |changed, changed_index| {
+        try t.expectEqualSlices(u8, inline_bytes, changed.string.bytes);
+        try t.expectEqual(changed.trailer, changed.string.trailer);
+        try t.expect(changed.string.object_id != old_inline_ids[changed_index]);
+        for (changed_inline[0..changed_index]) |previous| try t.expect(changed.string.object_id != previous.string.object_id);
+    }
+    const retained_footnote = inline_chart.prefix.objects.entries.get(old_footnote_font.object_id).?.string;
+    const retained_legend = inline_chart.prefix.objects.entries.get(old_legend_font.object_id).?.string;
+    try t.expectEqualSlices(u8, old_footnote_font.bytes, retained_footnote.bytes);
+    try t.expectEqual(old_footnote_font.trailer, retained_footnote.trailer);
+    try t.expectEqualSlices(u8, old_legend_font.bytes, retained_legend.bytes);
+    try t.expectEqual(old_legend_font.trailer, retained_legend.trailer);
 
     var multi_options = edit_options;
     multi_options.file.bin_data.max_total_encoded_bytes = 128 * 1024;

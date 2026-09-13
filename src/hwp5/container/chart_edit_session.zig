@@ -9,6 +9,7 @@ const TextBody = @import("../chart/text_block_body.zig").Body;
 const NullableTextBlock = @import("../chart/text_block.zig").NullableBlock;
 const NullableTextFormat = @import("../chart/text_format.zig").NullableFormat;
 const ValueBlock = @import("../chart/value_block.zig").Block;
+const ObjectReference = @import("../chart/object_table.zig").Reference;
 const paths = @import("paths.zig");
 
 pub const Options = struct {
@@ -19,6 +20,30 @@ pub const Options = struct {
     max_edited_contents_bytes: usize = 64 * 1024 * 1024,
     max_total_edited_contents_bytes: usize = 256 * 1024 * 1024,
 };
+
+pub fn forkInlineFootnoteFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, bytes: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .inline_footnote_font_name = .{ .bytes = bytes, .trailer = trailer } }}, options);
+}
+
+pub fn forkInlineLegendFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, bytes: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .inline_legend_font_name = .{ .bytes = bytes, .trailer = trailer } }}, options);
+}
+
+pub fn forkInlineRootTitleFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, bytes: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .inline_root_title_font_name = .{ .bytes = bytes, .trailer = trailer } }}, options);
+}
+
+pub fn forkInlineFootnoteText(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, bytes: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .inline_footnote_text = .{ .bytes = bytes, .trailer = trailer } }}, options);
+}
+
+pub fn forkInlinePrimaryAxisTitleText(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, axis_index: usize, bytes: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .inline_primary_axis_title_text = .{ .axis_index = axis_index, .bytes = bytes, .trailer = trailer } }}, options);
+}
+
+pub fn forkInlineRootTitleText(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, bytes: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .inline_root_title_text = .{ .bytes = bytes, .trailer = trailer } }}, options);
+}
 
 /// Forks one primary-axis title Font name in an observed chart Contents and
 /// commits it through the OLE and outer HWP atomic edit layers.
@@ -69,6 +94,12 @@ pub fn materializePrimaryAxisScaleFormat(a: std.mem.Allocator, hwp: []const u8, 
 }
 
 pub const StringEdit = union(enum) {
+    inline_footnote_font_name: struct { bytes: []const u8, trailer: u8 },
+    inline_legend_font_name: struct { bytes: []const u8, trailer: u8 },
+    inline_root_title_font_name: struct { bytes: []const u8, trailer: u8 },
+    inline_footnote_text: struct { bytes: []const u8, trailer: u8 },
+    inline_primary_axis_title_text: struct { axis_index: usize, bytes: []const u8, trailer: u8 },
+    inline_root_title_text: struct { bytes: []const u8, trailer: u8 },
     primary_axis_title_font_name: struct { axis_index: usize, bytes: []const u8, trailer: u8 },
     secondary_axis_title_font_name: struct { bytes: []const u8, trailer: u8 },
     series_label_font_name: struct { series_index: usize, bytes: []const u8, trailer: u8 },
@@ -83,6 +114,7 @@ pub const StringEdit = union(enum) {
 };
 
 const Resolved = union(enum) {
+    inline_string: struct { value: ObjectReference, bytes: []const u8, trailer: u8 },
     font: struct { value: *const Font, bytes: []const u8, trailer: u8 },
     text_body: struct { value: *const TextBody, bytes: []const u8, trailer: u8 },
     null_text_body: struct { value: *const TextBody, bytes: []const u8, trailer: u8 },
@@ -192,6 +224,7 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
     for (commands, resolved, 0..) |command, *item, i| {
         item.* = try resolve(&chart, command);
         switch (item.*) {
+            .inline_string => |target| starts[i] = target.value.start,
             .font => |target| {
                 starts[i] = target.value.name_start;
                 forbidden[reserved] = target.value.object_id;
@@ -240,6 +273,7 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
         forbidden[reserved] = new_id;
         reserved += 1;
         requests[request_at] = switch (resolved[i]) {
+            .inline_string => |target| .{ .inline_string = .{ .reference = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .font => |target| .{ .font_name = .{ .font = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .text_body => |target| .{ .text_body = .{ .body = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .null_text_body => |target| .{ .null_text_body = .{ .body = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
@@ -269,6 +303,19 @@ fn findLowestTypeId(types: *const @import("../chart/type_table.zig").Table, prev
 
 fn resolve(chart: *const ChartContents, command: StringEdit) !Resolved {
     return switch (command) {
+        .inline_footnote_font_name => |item| .{ .inline_string = .{ .value = fontReference(&chart.prefix.footnote.block.font), .bytes = item.bytes, .trailer = item.trailer } },
+        .inline_legend_font_name => |item| .{ .inline_string = .{ .value = fontReference(&chart.prefix.legend.font), .bytes = item.bytes, .trailer = item.trailer } },
+        .inline_root_title_font_name => |item| .{ .inline_string = .{ .value = fontReference(&chart.title.block.font), .bytes = item.bytes, .trailer = item.trailer } },
+        .inline_footnote_text => |item| .{ .inline_string = .{ .value = .{ .value = chart.prefix.footnote.block.text, .introduced = chart.prefix.footnote.block.text_introduced, .start = chart.prefix.footnote.block.text_start, .end = chart.prefix.footnote.block.text_end }, .bytes = item.bytes, .trailer = item.trailer } },
+        .inline_primary_axis_title_text => |item| blk: {
+            if (item.axis_index >= chart.primary_axes.len) return error.InvalidChartAxisIndex;
+            const block = &chart.primary_axes[item.axis_index].title;
+            break :blk .{ .inline_string = .{ .value = .{ .value = block.text, .introduced = block.text_introduced, .start = block.text_start, .end = block.text_end }, .bytes = item.bytes, .trailer = item.trailer } };
+        },
+        .inline_root_title_text => |item| blk: {
+            const text = chart.title.block.text orelse return error.MissingChartTitleText;
+            break :blk .{ .inline_string = .{ .value = .{ .value = text, .introduced = chart.title.block.text_introduced, .start = chart.title.block.text_start, .end = chart.title.block.text_end }, .bytes = item.bytes, .trailer = item.trailer } };
+        },
         .primary_axis_title_font_name => |item| blk: {
             if (item.axis_index >= chart.primary_axes.len) return error.InvalidChartAxisIndex;
             break :blk .{ .font = .{ .value = &chart.primary_axes[item.axis_index].title.font, .bytes = item.bytes, .trailer = item.trailer } };
@@ -316,4 +363,8 @@ fn resolve(chart: *const ChartContents, command: StringEdit) !Resolved {
             break :blk .{ .null_text_format_object = .{ .value = &scale.value, .raw_word = item.raw_word, .bytes = item.bytes, .trailer = item.trailer } };
         },
     };
+}
+
+fn fontReference(font: *const Font) ObjectReference {
+    return .{ .value = font.name, .introduced = font.name_introduced, .start = font.name_start, .end = font.name_end };
 }

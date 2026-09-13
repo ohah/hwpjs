@@ -16,4 +16,6 @@ observed V6 실제 Contents에는 inline Font 이름 3개와 inline Text 6개가
 
 적대적 검증은 원래 정의를 마지막 alias로 이전, 정의 이전 생략, 대상에 원래 object ID 유지, 대상 payload 1바이트 변조, 이전 정의에 새 trailer 사용의 다섯 결함을 각각 주입했다. `Debug`, `ReleaseSafe`, `ReleaseFast`의 유효한 15회 모두 컴파일 뒤 실제 Contents 재파싱 또는 끝단 identity/payload 검사에서 실패했다.
 
-이 문서의 범위는 Contents writer와 참조 SSOT다. HWP 파일의 typed target API와 여러 inline 편집을 한 patch batch로 합치는 adapter는 다음 파트이며, 아직 지원한다고 간주하지 않는다.
+HWP 파일 adapter는 footnote·legend·root-title Font와 footnote·primary-axis 4개·root-title Text의 실제 inline 9곳을 typed target으로 제공한다. 아홉 명령을 wire 역순으로 한 batch에 넣고도 각 위치가 서로 다른 새 ID·bytes·trailer로 저장되며, footnote와 legend의 기존 공유 객체는 원래 값을 유지하는지 바깥 HWP부터 내부 Contents까지 다시 연다. shared 정의 이전은 한 명령에서 patch 두 개를 만들 수 있으므로 compositor의 patch·replacement 배열은 명령 수의 두 배를 상한으로 잡고 실제 사용 개수를 연속 관리한다.
+
+파일 adapter 적대적 검증은 footnote를 legend에 오배선, axis index 순환 이동, inline trailer 폐기, 기존 object ID 강제, relocation patch 범위 확장의 다섯 결함을 주입했다. 세 최적화 모드의 유효한 15회가 모두 실제 파일 끝단 검증 또는 overlap/identity 검증에서 실패했다. 통합 중 inline의 두 replacement 뒤 일반 요청 소유권을 명령 인덱스로 기록해 이중 해제가 발생하는 결함도 allocation-failure 검사로 발견했고, 모든 replacement를 연속 `built` 인덱스 하나로 관리하도록 수정했다.
