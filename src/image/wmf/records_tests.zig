@@ -25,6 +25,26 @@ test "WMF records require exact framing max size and terminal EOF" {
     try t.expectError(error.TruncatedWmfRecord, records.validate(valid[0 .. valid.len - 1], header(4), .{}));
 }
 
+test "WMF record iterator exposes borrowed parameters and preserves failure position" {
+    var iterator = try records.Iterator.init(&valid, 0, valid.len);
+    const first = (try iterator.next()).?;
+    try t.expectEqual(@as(usize, 0), first.offset);
+    try t.expectEqual(@as(u32, 4), first.size_words);
+    try t.expectEqual(@as(u16, 0x012d), first.function);
+    try t.expectEqualSlices(u8, &.{ 0xaa, 0xbb }, first.parameters);
+    try t.expectEqual(@as(usize, 8), first.end);
+    const eof = (try iterator.next()).?;
+    try t.expectEqual(@as(u16, 0), eof.function);
+    try t.expectEqual(@as(usize, 14), iterator.offset);
+    try t.expect((try iterator.next()) == null);
+
+    var malformed = try records.Iterator.init(valid[0 .. valid.len - 1], 8, valid.len - 1);
+    try t.expectError(error.TruncatedWmfRecord, malformed.next());
+    try t.expectEqual(@as(usize, 8), malformed.offset);
+    try t.expectError(error.InvalidWmfRecordsOffset, records.Iterator.init(&valid, 9, 8));
+    try t.expectError(error.InvalidWmfRecordsOffset, records.Iterator.init(&valid, 0, valid.len + 1));
+}
+
 test "WMF records reject invalid size EOF and post-EOF data" {
     const undersized_eof = [_]u8{ 2, 0, 0, 0, 0, 0 };
     try t.expectError(error.InvalidWmfRecordSize, records.validate(&undersized_eof, header(2), .{}));

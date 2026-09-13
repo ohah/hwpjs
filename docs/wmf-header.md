@@ -22,4 +22,4 @@
 
 record 파트는 (1) 최소 크기를 3에서 2 WORD로 완화, (2) 함수 WORD를 잘못된 오프셋에서 읽기, (3) EOF 뒤 record data 허용, (4) trailing zero 내용 검사 우회, (5) 선언 `MaxRecord` 대조 우회의 다섯 변이를 같은 세 모드에서 주입했다. 최초 최소 크기 변이는 전체 단위 테스트만 잡고 전용 감사가 놓치는 위치 편향을 드러냈다. 공개 API 합성 계약을 전용 감사에도 추가한 뒤 재실행한 유효 15회는 모두 검출됐고 코드는 원복했다.
 
-이 파트는 WMF 헤더와 generic record framing, 한 실제 HWP envelope의 분류 근거다. 개별 record 함수와 파라미터, 객체 수명·인덱스, EMF/BMP/수식 `Contents`, `OlePres000`, SVG/픽셀 렌더링과 제품 JS API 연결은 남아 있다. 구조 검증 성공을 안전한 렌더링이나 전체 WMF/HWP 지원으로 세지 않는다.
+이 파트는 WMF 헤더와 generic record framing, 한 실제 HWP envelope의 분류 근거다. 후속 [Object Table 수명 검증](wmf-object-table.md)은 생성·선택·삭제 인덱스를 검사한다. 개별 객체 payload와 그리기 record 파라미터, EMF/BMP/수식 `Contents`, `OlePres000`, SVG/픽셀 렌더링과 제품 JS API 연결은 남아 있다. 구조 검증 성공을 안전한 렌더링이나 전체 WMF/HWP 지원으로 세지 않는다.
