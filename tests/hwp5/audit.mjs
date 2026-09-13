@@ -234,6 +234,7 @@ import {chartNullableTitles} from './chart-nullable-titles.mjs';
 import {chartLineItems} from './chart-line-items.mjs';
 import {chartPostLines} from './chart-post-lines.mjs';
 import {chartSeriesPrefixes} from './chart-series-prefixes.mjs';
+import {chartSeriesLabels} from './chart-series-labels.mjs';
 import {chartStrings} from './chart-strings.mjs';
 import {chartBackdrops} from './chart-backdrops.mjs';
 import {chartTextBlocks} from './chart-text-blocks.mjs';
@@ -843,6 +844,7 @@ const chartNullableTitleResults = await chartNullableTitles(call);
 const chartLineItemResults = await chartLineItems(call);
 const chartPostLineResults = await chartPostLines(call);
 const chartSeriesPrefixResults = await chartSeriesPrefixes(call);
+const chartSeriesLabelResults = await chartSeriesLabels(call);
 const chartStringResults = await chartStrings(call);
 const chartBackdropResults = await chartBackdrops(call);
 const chartTextBlockResults = await chartTextBlocks(call);
@@ -1596,6 +1598,7 @@ console.log(
       chartLineItemResults,
       chartPostLineResults,
       chartSeriesPrefixResults,
+      chartSeriesLabelResults,
       chartStringResults,
       chartBackdropResults,
       chartTextBlockResults,

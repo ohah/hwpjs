@@ -38,3 +38,5 @@ node tests/hwp5/chart-series-label-survey.mjs --verify
 ## 남은 범위
 
 다음은 이미 검증한 분기·공통 Label 본문·Point 꼬리를 코어에 연결하고 실제 WASM으로 대조하는 작업입니다. 일반 계열 Label 다음에도 별도 inline TextBlock으로 보이는 데이터가 남습니다. 이후 계열의 끝·다른 계열 반복·일반 배열 규칙·raw 의미·Chart 조립·렌더링·저장은 미완료입니다.
+
+후속 코어 연결과 WASM 검증 범위는 [SeriesLabel·SeriesPoint 코어](hwp5-chart-series-label.md)가 소유합니다. 위 조사 수치를 제품 실행 수치로 해석하지 않습니다.
