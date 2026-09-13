@@ -41,9 +41,10 @@ pub fn replaceDecodedAt(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, s
     const doc_info_index = try paths.required(&file, "/DocInfo", 2);
     const doc_info = try @import("../stream.zig").decodeWithPolicy(a, &header, file.entries[doc_info_index].content, options.max_doc_info_bytes, options.distribution);
     defer a.free(doc_info);
-    const item = try @import("../docinfo/bin_data_selection.zig").byOrdinal(doc_info, header.version(), options.framing, ordinal);
+    const selection = try @import("../docinfo/resources.zig").inspectBinDataOrdinal(doc_info, header.version(), options.framing, ordinal);
+    try selection.resources.validateKnownCounts();
 
-    return replaceOpened(a, &file, &header, item, storage_layout, decoded, options);
+    return replaceOpened(a, &file, &header, selection.item, storage_layout, decoded, options);
 }
 
 fn replaceOpened(a: std.mem.Allocator, file: *const cfb.File, header: *const Header, item: BinData, storage_layout: StorageLayout, decoded: []const u8, options: Options) ![]u8 {

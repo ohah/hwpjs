@@ -24,11 +24,15 @@ fn make(a: std.mem.Allocator, version: u16, default_compressed: bool) ![]u8 {
     }, .{ .version = version });
 }
 
-fn makeBound(a: std.mem.Allocator, compressed: bool) ![]u8 {
+fn makeBound(a: std.mem.Allocator, compressed: bool, declared_bins: i32, declared_borders: i32) ![]u8 {
     var header = fixture.header();
     fixture.put(&header, 36, u32, @intFromBool(compressed));
     var doc: std.ArrayList(u8) = .empty;
     defer doc.deinit(a);
+    var mappings = [_]u8{0} ** 60;
+    fixture.put(&mappings, 0, i32, declared_bins);
+    fixture.put(&mappings, 32, i32, declared_borders);
+    try fixture.frame(a, &doc, 17, 0, &mappings);
     var first = [_]u8{ 0x22, 0, 7, 0 };
     var second = [_]u8{ 0x22, 0, 9, 0 };
     try fixture.frame(a, &doc, 18, 1, &first);
@@ -49,9 +53,9 @@ fn makeBound(a: std.mem.Allocator, compressed: bool) ![]u8 {
 }
 
 fn exerciseBound(a: std.mem.Allocator, compressed: bool) !void {
-    const input = try makeBound(a, compressed);
+    const input = try makeBound(a, compressed, 2, 0);
     defer a.free(input);
-    const saved = try replace.replaceDecodedAt(a, input, 2, .specified, "selected", .{ .max_doc_info_bytes = 64, .max_encoded_bytes = 64, .max_output_bytes = 64 * 1024 });
+    const saved = try replace.replaceDecodedAt(a, input, 2, .specified, "selected", .{ .max_doc_info_bytes = 128, .max_encoded_bytes = 64, .max_output_bytes = 64 * 1024 });
     defer a.free(saved);
     var file = try cfb.File.open(a, saved, .{ .strict = true });
     defer file.deinit();
@@ -127,10 +131,22 @@ test "outer HWP replacement resolves the actual one-based DocInfo BinData record
 }
 
 test "DocInfo-bound replacement rejects ordinal bounds budgets and hidden trailing failures" {
-    const input = try makeBound(t.allocator, false);
+    const input = try makeBound(t.allocator, false, 2, 0);
     defer t.allocator.free(input);
     try t.expectError(error.InvalidBinDataOrdinal, replace.replaceDecodedAt(t.allocator, input, 0, .specified, "x", .{}));
     try t.expectError(error.BinDataNotFound, replace.replaceDecodedAt(t.allocator, input, 3, .specified, "x", .{}));
-    try t.expectError(error.LimitExceeded, replace.replaceDecodedAt(t.allocator, input, 1, .specified, "x", .{ .max_doc_info_bytes = 15 }));
-    try t.expectError(error.LimitExceeded, replace.replaceDecodedAt(t.allocator, input, 1, .specified, "x", .{ .framing = .{ .max_records = 1 } }));
+    try t.expectError(error.LimitExceeded, replace.replaceDecodedAt(t.allocator, input, 1, .specified, "x", .{ .max_doc_info_bytes = 79 }));
+    try t.expectError(error.LimitExceeded, replace.replaceDecodedAt(t.allocator, input, 1, .specified, "x", .{ .framing = .{ .max_records = 2 } }));
+}
+
+test "DocInfo-bound replacement requires all declared known resource counts" {
+    for ([_]struct { bins: i32, borders: i32, expected: anyerror }{
+        .{ .bins = 1, .borders = 0, .expected = error.ResourceCountMismatch },
+        .{ .bins = -1, .borders = 0, .expected = error.NegativeMappingCount },
+        .{ .bins = 2, .borders = 1, .expected = error.ResourceCountMismatch },
+    }) |case| {
+        const input = try makeBound(t.allocator, false, case.bins, case.borders);
+        defer t.allocator.free(input);
+        try t.expectError(case.expected, replace.replaceDecodedAt(t.allocator, input, 1, .specified, "x", .{}));
+    }
 }
