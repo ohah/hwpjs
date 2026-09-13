@@ -25,6 +25,10 @@ fn make(a: std.mem.Allocator, version: u16, default_compressed: bool) ![]u8 {
 }
 
 fn makeBound(a: std.mem.Allocator, compressed: bool, declared_bins: i32, declared_borders: i32) ![]u8 {
+    return makeBoundIds(a, compressed, declared_bins, declared_borders, 7, 9);
+}
+
+fn makeBoundIds(a: std.mem.Allocator, compressed: bool, declared_bins: i32, declared_borders: i32, first_id: u16, second_id: u16) ![]u8 {
     var header = fixture.header();
     fixture.put(&header, 36, u32, @intFromBool(compressed));
     var doc: std.ArrayList(u8) = .empty;
@@ -33,8 +37,10 @@ fn makeBound(a: std.mem.Allocator, compressed: bool, declared_bins: i32, declare
     fixture.put(&mappings, 0, i32, declared_bins);
     fixture.put(&mappings, 32, i32, declared_borders);
     try fixture.frame(a, &doc, 17, 0, &mappings);
-    var first = [_]u8{ 0x22, 0, 7, 0 };
-    var second = [_]u8{ 0x22, 0, 9, 0 };
+    var first = [_]u8{ 0x22, 0, 0, 0 };
+    var second = [_]u8{ 0x22, 0, 0, 0 };
+    fixture.put(&first, 2, u16, first_id);
+    fixture.put(&second, 2, u16, second_id);
     try fixture.frame(a, &doc, 18, 1, &first);
     try fixture.frame(a, &doc, 18, 1, &second);
     const stored_doc = if (compressed)
@@ -50,6 +56,17 @@ fn makeBound(a: std.mem.Allocator, compressed: bool, declared_bins: i32, declare
         .{ .name = "BIN0007", .parent = 3, .content = "first" },
         .{ .name = "BIN0009", .parent = 3, .content = "second" },
     }, .{ .version = 4 });
+}
+
+fn exerciseBatch(a: std.mem.Allocator, compressed: bool) !void {
+    const input = try makeBound(a, compressed, 2, 0);
+    defer a.free(input);
+    const saved = try replace.replaceDecodedBatch(a, input, &.{ .{ .ordinal = 1, .decoded = "batch-first" }, .{ .ordinal = 2, .decoded = "batch-second" } }, .specified, .{ .max_doc_info_bytes = 128, .max_encoded_bytes = 64, .max_output_bytes = 64 * 1024 });
+    defer a.free(saved);
+    var file = try cfb.File.open(a, saved, .{ .strict = true });
+    defer file.deinit();
+    try t.expectEqualStrings("batch-first", file.entries[(try file.findExact("/BinData/BIN0007")).?].content);
+    try t.expectEqualStrings("batch-second", file.entries[(try file.findExact("/BinData/BIN0009")).?].content);
 }
 
 fn exerciseBound(a: std.mem.Allocator, compressed: bool) !void {
@@ -149,4 +166,35 @@ test "DocInfo-bound replacement requires all declared known resource counts" {
         defer t.allocator.free(input);
         try t.expectError(case.expected, replace.replaceDecodedAt(t.allocator, input, 1, .specified, "x", .{}));
     }
+}
+
+test "outer HWP BinData batch resolves and replaces two streams atomically" {
+    for ([_]bool{ false, true }) |compressed| {
+        try exerciseBatch(t.allocator, compressed);
+        try t.checkAllAllocationFailures(t.allocator, exerciseBatch, .{compressed});
+    }
+}
+
+test "outer HWP BinData batch rejects order duplicates limits and late preparation failures" {
+    const input = try makeBound(t.allocator, false, 2, 0);
+    defer t.allocator.free(input);
+    try t.expectError(error.EmptyBinDataEditSet, replace.replaceDecodedBatch(t.allocator, input, &.{}, .specified, .{}));
+    try t.expectError(error.LimitExceeded, replace.replaceDecodedBatch(t.allocator, input, &.{ .{ .ordinal = 1, .decoded = "a" }, .{ .ordinal = 2, .decoded = "b" } }, .specified, .{ .max_edits = 1 }));
+    try t.expectError(error.InvalidBinDataOrdinal, replace.replaceDecodedBatch(t.allocator, input, &.{.{ .ordinal = 0, .decoded = "x" }}, .specified, .{}));
+    try t.expectError(error.InvalidBinDataOrdinalOrder, replace.replaceDecodedBatch(t.allocator, input, &.{ .{ .ordinal = 2, .decoded = "a" }, .{ .ordinal = 1, .decoded = "b" } }, .specified, .{}));
+    try t.expectError(error.InvalidBinDataOrdinalOrder, replace.replaceDecodedBatch(t.allocator, input, &.{ .{ .ordinal = 1, .decoded = "a" }, .{ .ordinal = 1, .decoded = "b" } }, .specified, .{}));
+    try t.expectError(error.BinDataNotFound, replace.replaceDecodedBatch(t.allocator, input, &.{.{ .ordinal = 3, .decoded = "x" }}, .specified, .{}));
+    try t.expectError(error.LimitExceeded, replace.replaceDecodedBatch(t.allocator, input, &.{ .{ .ordinal = 1, .decoded = "a" }, .{ .ordinal = 2, .decoded = "bb" } }, .specified, .{ .max_encoded_bytes = 1 }));
+    try t.expectError(error.LimitExceeded, replace.replaceDecodedBatch(t.allocator, input, &.{ .{ .ordinal = 1, .decoded = "a" }, .{ .ordinal = 2, .decoded = "b" } }, .specified, .{ .max_total_encoded_bytes = 1 }));
+
+    const aliased = try makeBoundIds(t.allocator, false, 2, 0, 7, 7);
+    defer t.allocator.free(aliased);
+    try t.expectError(error.DuplicateStreamReplacement, replace.replaceDecodedBatch(t.allocator, aliased, &.{ .{ .ordinal = 1, .decoded = "a" }, .{ .ordinal = 2, .decoded = "b" } }, .specified, .{}));
+    const missing = try makeBoundIds(t.allocator, false, 2, 0, 7, 8);
+    defer t.allocator.free(missing);
+    try t.expectError(error.MissingHwpEntry, replace.replaceDecodedBatch(t.allocator, missing, &.{ .{ .ordinal = 1, .decoded = "a" }, .{ .ordinal = 2, .decoded = "b" } }, .specified, .{}));
+    var unchanged = try cfb.File.open(t.allocator, input, .{ .strict = true });
+    defer unchanged.deinit();
+    try t.expectEqualStrings("first", unchanged.entries[(try unchanged.findExact("/BinData/BIN0007")).?].content);
+    try t.expectEqualStrings("second", unchanged.entries[(try unchanged.findExact("/BinData/BIN0009")).?].content);
 }

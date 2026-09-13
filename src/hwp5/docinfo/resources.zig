@@ -83,18 +83,38 @@ pub fn inspect(bytes: []const u8, version: Version, options: Options) !Report {
 /// Resolves a one-based BinData ordinal while the same complete traversal
 /// counts every known DocInfo resource. Selection never uses the storage ID.
 pub fn inspectBinDataOrdinal(bytes: []const u8, version: Version, options: Options, ordinal: usize) !BinDataSelection {
-    if (ordinal == 0) return error.InvalidBinDataOrdinal;
-    const result = try scan(bytes, version, options, ordinal);
-    return .{ .item = result.item orelse return error.BinDataNotFound, .resources = result.report };
+    var items: [1]d.BinData = undefined;
+    const resources = try inspectBinDataOrdinals(bytes, version, options, &.{ordinal}, &items);
+    return .{ .item = items[0], .resources = resources };
 }
 
-const Scan = struct { report: Report, item: ?d.BinData };
+/// Resolves strictly increasing one-based ordinals into caller storage during
+/// the same complete resource traversal. The output order matches ordinals.
+pub fn inspectBinDataOrdinals(bytes: []const u8, version: Version, options: Options, ordinals: []const usize, items: []d.BinData) !Report {
+    if (ordinals.len == 0) return error.EmptyBinDataSelection;
+    if (items.len != ordinals.len) return error.InvalidBinDataSelectionBuffer;
+    for (ordinals, 0..) |ordinal, index| {
+        if (ordinal == 0) return error.InvalidBinDataOrdinal;
+        if (index != 0 and ordinal <= ordinals[index - 1]) return error.InvalidBinDataOrdinalOrder;
+    }
+    var selector: Selector = .{ .ordinals = ordinals, .items = items };
+    const result = try scan(bytes, version, options, &selector);
+    if (selector.next != ordinals.len) return error.BinDataNotFound;
+    return result.report;
+}
 
-fn scan(bytes: []const u8, version: Version, options: Options, ordinal: ?usize) !Scan {
+const Selector = struct {
+    ordinals: []const usize,
+    items: []d.BinData,
+    next: usize = 0,
+};
+
+const Scan = struct { report: Report };
+
+fn scan(bytes: []const u8, version: Version, options: Options, selector: ?*Selector) !Scan {
     var it = try d.Iterator.init(bytes, version, options);
     var mappings: ?d.IdMappings = null;
     var bins: usize = 0;
-    var selected: ?d.BinData = null;
     var fonts: usize = 0;
     var memos: usize = 0;
     var authors: usize = 0;
@@ -107,7 +127,10 @@ fn scan(bytes: []const u8, version: Version, options: Options, ordinal: ?usize) 
         },
         .bin_data => |item| {
             bins += 1;
-            if (ordinal != null and bins == ordinal.?) selected = item;
+            if (selector) |selected| if (selected.next < selected.ordinals.len and bins == selected.ordinals[selected.next]) {
+                selected.items[selected.next] = item;
+                selected.next += 1;
+            };
         },
         .face_name => fonts += 1,
         .memo_shape => memos += 1,
@@ -119,5 +142,5 @@ fn scan(bytes: []const u8, version: Version, options: Options, ordinal: ?usize) 
             }
         },
     };
-    return .{ .report = .{ .mappings = mappings orelse return error.MissingIdMappings, .bin_data_count = bins, .face_name_count = fonts, .memo_shape_count = memos, .track_change_author_count = authors, .track_change_count = changes, .counts = counts }, .item = selected };
+    return .{ .report = .{ .mappings = mappings orelse return error.MissingIdMappings, .bin_data_count = bins, .face_name_count = fonts, .memo_shape_count = memos, .track_change_author_count = authors, .track_change_count = changes, .counts = counts } };
 }
