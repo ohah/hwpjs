@@ -39,3 +39,5 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit가 모두 종료 코드 0으로 완
 ## 남은 범위
 
 제품 JS API는 변경하지 않았습니다. 일반 Series 배열 규칙·tail 전체 코어·Label 이후 inline TextBlock·계열 끝과 반복·raw 의미·전체 Chart 조립·렌더링·저장은 여전히 미완료입니다. 본 파트 통과는 전체 차트나 HWP 문서 지원 완료가 아닙니다.
+
+후속 [TextBlock·TextFormat 조사](hwp5-chart-series-suffix-evidence.md)에서 뒤쪽 두 Format의 nullable code 예외를 확인했습니다. 조사 완료와 제품 지원 범위는 구분하며 현재 근거는 해당 문서가 소유합니다.

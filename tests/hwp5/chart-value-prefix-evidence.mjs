@@ -1,5 +1,6 @@
 // Selected first scale-value prefix through its label only. Header words are
 // preserved without asserting global object identity or the following layout.
+import {readTextFormatFields} from './chart-text-format-fields-evidence.mjs';
 export function observeValuePrefix(bytes, offset, priorTypes, priorStrings, priorNumbers=new Map()){
  const b=Buffer.from(bytes);
  if(!Number.isSafeInteger(offset)||offset<0||offset>b.length)throw new RangeError('InvalidObservationOffset');
@@ -38,10 +39,7 @@ export function observeValuePrefix(bytes, offset, priorTypes, priorStrings, prio
  if(slots.some(n=>n!==0xffffffff))fail('UnsupportedValueObservationSlots');
  const valueStart=p,headerWord=long(),typeId=type('VtValueBlock');
  const reference=nullable(()=>string(true));
- const format=nullable(()=>{
-  const start=p,headerWord=long(),typeId=type('VtTextFormat');type('VtObject');const rawWord=word(),code=string();
-  return {start,headerWord,typeId,rawWord,code,end:p};
- });
+ const format=nullable(()=>readTextFormatFields({offset:()=>p,long,type,word,string}));
  const rawBeforeLabel=word(),label=string();
  return {start:offset,slots,valueStart,headerWord,typeId,reference,format,rawBeforeLabel,label,end:p,declarations};
 }

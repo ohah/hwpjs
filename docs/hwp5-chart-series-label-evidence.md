@@ -6,6 +6,8 @@
 
 객체 사전은 Point/Label 등 앞선 비-String ID도 포함합니다. 기존 TextBlock 조사기의 로컬 문자열 범위 검사를 전체 그래프 검사로 오인하지 않습니다. 래퍼가 추가 객체 ID를 확인하고 Map/Set을 복사해 이어 사용합니다. null 텍스트, 빈 신규 String, 신규/기존 참조는 공통 본문 계약을 유지합니다.
 
+후속 suffix 조사에서 이 범위 처리 구현을 `chart-text-body-scope-evidence.mjs`로 분리했습니다. 기존 Label 함수는 호환 별칭이며 검사·오류명은 유지합니다. 분리 근거는 [suffix 조사](hwp5-chart-series-suffix-evidence.md)가 소유합니다.
+
 ## Point와 계열 Label 조립
 
 `chart-series-point-evidence.mjs`는 기존 point 분기 헤더 → 공통 Label 본문 → raw20 → 알려진 VtObject v1 참조를 한 Point 후보로 읽습니다. 마지막 기반 타입의 새 선언은 이 선택된 조사 경로에서 지원하지 않습니다. raw20은 의미를 부여하지 않고 보존합니다.
