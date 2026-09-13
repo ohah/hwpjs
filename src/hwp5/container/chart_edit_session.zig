@@ -3,6 +3,9 @@ const cfb = @import("../../cfb/reader.zig");
 const ole_session = @import("ole_edit_session.zig");
 const StorageLayout = @import("../docinfo/bin_data.zig").StorageLayout;
 const ChartLayout = @import("../chart/observed_contents.zig").Layout;
+const ChartContents = @import("../chart/observed_contents.zig").Contents;
+const Font = @import("../chart/font.zig").Font;
+const TextBody = @import("../chart/text_block_body.zig").Body;
 const paths = @import("paths.zig");
 
 pub const Options = struct {
@@ -30,10 +33,36 @@ pub fn materializeSeriesPointLabelBodyText(a: std.mem.Allocator, hwp: []const u8
     return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .null_series_point_label_body_text = .{ .series_index = series_index, .point_index = point_index, .bytes = new_text, .trailer = trailer } }}, options);
 }
 
+pub fn forkSecondaryAxisTitleFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, new_name: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .secondary_axis_title_font_name = .{ .bytes = new_name, .trailer = trailer } }}, options);
+}
+
+pub fn forkSeriesLabelFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, series_index: usize, new_name: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .series_label_font_name = .{ .series_index = series_index, .bytes = new_name, .trailer = trailer } }}, options);
+}
+
+pub fn forkSeriesPointLabelFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, series_index: usize, point_index: usize, new_name: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .series_point_label_font_name = .{ .series_index = series_index, .point_index = point_index, .bytes = new_name, .trailer = trailer } }}, options);
+}
+
+pub fn forkSeriesSuffixFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, series_index: usize, new_name: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .series_suffix_font_name = .{ .series_index = series_index, .bytes = new_name, .trailer = trailer } }}, options);
+}
+
 pub const StringEdit = union(enum) {
     primary_axis_title_font_name: struct { axis_index: usize, bytes: []const u8, trailer: u8 },
+    secondary_axis_title_font_name: struct { bytes: []const u8, trailer: u8 },
+    series_label_font_name: struct { series_index: usize, bytes: []const u8, trailer: u8 },
+    series_point_label_font_name: struct { series_index: usize, point_index: usize, bytes: []const u8, trailer: u8 },
+    series_suffix_font_name: struct { series_index: usize, bytes: []const u8, trailer: u8 },
     series_label_body_text: struct { series_index: usize, bytes: []const u8, trailer: u8 },
     null_series_point_label_body_text: struct { series_index: usize, point_index: usize, bytes: []const u8, trailer: u8 },
+};
+
+const Resolved = union(enum) {
+    font: struct { value: *const Font, bytes: []const u8, trailer: u8 },
+    text_body: struct { value: *const TextBody, bytes: []const u8, trailer: u8 },
+    null_text_body: struct { value: *const TextBody, bytes: []const u8, trailer: u8 },
 };
 pub const Command = StringEdit;
 
@@ -123,6 +152,8 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
     const fork = @import("../chart/contents_string_fork.zig");
     const requests = try a.alloc(fork.BatchRequest, commands.len);
     defer a.free(requests);
+    const resolved = try a.alloc(Resolved, commands.len);
+    defer a.free(resolved);
     const starts = try a.alloc(usize, commands.len);
     defer a.free(starts);
     const order = try a.alloc(usize, commands.len);
@@ -131,53 +162,67 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
     const forbidden = try a.alloc(u32, forbidden_count);
     defer a.free(forbidden);
     var reserved: usize = 0;
-    for (commands, 0..) |command, i| switch (command) {
-        .primary_axis_title_font_name => |item| {
-            if (item.axis_index >= chart.primary_axes.len) return error.InvalidChartAxisIndex;
-            const font = &chart.primary_axes[item.axis_index].title.font;
-            starts[i] = font.name_start;
-            forbidden[reserved] = font.object_id;
-            reserved += 1;
-        },
-        .series_label_body_text => |item| {
-            if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
-            starts[i] = chart.series.items[item.series_index].section.label.body.text_start;
-        },
-        .null_series_point_label_body_text => |item| {
-            if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
-            const points = chart.series.items[item.series_index].section.points;
-            if (item.point_index >= points.len) return error.InvalidChartPointIndex;
-            starts[i] = points[item.point_index].label.body.text_start;
-        },
-    };
+    for (commands, resolved, 0..) |command, *item, i| {
+        item.* = try resolve(&chart, command);
+        switch (item.*) {
+            .font => |target| {
+                starts[i] = target.value.name_start;
+                forbidden[reserved] = target.value.object_id;
+                reserved += 1;
+            },
+            .text_body => |target| starts[i] = target.value.text_start,
+            .null_text_body => |target| starts[i] = target.value.text_start,
+        }
+    }
     for (order, 0..) |*slot, i| slot.* = i;
     for (order, 0..) |_, i| {
         var at = i;
         while (at > 0 and (starts[order[at]] < starts[order[at - 1]] or (starts[order[at]] == starts[order[at - 1]] and order[at] < order[at - 1]))) : (at -= 1)
             std.mem.swap(usize, &order[at], &order[at - 1]);
     }
-    for (order) |i| switch (commands[i]) {
-        .primary_axis_title_font_name => |item| {
-            const font = &chart.primary_axes[item.axis_index].title.font;
-            const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
-            forbidden[reserved] = new_id;
-            reserved += 1;
-            requests[i] = .{ .font_name = .{ .font = font, .new_object_id = new_id, .bytes = item.bytes, .trailer = item.trailer } };
+    for (order) |i| {
+        const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
+        forbidden[reserved] = new_id;
+        reserved += 1;
+        requests[i] = switch (resolved[i]) {
+            .font => |target| .{ .font_name = .{ .font = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
+            .text_body => |target| .{ .text_body = .{ .body = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
+            .null_text_body => |target| .{ .null_text_body = .{ .body = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
+        };
+    }
+    return fork.forkMany(a, &chart, requests, max_output_bytes);
+}
+
+fn resolve(chart: *const ChartContents, command: StringEdit) !Resolved {
+    return switch (command) {
+        .primary_axis_title_font_name => |item| blk: {
+            if (item.axis_index >= chart.primary_axes.len) return error.InvalidChartAxisIndex;
+            break :blk .{ .font = .{ .value = &chart.primary_axes[item.axis_index].title.font, .bytes = item.bytes, .trailer = item.trailer } };
         },
-        .series_label_body_text => |item| {
-            const body = &chart.series.items[item.series_index].section.label.body;
-            const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
-            forbidden[reserved] = new_id;
-            reserved += 1;
-            requests[i] = .{ .text_body = .{ .body = body, .new_object_id = new_id, .bytes = item.bytes, .trailer = item.trailer } };
+        .secondary_axis_title_font_name => |item| .{ .font = .{ .value = &chart.secondary_axis.title.font, .bytes = item.bytes, .trailer = item.trailer } },
+        .series_label_font_name => |item| blk: {
+            if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
+            break :blk .{ .font = .{ .value = &chart.series.items[item.series_index].section.label.body.font, .bytes = item.bytes, .trailer = item.trailer } };
         },
-        .null_series_point_label_body_text => |item| {
-            const body = &chart.series.items[item.series_index].section.points[item.point_index].label.body;
-            const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
-            forbidden[reserved] = new_id;
-            reserved += 1;
-            requests[i] = .{ .null_text_body = .{ .body = body, .new_object_id = new_id, .bytes = item.bytes, .trailer = item.trailer } };
+        .series_point_label_font_name => |item| blk: {
+            if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
+            const points = chart.series.items[item.series_index].section.points;
+            if (item.point_index >= points.len) return error.InvalidChartPointIndex;
+            break :blk .{ .font = .{ .value = &points[item.point_index].label.body.font, .bytes = item.bytes, .trailer = item.trailer } };
+        },
+        .series_suffix_font_name => |item| blk: {
+            if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
+            break :blk .{ .font = .{ .value = &chart.series.items[item.series_index].suffix.block.font, .bytes = item.bytes, .trailer = item.trailer } };
+        },
+        .series_label_body_text => |item| blk: {
+            if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
+            break :blk .{ .text_body = .{ .value = &chart.series.items[item.series_index].section.label.body, .bytes = item.bytes, .trailer = item.trailer } };
+        },
+        .null_series_point_label_body_text => |item| blk: {
+            if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
+            const points = chart.series.items[item.series_index].section.points;
+            if (item.point_index >= points.len) return error.InvalidChartPointIndex;
+            break :blk .{ .null_text_body = .{ .value = &points[item.point_index].label.body, .bytes = item.bytes, .trailer = item.trailer } };
         },
     };
-    return fork.forkMany(a, &chart, requests, max_output_bytes);
 }

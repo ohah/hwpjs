@@ -140,6 +140,50 @@ test "actual Contents TextFormat code spans retain wire boundaries" {
     }
     for (value.series.items) |item| for (item.suffix.formats) |format| try expectNullableFormatCodeSpan(&bytes, format);
 }
+test "actual chart string reference inventory remains explicit" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    var fonts = [_]usize{ 0, 0 }; // alias, inline
+    var texts = [_]usize{ 0, 0, 0 }; // null, alias, inline
+    var formats = [_]usize{ 0, 0, 0 }; // null, alias, inline
+    const Count = struct {
+        fn font(introduced: bool, counts: *[2]usize) void {
+            counts[@intFromBool(introduced)] += 1;
+        }
+        fn text(is_null: bool, introduced: bool, counts: *[3]usize) void {
+            counts[if (is_null) 0 else if (introduced) 2 else 1] += 1;
+        }
+    };
+    Count.font(value.prefix.footnote.block.font.name_introduced, &fonts);
+    Count.font(value.prefix.legend.font.name_introduced, &fonts);
+    Count.font(value.secondary_axis.title.font.name_introduced, &fonts);
+    Count.font(value.title.block.font.name_introduced, &fonts);
+    Count.text(false, value.prefix.footnote.block.text_introduced, &texts);
+    Count.text(value.secondary_axis.title.text == null, value.secondary_axis.title.text_introduced, &texts);
+    Count.text(value.title.block.text == null, value.title.block.text_introduced, &texts);
+    for (value.primary_axes) |axis| {
+        Count.font(axis.title.font.name_introduced, &fonts);
+        Count.text(false, axis.title.text_introduced, &texts);
+        if (axis.scale) |scale| {
+            Count.text(scale.value.format == null, if (scale.value.format) |format| format.code_introduced else false, &formats);
+        }
+    }
+    for (value.series.items) |series| {
+        Count.font(series.section.label.body.font.name_introduced, &fonts);
+        Count.text(series.section.label.body.text == null, series.section.label.body.text_introduced, &texts);
+        Count.font(series.suffix.block.font.name_introduced, &fonts);
+        Count.text(series.suffix.block.text == null, series.suffix.block.text_introduced, &texts);
+        for (series.suffix.formats) |format| Count.text(format.code == null, format.code_introduced, &formats);
+        for (series.section.points) |point| {
+            Count.font(point.label.body.font.name_introduced, &fonts);
+            Count.text(point.label.body.text == null, point.label.body.text_introduced, &texts);
+        }
+    }
+    try t.expectEqualSlices(usize, &.{ 23, 3 }, &fonts);
+    try t.expectEqualSlices(usize, &.{ 13, 6, 6 }, &texts);
+    try t.expectEqualSlices(usize, &.{ 9, 0, 0 }, &formats);
+}
 test "actual Contents TextBlock text adapters fork aliases and reject other states" {
     const bytes = try decode();
     var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
@@ -301,6 +345,9 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const edit_options: core.hwp5.chart_edit_session.Options = .{ .file = .{ .bin_data = .{ .max_doc_info_bytes = 96, .max_encoded_bytes = 64 * 1024, .max_total_encoded_bytes = 64 * 1024, .max_output_bytes = 128 * 1024 }, .ole = .{ .max_output_bytes = 64 * 1024 }, .max_decoded_bin_data_bytes = 64 * 1024, .max_total_decoded_bin_data_bytes = 64 * 1024, .max_total_edited_ole_bytes = 64 * 1024 }, .max_contents_bytes = bytes.len, .max_edited_contents_bytes = bytes.len + replacement.len + 15 };
     try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, replacement, 0x55, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.forkSeriesLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, series_replacement, 0x66, edit_options));
+    try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.forkSeriesLabelFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, "x", 0, edit_options));
+    try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.forkSeriesSuffixFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, "x", 0, edit_options));
+    try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.forkSeriesPointLabelFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, "x", 0, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, 0, point_replacement, 0x77, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, point_replacement, 0x77, edit_options));
     var low_source = edit_options;
@@ -385,6 +432,63 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectEqual(batch_point_id, batch_point.text.?.object_id);
     try t.expectEqualSlices(u8, point_replacement, batch_point.text.?.bytes);
     try t.expectEqual(@as(u8, 0x77), batch_point.text.?.trailer);
+
+    const all_fonts = "all-alias-fonts";
+    var font_commands: [23]core.hwp5.chart_edit_session.StringEdit = undefined;
+    var font_at: usize = 0;
+    for (value.primary_axes, 0..) |_, axis_index| {
+        font_commands[font_at] = .{ .primary_axis_title_font_name = .{ .axis_index = axis_index, .bytes = all_fonts, .trailer = @intCast(font_at + 1) } };
+        font_at += 1;
+    }
+    font_commands[font_at] = .{ .secondary_axis_title_font_name = .{ .bytes = all_fonts, .trailer = @intCast(font_at + 1) } };
+    font_at += 1;
+    for (value.series.items, 0..) |series, series_index| {
+        font_commands[font_at] = .{ .series_label_font_name = .{ .series_index = series_index, .bytes = all_fonts, .trailer = @intCast(font_at + 1) } };
+        font_at += 1;
+        font_commands[font_at] = .{ .series_suffix_font_name = .{ .series_index = series_index, .bytes = all_fonts, .trailer = @intCast(font_at + 1) } };
+        font_at += 1;
+        for (series.section.points, 0..) |_, point_index| {
+            font_commands[font_at] = .{ .series_point_label_font_name = .{ .series_index = series_index, .point_index = point_index, .bytes = all_fonts, .trailer = @intCast(font_at + 1) } };
+            font_at += 1;
+        }
+    }
+    try t.expectEqual(font_commands.len, font_at);
+    var font_options = edit_options;
+    font_options.max_edited_contents_bytes = bytes.len + font_commands.len * (all_fonts.len + 15);
+    const font_saved_outer = try core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &font_commands, font_options);
+    defer t.allocator.free(font_saved_outer);
+    var font_outer_file = try core.cfb.File.open(t.allocator, font_saved_outer, .{ .strict = true });
+    defer font_outer_file.deinit();
+    const font_header = try core.hwp5.Header.parse(font_outer_file.entries[(try font_outer_file.findExact("/FileHeader")).?].content);
+    const font_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &font_header, item, font_outer_file.entries[(try font_outer_file.findExact("/BinData/BIN0001.OLE")).?].content, 64 * 1024);
+    defer t.allocator.free(font_inner);
+    var font_ole = try core.cfb.File.open(t.allocator, font_inner, .{ .strict = true });
+    defer font_ole.deinit();
+    var font_chart = try contents.readObservedV6(t.allocator, font_ole.entries[(try font_ole.findExact("/Contents")).?].content, layout, .{});
+    defer font_chart.deinit();
+    font_at = 0;
+    for (font_chart.primary_axes) |axis| {
+        try t.expectEqualSlices(u8, all_fonts, axis.title.font.name.bytes);
+        try t.expectEqual(@as(u8, @intCast(font_at + 1)), axis.title.font.name.trailer);
+        font_at += 1;
+    }
+    try t.expectEqualSlices(u8, all_fonts, font_chart.secondary_axis.title.font.name.bytes);
+    try t.expectEqual(@as(u8, @intCast(font_at + 1)), font_chart.secondary_axis.title.font.name.trailer);
+    font_at += 1;
+    for (font_chart.series.items) |series| {
+        try t.expectEqualSlices(u8, all_fonts, series.section.label.body.font.name.bytes);
+        try t.expectEqual(@as(u8, @intCast(font_at + 1)), series.section.label.body.font.name.trailer);
+        font_at += 1;
+        try t.expectEqualSlices(u8, all_fonts, series.suffix.block.font.name.bytes);
+        try t.expectEqual(@as(u8, @intCast(font_at + 1)), series.suffix.block.font.name.trailer);
+        font_at += 1;
+        for (series.section.points) |point| {
+            try t.expectEqualSlices(u8, all_fonts, point.label.body.font.name.bytes);
+            try t.expectEqual(@as(u8, @intCast(font_at + 1)), point.label.body.font.name.trailer);
+            font_at += 1;
+        }
+    }
+    try t.expectEqual(font_commands.len, font_at);
 
     var multi_options = edit_options;
     multi_options.file.bin_data.max_total_encoded_bytes = 128 * 1024;
