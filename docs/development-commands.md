@@ -32,7 +32,7 @@ node tests/hwp5/preview-image-survey.mjs legacy/rust/crates/hwp-core/tests/fixtu
 
 제품 WASM 빌드 후 루트에서 `node --test tests/hwp5/chart-contents-evidence.test.mjs`와 `node tests/hwp5/chart-contents-survey.mjs`를 실행합니다. 조사 범위와 의미 해석의 경계는 [차트 Contents 실측](hwp5-chart-contents-evidence.md)에 둡니다. 정규 audit와 별개의 읽기 전용 조사입니다.
 
-`zig build chart-ownership-audit --summary all`은 SHA-256으로 고정한 실제 Contents 표본의 소유권·원본 복제·span patch·String 정의 편집·참조 분리/재파싱·OOM·모든 잘림·한도 오류 검사와 표본 모듈 생성기 테스트를 실행합니다. `-Doptimize=ReleaseSafe` 또는 `-Doptimize=ReleaseFast`로 같은 검사를 실행할 수 있으며 정규 `audit`에도 포함됩니다. 매 실행마다 기존 corpus에서 원본을 다시 확인하고 생성한 Zig 모듈은 빌드 캐시에만 둡니다. 필요한 표본이 없으면 다른 표본으로 대체하지 않고 실패합니다. 선택 배치와 검증 한계는 [Contents 조립](hwp5-chart-observed-contents.md), 원본 출력 계약은 [차트 원본 바이트 보존](hwp5-chart-source-preservation.md), patch 계약은 [차트 원본 span patch writer](hwp5-chart-patch-writer.md), 정의 편집 계약은 [차트 String 객체 편집](hwp5-chart-string-edit.md), 참조 분리 계약은 [차트 Font String 참조 분리](hwp5-chart-string-fork.md)가 소유합니다.
+`zig build chart-ownership-audit --summary all`은 SHA-256으로 고정한 실제 Contents 표본의 소유권·원본 복제·span patch·String 정의 편집·참조 분리/재파싱·OOM·모든 잘림·한도 오류 검사와 표본 모듈 생성기 테스트를 실행합니다. `-Doptimize=ReleaseSafe` 또는 `-Doptimize=ReleaseFast`로 같은 검사를 실행할 수 있으며 정규 `audit`에도 포함됩니다. 매 실행마다 기존 corpus에서 원본을 다시 확인하고 생성한 Zig 모듈은 빌드 캐시에만 둡니다. 필요한 표본이 없으면 다른 표본으로 대체하지 않고 실패합니다. 선택 배치와 검증 한계는 [Contents 조립](hwp5-chart-observed-contents.md), 원본 출력 계약은 [차트 원본 바이트 보존](hwp5-chart-source-preservation.md), patch 계약은 [차트 원본 span patch writer](hwp5-chart-patch-writer.md), 정의 편집 계약은 [차트 String 객체 편집](hwp5-chart-string-edit.md), 참조 분리 계약은 [차트 String 참조 분리](hwp5-chart-string-fork.md)가 소유합니다.
 
 ## 세 빌드 모드 회귀 검증
 

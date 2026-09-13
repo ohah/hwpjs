@@ -32,6 +32,14 @@ fn exercise(a: std.mem.Allocator) !void {
     defer a.free(edited);
     const forked = try core.hwp5.chart_contents_string_fork.forkFontName(a, &value, &value.primary_axes[0].title.font, 0xfffffffe, "x", 0, bytes.len + 16);
     defer a.free(forked);
+    const generic_alias: core.hwp5.chart_object_table.Reference = .{
+        .value = value.primary_axes[0].title.font.name,
+        .introduced = value.primary_axes[0].title.font.name_introduced,
+        .start = value.primary_axes[0].title.font.name_start,
+        .end = value.primary_axes[0].title.font.name_end,
+    };
+    const generic_forked = try core.hwp5.chart_contents_string_fork.forkStringReference(a, &value, &generic_alias, 0xfffffffd, "y", 0, bytes.len + 16);
+    defer a.free(generic_forked);
     const begin = @intFromPtr(&bytes);
     try t.expect(@intFromPtr(name.ptr) >= begin and @intFromPtr(name.ptr) + name.len <= begin + bytes.len);
     const raw = value.prefix.transition.raw;
@@ -192,6 +200,30 @@ test "actual Contents Font String alias forks and reparses" {
         if (axis.title.font.name.object_id == old_id) retained_old_alias = true;
     }
     try t.expect(retained_old_alias);
+}
+test "actual Contents generic String alias forks and reparses" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const font = value.primary_axes[0].title.font;
+    const target: core.hwp5.chart_object_table.Reference = .{ .value = font.name, .introduced = font.name_introduced, .start = font.name_start, .end = font.name_end };
+    try t.expectEqual(@as(usize, 4), target.end - target.start);
+    const old_id = target.value.object_id;
+    const new_id: u32 = 0xfffffffd;
+    const replacement = "generic-reference-name";
+    const expected_len = bytes.len + replacement.len + 15;
+    const forked = try core.hwp5.chart_contents_string_fork.forkStringReference(t.allocator, &value, &target, new_id, replacement, 0x6c, expected_len);
+    defer t.allocator.free(forked);
+    var reparsed = try contents.readObservedV6(t.allocator, forked, layout, .{});
+    defer reparsed.deinit();
+    const changed = reparsed.primary_axes[0].title.font;
+    try t.expect(changed.name_introduced);
+    try t.expectEqual(new_id, changed.name.object_id);
+    try t.expectEqualSlices(u8, replacement, changed.name.bytes);
+    try t.expectEqual(@as(u8, 0x6c), changed.name.trailer);
+    try t.expect(reparsed.prefix.objects.entries.contains(old_id));
+    try t.expectEqual(@as(u32, @intCast(forked.len - 36)), std.mem.readInt(u32, forked[32..36], .little));
+    try t.expectError(error.UnsupportedChartStringForkTarget, core.hwp5.chart_contents_string_fork.forkStringReference(t.allocator, &value, &value.series.items[0].section.text, 0xfffffffc, "x", 0, bytes.len + 16));
 }
 test "actual Contents Font String fork validation" {
     var bytes = try decode();
