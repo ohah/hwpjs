@@ -17,6 +17,10 @@ fn syntheticObjectHeader(slots: u16) core.image.wmf_header.Header {
     return value;
 }
 
+fn syntheticRecord(function: u16, size_words: u32, parameters: []const u8) core.image.wmf_records.Record {
+    return .{ .offset = 0, .size_words = size_words, .function = function, .parameters = parameters, .end = @as(usize, size_words) * 2 };
+}
+
 test "actual HWP OLE CONTENTS is an explicitly selected payload-sized placeable WMF" {
     const value = try core.image.wmf_header.parse(fixture.bytes, .observed_payload_words);
     try t.expectError(error.InvalidWmfSize, core.image.wmf_header.parse(fixture.bytes, .specified));
@@ -47,6 +51,37 @@ test "actual HWP OLE CONTENTS is an explicitly selected payload-sized placeable 
     try t.expectEqual(@as(usize, 192), objects.deletes);
     try t.expectEqual(@as(usize, 9), objects.peak_live);
     try t.expectEqual(@as(usize, 5), objects.final_live);
+    const payloads = try core.image.wmf_create_payloads.inspect(fixture.bytes, value, records, .observed_preserve);
+    try t.expectEqual(@as(usize, 128), payloads.pens);
+    try t.expectEqual(@as(usize, 43), payloads.brushes);
+    try t.expectEqual(@as(usize, 26), payloads.fonts);
+    try t.expectEqual(@as(usize, 75), payloads.nonzero_color_reserved);
+    try t.expectEqual(@as(usize, 25), payloads.nonempty_face_names);
+    try t.expectEqual(@as(usize, 234), payloads.face_name_bytes);
+    try t.expectError(error.InvalidWmfColorReserved, core.image.wmf_create_payloads.inspect(fixture.bytes, value, records, .specified_zero));
+}
+
+test "public WMF create payload audit pins fields and mandatory validation" {
+    const pen_bytes = [_]u8{ 6, 0, 0xff, 0xff, 2, 0, 1, 2, 3, 2 };
+    const pen = try core.image.wmf_pen.parse(syntheticRecord(0x02fa, 8, &pen_bytes), .observed_preserve);
+    try t.expectEqual(@as(i16, -1), pen.width_x);
+    try t.expectEqual(@as(i16, 2), pen.width_y);
+    try t.expectEqual(@as(u32, 0x02030201), pen.color.raw);
+    try t.expectError(error.InvalidWmfColorReserved, core.image.wmf_pen.parse(syntheticRecord(0x02fa, 8, &pen_bytes), .specified_zero));
+
+    var brush_bytes = [_]u8{ 2, 0, 3, 4, 5, 0, 6, 0 };
+    try t.expectError(error.UnsupportedWmfHatchStyle, core.image.wmf_brush.parse(syntheticRecord(0x02fc, 7, &brush_bytes), .specified_zero));
+    brush_bytes[6] = 5;
+    const brush = try core.image.wmf_brush.parse(syntheticRecord(0x02fc, 7, &brush_bytes), .specified_zero);
+    try t.expectEqual(@as(u16, 5), brush.hatch_raw);
+
+    var font_bytes = [_]u8{0} ** 50;
+    std.mem.writeInt(i16, font_bytes[8..10], 400, .little);
+    font_bytes[10] = 2;
+    try t.expectError(error.InvalidWmfFontBoolean, core.image.wmf_font.parse(syntheticRecord(0x02fb, 28, &font_bytes)));
+    font_bytes[10] = 0;
+    @memset(font_bytes[18..50], 'A');
+    try t.expectError(error.UnterminatedWmfFaceName, core.image.wmf_font.parse(syntheticRecord(0x02fb, 28, &font_bytes)));
 }
 
 test "public WMF object audit pins lowest-slot reuse and dead references" {

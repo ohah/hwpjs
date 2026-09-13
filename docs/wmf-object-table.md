@@ -6,7 +6,7 @@ Microsoft [Object Record Types](https://learn.microsoft.com/en-us/openspecs/wind
 
 `src/image/wmf/records.zig`의 `Iterator`가 generic record 경계와 borrowed parameter slice의 SSOT다. `src/image/wmf/objects.zig`는 이미 framing 검증된 EOF 범위에서 이 Iterator를 재사용하여 Object Table만 재생한다. `NumberOfObjects`를 실제 슬롯 수로 사용하며 bitset의 WORD 반올림 저장 용량을 슬롯 수로 사용하지 않는다.
 
-생성은 `CREATEPALETTE`, 두 pattern brush, pen, font, brush, region을 모두 분류한다. `SELECTCLIPREGION`, `SELECTOBJECT`, `SELECTPALETTE`와 `DELETEOBJECT`는 정확히 4 WORD여야 하고 범위 안의 live 인덱스만 참조할 수 있다. 삭제된 슬롯은 즉시 비워 다음 생성에서 가장 낮은 빈 인덱스로 재사용한다. 객체 payload 필드나 객체 종류별 선택 적합성, 선택된 객체 삭제의 playback 의미, 그리기 결과는 이 단계의 책임이 아니다.
+생성은 `CREATEPALETTE`, 두 pattern brush, pen, font, brush, region을 모두 분류한다. `SELECTCLIPREGION`, `SELECTOBJECT`, `SELECTPALETTE`와 `DELETEOBJECT`는 정확히 4 WORD여야 하고 범위 안의 live 인덱스만 참조할 수 있다. 삭제된 슬롯은 즉시 비워 다음 생성에서 가장 낮은 빈 인덱스로 재사용한다. 실제 표본의 [pen·brush·font payload](wmf-create-payloads.md)는 후속 parser가 소유한다. 나머지 객체 payload, 객체 종류별 선택 적합성, 선택된 객체 삭제의 playback 의미, 그리기 결과는 이 단계의 책임이 아니다.
 
 ## 실제 HWP 근거
 

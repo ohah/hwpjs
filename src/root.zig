@@ -12,6 +12,7 @@ test {
     _ = @import("image/wmf/header_tests.zig");
     _ = @import("image/wmf/records_tests.zig");
     _ = @import("image/wmf/objects_tests.zig");
+    _ = @import("image/wmf/create_payloads_tests.zig");
     _ = @import("image/gif/tests.zig");
     _ = @import("image/jpeg/progressive_block_tests.zig");
     _ = @import("image/jpeg/rgb_raster_tests.zig");
