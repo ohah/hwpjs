@@ -184,6 +184,23 @@ test "TextFormat adapters map actual source spans to the shared String fork" {
     try t.expect(introduced.code_introduced);
     try t.expectError(error.UnsupportedChartStringForkTarget, core.hwp5.chart_contents_string_fork.forkTextFormatCode(t.allocator, &value, &introduced, 0xfffffff8, "x", 0, bytes.len + 16));
 }
+test "actual Contents allocates and forks with the lowest available object ID" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const target = &value.primary_axes[0].title.font;
+    const new_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{target.object_id});
+    try t.expect(new_id != 0xffffffff);
+    try t.expect(new_id != target.object_id);
+    try t.expect(!value.prefix.objects.entries.contains(new_id));
+    const replacement = "allocated-axis-font";
+    const forked = try core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, new_id, replacement, 0x31, bytes.len + replacement.len + 15);
+    defer t.allocator.free(forked);
+    var reparsed = try contents.readObservedV6(t.allocator, forked, layout, .{});
+    defer reparsed.deinit();
+    try t.expectEqual(new_id, reparsed.primary_axes[0].title.font.name.object_id);
+    try t.expectEqualSlices(u8, replacement, reparsed.primary_axes[0].title.font.name.bytes);
+}
 test "actual Contents patch validation" {
     var bytes = try decode();
     var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});

@@ -4,7 +4,7 @@
 
 `chart/contents_string_fork.zig`의 `forkStringReference`는 기존 String object ID를 재참조하는 `object_table.Reference` 한 곳을 새 inline String 정의로 교체합니다. `forkStringValueReference`는 String/Number union에서 String만 같은 경로로 전달하고 Number를 명시적으로 거부합니다. `forkFontName`, `forkTextBlockText`, `forkNullableTextBlockText`, `forkTextBodyText`, `forkTextFormatCode`, `forkNullableTextFormatCode`는 평탄화된 필드를 같은 내부 `Target`으로 변환하는 adapter입니다. 모든 진입점은 직렬화 규칙을 복제하지 않습니다. 대상은 `introduced == false`이고 [보존된 참조 span](hwp5-chart-string-reference-spans.md)이 정확히 4바이트여야 합니다. span의 u32 ID, 결과 모델의 ID, 객체 사전의 String entry가 모두 일치해야 합니다.
 
-caller가 새 object ID, 원시 bytes, trailer와 출력 한도를 제공합니다. ID는 null sentinel이 아니고 기존 객체 사전 및 Font object ID와 충돌하지 않아야 합니다. writer가 임의 ID를 고르지 않으므로 ID 할당 정책은 호출자 소유입니다. 문자열 최대 길이는 wire의 u16과 같은 65,535바이트입니다.
+caller가 새 object ID, 원시 bytes, trailer와 출력 한도를 제공합니다. ID는 null sentinel이 아니고 기존 객체 사전 및 enclosing object ID와 충돌하지 않아야 합니다. writer는 임의 ID를 고르지 않으며, 결정적 기본 선택은 별도 [object ID 선택](hwp5-chart-object-id-allocation.md)이 소유합니다. 문자열 최대 길이는 wire의 u16과 같은 65,535바이트입니다.
 
 새 정의는 `object ID + VtString type ID + u16 길이 + bytes + trailer + VtValue type ID + VtObject type ID` 순서입니다. 파싱된 타입 테이블에서 이름과 version 1이 정확히 맞는 등록 ID 중 가장 작은 값을 결정적으로 재사용합니다. 새 타입 선언을 만들거나 이름을 추정하지 않습니다. 최종 바이트 이동과 Contents extent 갱신은 [span patch writer](hwp5-chart-patch-writer.md)만 담당합니다.
 
@@ -35,4 +35,4 @@ TextFormat adapter에는 required 시작+1·끝-1·introduced=true, nullable nul
 
 ## 미구현 범위
 
-범용 API는 `object_table.Reference`, String arm의 `ValueReference`, Font 이름, TextBlock 본문과 TextFormat code에 적용할 수 있습니다. Number와 null을 String으로 재형식화하지 않습니다. 값을 평탄화한 다른 필드는 별도 span 보존과 얇은 adapter가 필요합니다. 자동 object ID 탐색, 새 type ID·선언 생성, 문자열 인코딩 변환, 여러 편집의 일괄 트랜잭션, CFB 스트림 저장은 제공하지 않습니다.
+범용 API는 `object_table.Reference`, String arm의 `ValueReference`, Font 이름, TextBlock 본문과 TextFormat code에 적용할 수 있습니다. Number와 null을 String으로 재형식화하지 않습니다. 값을 평탄화한 다른 필드는 별도 span 보존과 얇은 adapter가 필요합니다. 자동 ID 선택은 별도 모듈을 명시적으로 호출하며 예약형 편집 세션은 제공하지 않습니다. 새 type ID·선언 생성, 문자열 인코딩 변환, 여러 편집의 일괄 트랜잭션, CFB 스트림 저장도 제공하지 않습니다.

@@ -81,6 +81,7 @@ pub const chart_series_label = @import("chart/series_label.zig");
 pub const chart_series_point = @import("chart/series_point.zig");
 pub const chart_footnote = @import("chart/footnote.zig");
 pub const chart_object_table = @import("chart/object_table.zig");
+pub const chart_object_id_allocator = @import("chart/object_id_allocator.zig");
 pub const chart_legend = @import("chart/legend.zig");
 pub const chart_array_header = @import("chart/array_header.zig");
 pub const chart_collection_header = @import("chart/collection_header.zig");
