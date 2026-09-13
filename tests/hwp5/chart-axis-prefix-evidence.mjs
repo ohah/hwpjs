@@ -48,14 +48,15 @@ function observe(bytes, offset, priorTypes, priorStrings, baseOnly, allowNullTit
  if(b.length-p<4)fail('IncompleteAxisObservation');
  if(b.readUInt32LE(p)===0xffffffff)long();else background=backdrop();
  const backgroundEnd=background?p:null,fontOffset=p,fontId=object();type('VtFont');const fontName=string();raw(14);type('VtObject');raw(24);
- let text;
+ const textStart=p;let text;
  if((baseOnly||allowNullTitle)&&b.length-p>=4&&b.readUInt32LE(p)===0xffffffff){long();text=null;}else text=string();
+ const textEnd=p;
  raw(26);type('VtObject');const blockEnd=p;
- if(baseOnly)return {start:offset,blockStart,blockId,auxiliaryOffset,background,backgroundEnd,fontOffset,fontId,fontName,text,blockEnd,end:p,rawFields,declarations,references,objectOffsets};
+ if(baseOnly)return {start:offset,blockStart,blockId,auxiliaryOffset,background,backgroundEnd,fontOffset,fontId,fontName,text,textStart,textEnd,blockEnd,end:p,rawFields,declarations,references,objectOffsets};
  const scaleArray=array();
  // Record only the first nested header; do not infer either array word's meaning.
  let scale=null;
  if(scaleArray.first===1&&scaleArray.second===1){const id=object();type('VtAxisScaleBlock');scale={id,array:array()};}
  else if(scaleArray.first!==0||scaleArray.second!==0)fail('UnsupportedAxisObservationScaleArray');
- return {start:offset,axisId,blockStart,blockId,auxiliaryOffset,background,backgroundEnd,fontOffset,fontId,fontName,text,blockEnd,scaleArray,scale,end:p,rawFields,declarations,references,objectOffsets};
+ return {start:offset,axisId,blockStart,blockId,auxiliaryOffset,background,backgroundEnd,fontOffset,fontId,fontName,text,textStart,textEnd,blockEnd,scaleArray,scale,end:p,rawFields,declarations,references,objectOffsets};
 }

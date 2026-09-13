@@ -4,7 +4,7 @@
 
 기존 `chart/text_block.zig`의 readObservedV2는 null 보조 값과 inline String 계약을 유지합니다. 새 readObservedWithObjects는 같은 읽기 본문을 공유하며, inline Backdrop 보조 객체와 객체 목록 기반 Font 이름/본문 String 해석을 선택합니다. 실제 배치 근거는 [Axis 제목 조사](hwp5-chart-axis-prefix-evidence.md)입니다. Axis 전체 조립이나 일반 객체 그래프 지원을 의미하지 않습니다.
 
-Block은 새 backdrop 옵션과 text_introduced 플래그를 보존합니다. 기존 진입점에서는 각각 null/true입니다. Font의 이름 정의 여부는 기존 font.name_introduced를 그대로 사용합니다. null 보조 값은 두 진입점에서 허용하며, 새 경로의 non-null 값은 기존 Backdrop·빈 Picture 파서로 읽습니다. 보조 Backdrop 자체 재참조나 그림 데이터가 있는 Picture는 아직 지원하지 않습니다.
+Block은 backdrop 옵션, `text_introduced`, `text_start`, `text_end`를 보존합니다. 기존 진입점에서는 backdrop/text 도입 상태가 각각 null/true입니다. Font의 이름 정의 여부는 기존 font.name_introduced를 그대로 사용합니다. null 보조 값은 두 진입점에서 허용하며, 새 경로의 non-null 값은 기존 Backdrop·빈 Picture 파서로 읽습니다. 보조 Backdrop 자체 재참조나 그림 데이터가 있는 Picture는 아직 지원하지 않습니다.
 
 Backdrop 필드 읽기를 복제하지 않고, 읽은 세 ID를 공통 객체 목록에 등록합니다. TextBlock/Font ID도 같은 목록에서 충돌을 검사합니다. String은 공통 resolver를 사용하므로 이름과 본문이 같은 이전 String을 참조해도 중복 정의로 오판하지 않습니다. 알려진 비문자열을 String으로 대체하거나 null String을 빈 값으로 복구하지 않습니다.
 

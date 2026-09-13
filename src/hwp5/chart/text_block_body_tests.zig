@@ -82,6 +82,8 @@ fn exercise(a: std.mem.Allocator, kind: Kind) !void {
     try t.expectEqual(stored, objects.string_bytes);
     try t.expectEqual(kind == .absent, value.text == null);
     try t.expectEqual(kind == .fresh or kind == .empty, value.text_introduced);
+    try t.expectEqual(f.text, value.text_start);
+    try t.expectEqual(@as(usize, if (kind == .absent or kind == .alias) 4 else f.end - 26 - 4 - f.text), value.text_end - value.text_start);
     try t.expect(value.backdrop == null);
     if (value.text) |text| {
         try t.expectEqual(@as(u32, if (kind == .alias) 11 else 12), text.object_id);

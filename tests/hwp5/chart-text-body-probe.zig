@@ -35,14 +35,14 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 
 // One adapter for inline nullable blocks and their base-body test wire.
 pub fn serializeNullableBlock(a: std.mem.Allocator, block: core.hwp5.chart_text_block.NullableBlock, objects: *const core.hwp5.chart_object_table.Table) ![]u8 {
-    return serialize(a, .{ .prefix = block.prefix, .font = block.font, .middle = block.middle, .text = block.text, .suffix = block.suffix, .end = block.end, .backdrop = block.backdrop, .text_introduced = block.text_introduced }, objects);
+    return serialize(a, .{ .prefix = block.prefix, .font = block.font, .middle = block.middle, .text = block.text, .suffix = block.suffix, .end = block.end, .backdrop = block.backdrop, .text_introduced = block.text_introduced, .text_start = block.text_start, .text_end = block.text_end }, objects);
 }
 
 // Shared test wire for standalone bodies and enclosing ValueBlock probes.
 pub fn serialize(a: std.mem.Allocator, body: core.hwp5.chart_text_block_body.Body, objects: *const core.hwp5.chart_object_table.Table) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (.{ body.end, body.font.object_id, body.font.name.object_id, body.font.name.bytes.len, body.font.name.trailer, @intFromBool(body.font.name_introduced), @intFromBool(body.text != null), if (body.text) |s| s.object_id else 0xffffffff, if (body.text) |s| s.bytes.len else 0, if (body.text) |s| s.trailer else 0, @intFromBool(body.text_introduced), @intFromBool(body.backdrop != null), objects.entries.count(), objects.string_bytes }) |field|
+    inline for (.{ body.end, body.font.object_id, body.font.name.object_id, body.font.name.bytes.len, body.font.name.trailer, @intFromBool(body.font.name_introduced), @intFromBool(body.text != null), if (body.text) |s| s.object_id else 0xffffffff, if (body.text) |s| s.bytes.len else 0, if (body.text) |s| s.trailer else 0, @intFromBool(body.text_introduced), body.text_start, body.text_end, @intFromBool(body.backdrop != null), objects.entries.count(), objects.string_bytes }) |field|
         try int(a, &out, u32, @intCast(field));
     try out.appendSlice(a, &body.prefix);
     try out.appendSlice(a, &body.font.raw);

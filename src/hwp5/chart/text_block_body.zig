@@ -19,6 +19,8 @@ pub const Body = struct {
     end: usize,
     backdrop: ?backdrops.Backdrop,
     text_introduced: bool,
+    text_start: usize,
+    text_end: usize,
 };
 
 /// Selected base-class body starts at VtTextBlock v2, with no object ID.
@@ -43,24 +45,31 @@ fn read(reader: *Reader, table: *Table, objects: ?*Objects, options: Options, al
     const middle = (try next.take(24))[0..24].*;
     const text_limit = @min(options.max_string_bytes, options.max_total_string_bytes - font.name.bytes.len);
     var introduced = false;
+    var text_start = next.offset;
+    var text_end: usize = undefined;
     var peek = next;
     const text: ?strings.String = if (allow_null and try peek.readInt(u32) == 0xffffffff) blk: {
         next = peek;
+        text_end = next.offset;
         break :blk null;
     } else if (objects) |o| blk: {
         const reference = try o.readStringObservedV1(&next, table, text_limit);
         introduced = reference.introduced;
+        text_start = reference.start;
+        text_end = reference.end;
         break :blk reference.value;
     } else blk: {
         introduced = true;
-        break :blk try strings.readObservedV1(&next, table, text_limit);
+        const value = try strings.readObservedV1(&next, table, text_limit);
+        text_end = next.offset;
+        break :blk value;
     };
     // Preserve legacy duplicate-vs-truncation precedence before reading tail.
     if (inline_id) |id| if (objects == null) try ids.requireUnique(&.{ id, font.object_id, font.name.object_id, text.?.object_id });
     const suffix = (try next.take(26))[0..26].*;
     try requireType(table, &next, "VtObject\x00", 1);
     reader.* = next;
-    return .{ .prefix = prefix, .font = font, .middle = middle, .text = text, .suffix = suffix, .end = next.offset, .backdrop = backdrop, .text_introduced = introduced };
+    return .{ .prefix = prefix, .font = font, .middle = middle, .text = text, .suffix = suffix, .end = next.offset, .backdrop = backdrop, .text_introduced = introduced, .text_start = text_start, .text_end = text_end };
 }
 
 fn readAuxiliary(reader: *Reader, table: *Table, objects: ?*Objects) !?backdrops.Backdrop {

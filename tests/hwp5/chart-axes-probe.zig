@@ -57,7 +57,7 @@ pub fn serialize(a: std.mem.Allocator, out: *std.ArrayList(u8), axis: anytype, o
     inline for (.{ axis.object_id, axis.end, @intFromBool(axis.scale != null), axis.title.object_id }) |v| try int(a, out, u32, @intCast(v));
     try out.appendSlice(a, &axis.raw);
     const t = axis.title;
-    const title = try @import("chart-text-body-probe.zig").serialize(a, .{ .prefix = t.prefix, .font = t.font, .middle = t.middle, .text = t.text, .suffix = t.suffix, .end = t.end, .backdrop = t.backdrop, .text_introduced = t.text_introduced }, objects);
+    const title = try @import("chart-text-body-probe.zig").serialize(a, .{ .prefix = t.prefix, .font = t.font, .middle = t.middle, .text = t.text, .suffix = t.suffix, .end = t.end, .backdrop = t.backdrop, .text_introduced = t.text_introduced, .text_start = t.text_start, .text_end = t.text_end }, objects);
     defer a.free(title);
     try out.appendSlice(a, title);
     try array(a, out, axis.scale_array);

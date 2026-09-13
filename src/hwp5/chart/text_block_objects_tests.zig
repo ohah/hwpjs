@@ -92,6 +92,8 @@ fn exercise(a: std.mem.Allocator, background: bool, new_name: bool, alias: bool)
     try t.expectEqual(background, value.backdrop != null);
     try t.expectEqual(new_name, value.font.name_introduced);
     try t.expectEqual(!alias, value.text_introduced);
+    try t.expectEqual(f.text, value.text_start);
+    try t.expectEqual(@as(usize, if (alias) 4 else f.end - 26 - 4 - f.text), value.text_end - value.text_start);
     try t.expectEqual(@as(u8, if (new_name) 173 else 99), value.font.name.trailer);
     try t.expectEqual(@as(u8, if (alias and !new_name) 99 else 173), value.text.trailer);
     try t.expectEqual(@as(usize, 2 + @as(usize, if (new_name) 2 else 0) + @as(usize, if (alias) 0 else 3)), objects.string_bytes);

@@ -20,6 +20,8 @@ fn BlockType(comptime nullable: bool) type {
         end: usize,
         backdrop: ?backdrops.Backdrop = null,
         text_introduced: bool = true,
+        text_start: usize,
+        text_end: usize,
     };
 }
 
@@ -50,5 +52,5 @@ fn read(comptime nullable: bool, reader: *Reader, table: *Table, objects: ?*Obje
     const body = if (nullable) try bodies.readObservedV2(&next, table, objects.?, options) else try bodies.readRequired(&next, table, objects, options, id);
     const text = if (nullable) body.text else body.text.?;
     reader.* = next;
-    return .{ .object_id = id, .prefix = body.prefix, .font = body.font, .middle = body.middle, .text = text, .suffix = body.suffix, .end = next.offset, .backdrop = body.backdrop, .text_introduced = body.text_introduced };
+    return .{ .object_id = id, .prefix = body.prefix, .font = body.font, .middle = body.middle, .text = text, .suffix = body.suffix, .end = next.offset, .backdrop = body.backdrop, .text_introduced = body.text_introduced, .text_start = body.text_start, .text_end = body.text_end };
 }

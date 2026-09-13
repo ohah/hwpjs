@@ -19,7 +19,7 @@ export function textBodyCase(bytes,result,prior){
 }
 export function textBodyWire(t,start,objects,stored){
  const name=t.fontName,text=t.text,nameBytes=Buffer.from(name.hex,'hex'),textBytes=Buffer.from(text?.hex??'','hex');
- const out=[...[t.end-start,t.fontId,name.id,nameBytes.length,name.trailer,Number(name.introduced),Number(text!==null),text?.id??0xffffffff,textBytes.length,text?.trailer??0,Number(text?.introduced??false),Number(t.background!==null),objects,stored].map(n=>integer(n))];
+ const out=[...[t.end-start,t.fontId,name.id,nameBytes.length,name.trailer,Number(name.introduced),Number(text!==null),text?.id??0xffffffff,textBytes.length,text?.trailer??0,Number(text?.introduced??false),t.textStart-start,t.textEnd-start,Number(t.background!==null),objects,stored].map(n=>integer(n))];
  for(const size of [12,14,24,26])out.push(Buffer.from(t.rawFields.find(r=>r.n===size).hex,'hex'));
  if(t.background){out.push(...t.background.ids.map(n=>integer(n)),integer(t.backgroundEnd-start),integer(t.background.suffix,2));for(const size of [50,34,4])out.push(Buffer.from(t.rawFields.find(r=>r.n===size).hex,'hex'));}
  out.push(nameBytes,textBytes);

@@ -9,6 +9,17 @@ fn decode() ![fixture.bytes.len]u8 {
     @memcpy(&bytes, fixture.bytes);
     return bytes;
 }
+fn expectTextSpan(source: []const u8, text: ?core.hwp5.chart_value_object.String, introduced: bool, start: usize, end: usize) !void {
+    try t.expect(start <= end and end <= source.len);
+    if (text) |string| {
+        if (introduced) try t.expect(end - start > 4) else try t.expectEqual(@as(usize, 4), end - start);
+        try t.expectEqual(string.object_id, std.mem.readInt(u32, source[start..][0..4], .little));
+    } else {
+        try t.expect(!introduced);
+        try t.expectEqual(@as(usize, 4), end - start);
+        try t.expectEqual(@as(u32, 0xffffffff), std.mem.readInt(u32, source[start..][0..4], .little));
+    }
+}
 fn exercise(a: std.mem.Allocator) !void {
     var bytes = try decode();
     var value = try contents.readObservedV6(a, &bytes, layout, .{});
@@ -75,6 +86,20 @@ test "actual Contents sorted patch splice and extent" {
     try t.expectEqualSlices(u8, "xyz", out[99..102]);
     try t.expectEqualSlices(u8, bytes[43..100], out[42..99]);
     try t.expectEqualSlices(u8, bytes[205..], out[202..]);
+}
+test "actual Contents TextBlock text spans retain wire boundaries" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const footnote = value.prefix.footnote.block;
+    try expectTextSpan(&bytes, footnote.text, footnote.text_introduced, footnote.text_start, footnote.text_end);
+    for (value.primary_axes) |axis| try expectTextSpan(&bytes, axis.title.text, axis.title.text_introduced, axis.title.text_start, axis.title.text_end);
+    try expectTextSpan(&bytes, value.secondary_axis.title.text, value.secondary_axis.title.text_introduced, value.secondary_axis.title.text_start, value.secondary_axis.title.text_end);
+    for (value.series.items) |item| {
+        for (item.section.points) |point| try expectTextSpan(&bytes, point.label.body.text, point.label.body.text_introduced, point.label.body.text_start, point.label.body.text_end);
+        try expectTextSpan(&bytes, item.section.label.body.text, item.section.label.body.text_introduced, item.section.label.body.text_start, item.section.label.body.text_end);
+    }
+    try expectTextSpan(&bytes, value.title.block.text, value.title.block.text_introduced, value.title.block.text_start, value.title.block.text_end);
 }
 test "actual Contents patch validation" {
     var bytes = try decode();

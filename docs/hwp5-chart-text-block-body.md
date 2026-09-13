@@ -6,6 +6,8 @@
 
 본문 String의 null과 길이 0인 String은 구분합니다. null이면 text=null, text_introduced=false이며 문자열 객체를 등록하거나 저장 바이트를 더하지 않습니다. 새 String과 재참조는 기존 객체 사전을 사용합니다. 합계 문자열 제한은 Font 이름과 본문 길이의 합이며 같은 String을 재참조해도 두 필드 길이를 셉니다. null 본문에서도 Font 이름 제한은 적용합니다.
 
+`text_start`와 `text_end`는 본문 String 위치의 원본 기준 반개방 구간입니다. alias는 u32 object ID 4바이트, inline 정의는 ID부터 마지막 `VtObject` type 참조까지, null은 `0xffffffff` sentinel 4바이트를 보존합니다. 객체 테이블 경로에서는 `Reference.start/end`를 그대로 전달하고, 독립 inline 경로와 null 경로만 같은 reader의 시작·종료 cursor를 기록합니다. `TextBlock`은 base `Body`의 두 값을 재계산하지 않고 전달합니다.
+
 prefix12·Font raw14·middle24·suffix26 및 Backdrop 원시는 복사하고 String 바이트는 호출자가 유지하는 입력을 빌립니다. 본문 자체는 해제할 할당을 소유하지 않습니다. 오류 시 입력 Reader 위치는 유지하지만 타입/객체 사전은 변경됐을 수 있으므로 호출자가 둘 다 폐기해야 합니다.
 
 기존 `text_block.zig`는 inline ID 처리 후 같은 본문의 readRequired 경로를 사용합니다. 기존 Block 필드와 필수 text 계약, 레거시 null 보조 값 제한을 유지합니다. Options 정의는 본문 모듈에서 공유합니다. 레거시 중복 ID 판정은 꼬리 소비 전에 실행해 중복+잘림이 동시에 있는 경우의 오류 순서도 유지합니다.
@@ -16,7 +18,11 @@ Debug·ReleaseSafe·ReleaseFast 각각 `zig test src/root.zig --test-filter 'cha
 
 기존 TextBlock 테스트에는 중복 ID와 꼬리 잘림을 동시에 넣어 기존 UnsupportedChartObjectReference 우선순위를 확인하는 회귀 입력을 추가했습니다.
 
+span은 합성 fixture의 null·빈 값·inline·alias 네 배치에서 시작 위치와 정확한 소비 길이를 검사합니다. SHA-256 고정 9,876바이트 전체 Contents에서는 Footnote, 주·보조축 제목, series point/section label, 문서 title의 모든 TextBlock을 순회해 null sentinel·alias ID·inline ID와 반환 span을 원본 바이트에 대조합니다. 독립 JS oracle도 같은 `textStart/textEnd`를 관측하여 native wire와 비교합니다.
+
 `/tmp/hwpjs-text-body-mutants.XWK1s8`에서 null 허용 제거, 불필요한 ID 소비, 합계 제한에서 Font 길이 차감 누락, 빈 String을 null로 변경, 마지막 타입 검사 전 Reader 반영, raw prefix 삭제의 6종을 만들었습니다. 세 모드 각각 실제 런타임 FAIL과 종료 코드 1로 검출했습니다(18회). 컴파일 오류를 검출로 세지 않았습니다.
+
+span 보존 추가 후에는 객체 Reference 시작+1·끝-1, null sentinel 끝-1, 독립 inline 시작+1, `TextBlock` 전달 시작+1의 다섯 변이를 실제 9,876바이트 Contents 테스트로 세 모드에서 실행했습니다. 15개 조합은 모두 컴파일 성공 후 assertion 실패로 거부됐고 trap이나 컴파일 실패는 검출로 세지 않았습니다.
 
 ## 실제 WASM 대조
 
@@ -39,3 +45,5 @@ Debug·ReleaseSafe·ReleaseFast 독립 WASM에서 43개 차트의 배율 본문 
 이번 단계는 TextBlock 기반 클래스 본문 지원입니다. 전체 파서 검증 완료를 뜻하지 않으며 Axis/ValueBlock의 제품 조립은 별도 후속 작업입니다.
 
 전체 audit 이후 기본 `zig build test --summary all`도 1,035/1,035 tests, `zig build -Doptimize=ReleaseSafe --summary all`도 5/5 steps로 통과했습니다. 변경 Zig fmt·JS 구문·문서 링크·diff 공백 검사도 통과했습니다.
+
+TextBlock span 추가 상태의 현재 정규 audit는 Debug·ReleaseSafe·ReleaseFast 모두 32/32 단계, native 1,100/1,100개, HWP/WASM 8,905,815회, imports 0으로 통과했습니다. Contents 소유권 테스트는 각 모드 14/14개이며 전체 기본 Zig 테스트는 1,086/1,086개입니다. 위의 과거 단계별 수치는 당시 기준 기록이고 이 문단이 현재 통합 검증 수치입니다.
