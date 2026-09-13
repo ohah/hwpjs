@@ -2,6 +2,7 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    @import("chart-observed-field-contract.zig").assertCurrent();
     var input: core.Reader = .{ .bytes = bytes };
     const max_objects = try input.readInt(u32);
     const axes = try input.readInt(u32);

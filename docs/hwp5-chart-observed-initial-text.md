@@ -49,6 +49,6 @@ Legend oracle 자체도 원본 43건에서 새로 노출한 8개 메타데이터
 
 임시 코어에서 두 introduced 값을 각각 false로 바꾸거나 null Backdrop에 전환 Backdrop을 넣는 3종을 주입했습니다. 세 모드 총 9건 모두 컴파일 종료 코드 0 후 `ERR_ASSERTION`·실행 종료 코드 1로 검출했습니다. 정상 코어는 세 모드 각각 정상·변형 1,452건·기본 거부 946건을 통과했습니다. 로그는 `/tmp/hwpjs-footnote-flags.SclyWx`의 `종류-모드.compile.log`·`종류-모드.log`이며 제품 소스는 변경하지 않았습니다.
 
-Footnote의 위 상태값은 후속 검사에 연결했습니다. 현재 선택 배치에서 허용하지 않는 non-null 보조 Backdrop의 내용을 이 검사로 검증했다고 해석하지 않습니다. Grid 전환 Backdrop은 후속 [Grid 반환값 검사](hwp5-chart-observed-grid.md), 개별 타입/객체 값은 [사전 엔트리 대조](hwp5-chart-observed-tables.md)에 연결했습니다. 다른 구조의 참조 메타데이터 등 미대조 필드는 남아 있습니다. 합계가 같다는 사실은 각 엔트리가 같다는 증거가 아닙니다.
+Footnote의 위 상태값은 후속 검사에 연결했습니다. 현재 선택 배치에서 허용하지 않는 non-null 보조 Backdrop의 내용을 이 검사로 검증했다고 해석하지 않습니다. Grid 전환 Backdrop은 후속 [Grid 반환값 검사](hwp5-chart-observed-grid.md), 개별 타입/객체 값은 [사전 엔트리 대조](hwp5-chart-observed-tables.md), 현재 제품이 반환하는 객체 Reference 위치는 [축 반환값 대조](hwp5-chart-observed-axes.md)와 기존 Series wire에 연결했습니다. 합계가 같다는 사실은 각 엔트리가 같다는 증거가 아닙니다.
 
 이후 사전 엔트리 검사까지 포함한 누적 세 모드 전체 audit가 통과했습니다. 최종 수치와 로그는 [사전 엔트리 대조](hwp5-chart-observed-tables.md)가 소유합니다. 전체 문서 검증 완료나 모든 차트 배치 지원을 뜻하지 않습니다.

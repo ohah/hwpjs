@@ -64,7 +64,7 @@ ReleaseSafe 실측:
 
 ### 축 배치의 실제 표본 편향
 
-타입별 ID·이름·버전 및 객체별 kind·문자열/숫자 값의 후속 전체 반환값 검사는 [사전 엔트리 대조](hwp5-chart-observed-tables.md)에 연결했습니다. 기존 총계 검사와 구분하며 참조별 introduced·start/end 같은 미대조 중첩 필드는 아직 남아 있습니다.
+타입별 ID·이름·버전 및 객체별 kind·문자열/숫자 값의 후속 전체 반환값 검사는 [사전 엔트리 대조](hwp5-chart-observed-tables.md)에 연결했습니다. 현재 제품이 반환하는 객체 Reference의 introduced·start/end는 [축 반환값 대조](hwp5-chart-observed-axes.md)와 기존 Series wire에 연결했습니다. 새 struct 필드가 조용히 누락되는 문제는 [반환 필드 변경 감지 계약](hwp5-chart-observed-field-contract.md)으로 방어합니다.
 
 전체 audit를 실행하는 동안 원본을 변경하지 않고 `axesOracle`·`nullableTitleOracle`로 43개 Contents의 축 분기를 다시 집계했습니다. 이는 독립 관측의 입력 분포이며 아직 mode 336의 축 반환 필드 검증 실적은 아닙니다.
 

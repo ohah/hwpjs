@@ -12,7 +12,7 @@ Plot ID·초기 배열의 ID/word/end·raw136/end, Surface ID·배열의 ID/word
 - Light의 배열 end
 - 각 Series의 section.end와 suffix.end
 
-Grid 셀·Prelude 원시 필드는 후속 [Grid 반환값 대조](hwp5-chart-observed-grid.md)에서 확장했습니다. Footnote/Legend, 일부 축 ValueBlock 내부 reference/label의 start/end, 테이블의 개별 엔트리 등은 아직 남아 있습니다. 전체 문서 필드 검증 완료가 아닙니다.
+Grid 셀·Prelude 원시 필드는 후속 [Grid 반환값 대조](hwp5-chart-observed-grid.md), Footnote/Legend는 [초기 텍스트 대조](hwp5-chart-observed-initial-text.md), 테이블 엔트리는 [사전 엔트리 대조](hwp5-chart-observed-tables.md), 축 ValueBlock reference/label 위치는 [축 반환값 대조](hwp5-chart-observed-axes.md)에서 확장했습니다. 이 문서의 당시 검사만으로 후속 필드가 검증됐다고 소급하지 않으며 전체 문서 필드 검증 완료도 아닙니다.
 
 ## 입력 검사
 

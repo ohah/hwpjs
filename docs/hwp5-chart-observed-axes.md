@@ -4,7 +4,7 @@
 
 [명시적 배치 조립](hwp5-chart-observed-contents.md)의 mode 336 시험 출력에 주축 배열 순서와 보조축을 추가했습니다. `chart-axes-probe.zig`의 결과 전용 serialize와 독립 `chart-axes-oracle.mjs`의 axisWire를 재사용합니다. 개별 축 종료 시점이 아닌 전체 Contents 종료 시점의 객체·문자열 총계를 명시적으로 전달합니다. 제품 파서의 배치 판정이나 지원 형식을 바꾼 작업은 아닙니다.
 
-추가 대조는 축 ID/end/raw82, 제목 TextBlock/Font/String, Scale 유무·배열·ValueBlock, Tail 유무·원시 구간/end를 기존 wire 수준으로 검사합니다. 전체 조립 반환 객체를 직접 직렬화하며 입력을 다시 파싱한 결과로 대신하지 않습니다. ValueBlock 내부 Reference/label의 start/end처럼 기존 wire에 없는 중첩 필드는 아직 별도 대조하지 않습니다.
+추가 대조는 축 ID/end/raw82, 제목 TextBlock/Font/String, Scale 유무·배열·ValueBlock, Tail 유무·원시 구간/end를 기존 wire 수준으로 검사합니다. 전체 조립 반환 객체를 직접 직렬화하며 입력을 다시 파싱한 결과로 대신하지 않습니다. ValueBlock 내부 Reference/label의 start/end는 아래 후속 절에서 연결했습니다.
 
 ## 표본 밖의 분기
 

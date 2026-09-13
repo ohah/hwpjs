@@ -66,6 +66,7 @@
   - [전체 Contents의 Grid 셀 반환값 대조](hwp5-chart-observed-grid.md)
   - [전체 Contents의 Footnote·Legend 반환값 대조](hwp5-chart-observed-initial-text.md)
   - [전체 Contents의 사전 엔트리 대조](hwp5-chart-observed-tables.md)
+  - [전체 Contents 반환 필드 변경 감지 계약](hwp5-chart-observed-field-contract.md)
   - [TextBlock 보조 Backdrop·문자열 재참조](hwp5-chart-text-block-objects.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
