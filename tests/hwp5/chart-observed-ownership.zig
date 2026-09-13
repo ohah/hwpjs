@@ -28,6 +28,8 @@ fn exercise(a: std.mem.Allocator) !void {
     for (value.series.items, layout.series_point_counts) |item, n| try t.expectEqual(n, item.section.points.len);
     const name = value.prefix.legend.font.name.bytes;
     try t.expect(name.len > 0);
+    const edited = try core.hwp5.chart_contents_string_edit.replaceStringObject(a, &value, value.prefix.legend.font.name.object_id, "x", 0, bytes.len);
+    defer a.free(edited);
     const begin = @intFromPtr(&bytes);
     try t.expect(@intFromPtr(name.ptr) >= begin and @intFromPtr(name.ptr) + name.len <= begin + bytes.len);
     const raw = value.prefix.transition.raw;
@@ -76,6 +78,84 @@ test "actual Contents patch validation" {
     value.end += 1;
     bytes[32] ^= 1;
     try t.expectError(error.InvalidChartSourceExtent, core.hwp5.chart_contents_patch.applyOriginal(t.allocator, &value, &.{}, bytes.len));
+}
+test "actual Contents String object edit reparses" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const original = value.prefix.legend.font.name;
+    try t.expect(value.prefix.legend.font.name_introduced);
+    const same = try core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, original.bytes, original.trailer, bytes.len);
+    defer t.allocator.free(same);
+    try t.expectEqualSlices(u8, &bytes, same);
+
+    const edited_bytes = "edited-chart-name";
+    const max = bytes.len - original.bytes.len + edited_bytes.len;
+    const edited = try core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, edited_bytes, 0xa5, max);
+    defer t.allocator.free(edited);
+    try t.expectEqual(max, edited.len);
+    try t.expectEqual(@as(u32, @intCast(edited.len - 36)), std.mem.readInt(u32, edited[32..36], .little));
+    var reparsed = try contents.readObservedV6(t.allocator, edited, layout, .{});
+    defer reparsed.deinit();
+    const changed = reparsed.prefix.objects.entries.get(original.object_id).?.string;
+    try t.expectEqualSlices(u8, edited_bytes, changed.bytes);
+    try t.expectEqual(@as(u8, 0xa5), changed.trailer);
+    try t.expectEqual(original.object_id, reparsed.prefix.legend.font.name.object_id);
+    try t.expectEqualSlices(u8, edited_bytes, reparsed.prefix.legend.font.name.bytes);
+
+    const alias = value.primary_axes[0].title.font.name;
+    try t.expect(!value.primary_axes[0].title.font.name_introduced);
+    const alias_bytes = "shared-axis-font";
+    const alias_max = bytes.len - alias.bytes.len + alias_bytes.len;
+    const alias_edited = try core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, alias.object_id, alias_bytes, 0x5a, alias_max);
+    defer t.allocator.free(alias_edited);
+    var alias_reparsed = try contents.readObservedV6(t.allocator, alias_edited, layout, .{});
+    defer alias_reparsed.deinit();
+    for (alias_reparsed.primary_axes) |axis| {
+        if (axis.title.font.name.object_id == alias.object_id)
+            try t.expectEqualSlices(u8, alias_bytes, axis.title.font.name.bytes);
+    }
+
+    const empty = try core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, "", 0, bytes.len - original.bytes.len);
+    defer t.allocator.free(empty);
+    var empty_reparsed = try contents.readObservedV6(t.allocator, empty, layout, .{});
+    defer empty_reparsed.deinit();
+    try t.expectEqual(@as(usize, 0), empty_reparsed.prefix.legend.font.name.bytes.len);
+
+    const maximum_bytes = try t.allocator.alloc(u8, 65535);
+    defer t.allocator.free(maximum_bytes);
+    @memset(maximum_bytes, 0xa7);
+    const maximum_len = bytes.len - original.bytes.len + maximum_bytes.len;
+    const maximum = try core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, maximum_bytes, 0xff, maximum_len);
+    defer t.allocator.free(maximum);
+    var maximum_reparsed = try contents.readObservedV6(t.allocator, maximum, layout, .{});
+    defer maximum_reparsed.deinit();
+    try t.expectEqual(@as(usize, 65535), maximum_reparsed.prefix.legend.font.name.bytes.len);
+    try t.expectEqual(@as(u8, 0xff), maximum_reparsed.prefix.legend.font.name.trailer);
+}
+test "actual Contents String edit validation" {
+    var bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const original = value.prefix.legend.font.name;
+    try t.expectError(error.UnknownChartStringObject, core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, 0xffffffff, "x", 0, bytes.len));
+    try t.expectError(error.UnsupportedChartStringEditTarget, core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, value.prefix.legend.object_id, "x", 0, bytes.len));
+    const too_long = try t.allocator.alloc(u8, 65536);
+    defer t.allocator.free(too_long);
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, too_long, 0, std.math.maxInt(usize)));
+    const payload_offset = @intFromPtr(original.bytes.ptr) - @intFromPtr(bytes[0..].ptr);
+    bytes[payload_offset - 2] ^= 1;
+    try t.expectError(error.InvalidChartStringSource, core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, "x", 0, bytes.len));
+    bytes[payload_offset - 2] ^= 1;
+    bytes[payload_offset + original.bytes.len] ^= 1;
+    try t.expectError(error.InvalidChartStringSource, core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, "x", 0, bytes.len));
+    bytes[payload_offset + original.bytes.len] ^= 1;
+    const entry = value.prefix.objects.entries.getPtr(original.object_id).?;
+    entry.string.object_id ^= 1;
+    try t.expectError(error.InvalidChartStringSource, core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, "x", 0, bytes.len));
+    entry.string.object_id ^= 1;
+    entry.string.bytes = "outside-source";
+    try t.expectError(error.InvalidChartStringSource, core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, "x", 0, bytes.len));
 }
 test "actual Contents original copy boundaries" {
     const bytes = try decode();

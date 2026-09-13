@@ -33,4 +33,4 @@ SHA-256 고정 실제 9,876바이트 Contents에서 다음을 native로 검사�
 
 ## 미구현 범위
 
-현재 API는 caller가 확정한 span만 다룹니다. 문자열 길이 필드, 타입/객체 참조와 후속 오프셋, 특정 의미 필드의 span을 자동으로 찾지 않습니다. patch 결과를 다시 파싱해 구조 유효성을 보장하지 않으며 CFB 스트림 압축·교체도 하지 않습니다. 실제 편집 API는 필드별 span/serializer와 재파싱 검증을 이 계층 위에 추가해야 합니다.
+현재 API는 caller가 확정한 span만 다룹니다. 첫 필드별 adapter인 [String 객체 편집](hwp5-chart-string-edit.md)은 길이·payload·trailer span과 전체 재파싱을 담당합니다. 다른 타입/객체 참조와 후속 오프셋, 그 밖의 의미 필드 span은 아직 자동으로 찾지 않습니다. patch writer 자체는 결과를 다시 파싱하지 않으며 CFB 스트림 압축·교체도 하지 않습니다.
