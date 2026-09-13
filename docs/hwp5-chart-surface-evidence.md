@@ -28,3 +28,5 @@ node tests/hwp5/chart-surface-survey.mjs --verify
 ```
 
 조사에는 기존 제품 WASM 빌드가 필요합니다. 이번 변경은 독립 조사 코드와 문서뿐이며 이전 Axis 전체 회귀 결과를 이번 조사에서 재실행한 결과로 주장하지 않습니다.
+
+후속 [Plot·Surface 접두부 코어](hwp5-chart-plot-surface-prefix.md)의 구현·직접 WASM 대조·전체 회귀 상태는 별도 문서에서 관리합니다. 조사기에 추가된 타입 참조·word 위치 메타데이터도 해당 직접 대조에서 사용합니다.

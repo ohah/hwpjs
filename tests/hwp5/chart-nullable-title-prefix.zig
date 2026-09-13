@@ -21,12 +21,7 @@ pub fn read(a: std.mem.Allocator, contents: []const u8, limit: usize, per: usize
     objects.options.max_total_string_bytes = stored;
     // Selected corpus prefix only, not a product four-axis/Surface contract.
     for (0..4) |_| _ = try core.hwp5.chart_axis.readObservedV3(reader, types, objects, .{});
-    _ = try reader.take(30);
-    try objects.registerOther(try reader.readInt(u32));
-    try core.hwp5.chart_type_checks.require(types, reader, "VtSurfaceDesc\x00", 1);
-    _ = try reader.take(46);
-    const array = try core.hwp5.chart_array_header.readObservedV1(reader, types, objects);
-    if (try array.observedEqualCount(0) != 0) return error.UnsupportedChartArrayLayout;
+    _ = try core.hwp5.chart_surface_prefix.readObservedEmptyArrayV1(reader, types, objects);
     const axis = try core.hwp5.chart_axis.readNullableTitleObservedV3(reader, types, objects, .{ .max_string_bytes = per, .max_total_string_bytes = total });
     return .{ .previous = prefix, .axis = axis };
 }

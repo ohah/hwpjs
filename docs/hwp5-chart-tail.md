@@ -31,4 +31,4 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit는 각각 종료 코드 0으로 완
 
 Window 직전 4바이트의 ID 여부, 원시 필드 의미, 임의 List 요소·버전, 전체 객체 그래프·모델·렌더링·편집·저장은 별도입니다. 43개 표본의 끝 위치 일치는 전체 포맷 지원 증거가 아닙니다.
 
-다음 연결 공백도 남아 있습니다. `tests/hwp5/chart-light-prefix.zig`는 Plot ID·v4·초기 배열·raw136을 테스트 전용 코드에서 읽고, `chart-nullable-title-prefix.zig`는 네 축 다음 raw30·SurfaceDesc ID/v1·raw46·초기 배열을 직접 소비합니다. 따라서 tail까지 WASM 검증을 연결한 것만으로 전체 Contents 제품 파서가 조립된 것은 아닙니다. 후속 작업은 이 Plot·Surface 접두부를 독립 코어로 분리하고, 선택된 배열 배치와 미확정 원시 필드를 명시적으로 보존하는 것입니다. 배열 개수·축 개수의 자동 판정은 별도 근거가 필요합니다.
+이 단계에서 남았던 테스트 전용 Plot·Surface 접두부의 코어 분리와 후속 검증 상태는 [Plot·Surface 접두부 코어](hwp5-chart-plot-surface-prefix.md)가 소유합니다. tail까지 WASM 검증을 연결한 것만으로 전체 Contents 제품 파서가 조립된 것은 아닙니다. 배열 개수·축 개수의 자동 판정은 별도 근거가 필요합니다.
