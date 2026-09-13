@@ -6,6 +6,8 @@
 
 필드 구조는 컴파일 타임 타입 함수가, 읽기 순서는 같은 private 함수가 소유합니다. 객체 ID·타입·기반 타입·raw u16·String resolver를 다시 구현하지 않습니다. non-null code 읽기도 하나의 공통 호출 경로입니다. null 표식은 4바이트만 소비하며 String을 등록하지 않고 `code_introduced=false`입니다. 빈 신규 String은 별도 ID와 `code_introduced=true`, 별칭은 기존 ID와 `false`를 유지합니다.
 
+nullable 결과의 `code_start/code_end`는 null sentinel도 4바이트 구간으로 보존합니다. non-null은 공통 객체 `Reference` 경계를 그대로 사용하므로 alias·inline·null의 위치 계약이 `code`와 `code_introduced` 상태에 의해 하나로 결정됩니다.
+
 객체 자체의 null/재참조는 허용하지 않습니다. ID 0은 정상이고 중복 ID는 거부합니다. 코드 raw 바이트는 입력을 빌리며 Unicode 변환이나 NUL 제거를 하지 않습니다. 실패 시 Reader는 유지하지만 변경 가능성이 있는 타입·객체 테이블은 폐기해야 합니다. 문자열별 크기와 전체 고유 문자열 저장량 제한은 기존 resolver가 검사합니다. null은 0바이트 제한에서도 허용되며 빈 문자열과 혼동하지 않습니다.
 
 ## 네이티브 검증
@@ -13,6 +15,10 @@
 별도 fixture와 테스트는 신규/기존 타입, offset 0/1/17/257, null/빈 String/신규 String/별칭, 원시 u16, 문자열 차용, 정확한 소비 끝, 필수 API의 null 거부를 검사합니다. 모든 잘림, 각 타입의 클래스·버전 오류, null/중복 객체 ID와 코드의 자기 참조, 객체·문자열별/저장량 제한도 포함합니다. 정상·실패 경로 OOM과 safety=true 할당 해제 회계를 검사합니다.
 
 신규 테스트 2개와 루트 테스트는 세 모드 각각 3/3 통과했습니다. 기존 필수 TextFormat 테스트도 통과했습니다.
+
+span 검증은 null·빈 String·신규 String·별칭 fixture 각각에서 `code_start`와 정확한 소비 길이를 확인합니다. 실제 9,876바이트 Contents의 nullable format은 null 경로를 검증하고, non-null Reference 경계는 합성 fixture와 전체 corpus 독립 oracle 대조가 담당합니다.
+
+span을 포함한 nullable format wire는 현재 세 모드 전체 audit에서 각각 32/32 단계, native 1,102/1,102개와 HWP/WASM 8,905,815회를 통과했습니다. 검사 횟수는 지원 포맷 완성도를 뜻하지 않습니다.
 
 ## 실제 파일 연결과 SSOT
 

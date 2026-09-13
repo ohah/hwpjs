@@ -13,6 +13,8 @@ fn FormatType(comptime nullable: bool) type {
         raw_word: u16,
         code: if (nullable) ?String else String,
         code_introduced: bool,
+        code_start: usize,
+        code_end: usize,
         end: usize,
     };
 }
@@ -40,18 +42,23 @@ fn read(comptime nullable: bool, reader: *Reader, types: *Types, objects: *Objec
     try requireType(types, &next, "VtObject\x00", 1);
     const raw_word = try next.readInt(u16);
     var introduced = false;
+    var code_start = next.offset;
+    var code_end: usize = undefined;
     const code: ?String = blk: {
         if (nullable) {
             var peek = next;
             if (try peek.readInt(u32) == 0xffffffff) {
                 next = peek;
+                code_end = next.offset;
                 break :blk null;
             }
         }
         const ref = try objects.readStringObservedV1(&next, types, max_code_bytes);
         introduced = ref.introduced;
+        code_start = ref.start;
+        code_end = ref.end;
         break :blk ref.value;
     };
     reader.* = next;
-    return .{ .object_id = id, .raw_word = raw_word, .code = if (nullable) code else code.?, .code_introduced = introduced, .end = next.offset };
+    return .{ .object_id = id, .raw_word = raw_word, .code = if (nullable) code else code.?, .code_introduced = introduced, .code_start = code_start, .code_end = code_end, .end = next.offset };
 }

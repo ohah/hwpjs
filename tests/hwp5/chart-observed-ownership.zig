@@ -20,6 +20,22 @@ fn expectTextSpan(source: []const u8, text: ?core.hwp5.chart_value_object.String
         try t.expectEqual(@as(u32, 0xffffffff), std.mem.readInt(u32, source[start..][0..4], .little));
     }
 }
+fn expectRequiredFormatCodeSpan(source: []const u8, format: core.hwp5.chart_text_format.Format) !void {
+    try t.expect(format.code_start <= format.code_end and format.code_end <= source.len);
+    if (format.code_introduced) try t.expect(format.code_end - format.code_start > 4) else try t.expectEqual(@as(usize, 4), format.code_end - format.code_start);
+    try t.expectEqual(format.code.object_id, std.mem.readInt(u32, source[format.code_start..][0..4], .little));
+}
+fn expectNullableFormatCodeSpan(source: []const u8, format: core.hwp5.chart_text_format.NullableFormat) !void {
+    try t.expect(format.code_start <= format.code_end and format.code_end <= source.len);
+    if (format.code) |string| {
+        if (format.code_introduced) try t.expect(format.code_end - format.code_start > 4) else try t.expectEqual(@as(usize, 4), format.code_end - format.code_start);
+        try t.expectEqual(string.object_id, std.mem.readInt(u32, source[format.code_start..][0..4], .little));
+    } else {
+        try t.expect(!format.code_introduced);
+        try t.expectEqual(@as(usize, 4), format.code_end - format.code_start);
+        try t.expectEqual(@as(u32, 0xffffffff), std.mem.readInt(u32, source[format.code_start..][0..4], .little));
+    }
+}
 fn exercise(a: std.mem.Allocator) !void {
     var bytes = try decode();
     var value = try contents.readObservedV6(a, &bytes, layout, .{});
@@ -102,6 +118,15 @@ test "actual Contents TextBlock text spans retain wire boundaries" {
         try expectTextSpan(&bytes, item.section.label.body.text, item.section.label.body.text_introduced, item.section.label.body.text_start, item.section.label.body.text_end);
     }
     try expectTextSpan(&bytes, value.title.block.text, value.title.block.text_introduced, value.title.block.text_start, value.title.block.text_end);
+}
+test "actual Contents TextFormat code spans retain wire boundaries" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    for (value.primary_axes) |axis| {
+        if (axis.scale) |scale| if (scale.value.format) |format| try expectRequiredFormatCodeSpan(&bytes, format);
+    }
+    for (value.series.items) |item| for (item.suffix.formats) |format| try expectNullableFormatCodeSpan(&bytes, format);
 }
 test "actual Contents TextBlock text adapters fork aliases and reject other states" {
     const bytes = try decode();

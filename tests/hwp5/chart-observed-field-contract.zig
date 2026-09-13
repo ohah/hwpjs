@@ -40,7 +40,7 @@ pub fn assertCurrent() void {
         fields(h.chart_value_block.Block, &.{ "header_word", "reference", "format", "raw_before_label", "label", "raw_suffix", "text", "end" });
         fields(h.chart_object_table.Reference, &.{ "value", "introduced", "start", "end" });
         fields(h.chart_object_table.ValueReference, &.{ "value", "introduced", "start", "end" });
-        fields(h.chart_text_format.Format, &.{ "object_id", "raw_word", "code", "code_introduced", "end" });
+        fields(h.chart_text_format.Format, &.{ "object_id", "raw_word", "code", "code_introduced", "code_start", "code_end", "end" });
         fields(h.chart_surface_prefix.Prefix, &.{ "raw_before", "object_id", "raw_body", "array", "end" });
         fields(h.chart_line_item.Item, &.{ "object_id", "raw", "end" });
         fields(h.chart_post_line.Block, &.{ "raw", "array", "end" });

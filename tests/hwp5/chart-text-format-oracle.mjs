@@ -10,6 +10,6 @@ export function textFormatCase(bytes,result,priorTypes){
   const alias=options.alias??false;
   return Buffer.concat([...[options.per??raw.length,options.count??2,options.stored??raw.length,types.size,Number(alias)].map(n=>integer(n)),seed,...(alias?[integer(f.code.id),integer(raw.length),raw,integer(f.code.trailer,1)]:[]),data]);
  };
- const wire=(data=body,options={})=>Buffer.concat([...[f.headerWord,options.word??f.rawWord,f.code.id,raw.length,f.code.trailer,Number(!(options.alias??false)),data.length,2,raw.length].map(n=>integer(n)),raw]);
+ const wire=(data=body,options={})=>{const codeStart=f.codeStart-f.start,codeEnd=codeStart+(options.alias?4:f.codeEnd-f.codeStart);return Buffer.concat([...[f.headerWord,options.word??f.rawWord,f.code.id,raw.length,f.code.trailer,Number(!(options.alias??false)),codeStart,codeEnd,data.length,2,raw.length].map(n=>integer(n)),raw]);};
  return {f,body,raw,input,wire};
 }

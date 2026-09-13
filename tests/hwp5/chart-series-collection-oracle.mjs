@@ -20,7 +20,7 @@ export function seriesCollectionWire(r,scope=r){
   for(const point of s.section.points){ints(point.prefix.point.id,point.end);raw(point.raw20);label(point.prefix,point.label);}
   const tail=s.section.tail,t=tail.text;raw(tail.raw66);ints(t.id,t.hex.length/2,t.trailer,Number(t.introduced),t.start,t.end);raw(t.hex);label(tail,s.section.label);
   const suffix=s.suffix;ints(suffix.blockId);body(suffix.body);ints(suffix.rawWord);
-  for(const state of suffix.formats){const f=state.format,c=f.code;ints(f.headerWord,f.rawWord,Number(c!==null),c?.id??0xffffffff,(c?.hex.length??0)/2,c?.trailer??0,Number(c?.introduced??false),f.end);raw(c?.hex??'');}
+  for(const state of suffix.formats){const f=state.format,c=f.code;ints(f.headerWord,f.rawWord,Number(c!==null),c?.id??0xffffffff,(c?.hex.length??0)/2,c?.trailer??0,Number(c?.introduced??false),f.codeStart,f.codeEnd,f.end);raw(c?.hex??'');}
   const pic=s.picture;ints(pic.picture.id,pic.pictureEnd,pic.pictureEnd,pic.end);raw(pic.raw40);raw(pic.picture.raw4);raw(s.raw106);ints(s.end);
  }
  return Buffer.concat(parts);

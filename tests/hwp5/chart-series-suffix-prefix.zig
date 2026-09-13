@@ -35,7 +35,7 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, limit: usize) !Prefix {
     try int(a, &out, u32, try prefix.reader().readInt(u16));
     for (0..2) |_| {
         const f = try core.hwp5.chart_text_format.readNullableObservedV1(prefix.reader(), prefix.types(), prefix.objects(), 65535);
-        inline for (.{ f.object_id, f.raw_word, @intFromBool(f.code != null), if (f.code) |s| s.object_id else 0xffffffff, if (f.code) |s| s.bytes.len else 0, if (f.code) |s| s.trailer else 0, @intFromBool(f.code_introduced), f.end, prefix.objects().entries.count(), prefix.objects().string_bytes }) |v| try int(a, &out, u32, @intCast(v));
+        inline for (.{ f.object_id, f.raw_word, @intFromBool(f.code != null), if (f.code) |s| s.object_id else 0xffffffff, if (f.code) |s| s.bytes.len else 0, if (f.code) |s| s.trailer else 0, @intFromBool(f.code_introduced), f.code_start, f.code_end, f.end, prefix.objects().entries.count(), prefix.objects().string_bytes }) |v| try int(a, &out, u32, @intCast(v));
         if (f.code) |s| try out.appendSlice(a, s.bytes);
     }
     try int(a, &out, u32, prefix.types().definitions.count());

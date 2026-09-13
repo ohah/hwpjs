@@ -24,7 +24,7 @@ export function valueBlockWire(value,start,objects,stored){
  if(!p.reference)out.push(integer(0));
  else if(p.reference.kind==='number'){const r=p.reference;out.push(...[2,r.id,r.trailer,Number(r.introduced)].map(n=>integer(n)),number(r),integer(r.start-start),integer(r.end-start));}
  else out.push(integer(1),string(p.reference),integer(p.reference.start-start),integer(p.reference.end-start));
- if(p.format){const f=p.format;out.push(...[f.headerWord,f.rawWord,f.end-start].map(n=>integer(n)),string(f.code));}
+ if(p.format){const f=p.format;out.push(...[f.headerWord,f.rawWord,f.end-start].map(n=>integer(n)),string(f.code),integer(f.codeStart-start),integer(f.codeEnd-start));}
  out.push(string(p.label),integer(p.label.start-start),integer(p.label.end-start),textBodyWire(t,start,objects,stored));
  return Buffer.concat(out);
 }

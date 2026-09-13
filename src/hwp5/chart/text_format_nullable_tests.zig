@@ -25,7 +25,7 @@ fn exercise(a: std.mem.Allocator, start: usize, known: bool, kind: fixture.Kind,
             return;
         };
         try t.expect(kind != .absent);
-        break :blk .{ .object_id = v.object_id, .raw_word = v.raw_word, .code = v.code, .code_introduced = v.code_introduced, .end = v.end };
+        break :blk .{ .object_id = v.object_id, .raw_word = v.raw_word, .code = v.code, .code_introduced = v.code_introduced, .code_start = v.code_start, .code_end = v.code_end, .end = v.end };
     } else formats.readNullableObservedV1(&r, &types, &objects, stored) catch |err| {
         try t.expectEqual(start, r.offset);
         return err;
@@ -36,6 +36,8 @@ fn exercise(a: std.mem.Allocator, start: usize, known: bool, kind: fixture.Kind,
     try t.expectEqual(@as(u16, 0xaa55), v.raw_word);
     try t.expectEqual(kind == .absent, v.code == null);
     try t.expectEqual(kind == .fresh or kind == .empty, v.code_introduced);
+    try t.expectEqual(f.code, v.code_start);
+    try t.expectEqual(@as(usize, if (kind == .absent or kind == .alias) 4 else f.end - f.code), v.code_end - v.code_start);
     try t.expectEqual(stored, objects.string_bytes);
     try t.expectEqual(@as(u32, if (kind == .absent) 1 else 2), objects.entries.count());
     if (v.code) |s| {

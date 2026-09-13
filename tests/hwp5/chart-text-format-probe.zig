@@ -29,7 +29,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const f = try core.hwp5.chart_text_format.readObservedV1(&reader, &types, &objects, per);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (.{ f.object_id, f.raw_word, f.code.object_id, f.code.bytes.len, f.code.trailer, @intFromBool(f.code_introduced), f.end, objects.entries.count(), objects.string_bytes }) |field| try int(a, &out, u32, @intCast(field));
+    inline for (.{ f.object_id, f.raw_word, f.code.object_id, f.code.bytes.len, f.code.trailer, @intFromBool(f.code_introduced), f.code_start, f.code_end, f.end, objects.entries.count(), objects.string_bytes }) |field| try int(a, &out, u32, @intCast(field));
     try out.appendSlice(a, f.code.bytes);
     return out.toOwnedSlice(a);
 }

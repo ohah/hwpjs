@@ -59,6 +59,7 @@ pub fn serialize(a: std.mem.Allocator, b: core.hwp5.chart_value_block.Block, obj
     if (b.format) |f| {
         inline for (.{ f.object_id, f.raw_word, f.end }) |v| try int(a, &out, u32, @intCast(v));
         try string(a, &out, f.code, f.code_introduced);
+        inline for (.{ f.code_start, f.code_end }) |v| try int(a, &out, u32, @intCast(v));
     }
     try string(a, &out, b.label.value, b.label.introduced);
     inline for (.{ b.label.start, b.label.end }) |v| try int(a, &out, u32, @intCast(v));

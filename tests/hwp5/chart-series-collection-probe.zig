@@ -37,7 +37,7 @@ pub fn serialize(a: std.mem.Allocator, c: core.hwp5.chart_series_collection.Coll
         }
         try int(a, &out, u32, s.suffix.raw_word);
         for (s.suffix.formats) |f| {
-            inline for (.{ f.object_id, f.raw_word, @intFromBool(f.code != null), if (f.code) |v| v.object_id else 0xffffffff, if (f.code) |v| v.bytes.len else 0, if (f.code) |v| v.trailer else 0, @intFromBool(f.code_introduced), f.end }) |v| try int(a, &out, u32, @intCast(v));
+            inline for (.{ f.object_id, f.raw_word, @intFromBool(f.code != null), if (f.code) |v| v.object_id else 0xffffffff, if (f.code) |v| v.bytes.len else 0, if (f.code) |v| v.trailer else 0, @intFromBool(f.code_introduced), f.code_start, f.code_end, f.end }) |v| try int(a, &out, u32, @intCast(v));
             if (f.code) |v| try out.appendSlice(a, v.bytes);
         }
         inline for (.{ s.picture.picture.object_id, s.picture.picture.body.end, s.picture.picture.end, s.picture.end }) |v| try int(a, &out, u32, @intCast(v));
