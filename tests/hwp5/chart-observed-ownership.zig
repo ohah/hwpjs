@@ -92,6 +92,12 @@ fn exercise(a: std.mem.Allocator) !void {
     try t.expectEqual(@as(u8, 0xcc), name[0]);
     try t.expectEqualSlices(u8, &raw, &value.prefix.transition.raw);
 }
+
+fn exerciseMultiChartSession(a: std.mem.Allocator, outer: []const u8, options: core.hwp5.chart_edit_session.Options) !void {
+    const commands = [_]core.hwp5.chart_edit_session.ChartCommand{ .{ .ordinal = 1, .ole_layout = .raw_cfb, .chart_layout = layout, .edits = &.{.{ .primary_axis_title_font_name = .{ .axis_index = 0, .bytes = "outer-saved-axis-font", .trailer = 0x55 } }} }, .{ .ordinal = 2, .ole_layout = .raw_cfb, .chart_layout = layout, .edits = &.{.{ .series_label_body_text = .{ .series_index = 0, .bytes = "outer-series-label", .trailer = 0x66 } }} } };
+    const output = try core.hwp5.chart_edit_session.applyCharts(a, outer, &commands, .observed_optional_extension, options);
+    defer a.free(output);
+}
 test "actual Contents sorted patch splice and extent" {
     const bytes = try decode();
     var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
@@ -248,12 +254,14 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     @memcpy(header[0..17], "HWP Document File");
     std.mem.writeInt(u32, header[32..36], 0x05000107, .little);
     std.mem.writeInt(u32, header[36..40], 1, .little);
-    var doc_info = [_]u8{0} ** 80;
+    var doc_info = [_]u8{0} ** 96;
     std.mem.writeInt(u32, doc_info[0..4], 17 | (60 << 20), .little);
-    std.mem.writeInt(i32, doc_info[4..8], 1, .little);
+    std.mem.writeInt(i32, doc_info[4..8], 2, .little);
     std.mem.writeInt(u32, doc_info[64..68], 18 | (1 << 10) | (12 << 20), .little);
-    @memcpy(doc_info[68..], &[_]u8{ 2, 0, 1, 0, 3, 0, 'O', 0, 'L', 0, 'E', 0 });
-    const stored_doc_info = try core.raw_deflate.encodeStored(t.allocator, &doc_info, 96);
+    @memcpy(doc_info[68..80], &[_]u8{ 2, 0, 1, 0, 3, 0, 'O', 0, 'L', 0, 'E', 0 });
+    std.mem.writeInt(u32, doc_info[80..84], 18 | (1 << 10) | (12 << 20), .little);
+    @memcpy(doc_info[84..96], &[_]u8{ 2, 0, 2, 0, 3, 0, 'O', 0, 'L', 0, 'E', 0 });
+    const stored_doc_info = try core.raw_deflate.encodeStored(t.allocator, &doc_info, 112);
     defer t.allocator.free(stored_doc_info);
     const outer = try core.cfb.writer.write(t.allocator, &.{
         .{ .name = "Root Entry", .kind = 5 },
@@ -261,6 +269,7 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
         .{ .name = "DocInfo", .parent = 0, .content = stored_doc_info },
         .{ .name = "BinData", .kind = 1, .parent = 0 },
         .{ .name = "BIN0001.OLE", .parent = 3, .content = stored_inner },
+        .{ .name = "BIN0002.OLE", .parent = 3, .content = stored_inner },
         .{ .name = "Sibling", .parent = 0, .content = "outer-preserved" },
     }, .{ .version = 3 });
     defer t.allocator.free(outer);
@@ -286,6 +295,7 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     defer outer_file.deinit();
     try t.expectEqual(@as(u16, 3), outer_file.header.major);
     try t.expectEqualStrings("outer-preserved", outer_file.entries[(try outer_file.findExact("/Sibling")).?].content);
+    try t.expectEqualSlices(u8, stored_inner, outer_file.entries[(try outer_file.findExact("/BinData/BIN0002.OLE")).?].content);
     const parsed_header = try core.hwp5.Header.parse(outer_file.entries[(try outer_file.findExact("/FileHeader")).?].content);
     const stored = outer_file.entries[(try outer_file.findExact("/BinData/BIN0001.OLE")).?].content;
     try t.expect(parsed_header.has(.compressed));
@@ -344,6 +354,52 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const batch_body = batch_reparsed.series.items[0].section.label.body;
     try t.expectEqual(batch_series_id, batch_body.text.?.object_id);
     try t.expectEqualSlices(u8, series_replacement, batch_body.text.?.bytes);
+
+    var multi_options = edit_options;
+    multi_options.file.bin_data.max_total_encoded_bytes = 128 * 1024;
+    const multi_commands = [_]core.hwp5.chart_edit_session.ChartCommand{ .{ .ordinal = 1, .ole_layout = .raw_cfb, .chart_layout = layout, .edits = &.{.{ .primary_axis_title_font_name = .{ .axis_index = 0, .bytes = replacement, .trailer = 0x55 } }} }, .{ .ordinal = 2, .ole_layout = .raw_cfb, .chart_layout = layout, .edits = &.{.{ .series_label_body_text = .{ .series_index = 0, .bytes = series_replacement, .trailer = 0x66 } }} } };
+    try t.expectError(error.EmptyChartEditSet, core.hwp5.chart_edit_session.applyCharts(t.allocator, outer, &.{}, .observed_optional_extension, multi_options));
+    var one_chart_only = multi_options;
+    one_chart_only.file.bin_data.max_edits = 1;
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_edit_session.applyCharts(t.allocator, outer, &multi_commands, .observed_optional_extension, one_chart_only));
+    var empty_chart = multi_commands[0];
+    empty_chart.edits = &.{};
+    try t.expectError(error.EmptyChartEditBatch, core.hwp5.chart_edit_session.applyCharts(t.allocator, outer, &.{empty_chart}, .observed_optional_extension, multi_options));
+    const reversed_charts = [_]core.hwp5.chart_edit_session.ChartCommand{ multi_commands[1], multi_commands[0] };
+    try t.expectError(error.InvalidBinDataOrdinalOrder, core.hwp5.chart_edit_session.applyCharts(t.allocator, outer, &reversed_charts, .observed_optional_extension, multi_options));
+    const duplicate_charts = [_]core.hwp5.chart_edit_session.ChartCommand{ multi_commands[0], multi_commands[0] };
+    try t.expectError(error.InvalidBinDataOrdinalOrder, core.hwp5.chart_edit_session.applyCharts(t.allocator, outer, &duplicate_charts, .observed_optional_extension, multi_options));
+    var low_total_contents = multi_options;
+    low_total_contents.max_total_edited_contents_bytes = bytes.len + replacement.len + 15;
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_edit_session.applyCharts(t.allocator, outer, &multi_commands, .observed_optional_extension, low_total_contents));
+    var low_total_decoded = multi_options;
+    low_total_decoded.file.max_total_decoded_bin_data_bytes = inner.len;
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_edit_session.applyCharts(t.allocator, outer, &multi_commands, .observed_optional_extension, low_total_decoded));
+    const multi_saved_outer = try core.hwp5.chart_edit_session.applyCharts(t.allocator, outer, &multi_commands, .observed_optional_extension, multi_options);
+    defer t.allocator.free(multi_saved_outer);
+    try t.checkAllAllocationFailures(t.allocator, exerciseMultiChartSession, .{ outer, multi_options });
+    var multi_outer_file = try core.cfb.File.open(t.allocator, multi_saved_outer, .{ .strict = true });
+    defer multi_outer_file.deinit();
+    try t.expectEqual(@as(u16, 3), multi_outer_file.header.major);
+    try t.expectEqualStrings("outer-preserved", multi_outer_file.entries[(try multi_outer_file.findExact("/Sibling")).?].content);
+    const multi_header = try core.hwp5.Header.parse(multi_outer_file.entries[(try multi_outer_file.findExact("/FileHeader")).?].content);
+    const item2: core.hwp5.docinfo.BinData = .{ .attributes = 2, .data = .{ .storage = 2 }, .extra = &.{ 3, 0, 'O', 0, 'L', 0, 'E', 0 } };
+    const multi_first_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &multi_header, item, multi_outer_file.entries[(try multi_outer_file.findExact("/BinData/BIN0001.OLE")).?].content, 64 * 1024);
+    defer t.allocator.free(multi_first_inner);
+    const multi_second_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &multi_header, item2, multi_outer_file.entries[(try multi_outer_file.findExact("/BinData/BIN0002.OLE")).?].content, 64 * 1024);
+    defer t.allocator.free(multi_second_inner);
+    var multi_first_ole = try core.cfb.File.open(t.allocator, multi_first_inner, .{ .strict = true });
+    defer multi_first_ole.deinit();
+    var multi_second_ole = try core.cfb.File.open(t.allocator, multi_second_inner, .{ .strict = true });
+    defer multi_second_ole.deinit();
+    try t.expectEqualStrings("inner-preserved", multi_first_ole.entries[(try multi_first_ole.findExact("/Unknown")).?].content);
+    try t.expectEqualStrings("inner-preserved", multi_second_ole.entries[(try multi_second_ole.findExact("/Unknown")).?].content);
+    var multi_first_chart = try contents.readObservedV6(t.allocator, multi_first_ole.entries[(try multi_first_ole.findExact("/Contents")).?].content, layout, .{});
+    defer multi_first_chart.deinit();
+    var multi_second_chart = try contents.readObservedV6(t.allocator, multi_second_ole.entries[(try multi_second_ole.findExact("/Contents")).?].content, layout, .{});
+    defer multi_second_chart.deinit();
+    try t.expectEqualSlices(u8, replacement, multi_first_chart.primary_axes[0].title.font.name.bytes);
+    try t.expectEqualSlices(u8, series_replacement, multi_second_chart.series.items[0].section.label.body.text.?.bytes);
 }
 test "actual Contents patch validation" {
     var bytes = try decode();

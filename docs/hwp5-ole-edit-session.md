@@ -18,4 +18,4 @@
 
 ## 남은 범위
 
-이 계층은 replacement bytes의 의미를 해석하지 않습니다. 현재 실제 차트 Contents writer 결과를 단일 OLE·바깥 HWP로 저장하는 연결은 검증되어 있지만, 여러 실제 차트 의미 편집을 이 명령 배열로 만드는 typed API는 별도입니다. DocInfo 항목 추가·삭제, 본문 참조 수정, 암호화/DRM, 외부 LINK, 차트 외 OLE 애플리케이션 의미는 지원 범위가 아닙니다.
+이 계층은 replacement bytes의 의미를 해석하지 않습니다. 실제 차트 typed 계층이 한 차트와 여러 BinData의 Contents writer 결과를 이 명령 배열로 만들어 한 번에 저장하는 연결은 검증되어 있습니다. DocInfo 항목 추가·삭제, 본문 참조 수정, 암호화/DRM, 외부 LINK, 차트 외 OLE 애플리케이션 의미는 지원 범위가 아닙니다.

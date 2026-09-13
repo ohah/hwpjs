@@ -10,6 +10,10 @@
 
 `applyStringEdits`는 두 typed 대상을 한 배치에 조합합니다. 빈 배치와 `max_edits` 초과를 파일 개방 전에 거부하고, 한 번 파싱한 원본 Contents에서 모든 target을 해석합니다. 새 object ID는 명령 배열 순서가 아니라 원본 wire offset 순으로 예약하며 모든 대상 Font ID와 앞서 예약한 ID를 제외합니다. `chart_contents_string_fork.forkMany`는 새 ID 중복을 거부하고 원본 좌표 patch를 정렬한 뒤 한 번만 extent를 갱신합니다. 중복 대상은 overlapping patch로 거부되므로 부분 결과는 저장되지 않습니다.
 
+`applyCharts`는 엄격히 증가하는 DocInfo BinData 순번별로 OLE layout, chart layout과 typed String edit 배열을 받습니다. FileHeader와 DocInfo는 한 번 읽고 `inspectBinDataOrdinals`가 모든 실제 resource를 동시에 선택합니다. 각 BinData의 압축 해제·OLE `/Contents` 파싱·의미 편집 결과가 전부 준비된 뒤에만 기존 `ole_edit_session.apply`를 한 번 호출하므로 바깥 HWP CFB도 한 번만 재작성됩니다. 단일 차트 API들은 모두 이 함수의 한 명령 wrapper입니다.
+
+다중 준비 단계에는 항목별·전체 decoded BinData 한도와 항목별·전체 edited Contents 한도를 적용합니다. `max_total_edited_contents_bytes`는 하위 OLE 전체 결과 한도와 구분됩니다. 각 결과와 command/replacement backing 배열은 최종 세션 호출까지 소유하며, 성공한 HWP 외에는 실패 시 모두 해제합니다.
+
 ## 실제 검증
 
 SHA-256가 고정된 9,876바이트 실제 Contents를 내부 CFB v4에 넣고, 이를 유효한 압축 DocInfo와 raw-DEFLATE OLE BinData를 가진 바깥 HWP CFB v3에 연결합니다. typed API로 primary axis 0의 title Font 이름과 series 0의 main-label 본문을 각각 수정한 뒤 최종 HWP·BinData 압축·내부 OLE·Contents를 모두 다시 열어 새 최저 object ID, UTF-8 bytes, trailer, 양쪽 CFB version과 내부·외부 형제 stream 보존을 확인합니다.
@@ -22,6 +26,8 @@ series label 확장 뒤에는 공개 wrapper를 axis 대상으로 오배선, ser
 
 동일 차트 배치에는 wire 순서 대신 명령 순서로 ID 배정, 첫 ID 예약 누락, 첫 요청만 writer에 전달, 원본 좌표 patch 정렬 제거, 편집 전 Contents 저장의 다섯 결함을 주입했습니다. `Debug`, `ReleaseSafe`, `ReleaseFast` 15회 모두 컴파일은 성공하고 실제 round-trip 검사가 실패했습니다. 정상 검사는 axis와 series 명령을 wire 역순으로 전달하고 두 새 ID·문자열과 내외부 형제 stream을 함께 확인합니다. writer 배치는 빈 요청·새 ID 중복·대상 중복을 별도로 거부하며 allocation-failure 전수 검사에 포함됩니다.
 
+여러 차트 배치에는 두 번째 OLE command 누락, 두 번째 차트에 첫 차트의 의미 명령 적용, typed Contents 누적 한도 갱신 누락, 편집 결과 대신 바깥 HWP bytes를 `/Contents`로 전달, 두 번째 outer ordinal을 첫 ordinal로 오배선하는 결함을 주입했습니다. 세 최적화 모드의 유효한 15회가 모두 컴파일 뒤 실패했습니다. typed decoded 누적 갱신을 제거한 변형은 하위 OLE 세션의 같은 누적 한도가 동일 오류로 거부해 변이 검출 수에서 제외했습니다. 정상 fixture는 압축 DocInfo의 서로 다른 두 OLE BinData를 편집하고 두 내부 CFB v4, 바깥 CFB v3, 모든 형제 stream과 서로 다른 의미 변경을 끝단에서 확인합니다. multi-chart 전체 성공 경로도 모든 allocation failure 위치를 순회합니다.
+
 ## 남은 범위
 
-현재 typed 대상은 observed V6 차트의 primary-axis title Font name alias와 series main-label body alias이며, 같은 차트에서는 두 종류를 원자적 batch로 조합할 수 있습니다. 고정 실제 fixture의 point label 본문은 전부 null 또는 inline이라 기존 alias fork의 성공 근거로 사용할 수 없으며, 해당 typed API를 합성 fixture만으로 노출하지 않습니다. 이미 inline인 문자열, 다른 Font 위치, TextBlock·TextFormat의 다른 위치와 여러 차트/BinData의 typed batch는 별도 wire 계약이나 기존 writer 연결이 필요합니다. chart layout은 opaque wire 값에서 추측하지 않으며 caller가 신뢰할 수 있는 구조 count를 명시해야 합니다. 차트 렌더링·수식 재계산·한글 프로그램과의 시각 동일성은 이 저장 성공으로 증명되지 않습니다.
+현재 typed 대상은 observed V6 차트의 primary-axis title Font name alias와 series main-label body alias이며, 같은 차트와 여러 차트/BinData 모두 원자적 batch로 조합할 수 있습니다. 고정 실제 fixture의 point label 본문은 전부 null 또는 inline이라 기존 alias fork의 성공 근거로 사용할 수 없으며, 해당 typed API를 합성 fixture만으로 노출하지 않습니다. 이미 inline인 문자열, 다른 Font 위치와 TextBlock·TextFormat의 다른 위치는 별도 wire 계약이나 기존 writer 연결이 필요합니다. chart layout은 opaque wire 값에서 추측하지 않으며 caller가 신뢰할 수 있는 구조 count를 명시해야 합니다. 차트 렌더링·수식 재계산·한글 프로그램과의 시각 동일성은 이 저장 성공으로 증명되지 않습니다.
