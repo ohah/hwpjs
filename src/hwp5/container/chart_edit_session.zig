@@ -66,6 +66,10 @@ pub fn materializeGridCellNumber(a: std.mem.Allocator, hwp: []const u8, ordinal:
     return applyEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .null_grid_cell_number = .{ .row = row, .column = column, .bits = bits, .trailer = trailer } }}, options);
 }
 
+pub fn nullifyGridCell(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, row: usize, column: usize, options: Options) ![]u8 {
+    return applyEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .nullify_grid_cell = .{ .row = row, .column = column } }}, options);
+}
+
 /// Forks one primary-axis title Font name in an observed chart Contents and
 /// commits it through the OLE and outer HWP atomic edit layers.
 pub fn forkPrimaryAxisTitleFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, axis_index: usize, new_name: []const u8, trailer: u8, options: Options) ![]u8 {
@@ -137,6 +141,7 @@ pub const Edit = union(enum) {
     grid_cell_string: struct { row: usize, column: usize, bytes: []const u8, trailer: u8 },
     null_grid_cell_string: struct { row: usize, column: usize, bytes: []const u8, trailer: u8 },
     null_grid_cell_number: struct { row: usize, column: usize, bits: u64, trailer: u16 },
+    nullify_grid_cell: struct { row: usize, column: usize },
 };
 
 /// Backward-compatible name retained for callers created before non-string
@@ -155,6 +160,8 @@ const Resolved = union(enum) {
     number_payload: struct { value: ChartNumber, bits: u64, trailer: u16 },
     null_grid_string: struct { value: *const @import("../chart/grid_cells.zig").Cell, bytes: []const u8, trailer: u8 },
     null_grid_number: struct { value: *const @import("../chart/grid_cells.zig").Cell, bits: u64, trailer: u16 },
+    nullify_grid_string: struct { value: ObjectReference },
+    nullify_grid_number: struct { cell: *const @import("../chart/grid_cells.zig").Cell, value: ChartNumber },
 };
 pub const Command = Edit;
 
@@ -267,6 +274,8 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             .number_payload => |target| starts[i] = target.value.payload_start,
             .null_grid_string => |target| starts[i] = target.value.start,
             .null_grid_number => |target| starts[i] = target.value.start,
+            .nullify_grid_string => |target| starts[i] = target.value.start,
+            .nullify_grid_number => |target| starts[i] = target.cell.start,
             .font => |target| {
                 starts[i] = target.value.name_start;
                 forbidden[reserved] = target.value.object_id;
@@ -324,6 +333,15 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             requests[request_at] = .{ .null_grid_number = .{ .cell = target.value, .object_id = object_id, .number_type_id = number_type_id, .value_type_id = value_type_id, .bits = target.bits, .trailer = target.trailer } };
             continue;
         }
+        if (resolved[i] == .nullify_grid_string) {
+            requests[request_at] = .{ .nullify_grid_string = .{ .reference = resolved[i].nullify_grid_string.value } };
+            continue;
+        }
+        if (resolved[i] == .nullify_grid_number) {
+            const target = resolved[i].nullify_grid_number;
+            requests[request_at] = .{ .nullify_grid_number = .{ .cell = target.cell, .number = target.value } };
+            continue;
+        }
         if (resolved[i] == .null_text_format_object) {
             const target = resolved[i].null_text_format_object;
             const format_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
@@ -351,6 +369,8 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             .number_payload => unreachable,
             .null_grid_string => unreachable,
             .null_grid_number => unreachable,
+            .nullify_grid_string => unreachable,
+            .nullify_grid_number => unreachable,
         };
     }
     return fork.forkMany(a, &chart, requests, max_output_bytes);
@@ -454,6 +474,17 @@ fn resolve(chart: *const ChartContents, command: Edit) !Resolved {
         .grid_cell_string => |item| .{ .inline_string = .{ .value = try @import("../chart/grid_string_target.zig").resolve(chart, item.row, item.column), .bytes = item.bytes, .trailer = item.trailer } },
         .null_grid_cell_string => |item| .{ .null_grid_string = .{ .value = try @import("../chart/grid_null_target.zig").resolve(chart, item.row, item.column), .bytes = item.bytes, .trailer = item.trailer } },
         .null_grid_cell_number => |item| .{ .null_grid_number = .{ .value = try @import("../chart/grid_null_target.zig").resolve(chart, item.row, item.column), .bits = item.bits, .trailer = item.trailer } },
+        .nullify_grid_cell => |item| blk: {
+            const grid = &chart.prefix.grid;
+            if (item.row >= grid.prelude.rows) return error.InvalidChartGridRow;
+            if (item.column >= grid.prelude.columns) return error.InvalidChartGridColumn;
+            const cell = &grid.cells[item.row * grid.prelude.columns + item.column];
+            break :blk switch (cell.value) {
+                .empty => error.ExpectedNonNullChartCell,
+                .string => .{ .nullify_grid_string = .{ .value = try @import("../chart/grid_string_target.zig").resolve(chart, item.row, item.column) } },
+                .number => .{ .nullify_grid_number = .{ .cell = cell, .value = try @import("../chart/grid_number_target.zig").resolve(chart, item.row, item.column) } },
+            };
+        },
     };
 }
 

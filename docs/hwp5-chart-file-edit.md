@@ -47,3 +47,5 @@ axis scale의 3개 outer null은 TextFormat 객체 전체와 그 code String을 
 실제 고정 Contents의 위 지원 inventory 60개, [축 Double 선택 값](hwp5-chart-number-edit.md) 2개, [Grid Double 셀](hwp5-chart-grid-number-edit.md) 12개, [Grid String 셀](hwp5-chart-grid-string-edit.md) 7개와 [Grid null String materialization](hwp5-chart-grid-null-string.md) 1개, 총 82개를 한 `applyEdits` 호출에 넣고 바깥 HWP, 압축 BinData, 내부 OLE와 Contents를 다시 열어 전 위치를 확인합니다. 이 수치는 현재 관측·지원된 문자열·형식·숫자 편집 대상의 완전 batch이며, 차트의 opaque raw 필드나 아직 의미를 부여하지 않은 다른 객체를 편집한다는 뜻은 아닙니다.
 
 같은 null 셀의 [Double materialization](hwp5-chart-grid-null-number.md)은 String과 상호배타적이므로 82개에 중복 합산하지 않고 별도 실제 HWP 왕복으로 검증합니다.
+
+[기존 Grid 셀 null화](hwp5-chart-grid-cell-nullify.md)도 같은 셀의 값 편집과 상호배타적이므로 별도 실제 HWP batch로 검증합니다.

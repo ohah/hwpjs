@@ -106,6 +106,7 @@ pub const chart_grid_string_target = @import("chart/grid_string_target.zig");
 pub const chart_grid_null_target = @import("chart/grid_null_target.zig");
 pub const chart_grid_string_materialize = @import("chart/grid_string_materialize.zig");
 pub const chart_grid_number_materialize = @import("chart/grid_number_materialize.zig");
+pub const chart_grid_cell_nullify = @import("chart/grid_cell_nullify.zig");
 pub const ole_stream_replace = @import("ole/stream_replace.zig");
 pub const chart_light_source = @import("chart/light_source.zig");
 pub const chart_light = @import("chart/light.zig");

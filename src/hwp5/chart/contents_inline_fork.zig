@@ -18,6 +18,7 @@ pub const Prepared = struct {
     }
 };
 pub const Span = struct { start: usize, end: usize };
+const Inspection = struct { length_start: usize, payload_end: usize, next_alias: ?Objects.ReferenceSpan };
 
 /// Gives one introduced String site a new identity. If the old identity has
 /// later aliases, its original definition is relocated to the first alias so
@@ -35,10 +36,46 @@ pub fn prepare(a: std.mem.Allocator, value: *const Contents, target: *const Obje
 }
 
 pub fn prepareAvoiding(a: std.mem.Allocator, value: *const Contents, target: *const Objects.Reference, new_object_id: u32, bytes: []const u8, trailer: u8, excluded: []const Span) !Prepared {
-    if (!target.introduced) return error.ExpectedInlineChartString;
     if (bytes.len > std.math.maxInt(u16)) return error.LimitExceeded;
     try ids.requireInline(new_object_id);
     if (value.prefix.objects.entries.contains(new_object_id)) return error.DuplicateChartObjectId;
+    const inspected = try inspectIntroduced(value, target, excluded);
+    const source = value.source;
+    const target_len = target.end - target.start - (inspected.payload_end - inspected.length_start) + bytes.len + 3;
+    const replacement = try a.alloc(u8, target_len);
+    errdefer a.free(replacement);
+    const prefix_len = inspected.length_start - target.start;
+    @memcpy(replacement[0..prefix_len], source[target.start..inspected.length_start]);
+    std.mem.writeInt(u32, replacement[0..4], new_object_id, .little);
+    std.mem.writeInt(u16, replacement[prefix_len..][0..2], @intCast(bytes.len), .little);
+    @memcpy(replacement[prefix_len + 2 ..][0..bytes.len], bytes);
+    replacement[prefix_len + 2 + bytes.len] = trailer;
+    @memcpy(replacement[prefix_len + 3 + bytes.len ..], source[inspected.payload_end..target.end]);
+
+    if (inspected.next_alias) |alias| {
+        const relocated = try strings.serializeKnown(a, value, target.value.object_id, target.value.bytes, target.value.trailer);
+        return .{ .target = replacement, .target_start = target.start, .target_end = target.end, .relocation = relocated, .relocation_start = alias.start, .relocation_end = alias.end };
+    }
+    return .{ .target = replacement, .target_start = target.start, .target_end = target.end, .relocation = null, .relocation_start = 0, .relocation_end = 0 };
+}
+
+/// Replaces a known-type inline String definition with a null slot. Any later
+/// aliases retain the old identity through the same relocation contract used
+/// by String forking.
+pub fn prepareNullAvoiding(a: std.mem.Allocator, value: *const Contents, target: *const Objects.Reference, excluded: []const Span) !Prepared {
+    const inspected = try inspectIntroduced(value, target, excluded);
+    if (target.end - target.start != target.value.bytes.len + 19) return error.ChartGridCellOwnsTypeDeclaration;
+    const replacement = try a.alloc(u8, 4);
+    @memset(replacement, 0xff);
+    if (inspected.next_alias) |alias| {
+        const relocated = try strings.serializeKnown(a, value, target.value.object_id, target.value.bytes, target.value.trailer);
+        return .{ .target = replacement, .target_start = target.start, .target_end = target.end, .relocation = relocated, .relocation_start = alias.start, .relocation_end = alias.end };
+    }
+    return .{ .target = replacement, .target_start = target.start, .target_end = target.end, .relocation = null, .relocation_start = 0, .relocation_end = 0 };
+}
+
+fn inspectIntroduced(value: *const Contents, target: *const Objects.Reference, excluded: []const Span) !Inspection {
+    if (!target.introduced) return error.ExpectedInlineChartString;
     const registered = switch (value.prefix.objects.entries.get(target.value.object_id) orelse return error.InvalidChartStringReferenceGraph) {
         .string => |string| string,
         else => return error.InvalidChartStringReferenceGraph,
@@ -83,20 +120,5 @@ pub fn prepareAvoiding(a: std.mem.Allocator, value: *const Contents, target: *co
     }
     if (!matched_definition) return error.InvalidChartStringReferenceGraph;
 
-    const target_len = target.end - target.start - (payload_end - length_start) + bytes.len + 3;
-    const replacement = try a.alloc(u8, target_len);
-    errdefer a.free(replacement);
-    const prefix_len = length_start - target.start;
-    @memcpy(replacement[0..prefix_len], source[target.start..length_start]);
-    std.mem.writeInt(u32, replacement[0..4], new_object_id, .little);
-    std.mem.writeInt(u16, replacement[prefix_len..][0..2], @intCast(bytes.len), .little);
-    @memcpy(replacement[prefix_len + 2 ..][0..bytes.len], bytes);
-    replacement[prefix_len + 2 + bytes.len] = trailer;
-    @memcpy(replacement[prefix_len + 3 + bytes.len ..], source[payload_end..target.end]);
-
-    if (next_alias) |alias| {
-        const relocated = try strings.serializeKnown(a, value, target.value.object_id, target.value.bytes, target.value.trailer);
-        return .{ .target = replacement, .target_start = target.start, .target_end = target.end, .relocation = relocated, .relocation_start = alias.start, .relocation_end = alias.end };
-    }
-    return .{ .target = replacement, .target_start = target.start, .target_end = target.end, .relocation = null, .relocation_start = 0, .relocation_end = 0 };
+    return .{ .length_start = length_start, .payload_end = payload_end, .next_alias = next_alias };
 }
