@@ -80,6 +80,51 @@ test "actual HWP OLE CONTENTS is an explicitly selected payload-sized placeable 
     try t.expectEqual(@as(i64, 20994), state.line_x_sum);
     try t.expectEqual(@as(i64, 13754), state.line_y_sum);
     try t.expectError(error.InvalidWmfColorReserved, core.image.wmf_state_records.inspect(fixture.bytes, value, records, .specified_zero));
+    const drawings = try core.image.wmf_drawing_records.inspect(fixture.bytes, value, records);
+    try t.expectEqual(@as(usize, 2), drawings.polygons);
+    try t.expectEqual(@as(usize, 456), drawings.polygon_points);
+    try t.expectEqual(@as(i64, 2100296), drawings.polygon_x_sum);
+    try t.expectEqual(@as(i64, 698698), drawings.polygon_y_sum);
+    try t.expectEqual(@as(usize, 51), drawings.polylines);
+    try t.expectEqual(@as(usize, 150), drawings.polyline_points);
+    try t.expectEqual(@as(i64, 441001), drawings.polyline_x_sum);
+    try t.expectEqual(@as(i64, 271796), drawings.polyline_y_sum);
+    try t.expectEqual(@as(usize, 64), drawings.ellipses);
+    try t.expectEqual(@as(i64, 159886), drawings.ellipse_left_sum);
+    try t.expectEqual(@as(i64, 124086), drawings.ellipse_top_sum);
+    try t.expectEqual(@as(i64, 170390), drawings.ellipse_right_sum);
+    try t.expectEqual(@as(i64, 129686), drawings.ellipse_bottom_sum);
+    try t.expectEqual(@as(usize, 46), drawings.rectangles);
+    try t.expectEqual(@as(i64, 121796), drawings.rectangle_left_sum);
+    try t.expectEqual(@as(i64, 83018), drawings.rectangle_top_sum);
+    try t.expectEqual(@as(i64, 145226), drawings.rectangle_right_sum);
+    try t.expectEqual(@as(i64, 87922), drawings.rectangle_bottom_sum);
+}
+
+test "public WMF drawing audit pins point counts XY and rectangle field order" {
+    const two = [_]u8{ 2, 0, 0xfe, 0xff, 3, 0, 4, 0, 0xfb, 0xff };
+    const polygon = try core.image.wmf_poly_record.parse(syntheticRecord(0x0324, 8, &two), .polygon);
+    try t.expectEqual(@as(usize, 2), polygon.points.count);
+    const first = try polygon.points.get(0);
+    const second = try polygon.points.get(1);
+    try t.expectEqual(@as(i16, -2), first.x);
+    try t.expectEqual(@as(i16, 3), first.y);
+    try t.expectEqual(@as(i16, 4), second.x);
+    try t.expectEqual(@as(i16, -5), second.y);
+    try t.expectError(error.WmfPointIndexOutOfBounds, polygon.points.get(2));
+    try t.expectError(error.InvalidWmfPolySize, core.image.wmf_poly_record.parse(syntheticRecord(0x0324, 7, &two), .polygon));
+    const one = [_]u8{ 1, 0, 0, 0, 0, 0 };
+    try t.expectError(error.InvalidWmfPolygonPointCount, core.image.wmf_poly_record.parse(syntheticRecord(0x0324, 6, &one), .polygon));
+    const negative = [_]u8{ 0xff, 0xff };
+    try t.expectError(error.InvalidWmfPointCount, core.image.wmf_poly_record.parse(syntheticRecord(0x0325, 4, &negative), .polyline));
+
+    const rect_bytes = [_]u8{ 1, 0, 2, 0, 0xfd, 0xff, 0xfc, 0xff };
+    const ellipse = try core.image.wmf_rect_record.parse(syntheticRecord(0x0418, 7, &rect_bytes), .ellipse);
+    try t.expectEqual(@as(i16, -4), ellipse.rect.left);
+    try t.expectEqual(@as(i16, -3), ellipse.rect.top);
+    try t.expectEqual(@as(i16, 2), ellipse.rect.right);
+    try t.expectEqual(@as(i16, 1), ellipse.rect.bottom);
+    try t.expectError(error.InvalidWmfRectFunction, core.image.wmf_rect_record.parse(syntheticRecord(0x041b, 7, &rect_bytes), .ellipse));
 }
 
 test "public WMF create payload audit pins fields and mandatory validation" {

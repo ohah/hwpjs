@@ -74,3 +74,7 @@ pub const wmf_mode_record = @import("wmf/mode_record.zig");
 pub const wmf_point_record = @import("wmf/point_record.zig");
 pub const wmf_text_color = @import("wmf/text_color.zig");
 pub const wmf_state_records = @import("wmf/state_records.zig");
+pub const wmf_point_array = @import("wmf/point_array.zig");
+pub const wmf_poly_record = @import("wmf/poly_record.zig");
+pub const wmf_rect_record = @import("wmf/rect_record.zig");
+pub const wmf_drawing_records = @import("wmf/drawing_records.zig");
