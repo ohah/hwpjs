@@ -77,7 +77,7 @@ fn exercise(a: std.mem.Allocator) !void {
     defer a.free(value_forked);
     const body_forked = try core.hwp5.chart_contents_string_fork.forkTextBodyText(a, &value, &value.series.items[0].section.label.body, 0xfffffffb, "q", 0, bytes.len + 16);
     defer a.free(body_forked);
-    const batch_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .null_text_body = .{ .body = &value.series.items[0].section.points[0].label.body, .new_object_id = 0xfffffff6, .bytes = "c", .trailer = 3 } }, .{ .text_body = .{ .body = &value.series.items[0].section.label.body, .new_object_id = 0xfffffff8, .bytes = "b", .trailer = 2 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xfffffff7, .bytes = "a", .trailer = 1 } } }, bytes.len + 48);
+    const batch_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .null_nullable_text_block = .{ .block = &value.secondary_axis.title, .new_object_id = 0xfffffff4, .bytes = "e", .trailer = 5 } }, .{ .nullable_text_block = .{ .block = &value.series.items[0].suffix.block, .new_object_id = 0xfffffff5, .bytes = "d", .trailer = 4 } }, .{ .null_text_body = .{ .body = &value.series.items[0].section.points[0].label.body, .new_object_id = 0xfffffff6, .bytes = "c", .trailer = 3 } }, .{ .text_body = .{ .body = &value.series.items[0].section.label.body, .new_object_id = 0xfffffff8, .bytes = "b", .trailer = 2 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xfffffff7, .bytes = "a", .trailer = 1 } } }, bytes.len + 80);
     defer a.free(batch_forked);
     const font = value.primary_axes[0].title.font;
     const format_alias: core.hwp5.chart_text_format.Format = .{ .object_id = font.object_id, .raw_word = 0, .code = font.name, .code_introduced = font.name_introduced, .code_start = font.name_start, .code_end = font.name_end, .end = font.name_end };
@@ -226,6 +226,8 @@ test "actual null point label materializes as an inline String" {
     try t.expectEqualSlices(u8, replacement, changed.text.?.bytes);
     try t.expectEqual(@as(u8, 0x48), changed.text.?.trailer);
     try t.expectError(error.ExpectedNullChartString, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{.{ .null_text_body = .{ .body = &value.series.items[0].section.label.body, .new_object_id = 0xfffffffa, .bytes = "x", .trailer = 0 } }}, bytes.len + 16));
+    try t.expectError(error.ExpectedNullChartString, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{.{ .null_nullable_text_block = .{ .block = &value.series.items[0].suffix.block, .new_object_id = 0xfffffff9, .bytes = "x", .trailer = 0 } }}, bytes.len + 16));
+    try t.expectError(error.UnsupportedChartStringForkValue, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{.{ .nullable_text_block = .{ .block = &value.secondary_axis.title, .new_object_id = 0xfffffff9, .bytes = "x", .trailer = 0 } }}, bytes.len + 16));
     bytes[body.text_start] = 0;
     try t.expectError(error.InvalidChartStringReferenceSpan, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{.{ .null_text_body = .{ .body = body, .new_object_id = 0xfffffffa, .bytes = "x", .trailer = 0 } }}, bytes.len + 16));
 }
@@ -347,6 +349,7 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.forkSeriesLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, series_replacement, 0x66, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.forkSeriesLabelFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, "x", 0, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.forkSeriesSuffixFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, "x", 0, edit_options));
+    try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.forkSeriesSuffixText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, "x", 0, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.forkSeriesPointLabelFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, "x", 0, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, 0, point_replacement, 0x77, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, point_replacement, 0x77, edit_options));
@@ -489,6 +492,35 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
         }
     }
     try t.expectEqual(font_commands.len, font_at);
+
+    const text_block_bytes = "text-block-edit";
+    const text_block_commands = [_]core.hwp5.chart_edit_session.StringEdit{
+        .{ .series_suffix_text = .{ .series_index = 2, .bytes = text_block_bytes, .trailer = 0x94 } },
+        .{ .null_secondary_axis_title_text = .{ .bytes = text_block_bytes, .trailer = 0x91 } },
+        .{ .series_suffix_text = .{ .series_index = 0, .bytes = text_block_bytes, .trailer = 0x92 } },
+        .{ .series_suffix_text = .{ .series_index = 1, .bytes = text_block_bytes, .trailer = 0x93 } },
+    };
+    var text_block_options = edit_options;
+    text_block_options.max_edited_contents_bytes = bytes.len + text_block_commands.len * (text_block_bytes.len + 15);
+    const text_block_saved = try core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &text_block_commands, text_block_options);
+    defer t.allocator.free(text_block_saved);
+    var text_block_outer = try core.cfb.File.open(t.allocator, text_block_saved, .{ .strict = true });
+    defer text_block_outer.deinit();
+    const text_block_header = try core.hwp5.Header.parse(text_block_outer.entries[(try text_block_outer.findExact("/FileHeader")).?].content);
+    const text_block_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &text_block_header, item, text_block_outer.entries[(try text_block_outer.findExact("/BinData/BIN0001.OLE")).?].content, 64 * 1024);
+    defer t.allocator.free(text_block_inner);
+    var text_block_ole = try core.cfb.File.open(t.allocator, text_block_inner, .{ .strict = true });
+    defer text_block_ole.deinit();
+    var text_block_chart = try contents.readObservedV6(t.allocator, text_block_ole.entries[(try text_block_ole.findExact("/Contents")).?].content, layout, .{});
+    defer text_block_chart.deinit();
+    try t.expect(text_block_chart.secondary_axis.title.text_introduced);
+    try t.expectEqualSlices(u8, text_block_bytes, text_block_chart.secondary_axis.title.text.?.bytes);
+    try t.expectEqual(@as(u8, 0x91), text_block_chart.secondary_axis.title.text.?.trailer);
+    for (text_block_chart.series.items, 0..) |series, series_index| {
+        try t.expect(series.suffix.block.text_introduced);
+        try t.expectEqualSlices(u8, text_block_bytes, series.suffix.block.text.?.bytes);
+        try t.expectEqual(@as(u8, @intCast(0x92 + series_index)), series.suffix.block.text.?.trailer);
+    }
 
     var multi_options = edit_options;
     multi_options.file.bin_data.max_total_encoded_bytes = 128 * 1024;

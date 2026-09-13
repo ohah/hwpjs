@@ -6,6 +6,7 @@ const ChartLayout = @import("../chart/observed_contents.zig").Layout;
 const ChartContents = @import("../chart/observed_contents.zig").Contents;
 const Font = @import("../chart/font.zig").Font;
 const TextBody = @import("../chart/text_block_body.zig").Body;
+const NullableTextBlock = @import("../chart/text_block.zig").NullableBlock;
 const paths = @import("paths.zig");
 
 pub const Options = struct {
@@ -49,6 +50,14 @@ pub fn forkSeriesSuffixFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: 
     return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .series_suffix_font_name = .{ .series_index = series_index, .bytes = new_name, .trailer = trailer } }}, options);
 }
 
+pub fn materializeSecondaryAxisTitleText(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, new_text: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .null_secondary_axis_title_text = .{ .bytes = new_text, .trailer = trailer } }}, options);
+}
+
+pub fn forkSeriesSuffixText(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, series_index: usize, new_text: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .series_suffix_text = .{ .series_index = series_index, .bytes = new_text, .trailer = trailer } }}, options);
+}
+
 pub const StringEdit = union(enum) {
     primary_axis_title_font_name: struct { axis_index: usize, bytes: []const u8, trailer: u8 },
     secondary_axis_title_font_name: struct { bytes: []const u8, trailer: u8 },
@@ -57,12 +66,16 @@ pub const StringEdit = union(enum) {
     series_suffix_font_name: struct { series_index: usize, bytes: []const u8, trailer: u8 },
     series_label_body_text: struct { series_index: usize, bytes: []const u8, trailer: u8 },
     null_series_point_label_body_text: struct { series_index: usize, point_index: usize, bytes: []const u8, trailer: u8 },
+    null_secondary_axis_title_text: struct { bytes: []const u8, trailer: u8 },
+    series_suffix_text: struct { series_index: usize, bytes: []const u8, trailer: u8 },
 };
 
 const Resolved = union(enum) {
     font: struct { value: *const Font, bytes: []const u8, trailer: u8 },
     text_body: struct { value: *const TextBody, bytes: []const u8, trailer: u8 },
     null_text_body: struct { value: *const TextBody, bytes: []const u8, trailer: u8 },
+    nullable_text_block: struct { value: *const NullableTextBlock, bytes: []const u8, trailer: u8 },
+    null_nullable_text_block: struct { value: *const NullableTextBlock, bytes: []const u8, trailer: u8 },
 };
 pub const Command = StringEdit;
 
@@ -172,6 +185,16 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             },
             .text_body => |target| starts[i] = target.value.text_start,
             .null_text_body => |target| starts[i] = target.value.text_start,
+            .nullable_text_block => |target| {
+                starts[i] = target.value.text_start;
+                forbidden[reserved] = target.value.object_id;
+                reserved += 1;
+            },
+            .null_nullable_text_block => |target| {
+                starts[i] = target.value.text_start;
+                forbidden[reserved] = target.value.object_id;
+                reserved += 1;
+            },
         }
     }
     for (order, 0..) |*slot, i| slot.* = i;
@@ -188,6 +211,8 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             .font => |target| .{ .font_name = .{ .font = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .text_body => |target| .{ .text_body = .{ .body = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .null_text_body => |target| .{ .null_text_body = .{ .body = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
+            .nullable_text_block => |target| .{ .nullable_text_block = .{ .block = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
+            .null_nullable_text_block => |target| .{ .null_nullable_text_block = .{ .block = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
         };
     }
     return fork.forkMany(a, &chart, requests, max_output_bytes);
@@ -223,6 +248,11 @@ fn resolve(chart: *const ChartContents, command: StringEdit) !Resolved {
             const points = chart.series.items[item.series_index].section.points;
             if (item.point_index >= points.len) return error.InvalidChartPointIndex;
             break :blk .{ .null_text_body = .{ .value = &points[item.point_index].label.body, .bytes = item.bytes, .trailer = item.trailer } };
+        },
+        .null_secondary_axis_title_text => |item| .{ .null_nullable_text_block = .{ .value = &chart.secondary_axis.title, .bytes = item.bytes, .trailer = item.trailer } },
+        .series_suffix_text => |item| blk: {
+            if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
+            break :blk .{ .nullable_text_block = .{ .value = &chart.series.items[item.series_index].suffix.block, .bytes = item.bytes, .trailer = item.trailer } };
         },
     };
 }

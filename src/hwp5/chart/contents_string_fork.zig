@@ -12,6 +12,8 @@ pub const BatchRequest = union(enum) {
     font_name: struct { font: *const Font, new_object_id: u32, bytes: []const u8, trailer: u8 },
     text_body: struct { body: *const TextBody, new_object_id: u32, bytes: []const u8, trailer: u8 },
     null_text_body: struct { body: *const TextBody, new_object_id: u32, bytes: []const u8, trailer: u8 },
+    nullable_text_block: struct { block: *const TextBlock.NullableBlock, new_object_id: u32, bytes: []const u8, trailer: u8 },
+    null_nullable_text_block: struct { block: *const TextBlock.NullableBlock, new_object_id: u32, bytes: []const u8, trailer: u8 },
 };
 
 /// Forks multiple aliases from one original Contents coordinate space.
@@ -37,6 +39,14 @@ pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const 
                 if (item.body.text != null) return error.ExpectedNullChartString;
                 break :blk Spec{ .target = Target{ .object_id = 0xffffffff, .start = item.body.text_start, .end = item.body.text_end, .introduced = false }, .enclosing_object_id = null, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = false };
             },
+            .nullable_text_block => |item| blk: {
+                const string = item.block.text orelse return error.UnsupportedChartStringForkValue;
+                break :blk Spec{ .target = Target{ .object_id = string.object_id, .start = item.block.text_start, .end = item.block.text_end, .introduced = item.block.text_introduced }, .enclosing_object_id = item.block.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = true };
+            },
+            .null_nullable_text_block => |item| blk: {
+                if (item.block.text != null) return error.ExpectedNullChartString;
+                break :blk Spec{ .target = Target{ .object_id = 0xffffffff, .start = item.block.text_start, .end = item.block.text_end, .introduced = false }, .enclosing_object_id = item.block.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = false };
+            },
         };
         for (requests[0..i]) |previous| if (requestObjectId(previous) == spec.new_object_id) return error.DuplicateChartObjectId;
         const replacement = try makeReplacement(a, value, spec.target, spec.enclosing_object_id, spec.new_object_id, spec.bytes, spec.trailer, spec.require_original);
@@ -57,6 +67,8 @@ fn requestObjectId(request: BatchRequest) u32 {
         .font_name => |item| item.new_object_id,
         .text_body => |item| item.new_object_id,
         .null_text_body => |item| item.new_object_id,
+        .nullable_text_block => |item| item.new_object_id,
+        .null_nullable_text_block => |item| item.new_object_id,
     };
 }
 
