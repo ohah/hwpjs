@@ -34,3 +34,5 @@ node tests/hwp5/chart-series-picture-survey.mjs --verify
 ## 다음 범위
 
 기존 Backdrop의 빈 Picture 코어와 필드 읽기를 공유해 새 구간을 실제 WASM으로 대조해야 합니다. Picture 뒤의 불명확한 바이트·계열 끝·반복·일반 배열 규칙, 전체 Chart 조립·렌더링·저장은 미완료입니다. 공식 API 속성 표만으로 바이트 순서나 소유 관계를 확정하지 않습니다.
+
+후속 구현·WASM 연결의 현재 범위는 [빈 Picture 공통 코어](hwp5-chart-picture.md)가 소유합니다. 위 조사 수치를 제품 실행 수치로 해석하지 않습니다.

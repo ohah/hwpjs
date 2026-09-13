@@ -10,6 +10,7 @@ const Fixture = struct {
     picture_data: usize = 0,
     base: usize = 0,
     second_id: usize = 0,
+    third_id: usize = 0,
     fn int(self: *Fixture, comptime T: type, value: T) void {
         std.mem.writeInt(T, self.bytes[self.end..][0..@sizeOf(T)], value, .little);
         self.end += @sizeOf(T);
@@ -31,6 +32,7 @@ fn fixture() Fixture {
     f.int(u32, 123);
     f.decl(3, "VtFill\x00");
     f.end += 34;
+    f.third_id = f.end;
     f.int(u32, 9);
     f.decl(77, "VtPicture\x00");
     f.end += 4;
@@ -94,6 +96,12 @@ test "chart backdrop unsupported picture references duplicates classes and budge
     f = original;
     std.mem.writeInt(u32, f.bytes[f.second_id..][0..4], 0, .little);
     try reject(t.allocator, f.bytes[0..f.end], error.UnsupportedChartObjectReference, .{});
+    for ([_]u32{ 0, 123 }) |id| {
+        f = original;
+        std.mem.writeInt(u32, f.bytes[f.third_id..][0..4], id, .little);
+        try reject(t.allocator, f.bytes[0 .. f.third_id + 4], error.UnsupportedChartObjectReference, .{});
+        try reject(t.allocator, f.bytes[0..f.end], error.UnsupportedChartObjectReference, .{});
+    }
     f = original;
     std.mem.writeInt(u32, f.bytes[1..5], 0xffffffff, .little);
     try reject(t.allocator, f.bytes[0..f.end], error.UnsupportedChartObjectReference, .{});

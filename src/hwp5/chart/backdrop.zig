@@ -29,10 +29,8 @@ pub fn readObservedEmptyPicture(reader: *Reader, table: *types.Table) !Backdrop 
     out.object_ids[2] = try objectId(&next);
     if (out.object_ids[2] == out.object_ids[0] or out.object_ids[2] == out.object_ids[1])
         return error.UnsupportedChartObjectReference;
-    try requireType(table, &next, "VtPicture\x00", 1);
-    out.raw_picture = (try next.take(4))[0..4].*;
-    if (try next.readInt(u32) != 0xffffffff) return error.UnsupportedChartPictureData;
-    try requireType(table, &next, "VtObject\x00", 1);
+    const picture = try @import("picture.zig").readEmptyBodyObservedV1(&next, table);
+    out.raw_picture = picture.raw;
     out.fill_suffix = try next.readInt(u16);
     try requireType(table, &next, "VtObject\x00", 1);
     try requireType(table, &next, "VtObject\x00", 1);
