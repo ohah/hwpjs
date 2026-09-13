@@ -8,6 +8,52 @@ const TextFormat = @import("text_format.zig");
 const ids = @import("object_ids.zig");
 const patches = @import("contents_patch.zig");
 
+pub const BatchRequest = union(enum) {
+    font_name: struct { font: *const Font, new_object_id: u32, bytes: []const u8, trailer: u8 },
+    text_body: struct { body: *const TextBody, new_object_id: u32, bytes: []const u8, trailer: u8 },
+};
+
+/// Forks multiple aliases from one original Contents coordinate space.
+/// New IDs must be unique across the batch; semantic command order does not
+/// affect patch order or output bytes.
+pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const BatchRequest, max_output_bytes: usize) ![]u8 {
+    if (requests.len == 0) return error.EmptyChartStringForkBatch;
+    const output_patches = try a.alloc(patches.Patch, requests.len);
+    defer a.free(output_patches);
+    const replacements = try a.alloc([]u8, requests.len);
+    defer a.free(replacements);
+    var built: usize = 0;
+    defer for (replacements[0..built]) |replacement| a.free(replacement);
+
+    for (requests, 0..) |request, i| {
+        const spec = switch (request) {
+            .font_name => |item| Spec{ .target = Target{ .object_id = item.font.name.object_id, .start = item.font.name_start, .end = item.font.name_end, .introduced = item.font.name_introduced }, .enclosing_object_id = item.font.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer },
+            .text_body => |item| blk: {
+                const string = item.body.text orelse return error.UnsupportedChartStringForkValue;
+                break :blk Spec{ .target = Target{ .object_id = string.object_id, .start = item.body.text_start, .end = item.body.text_end, .introduced = item.body.text_introduced }, .enclosing_object_id = null, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer };
+            },
+        };
+        for (requests[0..i]) |previous| if (requestObjectId(previous) == spec.new_object_id) return error.DuplicateChartObjectId;
+        const replacement = try makeReplacement(a, value, spec.target, spec.enclosing_object_id, spec.new_object_id, spec.bytes, spec.trailer);
+        replacements[i] = replacement;
+        built += 1;
+        output_patches[i] = .{ .start = spec.target.start, .end = spec.target.end, .replacement = replacement };
+    }
+    std.mem.sort(patches.Patch, output_patches, {}, struct {
+        fn lessThan(_: void, left: patches.Patch, right: patches.Patch) bool {
+            return left.start < right.start;
+        }
+    }.lessThan);
+    return patches.applyOriginal(a, value, output_patches, max_output_bytes);
+}
+
+fn requestObjectId(request: BatchRequest) u32 {
+    return switch (request) {
+        .font_name => |item| item.new_object_id,
+        .text_body => |item| item.new_object_id,
+    };
+}
+
 /// Replaces one existing Font String alias with a new inline String definition.
 /// The caller selects the new object ID; existing aliases remain unchanged.
 pub fn forkFontName(a: std.mem.Allocator, value: *const Contents, font: *const Font, new_object_id: u32, bytes: []const u8, trailer: u8, max_output_bytes: usize) ![]u8 {
@@ -58,8 +104,15 @@ pub fn forkNullableTextFormatCode(a: std.mem.Allocator, value: *const Contents, 
 }
 
 const Target = struct { object_id: u32, start: usize, end: usize, introduced: bool };
+const Spec = struct { target: Target, enclosing_object_id: ?u32, new_object_id: u32, bytes: []const u8, trailer: u8 };
 
 fn fork(a: std.mem.Allocator, value: *const Contents, target: Target, enclosing_object_id: ?u32, new_object_id: u32, bytes: []const u8, trailer: u8, max_output_bytes: usize) ![]u8 {
+    const replacement = try makeReplacement(a, value, target, enclosing_object_id, new_object_id, bytes, trailer);
+    defer a.free(replacement);
+    return patches.applyOriginal(a, value, &.{.{ .start = target.start, .end = target.end, .replacement = replacement }}, max_output_bytes);
+}
+
+fn makeReplacement(a: std.mem.Allocator, value: *const Contents, target: Target, enclosing_object_id: ?u32, new_object_id: u32, bytes: []const u8, trailer: u8) ![]u8 {
     if (bytes.len > std.math.maxInt(u16)) return error.LimitExceeded;
     try ids.requireInline(new_object_id);
     if (value.prefix.objects.entries.contains(new_object_id)) return error.DuplicateChartObjectId;
@@ -83,7 +136,7 @@ fn fork(a: std.mem.Allocator, value: *const Contents, target: Target, enclosing_
     const object_type = types.findLowestId("VtObject\x00", 1) orelse return error.MissingChartStringForkType;
 
     const replacement = try a.alloc(u8, bytes.len + 19);
-    defer a.free(replacement);
+    errdefer a.free(replacement);
     std.mem.writeInt(u32, replacement[0..4], new_object_id, .little);
     std.mem.writeInt(u32, replacement[4..8], string_type, .little);
     std.mem.writeInt(u16, replacement[8..10], @intCast(bytes.len), .little);
@@ -91,5 +144,5 @@ fn fork(a: std.mem.Allocator, value: *const Contents, target: Target, enclosing_
     replacement[10 + bytes.len] = trailer;
     std.mem.writeInt(u32, replacement[11 + bytes.len ..][0..4], value_type, .little);
     std.mem.writeInt(u32, replacement[15 + bytes.len ..][0..4], object_type, .little);
-    return patches.applyOriginal(a, value, &.{.{ .start = target.start, .end = target.end, .replacement = replacement }}, max_output_bytes);
+    return replacement;
 }

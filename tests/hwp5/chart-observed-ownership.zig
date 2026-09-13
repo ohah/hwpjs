@@ -77,6 +77,8 @@ fn exercise(a: std.mem.Allocator) !void {
     defer a.free(value_forked);
     const body_forked = try core.hwp5.chart_contents_string_fork.forkTextBodyText(a, &value, &value.series.items[0].section.label.body, 0xfffffffb, "q", 0, bytes.len + 16);
     defer a.free(body_forked);
+    const batch_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .text_body = .{ .body = &value.series.items[0].section.label.body, .new_object_id = 0xfffffff8, .bytes = "b", .trailer = 2 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xfffffff7, .bytes = "a", .trailer = 1 } } }, bytes.len + 32);
+    defer a.free(batch_forked);
     const font = value.primary_axes[0].title.font;
     const format_alias: core.hwp5.chart_text_format.Format = .{ .object_id = font.object_id, .raw_word = 0, .code = font.name, .code_introduced = font.name_introduced, .code_start = font.name_start, .code_end = font.name_end, .end = font.name_end };
     const format_forked = try core.hwp5.chart_contents_string_fork.forkTextFormatCode(a, &value, &format_alias, 0xfffffff9, "f", 0, bytes.len + 16);
@@ -234,6 +236,8 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const replacement = "outer-saved-axis-font";
     const series_new_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{});
     const series_replacement = "outer-series-label";
+    const batch_axis_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{target.object_id});
+    const batch_series_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{ target.object_id, batch_axis_id });
 
     const inner = try core.cfb.writer.write(t.allocator, &.{ .{ .name = "Root Entry", .kind = 5 }, .{ .name = "Contents", .parent = 0, .content = &bytes }, .{ .name = "Unknown", .parent = 0, .content = "inner-preserved" } }, .{ .version = 4 });
     defer t.allocator.free(inner);
@@ -271,6 +275,10 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     low_output.max_edited_contents_bytes = bytes.len;
     try t.expectError(error.LimitExceeded, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, replacement, 0x55, low_output));
     try t.expectError(error.InvalidOleEnvelopeSize, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .observed_size_prefix, layout, 0, replacement, 0x55, edit_options));
+    try t.expectError(error.EmptyChartEditBatch, core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &.{}, edit_options));
+    var one_edit_only = edit_options;
+    one_edit_only.max_edits = 1;
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &.{ .{ .primary_axis_title_font_name = .{ .axis_index = 0, .bytes = replacement, .trailer = 0x55 } }, .{ .series_label_body_text = .{ .series_index = 0, .bytes = series_replacement, .trailer = 0x66 } } }, one_edit_only));
     const saved_outer = try core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, replacement, 0x55, edit_options);
     defer t.allocator.free(saved_outer);
 
@@ -313,6 +321,29 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectEqual(series_new_id, changed_body.text.?.object_id);
     try t.expectEqualSlices(u8, series_replacement, changed_body.text.?.bytes);
     try t.expectEqual(@as(u8, 0x66), changed_body.text.?.trailer);
+
+    var batch_options = edit_options;
+    batch_options.max_edited_contents_bytes = bytes.len + replacement.len + series_replacement.len + 30;
+    const batch_saved_outer = try core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &.{ .{ .series_label_body_text = .{ .series_index = 0, .bytes = series_replacement, .trailer = 0x66 } }, .{ .primary_axis_title_font_name = .{ .axis_index = 0, .bytes = replacement, .trailer = 0x55 } } }, batch_options);
+    defer t.allocator.free(batch_saved_outer);
+    var batch_outer_file = try core.cfb.File.open(t.allocator, batch_saved_outer, .{ .strict = true });
+    defer batch_outer_file.deinit();
+    try t.expectEqualStrings("outer-preserved", batch_outer_file.entries[(try batch_outer_file.findExact("/Sibling")).?].content);
+    const batch_header = try core.hwp5.Header.parse(batch_outer_file.entries[(try batch_outer_file.findExact("/FileHeader")).?].content);
+    const batch_stored = batch_outer_file.entries[(try batch_outer_file.findExact("/BinData/BIN0001.OLE")).?].content;
+    const batch_decoded_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &batch_header, item, batch_stored, 64 * 1024);
+    defer t.allocator.free(batch_decoded_inner);
+    var batch_inner_file = try core.cfb.File.open(t.allocator, batch_decoded_inner, .{ .strict = true });
+    defer batch_inner_file.deinit();
+    try t.expectEqual(@as(u16, 4), batch_inner_file.header.major);
+    try t.expectEqualStrings("inner-preserved", batch_inner_file.entries[(try batch_inner_file.findExact("/Unknown")).?].content);
+    var batch_reparsed = try contents.readObservedV6(t.allocator, batch_inner_file.entries[(try batch_inner_file.findExact("/Contents")).?].content, layout, .{});
+    defer batch_reparsed.deinit();
+    try t.expectEqual(batch_axis_id, batch_reparsed.primary_axes[0].title.font.name.object_id);
+    try t.expectEqualSlices(u8, replacement, batch_reparsed.primary_axes[0].title.font.name.bytes);
+    const batch_body = batch_reparsed.series.items[0].section.label.body;
+    try t.expectEqual(batch_series_id, batch_body.text.?.object_id);
+    try t.expectEqualSlices(u8, series_replacement, batch_body.text.?.bytes);
 }
 test "actual Contents patch validation" {
     var bytes = try decode();
@@ -476,6 +507,10 @@ test "actual Contents Font String fork validation" {
     var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
     defer value.deinit();
     const target = &value.primary_axes[0].title.font;
+    const body = &value.series.items[0].section.label.body;
+    try t.expectError(error.EmptyChartStringForkBatch, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{}, bytes.len));
+    try t.expectError(error.DuplicateChartObjectId, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{ .{ .font_name = .{ .font = target, .new_object_id = 0xfffffffa, .bytes = "a", .trailer = 0 } }, .{ .text_body = .{ .body = body, .new_object_id = 0xfffffffa, .bytes = "b", .trailer = 0 } } }, bytes.len + 32));
+    try t.expectError(error.OverlappingChartPatches, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{ .{ .font_name = .{ .font = target, .new_object_id = 0xfffffffa, .bytes = "a", .trailer = 0 } }, .{ .font_name = .{ .font = target, .new_object_id = 0xfffffff9, .bytes = "b", .trailer = 0 } } }, bytes.len + 32));
     try t.expectError(error.UnsupportedChartStringForkTarget, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, &value.prefix.legend.font, 0xfffffffe, "x", 0, bytes.len + 16));
     try t.expectError(error.UnsupportedChartObjectReference, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, 0xffffffff, "x", 0, bytes.len + 16));
     try t.expectError(error.DuplicateChartObjectId, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, target.name.object_id, "x", 0, bytes.len + 16));

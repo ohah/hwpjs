@@ -8,6 +8,7 @@ const paths = @import("paths.zig");
 pub const Options = struct {
     file: ole_session.Options = .{},
     chart: @import("../chart/observed_contents.zig").Options = .{},
+    max_edits: usize = 1024,
     max_contents_bytes: usize = 64 * 1024 * 1024,
     max_edited_contents_bytes: usize = 64 * 1024 * 1024,
 };
@@ -15,20 +16,23 @@ pub const Options = struct {
 /// Forks one primary-axis title Font name in an observed chart Contents and
 /// commits it through the OLE and outer HWP atomic edit layers.
 pub fn forkPrimaryAxisTitleFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, axis_index: usize, new_name: []const u8, trailer: u8, options: Options) ![]u8 {
-    return forkString(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, .{ .primary_axis_title_font_name = axis_index }, new_name, trailer, options);
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .primary_axis_title_font_name = .{ .axis_index = axis_index, .bytes = new_name, .trailer = trailer } }}, options);
 }
 
 /// Forks the main label body text of one chart series.
 pub fn forkSeriesLabelBodyText(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, series_index: usize, new_text: []const u8, trailer: u8, options: Options) ![]u8 {
-    return forkString(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, .{ .series_label_body_text = series_index }, new_text, trailer, options);
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .series_label_body_text = .{ .series_index = series_index, .bytes = new_text, .trailer = trailer } }}, options);
 }
 
-const StringTarget = union(enum) {
-    primary_axis_title_font_name: usize,
-    series_label_body_text: usize,
+pub const Command = union(enum) {
+    primary_axis_title_font_name: struct { axis_index: usize, bytes: []const u8, trailer: u8 },
+    series_label_body_text: struct { series_index: usize, bytes: []const u8, trailer: u8 },
 };
 
-fn forkString(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, string_target: StringTarget, new_bytes: []const u8, trailer: u8, options: Options) ![]u8 {
+/// Applies multiple typed String forks to one parsed Contents and commits once.
+pub fn applyStringEdits(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, commands: []const Command, options: Options) ![]u8 {
+    if (commands.len == 0) return error.EmptyChartEditBatch;
+    if (commands.len > options.max_edits) return error.LimitExceeded;
     var read_options = options.file.bin_data.cfb;
     read_options.strict = true;
     var file = try cfb.File.open(a, hwp, read_options);
@@ -57,20 +61,53 @@ fn forkString(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_lay
     if (source.len > options.max_contents_bytes) return error.LimitExceeded;
     var chart = try @import("../chart/observed_contents.zig").readObservedV6(a, source, chart_layout, options.chart);
     defer chart.deinit();
-    const edited = switch (string_target) {
-        .primary_axis_title_font_name => |axis_index| blk: {
-            if (axis_index >= chart.primary_axes.len) return error.InvalidChartAxisIndex;
-            const font = &chart.primary_axes[axis_index].title.font;
-            const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, &.{font.object_id});
-            break :blk try @import("../chart/contents_string_fork.zig").forkFontName(a, &chart, font, new_id, new_bytes, trailer, options.max_edited_contents_bytes);
+    const fork = @import("../chart/contents_string_fork.zig");
+    const requests = try a.alloc(fork.BatchRequest, commands.len);
+    defer a.free(requests);
+    const starts = try a.alloc(usize, commands.len);
+    defer a.free(starts);
+    const order = try a.alloc(usize, commands.len);
+    defer a.free(order);
+    const forbidden_count = std.math.mul(usize, commands.len, 2) catch return error.LimitExceeded;
+    const forbidden = try a.alloc(u32, forbidden_count);
+    defer a.free(forbidden);
+    var reserved: usize = 0;
+    for (commands, 0..) |command, i| switch (command) {
+        .primary_axis_title_font_name => |item| {
+            if (item.axis_index >= chart.primary_axes.len) return error.InvalidChartAxisIndex;
+            const font = &chart.primary_axes[item.axis_index].title.font;
+            starts[i] = font.name_start;
+            forbidden[reserved] = font.object_id;
+            reserved += 1;
         },
-        .series_label_body_text => |series_index| blk: {
-            if (series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
-            const body = &chart.series.items[series_index].section.label.body;
-            const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, &.{});
-            break :blk try @import("../chart/contents_string_fork.zig").forkTextBodyText(a, &chart, body, new_id, new_bytes, trailer, options.max_edited_contents_bytes);
+        .series_label_body_text => |item| {
+            if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
+            starts[i] = chart.series.items[item.series_index].section.label.body.text_start;
         },
     };
+    for (order, 0..) |*slot, i| slot.* = i;
+    for (order, 0..) |_, i| {
+        var at = i;
+        while (at > 0 and (starts[order[at]] < starts[order[at - 1]] or (starts[order[at]] == starts[order[at - 1]] and order[at] < order[at - 1]))) : (at -= 1)
+            std.mem.swap(usize, &order[at], &order[at - 1]);
+    }
+    for (order) |i| switch (commands[i]) {
+        .primary_axis_title_font_name => |item| {
+            const font = &chart.primary_axes[item.axis_index].title.font;
+            const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
+            forbidden[reserved] = new_id;
+            reserved += 1;
+            requests[i] = .{ .font_name = .{ .font = font, .new_object_id = new_id, .bytes = item.bytes, .trailer = item.trailer } };
+        },
+        .series_label_body_text => |item| {
+            const body = &chart.series.items[item.series_index].section.label.body;
+            const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
+            forbidden[reserved] = new_id;
+            reserved += 1;
+            requests[i] = .{ .text_body = .{ .body = body, .new_object_id = new_id, .bytes = item.bytes, .trailer = item.trailer } };
+        },
+    };
+    const edited = try fork.forkMany(a, &chart, requests, options.max_edited_contents_bytes);
     defer a.free(edited);
     return ole_session.apply(a, hwp, &.{.{ .ordinal = ordinal, .layout = ole_layout, .replacements = &.{.{ .path = "/Contents", .content = edited }} }}, storage_layout, options.file);
 }
