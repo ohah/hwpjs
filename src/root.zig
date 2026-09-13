@@ -337,6 +337,7 @@ test {
     _ = @import("cfb/mutation_tests.zig");
     _ = @import("cfb/extended_tests.zig");
     _ = @import("cfb/writer_tests.zig");
+    _ = @import("cfb/stream_replace_tests.zig");
     _ = @import("wasm/search_snapshot.zig");
     _ = @import("wasm/document_wire.zig");
 }
