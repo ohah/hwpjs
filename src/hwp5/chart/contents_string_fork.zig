@@ -18,7 +18,7 @@ pub const BatchRequest = union(enum) {
     null_nullable_text_format: struct { format: *const TextFormat.NullableFormat, new_object_id: u32, bytes: []const u8, trailer: u8 },
     null_text_format_object: struct { block: *const ValueBlock, format_object_id: u32, code_object_id: u32, format_type_id: u32, raw_word: u16, bytes: []const u8, trailer: u8 },
     inline_string: struct { reference: Objects.Reference, new_object_id: u32, bytes: []const u8, trailer: u8 },
-    number_payload: struct { reference: *const Objects.ValueReference, bits: u64, trailer: u16 },
+    number_payload: struct { number: @import("value_object.zig").Number, bits: u64, trailer: u16 },
 };
 
 /// Forks multiple aliases from one original Contents coordinate space.
@@ -79,10 +79,7 @@ fn requestSpan(request: BatchRequest) @import("contents_inline_fork.zig").Span {
         .null_nullable_text_format => |item| .{ .start = item.format.code_start, .end = item.format.code_end },
         .null_text_format_object => |item| .{ .start = item.block.format_start, .end = item.block.format_end },
         .inline_string => |item| .{ .start = item.reference.start, .end = item.reference.end },
-        .number_payload => |item| switch (item.reference.value) {
-            .number => |number| .{ .start = number.payload_start, .end = number.payload_end },
-            else => .{ .start = item.reference.start, .end = item.reference.end },
-        },
+        .number_payload => |item| .{ .start = item.number.payload_start, .end = item.number.payload_end },
     };
 }
 
@@ -105,12 +102,8 @@ const Prepared = struct { start: usize, end: usize, replacement: []u8 };
 fn prepare(a: std.mem.Allocator, value: *const Contents, request: BatchRequest, previous: []const BatchRequest) !Prepared {
     if (request == .number_payload) {
         const item = request.number_payload;
-        const number = switch (item.reference.value) {
-            .number => |number| number,
-            else => return error.ExpectedChartNumber,
-        };
-        const replacement = try @import("contents_number_edit.zig").replacement(a, value, item.reference, item.bits, item.trailer);
-        return .{ .start = number.payload_start, .end = number.payload_end, .replacement = replacement };
+        const replacement = try @import("contents_number_edit.zig").replacementNumber(a, value, item.number, item.bits, item.trailer);
+        return .{ .start = item.number.payload_start, .end = item.number.payload_end, .replacement = replacement };
     }
     if (request == .null_text_format_object) {
         const item = request.null_text_format_object;

@@ -8,7 +8,7 @@ observed V6 고정 Contents의 69개 ValueBlock 중 Double 선택 값은 primary
 
 ## 파일 편집과 검증
 
-`chart_edit_session.replacePrimaryAxisScaleNumber`와 batch variant는 axis·scale·선택 값·Number 종류를 순서대로 확인한다. 실제 두 축을 wire 역순 명령으로 편집하고 signed zero 및 NaN payload 비트, 서로 다른 trailer, 기존 object ID와 고정 Contents 길이를 바깥 HWP부터 다시 열어 확인한다. 기존 문자열·TextFormat 60개와 두 Number를 합친 62개 전체 batch도 모든 의미 위치를 재파싱한다.
+`chart_edit_session.replacePrimaryAxisScaleNumber`와 batch variant는 axis·scale·선택 값·Number 종류를 순서대로 확인한다. 실제 두 축을 wire 역순 명령으로 편집하고 signed zero 및 NaN payload 비트, 서로 다른 trailer, 기존 object ID와 고정 Contents 길이를 바깥 HWP부터 다시 열어 확인한다. 기존 문자열·TextFormat 60개와 두 Number를 합친 축 숫자 범위는 62개 batch로 검증했으며, 이후 [Grid 숫자 셀](hwp5-chart-grid-number-edit.md) 12개를 연결한 누적 완전 batch는 74개다.
 
 직접 검증은 String 전달, 중복 payload patch, 손상된 원본 bits, 공유 참조를 거부한다. 새 payload 생성은 allocation-failure 전수 검사에도 포함한다. 이 계약은 raw bits 보존과 target-local 저장 범위이며 축척 계산·표시 형식·NaN 의미·차트 렌더링 동일성을 주장하지 않는다.
 

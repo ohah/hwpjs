@@ -396,6 +396,9 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.forkInlinePrimaryAxisTitleText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, "x", 0, edit_options));
     try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.replacePrimaryAxisScaleNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, 0, 0, edit_options));
     try t.expectError(error.MissingChartAxisScale, core.hwp5.chart_edit_session.replacePrimaryAxisScaleNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 3, 0, 0, edit_options));
+    try t.expectError(error.InvalidChartGridRow, core.hwp5.chart_edit_session.replaceGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, value.prefix.grid.prelude.rows, 0, 0, 0, edit_options));
+    try t.expectError(error.InvalidChartGridColumn, core.hwp5.chart_edit_session.replaceGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.prefix.grid.prelude.columns, 0, 0, edit_options));
+    try t.expectError(error.ExpectedChartNumber, core.hwp5.chart_edit_session.replaceGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, 0, 0, 0, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.forkSeriesPointLabelFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, "x", 0, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, 0, point_replacement, 0x77, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, point_replacement, 0x77, edit_options));
@@ -650,6 +653,21 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectEqual(@as(u64, 0x7ff8000000001234), number_chart.primary_axes[2].scale.?.value.reference.?.value.number.bits);
     try t.expectEqual(@as(u16, 0xca02), number_chart.primary_axes[2].scale.?.value.reference.?.value.number.trailer);
 
+    const grid_saved = try core.hwp5.chart_edit_session.replaceGridCellNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 2, 3, 0x7ff8000000004321, 0xcb03, edit_options);
+    defer t.allocator.free(grid_saved);
+    var grid_outer = try core.cfb.File.open(t.allocator, grid_saved, .{ .strict = true });
+    defer grid_outer.deinit();
+    const grid_header = try core.hwp5.Header.parse(grid_outer.entries[(try grid_outer.findExact("/FileHeader")).?].content);
+    const grid_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &grid_header, item, grid_outer.entries[(try grid_outer.findExact("/BinData/BIN0001.OLE")).?].content, 64 * 1024);
+    defer t.allocator.free(grid_inner);
+    var grid_ole = try core.cfb.File.open(t.allocator, grid_inner, .{ .strict = true });
+    defer grid_ole.deinit();
+    var grid_chart = try contents.readObservedV6(t.allocator, grid_ole.entries[(try grid_ole.findExact("/Contents")).?].content, layout, .{});
+    defer grid_chart.deinit();
+    const changed_grid_cell = grid_chart.prefix.grid.cells[2 * grid_chart.prefix.grid.prelude.columns + 3];
+    try t.expectEqual(@as(u64, 0x7ff8000000004321), changed_grid_cell.value.number.bits);
+    try t.expectEqual(@as(u16, 0xcb03), changed_grid_cell.value.number.trailer);
+
     const inline_bytes = "inline-file-edit";
     const old_footnote_font = value.prefix.footnote.block.font.name;
     const old_legend_font = value.prefix.legend.font.name;
@@ -725,7 +743,7 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectEqualSlices(u8, all_fonts, mixed_chart.series.items[2].section.points[3].label.body.font.name.bytes);
 
     const all_texts = "all-non-inline-texts";
-    var complete_commands: [62]core.hwp5.chart_edit_session.StringEdit = undefined;
+    var complete_commands: [74]core.hwp5.chart_edit_session.Edit = undefined;
     var complete_at: usize = 0;
     @memcpy(complete_commands[complete_at..][0..inline_commands.len], &inline_commands);
     complete_at += inline_commands.len;
@@ -749,6 +767,14 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     complete_at += axis_format_commands.len;
     @memcpy(complete_commands[complete_at..][0..number_commands.len], &number_commands);
     complete_at += number_commands.len;
+    var cell_index = value.prefix.grid.cells.len;
+    while (cell_index > 0) {
+        cell_index -= 1;
+        if (value.prefix.grid.cells[cell_index].value == .number) {
+            complete_commands[complete_at] = .{ .grid_cell_number = .{ .row = cell_index / value.prefix.grid.prelude.columns, .column = cell_index % value.prefix.grid.prelude.columns, .bits = 0x3ff0000000000000 + cell_index, .trailer = @intCast(0xd000 + cell_index) } };
+            complete_at += 1;
+        }
+    }
     try t.expectEqual(complete_commands.len, complete_at);
     var complete_options = edit_options;
     complete_options.max_edits = complete_commands.len;
@@ -777,6 +803,11 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
         if (axis_index == 1) try t.expectEqual(@as(u64, 0x8000000000000000), axis.scale.?.value.reference.?.value.number.bits);
         if (axis_index == 2) try t.expectEqual(@as(u64, 0x7ff8000000001234), axis.scale.?.value.reference.?.value.number.bits);
     }
+    for (complete_chart.prefix.grid.cells, 0..) |cell, index| if (cell.value == .number) {
+        try t.expectEqual(value.prefix.grid.cells[index].object_id, cell.object_id);
+        try t.expectEqual(@as(u64, 0x3ff0000000000000) + index, cell.value.number.bits);
+        try t.expectEqual(@as(u16, @intCast(0xd000 + index)), cell.value.number.trailer);
+    };
     for (complete_chart.series.items) |series| {
         try t.expectEqualSlices(u8, all_fonts, series.section.label.body.font.name.bytes);
         try t.expectEqualSlices(u8, all_texts, series.section.label.body.text.?.bytes);
@@ -1102,7 +1133,7 @@ test "actual Contents Double payload edit is fixed-width and validated" {
     defer value.deinit();
     const reference = &value.primary_axes[1].scale.?.value.reference.?;
     const original_id = reference.value.number.object_id;
-    const edited = try core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{.{ .number_payload = .{ .reference = reference, .bits = 0xffffffffffffffff, .trailer = 0xa55a } }}, bytes.len);
+    const edited = try core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{.{ .number_payload = .{ .number = reference.value.number, .bits = 0xffffffffffffffff, .trailer = 0xa55a } }}, bytes.len);
     defer t.allocator.free(edited);
     try t.expectEqual(bytes.len, edited.len);
     var reparsed = try contents.readObservedV6(t.allocator, edited, layout, .{});
@@ -1111,7 +1142,7 @@ test "actual Contents Double payload edit is fixed-width and validated" {
     try t.expectEqual(original_id, changed.object_id);
     try t.expectEqual(@as(u64, 0xffffffffffffffff), changed.bits);
     try t.expectEqual(@as(u16, 0xa55a), changed.trailer);
-    try t.expectError(error.OverlappingChartPatches, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{ .{ .number_payload = .{ .reference = reference, .bits = 1, .trailer = 2 } }, .{ .number_payload = .{ .reference = reference, .bits = 3, .trailer = 4 } } }, bytes.len));
+    try t.expectError(error.OverlappingChartPatches, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{ .{ .number_payload = .{ .number = reference.value.number, .bits = 1, .trailer = 2 } }, .{ .number_payload = .{ .number = reference.value.number, .bits = 3, .trailer = 4 } } }, bytes.len));
     const font = value.primary_axes[0].title.font;
     const string_reference: core.hwp5.chart_object_table.ValueReference = .{ .value = .{ .string = font.name }, .introduced = font.name_introduced, .start = font.name_start, .end = font.name_end };
     try t.expectError(error.ExpectedChartNumber, core.hwp5.chart_contents_number_edit.replacement(t.allocator, &value, &string_reference, 0, 0));
@@ -1121,6 +1152,18 @@ test "actual Contents Double payload edit is fixed-width and validated" {
     try t.expectError(error.SharedChartNumberObject, core.hwp5.chart_contents_number_edit.requireUniqueReference(&value.prefix.objects, number.object_id));
     bytes[number.payload_start] ^= 1;
     try t.expectError(error.InvalidChartNumberSource, core.hwp5.chart_contents_number_edit.replacement(t.allocator, &value, reference, 0, 0));
+}
+test "actual Contents Grid number target validates coordinate kind and sharing" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    try t.expectError(error.InvalidChartGridRow, core.hwp5.chart_grid_number_target.resolve(&value, value.prefix.grid.prelude.rows, 0));
+    try t.expectError(error.InvalidChartGridColumn, core.hwp5.chart_grid_number_target.resolve(&value, 0, value.prefix.grid.prelude.columns));
+    try t.expectError(error.ExpectedChartNumber, core.hwp5.chart_grid_number_target.resolve(&value, 0, 0));
+    const number = try core.hwp5.chart_grid_number_target.resolve(&value, 2, 3);
+    try t.expectEqual(value.prefix.grid.cells[11].object_id.?, number.object_id);
+    try value.prefix.objects.references.append(t.allocator, .{ .object_id = number.object_id, .introduced = false, .start = 0, .end = 4 });
+    try t.expectError(error.SharedChartNumberObject, core.hwp5.chart_grid_number_target.resolve(&value, 2, 3));
 }
 test "actual Contents String ValueReference forks and rejects Number" {
     const bytes = try decode();

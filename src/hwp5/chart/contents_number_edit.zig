@@ -16,6 +16,10 @@ pub fn replacement(a: std.mem.Allocator, value: *const Contents, reference: *con
         .number => |number| number,
         else => return error.ExpectedChartNumber,
     };
+    return replacementNumber(a, value, number, bits, trailer);
+}
+
+pub fn replacementNumber(a: std.mem.Allocator, value: *const Contents, number: @import("value_object.zig").Number, bits: u64, trailer: u16) ![]u8 {
     const registered = switch (value.prefix.objects.entries.get(number.object_id) orelse return error.InvalidChartNumberSource) {
         .number => |stored| stored,
         else => return error.InvalidChartNumberSource,

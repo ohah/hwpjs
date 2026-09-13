@@ -10,7 +10,7 @@ const NullableTextBlock = @import("../chart/text_block.zig").NullableBlock;
 const NullableTextFormat = @import("../chart/text_format.zig").NullableFormat;
 const ValueBlock = @import("../chart/value_block.zig").Block;
 const ObjectReference = @import("../chart/object_table.zig").Reference;
-const ObjectValueReference = @import("../chart/object_table.zig").ValueReference;
+const ChartNumber = @import("../chart/value_object.zig").Number;
 const paths = @import("paths.zig");
 
 pub const Options = struct {
@@ -48,6 +48,10 @@ pub fn forkInlineRootTitleText(a: std.mem.Allocator, hwp: []const u8, ordinal: u
 
 pub fn replacePrimaryAxisScaleNumber(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, axis_index: usize, bits: u64, trailer: u16, options: Options) ![]u8 {
     return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .primary_axis_scale_number = .{ .axis_index = axis_index, .bits = bits, .trailer = trailer } }}, options);
+}
+
+pub fn replaceGridCellNumber(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, row: usize, column: usize, bits: u64, trailer: u16, options: Options) ![]u8 {
+    return applyEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .grid_cell_number = .{ .row = row, .column = column, .bits = bits, .trailer = trailer } }}, options);
 }
 
 /// Forks one primary-axis title Font name in an observed chart Contents and
@@ -117,6 +121,7 @@ pub const Edit = union(enum) {
     null_series_suffix_format_code: struct { series_index: usize, format_index: usize, bytes: []const u8, trailer: u8 },
     null_primary_axis_scale_format: struct { axis_index: usize, raw_word: u16, bytes: []const u8, trailer: u8 },
     primary_axis_scale_number: struct { axis_index: usize, bits: u64, trailer: u16 },
+    grid_cell_number: struct { row: usize, column: usize, bits: u64, trailer: u16 },
 };
 
 /// Backward-compatible name retained for callers created before non-string
@@ -132,7 +137,7 @@ const Resolved = union(enum) {
     null_nullable_text_block: struct { value: *const NullableTextBlock, bytes: []const u8, trailer: u8 },
     null_nullable_text_format: struct { value: *const NullableTextFormat, bytes: []const u8, trailer: u8 },
     null_text_format_object: struct { value: *const ValueBlock, raw_word: u16, bytes: []const u8, trailer: u8 },
-    number_payload: struct { value: *const ObjectValueReference, bits: u64, trailer: u16 },
+    number_payload: struct { value: ChartNumber, bits: u64, trailer: u16 },
 };
 pub const Command = Edit;
 
@@ -242,10 +247,7 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
         item.* = try resolve(&chart, command);
         switch (item.*) {
             .inline_string => |target| starts[i] = target.value.start,
-            .number_payload => |target| starts[i] = switch (target.value.value) {
-                .number => |number| number.payload_start,
-                else => target.value.start,
-            },
+            .number_payload => |target| starts[i] = target.value.payload_start,
             .font => |target| {
                 starts[i] = target.value.name_start;
                 forbidden[reserved] = target.value.object_id;
@@ -280,7 +282,7 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
     for (order, 0..) |i, request_at| {
         if (resolved[i] == .number_payload) {
             const target = resolved[i].number_payload;
-            requests[request_at] = .{ .number_payload = .{ .reference = target.value, .bits = target.bits, .trailer = target.trailer } };
+            requests[request_at] = .{ .number_payload = .{ .number = target.value, .bits = target.bits, .trailer = target.trailer } };
             continue;
         }
         if (resolved[i] == .null_text_format_object) {
@@ -400,7 +402,11 @@ fn resolve(chart: *const ChartContents, command: Edit) !Resolved {
                 else => return error.ExpectedChartNumber,
             };
             try @import("../chart/contents_number_edit.zig").requireUniqueReference(&chart.prefix.objects, number.object_id);
-            break :blk .{ .number_payload = .{ .value = reference, .bits = item.bits, .trailer = item.trailer } };
+            break :blk .{ .number_payload = .{ .value = number, .bits = item.bits, .trailer = item.trailer } };
+        },
+        .grid_cell_number => |item| blk: {
+            const number = try @import("../chart/grid_number_target.zig").resolve(chart, item.row, item.column);
+            break :blk .{ .number_payload = .{ .value = number, .bits = item.bits, .trailer = item.trailer } };
         },
     };
 }
